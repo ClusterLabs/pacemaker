@@ -216,4 +216,18 @@ void cib__set_output(cib_t *cib, pcmk__output_t *out);
 
 cib_callback_client_t* cib__lookup_id (int call_id);
 
+/*!
+ * \internal
+ * \brief Connect to, query, and optionally disconnect from the CIB, returning
+ *        the resulting XML object.
+ *
+ * \param[out] cib        If non-NULL, a pointer to where to store the CIB
+ *                        connection.  In this case, it is up to the caller to
+ *                        disconnect from the CIB when finished.
+ * \param[out] cib_object A pointer to where to store the XML query result.
+ *
+ * \return A standard Pacemaker return code
+ */
+int cib__signon_query(cib_t **cib, xmlNode **cib_object);
+
 #endif

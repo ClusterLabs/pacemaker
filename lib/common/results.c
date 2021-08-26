@@ -250,7 +250,19 @@ static struct pcmk__rc_info {
     { "pcmk_rc_underflow",
       "Value too small to be stored in data type",
       -pcmk_err_generic,
-    }
+    },
+    { "pcmk_rc_dot_error",
+      "Error writing dot(1) file",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_graph_error",
+      "Error writing graph file",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_invalid_transition",
+      "Cluster simulation produced invalid transition",
+      -pcmk_err_generic,
+    },
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
@@ -672,6 +684,8 @@ pcmk_rc2exitc(int rc)
 
         case EIO:
         case pcmk_rc_no_output:
+        case pcmk_rc_dot_error:
+        case pcmk_rc_graph_error:
             return CRM_EX_IOERR;
 
         case ENOTSUP:

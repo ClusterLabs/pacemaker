@@ -26,6 +26,7 @@
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -107,7 +108,6 @@ main(int argc, char **argv)
     xmlNode *status = NULL;
 
     pe_working_set_t *data_set = NULL;
-    cib_t *cib_conn = NULL;
     const char *xml_tag = NULL;
 
     int rc = pcmk_rc_ok;
@@ -148,27 +148,11 @@ main(int argc, char **argv)
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
     if (options.use_live_cib) {
-        cib_conn = cib_new();
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        rc = pcmk_legacy2rc(rc);
-    }
-
-    if (options.use_live_cib) {
-        if (rc == pcmk_rc_ok) {
-            int options = cib_scope_local | cib_sync_call;
-
-            crm_info("Reading XML from: live cluster");
-            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, options);
-            rc = pcmk_legacy2rc(rc);
-        }
+        crm_info("Reading XML from: live cluster");
+        rc = cib__signon_query(NULL, &cib_object);
 
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc, "Live CIB query failed: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-        if (cib_object == NULL) {
-            rc = ENOMSG;
-            g_set_error(&error, PCMK__RC_ERROR, rc, "Live CIB query failed: empty result");
+            g_set_error(&error, PCMK__RC_ERROR, rc, "CIB query failed: %s", pcmk_rc_str(rc));
             goto done;
         }
 
@@ -275,11 +259,6 @@ main(int argc, char **argv)
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Warnings found during check: config may not be valid\n-V may provide more details");
         }
-    }
-
-    if (options.use_live_cib && cib_conn) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
     }
 
   done:

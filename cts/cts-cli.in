@@ -603,6 +603,10 @@ function test_tools() {
     cmd="crm_failcount --query -r foo -N node1"
     test_assert $CRM_EX_OK
 
+    desc="Show node attributes with crm_simulate"
+    cmd="crm_simulate --live-check --show-attrs"
+    test_assert $CRM_EX_OK 0
+
     desc="Delete a transient (fail-count) node attribute"
     cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
     test_assert $CRM_EX_OK
@@ -955,6 +959,29 @@ function test_tools() {
     unset CIB_file
 
     export CIB_file="$test_home/cli/crm_mon.xml"
+    export CIB_shadow_dir="${shadow_dir}"
+
+    desc="Show allocation scores with crm_simulate"
+    cmd="crm_simulate -x $CIB_file --show-scores --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Show utilization with crm_simulate"
+    cmd="crm_simulate -x $CIB_file --show-utilization"
+    test_assert $CRM_EX_OK 0
+
+    desc="Simulate injecting a failure"
+    cmd="crm_simulate -x $CIB_file -S -i ping_monitor_10000@cluster02=1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Simulate bringing a node down"
+    cmd="crm_simulate -x $CIB_file -S --node-down=cluster01"
+    test_assert $CRM_EX_OK 0
+
+    desc="Simulate a node failing"
+    cmd="crm_simulate -x $CIB_file -S --node-fail=cluster02"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_shadow_dir
 
     desc="List a promotable clone resource"
     cmd="crm_resource --locate -r promotable-clone"
@@ -1851,6 +1878,7 @@ for t in $tests; do
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
+        -e 's/\(Injecting attribute last-failure-ping#monitor_10000=\)[0-9]*/\1/' \
         -e 's/^lt-//' \
         -e 's/ocf::/ocf:/' \
         -e 's/Masters:/Promoted:/' \

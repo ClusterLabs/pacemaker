@@ -389,10 +389,7 @@ set_ticket_state_attr(const char *ticket_id, const char *attr_name,
 }
 
 void
-modify_configuration(pe_working_set_t * data_set, cib_t *cib,
-                     const char *quorum, const char *watchdog, GList *node_up, GList *node_down, GList *node_fail,
-                     GList *op_inject, GList *ticket_grant, GList *ticket_revoke,
-                     GList *ticket_standby, GList *ticket_activate)
+modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t *injections)
 {
     int rc = pcmk_ok;
     GList *gIter = NULL;
@@ -405,27 +402,27 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
     out = data_set->priv;
 
-    out->message(out, "inject-modify-config", quorum, watchdog);
+    out->message(out, "inject-modify-config", injections->quorum, injections->watchdog);
 
-    if (quorum) {
+    if (injections->quorum) {
         xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
 
         /* crm_xml_add(top, XML_ATTR_DC_UUID, dc_uuid);      */
-        crm_xml_add(top, XML_ATTR_HAVE_QUORUM, quorum);
+        crm_xml_add(top, XML_ATTR_HAVE_QUORUM, injections->quorum);
 
         rc = cib->cmds->modify(cib, NULL, top, cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    if (watchdog) {
+    if (injections->watchdog) {
         rc = update_attr_delegate(cib, cib_sync_call | cib_scope_local,
                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             XML_ATTR_HAVE_WATCHDOG, watchdog, FALSE, NULL, NULL);
+                             XML_ATTR_HAVE_WATCHDOG, injections->watchdog, FALSE, NULL, NULL);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = node_up; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_up; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
         out->message(out, "inject-modify-node", "Online", node);
@@ -439,7 +436,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free_xml(cib_node);
     }
 
-    for (gIter = node_down; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_down; gIter != NULL; gIter = gIter->next) {
         char xpath[STATUS_PATH_MAX];
         char *node = (char *)gIter->data;
 
@@ -464,7 +461,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
     }
 
-    for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_fail; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
         out->message(out, "inject-modify-node", "Failing", node);
@@ -479,7 +476,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free_xml(cib_node);
     }
 
-    for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_grant; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
@@ -490,7 +487,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_revoke; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
@@ -501,7 +498,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_standby; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_standby; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
@@ -512,7 +509,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_activate; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_activate; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
@@ -523,7 +520,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = op_inject; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->op_inject; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
 
         int rc = 0;
@@ -795,7 +792,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
-int
+enum transition_status
 run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
@@ -849,8 +846,5 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->end_list(out);
     }
 
-    if (graph_rc != transition_complete) {
-        return graph_rc;
-    }
-    return 0;
+    return graph_rc;
 }
