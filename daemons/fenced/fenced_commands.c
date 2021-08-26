@@ -1925,14 +1925,15 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
     can_fence_host_with_device(dev, search);
 }
 
-#define DEFAULT_QUERY_TIMEOUT 20
+//#define DEFAULT_QUERY_TIMEOUT 20
+#define MIN_QUERY_TIMEOUT 20
 static void
 get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
                     void (*callback) (GList * devices, void *user_data))
 {
     struct device_search_s *search;
-    int per_device_timeout = DEFAULT_QUERY_TIMEOUT;
-    int devices_needing_async_query = 0;
+//    int per_device_timeout = DEFAULT_QUERY_TIMEOUT;
+//    int devices_needing_async_query = 0;
     char *key = NULL;
     const char *check_type = NULL;
     GHashTableIter gIter;
@@ -1954,10 +1955,20 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&device)) {
         check_type = target_list_type(device);
         if (pcmk__strcase_any_of(check_type, "status", "dynamic-list", NULL)) {
-            devices_needing_async_query++;
+//            devices_needing_async_query++;
+              int device_timeout = get_action_timeout(device, 
+                                                  pcmk__str_eq(check_type, "status", pcmk__str_casei)? "status" : "list", timeout);
+              if (device_timeout > timeout) {
+                  crm_notice("Since the pcmk_xxxx_timeout parameter of %s is larger than stonith-timeout(%d), timeout may occur",
+                  device->id, timeout); 
+              } else if (device_timeout < timeout && device_timeout < MIN_QUERY_TIMEOUT) {
+                  crm_notice("Since the pcmk_xxxx_timeout parameter of %s is larger than the minimum timeout(%d) of Query, timeout may occur",
+                  device->id, MIN_QUERY_TIMEOUT); 
+              }
         }
     }
 
+#if 0 //YAMAUCHI
     /* If we have devices that require an async event in order to know what
      * nodes they can fence, we have to give the events a timeout. The total
      * query timeout is divided among those events. */
@@ -1975,10 +1986,12 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
                        timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
         }
     }
+#endif
 
     search->host = host ? strdup(host) : NULL;
     search->action = action ? strdup(action) : NULL;
-    search->per_device_timeout = per_device_timeout;
+//    search->per_device_timeout = per_device_timeout;
+    search->per_device_timeout = timeout;
     /* We are guaranteed this many replies. Even if a device gets
      * unregistered some how during the async search, we will get
      * the correct number of replies. */
