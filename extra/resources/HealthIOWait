@@ -49,7 +49,7 @@ Upper limit of iowait percentage to switch the health attribute to yellow. I.e.
 the #health-iowait will go yellow if the %iowait of the CPU gets higher than 10%.
 </longdesc>
 <shortdesc lang="en">Upper limit for yellow health attribute</shortdesc>
-<content type="string" default="10"/>
+<content type="integer" default="10"/>
 </parameter>
 
 <parameter name="red_limit" unique="0">
@@ -58,7 +58,7 @@ Upper limit of iowait percentage to switch the health attribute to red. I.e.
 the #health-iowait will go red if the %iowait of the CPU get higher than 15%.
 </longdesc>
 <shortdesc lang="en">Upper limit for red health attribute</shortdesc>
-<content type="string" default="15"/>
+<content type="integer" default="15"/>
 </parameter>
 
 </parameters>
@@ -126,16 +126,30 @@ agent_monitor() {
         return $OCF_NOT_RUNNING
 }
 
+is_integer() {
+    case "$1" in
+        ""|*[0-9]*) return 0 ;;
+        *)          return 1 ;;
+    esac
+}
+
 is_writable_dir() {
     dir=$(dirname "$1")
     [ -d "$dir" ] && [ -w "$dir" ] && [ -x "$dir" ]
 }
 
 agent_validate() {
+
+    is_integer "$OCF_RESKEY_yellow_limit" && is_integer "$OCF_RESKEY_red_limit"
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_CONFIGURED
+    fi
+
     is_writable_dir "$OCF_RESKEY_state"
     if [ $? -ne 0 ]; then
       return $OCF_ERR_ARGS
     fi
+
     return $OCF_SUCCESS
 }
 
