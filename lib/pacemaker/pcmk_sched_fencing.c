@@ -127,3 +127,21 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     // Order/imply other actions relative to pseudo-fence as with real fence
     pcmk__order_vs_fence(stonith_op, data_set);
 }
+
+/*!
+ * \internal
+ * \brief Check whether a resource is a fencing device that supports unfencing
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return true if \p rsc is a fencing device that supports unfencing,
+ *         otherwise false
+ */
+bool
+pcmk__is_unfence_device(const pe_resource_t *rsc,
+                        const pe_working_set_t *data_set)
+{
+    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
+}

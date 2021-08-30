@@ -17,6 +17,8 @@
 #include <pacemaker-internal.h>
 #include <crm/services.h>
 
+#include "libpacemaker_private.h"
+
 // The controller removes the resource from the CIB, making this redundant
 // #define DELETE_THEN_REFRESH 1
 
@@ -493,13 +495,6 @@ node_has_been_unfenced(pe_node_t *node)
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
-static inline bool
-is_unfence_device(pe_resource_t *rsc, pe_working_set_t *data_set)
-{
-    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }
 
 pe_node_t *
@@ -2480,7 +2475,7 @@ order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * only quorum. However, fence agents that unfence often don't have enough
      * information to even probe or start unless the node is first unfenced.
      */
-    if (is_unfence_device(rsc, data_set)
+    if (pcmk__is_unfence_device(rsc, data_set)
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
@@ -2818,7 +2813,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
@@ -2843,7 +2838,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
 #if 0
     // complete is always null currently
-    if (!is_unfence_device(rsc, data_set)) {
+    if (!pcmk__is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
          * on rsc.probe. But this can't be the case for fence devices
          * with unfencing, as it would create graph loops.
