@@ -143,9 +143,6 @@ void LogNodeActions(pe_working_set_t * data_set);
 void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set);
 void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 
-extern void rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op,
-                                 pe_working_set_t * data_set);
-
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
                                           pe_node_t *node,
                                           enum pe_action_flags flags,
