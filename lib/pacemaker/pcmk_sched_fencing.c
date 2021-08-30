@@ -130,6 +130,23 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Check whether node has already been unfenced
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if node has a nonzero #node-unfenced attribute (or none),
+ *         otherwise false
+ */
+bool
+pcmk__node_unfenced(pe_node_t *node)
+{
+    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+
+    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
+}
+
+/*!
+ * \internal
  * \brief Check whether a resource is a fencing device that supports unfencing
  *
  * \param[in] rsc       Resource to check

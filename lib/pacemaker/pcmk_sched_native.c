@@ -489,14 +489,6 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
     return work;
 }
 
-static inline bool
-node_has_been_unfenced(pe_node_t *node)
-{
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
-
-    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
 pe_node_t *
 pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                       pe_working_set_t *data_set)
@@ -2455,7 +2447,7 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
             pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (!node_has_been_unfenced(current)) {
+            if (!pcmk__node_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
@@ -2486,7 +2478,7 @@ order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
 
         order_actions(unfence, action, order);
 
-        if (!node_has_been_unfenced(node)) {
+        if (!pcmk__node_unfenced(node)) {
             // But unfencing is required if it has never been done
             char *reason = crm_strdup_printf("required by %s %s",
                                              rsc->id, action->task);
