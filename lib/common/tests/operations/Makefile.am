@@ -7,7 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
-LDADD = $(top_builddir)/lib/common/libcrmcommon.la
+LDADD = $(top_builddir)/lib/common/libcrmcommon.la -lcmocka
 
 include $(top_srcdir)/mk/glib-tap.mk
 

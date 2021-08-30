@@ -9,124 +9,112 @@
 
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 #include <float.h>  // DBL_MAX, etc.
 #include <math.h>   // fabs()
-#include <glib.h>
 
 // Ensure plenty of characters for %f display
 #define LOCAL_BUF_SIZE 2 * DBL_MAX_10_EXP
 
-/*
- * Avoids compiler warnings for floating-point equality checks.
- * Use for comparing numbers (e.g., 1.0 == 1.0), not expression values.
- */
-#define ASSERT_DBL_EQ(d1, d2) g_assert_cmpfloat(fabs(d1 - d2), \
-                                                <, DBL_EPSILON);
-
 static void
-empty_input_string(void)
+empty_input_string(void **state)
 {
     double result;
 
     // Without default_text
-    g_assert_cmpint(pcmk__scan_double(NULL, &result, NULL, NULL), ==, EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double(NULL, &result, NULL, NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("", &result, NULL, NULL), ==, EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("", &result, NULL, NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 
     // With default_text
-    g_assert_cmpint(pcmk__scan_double(NULL, &result, "2.0", NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, 2.0);
+    assert_int_equal(pcmk__scan_double(NULL, &result, "2.0", NULL), pcmk_rc_ok);
+    assert_float_equal(result, 2.0, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("", &result, "2.0", NULL), ==, EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("", &result, "2.0", NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 }
 
 static void
-bad_input_string(void)
+bad_input_string(void **state)
 {
     double result;
 
     // Without default text
-    g_assert_cmpint(pcmk__scan_double("asdf", &result, NULL, NULL), ==, EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("asdf", &result, NULL, NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("as2.0", &result, NULL, NULL), ==,
-                    EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("as2.0", &result, NULL, NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 
     // With default text (not used)
-    g_assert_cmpint(pcmk__scan_double("asdf", &result, "2.0", NULL), ==,
-                    EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("asdf", &result, "2.0", NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("as2.0", &result, "2.0", NULL), ==,
-                    EINVAL);
-    ASSERT_DBL_EQ(result, PCMK__PARSE_DBL_DEFAULT);
+    assert_int_equal(pcmk__scan_double("as2.0", &result, "2.0", NULL), EINVAL);
+    assert_float_equal(result, PCMK__PARSE_DBL_DEFAULT, DBL_EPSILON);
 }
 
 static void
-trailing_chars(void)
+trailing_chars(void **state)
 {
     double result;
 
-    g_assert_cmpint(pcmk__scan_double("2.0asdf", &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, 2.0);
+    assert_int_equal(pcmk__scan_double("2.0asdf", &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, 2.0, DBL_EPSILON);
 }
 
 static void
-typical_case(void)
+typical_case(void **state)
 {
     char str[LOCAL_BUF_SIZE];
     double result;
 
-    g_assert_cmpint(pcmk__scan_double("0.0", &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, 0.0);
+    assert_int_equal(pcmk__scan_double("0.0", &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, 0.0, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("1.0", &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, 1.0);
+    assert_int_equal(pcmk__scan_double("1.0", &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, 1.0, DBL_EPSILON);
 
-    g_assert_cmpint(pcmk__scan_double("-1.0", &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, -1.0);
+    assert_int_equal(pcmk__scan_double("-1.0", &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, -1.0, DBL_EPSILON);
 
     snprintf(str, LOCAL_BUF_SIZE, "%f", DBL_MAX);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, DBL_MAX);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, DBL_MAX, DBL_EPSILON);
 
     snprintf(str, LOCAL_BUF_SIZE, "%f", -DBL_MAX);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==,
-                    pcmk_rc_ok);
-    ASSERT_DBL_EQ(result, -DBL_MAX);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
+    assert_float_equal(result, -DBL_MAX, DBL_EPSILON);
 }
 
 static void
-double_overflow(void)
+double_overflow(void **state)
 {
     char str[LOCAL_BUF_SIZE];
     double result;
 
     /*
      * 1e(DBL_MAX_10_EXP + 1) produces an inf value
-     * Can't use ASSERT_DBL_EQ() because (inf - inf) == NaN
+     * Can't use assert_float_equal() because (inf - inf) == NaN
      */
     snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MAX_10_EXP + 1);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==, EOVERFLOW);
-    g_assert_cmpfloat(result, >, DBL_MAX);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
+    assert_true(result > DBL_MAX);
 
     snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MAX_10_EXP + 1);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==, EOVERFLOW);
-    g_assert_cmpfloat(result, <, -DBL_MAX);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
+    assert_true(result < -DBL_MAX);
 }
 
 static void
-double_underflow(void)
+double_underflow(void **state)
 {
     char str[LOCAL_BUF_SIZE];
     double result;
@@ -138,32 +126,31 @@ double_underflow(void)
      * C99/C11: result will be **no greater than** DBL_MIN
      */
     snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MIN_10_EXP - 1);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==,
-                    pcmk_rc_underflow);
-    g_assert_cmpfloat(result, >=, 0.0);
-    g_assert_cmpfloat(result, <=, DBL_MIN);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
+    assert_true(result >= 0.0);
+    assert_true(result <= DBL_MIN);
 
     snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MIN_10_EXP - 1);
-    g_assert_cmpint(pcmk__scan_double(str, &result, NULL, NULL), ==,
-                    pcmk_rc_underflow);
-    g_assert_cmpfloat(result, <=, 0.0);
-    g_assert_cmpfloat(result, >=, -DBL_MIN);
+    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
+    assert_true(result <= 0.0);
+    assert_true(result >= -DBL_MIN);
 }
 
 int main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        // Test for input string issues
+        cmocka_unit_test(empty_input_string),
+        cmocka_unit_test(bad_input_string),
+        cmocka_unit_test(trailing_chars),
 
-    // Test for input string issues
-    g_test_add_func("/common/strings/double/empty_input", empty_input_string);
-    g_test_add_func("/common/strings/double/bad_input", bad_input_string);
-    g_test_add_func("/common/strings/double/trailing_chars", trailing_chars);
+        // Test for numeric issues
+        cmocka_unit_test(typical_case),
+        cmocka_unit_test(double_overflow),
+        cmocka_unit_test(double_underflow),
+    };
 
-    // Test for numeric issues
-    g_test_add_func("/common/strings/double/typical", typical_case);
-    g_test_add_func("/common/strings/double/overflow", double_overflow);
-    g_test_add_func("/common/strings/double/underflow", double_underflow);
-
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }
 

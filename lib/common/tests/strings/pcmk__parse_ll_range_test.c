@@ -9,101 +9,98 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
 
 static void
-empty_input_string(void)
+empty_input_string(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range(NULL, &start, &end), ==,
-                    pcmk_rc_unknown_format);
-    g_assert_cmpint(pcmk__parse_ll_range("", &start, &end), ==,
-                    pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range(NULL, &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("", &start, &end), pcmk_rc_unknown_format);
 }
 
 static void
-missing_separator(void)
+missing_separator(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("1234", &start, &end), ==, pcmk_rc_ok);
-    g_assert_cmpint(start, ==, 1234);
-    g_assert_cmpint(end, ==, 1234);
+    assert_int_equal(pcmk__parse_ll_range("1234", &start, &end), pcmk_rc_ok);
+    assert_int_equal(start, 1234);
+    assert_int_equal(end, 1234);
 }
 
 static void
-only_separator(void)
+only_separator(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("-", &start, &end), ==,
-                    pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
-    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(pcmk__parse_ll_range("-", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
-no_range_end(void)
+no_range_end(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("2000-", &start, &end), ==,
-                    pcmk_rc_ok);
-    g_assert_cmpint(start, ==, 2000);
-    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(pcmk__parse_ll_range("2000-", &start, &end), pcmk_rc_ok);
+    assert_int_equal(start, 2000);
+    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
-no_range_start(void)
+no_range_start(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("-2020", &start, &end), ==,
-                    pcmk_rc_ok);
-    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
-    g_assert_cmpint(end, ==, 2020);
+    assert_int_equal(pcmk__parse_ll_range("-2020", &start, &end), pcmk_rc_ok);
+    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(end, 2020);
 }
 
 static void
-range_start_and_end(void)
+range_start_and_end(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("2000-2020", &start, &end), ==,
-                    pcmk_rc_ok);
-    g_assert_cmpint(start, ==, 2000);
-    g_assert_cmpint(end, ==, 2020);
+    assert_int_equal(pcmk__parse_ll_range("2000-2020", &start, &end), pcmk_rc_ok);
+    assert_int_equal(start, 2000);
+    assert_int_equal(end, 2020);
 }
 
 static void
-garbage(void)
+garbage(void **state)
 {
     long long start, end;
 
-    g_assert_cmpint(pcmk__parse_ll_range("2000x-", &start, &end), ==,
-                    pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
-    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(pcmk__parse_ll_range("2000x-", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 
-    g_assert_cmpint(pcmk__parse_ll_range("-x2000", &start, &end), ==,
-                    pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
-    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(pcmk__parse_ll_range("-x2000", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
+    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
 int main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(empty_input_string),
+        cmocka_unit_test(missing_separator),
+        cmocka_unit_test(only_separator),
+        cmocka_unit_test(no_range_end),
+        cmocka_unit_test(no_range_start),
+        cmocka_unit_test(range_start_and_end),
 
-    g_test_add_func("/common/strings/range/empty", empty_input_string);
-    g_test_add_func("/common/strings/range/no_sep", missing_separator);
-    g_test_add_func("/common/strings/range/only_sep", only_separator);
-    g_test_add_func("/common/strings/range/no_end", no_range_end);
-    g_test_add_func("/common/strings/range/no_start", no_range_start);
-    g_test_add_func("/common/strings/range/start_and_end", range_start_and_end);
+        cmocka_unit_test(garbage),
+    };
 
-    g_test_add_func("/common/strings/range/garbage", garbage);
-
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

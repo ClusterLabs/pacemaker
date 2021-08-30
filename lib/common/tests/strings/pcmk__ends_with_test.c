@@ -9,53 +9,61 @@
 
 #include <crm_internal.h>
 
-static void
-bad_input(void) {
-    g_assert_false(pcmk__ends_with(NULL, "xyz"));
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
 
-    g_assert_true(pcmk__ends_with(NULL, NULL));
-    g_assert_true(pcmk__ends_with(NULL, ""));
-    g_assert_true(pcmk__ends_with("", NULL));
-    g_assert_true(pcmk__ends_with("", ""));
-    g_assert_true(pcmk__ends_with("abc", NULL));
-    g_assert_true(pcmk__ends_with("abc", ""));
+static void
+bad_input(void **state) {
+    assert_false(pcmk__ends_with(NULL, "xyz"));
+
+    assert_true(pcmk__ends_with(NULL, NULL));
+    assert_true(pcmk__ends_with(NULL, ""));
+    assert_true(pcmk__ends_with("", NULL));
+    assert_true(pcmk__ends_with("", ""));
+    assert_true(pcmk__ends_with("abc", NULL));
+    assert_true(pcmk__ends_with("abc", ""));
 }
 
 static void
-ends_with(void) {
-    g_assert_true(pcmk__ends_with("abc", "abc"));
-    g_assert_true(pcmk__ends_with("abc", "bc"));
-    g_assert_true(pcmk__ends_with("abc", "c"));
-    g_assert_true(pcmk__ends_with("abcbc", "bc"));
+ends_with(void **state) {
+    assert_true(pcmk__ends_with("abc", "abc"));
+    assert_true(pcmk__ends_with("abc", "bc"));
+    assert_true(pcmk__ends_with("abc", "c"));
+    assert_true(pcmk__ends_with("abcbc", "bc"));
 
-    g_assert_false(pcmk__ends_with("abc", "def"));
-    g_assert_false(pcmk__ends_with("abc", "defg"));
-    g_assert_false(pcmk__ends_with("abc", "bcd"));
-    g_assert_false(pcmk__ends_with("abc", "ab"));
+    assert_false(pcmk__ends_with("abc", "def"));
+    assert_false(pcmk__ends_with("abc", "defg"));
+    assert_false(pcmk__ends_with("abc", "bcd"));
+    assert_false(pcmk__ends_with("abc", "ab"));
 
-    g_assert_false(pcmk__ends_with("abc", "BC"));
+    assert_false(pcmk__ends_with("abc", "BC"));
 }
 
 static void
-ends_with_ext(void) {
-    g_assert_true(pcmk__ends_with_ext("ab.c", ".c"));
-    g_assert_true(pcmk__ends_with_ext("ab.cb.c", ".c"));
+ends_with_ext(void **state) {
+    assert_true(pcmk__ends_with_ext("ab.c", ".c"));
+    assert_true(pcmk__ends_with_ext("ab.cb.c", ".c"));
 
-    g_assert_false(pcmk__ends_with_ext("ab.c", ".def"));
-    g_assert_false(pcmk__ends_with_ext("ab.c", ".defg"));
-    g_assert_false(pcmk__ends_with_ext("ab.c", ".cd"));
-    g_assert_false(pcmk__ends_with_ext("ab.c", "ab"));
+    assert_false(pcmk__ends_with_ext("ab.c", ".def"));
+    assert_false(pcmk__ends_with_ext("ab.c", ".defg"));
+    assert_false(pcmk__ends_with_ext("ab.c", ".cd"));
+    assert_false(pcmk__ends_with_ext("ab.c", "ab"));
 
-    g_assert_false(pcmk__ends_with_ext("ab.c", ".C"));
+    assert_false(pcmk__ends_with_ext("ab.c", ".C"));
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(bad_input),
+        cmocka_unit_test(ends_with),
+        cmocka_unit_test(ends_with_ext),
+    };
 
-    g_test_add_func("/common/strings/ends_with/bad_input", bad_input);
-    g_test_add_func("/common/strings/ends_with/ends_with", ends_with);
-    g_test_add_func("/common/strings/ends_with/ends_with_ext", ends_with_ext);
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

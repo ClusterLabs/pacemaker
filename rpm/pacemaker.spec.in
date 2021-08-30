@@ -306,6 +306,9 @@ BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
 
+# Required for "make check"
+BuildRequires: libcmocka-devel
+
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
 %endif

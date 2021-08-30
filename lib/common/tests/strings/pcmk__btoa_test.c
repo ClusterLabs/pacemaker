@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,18 +9,26 @@
 
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-btoa(void) {
-    g_assert_cmpstr(pcmk__btoa(false), ==, "false");
-    g_assert_cmpstr(pcmk__btoa(true), ==, "true");
-    g_assert_cmpstr(pcmk__btoa(1 == 0), ==, "false");
+btoa(void **state) {
+    assert_string_equal(pcmk__btoa(false), "false");
+    assert_string_equal(pcmk__btoa(true), "true");
+    assert_string_equal(pcmk__btoa(1 == 0), "false");
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(btoa),
+    };
 
-    g_test_add_func("/common/strings/btoa/btoa", btoa);
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }
