@@ -238,7 +238,9 @@ controld_record_action_timeout(crm_action_t *action)
      * to the executor.
      */
     op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
-                                       PCMK_OCF_TIMEOUT);
+                                       PCMK_OCF_TIMEOUT,
+                                       "Cluster communication timeout "
+                                       "(no response from executor)");
     op->call_id = -1;
     op->user_data = pcmk__transition_key(transition_graph->id, action->id,
                                          target_rc, te_uuid);

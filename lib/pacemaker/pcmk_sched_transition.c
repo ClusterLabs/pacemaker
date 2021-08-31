@@ -680,7 +680,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
-                                       target_outcome);
+                                       target_outcome, "User-injected result");
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 
