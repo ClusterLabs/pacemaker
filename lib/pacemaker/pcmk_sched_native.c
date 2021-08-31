@@ -17,6 +17,8 @@
 #include <pacemaker-internal.h>
 #include <crm/services.h>
 
+#include "libpacemaker_private.h"
+
 // The controller removes the resource from the CIB, making this redundant
 // #define DELETE_THEN_REFRESH 1
 
@@ -485,21 +487,6 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
     return work;
-}
-
-static inline bool
-node_has_been_unfenced(pe_node_t *node)
-{
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
-
-    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
-static inline bool
-is_unfence_device(pe_resource_t *rsc, pe_working_set_t *data_set)
-{
-    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }
 
 pe_node_t *
@@ -2460,46 +2447,13 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
             pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (!node_has_been_unfenced(current)) {
+            if (!pcmk__node_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
     }
 
     return TRUE;
-}
-
-static void
-order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
-                      enum pe_ordering order, pe_working_set_t *data_set)
-{
-    /* When unfencing is in use, we order unfence actions before any probe or
-     * start of resources that require unfencing, and also of fence devices.
-     *
-     * This might seem to violate the principle that fence devices require
-     * only quorum. However, fence agents that unfence often don't have enough
-     * information to even probe or start unless the node is first unfenced.
-     */
-    if (is_unfence_device(rsc, data_set)
-        || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-
-        /* Start with an optional ordering. Requiring unfencing would result in
-         * the node being unfenced, and all its resources being stopped,
-         * whenever a new resource is added -- which would be highly suboptimal.
-         */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
-
-        order_actions(unfence, action, order);
-
-        if (!node_has_been_unfenced(node)) {
-            // But unfencing is required if it has never been done
-            char *reason = crm_strdup_printf("required by %s %s",
-                                             rsc->id, action->task);
-
-            trigger_unfencing(NULL, node, reason, NULL, data_set);
-            free(reason);
-        }
-    }
 }
 
 gboolean
@@ -2511,7 +2465,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
     pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
-    order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
+    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
@@ -2801,7 +2755,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     pe__clear_action_flags(probe, pe_action_optional);
 
-    order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, data_set);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -2818,7 +2772,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
@@ -2843,7 +2797,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
 #if 0
     // complete is always null currently
-    if (!is_unfence_device(rsc, data_set)) {
+    if (!pcmk__is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
          * on rsc.probe. But this can't be the case for fence devices
          * with unfencing, as it would create graph loops.
@@ -2854,270 +2808,6 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 #endif
     return TRUE;
-}
-
-/*!
- * \internal
- * \brief Check whether a resource is known on a particular node
- *
- * \param[in] rsc   Resource to check
- * \param[in] node  Node to check
- *
- * \return TRUE if resource (or parent if an anonymous clone) is known
- */
-static bool
-rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
-{
-   if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
-       return TRUE;
-
-   } else if ((rsc->variant == pe_native)
-              && pe_rsc_is_anon_clone(rsc->parent)
-              && pe_hash_table_lookup(rsc->parent->known_on, node->details->id)) {
-       /* We check only the parent, not the uber-parent, because we cannot
-        * assume that the resource is known if it is in an anonymously cloned
-        * group (which may be only partially known).
-        */
-       return TRUE;
-   }
-   return FALSE;
-}
-
-/*!
- * \internal
- * \brief Order a resource's start and promote actions relative to fencing
- *
- * \param[in] rsc         Resource to be ordered
- * \param[in] stonith_op  Fence action
- * \param[in] data_set    Cluster information
- */
-static void
-native_start_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    pe_node_t *target;
-    GList *gIter = NULL;
-
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
-
-    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        switch (action->needs) {
-            case rsc_req_nothing:
-                // Anything other than start or promote requires nothing
-                break;
-
-            case rsc_req_stonith:
-                order_actions(stonith_op, action, pe_order_optional);
-                break;
-
-            case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
-                    && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                    && !rsc_is_known_on(rsc, target)) {
-
-                    /* If we don't know the status of the resource on the node
-                     * we're about to shoot, we have to assume it may be active
-                     * there. Order the resource start after the fencing. This
-                     * is analogous to waiting for all the probes for a resource
-                     * to complete before starting it.
-                     *
-                     * The most likely explanation is that the DC died and took
-                     * its status with it.
-                     */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                                 target->details->uname);
-                    order_actions(stonith_op, action,
-                                  pe_order_optional | pe_order_runnable_left);
-                }
-                break;
-        }
-    }
-}
-
-static void
-native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    GList *action_list = NULL;
-    bool order_implicit = false;
-
-    pe_resource_t *top = uber_parent(rsc);
-    pe_action_t *parent_stop = NULL;
-    pe_node_t *target;
-
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
-
-    /* Get a list of stop actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_STOP, FALSE);
-
-    /* If resource requires fencing, implicit actions must occur after fencing.
-     *
-     * Implied stops and demotes of resources running on guest nodes are always
-     * ordered after fencing, even if the resource does not require fencing,
-     * because guest node "fencing" is actually just a resource stop.
-     */
-    if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)
-        || pe__is_guest_node(target)) {
-
-        order_implicit = true;
-    }
-
-    if (action_list && order_implicit) {
-        parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
-    }
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        // The stop would never complete, so convert it into a pseudo-action.
-        pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
-
-        if (order_implicit) {
-            pe__set_action_flags(action, pe_action_implied_by_stonith);
-
-            /* Order the stonith before the parent stop (if any).
-             *
-             * Also order the stonith before the resource stop, unless the
-             * resource is inside a bundle -- that would cause a graph loop.
-             * We can rely on the parent stop's ordering instead.
-             *
-             * User constraints must not order a resource in a guest node
-             * relative to the guest node container resource. The
-             * pe_order_preserve flag marks constraints as generated by the
-             * cluster and thus immune to that check (and is irrelevant if
-             * target is not a guest).
-             */
-            if (!pe_rsc_is_bundled(rsc)) {
-                order_actions(stonith_op, action, pe_order_preserve);
-            }
-            order_actions(stonith_op, parent_stop, pe_order_preserve);
-        }
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
-                       rsc->id, (order_implicit? "after" : "because"),
-                       target->details->uname);
-        } else {
-            crm_info("%s is implicit %s %s is fenced",
-                     action->uuid, (order_implicit? "after" : "because"),
-                     target->details->uname);
-        }
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
-            /* Create a second notification that will be delivered
-             *   immediately after the node is fenced
-             *
-             * Basic problem:
-             * - C is a clone active on the node to be shot and stopping on another
-             * - R is a resource that depends on C
-             *
-             * + C.stop depends on R.stop
-             * + C.stopped depends on STONITH
-             * + C.notify depends on C.stopped
-             * + C.healthy depends on C.notify
-             * + R.stop depends on C.healthy
-             *
-             * The extra notification here changes
-             *  + C.healthy depends on C.notify
-             * into:
-             *  + C.healthy depends on C.notify'
-             *  + C.notify' depends on STONITH'
-             * thus breaking the loop
-             */
-            create_secondary_notification(action, rsc, stonith_op, data_set);
-        }
-
-/* From Bug #1601, successful fencing must be an input to a failed resources stop action.
-
-   However given group(rA, rB) running on nodeX and B.stop has failed,
-   A := stop healthy resource (rA.stop)
-   B := stop failed resource (pseudo operation B.stop)
-   C := stonith nodeX
-   A requires B, B requires C, C requires A
-   This loop would prevent the cluster from making progress.
-
-   This block creates the "C requires A" dependency and therefore must (at least
-   for now) be disabled.
-
-   Instead, run the block above and treat all resources on nodeX as B would be
-   (marked as a pseudo op depending on the STONITH).
-
-   TODO: Break the "A requires B" dependency in update_action() and re-enable this block
-
-   } else if(is_stonith == FALSE) {
-   crm_info("Moving healthy resource %s"
-   " off %s before fencing",
-   rsc->id, node->details->uname);
-
-   * stop healthy resources before the
-   * stonith op
-   *
-   custom_action_order(
-   rsc, stop_key(rsc), NULL,
-   NULL,strdup(CRM_OP_FENCE),stonith_op,
-   pe_order_optional, data_set);
-*/
-    }
-
-    g_list_free(action_list);
-
-    /* Get a list of demote actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (action->node->details->online == FALSE || action->node->details->unclean == TRUE
-            || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-
-            if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-                pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit after %s is fenced",
-                            rsc->id, target->details->uname);
-            } else {
-                pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, target->details->uname);
-            }
-
-            /* The demote would never complete and is now implied by the
-             * fencing, so convert it into a pseudo-action.
-             */
-            pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
-
-            if (pe_rsc_is_bundled(rsc)) {
-                /* Do nothing, let the recovery be ordered after the parent's implied stop */
-
-            } else if (order_implicit) {
-                order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
-            }
-        }
-    }
-
-    g_list_free(action_list);
-}
-
-void
-rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    if (rsc->children) {
-        GList *gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            rsc_stonith_ordering(child_rsc, stonith_op, data_set);
-        }
-
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-
-    } else {
-        native_start_constraints(rsc, stonith_op, data_set);
-        native_stop_constraints(rsc, stonith_op, data_set);
-    }
 }
 
 void
