@@ -1094,27 +1094,50 @@ handle_dup:
     return cmd;
 }
 
+/*!
+ * \internal
+ * \brief Execute an action using the (internal) ocf:pacemaker:remote agent
+ *
+ * \param[in]  lrm_state       Executor state object for remote connection
+ * \param[in]  rsc_id          Connection resource ID
+ * \param[in]  action          Action to execute
+ * \param[in]  userdata        String to copy and pass to execution callback
+ * \param[in]  interval_ms     Action interval (in milliseconds)
+ * \param[in]  timeout_ms      Action timeout (in milliseconds)
+ * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
+ * \param[in]  params          Connection resource parameters
+ * \param[out] call_id         Where to store call ID on success
+ *
+ * \return Standard Pacemaker return code
+ * \note This takes ownership of \p params, which should not be used or freed
+ *       after calling this function.
+ */
 int
-remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-               const char *userdata, guint interval_ms,
-               int timeout,     /* ms */
-               int start_delay, /* ms */
-               lrmd_key_value_t * params)
+controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
+                              const char *action, const char *userdata,
+                              guint interval_ms, int timeout_ms,
+                              int start_delay_ms, lrmd_key_value_t *params,
+                              int *call_id)
 {
-    int rc = 0;
     lrm_state_t *connection_rsc = NULL;
     remote_ra_cmd_t *cmd = NULL;
     remote_ra_data_t *ra_data = NULL;
 
-    if (is_remote_ra_supported_action(action) == FALSE) {
-        rc = -EINVAL;
-        goto exec_done;
+    *call_id = 0;
+
+    CRM_CHECK((lrm_state != NULL) && (rsc_id != NULL) && (action != NULL)
+              && (userdata != NULL) && (call_id != NULL),
+              lrmd_key_value_freeall(params); return EINVAL);
+
+    if (!is_remote_ra_supported_action(action)) {
+        lrmd_key_value_freeall(params);
+        return EOPNOTSUPP;
     }
 
     connection_rsc = lrm_state_find(rsc_id);
-    if (!connection_rsc) {
-        rc = -EINVAL;
-        goto exec_done;
+    if (connection_rsc == NULL) {
+        lrmd_key_value_freeall(params);
+        return ENOTCONN;
     }
 
     remote_ra_data_init(connection_rsc);
@@ -1122,18 +1145,31 @@ remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
 
     cmd = handle_dup_monitor(ra_data, interval_ms, userdata);
     if (cmd) {
-        rc = cmd->call_id;
-        goto exec_done;
+        *call_id = cmd->call_id;
+        lrmd_key_value_freeall(params);
+        return pcmk_rc_ok;
     }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
+    if (cmd == NULL) {
+        lrmd_key_value_freeall(params);
+        return ENOMEM;
+    }
+
     cmd->owner = strdup(lrm_state->node_name);
     cmd->rsc_id = strdup(rsc_id);
     cmd->action = strdup(action);
     cmd->userdata = strdup(userdata);
+    if ((cmd->owner == NULL) || (cmd->rsc_id == NULL) || (cmd->action == NULL)
+        || (cmd->userdata == NULL)) {
+        free_cmd(cmd);
+        lrmd_key_value_freeall(params);
+        return ENOMEM;
+    }
+
     cmd->interval_ms = interval_ms;
-    cmd->timeout = timeout;
-    cmd->start_delay = start_delay;
+    cmd->timeout = timeout_ms;
+    cmd->start_delay = start_delay_ms;
     cmd->params = params;
     cmd->start_time = time(NULL);
 
@@ -1146,11 +1182,8 @@ remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     ra_data->cmds = g_list_append(ra_data->cmds, cmd);
     mainloop_set_trigger(ra_data->work);
 
-    return cmd->call_id;
-  exec_done:
-
-    lrmd_key_value_freeall(params);
-    return rc;
+    *call_id = cmd->call_id;
+    return pcmk_rc_ok;
 }
 
 /*!
