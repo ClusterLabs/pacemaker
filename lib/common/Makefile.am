@@ -26,7 +26,7 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
 SUBDIRS = tests
 
-noinst_HEADERS		= crmcommon_private.h
+noinst_HEADERS		= crmcommon_private.h mock_private.h
 
 libcrmcommon_la_LDFLAGS	= -version-info 41:0:7
 
