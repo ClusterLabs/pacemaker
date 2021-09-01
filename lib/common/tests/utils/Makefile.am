@@ -6,8 +6,14 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
+
+include $(top_srcdir)/lib/common/mock.mk
+
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/lib/common
 LDADD = $(top_builddir)/lib/common/libcrmcommon.la -lcmocka
+
+pcmk_hostname_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
+pcmk_hostname_test_LDFLAGS = -Wl,--wrap=uname
 
 include $(top_srcdir)/mk/glib-tap.mk
 
@@ -18,7 +24,8 @@ include $(top_srcdir)/mk/glib-tap.mk
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
 #
 # Add "_test" to the end of all test program names to simplify .gitignore.
-test_programs =	pcmk_str_is_infinity_test		\
+test_programs =	pcmk_hostname_test \
+		pcmk_str_is_infinity_test		\
 		pcmk_str_is_minus_infinity_test
 
 # If any extra data needs to be added to the source distribution, add it to the
