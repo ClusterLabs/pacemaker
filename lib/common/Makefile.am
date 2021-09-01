@@ -7,6 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/lib/common/mock.mk
 
 AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
 
@@ -14,6 +15,7 @@ MOSTLYCLEANFILES	= md5.c
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
+check_LTLIBRARIES = libcrmcommon_test.la
 
 # Disable -Wcast-qual if used, because we do some hacky casting,
 # and because libxml2 has some signatures that should be const but aren't
@@ -24,7 +26,11 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
-SUBDIRS = tests
+# Without "." here, check-recursive will run through the subdirectories first
+# and then run "make check" here.  This will fail, because there's things in
+# the subdirectories that need check_LTLIBRARIES built first.  Adding "." here
+# changes the order so the subdirectories are processed afterwards.
+SUBDIRS = . tests
 
 noinst_HEADERS		= crmcommon_private.h mock_private.h
 
@@ -91,6 +97,13 @@ libcrmcommon_la_SOURCES	+= xpath.c
 # but distclean chokes on that because it tries to include the source's .Plo
 # file, which may have already been cleaned.
 nodist_libcrmcommon_la_SOURCES	= md5.c
+
+libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
+libcrmcommon_test_la_SOURCES	+= mock.c
+libcrmcommon_test_la_LDFLAGS	= $(LDFLAGS_HARDENED_LIB) $(WRAPPED_FLAGS)
+libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS)
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
+nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
 
 md5.c: ../gnu/md5.c
 	cp "$<" "$@"
