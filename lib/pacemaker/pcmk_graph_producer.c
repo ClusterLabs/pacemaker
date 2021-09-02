@@ -1570,9 +1570,9 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
     return true;
 }
 
-static bool
-graph_has_loop(pe_action_t *init_action, pe_action_t *action,
-               pe_action_wrapper_t *input)
+bool
+pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+                     pe_action_wrapper_t *input)
 {
     bool has_loop = false;
 
@@ -1616,8 +1616,8 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     for (GList *iter = input->action->actions_before;
          iter != NULL; iter = iter->next) {
 
-        if (graph_has_loop(init_action, input->action,
-                           (pe_action_wrapper_t *) iter->data)) {
+        if (pcmk__graph_has_loop(init_action, input->action,
+                                 (pe_action_wrapper_t *) iter->data)) {
             // Recursive call already logged a debug message
             has_loop = true;
             goto done;
@@ -1636,38 +1636,6 @@ done:
                   input->type);
     }
     return has_loop;
-}
-
-bool
-pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
-{
-    /* Prevent user-defined ordering constraints between resources
-     * running in a guest node and the resource that defines that node.
-     */
-    if (!pcmk_is_set(input->type, pe_order_preserve)
-        && action->rsc && action->rsc->fillers
-        && input->action->rsc && input->action->node
-        && input->action->node->details->remote_rsc
-        && (input->action->node->details->remote_rsc->container == action->rsc)) {
-        crm_warn("Invalid ordering constraint between %s and %s",
-                 input->action->rsc->id, action->rsc->id);
-        return true;
-    }
-
-    /* If there's an order like
-     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
-     *
-     * then rscA is being migrated from node1 to node2, while rscB is being
-     * migrated from node2 to node1. If there would be a graph loop,
-     * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
-     */
-    if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
-        && graph_has_loop(action, action, input)) {
-        return true;
-    }
-
-    return false;
 }
 
 // Remove duplicate inputs (regardless of flags)

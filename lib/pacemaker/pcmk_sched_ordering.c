@@ -1209,3 +1209,53 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
         return unpack_simple_rsc_order(xml_obj, data_set);
     }
 }
+
+static bool
+ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
+{
+    /* Prevent user-defined ordering constraints between resources
+     * running in a guest node and the resource that defines that node.
+     */
+    if (!pcmk_is_set(input->type, pe_order_preserve)
+        && action->rsc && action->rsc->fillers
+        && input->action->rsc && input->action->node
+        && input->action->node->details->remote_rsc
+        && (input->action->node->details->remote_rsc->container == action->rsc)) {
+        crm_warn("Invalid ordering constraint between %s and %s",
+                 input->action->rsc->id, action->rsc->id);
+        return true;
+    }
+
+    /* If there's an order like
+     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
+     *
+     * then rscA is being migrated from node1 to node2, while rscB is being
+     * migrated from node2 to node1. If there would be a graph loop,
+     * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
+     */
+    if ((input->type == pe_order_load) && action->rsc
+        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
+        && pcmk__graph_has_loop(action, action, input)) {
+        return true;
+    }
+
+    return false;
+}
+
+void
+pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
+{
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+        pe_action_wrapper_t *input = NULL;
+
+        for (GList *input_iter = action->actions_before;
+             input_iter != NULL; input_iter = input_iter->next) {
+
+            input = (pe_action_wrapper_t *) input_iter->data;
+            if (ordering_is_invalid(action, input)) {
+                input->type = pe_order_none;
+            }
+        }
+    }
+}

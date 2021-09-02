@@ -17,6 +17,10 @@
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
 G_GNUC_INTERNAL
+bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+                          pe_action_wrapper_t *input);
+
+G_GNUC_INTERNAL
 void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
@@ -79,6 +83,9 @@ void pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_task,
 
 G_GNUC_INTERNAL
 void pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__disable_invalid_orderings(pe_working_set_t *data_set);
 
 /*!
  * \internal

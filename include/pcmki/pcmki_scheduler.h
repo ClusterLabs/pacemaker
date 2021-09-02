@@ -84,7 +84,6 @@ extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * d
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                 crm_time_t *now);
-bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern const char *transition_idle_timeout;
 

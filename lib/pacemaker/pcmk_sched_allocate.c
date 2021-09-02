@@ -2679,20 +2679,7 @@ stage7(pe_working_set_t * data_set)
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
     g_list_foreach(data_set->actions, (GFunc) update_action, data_set);
 
-    // Check for invalid orderings
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-        pe_action_wrapper_t *input = NULL;
-
-        for (GList *input_iter = action->actions_before;
-             input_iter != NULL; input_iter = input_iter->next) {
-
-            input = (pe_action_wrapper_t *) input_iter->data;
-            if (pcmk__ordering_is_invalid(action, input)) {
-                input->type = pe_order_none;
-            }
-        }
-    }
+    pcmk__disable_invalid_orderings(data_set);
 
     /* stage7 only ever outputs to the log, so ignore whatever output object was
      * previously set and just log instead.
