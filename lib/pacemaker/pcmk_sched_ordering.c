@@ -504,8 +504,8 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
 {
     char *lh_task = NULL;
     char *rh_task = NULL;
-    gboolean rh_migratable;
-    gboolean lh_migratable;
+    bool rh_migratable;
+    bool lh_migratable;
 
     // Only orderings between two different resources are relevant
     if ((order->lh_rsc == NULL) || (order->rh_rsc == NULL)
@@ -741,7 +741,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
     pe_resource_t *resource = NULL;
 
     int local_kind = parent_kind;
-    gboolean sequential = FALSE;
+    bool sequential = false;
     enum pe_ordering flags = pe_order_optional;
     enum ordering_symmetry symmetry;
 
@@ -867,7 +867,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
     const char *require_all_s = crm_element_value(set1, "require-all");
-    gboolean require_all = require_all_s ? crm_is_true(require_all_s) : TRUE;
+    bool require_all = require_all_s? crm_is_true(require_all_s) : true;
 
     enum pe_ordering flags = pe_order_none;
 
@@ -891,7 +891,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
          * During shutdown neither B nor can shutdown until D is down, so simply
          * turn require_all back on.
          */
-        require_all = TRUE;
+        require_all = true;
     }
 
     // @TODO is action_2 correct here?
@@ -1048,7 +1048,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
-    gboolean any_sets = FALSE;
+    bool any_sets = false;
 
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
@@ -1100,7 +1100,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             crm_xml_add(rsc_set_first, "action", action_first);
             xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_FIRST_ACTION);
         }
-        any_sets = TRUE;
+        any_sets = true;
     }
 
     // Convert template/tag reference in "then" into resource_set under constraint
@@ -1117,7 +1117,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             crm_xml_add(rsc_set_then, "action", action_then);
             xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_THEN_ACTION);
         }
-        any_sets = TRUE;
+        any_sets = true;
     }
 
     if (any_sets) {
