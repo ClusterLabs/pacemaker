@@ -18,6 +18,119 @@
 
 #include "libpacemaker_private.h"
 
+/*!
+ * \brief Check whether a ticket constraint matches a resource by role
+ *
+ * \param[in] rsc_ticket  Ticket constraint
+ * \param[in] rsc         Resource to compare with ticket
+ *
+ * \param[in] true if constraint has no role or resource's role matches
+ *            constraint's, otherwise false
+ */
+static bool
+ticket_role_matches(pe_resource_t *rsc_lh, rsc_ticket_t *rsc_ticket)
+{
+    if ((rsc_ticket->role_lh == RSC_ROLE_UNKNOWN)
+        || (rsc_ticket->role_lh == rsc_lh->role)) {
+        return true;
+    }
+    pe_rsc_trace(rsc_lh, "LH: Skipping constraint: \"%s\" state filter",
+                 role2text(rsc_ticket->role_lh));
+    return false;
+}
+
+/*!
+ * \brief Create location constraints and fencing as needed for a ticket
+ *
+ * \param[in] rsc_lh      Resource affected by ticket
+ * \param[in] rsc_ticket  Ticket
+ * \param[in] data_set    Cluster working set
+ */
+static void
+constraints_for_ticket(pe_resource_t *rsc_lh, rsc_ticket_t *rsc_ticket,
+                       pe_working_set_t *data_set)
+{
+    GList *gIter = NULL;
+
+    CRM_CHECK((rsc_lh != NULL) && (rsc_ticket != NULL), return);
+
+    if (rsc_ticket->ticket->granted && !rsc_ticket->ticket->standby) {
+        return;
+    }
+
+    if (rsc_lh->children) {
+        pe_rsc_trace(rsc_lh, "Processing ticket dependencies from %s", rsc_lh->id);
+        for (gIter = rsc_lh->children; gIter != NULL; gIter = gIter->next) {
+            constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket,
+                                  data_set);
+        }
+        return;
+    }
+
+    pe_rsc_trace(rsc_lh, "%s: Processing ticket dependency on %s (%s, %s)",
+                 rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id,
+                 role2text(rsc_ticket->role_lh));
+
+    if (!rsc_ticket->ticket->granted && (rsc_lh->running_on != NULL)) {
+
+        switch (rsc_ticket->loss_policy) {
+            case loss_ticket_stop:
+                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__",
+                                  data_set);
+                break;
+
+            case loss_ticket_demote:
+                // Promotion score will be set to -INFINITY in promotion_order()
+                if (rsc_ticket->role_lh != RSC_ROLE_PROMOTED) {
+                    resource_location(rsc_lh, NULL, -INFINITY,
+                                      "__loss_of_ticket__", data_set);
+                }
+                break;
+
+            case loss_ticket_fence:
+                if (!ticket_role_matches(rsc_lh, rsc_ticket)) {
+                    return;
+                }
+
+                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__",
+                                  data_set);
+
+                for (gIter = rsc_lh->running_on; gIter != NULL;
+                     gIter = gIter->next) {
+                    pe_fence_node(data_set, (pe_node_t *) gIter->data,
+                                  "deadman ticket was lost", FALSE);
+                }
+                break;
+
+            case loss_ticket_freeze:
+                if (!ticket_role_matches(rsc_lh, rsc_ticket)) {
+                    return;
+                }
+                if (rsc_lh->running_on != NULL) {
+                    pe__clear_resource_flags(rsc_lh, pe_rsc_managed);
+                    pe__set_resource_flags(rsc_lh, pe_rsc_block);
+                }
+                break;
+        }
+
+    } else if (!rsc_ticket->ticket->granted) {
+
+        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
+            resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__",
+                              data_set);
+        }
+
+    } else if (rsc_ticket->ticket->standby) {
+
+        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
+            resource_location(rsc_lh, NULL, -INFINITY, "__ticket_standby__",
+                              data_set);
+        }
+    }
+}
+
 static void
 rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
                const char *state_lh, const char *loss_policy,
@@ -104,7 +217,7 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
                                                  new_rsc_ticket);
 
     if (!(new_rsc_ticket->ticket->granted) || new_rsc_ticket->ticket->standby) {
-        rsc_ticket_constraint(rsc_lh, new_rsc_ticket, data_set);
+        constraints_for_ticket(rsc_lh, new_rsc_ticket, data_set);
     }
 }
 
