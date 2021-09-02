@@ -189,7 +189,8 @@ CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
 
     cancel = pe_cancel_op(rsc, task, interval_ms, active_node, data_set);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
-    custom_action_order(rsc, stop_key(rsc), NULL, rsc, NULL, cancel, pe_order_optional, data_set);
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
+                       pe_order_optional, data_set);
 }
 
 static gboolean
@@ -1248,10 +1249,10 @@ order_start_then_action(pe_resource_t *lh_rsc, pe_action_t *rh_action,
                         enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_rsc && rh_action && data_set) {
-        custom_action_order(lh_rsc, start_key(lh_rsc), NULL,
-                            rh_action->rsc, NULL, rh_action,
-                            pe_order_preserve | pe_order_runnable_left | extra,
-                            data_set);
+        pcmk__new_ordering(lh_rsc, start_key(lh_rsc), NULL,
+                           rh_action->rsc, NULL, rh_action,
+                           pe_order_preserve|pe_order_runnable_left|extra,
+                           data_set);
     }
 }
 
@@ -1260,9 +1261,9 @@ order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
                        enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_action && rh_rsc && data_set) {
-        custom_action_order(lh_action->rsc, NULL, lh_action,
-                            rh_rsc, stop_key(rh_rsc), NULL,
-                            pe_order_preserve | extra, data_set);
+        pcmk__new_ordering(lh_action->rsc, NULL, lh_action,
+                           rh_rsc, stop_key(rh_rsc), NULL,
+                           pe_order_preserve|extra, data_set);
     }
 }
 
@@ -1287,9 +1288,9 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
             /* We can't use order_action_then_stop() here because its
              * pe_order_preserve breaks things
              */
-            custom_action_order(clear_op->rsc, NULL, clear_op,
-                                rsc, stop_key(rsc), NULL,
-                                pe_order_optional, data_set);
+            pcmk__new_ordering(clear_op->rsc, NULL, clear_op,
+                               rsc, stop_key(rsc), NULL,
+                               pe_order_optional, data_set);
         }
     }
 }
@@ -2097,14 +2098,9 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         if (action->rsc->is_remote_node &&
             pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
 
-            custom_action_order(action->rsc,
-                NULL,
-                action,
-                action->rsc,
-                pcmk__op_key(action->rsc->id, RSC_START, 0),
-                NULL,
-                pe_order_optional,
-                data_set);
+            pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
+                               pcmk__op_key(action->rsc->id, RSC_START, 0),
+                               NULL, pe_order_optional, data_set);
 
             continue;
         }
@@ -2146,9 +2142,9 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
                 if ((rsc_action->node->details != action->node->details)
                     && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
-                    custom_action_order(remote, start_key(remote), NULL,
-                                        action->rsc, NULL, rsc_action,
-                                        pe_order_optional, data_set);
+                    pcmk__new_ordering(remote, start_key(remote), NULL,
+                                       action->rsc, NULL, rsc_action,
+                                       pe_order_optional, data_set);
                 }
             }
         }

@@ -641,9 +641,9 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
                      node->details->uname);
         pe__clear_action_flags(action, pe_action_optional);
-        custom_action_order(action->rsc, NULL, action,
-                            NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                            pe_order_optional | pe_order_runnable_left, data_set);
+        pcmk__new_ordering(action->rsc, NULL, action,
+                           NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
+                           pe_order_optional|pe_order_runnable_left, data_set);
     }
 
     return TRUE;

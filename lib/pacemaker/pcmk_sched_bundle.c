@@ -343,11 +343,6 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
                                          pe_order_implies_first_printed,
                                          data_set);
         }
-
-    } else {
-//    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-//        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-//                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional, data_set);
     }
 }
 
@@ -1015,13 +1010,13 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                     if ((other != replica) && (other != NULL)
                         && (other->container != NULL)) {
 
-                        custom_action_order(replica->container,
-                                            pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                            NULL, other->container,
-                                            pcmk__op_key(other->container->id, RSC_START, 0),
-                                            NULL,
-                                            pe_order_optional|pe_order_same_node,
-                                            data_set);
+                        pcmk__new_ordering(replica->container,
+                                           pcmk__op_key(replica->container->id, RSC_STATUS, 0),
+                                           NULL, other->container,
+                                           pcmk__op_key(other->container->id, RSC_START, 0),
+                                           NULL,
+                                           pe_order_optional|pe_order_same_node,
+                                           data_set);
                     }
                 }
             }
@@ -1045,10 +1040,10 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 any_created = TRUE;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
-                custom_action_order(replica->container,
-                                    pcmk__op_key(replica->container->id, RSC_START, 0),
-                                    NULL, replica->remote, NULL, probe,
-                                    pe_order_probe, data_set);
+                pcmk__new_ordering(replica->container,
+                                   pcmk__op_key(replica->container->id, RSC_START, 0),
+                                   NULL, replica->remote, NULL, probe,
+                                   pe_order_probe, data_set);
             }
         }
     }

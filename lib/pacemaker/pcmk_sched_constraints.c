@@ -489,14 +489,14 @@ clone_min_ordering(const char *id,
 
         pe_resource_t *child = rIter->data;
 
-        custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
+        pcmk__new_ordering(child, pcmk__op_key(child->id, action_first, 0),
                             NULL, NULL, NULL, clone_min_met,
                             pe_order_one_or_more|pe_order_implies_then_printed,
                             data_set);
     }
 
     // Order "then" action after the pseudo-action (if runnable)
-    custom_action_order(NULL, NULL, clone_min_met, rsc_then,
+    pcmk__new_ordering(NULL, NULL, clone_min_met, rsc_then,
                         pcmk__op_key(rsc_then->id, action_then, 0),
                         NULL, flags|pe_order_runnable_left, data_set);
 }
@@ -886,7 +886,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         if (lh_migratable && rh_migratable) {
             /* A start then B start
              * A migrate_from then B migrate_to */
-            custom_action_order(order->lh_rsc,
+            pcmk__new_ordering(order->lh_rsc,
                                 pcmk__op_key(order->lh_rsc->id, RSC_MIGRATED, 0),
                                 NULL, order->rh_rsc,
                                 pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
@@ -900,7 +900,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
 
             /* A start then B start
              * A start then B migrate_to... only if A start is not a part of a migration*/
-            custom_action_order(order->lh_rsc,
+            pcmk__new_ordering(order->lh_rsc,
                                 pcmk__op_key(order->lh_rsc->id, RSC_START, 0),
                                 NULL, order->rh_rsc,
                                 pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
@@ -917,7 +917,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         /* rh side is at the bottom of the stack during a stop. If we have a constraint
          * stop B then stop A, if B is migrating via stop/start, and A is migrating using migration actions,
          * we need to enforce that A's migrate_to action occurs after B's stop action. */
-        custom_action_order(order->lh_rsc,
+        pcmk__new_ordering(order->lh_rsc,
                             pcmk__op_key(order->lh_rsc->id, RSC_STOP, 0), NULL,
                             order->rh_rsc,
                             pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
@@ -926,7 +926,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         /* We need to build the stop constraint against migrate_from as well
          * to account for partial migrations. */
         if (order->rh_rsc->partial_migration_target) {
-            custom_action_order(order->lh_rsc,
+            pcmk__new_ordering(order->lh_rsc,
                                 pcmk__op_key(order->lh_rsc->id, RSC_STOP, 0),
                                 NULL, order->rh_rsc,
                                 pcmk__op_key(order->rh_rsc->id, RSC_MIGRATED, 0),
@@ -939,7 +939,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         if (rh_migratable) {
             /* A promote then B start
              * A promote then B migrate_to */
-            custom_action_order(order->lh_rsc,
+            pcmk__new_ordering(order->lh_rsc,
                                 pcmk__op_key(order->lh_rsc->id, RSC_PROMOTE, 0),
                                 NULL, order->rh_rsc,
                                 pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
@@ -952,14 +952,14 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         if (rh_migratable) {
             /* A demote then B stop
              * A demote then B migrate_to */
-            custom_action_order(order->lh_rsc, pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0), NULL,
+            pcmk__new_ordering(order->lh_rsc, pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0), NULL,
                                 order->rh_rsc, pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0), NULL,
                                 flags, data_set);
 
             /* We need to build the demote constraint against migrate_from as well
              * to account for partial migrations. */
             if (order->rh_rsc->partial_migration_target) {
-                custom_action_order(order->lh_rsc,
+                pcmk__new_ordering(order->lh_rsc,
                                     pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0),
                                     NULL, order->rh_rsc,
                                     pcmk__op_key(order->rh_rsc->id, RSC_MIGRATED, 0),
@@ -974,26 +974,23 @@ cleanup_order:
 }
 
 /* LHS before RHS */
-int
-custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * lh_action,
+void
+pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task, pe_action_t *lh_action,
                     pe_resource_t * rh_rsc, char *rh_action_task, pe_action_t * rh_action,
                     enum pe_ordering type, pe_working_set_t * data_set)
 {
     pe__ordering_t *order = NULL;
+
+    // One of action or resource must be specified for each side
+    CRM_CHECK(((lh_action != NULL) || (lh_rsc != NULL))
+              && ((rh_action != NULL) || (rh_rsc != NULL)),
+              free(lh_action_task); free(rh_action_task); return);
 
     if (lh_rsc == NULL && lh_action) {
         lh_rsc = lh_action->rsc;
     }
     if (rh_rsc == NULL && rh_action) {
         rh_rsc = rh_action->rsc;
-    }
-
-    if ((lh_action == NULL && lh_rsc == NULL)
-        || (rh_action == NULL && rh_rsc == NULL)) {
-        crm_err("Invalid ordering (bug?)");
-        free(lh_action_task);
-        free(rh_action_task);
-        return -1;
     }
 
     order = calloc(1, sizeof(pe__ordering_t));
@@ -1030,8 +1027,6 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
 
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints, order);
     handle_migration_ordering(order, data_set);
-
-    return order->id;
 }
 
 static gboolean
@@ -1104,7 +1099,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
                 pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
                 char *then_key = pcmk__op_key(then_rsc->id, action, 0);
 
-                custom_action_order(resource, strdup(key), NULL, then_rsc, then_key, NULL,
+                pcmk__new_ordering(resource, strdup(key), NULL, then_rsc, then_key, NULL,
                                     flags, data_set);
             }
 
@@ -1206,7 +1201,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 
             /* Add an ordering constraint between every element in set1 and the pseudo action.
              * If any action in set1 is runnable the pseudo action will be runnable. */
-            custom_action_order(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
+            pcmk__new_ordering(rsc_1, pcmk__op_key(rsc_1->id, action_1, 0),
                                 NULL, NULL, NULL, unordered_action,
                                 pe_order_one_or_more|pe_order_implies_then_printed,
                                 data_set);
@@ -1218,7 +1213,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
 
             /* Add an ordering constraint between the pseudo action and every element in set2.
              * If the pseudo action is runnable, every action in set2 will be runnable */
-            custom_action_order(NULL, NULL, unordered_action,
+            pcmk__new_ordering(NULL, NULL, unordered_action,
                                 rsc_2, pcmk__op_key(rsc_2->id, action_2, 0),
                                 NULL, flags|pe_order_runnable_left, data_set);
         }

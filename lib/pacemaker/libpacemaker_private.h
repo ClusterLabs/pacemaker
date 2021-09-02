@@ -71,6 +71,12 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_task,
+                        pe_action_t *lh_action, pe_resource_t *rh_rsc,
+                        char *rh_task, pe_action_t *rh_action,
+                        enum pe_ordering type, pe_working_set_t *data_set);
+
 /*!
  * \internal
  * \brief Create a new ordering between two resource actions
@@ -84,7 +90,7 @@ void pcmk__block_colocated_starts(pe_action_t *action,
  */
 #define pcmk__order_resource_actions(lh_rsc, lh_task, rh_rsc, rh_task,      \
                                      flags, data_set)                       \
-    custom_action_order((lh_rsc), pcmk__op_key((lh_rsc)->id, (lh_task), 0), \
+    pcmk__new_ordering((lh_rsc), pcmk__op_key((lh_rsc)->id, (lh_task), 0),  \
                        NULL,                                                \
                        (rh_rsc), pcmk__op_key((rh_rsc)->id, (rh_task), 0),  \
                        NULL, (flags), (data_set))

@@ -80,10 +80,6 @@ extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *
 extern gboolean shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op,
                                      pe_working_set_t * data_set);
 
-extern int custom_action_order(pe_resource_t * lh_rsc, char *lh_task, pe_action_t * lh_action,
-                               pe_resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
-                               enum pe_ordering type, pe_working_set_t * data_set);
-
 extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
