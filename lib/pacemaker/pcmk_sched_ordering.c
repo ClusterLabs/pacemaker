@@ -1320,3 +1320,217 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op,
                            pe_order_optional|pe_order_runnable_left, data_set);
     }
 }
+
+/*!
+ * \brief Find resource actions matching directly or as child
+ *
+ * \param[in] rsc           Resource to check
+ * \param[in] original_key  Action key to search for (possibly referencing
+ *                          parent of \rsc)
+ *
+ * \return Newly allocated list of matching actions
+ * \note It is the caller's responsibility to free the result with g_list_free()
+ */
+static GList *
+find_actions_by_task(pe_resource_t *rsc, const char *original_key)
+{
+    // Search under given task key directly
+    GList *list = find_actions(rsc->actions, original_key, NULL);
+
+    if (list == NULL) {
+        // Search again using this resource's ID
+        char *key = NULL;
+        char *task = NULL;
+        guint interval_ms = 0;
+
+        if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
+            key = pcmk__op_key(rsc->id, task, interval_ms);
+            list = find_actions(rsc->actions, key, NULL);
+            free(key);
+            free(task);
+        } else {
+            crm_err("Invalid operation key (bug?): %s", original_key);
+        }
+    }
+    return list;
+}
+
+static void
+rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
+               pe__ordering_t *order)
+{
+    GList *rh_actions = NULL;
+    pe_action_t *rh_action = NULL;
+    enum pe_ordering type;
+
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(order != NULL, return);
+
+    type = order->type;
+    rh_action = order->rh_action;
+    crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
+
+    if (rh_action != NULL) {
+        rh_actions = g_list_prepend(NULL, rh_action);
+
+    } else if (rsc != NULL) {
+        rh_actions = find_actions_by_task(rsc, order->rh_action_task);
+    }
+
+    if (rh_actions == NULL) {
+        pe_rsc_trace(rsc,
+                     "Ignoring constraint %d: then (%s for %s) not found",
+                     order->id, order->rh_action_task, rsc->id);
+        return;
+    }
+
+    if ((lh_action != NULL) && (lh_action->rsc == rsc)
+        && pcmk_is_set(lh_action->flags, pe_action_dangle)) {
+
+        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s",
+                     lh_action->uuid, order->rh_action_task);
+        pe__clear_order_flags(type, pe_order_implies_then);
+    }
+
+    for (GList *gIter = rh_actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *rh_action_iter = (pe_action_t *) gIter->data;
+
+        if (lh_action) {
+            order_actions(lh_action, rh_action_iter, type);
+
+        } else if (type & pe_order_implies_then) {
+            pe__clear_action_flags(rh_action_iter, pe_action_runnable);
+            crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
+        } else {
+            crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
+        }
+    }
+
+    g_list_free(rh_actions);
+}
+
+static void
+rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
+                pe_working_set_t *data_set)
+{
+    GList *lh_actions = NULL;
+    pe_action_t *lh_action = order->lh_action;
+    pe_resource_t *rh_rsc = order->rh_rsc;
+
+    CRM_ASSERT(lh_rsc != NULL);
+    pe_rsc_trace(lh_rsc, "Applying ordering constraint %d (first: %s)",
+                 order->id, lh_rsc->id);
+
+    if (lh_action != NULL) {
+        lh_actions = g_list_prepend(NULL, lh_action);
+
+    } else {
+        lh_actions = find_actions_by_task(lh_rsc, order->lh_action_task);
+    }
+
+    if ((lh_actions == NULL) && (lh_rsc == rh_rsc)) {
+        pe_rsc_trace(lh_rsc,
+                     "Ignoring constraint %d: first (%s for %s) not found",
+                     order->id, order->lh_action_task, lh_rsc->id);
+
+    } else if (lh_actions == NULL) {
+        char *key = NULL;
+        char *op_type = NULL;
+        guint interval_ms = 0;
+
+        parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
+        key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
+
+        if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED)
+            && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
+            free(key);
+            pe_rsc_trace(lh_rsc,
+                         "Ignoring constraint %d: first (%s for %s) not found",
+                         order->id, order->lh_action_task, lh_rsc->id);
+
+        } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
+                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+            free(key);
+            pe_rsc_trace(lh_rsc,
+                         "Ignoring constraint %d: first (%s for %s) not found",
+                         order->id, order->lh_action_task, lh_rsc->id);
+
+        } else {
+            pe_rsc_trace(lh_rsc,
+                         "Creating first (%s for %s) for constraint %d ",
+                         order->lh_action_task, lh_rsc->id, order->id);
+            lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
+            lh_actions = g_list_prepend(NULL, lh_action);
+        }
+
+        free(op_type);
+    }
+
+    if (rh_rsc == NULL) {
+        if (order->rh_action == NULL) {
+            pe_rsc_trace(lh_rsc, "Ignoring constraint %d: then not found",
+                         order->id);
+            return;
+        }
+        rh_rsc = order->rh_action->rsc;
+    }
+    for (GList *gIter = lh_actions; gIter != NULL; gIter = gIter->next) {
+        lh_action = (pe_action_t *) gIter->data;
+
+        if (rh_rsc == NULL) {
+            order_actions(lh_action, order->rh_action, order->type);
+
+        } else {
+            rsc_order_then(lh_action, rh_rsc, order);
+        }
+    }
+
+    g_list_free(lh_actions);
+}
+
+void
+pcmk__apply_orderings(pe_working_set_t *data_set)
+{
+    crm_trace("Applying ordering constraints");
+
+    /* Don't ask me why, but apparently they need to be processed in
+     * the order they were created in... go figure
+     *
+     * Also g_list_append() has horrendous performance characteristics
+     * So we need to use g_list_prepend() and then reverse the list here
+     */
+    data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
+
+    for (GList *gIter = data_set->ordering_constraints;
+         gIter != NULL; gIter = gIter->next) {
+
+        pe__ordering_t *order = gIter->data;
+        pe_resource_t *rsc = order->lh_rsc;
+
+        if (rsc != NULL) {
+            rsc_order_first(rsc, order, data_set);
+            continue;
+        }
+
+        rsc = order->rh_rsc;
+        if (rsc != NULL) {
+            rsc_order_then(order->lh_action, rsc, order);
+
+        } else {
+            crm_trace("Applying ordering constraint %d (non-resource actions)",
+                      order->id);
+            order_actions(order->lh_action, order->rh_action, order->type);
+        }
+    }
+
+    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocated_starts,
+                   data_set);
+
+    crm_trace("Ordering probes");
+    pcmk__order_probes(data_set);
+
+    crm_trace("Updating %d actions", g_list_length(data_set->actions));
+    g_list_foreach(data_set->actions, (GFunc) update_action, data_set);
+
+    pcmk__disable_invalid_orderings(data_set);
+}

@@ -1641,11 +1641,12 @@ deduplicate_inputs(pe_action_t *action)
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
- *       their original settings. That means this MUST be called after stage7()
- *       is complete, and nothing after this should rely on those type flags.
- *       (For example, some code looks for type equal to some flag rather than
- *       whether the flag is set, and some code looks for particular
- *       combinations of flags -- such code must be done before stage8().)
+ *       their original settings. That means this MUST be called after
+ *       pcmk__apply_orderings() is complete, and nothing after this should rely
+ *       on those type flags. (For example, some code looks for type equal to
+ *       some flag rather than whether the flag is set, and some code looks for
+ *       particular combinations of flags -- such code must be done before
+ *       stage8().)
  */
 void
 graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
