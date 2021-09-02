@@ -14,54 +14,6 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
-pe__location_t *
-rsc2node_new(const char *id, pe_resource_t *rsc,
-             int node_weight, const char *discover_mode,
-             pe_node_t *foo_node, pe_working_set_t *data_set)
-{
-    pe__location_t *new_con = NULL;
-
-    if (rsc == NULL || id == NULL) {
-        pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
-        return NULL;
-
-    } else if (foo_node == NULL) {
-        CRM_CHECK(node_weight == 0, return NULL);
-    }
-
-    new_con = calloc(1, sizeof(pe__location_t));
-    if (new_con != NULL) {
-        new_con->id = strdup(id);
-        new_con->rsc_lh = rsc;
-        new_con->node_list_rh = NULL;
-        new_con->role_filter = RSC_ROLE_UNKNOWN;
-
-
-        if (pcmk__str_eq(discover_mode, "always", pcmk__str_null_matches | pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_always;
-        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_never;
-        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_exclusive;
-            rsc->exclusive_discover = TRUE;
-        } else {
-            pe_err("Invalid %s value %s in location constraint", XML_LOCATION_ATTR_DISCOVERY, discover_mode);
-        }
-
-        if (foo_node != NULL) {
-            pe_node_t *copy = pe__copy_node(foo_node);
-
-            copy->weight = node_weight;
-            new_con->node_list_rh = g_list_prepend(NULL, copy);
-        }
-
-        data_set->placement_constraints = g_list_prepend(data_set->placement_constraints, new_con);
-        rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
-    }
-
-    return new_con;
-}
-
 gboolean
 can_run_resources(const pe_node_t * node)
 {
