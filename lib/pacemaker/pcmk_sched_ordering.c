@@ -32,7 +32,7 @@ enum ordering_symmetry {
         __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
         if (__rsc == NULL) {                                                    \
             pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return FALSE;                                                       \
+            return pcmk_rc_schema_validation;                                   \
         }                                                                       \
     } while (0)
 
@@ -727,9 +727,9 @@ pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
  * \param[in]  parent_symmetrical_s   rsc_order XML "symmetrical" attribute
  * \param[in]  data_set               Cluster working set
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
                  const char *parent_symmetrical_s, pe_working_set_t *data_set)
 {
@@ -833,7 +833,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
 
   done:
     g_list_free(resources);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -846,9 +846,9 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
  * \param[in] data_set  Cluster working set
  * \param[in] symmetry  Which ordering symmetry applies to this relation
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
                enum pe_order_kind kind, pe_working_set_t *data_set,
                enum ordering_symmetry symmetry)
@@ -935,7 +935,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
                                NULL, flags|pe_order_runnable_left, data_set);
         }
 
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (crm_is_true(sequential_1)) {
@@ -1018,7 +1018,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
         }
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1168,22 +1168,33 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
-            || !unpack_order_set(set, kind, invert, data_set)) {
+            || (unpack_order_set(set, kind, invert, data_set) != pcmk_rc_ok)) {
+
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
             }
             return;
         }
 
-        if ((last != NULL)
-            && (!order_rsc_sets(id, last, set, kind, data_set, symmetry)
-                || ((symmetry == ordering_symmetric)
-                    && !order_rsc_sets(id, set, last, kind, data_set,
-                                       ordering_symmetric_inverse)))) {
-            if (expanded_xml != NULL) {
-                free_xml(expanded_xml);
+        if (last != NULL) {
+
+            if (order_rsc_sets(id, last, set, kind, data_set,
+                               symmetry) != pcmk_rc_ok) {
+                if (expanded_xml != NULL) {
+                    free_xml(expanded_xml);
+                }
+                return;
             }
-            return;
+
+            if ((symmetry == ordering_symmetric)
+                && (order_rsc_sets(id, set, last, kind, data_set,
+                                   ordering_symmetric_inverse) != pcmk_rc_ok)) {
+                if (expanded_xml != NULL) {
+                    free_xml(expanded_xml);
+                }
+                return;
+            }
+
         }
         last = set;
     }
