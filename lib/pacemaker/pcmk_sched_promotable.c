@@ -12,6 +12,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
@@ -28,16 +30,19 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
         if (clone_data->ordered && last != NULL) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* last child promote before promoted started */
-            new_rsc_order(last, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
+            pcmk__order_resource_actions(last, RSC_PROMOTE, rsc, RSC_PROMOTED,
+                                         type, data_set);
         }
         return;
     }
 
     /* child promote before global promoted */
-    new_rsc_order(child, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
+    pcmk__order_resource_actions(child, RSC_PROMOTE, rsc, RSC_PROMOTED, type,
+                                 data_set);
 
     /* global promote before child promote */
-    new_rsc_order(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
+    pcmk__order_resource_actions(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type,
+                                 data_set);
 
     if (clone_data->ordered) {
         pe_rsc_trace(rsc, "Ordered version");
@@ -48,7 +53,8 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
         }
         /* else: child/child relative promote */
         order_start_start(last, child, type);
-        new_rsc_order(last, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
+        pcmk__order_resource_actions(last, RSC_PROMOTE, child, RSC_PROMOTE,
+                                     type, data_set);
 
     } else {
         pe_rsc_trace(rsc, "Un-ordered version");
@@ -64,27 +70,32 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
         if (clone_data->ordered && last != NULL) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* global demote before first child demote */
-            new_rsc_order(rsc, RSC_DEMOTE, last, RSC_DEMOTE, pe_order_optional, data_set);
+            pcmk__order_resource_actions(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
+                                         pe_order_optional, data_set);
         }
         return;
     }
 
     /* child demote before global demoted */
-    new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_implies_then_printed, data_set);
+    pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
+                                 pe_order_implies_then_printed, data_set);
 
     /* global demote before child demote */
-    new_rsc_order(rsc, RSC_DEMOTE, child, RSC_DEMOTE, pe_order_implies_first_printed, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, child, RSC_DEMOTE,
+                                 pe_order_implies_first_printed, data_set);
 
     if (clone_data->ordered && last != NULL) {
         pe_rsc_trace(rsc, "Ordered version");
 
         /* child/child relative demote */
-        new_rsc_order(child, RSC_DEMOTE, last, RSC_DEMOTE, type, data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, type,
+                                     data_set);
 
     } else if (clone_data->ordered) {
         pe_rsc_trace(rsc, "Ordered version (1st node)");
         /* first child stop before global stopped */
-        new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type, data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type,
+                                     data_set);
 
     } else {
         pe_rsc_trace(rsc, "Un-ordered version");
@@ -889,25 +900,32 @@ void
 promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     /* global stopped before start */
-    new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+                                 pe_order_optional, data_set);
 
     /* global stopped before promote */
-    new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 
     /* global demoted before start */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_START, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
+                                 pe_order_optional, data_set);
 
     /* global started before promote */
-    new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 
     /* global demoted before stop */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+                                 pe_order_optional, data_set);
 
     /* global demote before demoted */
-    new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
+                                 pe_order_optional, data_set);
 
     /* global demoted before promote */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 }
 
 
@@ -926,7 +944,8 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         /* child demote before promote */
-        new_rsc_order(child_rsc, RSC_DEMOTE, child_rsc, RSC_PROMOTE, pe_order_optional, data_set);
+        pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
+                                     RSC_PROMOTE, pe_order_optional, data_set);
 
         child_promoting_constraints(clone_data, pe_order_optional,
                                     rsc, child_rsc, last_rsc, data_set);

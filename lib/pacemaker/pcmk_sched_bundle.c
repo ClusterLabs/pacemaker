@@ -225,21 +225,31 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        new_rsc_order(rsc, RSC_START, bundle_data->child, RSC_START,
-                      pe_order_implies_first_printed, data_set);
-        new_rsc_order(rsc, RSC_STOP, bundle_data->child, RSC_STOP,
-                      pe_order_implies_first_printed, data_set);
+        pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
+                                     RSC_START, pe_order_implies_first_printed,
+                                     data_set);
+        pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
+                                     RSC_STOP, pe_order_implies_first_printed,
+                                     data_set);
 
         if (bundle_data->child->children) {
-            new_rsc_order(bundle_data->child, RSC_STARTED, rsc, RSC_STARTED,
-                          pe_order_implies_then_printed, data_set);
-            new_rsc_order(bundle_data->child, RSC_STOPPED, rsc, RSC_STOPPED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
+                                         RSC_STARTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
+                                         RSC_STOPPED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
         } else {
-            new_rsc_order(bundle_data->child, RSC_START, rsc, RSC_STARTED,
-                          pe_order_implies_then_printed, data_set);
-            new_rsc_order(bundle_data->child, RSC_STOP, rsc, RSC_STOPPED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
+                                         RSC_STARTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
+                                         RSC_STOPPED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
         }
     }
 
@@ -262,18 +272,20 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         }
         order_stop_stop(rsc, replica->container,
                         pe_order_implies_first_printed);
-        new_rsc_order(replica->container, RSC_START, rsc, RSC_STARTED,
-                      pe_order_implies_then_printed, data_set);
-        new_rsc_order(replica->container, RSC_STOP, rsc, RSC_STOPPED,
-                      pe_order_implies_then_printed, data_set);
+        pcmk__order_resource_actions(replica->container, RSC_START, rsc,
+                                     RSC_STARTED, pe_order_implies_then_printed,
+                                     data_set);
+        pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
+                                     RSC_STOPPED, pe_order_implies_then_printed,
+                                     data_set);
 
         if (replica->ip) {
             replica->ip->cmds->internal_constraints(replica->ip, data_set);
 
-            // Start ip then container
-            new_rsc_order(replica->ip, RSC_START, replica->container, RSC_START,
+            // Start IP then container
+            pcmk__order_resource_actions(replica->ip, RSC_START, replica->container, RSC_START,
                           pe_order_runnable_left|pe_order_preserve, data_set);
-            new_rsc_order(replica->container, RSC_STOP, replica->ip, RSC_STOP,
+            pcmk__order_resource_actions(replica->container, RSC_STOP, replica->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
@@ -305,20 +317,28 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
-            new_rsc_order(bundle_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
+                                         RSC_DEMOTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
 
             /* global demote before child demote */
-            new_rsc_order(rsc, RSC_DEMOTE, bundle_data->child, RSC_DEMOTE,
-                          pe_order_implies_first_printed, data_set);
+            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
+                                         RSC_DEMOTE,
+                                         pe_order_implies_first_printed,
+                                         data_set);
 
             /* child promoted before global promoted */
-            new_rsc_order(bundle_data->child, RSC_PROMOTED, rsc, RSC_PROMOTED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
+                                         RSC_PROMOTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
 
             /* global promote before child promote */
-            new_rsc_order(rsc, RSC_PROMOTE, bundle_data->child, RSC_PROMOTE,
-                          pe_order_implies_first_printed, data_set);
+            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
+                                         RSC_PROMOTE,
+                                         pe_order_implies_first_printed,
+                                         data_set);
         }
 
     } else {

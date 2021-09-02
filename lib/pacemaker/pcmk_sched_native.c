@@ -1624,8 +1624,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * so that if we detect the container running, we will trigger a new
              * transition and avoid the unnecessary recovery.
              */
-            new_rsc_order(rsc->container, RSC_STATUS, rsc, RSC_STOP,
-                          pe_order_optional, data_set);
+            pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
+                                         RSC_STOP, pe_order_optional, data_set);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -2468,11 +2468,13 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
 
     delete_action(rsc, node, optional);
 
-    new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
-    new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
     return TRUE;
 }

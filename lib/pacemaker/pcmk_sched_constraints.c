@@ -549,7 +549,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
                                                          ordering_symmetric_inverse);
 
         handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
-        new_rsc_order(rsc_then, action_then, rsc_first, action_first, flags,
+        pcmk__order_resource_actions(rsc_then, action_then, rsc_first, action_first, flags,
                       data_set);
     }
 }
@@ -618,7 +618,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
                            cons_weight, min_required_before, data_set);
     } else {
-        new_rsc_order(rsc_first, action_first, rsc_then, action_then,
+        pcmk__order_resource_actions(rsc_first, action_first, rsc_then, action_then,
                       cons_weight, data_set);
     }
 
@@ -822,26 +822,6 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
     }
 
     return TRUE;
-}
-
-/* LHS before RHS */
-int
-new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
-              pe_resource_t * rh_rsc, const char *rh_task,
-              enum pe_ordering type, pe_working_set_t * data_set)
-{
-    char *lh_key = NULL;
-    char *rh_key = NULL;
-
-    CRM_CHECK(lh_rsc != NULL, return -1);
-    CRM_CHECK(lh_task != NULL, return -1);
-    CRM_CHECK(rh_rsc != NULL, return -1);
-    CRM_CHECK(rh_task != NULL, return -1);
-
-    lh_key = pcmk__op_key(lh_rsc->id, lh_task, 0);
-    rh_key = pcmk__op_key(rh_rsc->id, rh_task, 0);
-
-    return custom_action_order(lh_rsc, lh_key, NULL, rh_rsc, rh_key, NULL, type, data_set);
 }
 
 static char *
@@ -1130,7 +1110,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
         } else if (sequential) {
             if (last != NULL) {
-                new_rsc_order(last, action, resource, action, flags, data_set);
+                pcmk__order_resource_actions(last, action, resource, action, flags, data_set);
             }
             last = resource;
         }
@@ -1154,7 +1134,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
         if (sequential) {
             if (last != NULL) {
-                new_rsc_order(resource, action, last, action, flags, data_set);
+                pcmk__order_resource_actions(resource, action, last, action, flags, data_set);
             }
             last = resource;
         }
@@ -1288,14 +1268,14 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     }
 
     if (rsc_1 != NULL && rsc_2 != NULL) {
-        new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+        pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 
     } else if (rsc_1 != NULL) {
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-            new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+            pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags, data_set);
         }
 
     } else if (rsc_2 != NULL) {
@@ -1305,7 +1285,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-            new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+            pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags, data_set);
         }
 
     } else {
@@ -1320,7 +1300,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
                  xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-                new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+                pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags, data_set);
             }
         }
     }

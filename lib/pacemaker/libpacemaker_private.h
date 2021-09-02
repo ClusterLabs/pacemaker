@@ -71,6 +71,24 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+/*!
+ * \internal
+ * \brief Create a new ordering between two resource actions
+ *
+ * \param[in] lh_rsc    Resource for 'first' action
+ * \param[in] rh_rsc    Resource for 'then' action
+ * \param[in] lh_task   Action key for 'first' action
+ * \param[in] rh_task   Action key for 'then' action
+ * \param[in] flags     Bitmask of enum pe_ordering flags
+ * \param[in] data_set  Cluster working set to add ordering to
+ */
+#define pcmk__order_resource_actions(lh_rsc, lh_task, rh_rsc, rh_task,      \
+                                     flags, data_set)                       \
+    custom_action_order((lh_rsc), pcmk__op_key((lh_rsc)->id, (lh_task), 0), \
+                       NULL,                                                \
+                       (rh_rsc), pcmk__op_key((rh_rsc)->id, (rh_task), 0),  \
+                       NULL, (flags), (data_set))
+
 G_GNUC_INTERNAL
 void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
