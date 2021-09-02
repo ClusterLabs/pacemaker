@@ -34,4 +34,32 @@ G_GNUC_INTERNAL
 bool pcmk__is_unfence_device(const pe_resource_t *rsc,
                              const pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+pe_resource_t *pcmk__find_constraint_resource(GList *rsc_list, const char *id);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
+                                   pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+gboolean pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
+                                     pe_resource_t **rsc, pe_tag_t **tag);
+
+G_GNUC_INTERNAL
+gboolean pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
+                          gboolean convert_rsc, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__new_colocation(const char *id, const char *node_attr, int score,
+                          pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                          const char *state_lh, const char *state_rh,
+                          bool influence, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__block_colocated_starts(pe_action_t *action,
+                                  pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

@@ -19,7 +19,8 @@
 
 #include <pacemaker-internal.h>
 
-void update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set);
+#include "libpacemaker_private.h"
+
 gboolean rsc_update_action(pe_action_t * first, pe_action_t * then, enum pe_ordering type);
 
 static enum pe_action_flags
@@ -404,72 +405,6 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
     return changed;
 }
 
-static void
-mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
-                   pe_working_set_t *data_set)
-{
-    GList *gIter = rsc->actions;
-    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (!pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
-            continue;
-        }
-        if (pcmk_is_set(action->flags, pe_action_runnable)) {
-            pe__clear_action_flags(action, pe_action_runnable);
-            pe_action_set_reason(action, reason_text, false);
-            update_colo_start_chain(action, data_set);
-            update_action(action, data_set);
-        }
-    }
-    free(reason_text);
-}
-
-void
-update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
-{
-    GList *gIter = NULL;
-    pe_resource_t *rsc = NULL;
-
-    if (!pcmk_is_set(action->flags, pe_action_runnable)
-        && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
-
-        rsc = uber_parent(action->rsc);
-        if (rsc->parent) {
-            /* For bundles, uber_parent() returns the clone, not the bundle, so
-             * the existence of rsc->parent implies this is a bundle.
-             * In this case, we need the bundle resource, so that we can check
-             * if all containers are stopped/stopping.
-             */
-            rsc = rsc->parent;
-        }
-    }
-
-    if (rsc == NULL || rsc->rsc_cons_lhs == NULL) {
-        return;
-    }
-
-    /* if rsc has children, all the children need to have start set to
-     * unrunnable before we follow the colo chain for the parent. */
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *)gIter->data;
-        pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
-        if ((start == NULL) || pcmk_is_set(start->flags, pe_action_runnable)) {
-            return;
-        }
-    }
-
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
-
-        if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->rsc_lh, action->rsc, data_set);
-        }
-    }
-}
-
 // Convenience macros for logging action properties
 
 #define action_type_str(flags) \
@@ -657,7 +592,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                   then->uuid);
         if (pcmk_is_set(last_flags, pe_action_runnable)
             && !pcmk_is_set(then->flags, pe_action_runnable)) {
-            update_colo_start_chain(then, data_set);
+            pcmk__block_colocated_starts(then, data_set);
         }
         update_action(then, data_set);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {

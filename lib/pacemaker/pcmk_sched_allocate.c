@@ -1759,9 +1759,6 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
     g_list_free(lh_actions);
 }
 
-extern void update_colo_start_chain(pe_action_t *action,
-                                    pe_working_set_t *data_set);
-
 static int
 is_recurring_action(pe_action_t *action)
 {
@@ -2676,7 +2673,8 @@ stage7(pe_working_set_t * data_set)
         }
     }
 
-    g_list_foreach(data_set->actions, (GFunc) update_colo_start_chain, data_set);
+    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocated_starts,
+                   data_set);
 
     crm_trace("Ordering probes");
     order_probes(data_set);

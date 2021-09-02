@@ -15,6 +15,8 @@
 
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
@@ -42,11 +44,12 @@ expand_group_colocations(pe_resource_t *rsc)
      * colocated with the previous one.
      *
      * However, there is a special case when a group has a mandatory colocation
-     * with a resource that can't start. In that case, update_colo_start_chain()
-     * will ensure that dependent resources in mandatory colocations (i.e. the
-     * first member for groups) can't start either. But if any group member is
-     * unmanaged and already started, the internal group colocations are no
-     * longer sufficient to make that apply to later members.
+     * with a resource that can't start. In that case,
+     * pcmk__block_colocated_starts() will ensure that dependent resources in
+     * mandatory colocations (i.e. the first member for groups) can't start
+     * either. But if any group member is unmanaged and already started, the
+     * internal group colocations are no longer sufficient to make that apply to
+     * later members.
      *
      * To handle that case, add mandatory colocations to each member after the
      * first.
