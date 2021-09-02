@@ -1259,3 +1259,64 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Order stops on a node before the node's shutdown
+ *
+ * \param[in] node         Node being shut down
+ * \param[in] shutdown_op  Shutdown action for node
+ * \param[in] data_set     Cluster working set
+ */
+void
+pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op,
+                                  pe_working_set_t *data_set)
+{
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        // Only stops on the node shutting down are relevant
+        if ((action->rsc == NULL) || (action->node == NULL)
+            || (action->node->details != node->details)
+            || !pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
+            continue;
+        }
+
+        // Resources and nodes in maintenance mode won't be touched
+
+        if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
+            pe_rsc_trace(action->rsc,
+                         "Not ordering %s before %s shutdown because "
+                         "resource in maintenance mode",
+                         action->uuid, node->details->uname);
+            continue;
+
+        } else if (node->details->maintenance) {
+            pe_rsc_trace(action->rsc,
+                         "Not ordering %s before %s shutdown because "
+                         "node in maintenance mode",
+                         action->uuid, node->details->uname);
+            continue;
+        }
+
+        /* Don't touch a resource that is unmanaged or blocked, to avoid
+         * blocking the shutdown (though if another action depends on this one,
+         * we may still end up blocking)
+         */
+        if (!pcmk_any_flags_set(action->rsc->flags,
+                                pe_rsc_managed|pe_rsc_block)) {
+            pe_rsc_trace(action->rsc,
+                         "Not ordering %s before %s shutdown because "
+                         "resource is unmanaged or blocked",
+                         action->uuid, node->details->uname);
+            continue;
+        }
+
+        pe_rsc_trace(action->rsc, "Ordering %s before %s shutdown",
+                     action->uuid, node->details->uname);
+        pe__clear_action_flags(action, pe_action_optional);
+        pcmk__new_ordering(action->rsc, NULL, action, NULL,
+                           strdup(CRM_OP_SHUTDOWN), shutdown_op,
+                           pe_order_optional|pe_order_runnable_left, data_set);
+    }
+}

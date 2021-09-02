@@ -605,50 +605,6 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
     return FALSE;
 }
 
-gboolean
-shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set_t * data_set)
-{
-    /* add the stop to the before lists so it counts as a pre-req
-     * for the shutdown
-     */
-    GList *lpc = NULL;
-
-    for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
-        pe_action_t *action = (pe_action_t *) lpc->data;
-
-        if (action->rsc == NULL || action->node == NULL) {
-            continue;
-        } else if (action->node->details != node->details) {
-            continue;
-        } else if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
-            pe_rsc_trace(action->rsc, "Skipping %s: maintenance mode", action->uuid);
-            continue;
-        } else if (node->details->maintenance) {
-            pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
-                         action->uuid, node->details->uname);
-            continue;
-        } else if (!pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
-            continue;
-        } else if (!pcmk_any_flags_set(action->rsc->flags,
-                                       pe_rsc_managed|pe_rsc_block)) {
-            /*
-             * If another action depends on this one, we may still end up blocking
-             */
-            pe_rsc_trace(action->rsc, "Skipping %s: unmanaged", action->uuid);
-            continue;
-        }
-
-        pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
-                     node->details->uname);
-        pe__clear_action_flags(action, pe_action_optional);
-        pcmk__new_ordering(action->rsc, NULL, action,
-                           NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                           pe_order_optional|pe_order_runnable_left, data_set);
-    }
-
-    return TRUE;
-}
-
 static pe_node_t *
 get_router_node(pe_action_t *action)
 {
