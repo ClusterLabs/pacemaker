@@ -84,11 +84,6 @@ extern int custom_action_order(pe_resource_t * lh_rsc, char *lh_task, pe_action_
                                pe_resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
                                enum pe_ordering type, pe_working_set_t * data_set);
 
-#  define order_start_start(rsc1,rsc2, type)				\
-    pcmk__order_resource_actions(rsc1, CRMD_ACTION_START, rsc2, CRMD_ACTION_START, type, data_set)
-#  define order_stop_stop(rsc1, rsc2, type)				\
-    pcmk__order_resource_actions(rsc1, CRMD_ACTION_STOP, rsc2, CRMD_ACTION_STOP, type, data_set)
-
 extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,

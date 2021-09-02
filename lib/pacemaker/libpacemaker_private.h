@@ -89,6 +89,14 @@ void pcmk__block_colocated_starts(pe_action_t *action,
                        (rh_rsc), pcmk__op_key((rh_rsc)->id, (rh_task), 0),  \
                        NULL, (flags), (data_set))
 
+#define pcmk__order_starts(rsc1, rsc2, type, data_set)       \
+    pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
+                                 (rsc2), CRMD_ACTION_START, (type), (data_set))
+
+#define pcmk__order_stops(rsc1, rsc2, type, data_set)        \
+    pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
+                                 (rsc2), CRMD_ACTION_STOP, (type), (data_set))
+
 G_GNUC_INTERNAL
 void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 

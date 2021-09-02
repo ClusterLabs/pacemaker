@@ -52,7 +52,7 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
 
         }
         /* else: child/child relative promote */
-        order_start_start(last, child, type);
+        pcmk__order_starts(last, child, type, data_set);
         pcmk__order_resource_actions(last, RSC_PROMOTE, child, RSC_PROMOTE,
                                      type, data_set);
 

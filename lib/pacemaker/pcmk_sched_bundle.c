@@ -263,15 +263,16 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         replica->container->cmds->internal_constraints(replica->container,
                                                        data_set);
 
-        order_start_start(rsc, replica->container,
-                          pe_order_runnable_left|pe_order_implies_first_printed);
+        pcmk__order_starts(rsc, replica->container,
+                           pe_order_runnable_left|pe_order_implies_first_printed,
+                           data_set);
 
         if (replica->child) {
-            order_stop_stop(rsc, replica->child,
-                            pe_order_implies_first_printed);
+            pcmk__order_stops(rsc, replica->child,
+                              pe_order_implies_first_printed, data_set);
         }
-        order_stop_stop(rsc, replica->container,
-                        pe_order_implies_first_printed);
+        pcmk__order_stops(rsc, replica->container,
+                          pe_order_implies_first_printed, data_set);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
                                      RSC_STARTED, pe_order_implies_then_printed,
                                      data_set);
@@ -283,10 +284,12 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             replica->ip->cmds->internal_constraints(replica->ip, data_set);
 
             // Start IP then container
-            pcmk__order_resource_actions(replica->ip, RSC_START, replica->container, RSC_START,
-                          pe_order_runnable_left|pe_order_preserve, data_set);
-            pcmk__order_resource_actions(replica->container, RSC_STOP, replica->ip, RSC_STOP,
-                          pe_order_implies_first|pe_order_preserve, data_set);
+            pcmk__order_starts(replica->ip, replica->container,
+                               pe_order_runnable_left|pe_order_preserve,
+                               data_set);
+            pcmk__order_stops(replica->container, replica->ip,
+                              pe_order_implies_first|pe_order_preserve,
+                              data_set);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,

@@ -976,18 +976,22 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-        order_start_start(rsc, child_rsc, pe_order_runnable_left | pe_order_implies_first_printed);
+        pcmk__order_starts(rsc, child_rsc,
+                           pe_order_runnable_left|pe_order_implies_first_printed,
+                           data_set);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed, data_set);
         if (clone_data->ordered && last_rsc) {
-            order_start_start(last_rsc, child_rsc, pe_order_optional);
+            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
+                               data_set);
         }
 
-        order_stop_stop(rsc, child_rsc, pe_order_implies_first_printed);
+        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
+                          data_set);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed, data_set);
         if (clone_data->ordered && last_rsc) {
-            order_stop_stop(child_rsc, last_rsc, pe_order_optional);
+            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional, data_set);
         }
 
         last_rsc = child_rsc;
