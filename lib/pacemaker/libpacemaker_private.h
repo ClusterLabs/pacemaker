@@ -77,6 +77,9 @@ void pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_task,
                         char *rh_task, pe_action_t *rh_action,
                         enum pe_ordering type, pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set);
+
 /*!
  * \internal
  * \brief Create a new ordering between two resource actions

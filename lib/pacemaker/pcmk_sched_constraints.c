@@ -47,8 +47,6 @@ enum ordering_symmetry {
 	}								\
     } while(0)
 
-static void unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set);
-
 static bool
 evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
 {
@@ -96,7 +94,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
-            unpack_rsc_order(xml_obj, data_set);
+            pcmk__unpack_ordering(xml_obj, data_set);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_casei)) {
             pcmk__unpack_colocation(xml_obj, data_set);
@@ -1420,8 +1418,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
  * \param[in]     xml_obj   Ordering constraint XML to unpack
  * \param[in,out] data_set  Cluster working set
  */
-static void
-unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
+void
+pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     pe_resource_t *rsc = NULL;
 
