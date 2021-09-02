@@ -724,7 +724,6 @@ pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
  *
  * \param[in]  set                    Set XML to unpack
  * \param[in]  parent_kind            rsc_order XML "kind" attribute
- * \param[out] rsc                    If set contains one resource, put it here
  * \param[in]  parent_symmetrical_s   rsc_order XML "symmetrical" attribute
  * \param[in]  data_set               Cluster working set
  *
@@ -732,8 +731,7 @@ pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
  */
 static gboolean
 unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
-                 pe_resource_t **rsc, const char *parent_symmetrical_s,
-                 pe_working_set_t *data_set)
+                 const char *parent_symmetrical_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     GList *set_iter = NULL;
@@ -778,11 +776,8 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
 
     if (pcmk__list_of_1(resources)) {
         crm_trace("Single set: %s", id);
-        *rsc = resource;
         goto done;
     }
-
-    *rsc = NULL;
 
     set_iter = resources;
     while (set_iter != NULL) {
@@ -1145,8 +1140,6 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 void
 pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-    pe_resource_t *rsc = NULL;
-
     xmlNode *set = NULL;
     xmlNode *last = NULL;
 
@@ -1175,7 +1168,7 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set)
 
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
-            || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
+            || !unpack_order_set(set, kind, invert, data_set)) {
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
             }
