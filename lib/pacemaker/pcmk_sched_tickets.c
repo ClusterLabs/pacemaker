@@ -388,7 +388,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "rsc" into resource_set under rsc_ticket
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
-                          FALSE, data_set)) {
+                          false, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;

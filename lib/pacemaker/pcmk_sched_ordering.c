@@ -1088,7 +1088,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "first" into resource_set under constraint
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST,
-                          TRUE, data_set)) {
+                          true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
@@ -1105,7 +1105,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "then" into resource_set under constraint
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN,
-                          TRUE, data_set)) {
+                          true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;

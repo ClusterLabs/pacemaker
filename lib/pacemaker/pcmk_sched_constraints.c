@@ -318,9 +318,19 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
     return new_xml;
 }
 
-gboolean
+/*!
+ * \internal
+ * \brief Convert a tag into a resource set of tagged resources
+ *
+ * \param[in]  xml_obj      Constraint XML
+ * \param[out] rsc_set      Where to store resource set XML created based on tag
+ * \param[in]  attr         Name of XML attribute containing resource or tag ID
+ * \param[in]  convert_rsc  Convert to set even if \p attr references a resource
+ * \param[in]  data_set     Cluster working set
+ */
+bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                 gboolean convert_rsc, pe_working_set_t *data_set)
+                 bool convert_rsc, pe_working_set_t *data_set)
 {
     const char *cons_id = NULL;
     const char *id = NULL;
@@ -330,24 +340,24 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     *rsc_set = NULL;
 
-    CRM_CHECK((xml_obj != NULL) && (attr != NULL), return FALSE);
+    CRM_CHECK((xml_obj != NULL) && (attr != NULL), return false);
 
     cons_id = ID(xml_obj);
     if (cons_id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return false;
     }
 
     id = crm_element_value(xml_obj, attr);
     if (id == NULL) {
-        return TRUE;
+        return true;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", cons_id, id);
-        return FALSE;
+        return false;
 
     } else if (tag) {
         GList *gIter = NULL;
@@ -369,7 +379,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         /* Set sequential="false" for the resource_set */
         crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
 
-    } else if (rsc && convert_rsc) {
+    } else if ((rsc != NULL) && convert_rsc) {
         /* Even a regular resource is referenced by "attr", convert it into a resource_set.
            Because the other side of the constraint could be a template/tag reference. */
         xmlNode *rsc_ref = NULL;
@@ -381,13 +391,13 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         crm_xml_add(rsc_ref, XML_ATTR_ID, id);
 
     } else {
-        return TRUE;
+        return true;
     }
 
     /* Remove the "attr" attribute referencing the template/tag */
-    if (*rsc_set) {
+    if (*rsc_set != NULL) {
         xml_remove_prop(xml_obj, attr);
     }
 
-    return TRUE;
+    return true;
 }
