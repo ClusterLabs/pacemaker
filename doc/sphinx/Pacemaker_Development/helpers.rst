@@ -75,9 +75,11 @@ tests.  Much of Pacemaker cannot effectively be unit tested (and there are other
 testing systems used for those parts), but the ``lib`` subdirectory is pretty easy
 to write tests for.
 
-Pacemaker uses the `GLib unit testing framework
-<https://developer.gnome.org/glib/stable/glib-Testing.html>`_ which looks a lot
-like other unit testing frameworks for C and should be fairly familiar.
+Pacemaker uses the `cmocka unit testing framework <https://cmocka.org/>`_ which looks
+a lot like other unit testing frameworks for C and should be fairly familiar.  In
+addition to regular unit tests, cmocka also gives us the ability to use
+`mock functions <https://en.wikipedia.org/wiki/Mock_object>`_ for unit testing
+functions that would otherwise be difficult to test.
 
 Organization
 ____________
@@ -123,14 +125,15 @@ you can see, there are already tests for other functions in this same file in
 the ``lib/common/tests/strings`` directory.
 
 * cd into ``lib/common/tests/strings``
-* Add the new file to the the ``test_programs`` variable in ``Makefile.am``, making
-  it something like this:
+* Add the new file to the the ``check_PROGRAMS`` variable in ``Makefile.am``,
+  making it something like this:
 
   .. code-block:: none
 
-      test_programs = pcmk__add_word_test             \
-                      pcmk__btoa_test                 \
-                      pcmk__scan_port_test
+      check_PROGRAMS = \
+             pcmk__add_word_test             \
+             pcmk__btoa_test                 \
+             pcmk__scan_port_test
 
 * Create a new ``pcmk__scan_port_test.c`` file, copying the copyright and include
   boilerplate from another file in the same directory.
@@ -171,13 +174,12 @@ is no ``lib/common/tests/acls`` directory.
 * Create a new ``acls`` directory, copying the ``Makefile.am`` from some other
   directory.
 * cd into ``acls``
-* Get rid of any existing values for ``test_programs``, ``dist_test_data``, and
-  ``test_data`` in ``Makefile.am``.  Set ``test_programs`` to ``pcmk_acl_required_test``,
-  like so:
+* Get rid of any existing values for ``check_PROGRAMS`` and set it to
+  ``pcmk_acl_required_test`` like so:
 
   .. code-block:: none
 
-     test_programs = pcmk_acl_required_test
+     check_PROGRAMS = pcmk_acl_required_test
 
 * Follow the steps in `Testing a new function in an already testable source file`_
   to create the new ``pcmk_acl_required_test.c`` file.
@@ -224,7 +226,7 @@ may not be a very good function or even library to write actual unit tests for.
 
      SUBDIRS = lrmd_alerts
 
-* Follow the steps in `Testing a function in a library without tests` to create
+* Follow the steps in `Testing a function in a source file without tests`_ to create
   the rest of the new directory structure.
 
 * Follow the steps in `Testing a new function in an already testable source file`_
@@ -248,7 +250,7 @@ here's the basic structure:
 .. code-block:: c
 
    /*
-    * Copyright 2020-2021 the Pacemaker project contributors
+    * Copyright 2021 the Pacemaker project contributors
     *
     * The version control history for this file may have further details.
     *
@@ -258,7 +260,11 @@ here's the basic structure:
 
    #include <crm_internal.h>
 
-   #include <glib.h>
+   #include <stdarg.h>
+   #include <stddef.h>
+   #include <stdint.h>
+   #include <setjmp.h>
+   #include <cmocka.h>
 
    /* Put your test-specific includes here */
 
@@ -267,11 +273,10 @@ here's the basic structure:
    int
    main(int argc, char **argv)
    {
-       g_test_init(&argc, &argv, NULL);
-
        /* Register your test functions here */
 
-       return g_test_run();
+       cmocka_set_message_output(CM_OUTPUT_TAP);
+       return cmocka_run_group_tests(tests, NULL, NULL);
    }
 
 Each test-specific function should test one aspect of the library function,
@@ -282,39 +287,23 @@ expression matching:
 .. code-block:: c
 
    static void
-   regex(void) {
+   regex(void **state) {
        const char *s1 = "abcd";
        const char *s2 = "ABCD";
 
-       g_assert_cmpint(pcmk__strcmp(NULL, "a..d", pcmk__str_regex), ==, 1);
-       g_assert_cmpint(pcmk__strcmp(s1, NULL, pcmk__str_regex), ==, 1);
-       g_assert_cmpint(pcmk__strcmp(s1, "a..d", pcmk__str_regex), ==, 0);
+       assert_int_equal(pcmk__strcmp(NULL, "a..d", pcmk__str_regex), 1);
+       assert_int_equal(pcmk__strcmp(s1, NULL, pcmk__str_regex), 1);
+       assert_int_equal(pcmk__strcmp(s1, "a..d", pcmk__str_regex), 0);
    }
 
 Each test-specific function must also be registered or it will not be called.
-This is done with ``g_test_add_func()``.  The first argument is a namespace for
-tests.  It's best to look at what is being used elsewhere and try to fit your
-new functions in.
+This is done with ``cmocka_unit_test()`` in the ``main`` function:
 
 .. code-block:: c
 
-   g_test_add_func("/common/strings/strcmp/same_pointer", same_pointer);
-   g_test_add_func("/common/strings/strcmp/one_is_null", one_is_null);
-   g_test_add_func("/common/strings/strcmp/case_matters", case_matters);
-   g_test_add_func("/common/strings/strcmp/case_insensitive", case_insensitive);
-   g_test_add_func("/common/strings/strcmp/regex", regex);
-
-Finally, be careful when calling the ``g_assert_`` functions.  They are adding
-new functions all the time, but we can't use functions newer than the minimum
-version of glib supported by Pacemaker.  Luckily, they do a good job of marking
-when each function was introduced.  The minimum glib version can be found in
-``configure.ac``:
-
-.. code-block:: none
-
-    $ grep -A 1 "Require minimum glib" configure.ac
-    # Require minimum glib version
-    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
+   const struct CMUnitTest tests[] = {
+       cmocka_unit_test(regex),
+   };
 
 Running
 _______
@@ -333,11 +322,11 @@ following:
 
 .. code-block:: none
 
-    PASS: pcmk__strcmp_test 1 /common/strings/strcmp/same_pointer
-    PASS: pcmk__strcmp_test 2 /common/strings/strcmp/one_is_null
-    PASS: pcmk__strcmp_test 3 /common/strings/strcmp/case_matters
-    PASS: pcmk__strcmp_test 4 /common/strings/strcmp/case_insensitive
-    PASS: pcmk__strcmp_test 5 /common/strings/strcmp/regex
+    PASS: pcmk__strcmp_test 1 - same_pointer
+    PASS: pcmk__strcmp_test 2 - one_is_null
+    PASS: pcmk__strcmp_test 3 - case_matters
+    PASS: pcmk__strcmp_test 4 - case_insensitive
+    PASS: pcmk__strcmp_test 5 - regex
     ============================================================================
     Testsuite summary for pacemaker 2.1.0
     ============================================================================
@@ -356,24 +345,20 @@ like these:
 
 .. code-block:: none
 
-   ERROR: pcmk__scan_double_test - Bail out! ERROR:pcmk__scan_double_test.c:77:trailing_chars: assertion failed (fabs(result - 3.0) < DBL_EPSILON): (1 < 2.22044605e-16)
-   PASS: pcmk__str_any_of_test 1 /common/strings/any_of/empty_list
-   PASS: pcmk__str_any_of_test 2 /common/strings/any_of/empty_string
-   PASS: pcmk__str_any_of_test 3 /common/strings/any_of/in
-   PASS: pcmk__str_any_of_test 4 /common/strings/any_of/not_in
-   PASS: pcmk__strcmp_test 1 /common/strings/strcmp/same_pointer
-   PASS: pcmk__strcmp_test 2 /common/strings/strcmp/one_is_null
-   PASS: pcmk__strcmp_test 3 /common/strings/strcmp/case_matters
-   PASS: pcmk__strcmp_test 4 /common/strings/strcmp/case_insensitive
-   PASS: pcmk__strcmp_test 5 /common/strings/strcmp/regex
+   PASS: pcmk__scan_double_test 3 - trailing_chars
+   FAIL: pcmk__scan_double_test 4 - typical_case
+   PASS: pcmk__scan_double_test 5 - double_overflow
+   PASS: pcmk__scan_double_test 6 - double_underflow
+   ERROR: pcmk__scan_double_test - exited with status 1
+   PASS: pcmk__starts_with_test 1 - bad_input
    ============================================================================
    Testsuite summary for pacemaker 2.1.0
    ============================================================================
-   # TOTAL: 30
-   # PASS:  29
+   # TOTAL: 56
+   # PASS:  54
    # SKIP:  0
    # XFAIL: 0
-   # FAIL:  0
+   # FAIL:  1
    # XPASS: 0
    # ERROR: 1
    ============================================================================
@@ -383,16 +368,30 @@ like these:
    make[7]: *** [Makefile:1218: test-suite.log] Error 1
    make[7]: Leaving directory '/home/clumens/src/pacemaker/lib/common/tests/strings'
 
-The ``ERROR`` line indicates which test failed, the line the failure occurred on,
-and the test result that caused a failure.  For this test case, the result is a
-little hard to understand because floating point numbers are involved.  It is
-basically saying that it expected ``result`` to be ``3.0``, but this was not the case.
-
-At this point, you need to determine whether your test case is incorrect or
-whether the code being tested is incorrect.  Fix whichever is wrong and continue.
-
-Test case failures are usually much easier to understand, for instance:
+The failure is in ``lib/common/tests/strings/test-suite.log``:
 
 .. code-block:: none
 
-   ERROR: pcmk__strcmp_test - Bail out! ERROR:pcmk__strcmp_test.c:64:regex: assertion failed (pcmk__strcmp(NULL, "a..d", pcmk__str_regex) == 2): (1 == 2)
+   ERROR: pcmk__scan_double_test
+   =============================
+
+   1..6
+   ok 1 - empty_input_string
+   PASS: pcmk__scan_double_test 1 - empty_input_string
+   ok 2 - bad_input_string
+   PASS: pcmk__scan_double_test 2 - bad_input_string
+   ok 3 - trailing_chars
+   PASS: pcmk__scan_double_test 3 - trailing_chars
+   not ok 4 - typical_case
+   FAIL: pcmk__scan_double_test 4 - typical_case
+   # 0.000000 != 3.000000
+   # pcmk__scan_double_test.c:80: error: Failure!
+   ok 5 - double_overflow
+   PASS: pcmk__scan_double_test 5 - double_overflow
+   ok 6 - double_underflow
+   PASS: pcmk__scan_double_test 6 - double_underflow
+   # not ok - tests
+   ERROR: pcmk__scan_double_test - exited with status 1
+
+At this point, you need to determine whether your test case is incorrect or
+whether the code being tested is incorrect.  Fix whichever is wrong and continue.
