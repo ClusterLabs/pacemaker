@@ -211,6 +211,19 @@ require a prefix, though a unique prefix indicating an executable (controld,
 crm_mon, etc.) can be helpful to indicate symbols shared between multiple
 source files for the executable.
 
+Public API Deprecation
+______________________
+
+Public APIs may not be removed in most Pacemaker releases, but they may be
+deprecated.
+
+When a public API is deprecated, it is moved to a header whose name ends in
+``compat.h``. The original header includes the compatibility header only if the
+``PCMK_ALLOW_DEPRECATED`` symbol is undefined or defined to 1. This allows
+external code to continue using the deprecated APIs, but internal code is
+prevented from using them because the ``crm_internal.h`` header defines the
+symbol to 0.
+
 
 .. index::
    pair: C; boilerplate
