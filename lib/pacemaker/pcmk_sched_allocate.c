@@ -815,8 +815,6 @@ apply_system_health(pe_working_set_t * data_set)
 gboolean
 stage0(pe_working_set_t * data_set)
 {
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
     if (data_set->input == NULL) {
         return FALSE;
     }
@@ -828,7 +826,7 @@ stage0(pe_working_set_t * data_set)
 
     set_alloc_actions(data_set);
     apply_system_health(data_set);
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     return TRUE;
 }

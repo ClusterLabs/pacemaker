@@ -540,10 +540,7 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                 data_set->input);
-
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
@@ -565,10 +562,7 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                 data_set->input);
-
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);

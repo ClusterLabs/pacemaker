@@ -399,11 +399,8 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
             GList *lpc = NULL;
 
             if(need_init) {
-                xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
                 need_init = FALSE;
-                unpack_constraints(cib_constraints, data_set);
-
+                pcmk__unpack_constraints(data_set);
                 pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
             }
 

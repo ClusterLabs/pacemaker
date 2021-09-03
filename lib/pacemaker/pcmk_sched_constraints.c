@@ -43,14 +43,25 @@ evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
     return result;
 }
 
-gboolean
-unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Unpack constraints from XML
+ *
+ * Given a cluster working set, unpack all constraints from its input XML into
+ * data structures.
+ *
+ * \param[in,out] data_set  Cluster working set
+ */
+void
+pcmk__unpack_constraints(pe_working_set_t *data_set)
 {
-    xmlNode *xml_obj = NULL;
-    xmlNode *lifetime = NULL;
+    xmlNode *xml_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                               data_set->input);
 
-    for (xml_obj = pcmk__xe_first_child(xml_constraints); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
+
+        xmlNode *lifetime = NULL;
         const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
         const char *tag = crm_element_name(xml_obj);
 
@@ -63,14 +74,14 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
         lifetime = first_named_child(xml_obj, "lifetime");
-        if (lifetime) {
+        if (lifetime != NULL) {
             pcmk__config_warn("Support for 'lifetime' attribute (in %s) is "
                               "deprecated (the rules it contains should "
                               "instead be direct descendents of the "
                               "constraint object)", id);
         }
 
-        if (lifetime && !evaluate_lifetime(lifetime, data_set)) {
+        if ((lifetime != NULL) && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
@@ -89,8 +100,6 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             pe_err("Unsupported constraint type: %s", tag);
         }
     }
-
-    return TRUE;
 }
 
 pe_resource_t *

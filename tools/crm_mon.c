@@ -2163,9 +2163,7 @@ mon_refresh_display(gpointer user_data)
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
     if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                   mon_data_set->input);
-        unpack_constraints(cib_constraints, mon_data_set);
+        pcmk__unpack_constraints(mon_data_set);
     }
 
     if (options.daemonize) {
