@@ -747,8 +747,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         require_all = true;
     }
 
-    // @TODO is action_2 correct here?
-    flags = ordering_flags_for_kind(kind, action_2, symmetry);
+    flags = ordering_flags_for_kind(kind, action_1, symmetry);
 
     /* If we have an unordered set1, whether it is sequential or not is
      * irrelevant in regards to set2.
