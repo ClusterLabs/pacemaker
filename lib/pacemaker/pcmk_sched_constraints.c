@@ -125,56 +125,75 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
     return NULL;
 }
 
-static gboolean
-pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, pe_tag_t ** tag)
+/*!
+ * \internal
+ * \brief Check whether an ID references a resource tag
+ *
+ * \param[in]  data_set  Cluster working set
+ * \param[in]  id        Tag ID to search for
+ * \param[out] tag       Where to store tag, if found
+ *
+ * \return true if ID refers to a tagged resource or resource set template,
+ *         otherwise false
+ */
+static bool
+find_constraint_tag(pe_working_set_t *data_set, const char *id, pe_tag_t **tag)
 {
-    gboolean rc = FALSE;
-
     *tag = NULL;
-    rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
-                                       NULL, (gpointer*) tag);
 
-    if (rc == FALSE) {
-        rc = g_hash_table_lookup_extended(data_set->tags, id,
-                                          NULL, (gpointer*) tag);
-
-        if (rc == FALSE) {
-            crm_warn("No template or tag named '%s'", id);
-            return FALSE;
-
-        } else if (*tag == NULL) {
-            crm_warn("No resource is tagged with '%s'", id);
-            return FALSE;
+    // Check whether id refers to a resource set template
+    if (g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
+                                     NULL, (gpointer *) tag)) {
+        if (*tag == NULL) {
+            crm_warn("No resource is derived from template '%s'", id);
+            return false;
         }
-
-    } else if (*tag == NULL) {
-        crm_warn("No resource is derived from template '%s'", id);
-        return FALSE;
+        return true;
     }
 
-    return rc;
+    // If not, check whether id refers to a tag
+    if (g_hash_table_lookup_extended(data_set->tags, id,
+                                     NULL, (gpointer *) tag)) {
+        if (*tag == NULL) {
+            crm_warn("No resource is tagged with '%s'", id);
+            return false;
+        }
+        return true;
+    }
+
+    crm_warn("No template or tag named '%s'", id);
+    return false;
 }
 
-gboolean
+/*!
+ * \brief
+ * \internal Check whether an ID refers to a valid resource or tag
+ *
+ * \param[in]  data_set Cluster working set
+ * \param[in]  id       ID to search for
+ * \param[out] rsc      Where to store resource, if found (or NULL to skip
+ *                      searching resources)
+ * \param[out] tag      Where to store tag, if found (or NULL to skip searching
+ *                      tags)
+ *
+ * \return true if id refers to a resource (possibly indirectly via a tag)
+ */
+bool
 pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
                             pe_resource_t **rsc, pe_tag_t **tag)
 {
-    gboolean rc = FALSE;
-
-    if (rsc) {
-        *rsc = NULL;
+    if (rsc != NULL) {
         *rsc = pcmk__find_constraint_resource(data_set->resources, id);
-        if (*rsc) {
-            return TRUE;
+        if (*rsc != NULL) {
+            return true;
         }
     }
 
-    if (tag) {
-        *tag = NULL;
-        rc = pe_find_constraint_tag(data_set, id, tag);
+    if ((tag != NULL) && find_constraint_tag(data_set, id, tag)) {
+        return true;
     }
 
-    return rc;
+    return false;
 }
 
 /*!
