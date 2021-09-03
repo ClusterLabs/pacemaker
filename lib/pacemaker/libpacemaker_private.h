@@ -71,4 +71,7 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

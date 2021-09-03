@@ -50,6 +50,7 @@ libpacemaker_la_SOURCES += pcmk_sched_messages.c
 libpacemaker_la_SOURCES += pcmk_sched_native.c
 libpacemaker_la_SOURCES += pcmk_sched_notif.c
 libpacemaker_la_SOURCES += pcmk_sched_promotable.c
+libpacemaker_la_SOURCES += pcmk_sched_tickets.c
 libpacemaker_la_SOURCES += pcmk_sched_transition.c
 libpacemaker_la_SOURCES += pcmk_sched_utilization.c
 libpacemaker_la_SOURCES += pcmk_sched_utils.c

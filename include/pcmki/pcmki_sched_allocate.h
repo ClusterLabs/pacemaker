@@ -61,8 +61,6 @@ void native_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
 void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                               pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
-extern void rsc_ticket_constraint(pe_resource_t * lh_rsc, rsc_ticket_t * rsc_ticket,
-                                  pe_working_set_t * data_set);
 extern enum pe_action_flags native_action_flags(pe_action_t * action, pe_node_t * node);
 
 void native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
