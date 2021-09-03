@@ -401,3 +401,20 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     return true;
 }
+
+/*!
+ * \internal
+ * \brief Create constraints inherent to resource types
+ *
+ * \param[in,out] data_set  Cluster working set
+ */
+void
+pcmk__create_internal_constraints(pe_working_set_t *data_set)
+{
+    crm_trace("Create internal constraints");
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->internal_constraints(rsc, data_set);
+    }
+}

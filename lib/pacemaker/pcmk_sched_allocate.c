@@ -1037,24 +1037,6 @@ stage2(pe_working_set_t * data_set)
 }
 
 /*
- * Create internal resource constraints before allocation
- */
-gboolean
-stage3(pe_working_set_t * data_set)
-{
-
-    GList *gIter = data_set->resources;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        rsc->cmds->internal_constraints(rsc, data_set);
-    }
-
-    return TRUE;
-}
-
-/*
  * Check for orphaned or redefined actions
  */
 gboolean
