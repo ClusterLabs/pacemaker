@@ -878,7 +878,6 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     if (rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
-        rc = -ECOMM;
         goto done;
 
     } else if(op_reply == NULL) {
