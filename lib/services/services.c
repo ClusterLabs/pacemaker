@@ -210,6 +210,45 @@ required_argument_missing(uint32_t ra_caps, const char *name,
     return false;
 }
 
+// \return Standard Pacemaker return code (pcmk_rc_ok or ENOMEM)
+static int
+copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
+                      const char *standard, const char *provider,
+                      const char *agent, const char *action)
+{
+    op->rsc = strdup(name);
+    if (op->rsc == NULL) {
+        return ENOMEM;
+    }
+
+    op->agent = strdup(agent);
+    if (op->agent == NULL) {
+        return ENOMEM;
+    }
+
+    op->standard = expand_resource_class(name, standard, agent);
+    if (op->standard == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+        action = "status";
+    }
+    op->action = strdup(action);
+    if (op->action == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
+        op->provider = strdup(provider);
+        if (op->provider == NULL) {
+            return ENOMEM;
+        }
+    }
+    return pcmk_rc_ok;
+}
+
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
@@ -249,21 +288,14 @@ services__create_resource_action(const char *name, const char *standard,
         return op;
     }
 
-    op->rsc = strdup(name);
-    op->standard = expand_resource_class(name, standard, agent);
-    op->agent = strdup(agent);
     op->id = pcmk__op_key(name, action, interval_ms);
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
-        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-
-        op->action = strdup("status");
-    } else {
-        op->action = strdup(action);
-    }
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
-        op->provider = strdup(provider);
+    if (copy_action_arguments(op, ra_caps, name, standard, provider, agent,
+                              action) != pcmk_rc_ok) {
+        crm_crit("Cannot prepare %s action for %s: %s",
+                 action, name, strerror(ENOMEM));
+        services__handle_exec_error(op, ENOMEM);
+        return op;
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
@@ -283,8 +315,8 @@ services__create_resource_action(const char *name, const char *standard,
 
         dirs = strdup(OCF_RA_PATH);
         if (dirs == NULL) {
-            crm_err("Cannot create %s operation for %s: %s",
-                    action, name, strerror(ENOMEM));
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
             services__handle_exec_error(op, ENOMEM);
             return op;
         }
@@ -311,28 +343,64 @@ services__create_resource_action(const char *name, const char *standard,
 
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
+        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
+        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         op->opaque->exec = strdup("systemd-dbus");
+        if (op->opaque->exec == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
         op->opaque->exec = strdup("upstart-dbus");
+        if (op->opaque->exec == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
         op->opaque->exec = pcmk__full_path(op->agent, NAGIOS_PLUGIN_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
+        if (op->opaque->args[0] == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
         if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {
             /* Invoke --version for a nagios probe */
             op->opaque->args[1] = strdup("--version");
+            if (op->opaque->args[1] == NULL) {
+                crm_crit("Cannot prepare %s action for %s: %s",
+                         action, name, strerror(ENOMEM));
+                services__handle_exec_error(op, ENOMEM);
+                return op;
+            }
 
         } else if (op->params) {
             GHashTableIter iter;
@@ -351,6 +419,12 @@ services__create_resource_action(const char *name, const char *standard,
                 }
                 op->opaque->args[index++] = crm_strdup_printf("--%s", key);
                 op->opaque->args[index++] = strdup(value);
+                if (op->opaque->args[index - 1] == NULL) {
+                    crm_crit("Cannot prepare %s action for %s: %s",
+                             action, name, strerror(ENOMEM));
+                    services__handle_exec_error(op, ENOMEM);
+                    return op;
+                }
             }
         }
 
