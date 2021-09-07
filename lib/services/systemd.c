@@ -824,6 +824,8 @@ systemd_timeout_callback(gpointer p)
 
     op->opaque->timerid = 0;
     crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_TIMEOUT;
     services__finalize_async_op(op);
     return FALSE;
 }
