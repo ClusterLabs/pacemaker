@@ -147,6 +147,29 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
+/*!
+ * \internal
+ * \brief Create an uninitialized svc_action_t instance
+ *
+ * \return Newly allocated instance (or NULL if not enough memory)
+ */
+static svc_action_t *
+new_action(void)
+{
+    svc_action_t *op = calloc(1, sizeof(svc_action_t));
+
+    if (op == NULL) {
+        return NULL;
+    }
+
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    if (op->opaque == NULL) {
+        free(op);
+        return NULL;
+    }
+
+    return op;
+}
 
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
@@ -156,6 +179,15 @@ services__create_resource_action(const char *name, const char *standard,
 {
     svc_action_t *op = NULL;
     uint32_t ra_caps = 0;
+
+    op = new_action();
+    if (op == NULL) {
+        crm_crit("Cannot prepare action: %s", strerror(ENOMEM));
+        if (params != NULL) {
+            g_hash_table_destroy(params);
+        }
+        return NULL;
+    }
 
     /*
      * Do some up front sanity checks before we go off and
@@ -193,8 +225,6 @@ services__create_resource_action(const char *name, const char *standard,
      * Sanity checks passed, proceed!
      */
 
-    op = calloc(1, sizeof(svc_action_t));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
     op->interval_ms = interval_ms;
     op->timeout = timeout;
@@ -347,11 +377,10 @@ resources_action_create(const char *name, const char *standard,
 svc_action_t *
 services_action_create_generic(const char *exec, const char *args[])
 {
-    svc_action_t *op;
+    svc_action_t *op = new_action();
     unsigned int cur_arg;
 
-    op = calloc(1, sizeof(*op));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    CRM_ASSERT(op != NULL);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
@@ -388,7 +417,6 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    CRM_ASSERT(action);
     action->timeout = timeout;
     action->id = strdup(id);
     action->params = params;
