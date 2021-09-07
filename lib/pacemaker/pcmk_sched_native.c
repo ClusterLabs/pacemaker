@@ -809,8 +809,8 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             if (after_key) {
-                custom_action_order(rsc, NULL, cancel_op, rsc, after_key, NULL,
-                                    pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
+                                   pe_order_runnable_left, data_set);
             }
         }
 
@@ -851,23 +851,23 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        custom_action_order(rsc, start_key(rsc), NULL,
-                            NULL, strdup(key), mon,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, start_key(rsc), NULL, NULL, strdup(key), mon,
+                           pe_order_implies_then|pe_order_runnable_left,
+                           data_set);
 
-        custom_action_order(rsc, reload_key(rsc), NULL,
-                            NULL, strdup(key), mon,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, reload_key(rsc), NULL, NULL, strdup(key), mon,
+                           pe_order_implies_then|pe_order_runnable_left,
+                           data_set);
 
         if (rsc->next_role == RSC_ROLE_PROMOTED) {
-            custom_action_order(rsc, promote_key(rsc), NULL,
-                                rsc, NULL, mon,
-                                pe_order_optional | pe_order_runnable_left, data_set);
+            pcmk__new_ordering(rsc, promote_key(rsc), NULL, rsc, NULL, mon,
+                               pe_order_optional|pe_order_runnable_left,
+                               data_set);
 
         } else if (rsc->role == RSC_ROLE_PROMOTED) {
-            custom_action_order(rsc, demote_key(rsc), NULL,
-                                rsc, NULL, mon,
-                                pe_order_optional | pe_order_runnable_left, data_set);
+            pcmk__new_ordering(rsc, demote_key(rsc), NULL, rsc, NULL, mon,
+                               pe_order_optional|pe_order_runnable_left,
+                               data_set);
         }
     }
 }
@@ -963,8 +963,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                 || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
                 /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */
                 /* rsc->role == RSC_ROLE_STARTED: for a migration, cancel the monitor on the target node before start */
-                custom_action_order(rsc, NULL, cancel_op, rsc, start_key(rsc), NULL,
-                                    pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, NULL, cancel_op, rsc, start_key(rsc),
+                                   NULL, pe_order_runnable_left, data_set);
             }
 
             pe_rsc_info(rsc, "Cancel action %s (%s vs. %s) on %s",
@@ -1045,9 +1045,10 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-                custom_action_order(rsc, stop_key(rsc), stop,
-                                    NULL, strdup(key), stopped_mon,
-                                    pe_order_implies_then | pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, stop_key(rsc), stop, NULL, strdup(key),
+                                   stopped_mon,
+                                   pe_order_implies_then|pe_order_runnable_left,
+                                   data_set);
             }
 
         }
@@ -1136,34 +1137,33 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             migrate_from->needs = start->needs;
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                                NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                               NULL, pe_order_optional, data_set);
 
         } else {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, pe_order_optional, data_set);
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, rsc,
-                                pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                                pe_order_optional|pe_order_implies_first_migratable,
-                                data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                               NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                               NULL,
+                               pe_order_optional|pe_order_implies_first_migratable,
+                               data_set);
         }
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional|pe_order_implies_first_migratable,
-                            data_set);
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                            pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
-                            data_set);
-
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                           pe_order_optional|pe_order_implies_first_migratable,
+                           data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                           pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
+                           data_set);
     }
 
     if (migrate_to) {
@@ -1495,29 +1495,29 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                          "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
-    custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                        rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                        pe_order_optional|pe_order_implies_then|pe_order_restart,
-                        data_set);
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                       rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                       pe_order_optional|pe_order_implies_then|pe_order_restart,
+                       data_set);
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
         || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_promoted_implies_first, data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                           pe_order_promoted_implies_first, data_set);
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
-                            pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
+                           pe_order_runnable_left, data_set);
     }
 
     // Don't clear resource history if probing on same node
-    custom_action_order(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
-                        NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
-                        NULL, pe_order_same_node|pe_order_then_cancels_first,
-                        data_set);
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
+                       NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
+                       NULL, pe_order_same_node|pe_order_then_cancels_first,
+                       data_set);
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
@@ -1549,14 +1549,14 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * it":
              *       stop this -> unfencing -> start that -> stop this
              */
-            custom_action_order(rsc, stop_key(rsc), NULL,
-                                NULL, strdup(unfence->uuid), unfence,
-                                pe_order_optional|pe_order_same_node, data_set);
+            pcmk__new_ordering(rsc, stop_key(rsc), NULL,
+                               NULL, strdup(unfence->uuid), unfence,
+                               pe_order_optional|pe_order_same_node, data_set);
 
-            custom_action_order(NULL, strdup(unfence->uuid), unfence,
-                                rsc, start_key(rsc), NULL,
-                                pe_order_implies_then_on_node|pe_order_same_node,
-                                data_set);
+            pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
+                               rsc, start_key(rsc), NULL,
+                               pe_order_implies_then_on_node|pe_order_same_node,
+                               data_set);
         }
     }
 
@@ -1578,8 +1578,9 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
-            custom_action_order(rsc, stop_key(rsc), NULL,
-                                NULL, load_stopped_task, load_stopped, pe_order_load, data_set);
+            pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
+                               load_stopped_task, load_stopped, pe_order_load,
+                               data_set);
         }
 
         for (GList *item = allowed_nodes; item; item = item->next) {
@@ -1593,12 +1594,13 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
-            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
-                                rsc, start_key(rsc), NULL, pe_order_load, data_set);
+            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
+                               rsc, start_key(rsc), NULL, pe_order_load,
+                               data_set);
 
-            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, pe_order_load, data_set);
+            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                               NULL, pe_order_load, data_set);
 
             free(load_stopped_task);
         }
@@ -1624,8 +1626,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * so that if we detect the container running, we will trigger a new
              * transition and avoid the unnecessary recovery.
              */
-            new_rsc_order(rsc->container, RSC_STATUS, rsc, RSC_STOP,
-                          pe_order_optional, data_set);
+            pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
+                                         RSC_STOP, pe_order_optional, data_set);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1663,17 +1665,17 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             crm_trace("Order and colocate %s relative to its container %s",
                       rsc->id, rsc->container->id);
 
-            custom_action_order(rsc->container,
-                                pcmk__op_key(rsc->container->id, RSC_START, 0),
-                                NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
-                                NULL,
-                                pe_order_implies_then|pe_order_runnable_left,
-                                data_set);
+            pcmk__new_ordering(rsc->container,
+                               pcmk__op_key(rsc->container->id, RSC_START, 0),
+                               NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
+                               NULL,
+                               pe_order_implies_then|pe_order_runnable_left,
+                               data_set);
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                                rsc->container,
-                                pcmk__op_key(rsc->container->id, RSC_STOP, 0),
-                                NULL, pe_order_implies_first, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                               rsc->container,
+                               pcmk__op_key(rsc->container->id, RSC_STOP, 0),
+                               NULL, pe_order_implies_first, data_set);
 
             if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -2468,11 +2470,13 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
 
     delete_action(rsc, node, optional);
 
-    new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
-    new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
     return TRUE;
 }
@@ -2611,11 +2615,11 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                  * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
-                custom_action_order(remote,
-                                    pcmk__op_key(remote->id, RSC_STATUS, 0),
-                                    NULL, top,
-                                    pcmk__op_key(top->id, RSC_START, 0), NULL,
-                                    pe_order_optional, data_set);
+                pcmk__new_ordering(remote,
+                                   pcmk__op_key(remote->id, RSC_STATUS, 0),
+                                   NULL, top,
+                                   pcmk__op_key(top->id, RSC_START, 0), NULL,
+                                   pe_order_optional, data_set);
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
@@ -2635,9 +2639,9 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
              * 'rsc' until 'remote' stops as this also implies that
              * 'rsc' is stopped - avoiding the need to probe
              */
-            custom_action_order(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
-                                NULL, top, pcmk__op_key(top->id, RSC_START, 0),
-                                NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
+                               NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+                               NULL, pe_order_optional, data_set);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
             return FALSE;
@@ -2682,14 +2686,13 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         pe__set_order_flags(flags, pe_order_runnable_left);
     }
 
-    custom_action_order(rsc, NULL, probe,
-                        top, pcmk__op_key(top->id, RSC_START, 0), NULL,
-                        flags, data_set);
+    pcmk__new_ordering(rsc, NULL, probe, top,
+                       pcmk__op_key(top->id, RSC_START, 0), NULL, flags,
+                       data_set);
 
     // Order the probe before any agent reload
-    custom_action_order(rsc, NULL, probe,
-                        top, reload_key(rsc), NULL,
-                        pe_order_optional, data_set);
+    pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
+                       pe_order_optional, data_set);
 
 #if 0
     // complete is always null currently
@@ -2757,12 +2760,12 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
                            FALSE, TRUE, data_set);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
-    custom_action_order(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
-                        pe_order_optional|pe_order_then_cancels_first,
-                        data_set);
-    custom_action_order(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
-                        pe_order_optional|pe_order_then_cancels_first,
-                        data_set);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
 }
 
 void

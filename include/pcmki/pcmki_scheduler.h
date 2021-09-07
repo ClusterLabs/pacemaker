@@ -72,32 +72,14 @@ extern gboolean stage3(pe_working_set_t * data_set);
 extern gboolean stage4(pe_working_set_t * data_set);
 extern gboolean stage5(pe_working_set_t * data_set);
 extern gboolean stage6(pe_working_set_t * data_set);
-extern gboolean stage7(pe_working_set_t * data_set);
 extern gboolean stage8(pe_working_set_t * data_set);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
-
-extern gboolean shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op,
-                                     pe_working_set_t * data_set);
-
-extern int custom_action_order(pe_resource_t * lh_rsc, char *lh_task, pe_action_t * lh_action,
-                               pe_resource_t * rh_rsc, char *rh_task, pe_action_t * rh_action,
-                               enum pe_ordering type, pe_working_set_t * data_set);
-
-extern int new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
-                         pe_resource_t * rh_rsc, const char *rh_task,
-                         enum pe_ordering type, pe_working_set_t * data_set);
-
-#  define order_start_start(rsc1,rsc2, type)				\
-    new_rsc_order(rsc1, CRMD_ACTION_START, rsc2, CRMD_ACTION_START, type, data_set)
-#  define order_stop_stop(rsc1, rsc2, type)				\
-    new_rsc_order(rsc1, CRMD_ACTION_STOP, rsc2, CRMD_ACTION_STOP, type, data_set)
 
 extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
 xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                 crm_time_t *now);
-bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
 extern const char *transition_idle_timeout;
 

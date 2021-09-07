@@ -605,50 +605,6 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
     return FALSE;
 }
 
-gboolean
-shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set_t * data_set)
-{
-    /* add the stop to the before lists so it counts as a pre-req
-     * for the shutdown
-     */
-    GList *lpc = NULL;
-
-    for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
-        pe_action_t *action = (pe_action_t *) lpc->data;
-
-        if (action->rsc == NULL || action->node == NULL) {
-            continue;
-        } else if (action->node->details != node->details) {
-            continue;
-        } else if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
-            pe_rsc_trace(action->rsc, "Skipping %s: maintenance mode", action->uuid);
-            continue;
-        } else if (node->details->maintenance) {
-            pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
-                         action->uuid, node->details->uname);
-            continue;
-        } else if (!pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
-            continue;
-        } else if (!pcmk_any_flags_set(action->rsc->flags,
-                                       pe_rsc_managed|pe_rsc_block)) {
-            /*
-             * If another action depends on this one, we may still end up blocking
-             */
-            pe_rsc_trace(action->rsc, "Skipping %s: unmanaged", action->uuid);
-            continue;
-        }
-
-        pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
-                     node->details->uname);
-        pe__clear_action_flags(action, pe_action_optional);
-        custom_action_order(action->rsc, NULL, action,
-                            NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                            pe_order_optional | pe_order_runnable_left, data_set);
-    }
-
-    return TRUE;
-}
-
 static pe_node_t *
 get_router_node(pe_action_t *action)
 {
@@ -1570,9 +1526,9 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
     return true;
 }
 
-static bool
-graph_has_loop(pe_action_t *init_action, pe_action_t *action,
-               pe_action_wrapper_t *input)
+bool
+pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
+                     pe_action_wrapper_t *input)
 {
     bool has_loop = false;
 
@@ -1616,8 +1572,8 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     for (GList *iter = input->action->actions_before;
          iter != NULL; iter = iter->next) {
 
-        if (graph_has_loop(init_action, input->action,
-                           (pe_action_wrapper_t *) iter->data)) {
+        if (pcmk__graph_has_loop(init_action, input->action,
+                                 (pe_action_wrapper_t *) iter->data)) {
             // Recursive call already logged a debug message
             has_loop = true;
             goto done;
@@ -1636,38 +1592,6 @@ done:
                   input->type);
     }
     return has_loop;
-}
-
-bool
-pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
-{
-    /* Prevent user-defined ordering constraints between resources
-     * running in a guest node and the resource that defines that node.
-     */
-    if (!pcmk_is_set(input->type, pe_order_preserve)
-        && action->rsc && action->rsc->fillers
-        && input->action->rsc && input->action->node
-        && input->action->node->details->remote_rsc
-        && (input->action->node->details->remote_rsc->container == action->rsc)) {
-        crm_warn("Invalid ordering constraint between %s and %s",
-                 input->action->rsc->id, action->rsc->id);
-        return true;
-    }
-
-    /* If there's an order like
-     * "rscB_stop node2"-> "load_stopped_node2" -> "rscA_migrate_to node1"
-     *
-     * then rscA is being migrated from node1 to node2, while rscB is being
-     * migrated from node2 to node1. If there would be a graph loop,
-     * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
-     */
-    if ((input->type == pe_order_load) && action->rsc
-        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
-        && graph_has_loop(action, action, input)) {
-        return true;
-    }
-
-    return false;
 }
 
 // Remove duplicate inputs (regardless of flags)
@@ -1717,11 +1641,12 @@ deduplicate_inputs(pe_action_t *action)
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
- *       their original settings. That means this MUST be called after stage7()
- *       is complete, and nothing after this should rely on those type flags.
- *       (For example, some code looks for type equal to some flag rather than
- *       whether the flag is set, and some code looks for particular
- *       combinations of flags -- such code must be done before stage8().)
+ *       their original settings. That means this MUST be called after
+ *       pcmk__apply_orderings() is complete, and nothing after this should rely
+ *       on those type flags. (For example, some code looks for type equal to
+ *       some flag rather than whether the flag is set, and some code looks for
+ *       particular combinations of flags -- such code must be done before
+ *       stage8().)
  */
 void
 graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)

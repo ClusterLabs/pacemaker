@@ -189,7 +189,8 @@ CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
 
     cancel = pe_cancel_op(rsc, task, interval_ms, active_node, data_set);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
-    custom_action_order(rsc, stop_key(rsc), NULL, rsc, NULL, cancel, pe_order_optional, data_set);
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
+                       pe_order_optional, data_set);
 }
 
 static gboolean
@@ -1248,10 +1249,10 @@ order_start_then_action(pe_resource_t *lh_rsc, pe_action_t *rh_action,
                         enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_rsc && rh_action && data_set) {
-        custom_action_order(lh_rsc, start_key(lh_rsc), NULL,
-                            rh_action->rsc, NULL, rh_action,
-                            pe_order_preserve | pe_order_runnable_left | extra,
-                            data_set);
+        pcmk__new_ordering(lh_rsc, start_key(lh_rsc), NULL,
+                           rh_action->rsc, NULL, rh_action,
+                           pe_order_preserve|pe_order_runnable_left|extra,
+                           data_set);
     }
 }
 
@@ -1260,9 +1261,9 @@ order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
                        enum pe_ordering extra, pe_working_set_t *data_set)
 {
     if (lh_action && rh_rsc && data_set) {
-        custom_action_order(lh_action->rsc, NULL, lh_action,
-                            rh_rsc, stop_key(rh_rsc), NULL,
-                            pe_order_preserve | extra, data_set);
+        pcmk__new_ordering(lh_action->rsc, NULL, lh_action,
+                           rh_rsc, stop_key(rh_rsc), NULL,
+                           pe_order_preserve|extra, data_set);
     }
 }
 
@@ -1287,9 +1288,9 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
             /* We can't use order_action_then_stop() here because its
              * pe_order_preserve breaks things
              */
-            custom_action_order(clear_op->rsc, NULL, clear_op,
-                                rsc, stop_key(rsc), NULL,
-                                pe_order_optional, data_set);
+            pcmk__new_ordering(clear_op->rsc, NULL, clear_op,
+                               rsc, stop_key(rsc), NULL,
+                               pe_order_optional, data_set);
         }
     }
 }
@@ -1590,174 +1591,6 @@ stage6(pe_working_set_t * data_set)
     g_list_free(stonith_ops);
     g_list_free(shutdown_ops);
     return TRUE;
-}
-
-/*
- * Determine the sets of independent actions and the correct order for the
- *  actions in each set.
- *
- * Mark dependencies of un-runnable actions un-runnable
- *
- */
-static GList *
-find_actions_by_task(GList *actions, pe_resource_t * rsc, const char *original_key)
-{
-    GList *list = NULL;
-
-    list = find_actions(actions, original_key, NULL);
-    if (list == NULL) {
-        /* we're potentially searching a child of the original resource */
-        char *key = NULL;
-        char *task = NULL;
-        guint interval_ms = 0;
-
-        if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
-            key = pcmk__op_key(rsc->id, task, interval_ms);
-            list = find_actions(actions, key, NULL);
-
-        } else {
-            crm_err("search key: %s", original_key);
-        }
-
-        free(key);
-        free(task);
-    }
-
-    return list;
-}
-
-static void
-rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
-               pe__ordering_t *order)
-{
-    GList *gIter = NULL;
-    GList *rh_actions = NULL;
-    pe_action_t *rh_action = NULL;
-    enum pe_ordering type;
-
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(order != NULL, return);
-
-    type = order->type;
-    rh_action = order->rh_action;
-    crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
-
-    if (rh_action != NULL) {
-        rh_actions = g_list_prepend(NULL, rh_action);
-
-    } else if (rsc != NULL) {
-        rh_actions = find_actions_by_task(rsc->actions, rsc, order->rh_action_task);
-    }
-
-    if (rh_actions == NULL) {
-        pe_rsc_trace(rsc,
-                     "Ignoring constraint %d: then (%s for %s) not found",
-                     order->id, order->rh_action_task, rsc->id);
-        return;
-    }
-
-    if ((lh_action != NULL) && (lh_action->rsc == rsc)
-        && pcmk_is_set(lh_action->flags, pe_action_dangle)) {
-
-        pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid,
-                     order->rh_action_task);
-        pe__clear_order_flags(type, pe_order_implies_then);
-    }
-
-    gIter = rh_actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *rh_action_iter = (pe_action_t *) gIter->data;
-
-        if (lh_action) {
-            order_actions(lh_action, rh_action_iter, type);
-
-        } else if (type & pe_order_implies_then) {
-            pe__clear_action_flags(rh_action_iter, pe_action_runnable);
-            crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
-        } else {
-            crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
-        }
-    }
-
-    g_list_free(rh_actions);
-}
-
-static void
-rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
-                pe_working_set_t *data_set)
-{
-    GList *lh_actions = NULL;
-    pe_action_t *lh_action = order->lh_action;
-    pe_resource_t *rh_rsc = order->rh_rsc;
-
-    CRM_ASSERT(lh_rsc != NULL);
-    pe_rsc_trace(lh_rsc, "Applying ordering constraint %d (first: %s)",
-                 order->id, lh_rsc->id);
-
-    if (lh_action != NULL) {
-        lh_actions = g_list_prepend(NULL, lh_action);
-
-    } else {
-        lh_actions = find_actions_by_task(lh_rsc->actions, lh_rsc, order->lh_action_task);
-    }
-
-    if ((lh_actions == NULL) && (lh_rsc == rh_rsc)) {
-        pe_rsc_trace(lh_rsc,
-                     "Ignoring constraint %d: first (%s for %s) not found",
-                     order->id, order->lh_action_task, lh_rsc->id);
-
-    } else if (lh_actions == NULL) {
-        char *key = NULL;
-        char *op_type = NULL;
-        guint interval_ms = 0;
-
-        parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
-        key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
-
-        if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
-            free(key);
-            pe_rsc_trace(lh_rsc,
-                         "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, lh_rsc->id);
-
-        } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
-                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
-            free(key);
-            pe_rsc_trace(lh_rsc,
-                         "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, lh_rsc->id);
-
-        } else {
-            pe_rsc_trace(lh_rsc,
-                         "Creating first (%s for %s) for constraint %d ",
-                         order->lh_action_task, lh_rsc->id, order->id);
-            lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
-            lh_actions = g_list_prepend(NULL, lh_action);
-        }
-
-        free(op_type);
-    }
-
-    if (rh_rsc == NULL) {
-        if (order->rh_action == NULL) {
-            pe_rsc_trace(lh_rsc, "Ignoring constraint %d: then not found",
-                         order->id);
-            return;
-        }
-        rh_rsc = order->rh_action->rsc;
-    }
-    for (GList *gIter = lh_actions; gIter != NULL; gIter = gIter->next) {
-        lh_action = (pe_action_t *) gIter->data;
-
-        if (rh_rsc == NULL) {
-            order_actions(lh_action, order->rh_action, order->type);
-
-        } else {
-            rsc_order_then(lh_action, rh_rsc, order);
-        }
-    }
-
-    g_list_free(lh_actions);
 }
 
 static int
@@ -2097,14 +1930,9 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         if (action->rsc->is_remote_node &&
             pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
 
-            custom_action_order(action->rsc,
-                NULL,
-                action,
-                action->rsc,
-                pcmk__op_key(action->rsc->id, RSC_START, 0),
-                NULL,
-                pe_order_optional,
-                data_set);
+            pcmk__new_ordering(action->rsc, NULL, action, action->rsc,
+                               pcmk__op_key(action->rsc->id, RSC_START, 0),
+                               NULL, pe_order_optional, data_set);
 
             continue;
         }
@@ -2122,7 +1950,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
          *
          * @TODO This is probably wrong; pseudo-actions might be converted to
          * real actions and vice versa later in update_actions() at the end of
-         * stage7().
+         * pcmk__apply_orderings().
          */
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             continue;
@@ -2146,9 +1974,9 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
                 if ((rsc_action->node->details != action->node->details)
                     && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
-                    custom_action_order(remote, start_key(remote), NULL,
-                                        action->rsc, NULL, rsc_action,
-                                        pe_order_optional, data_set);
+                    pcmk__new_ordering(remote, start_key(remote), NULL,
+                                       action->rsc, NULL, rsc_action,
+                                       pe_order_optional, data_set);
                 }
             }
         }
@@ -2630,96 +2458,11 @@ order_then_probes(pe_working_set_t * data_set)
 #endif
 }
 
-static void
-order_probes(pe_working_set_t * data_set)
+void
+pcmk__order_probes(pe_working_set_t *data_set)
 {
     order_first_probes(data_set);
     order_then_probes(data_set);
-}
-
-gboolean
-stage7(pe_working_set_t * data_set)
-{
-    pcmk__output_t *prev_out = data_set->priv;
-    pcmk__output_t *out = NULL;
-    GList *gIter = NULL;
-
-    crm_trace("Applying ordering constraints");
-
-    /* Don't ask me why, but apparently they need to be processed in
-     * the order they were created in... go figure
-     *
-     * Also g_list_append() has horrendous performance characteristics
-     * So we need to use g_list_prepend() and then reverse the list here
-     */
-    data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
-
-    for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
-        pe__ordering_t *order = gIter->data;
-        pe_resource_t *rsc = order->lh_rsc;
-
-        if (rsc != NULL) {
-            rsc_order_first(rsc, order, data_set);
-            continue;
-        }
-
-        rsc = order->rh_rsc;
-        if (rsc != NULL) {
-            rsc_order_then(order->lh_action, rsc, order);
-
-        } else {
-            crm_trace("Applying ordering constraint %d (non-resource actions)",
-                      order->id);
-            order_actions(order->lh_action, order->rh_action, order->type);
-        }
-    }
-
-    g_list_foreach(data_set->actions, (GFunc) pcmk__block_colocated_starts,
-                   data_set);
-
-    crm_trace("Ordering probes");
-    order_probes(data_set);
-
-    crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions, (GFunc) update_action, data_set);
-
-    // Check for invalid orderings
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-        pe_action_wrapper_t *input = NULL;
-
-        for (GList *input_iter = action->actions_before;
-             input_iter != NULL; input_iter = input_iter->next) {
-
-            input = (pe_action_wrapper_t *) input_iter->data;
-            if (pcmk__ordering_is_invalid(action, input)) {
-                input->type = pe_order_none;
-            }
-        }
-    }
-
-    /* stage7 only ever outputs to the log, so ignore whatever output object was
-     * previously set and just log instead.
-     */
-    out = pcmk__new_logger();
-    if (out == NULL) {
-        return FALSE;
-    }
-
-    pcmk__output_set_log_level(out, LOG_NOTICE);
-    data_set->priv = out;
-
-    out->begin_list(out, NULL, NULL, "Actions");
-    LogNodeActions(data_set);
-
-    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
-
-    out->end_list(out);
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-
-    data_set->priv = prev_out;
-    return TRUE;
 }
 
 static int transition_id = -1;

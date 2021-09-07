@@ -13,6 +13,7 @@
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
+#include "libpacemaker_private.h"
 
 gboolean
 can_run_resources(const pe_node_t * node)
@@ -490,7 +491,7 @@ sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
                                              node, FALSE, TRUE, data_set);
 
-    shutdown_constraints(node, shutdown_op, data_set);
+    pcmk__order_stops_before_shutdown(node, shutdown_op, data_set);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     return shutdown_op;
 }

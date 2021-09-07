@@ -164,8 +164,9 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
         for (int then_lpc = 0;
              (then_lpc <= 1) && (then_tasks[then_lpc] != NULL); then_lpc++) {
 
-            new_rsc_order(first_rsc, first_tasks[first_lpc], then_rsc, then_tasks[then_lpc],
-                          pe_order_anti_colocation, data_set);
+            pcmk__order_resource_actions(first_rsc, first_tasks[first_lpc],
+                                         then_rsc, then_tasks[then_lpc],
+                                         pe_order_anti_colocation, data_set);
         }
     }
 }

@@ -12,6 +12,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
@@ -951,13 +953,18 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
     get_clone_variant_data(clone_data, rsc);
 
     pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
-    new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
-    new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED, pe_order_runnable_left, data_set);
-    new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+                                 pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
+                                 pe_order_runnable_left, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
+                                 pe_order_runnable_left, data_set);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP, pe_order_optional, data_set);
-        new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
+        pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+                                     pe_order_optional, data_set);
+        pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+                                     pe_order_runnable_left, data_set);
     }
 
     if (clone_data->ordered) {
@@ -969,18 +976,22 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-        order_start_start(rsc, child_rsc, pe_order_runnable_left | pe_order_implies_first_printed);
-        new_rsc_order(child_rsc, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed,
-                      data_set);
+        pcmk__order_starts(rsc, child_rsc,
+                           pe_order_runnable_left|pe_order_implies_first_printed,
+                           data_set);
+        pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
+                                     pe_order_implies_then_printed, data_set);
         if (clone_data->ordered && last_rsc) {
-            order_start_start(last_rsc, child_rsc, pe_order_optional);
+            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
+                               data_set);
         }
 
-        order_stop_stop(rsc, child_rsc, pe_order_implies_first_printed);
-        new_rsc_order(child_rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed,
-                      data_set);
+        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
+                          data_set);
+        pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
+                                     pe_order_implies_then_printed, data_set);
         if (clone_data->ordered && last_rsc) {
-            order_stop_stop(child_rsc, last_rsc, pe_order_optional);
+            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional, data_set);
         }
 
         last_rsc = child_rsc;
