@@ -1349,11 +1349,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                      cmd->interval_ms, cmd->timeout,
                                      params_copy, cmd->service_flags);
 
-    if (!action) {
-        // Invalid arguments (which would be a bug) or out-of-memory
-        crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
+    if (action == NULL) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, "Internal Pacemaker error");
+                         PCMK_EXEC_ERROR, strerror(ENOMEM));
         goto exec_done;
     }
 

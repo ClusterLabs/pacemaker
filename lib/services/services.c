@@ -173,6 +173,43 @@ new_action(void)
     return op;
 }
 
+static bool
+required_argument_missing(uint32_t ra_caps, const char *name,
+                          const char *standard, const char *provider,
+                          const char *agent, const char *action)
+{
+    if (pcmk__str_empty(name)) {
+        crm_info("Cannot create operation without resource name (bug?)");
+        return true;
+    }
+
+    if (pcmk__str_empty(standard)) {
+        crm_info("Cannot create operation for %s without resource class (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+        && pcmk__str_empty(provider)) {
+        crm_info("Cannot create operation for %s resource %s "
+                 "without provider (bug?)", standard, name);
+        return true;
+    }
+
+    if (pcmk__str_empty(agent)) {
+        crm_info("Cannot create operation for %s without agent name (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk__str_empty(action)) {
+        crm_info("Cannot create operation for %s without action name (bug?)",
+                 name);
+        return true;
+    }
+    return false;
+}
+
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
@@ -180,7 +217,7 @@ services__create_resource_action(const char *name, const char *standard,
                         GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
-    uint32_t ra_caps = 0;
+    uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     op = new_action();
     if (op == NULL) {
@@ -191,49 +228,30 @@ services__create_resource_action(const char *name, const char *standard,
         return NULL;
     }
 
-    /*
-     * Do some up front sanity checks before we go off and
-     * build the svc_action_t instance.
-     */
-
-    if (pcmk__str_empty(name)) {
-        crm_err("Cannot create operation without resource name");
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(standard)) {
-        crm_err("Cannot create operation for %s without resource class", name);
-        goto return_error;
-    }
-    ra_caps = pcmk_get_ra_caps(standard);
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
-        && pcmk__str_empty(provider)) {
-        crm_err("Cannot create operation for %s without provider", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(agent)) {
-        crm_err("Cannot create operation for %s without agent name", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(action)) {
-        crm_err("Cannot create operation for %s without operation name", name);
-        goto return_error;
-    }
-
-    /*
-     * Sanity checks passed, proceed!
-     */
-
-    op->rsc = strdup(name);
     op->interval_ms = interval_ms;
     op->timeout = timeout;
+    op->flags = flags;
+    op->sequence = ++operations;
+
+    // Take ownership of params
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
+        op->params = params;
+    } else if (params != NULL) {
+        g_hash_table_destroy(params);
+        params = NULL;
+    }
+
+    if (required_argument_missing(ra_caps, name, standard, provider, agent,
+                                  action)) {
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Required agent or action information missing");
+        return op;
+    }
+
+    op->rsc = strdup(name);
     op->standard = expand_resource_class(name, standard, agent);
     op->agent = strdup(agent);
-    op->sequence = ++operations;
-    op->flags = flags;
     op->id = pcmk__op_key(name, action, interval_ms);
 
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
@@ -246,11 +264,6 @@ services__create_resource_action(const char *name, const char *standard,
 
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
         op->provider = strdup(provider);
-    }
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
-        op->params = params;
-        params = NULL; // so we don't free them in this function
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
@@ -350,11 +363,6 @@ services__create_resource_action(const char *name, const char *standard,
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
         services__handle_exec_error(op, ENOENT);
-    }
-
-  return_error:
-    if(params) {
-        g_hash_table_destroy(params);
     }
 
     return op;
