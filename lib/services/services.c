@@ -222,13 +222,23 @@ services__create_resource_action(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        char *dirs = strdup(OCF_RA_PATH);
+        char *dirs = NULL;
         char *dir = NULL;
         char *buf = NULL;
         struct stat st;
 
-        if (pcmk__str_empty(dirs)) {
-            free(dirs);
+        if (pcmk__str_empty(OCF_RA_PATH)) {
+            crm_err("Cannot execute OCF actions because resource agent path "
+                    "was not configured in this build");
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR_HARD;
+            return op;
+        }
+
+        dirs = strdup(OCF_RA_PATH);
+        if (dirs == NULL) {
+            crm_err("Cannot create %s operation for %s: %s",
+                    action, name, strerror(ENOMEM));
             services__handle_exec_error(op, ENOMEM);
             return op;
         }
@@ -247,6 +257,8 @@ services__create_resource_action(const char *name, const char *standard,
         if (buf) {
             op->opaque->exec = buf;
         } else {
+            crm_err("Cannot create %s operation for %s: %s",
+                    action, name, strerror(ENOENT));
             services__handle_exec_error(op, ENOENT);
             return op;
         }
