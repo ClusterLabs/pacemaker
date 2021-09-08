@@ -966,8 +966,7 @@ action_complete(svc_action_t * action)
 
         } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop completed
-            if ((cmd->result.execution_status == PCMK_EXEC_DONE)
-                && (cmd->result.exit_status == PCMK_OCF_PENDING)) {
+            if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
 
             } else if ((cmd->result.exit_status == PCMK_OCF_OK)
@@ -1035,7 +1034,7 @@ action_complete(svc_action_t * action)
                 crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
 
-            } else if (cmd->result.exit_status == PCMK_OCF_PENDING) {
+            } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
                          cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
