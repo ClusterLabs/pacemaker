@@ -615,7 +615,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
         crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                  op->id, op->pid, strsignal(signo), signo);
         op->status = PCMK_EXEC_ERROR;
-        op->rc = PCMK_OCF_SIGNAL;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
     }
 
     log_op_output(op);
