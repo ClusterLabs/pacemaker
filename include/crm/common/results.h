@@ -173,7 +173,6 @@ enum ocf_exitcode {
 
     // Pacemaker extensions
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
-    PCMK_OCF_EXEC_ERROR           = 192, //!< Error executing the agent
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
     PCMK_OCF_SIGNAL               = 194, //!< Agent terminated due to signal
     PCMK_OCF_PENDING              = 196, //!< Multi-stage execution in progress
@@ -181,6 +180,7 @@ enum ocf_exitcode {
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // Former Pacemaker extensions
+    PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
     PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
     PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
     PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
