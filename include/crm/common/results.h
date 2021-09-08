@@ -207,7 +207,7 @@ enum ocf_exitcode {
  * OSes we don't support -- for example, OpenVMS considers 1 success!).
  *
  * For init scripts, the LSB gives meaning to 0-7, and sets aside 150-199 for
- * application use. OCF adds 8-9 and 189-199.
+ * application use. OCF adds 8-9 and 190-191.
  *
  * sysexits.h was an attempt to give additional meanings, but never really
  * caught on. It uses 0 and 64-78.
@@ -268,6 +268,16 @@ typedef enum crm_exit_e {
 
     // Other
     CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
+
+    /* Anything above 128 overlaps with some shells' use of these values for
+     * "interrupted by signal N", and so may be unreliable when detected by
+     * shell scripts.
+     */
+
+    // OCF Resource Agent API 1.1
+    CRM_EX_DEGRADED             = 190, //!< Service active but more likely to fail soon
+    CRM_EX_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
+
     CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;
 
