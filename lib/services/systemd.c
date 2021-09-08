@@ -981,9 +981,11 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    // Initialize rc/status in case invoke_unit_by_name() doesn't set them
+    /* invoke_unit_by_name() should always override these values, which are here
+     * just as a fail-safe in case there are any code paths that neglect to
+     */
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    op->status = PCMK_EXEC_DONE;
+    op->status = PCMK_EXEC_ERROR;
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
         op->opaque->timerid = g_timeout_add(op->timeout + 5000,
