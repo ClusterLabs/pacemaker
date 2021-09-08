@@ -174,7 +174,6 @@ enum ocf_exitcode {
     // Pacemaker extensions
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
-    PCMK_OCF_PENDING              = 196, //!< Multi-stage execution in progress
     PCMK_OCF_TIMEOUT              = 198, //!< Action did not complete in time
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
@@ -182,6 +181,7 @@ enum ocf_exitcode {
     PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
     PCMK_OCF_SIGNAL               = 194, //!< \deprecated (Unused)
     PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
+    PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
     PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
     PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
 

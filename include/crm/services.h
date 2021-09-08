@@ -305,8 +305,6 @@ gboolean services_alert_async(svc_action_t *action,
                 return "promoted";
             case PCMK_OCF_FAILED_PROMOTED:
                 return "promoted (failed)";
-            case PCMK_OCF_PENDING:
-                return "OCF_PENDING";
             case PCMK_OCF_TIMEOUT:
                 return "OCF_TIMEOUT";
             case PCMK_OCF_DEGRADED:
@@ -323,6 +321,8 @@ gboolean services_alert_async(svc_action_t *action,
                 return "other error (DEPRECATED STATUS)";
             case PCMK_OCF_SIGNAL:
                 return "interrupted by signal (DEPRECATED STATUS)";
+            case PCMK_OCF_PENDING:
+                return "pending (DEPRECATED STATUS)";
 #endif
             default:
                 return "unknown";
