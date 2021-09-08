@@ -176,13 +176,15 @@ enum ocf_exitcode {
     PCMK_OCF_EXEC_ERROR           = 192, //!< Error executing the agent
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
     PCMK_OCF_SIGNAL               = 194, //!< Agent terminated due to signal
-    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
     PCMK_OCF_PENDING              = 196, //!< Multi-stage execution in progress
-    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
     PCMK_OCF_TIMEOUT              = 198, //!< Action did not complete in time
-    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // Former Pacemaker extensions
+    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
+    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
+    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
+
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
     PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
 

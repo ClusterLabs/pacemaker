@@ -307,20 +307,23 @@ gboolean services_alert_async(svc_action_t *action,
                 return "promoted (failed)";
             case PCMK_OCF_SIGNAL:
                 return "OCF_SIGNAL";
-            case PCMK_OCF_NOT_SUPPORTED:
-                return "OCF_NOT_SUPPORTED";
             case PCMK_OCF_PENDING:
                 return "OCF_PENDING";
-            case PCMK_OCF_CANCELLED:
-                return "OCF_CANCELLED";
             case PCMK_OCF_TIMEOUT:
                 return "OCF_TIMEOUT";
-            case PCMK_OCF_OTHER_ERROR:
-                return "OCF_OTHER_ERROR";
             case PCMK_OCF_DEGRADED:
                 return "OCF_DEGRADED";
             case PCMK_OCF_DEGRADED_PROMOTED:
                 return "promoted (degraded)";
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+            case PCMK_OCF_NOT_SUPPORTED:
+                return "action not supported (DEPRECATED)";
+            case PCMK_OCF_CANCELLED:
+                return "action cancelled (DEPRECATED)";
+            case PCMK_OCF_OTHER_ERROR:
+                return "other error (DEPRECATED)";
+#endif
             default:
                 return "unknown";
         }
