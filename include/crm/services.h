@@ -101,42 +101,79 @@ enum svc_action_flags {
 };
 
 typedef struct svc_action_private_s svc_action_private_t;
+
+/*!
+ * \brief Object for executing external actions
+ *
+ * \note This object should never be instantiated directly, but instead created
+ *       using one of the constructor functions (resources_action_create() for
+ *       resource agents, services_alert_create() for alert agents, or
+ *       services_action_create_generic() for generic executables). Similarly,
+ *       do not use sizeof() on this struct.
+ *
+ * \internal Internally, services__create_resource_action() is preferable to
+ *           resources_action_create().
+ */
 typedef struct svc_action_s {
+    /*! Operation key (<resource>_<action>_<interval>) for resource actions,
+     *  XML ID for alert actions, or NULL for generic actions
+     */
     char *id;
+
+    //! XML ID of resource being executed for resource actions, otherwise NULL
     char *rsc;
+
+    //! Name of action being executed for resource actions, otherwise NULL
     char *action;
+
+    //! Action interval for recurring resource actions, otherwise 0
     guint interval_ms;
 
+    //! Resource standard for resource actions, otherwise NULL
     char *standard;
+
+    //! Resource provider for resource actions that require it, otherwise NULL
     char *provider;
+
+    //! Resource agent name for resource actions, otherwise NULL
     char *agent;
 
-    int timeout;
-    GHashTable *params; /* used for setting up environment for ocf-ra &
-                           alert agents
-                           and to be sent via stdin for fence-agents
-                         */
+    int timeout;    //!< Action timeout (in milliseconds)
 
-    int rc;
-    int pid;
-    int cancel;
-    int status;
-    int sequence;
-    int expected_rc;
-    int synchronous;
-    enum svc_action_flags flags;
-
-    char *stderr_data;
-    char *stdout_data;
-
-    /*!
-     * Data stored by the creator of the action.
-     *
-     * This may be used to hold data that is needed later on by a callback,
-     * for example.
+    /*! A hash table of name/value pairs to use as parameters for resource and
+     *  alert actions, otherwise NULL. These will be used to set environment
+     *  variables for non-fencing resource agents and alert agents, and to send
+     *  stdin to fence agents.
      */
-    void *cb_data;
+    GHashTable *params;
 
+    int rc;         //!< Exit status of action (set by library upon completion)
+
+    //!@{
+    //! This field should be treated as internal to Pacemaker
+    int pid;        // Process ID of child
+    int cancel;     // Whether this is a cancellation of a recurring action
+    //!@}
+
+    int status;     //!< Execution status (enum pcmk_exec_status set by library)
+
+    /*! Action counter (set by library for resource actions, or by caller
+     * otherwise)
+     */
+    int sequence;
+
+    //!@{
+    //! This field should be treated as internal to Pacemaker
+    int expected_rc;    // Unused
+    int synchronous;    // Whether execution should be synchronous (blocking)
+    //!@}
+
+    enum svc_action_flags flags;    //!< Flag group of enum svc_action_flags
+    char *stderr_data;              //!< Action stderr (set by library)
+    char *stdout_data;              //!< Action stdout (set by library)
+    void *cb_data;                  //!< For caller's use (not used by library)
+
+    //! This field should be treated as internal to Pacemaker
     svc_action_private_t *opaque;
 } svc_action_t;
 
