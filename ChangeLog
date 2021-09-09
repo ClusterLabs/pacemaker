@@ -1,25 +1,7 @@
-* Mon Aug 16 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc3
-- Changesets: 7
-- Diff: 5 files changed, 118 insertions(+), 45 deletions(-)
-
-- Fixes since Pacemaker-2.1.1-rc2
-  + controller: ensure lost node's transient attributes are cleared without DC
-  + controller: ensure newly joining node learns the node names of non-DCs
-
-* Fri Aug 06 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc2
-- Changesets: 10
-- Diff: 10 files changed, 122 insertions(+), 66 deletions(-)
-
-- Fixes since Pacemaker-2.1.1-rc1
-  + fencer: avoid repeated attempts to get (nonexistent) meta-data for
-            watchdog device (regression in 2.1.0)
-  + tools: avoid crm_mon memory leaks when filtering by resource or node
-  + tools: crm_mon should show active unmanaged resources on offline nodes
-           without requiring -r/--inactive
-
-* Mon Jul 26 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc1
-- Changesets: 209
-- Diff: 93 files changed, 4673 insertions(+), 3323 deletions(-)
+* Thu Sep 09 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1
+- Changesets: 231
+- Diff:
+ 102 files changed, 4912 insertions(+), 3428 deletions(-)
 
 - Features added since Pacemaker-2.1.0
   + enhanced support for OCF Resource Agent API 1.1 standard
@@ -31,20 +13,30 @@
   + tools: crm_mon XML output includes stonith-timeout-ms and
            priority-fencing-delay-ms cluster properties
   + pacemakerd: support --output-as/--output-to options including XML output
-                with options such as --features
+                with interactive options such as --features
 
 - Fixes since Pacemaker-2.1.0
   + pacemaker-attrd: avoid repeated unfencing of remote nodes when DC joined
                      cluster after remote was up
+  + controller: ensure newly joining node learns the node names of non-DCs
+  + controller: ensure lost node's transient attributes are cleared without DC
   + scheduler: avoid invalid transition when group member is unmanaged
                (CLBZ#5423)
   + scheduler: don't schedule probes of unmanaged resources on pending nodes
+  + executor: avoid crash after TLS connection errors
+              (regression introduced in 2.0.4)
+  + fencing: avoid repeated attempts to get (nonexistent) meta-data for
+             watchdog device (regression introduced in 2.1.0)
   + fencing: select correct device when pcmk_host_check="dynamic-list" and
              pcmk_host_map are both specified (CLBZ#5474)
   + tools: crm_attribute supports node attribute values starting with a '-'
            again (regression introduced in 2.1.0)
   + tools: crm_attribute deprecated --get-value option does not require an
            argument (regression introduced in 2.1.0)
+  + tools: avoid crm_mon memory leaks when filtering by resource or node
+           (regressions introduced in 2.0.4 and 2.0.5)
+  + tools: crm_mon should show active unmanaged resources on offline nodes
+           without requiring -r/--inactive
   + tools: better crm_resource error messages for unsupported resource types
   + tools: crm_simulate --show-failcounts includes all relevant information
   + tools: crm_mon should not show inactive group members without --inactive
