@@ -1963,7 +1963,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
                   pcmk__str_eq(check_type, "status", pcmk__str_casei)? "status" : "list",
                   device->id, timeout); 
               } else if ((device_timeout < timeout) && (device_timeout < MIN_QUERY_TIMEOUT)) {
-                  crm_notice("Since the pcmk_%s_timeout parameter of %s is larger than the minimum timeout(%d) of Query, timeout may occur",
+                  crm_notice("Since the pcmk_%s_timeout parameter of %s is smaller than the minimum timeout(%d) of Query, timeout may occur",
                   pcmk__str_eq(check_type, "status", pcmk__str_casei)? "status" : "list",
                   device->id, MIN_QUERY_TIMEOUT); 
               }
