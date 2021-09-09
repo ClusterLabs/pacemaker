@@ -19,8 +19,11 @@ pcmk_hostname_test_LDFLAGS = -Wl,--wrap=uname
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS =	\
-	pcmk_hostname_test \
 	pcmk_str_is_infinity_test		\
 	pcmk_str_is_minus_infinity_test
+
+if WRAPPABLE_UNAME
+check_PROGRAMS += pcmk_hostname_test
+endif
 
 TESTS = $(check_PROGRAMS)
