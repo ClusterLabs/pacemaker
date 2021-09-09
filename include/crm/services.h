@@ -190,14 +190,6 @@ typedef struct svc_action_s {
     GList *get_directory_list(const char *root, gboolean files, gboolean executable);
 
 /**
- * Get a list of services
- *
- * \return a list of services.  The list items are gchar *.  This list _must_
- *         be destroyed using g_list_free_full(list, free).
- */
-    GList *services_list(void);
-
-/**
  * \brief Get a list of providers
  *
  * \param[in] standard  list providers of this standard (e.g. ocf, lsb, etc.)
@@ -236,9 +228,6 @@ typedef struct svc_action_s {
  * \return A boolean
  */
     gboolean resources_agent_exists(const char *standard, const char *provider, const char *agent);
-
-svc_action_t *services_action_create(const char *name, const char *action,
-                                     guint interval_ms, int timeout /* ms */);
 
 /**
  * \brief Create a new resource action
