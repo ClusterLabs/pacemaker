@@ -712,7 +712,6 @@ main(int argc, char **argv)
 {
     pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
-    xmlNode *cib_constraints = NULL;
 
     cib_t *cib_conn = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -893,8 +892,7 @@ main(int argc, char **argv)
 
     /* For recording the tickets that are referenced in rsc_ticket constraints
      * but have never been granted yet. */
-    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;

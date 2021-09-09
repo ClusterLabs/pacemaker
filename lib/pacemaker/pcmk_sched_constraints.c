@@ -43,14 +43,25 @@ evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
     return result;
 }
 
-gboolean
-unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Unpack constraints from XML
+ *
+ * Given a cluster working set, unpack all constraints from its input XML into
+ * data structures.
+ *
+ * \param[in,out] data_set  Cluster working set
+ */
+void
+pcmk__unpack_constraints(pe_working_set_t *data_set)
 {
-    xmlNode *xml_obj = NULL;
-    xmlNode *lifetime = NULL;
+    xmlNode *xml_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                               data_set->input);
 
-    for (xml_obj = pcmk__xe_first_child(xml_constraints); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
+    for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
+         xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
+
+        xmlNode *lifetime = NULL;
         const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
         const char *tag = crm_element_name(xml_obj);
 
@@ -63,14 +74,14 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
         crm_trace("Unpacking %s constraint '%s'", tag, id);
 
         lifetime = first_named_child(xml_obj, "lifetime");
-        if (lifetime) {
+        if (lifetime != NULL) {
             pcmk__config_warn("Support for 'lifetime' attribute (in %s) is "
                               "deprecated (the rules it contains should "
                               "instead be direct descendents of the "
                               "constraint object)", id);
         }
 
-        if (lifetime && !evaluate_lifetime(lifetime, data_set)) {
+        if ((lifetime != NULL) && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
         } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
@@ -89,8 +100,6 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             pe_err("Unsupported constraint type: %s", tag);
         }
     }
-
-    return TRUE;
 }
 
 pe_resource_t *
@@ -116,56 +125,75 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
     return NULL;
 }
 
-static gboolean
-pe_find_constraint_tag(pe_working_set_t * data_set, const char * id, pe_tag_t ** tag)
+/*!
+ * \internal
+ * \brief Check whether an ID references a resource tag
+ *
+ * \param[in]  data_set  Cluster working set
+ * \param[in]  id        Tag ID to search for
+ * \param[out] tag       Where to store tag, if found
+ *
+ * \return true if ID refers to a tagged resource or resource set template,
+ *         otherwise false
+ */
+static bool
+find_constraint_tag(pe_working_set_t *data_set, const char *id, pe_tag_t **tag)
 {
-    gboolean rc = FALSE;
-
     *tag = NULL;
-    rc = g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
-                                       NULL, (gpointer*) tag);
 
-    if (rc == FALSE) {
-        rc = g_hash_table_lookup_extended(data_set->tags, id,
-                                          NULL, (gpointer*) tag);
-
-        if (rc == FALSE) {
-            crm_warn("No template or tag named '%s'", id);
-            return FALSE;
-
-        } else if (*tag == NULL) {
-            crm_warn("No resource is tagged with '%s'", id);
-            return FALSE;
+    // Check whether id refers to a resource set template
+    if (g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
+                                     NULL, (gpointer *) tag)) {
+        if (*tag == NULL) {
+            crm_warn("No resource is derived from template '%s'", id);
+            return false;
         }
-
-    } else if (*tag == NULL) {
-        crm_warn("No resource is derived from template '%s'", id);
-        return FALSE;
+        return true;
     }
 
-    return rc;
+    // If not, check whether id refers to a tag
+    if (g_hash_table_lookup_extended(data_set->tags, id,
+                                     NULL, (gpointer *) tag)) {
+        if (*tag == NULL) {
+            crm_warn("No resource is tagged with '%s'", id);
+            return false;
+        }
+        return true;
+    }
+
+    crm_warn("No template or tag named '%s'", id);
+    return false;
 }
 
-gboolean
+/*!
+ * \brief
+ * \internal Check whether an ID refers to a valid resource or tag
+ *
+ * \param[in]  data_set Cluster working set
+ * \param[in]  id       ID to search for
+ * \param[out] rsc      Where to store resource, if found (or NULL to skip
+ *                      searching resources)
+ * \param[out] tag      Where to store tag, if found (or NULL to skip searching
+ *                      tags)
+ *
+ * \return true if id refers to a resource (possibly indirectly via a tag)
+ */
+bool
 pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
                             pe_resource_t **rsc, pe_tag_t **tag)
 {
-    gboolean rc = FALSE;
-
-    if (rsc) {
-        *rsc = NULL;
+    if (rsc != NULL) {
         *rsc = pcmk__find_constraint_resource(data_set->resources, id);
-        if (*rsc) {
-            return TRUE;
+        if (*rsc != NULL) {
+            return true;
         }
     }
 
-    if (tag) {
-        *tag = NULL;
-        rc = pe_find_constraint_tag(data_set, id, tag);
+    if ((tag != NULL) && find_constraint_tag(data_set, id, tag)) {
+        return true;
     }
 
-    return rc;
+    return false;
 }
 
 /*!
@@ -290,9 +318,19 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
     return new_xml;
 }
 
-gboolean
+/*!
+ * \internal
+ * \brief Convert a tag into a resource set of tagged resources
+ *
+ * \param[in]  xml_obj      Constraint XML
+ * \param[out] rsc_set      Where to store resource set XML created based on tag
+ * \param[in]  attr         Name of XML attribute containing resource or tag ID
+ * \param[in]  convert_rsc  Convert to set even if \p attr references a resource
+ * \param[in]  data_set     Cluster working set
+ */
+bool
 pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                 gboolean convert_rsc, pe_working_set_t *data_set)
+                 bool convert_rsc, pe_working_set_t *data_set)
 {
     const char *cons_id = NULL;
     const char *id = NULL;
@@ -302,24 +340,24 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 
     *rsc_set = NULL;
 
-    CRM_CHECK((xml_obj != NULL) && (attr != NULL), return FALSE);
+    CRM_CHECK((xml_obj != NULL) && (attr != NULL), return false);
 
     cons_id = ID(xml_obj);
     if (cons_id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return false;
     }
 
     id = crm_element_value(xml_obj, attr);
     if (id == NULL) {
-        return TRUE;
+        return true;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", cons_id, id);
-        return FALSE;
+        return false;
 
     } else if (tag) {
         GList *gIter = NULL;
@@ -341,7 +379,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         /* Set sequential="false" for the resource_set */
         crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
 
-    } else if (rsc && convert_rsc) {
+    } else if ((rsc != NULL) && convert_rsc) {
         /* Even a regular resource is referenced by "attr", convert it into a resource_set.
            Because the other side of the constraint could be a template/tag reference. */
         xmlNode *rsc_ref = NULL;
@@ -353,13 +391,30 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         crm_xml_add(rsc_ref, XML_ATTR_ID, id);
 
     } else {
-        return TRUE;
+        return true;
     }
 
     /* Remove the "attr" attribute referencing the template/tag */
-    if (*rsc_set) {
+    if (*rsc_set != NULL) {
         xml_remove_prop(xml_obj, attr);
     }
 
-    return TRUE;
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Create constraints inherent to resource types
+ *
+ * \param[in,out] data_set  Cluster working set
+ */
+void
+pcmk__create_internal_constraints(pe_working_set_t *data_set)
+{
+    crm_trace("Create internal constraints");
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->internal_constraints(rsc, data_set);
+    }
 }

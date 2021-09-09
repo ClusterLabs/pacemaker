@@ -623,7 +623,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "rsc" into resource_set under constraint
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
-                          TRUE, data_set)) {
+                          true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
@@ -640,7 +640,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     // Convert template/tag reference in "with-rsc" into resource_set under constraint
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET,
-                          TRUE, data_set)) {
+                          true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;

@@ -68,13 +68,12 @@ struct rsc_ticket_s {
 extern gboolean stage0(pe_working_set_t * data_set);
 extern gboolean probe_resources(pe_working_set_t * data_set);
 extern gboolean stage2(pe_working_set_t * data_set);
-extern gboolean stage3(pe_working_set_t * data_set);
 extern gboolean stage4(pe_working_set_t * data_set);
 extern gboolean stage5(pe_working_set_t * data_set);
 extern gboolean stage6(pe_working_set_t * data_set);
 extern gboolean stage8(pe_working_set_t * data_set);
 
-extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
+void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);

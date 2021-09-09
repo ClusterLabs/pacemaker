@@ -46,12 +46,15 @@ xmlNode *pcmk__expand_tags_in_sets(xmlNode *xml_obj,
                                    pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-gboolean pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
-                                     pe_resource_t **rsc, pe_tag_t **tag);
+bool pcmk__valid_resource_or_tag(pe_working_set_t *data_set, const char *id,
+                                 pe_resource_t **rsc, pe_tag_t **tag);
 
 G_GNUC_INTERNAL
-gboolean pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
-                          gboolean convert_rsc, pe_working_set_t *data_set);
+bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
+                      bool convert_rsc, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__create_internal_constraints(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);

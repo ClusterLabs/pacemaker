@@ -815,8 +815,6 @@ apply_system_health(pe_working_set_t * data_set)
 gboolean
 stage0(pe_working_set_t * data_set)
 {
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-
     if (data_set->input == NULL) {
         return FALSE;
     }
@@ -828,7 +826,7 @@ stage0(pe_working_set_t * data_set)
 
     set_alloc_actions(data_set);
     apply_system_health(data_set);
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     return TRUE;
 }
@@ -1033,24 +1031,6 @@ stage2(pe_working_set_t * data_set)
             common_apply_stickiness(rsc, node, data_set);
             rsc_discover_filter(rsc, node);
         }
-    }
-
-    return TRUE;
-}
-
-/*
- * Create internal resource constraints before allocation
- */
-gboolean
-stage3(pe_working_set_t * data_set)
-{
-
-    GList *gIter = data_set->resources;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        rsc->cmds->internal_constraints(rsc, data_set);
     }
 
     return TRUE;

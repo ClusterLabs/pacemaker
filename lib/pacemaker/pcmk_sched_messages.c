@@ -122,8 +122,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
         return NULL;
     }
 
-    crm_trace("Create internal constraints");
-    stage3(data_set);
+    pcmk__create_internal_constraints(data_set);
 
     crm_trace("Check actions");
     stage4(data_set);
