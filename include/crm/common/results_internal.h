@@ -23,11 +23,11 @@ GQuark pcmk__exitc_error_quark(void);
 /* Action results */
 
 typedef struct {
-    int exit_status;                    // Child exit status
-    enum pcmk_exec_status exec_status;  // Execution status
-    char *exit_reason;                  // Brief, human-friendly explanation
-    char *action_stdout;                // Action output
-    char *action_stderr;                // Action error output
+    int exit_status;        // Child exit status
+    enum pcmk_exec_status execution_status; // Execution status
+    char *exit_reason;      // Brief, human-friendly explanation
+    char *action_stdout;    // Action output
+    char *action_stderr;    // Action error output
 } pcmk__action_result_t;
 
 void pcmk__set_result(pcmk__action_result_t *result, int exit_status,

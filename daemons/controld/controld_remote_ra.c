@@ -362,7 +362,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.t_run = (unsigned int) cmd->start_time;
     op.t_rcchange = (unsigned int) cmd->start_time;
 
-    lrmd__set_result(&op, cmd->result.exit_status, cmd->result.exec_status,
+    lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
                      cmd->result.exit_reason);
 
     if (cmd->reported_success && (cmd->result.exit_status != PCMK_OCF_OK)) {

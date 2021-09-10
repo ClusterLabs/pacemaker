@@ -433,7 +433,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
      */
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
                      pcmk__str_casei)
-        && (dup->result.exec_status == PCMK_EXEC_CANCELLED)) {
+        && (dup->result.execution_status == PCMK_EXEC_CANCELLED)) {
         return false;
     }
 
@@ -577,7 +577,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
      * if the last result is the same as the new one. If so, suppress this update */
     if (cmd->first_notify_sent && (cmd->call_opts & lrmd_opt_notify_changes_only)) {
         if ((cmd->last_notify_rc == cmd->result.exit_status) &&
-            (cmd->last_notify_op_status == cmd->result.exec_status)) {
+            (cmd->last_notify_op_status == cmd->result.execution_status)) {
 
             /* only send changes */
             return;
@@ -587,7 +587,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     cmd->first_notify_sent = true;
     cmd->last_notify_rc = cmd->result.exit_status;
-    cmd->last_notify_op_status = cmd->result.exec_status;
+    cmd->last_notify_op_status = cmd->result.execution_status;
 
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 
@@ -596,7 +596,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->result.exit_status);
-    crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->result.exec_status);
+    crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->result.execution_status);
     crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
@@ -687,7 +687,7 @@ cmd_reset(lrmd_cmd_t * cmd)
     cmd->epoch_last_run = 0;
 
     pcmk__reset_result(&(cmd->result));
-    cmd->result.exec_status = PCMK_EXEC_DONE;
+    cmd->result.execution_status = PCMK_EXEC_DONE;
 }
 
 static void
@@ -711,7 +711,7 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     send_cmd_complete_notify(cmd);
 
     if ((cmd->interval_ms != 0)
-        && (cmd->result.exec_status == PCMK_EXEC_CANCELLED)) {
+        && (cmd->result.execution_status == PCMK_EXEC_CANCELLED)) {
 
         if (rsc) {
             rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
@@ -966,7 +966,7 @@ action_complete(svc_action_t * action)
 
         } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop completed
-            if ((cmd->result.exec_status == PCMK_EXEC_DONE)
+            if ((cmd->result.execution_status == PCMK_EXEC_DONE)
                 && (cmd->result.exit_status == PCMK_OCF_PENDING)) {
                 goagain = true;
 
@@ -986,7 +986,7 @@ action_complete(svc_action_t * action)
                 cmd_original_times(cmd);
 
                 // Monitors may return "not running", but start/stop shouldn't
-                if ((cmd->result.exec_status == PCMK_EXEC_DONE)
+                if ((cmd->result.execution_status == PCMK_EXEC_DONE)
                     && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
 
                     if (pcmk__str_eq(cmd->real_action, "start", pcmk__str_casei)) {
@@ -1141,9 +1141,9 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
      * pending action was aborted. Otherwise, we need to determine status from
      * the fencer return code.
      */
-    if (cmd->result.exec_status != PCMK_EXEC_CANCELLED) {
-        cmd->result.exec_status = stonith_rc2status(cmd->action,
-                                                    cmd->interval_ms, rc);
+    if (cmd->result.execution_status != PCMK_EXEC_CANCELLED) {
+        cmd->result.execution_status = stonith_rc2status(cmd->action,
+                                                         cmd->interval_ms, rc);
 
         // Certain successful actions change the known state of the resource
         if ((rsc != NULL) && (cmd->result.exit_status == PCMK_OCF_OK)) {
@@ -1170,7 +1170,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
      * not be removed from recurring_ops by cmd_finalize().
      */
     if (rsc && (cmd->interval_ms > 0)
-        && (cmd->result.exec_status != PCMK_EXEC_CANCELLED)) {
+        && (cmd->result.execution_status != PCMK_EXEC_CANCELLED)) {
         start_recurring_timer(cmd);
     }
 
@@ -1506,7 +1506,7 @@ free_rsc(gpointer data)
         lrmd_cmd_t *cmd = gIter->data;
 
         /* command was never executed */
-        cmd->result.exec_status = PCMK_EXEC_CANCELLED;
+        cmd->result.execution_status = PCMK_EXEC_CANCELLED;
         cmd_finalize(cmd, NULL);
 
         gIter = next;
@@ -1520,7 +1520,7 @@ free_rsc(gpointer data)
         lrmd_cmd_t *cmd = gIter->data;
 
         if (is_stonith) {
-            cmd->result.exec_status = PCMK_EXEC_CANCELLED;
+            cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             /* If a stonith command is in-flight, just mark it as cancelled;
              * it is not safe to finalize/free the cmd until the stonith api
              * says it has either completed or timed out.
@@ -1722,7 +1722,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         lrmd_cmd_t *cmd = gIter->data;
 
         if (action_matches(cmd, action, interval_ms)) {
-            cmd->result.exec_status = PCMK_EXEC_CANCELLED;
+            cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             cmd_finalize(cmd, rsc);
             return pcmk_ok;
         }
@@ -1735,7 +1735,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
             lrmd_cmd_t *cmd = gIter->data;
 
             if (action_matches(cmd, action, interval_ms)) {
-                cmd->result.exec_status = PCMK_EXEC_CANCELLED;
+                cmd->result.execution_status = PCMK_EXEC_CANCELLED;
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
                 }
