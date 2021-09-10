@@ -830,30 +830,22 @@ pcmk__set_result(pcmk__action_result_t *result, int exit_status,
  * \brief Set the output of an action
  *
  * \param[out] result         Action result to set output for
- * \param[in]  action_stdout  Action output to copy
- * \param[in]  action_stderr  Action error output to copy
+ * \param[in]  out            Action output to copy
+ * \param[in]  err            Action error output to copy
  */
 void
 pcmk__set_result_output(pcmk__action_result_t *result,
-                        const char *action_stdout, const char *action_stderr)
+                        const char *out, const char *err)
 {
     if (result == NULL) {
         return;
     }
 
     free(result->action_stdout);
-    if (action_stdout == NULL) {
-        result->action_stdout = NULL;
-    } else {
-        result->action_stdout = strdup(action_stdout);
-    }
+    result->action_stdout = (out == NULL)? NULL : strdup(out);
 
     free(result->action_stderr);
-    if (action_stderr == NULL) {
-        result->action_stderr = NULL;
-    } else {
-        result->action_stderr = strdup(action_stderr);
-    }
+    result->action_stderr = (err == NULL)? NULL : strdup(err);
 }
 
 /*!
