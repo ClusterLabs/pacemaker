@@ -1823,7 +1823,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
                                                        "node", node->details->uname,
                                                        "comment", comment,
                                                        NULL);
-    g_hash_table_foreach(node->details->utilization, add_dump_node, &xml_node);
+    g_hash_table_foreach(node->details->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }
@@ -2582,7 +2582,7 @@ resource_util_xml(pcmk__output_t *out, va_list args)
                                                        "node", node->details->uname,
                                                        "function", fn,
                                                        NULL);
-    g_hash_table_foreach(rsc->utilization, add_dump_node, &xml_node);
+    g_hash_table_foreach(rsc->utilization, add_dump_node, xml_node);
 
     return pcmk_rc_ok;
 }

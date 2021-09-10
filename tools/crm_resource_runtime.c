@@ -1784,7 +1784,12 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         /* Lookup exit code based on rc for LSB resources */
         if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei) &&
               pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-            exit_code = services_get_ocf_exitcode(action, exit_code);
+
+            /* A simple cast is sufficient because services_get_ocf_exitcode()
+             * will only return OCF codes that overlap with crm_exit_t.
+             */
+            exit_code = (crm_exit_t) services_get_ocf_exitcode(action,
+                                                               exit_code);
         }
 
         out->message(out, "resource-agent-action", resource_verbose, rsc_class,
