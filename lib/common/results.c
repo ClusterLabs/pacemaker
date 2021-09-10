@@ -734,6 +734,38 @@ pcmk_rc2exitc(int rc)
     }
 }
 
+/*!
+ * \brief Map a function return code to the most similar OCF exit code
+ *
+ * \param[in] rc  Function return code
+ *
+ * \return Most similar OCF exit code
+ */
+enum ocf_exitcode
+pcmk_rc2ocf(int rc)
+{
+    switch (rc) {
+        case pcmk_rc_ok:
+            return PCMK_OCF_OK;
+
+        case pcmk_rc_bad_nvpair:
+            return PCMK_OCF_INVALID_PARAM;
+
+        case EACCES:
+            return PCMK_OCF_INSUFFICIENT_PRIV;
+
+        case ENOTSUP:
+#if EOPNOTSUPP != ENOTSUP
+        case EOPNOTSUPP:
+#endif
+            return PCMK_OCF_UNIMPLEMENT_FEATURE;
+
+        default:
+            return PCMK_OCF_UNKNOWN_ERROR;
+    }
+}
+
+
 // Other functions
 
 const char *

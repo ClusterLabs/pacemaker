@@ -296,6 +296,7 @@ enum pcmk_exec_status {
 const char *pcmk_rc_name(int rc);
 const char *pcmk_rc_str(int rc);
 crm_exit_t pcmk_rc2exitc(int rc);
+enum ocf_exitcode pcmk_rc2ocf(int rc);
 int pcmk_rc2legacy(int rc);
 int pcmk_legacy2rc(int legacy_rc);
 const char *pcmk_strerror(int rc);
