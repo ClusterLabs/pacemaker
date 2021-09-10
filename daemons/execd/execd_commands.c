@@ -1422,9 +1422,15 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return TRUE;
     }
 
+    /* Asynchronous execution could not be initiated. services_action_async()
+     * should have already set an appropriate execution status, but as a
+     * fail-safe for cases where we've neglected to do so, make sure this is
+     * considered an execution error.
+     */
     if (action->status == PCMK_EXEC_DONE) {
         action->status = PCMK_EXEC_ERROR;
     }
+
     pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
     services_action_free(action);
     action = NULL;
