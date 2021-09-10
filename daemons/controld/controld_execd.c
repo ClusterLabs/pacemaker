@@ -1721,13 +1721,7 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         /* These are resource clean-ups, not actions, so no exit reason is
          * needed.
          */
-        if (cib_rc == EACCES) {
-            lrmd__set_result(op, PCMK_OCF_INSUFFICIENT_PRIV, PCMK_EXEC_ERROR,
-                             NULL);
-        } else {
-            lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             NULL);
-        }
+        lrmd__set_result(op, pcmk_rc2ocf(cib_rc), PCMK_EXEC_ERROR, NULL);
         controld_ack_event_directly(from_host, from_sys, NULL, op, rsc->id);
         lrmd_free_event(op);
         return;
