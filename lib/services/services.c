@@ -866,7 +866,6 @@ handle_blocked_ops(void)
         }
         executed_ops = g_list_append(executed_ops, op);
         if (execute_action(op) != pcmk_rc_ok) {
-            op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
             services__finalize_async_op(op);

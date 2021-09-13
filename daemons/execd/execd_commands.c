@@ -1406,23 +1406,12 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     action->cb_data = cmd;
 
-    /* 'cmd' may not be valid after this point if
-     * services_action_async() returned TRUE
-     *
-     * Upstart and systemd both synchronously determine monitor/status
-     * results and call action_complete (which may free 'cmd') if necessary.
-     */
     if (services_action_async(action, action_complete)) {
+        /* When services_action_async() returns TRUE, the callback might have
+         * been called -- in this case action_complete(), which might free cmd,
+         * so cmd cannot be used here.
+         */
         return TRUE;
-    }
-
-    /* Asynchronous execution could not be initiated. services_action_async()
-     * should have already set an appropriate execution status, but as a
-     * fail-safe for cases where we've neglected to do so, make sure this is
-     * considered an execution error.
-     */
-    if (action->status == PCMK_EXEC_DONE) {
-        action->status = PCMK_EXEC_ERROR;
     }
 
     pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
