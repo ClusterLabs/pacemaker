@@ -706,28 +706,30 @@ handle_duplicate_recurring(svc_action_t * op)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Execute an action appropriately according to its standard
+ *
+ * \param[in] op  Action to execute
+ */
 inline static gboolean
 action_exec_helper(svc_action_t * op)
 {
-    /* Whether a/synchronous must be decided (op->synchronous) beforehand. */
-    if (op->standard
-        && (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0)) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op) == pcmk_rc_ok;
-#endif
-    } else if (op->standard && strcasecmp(op->standard,
-                                          PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-#if SUPPORT_SYSTEMD
-        return services__execute_systemd(op) == pcmk_rc_ok;
-#endif
-    } else {
-        return services__execute_file(op) == pcmk_rc_ok;
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART,
+                     pcmk__str_casei)) {
+        return services__execute_upstart(op) == pcmk_rc_ok;
     }
-    /* The 'op' has probably been freed if the execution functions return TRUE
-       for the asynchronous 'op'. */
-    /* Avoid using the 'op' in here. */
+#endif
 
-    return FALSE;
+#if SUPPORT_SYSTEMD
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                     pcmk__str_casei)) {
+        return services__execute_systemd(op) == pcmk_rc_ok;
+    }
+#endif
+
+    return services__execute_file(op) == pcmk_rc_ok;
 }
 
 void
