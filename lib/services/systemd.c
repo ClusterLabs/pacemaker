@@ -281,7 +281,7 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
             systemd_unit_exec_with_unit(op, path);
 
         } else if (op->synchronous == FALSE) {
-            operation_finalize(op);
+            services__finalize_async_op(op);
         }
     }
 
@@ -587,7 +587,7 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
     systemd_exec_result(reply, op);
-    operation_finalize(op);
+    services__finalize_async_op(op);
 
     if(reply) {
         dbus_message_unref(reply);
@@ -720,7 +720,7 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
 
     if (op->synchronous == FALSE) {
         services_set_op_pending(op, NULL);
-        operation_finalize(op);
+        services__finalize_async_op(op);
     }
 }
 
@@ -750,7 +750,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             return TRUE;
 
         } else {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
 
     } else if (g_strcmp0(method, "start") == 0) {
@@ -795,7 +795,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             return TRUE;
 
         } else {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
 
     } else {
@@ -811,7 +811,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
   cleanup:
     if (op->synchronous == FALSE) {
-        return operation_finalize(op);
+        return services__finalize_async_op(op) == pcmk_rc_ok;
     }
 
     return op->rc == PCMK_OCF_OK;
@@ -824,8 +824,7 @@ systemd_timeout_callback(gpointer p)
 
     op->opaque->timerid = 0;
     crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
-    operation_finalize(op);
-
+    services__finalize_async_op(op);
     return FALSE;
 }
 
@@ -848,7 +847,7 @@ systemd_unit_exec(svc_action_t * op)
         op->rc = PCMK_OCF_OK;
 
         if (op->synchronous == FALSE) {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
         return TRUE;
     }
@@ -863,7 +862,7 @@ systemd_unit_exec(svc_action_t * op)
             return TRUE;
 
         } else {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
     }
 

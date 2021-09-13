@@ -309,7 +309,7 @@ upstart_job_check(const char *name, const char *state, void *userdata)
 
     if (op->synchronous == FALSE) {
         services_set_op_pending(op, NULL);
-        operation_finalize(op);
+        services__finalize_async_op(op);
     }
 }
 
@@ -406,7 +406,7 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
 
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
-    operation_finalize(op);
+    services__finalize_async_op(op);
 
     if(reply) {
         dbus_message_unref(reply);
@@ -559,7 +559,7 @@ upstart_job_exec(svc_action_t * op)
     }
 
     if (op->synchronous == FALSE) {
-        return operation_finalize(op);
+        return services__finalize_async_op(op) == pcmk_rc_ok;
     }
     return op->rc == PCMK_OCF_OK;
 }

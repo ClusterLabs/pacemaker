@@ -585,7 +585,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
         goto done;
     }
 
-    /* Tell operation_finalize() not to reschedule the operation */
+    // Tell services__finalize_async_op() not to reschedule the operation
     op->cancel = TRUE;
 
     /* Stop tracking it as a recurring operation, and stop its repeat timer */
@@ -594,8 +594,8 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* If the op has a PID, it's an in-flight child process, so kill it.
      *
      * Whether the kill succeeds or fails, the main loop will send the op to
-     * operation_finished() (and thus operation_finalize()) when the process
-     * goes away.
+     * operation_finished() (and thus services__finalize_async_op()) when the
+     * process goes away.
      */
     if (op->pid != 0) {
         crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
@@ -619,8 +619,9 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     }
 #endif
 
-    // The rest of this is essentially equivalent to operation_finalize(),
-    // except without calling handle_blocked_ops()
+    /* The rest of this is essentially equivalent to
+     * services__finalize_async_op(), minus the handle_blocked_ops() call.
+     */
 
     // Report operation as cancelled
     op->status = PCMK_EXEC_CANCELLED;
@@ -846,7 +847,7 @@ handle_blocked_ops(void)
             op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
-            operation_finalize(op);
+            services__finalize_async_op(op);
         }
     }
 

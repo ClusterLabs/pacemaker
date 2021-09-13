@@ -490,42 +490,57 @@ recurring_action_timer(gpointer data)
     return FALSE;
 }
 
-/* Returns FALSE if 'op' should be free'd by the caller */
-gboolean
-operation_finalize(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Finalize handling of an asynchronous operation
+ *
+ * Given a completed asynchronous operation, cancel or reschedule it as
+ * appropriate if recurring, call its callback if registered, stop tracking it,
+ * and clean it up.
+ *
+ * \param[in,out] op  Operation to finalize
+ *
+ * \return Standard Pacemaker return code
+ * \retval EINVAL      Caller supplied NULL or invalid \p op
+ * \retval EBUSY       Uncanceled recurring action has only been cleaned up
+ * \retval pcmk_rc_ok  Action has been freed
+ *
+ * \note If the return value is not pcmk_rc_ok, the caller is responsible for
+ *       freeing the action.
+ */
+int
+services__finalize_async_op(svc_action_t *op)
 {
-    int recurring = 0;
+    CRM_CHECK((op != NULL) && !(op->synchronous), return EINVAL);
 
-    if (op->interval_ms) {
+    if (op->interval_ms != 0) {
+        // Recurring operations must be either cancelled or rescheduled
         if (op->cancel) {
             op->status = PCMK_EXEC_CANCELLED;
             cancel_recurring_action(op);
         } else {
-            recurring = 1;
             op->opaque->repeat_timer = g_timeout_add(op->interval_ms,
-                                                     recurring_action_timer, (void *)op);
+                                                     recurring_action_timer,
+                                                     (void *) op);
         }
     }
 
-    if (op->opaque->callback) {
+    if (op->opaque->callback != NULL) {
         op->opaque->callback(op);
     }
 
+    // Stop tracking the operation (as in-flight or blocked)
     op->pid = 0;
-
     services_untrack_op(op);
 
-    if (!recurring && op->synchronous == FALSE) {
-        /*
-         * If this is a recurring action, do not free explicitly.
-         * It will get freed whenever the action gets cancelled.
-         */
-        services_action_free(op);
-        return TRUE;
+    if ((op->interval_ms != 0) && !(op->cancel)) {
+        // Do not free recurring actions (they will get freed when cancelled)
+        services_action_cleanup(op);
+        return EBUSY;
     }
 
-    services_action_cleanup(op);
-    return FALSE;
+    services_action_free(op);
+    return pcmk_rc_ok;
 }
 
 static void
@@ -619,7 +634,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     }
 
     log_op_output(op);
-    operation_finalize(op);
+    services__finalize_async_op(op);
 }
 
 /*!
@@ -893,7 +908,7 @@ services_os_action_execute(svc_action_t * op)
                  op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         if (!op->synchronous) {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
         return FALSE;
     }
@@ -904,7 +919,7 @@ services_os_action_execute(svc_action_t * op)
                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         if (!op->synchronous) {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
         return FALSE;
     }
@@ -918,7 +933,7 @@ services_os_action_execute(svc_action_t * op)
                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         if (!op->synchronous) {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
         return FALSE;
     }
@@ -934,7 +949,7 @@ services_os_action_execute(svc_action_t * op)
                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
             if (!op->synchronous) {
-                return operation_finalize(op);
+                return services__finalize_async_op(op) == pcmk_rc_ok;
             }
             return FALSE;
         }
@@ -960,7 +975,7 @@ services_os_action_execute(svc_action_t * op)
                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
             if (!op->synchronous) {
-                return operation_finalize(op);
+                return services__finalize_async_op(op) == pcmk_rc_ok;
             }
 
             sigchld_cleanup(&data);
