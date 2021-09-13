@@ -41,8 +41,6 @@ typedef struct lrmd_cmd_s {
     int timeout_orig;
 
     int call_id;
-    int exec_rc;
-    int lrmd_op_status;
 
     int call_opts;
     /* Timer ids, must be removed on cmd destruction. */
@@ -58,9 +56,9 @@ typedef struct lrmd_cmd_s {
     char *rsc_id;
     char *action;
     char *real_action;
-    char *exit_reason;
-    char *output;
     char *userdata_str;
+
+    pcmk__action_result_t result;
 
     /* We can track operation queue time and run time, to be saved with the CIB
      * resource history (and displayed in cluster status). We need
@@ -218,12 +216,13 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
     do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
                " (execution time %dms, queue time %dms)",
                cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc,
-               exec_time, queue_time);
+               (cmd->last_pid? ", PID " : ""), pid_str,
+               cmd->result.exit_status, exec_time, queue_time);
 #else
     do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d",
                cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc);
+               (cmd->last_pid? ", PID " : ""), pid_str,
+               cmd->result.exit_status);
 #endif
 }
 
@@ -329,13 +328,12 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     if (cmd->params) {
         g_hash_table_destroy(cmd->params);
     }
+    pcmk__reset_result(&(cmd->result));
     free(cmd->origin);
     free(cmd->action);
     free(cmd->real_action);
     free(cmd->userdata_str);
     free(cmd->rsc_id);
-    free(cmd->output);
-    free(cmd->exit_reason);
     free(cmd->client_id);
     free(cmd);
 }
@@ -435,7 +433,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
      */
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
                      pcmk__str_casei)
-        && (dup->lrmd_op_status == PCMK_EXEC_CANCELLED)) {
+        && (dup->result.execution_status == PCMK_EXEC_CANCELLED)) {
         return false;
     }
 
@@ -578,8 +576,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
      * the option to only send notifies on result changes is set. Check to see
      * if the last result is the same as the new one. If so, suppress this update */
     if (cmd->first_notify_sent && (cmd->call_opts & lrmd_opt_notify_changes_only)) {
-        if (cmd->last_notify_rc == cmd->exec_rc &&
-            cmd->last_notify_op_status == cmd->lrmd_op_status) {
+        if ((cmd->last_notify_rc == cmd->result.exit_status) &&
+            (cmd->last_notify_op_status == cmd->result.execution_status)) {
 
             /* only send changes */
             return;
@@ -588,8 +586,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     }
 
     cmd->first_notify_sent = true;
-    cmd->last_notify_rc = cmd->exec_rc;
-    cmd->last_notify_op_status = cmd->lrmd_op_status;
+    cmd->last_notify_rc = cmd->result.exit_status;
+    cmd->last_notify_op_status = cmd->result.execution_status;
 
     notify = create_xml_node(NULL, T_LRMD_NOTIFY);
 
@@ -597,8 +595,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     crm_xml_add_int(notify, F_LRMD_TIMEOUT, cmd->timeout);
     crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
-    crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->exec_rc);
-    crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->lrmd_op_status);
+    crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->result.exit_status);
+    crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->result.execution_status);
     crm_xml_add_int(notify, F_LRMD_CALLID, cmd->call_id);
     crm_xml_add_int(notify, F_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
@@ -619,8 +617,14 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         crm_xml_add(notify, F_LRMD_RSC_ACTION, cmd->action);
     }
     crm_xml_add(notify, F_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
-    crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->output);
-    crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->exit_reason);
+    crm_xml_add(notify, F_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
+
+    if (cmd->result.action_stderr != NULL) {
+        crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->result.action_stderr);
+
+    } else if (cmd->result.action_stdout != NULL) {
+        crm_xml_add(notify, F_LRMD_RSC_OUTPUT, cmd->result.action_stdout);
+    }
 
     if (cmd->params) {
         char *key = NULL;
@@ -675,17 +679,15 @@ send_generic_notify(int rc, xmlNode * request)
 static void
 cmd_reset(lrmd_cmd_t * cmd)
 {
-    cmd->lrmd_op_status = 0;
     cmd->last_pid = 0;
 #ifdef PCMK__TIME_USE_CGT
     memset(&cmd->t_run, 0, sizeof(cmd->t_run));
     memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
 #endif
     cmd->epoch_last_run = 0;
-    free(cmd->exit_reason);
-    cmd->exit_reason = NULL;
-    free(cmd->output);
-    cmd->output = NULL;
+
+    pcmk__reset_result(&(cmd->result));
+    cmd->result.execution_status = PCMK_EXEC_DONE;
 }
 
 static void
@@ -708,7 +710,9 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 
     send_cmd_complete_notify(cmd);
 
-    if (cmd->interval_ms && (cmd->lrmd_op_status == PCMK_EXEC_CANCELLED)) {
+    if ((cmd->interval_ms != 0)
+        && (cmd->result.execution_status == PCMK_EXEC_CANCELLED)) {
+
         if (rsc) {
             rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
             rsc->pending_ops = g_list_remove(rsc->pending_ops, cmd);
@@ -931,14 +935,14 @@ action_complete(svc_action_t * action)
     }
 
 #ifdef PCMK__TIME_USE_CGT
-    if (cmd->exec_rc != action->rc) {
+    if (cmd->result.exit_status != action->rc) {
         cmd->epoch_rcchange = time(NULL);
     }
 #endif
 
     cmd->last_pid = action->pid;
-    cmd->exec_rc = action_get_uniform_rc(action);
-    cmd->lrmd_op_status = action->status;
+    pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
+                     action->status, NULL);
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
@@ -949,7 +953,7 @@ action_complete(svc_action_t * action)
     }
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
-        if ((cmd->exec_rc == PCMK_OCF_OK)
+        if ((cmd->result.exit_status == PCMK_OCF_OK)
             && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
@@ -962,11 +966,11 @@ action_complete(svc_action_t * action)
 
         } else if (cmd->real_action != NULL) {
             // This is follow-up monitor to check whether start/stop completed
-            if ((cmd->lrmd_op_status == PCMK_EXEC_DONE)
-                && (cmd->exec_rc == PCMK_OCF_PENDING)) {
+            if ((cmd->result.execution_status == PCMK_EXEC_DONE)
+                && (cmd->result.exit_status == PCMK_OCF_PENDING)) {
                 goagain = true;
 
-            } else if ((cmd->exec_rc == PCMK_OCF_OK)
+            } else if ((cmd->result.exit_status == PCMK_OCF_OK)
                        && pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
                 goagain = true;
 
@@ -977,18 +981,18 @@ action_complete(svc_action_t * action)
                 crm_debug("%s systemd %s is now complete (elapsed=%dms, "
                           "remaining=%dms): %s (%d)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                          services_ocf_exitcode_str(cmd->exec_rc),
-                          cmd->exec_rc);
+                          services_ocf_exitcode_str(cmd->result.exit_status),
+                          cmd->result.exit_status);
                 cmd_original_times(cmd);
 
                 // Monitors may return "not running", but start/stop shouldn't
-                if ((cmd->lrmd_op_status == PCMK_EXEC_DONE)
-                    && (cmd->exec_rc == PCMK_OCF_NOT_RUNNING)) {
+                if ((cmd->result.execution_status == PCMK_EXEC_DONE)
+                    && (cmd->result.exit_status == PCMK_OCF_NOT_RUNNING)) {
 
                     if (pcmk__str_eq(cmd->real_action, "start", pcmk__str_casei)) {
-                        cmd->exec_rc = PCMK_OCF_UNKNOWN_ERROR;
+                        cmd->result.exit_status = PCMK_OCF_UNKNOWN_ERROR;
                     } else if (pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
-                        cmd->exec_rc = PCMK_OCF_OK;
+                        cmd->result.exit_status = PCMK_OCF_OK;
                     }
                 }
             }
@@ -999,11 +1003,12 @@ action_complete(svc_action_t * action)
 #if SUPPORT_NAGIOS
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         if (action_matches(cmd, "monitor", 0)
-            && (cmd->exec_rc == PCMK_OCF_OK)) {
+            && (cmd->result.exit_status == PCMK_OCF_OK)) {
             /* Successfully executed --version for the nagios plugin */
-            cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
+            cmd->result.exit_status = PCMK_OCF_NOT_RUNNING;
 
-        } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei) && cmd->exec_rc != PCMK_OCF_OK) {
+        } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)
+                   && (cmd->result.exit_status != PCMK_OCF_OK)) {
 #ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
@@ -1026,17 +1031,20 @@ action_complete(svc_action_t * action)
             cmd->start_delay = delay;
             cmd->timeout = timeout_left;
 
-            if(cmd->exec_rc == PCMK_OCF_OK) {
+            if (cmd->result.exit_status == PCMK_OCF_OK) {
                 crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
 
-            } else if(cmd->exec_rc == PCMK_OCF_PENDING) {
+            } else if (cmd->result.exit_status == PCMK_OCF_PENDING) {
                 crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
                          cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
             } else {
                 crm_notice("%s %s failed '%s' (%d): re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                           cmd->rsc_id, cmd->action, services_ocf_exitcode_str(cmd->exec_rc), cmd->exec_rc, time_sum, timeout_left, delay);
+                           cmd->rsc_id, cmd->action,
+                           services_ocf_exitcode_str(cmd->result.exit_status),
+                           cmd->result.exit_status, time_sum, timeout_left,
+                           delay);
             }
 
             cmd_reset(cmd);
@@ -1050,20 +1058,22 @@ action_complete(svc_action_t * action)
 
         } else {
             crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                       cmd->rsc_id, cmd->real_action?cmd->real_action:cmd->action, cmd->exec_rc, time_sum, timeout_left);
-            cmd->lrmd_op_status = PCMK_EXEC_TIMEOUT;
-            cmd->exec_rc = PCMK_OCF_TIMEOUT;
+                       cmd->rsc_id,
+                       (cmd->real_action? cmd->real_action : cmd->action),
+                       cmd->result.exit_status, time_sum, timeout_left);
+            pcmk__set_result(&(cmd->result), PCMK_OCF_TIMEOUT,
+                             PCMK_EXEC_TIMEOUT,
+                             "Investigate reason for timeout, and adjust "
+                             "configured operation timeout if necessary");
             cmd_original_times(cmd);
         }
     }
 #endif
 
+    pcmk__set_result_output(&(cmd->result),
+                            action->stdout_data, action->stderr_data);
     if (action->stderr_data) {
-        cmd->output = strdup(action->stderr_data);
-        cmd->exit_reason = parse_exit_reason(action->stderr_data);
-
-    } else if (action->stdout_data) {
-        cmd->output = strdup(action->stdout_data);
+        cmd->result.exit_reason = parse_exit_reason(action->stderr_data);
     }
 
     cmd_finalize(cmd, rsc);
@@ -1125,24 +1135,29 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    cmd->exec_rc = stonith2uniform_rc(cmd->action, rc);
+    cmd->result.exit_status = stonith2uniform_rc(cmd->action, rc);
 
     /* This function may be called with status already set to cancelled, if a
      * pending action was aborted. Otherwise, we need to determine status from
      * the fencer return code.
      */
-    if (cmd->lrmd_op_status != PCMK_EXEC_CANCELLED) {
-        cmd->lrmd_op_status = stonith_rc2status(cmd->action, cmd->interval_ms,
-                                                rc);
+    if (cmd->result.execution_status != PCMK_EXEC_CANCELLED) {
+        cmd->result.execution_status = stonith_rc2status(cmd->action,
+                                                         cmd->interval_ms, rc);
 
         // Certain successful actions change the known state of the resource
-        if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
+        if ((rsc != NULL) && (cmd->result.exit_status == PCMK_OCF_OK)) {
             if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
                 rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
             } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
                 rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
             }
         }
+    }
+
+    // Give the user more detail than an OCF code
+    if (rc != -pcmk_err_generic) {
+        cmd->result.exit_reason = strdup(pcmk_strerror(rc));
     }
 
     /* The recurring timer should not be running at this point in any case, but
@@ -1155,7 +1170,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
      * not be removed from recurring_ops by cmd_finalize().
      */
     if (rsc && (cmd->interval_ms > 0)
-        && (cmd->lrmd_op_status != PCMK_EXEC_CANCELLED)) {
+        && (cmd->result.execution_status != PCMK_EXEC_CANCELLED)) {
         start_recurring_timer(cmd);
     }
 
@@ -1368,7 +1383,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)
         && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
 
-        cmd->exec_rc = PCMK_OCF_OK;
+        cmd->result.exit_status = PCMK_OCF_OK;
         goto exec_done;
     }
 #endif
@@ -1382,15 +1397,15 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                      params_copy, cmd->service_flags);
 
     if (!action) {
+        // Invalid arguments (which would be a bug) or out-of-memory
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
-        cmd->exec_rc = PCMK_OCF_UNKNOWN_ERROR;
-        cmd->lrmd_op_status = PCMK_EXEC_ERROR;
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_ERROR, "Internal Pacemaker error");
         goto exec_done;
     }
 
-    if (action->rc != 0) {
-        cmd->exec_rc = action->rc;
-        cmd->lrmd_op_status = action->status;
+    if (action->rc != PCMK_OCF_OK) {
+        pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
         services_action_free(action);
         goto exec_done;
     }
@@ -1407,12 +1422,16 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return TRUE;
     }
 
-    cmd->exec_rc = action->rc;
-    if (action->status != PCMK_EXEC_DONE) {
-        cmd->lrmd_op_status = action->status;
-    } else {
-        cmd->lrmd_op_status = PCMK_EXEC_ERROR;
+    /* Asynchronous execution could not be initiated. services_action_async()
+     * should have already set an appropriate execution status, but as a
+     * fail-safe for cases where we've neglected to do so, make sure this is
+     * considered an execution error.
+     */
+    if (action->status == PCMK_EXEC_DONE) {
+        action->status = PCMK_EXEC_ERROR;
     }
+
+    pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
     services_action_free(action);
     action = NULL;
 
@@ -1493,7 +1512,7 @@ free_rsc(gpointer data)
         lrmd_cmd_t *cmd = gIter->data;
 
         /* command was never executed */
-        cmd->lrmd_op_status = PCMK_EXEC_CANCELLED;
+        cmd->result.execution_status = PCMK_EXEC_CANCELLED;
         cmd_finalize(cmd, NULL);
 
         gIter = next;
@@ -1507,7 +1526,7 @@ free_rsc(gpointer data)
         lrmd_cmd_t *cmd = gIter->data;
 
         if (is_stonith) {
-            cmd->lrmd_op_status = PCMK_EXEC_CANCELLED;
+            cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             /* If a stonith command is in-flight, just mark it as cancelled;
              * it is not safe to finalize/free the cmd until the stonith api
              * says it has either completed or timed out.
@@ -1709,7 +1728,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         lrmd_cmd_t *cmd = gIter->data;
 
         if (action_matches(cmd, action, interval_ms)) {
-            cmd->lrmd_op_status = PCMK_EXEC_CANCELLED;
+            cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             cmd_finalize(cmd, rsc);
             return pcmk_ok;
         }
@@ -1722,7 +1741,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
             lrmd_cmd_t *cmd = gIter->data;
 
             if (action_matches(cmd, action, interval_ms)) {
-                cmd->lrmd_op_status = PCMK_EXEC_CANCELLED;
+                cmd->result.execution_status = PCMK_EXEC_CANCELLED;
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
                 }

@@ -11,6 +11,7 @@
 #include <crm/msg_xml.h>
 #include <crm/lrmd.h>       // lrmd_event_data_t
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 #include "libpacemaker_private.h"
@@ -612,8 +613,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
              * @TODO It might be better to keep the correct result here, and
              * ignore it in process_graph_event().
              */
-            op->op_status = PCMK_EXEC_DONE;
-            op->rc = 0;
+            lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {

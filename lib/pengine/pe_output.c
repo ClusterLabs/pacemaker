@@ -1163,7 +1163,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
                              + strlen(exit_status) + strlen(call_id)
                              + strlen(lrm_status) + 50); // rough estimate
 
-    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s",
+    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status='%s'",
                     op_key, node_name, exit_status, rc, call_id, lrm_status);
 
     if (!pcmk__str_empty(exit_reason)) {

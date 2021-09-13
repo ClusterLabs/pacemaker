@@ -20,6 +20,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules.h>
+#include <crm/lrmd_internal.h>
 
 #include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
@@ -273,8 +274,7 @@ send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
 {
     lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
 
-    op->rc = PCMK_OCF_OK;
-    op->op_status = PCMK_EXEC_DONE;
+    lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     controld_ack_event_directly(ack_host, ack_sys, rsc, op, rsc_id);
     lrmd_free_event(op);
 }
@@ -866,18 +866,20 @@ controld_query_executor_state(const char *node_name)
 void
 controld_rc2event(lrmd_event_data_t *event, int rc)
 {
+    /* This is called for cleanup requests from controller peers/clients, not
+     * for resource actions, so no exit reason is needed.
+     */
     switch (rc) {
         case pcmk_rc_ok:
-            event->rc = PCMK_OCF_OK;
-            event->op_status = PCMK_EXEC_DONE;
+            lrmd__set_result(event, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             break;
         case EACCES:
-            event->rc = PCMK_OCF_INSUFFICIENT_PRIV;
-            event->op_status = PCMK_EXEC_ERROR;
+            lrmd__set_result(event, PCMK_OCF_INSUFFICIENT_PRIV,
+                             PCMK_EXEC_ERROR, NULL);
             break;
         default:
-            event->rc = PCMK_OCF_UNKNOWN_ERROR;
-            event->op_status = PCMK_EXEC_ERROR;
+            lrmd__set_result(event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             NULL);
             break;
     }
 }
@@ -1379,13 +1381,12 @@ get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
 
 static void
 fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
-               enum ocf_exitcode op_exitcode)
+               enum ocf_exitcode op_exitcode, const char *exit_reason)
 {
     op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
-    op->op_status = op_status;
-    op->rc = op_exitcode;
+    lrmd__set_result(op, op_exitcode, op_status, exit_reason);
 }
 
 static void
@@ -1440,10 +1441,12 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
  * \param[in] action     Action XML from request
  * \param[in] rc         Desired return code to use
  * \param[in] op_status  Desired operation status to use
+ * \param[in] exit_reason  Human-friendly detail, if error
  */
 static void
 synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
-                        int op_status, enum ocf_exitcode rc)
+                        int op_status, enum ocf_exitcode rc,
+                        const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
@@ -1467,9 +1470,9 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
     if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
-        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK);
+        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK, NULL);
     } else {
-        fake_op_status(lrm_state, op, op_status, rc);
+        fake_op_status(lrm_state, op, op_status, rc, exit_reason);
     }
 
     crm_info("Faking " PCMK__OP_FMT " result (%d) on %s",
@@ -1521,7 +1524,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      * processed as if it came from the executor.
      */
     op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
-    fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR);
 
     free((char*) op->user_data);
     op->user_data = NULL;
@@ -1529,22 +1531,28 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     if (user_name && !pcmk__is_privileged(user_name)) {
         crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
+        fake_op_status(lrm_state, op, PCMK_EXEC_ERROR,
+                       PCMK_OCF_INSUFFICIENT_PRIV,
+                       "Unprivileged user cannot fail resources");
         controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
         lrmd_free_event(op);
         return;
     }
 
+
     if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
         crm_info("Failing resource %s...", rsc->id);
-        op->exit_reason = strdup("Simulated failure");
+        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR,
+                       "Simulated failure");
         process_lrm_event(lrm_state, op, NULL, xml);
-        op->op_status = PCMK_EXEC_DONE;
-        op->rc = PCMK_OCF_OK;
+        op->rc = PCMK_OCF_OK; // The request to fail the resource succeeded
         lrmd_free_rsc_info(rsc);
 
     } else {
         crm_info("Cannot find/create resource in order to fail it...");
         crm_log_xml_warn(xml, "bad input");
+        fake_op_status(lrm_state, op, PCMK_EXEC_ERROR, PCMK_OCF_UNKNOWN_ERROR,
+                       "Cannot fail unknown resource");
     }
 
     controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
@@ -1709,13 +1717,11 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         lrmd_event_data_t *op = NULL;
 
         op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
-        op->op_status = PCMK_EXEC_ERROR;
 
-        if (cib_rc == EACCES) {
-            op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
-        } else {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        }
+        /* These are resource clean-ups, not actions, so no exit reason is
+         * needed.
+         */
+        lrmd__set_result(op, pcmk_rc2ocf(cib_rc), PCMK_EXEC_ERROR, NULL);
         controld_ack_event_directly(from_host, from_sys, NULL, op, rsc->id);
         lrmd_free_event(op);
         return;
@@ -1756,7 +1762,8 @@ do_lrm_invoke(long long action,
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
         synthesize_lrmd_failure(NULL, input->xml, PCMK_EXEC_NOT_CONNECTED,
-                                PCMK_OCF_UNKNOWN_ERROR);
+                                PCMK_OCF_UNKNOWN_ERROR,
+                                "Local node has no connection to remote");
         return;
     }
     CRM_ASSERT(lrm_state != NULL);
@@ -1814,7 +1821,8 @@ do_lrm_invoke(long long action,
         if (rc == -ENOTCONN) {
             synthesize_lrmd_failure(lrm_state, input->xml,
                                     PCMK_EXEC_NOT_CONNECTED,
-                                    PCMK_OCF_UNKNOWN_ERROR);
+                                    PCMK_OCF_UNKNOWN_ERROR,
+                                    "Not connected to remote executor");
             return;
 
         } else if ((rc < 0) && !create_rsc) {
@@ -1834,7 +1842,8 @@ do_lrm_invoke(long long action,
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
-                                    PCMK_OCF_NOT_CONFIGURED); // fatal error
+                                    PCMK_OCF_NOT_CONFIGURED, // fatal error
+                                    "Invalid resource definition");
             return;
 
         } else if (rc < 0) {
@@ -1844,7 +1853,8 @@ do_lrm_invoke(long long action,
                     ID(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
-                                    PCMK_OCF_INVALID_PARAM); // hard error
+                                    PCMK_OCF_INVALID_PARAM, // hard error
+                                    "Could not register resource with executor");
             return;
         }
 
@@ -1961,10 +1971,9 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
 
     op = lrmd_new_event(rsc_id, operation, 0);
     op->type = lrmd_event_exec_complete;
-    op->op_status = PCMK_EXEC_PENDING;
-    op->rc = -1;
     op->timeout = 0;
     op->start_delay = 0;
+    lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     if (rsc_op == NULL) {
         CRM_LOG_ASSERT(pcmk__str_eq(CRMD_ACTION_STOP, operation, pcmk__str_casei));
@@ -2212,8 +2221,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     }
 
     op->call_id = -1;
-    op->op_status = PCMK_EXEC_PENDING;
-    op->rc = PCMK_OCF_UNKNOWN;
+    lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
@@ -2237,7 +2245,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     gboolean stop_recurring = FALSE;
-    bool send_nack = FALSE;
+    const char *nack_reason = NULL;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(operation != NULL, return);
@@ -2296,22 +2304,22 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-        send_nack = TRUE;
+        nack_reason = "Not attempting start due to shutdown in progress";
 
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
                && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        send_nack = TRUE;
+        nack_reason = "Controller cannot attempt actions at this time";
     }
 
-    if(send_nack) {
+    if (nack_reason != NULL) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
                    operation, rsc->id, fsa_state2string(fsa_state),
                    pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
 
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->op_status = PCMK_EXEC_INVALID;
+        lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
+                         nack_reason);
         controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
         lrmd_free_event(op);
         free(op_id);
@@ -2367,12 +2375,11 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
         if ((op->interval_ms > 0)
             && (op->start_delay > START_DELAY_THRESHOLD)) {
-            int target_rc = 0;
+            int target_rc = PCMK_OCF_OK;
 
             crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
             decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
-            op->rc = target_rc;
-            op->op_status = PCMK_EXEC_DONE;
+            lrmd__set_result(op, target_rc, PCMK_EXEC_DONE, NULL);
             controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
         }
 
@@ -2383,7 +2390,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         crm_err("Could not initiate %s action for resource %s locally: %s "
                 CRM_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
-                       PCMK_OCF_UNKNOWN_ERROR);
+                       PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
@@ -2392,7 +2399,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                 "%s " CRM_XS " rc=%d",
                 operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
-                       PCMK_OCF_UNKNOWN_ERROR);
+                       PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
     }
 
@@ -2635,12 +2642,12 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if (compare_version(fsa_our_dc_version, "3.2.0") < 0) {
         switch (op->op_status) {
             case PCMK_EXEC_NOT_CONNECTED:
-                op->op_status = PCMK_EXEC_ERROR;
-                op->rc = PCMK_OCF_CONNECTION_DIED;
+                lrmd__set_result(op, PCMK_OCF_CONNECTION_DIED,
+                                 PCMK_EXEC_ERROR, op->exit_reason);
                 break;
             case PCMK_EXEC_INVALID:
-                op->op_status = PCMK_EXEC_ERROR;
-                op->rc = CRM_DIRECT_NACK_RC;
+                lrmd__set_result(op, CRM_DIRECT_NACK_RC, PCMK_EXEC_ERROR,
+                                 op->exit_reason);
                 break;
             default:
                 break;

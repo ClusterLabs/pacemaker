@@ -248,9 +248,8 @@ lrmd_free_event(lrmd_event_data_t *event)
     free((void *) event->rsc_id);
     free((void *) event->op_type);
     free((void *) event->user_data);
-    free((void *) event->output);
-    free((void *) event->exit_reason);
     free((void *) event->remote_nodename);
+    lrmd__reset_result(event);
     if (event->params != NULL) {
         g_hash_table_destroy(event->params);
     }
@@ -305,9 +304,11 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 
         event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
+        event.type = lrmd_event_exec_complete;
+
+        // No need to duplicate the memory, so don't use setter functions
         event.output = crm_element_value(msg, F_LRMD_RSC_OUTPUT);
         event.exit_reason = crm_element_value(msg, F_LRMD_RSC_EXIT_REASON);
-        event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
     } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
@@ -877,7 +878,6 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     if (rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
-        rc = -ECOMM;
         goto done;
 
     } else if(op_reply == NULL) {
@@ -2344,4 +2344,50 @@ lrmd_api_delete(lrmd_t * lrmd)
 
     free(lrmd->lrmd_private);
     free(lrmd);
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an executor event
+ *
+ * \param[in,out] event        Executor event to set
+ * \param[in]     rc           OCF exit status of event
+ * \param[in]     op_status    Executor status of event
+ * \param[in]     exit_reason  Human-friendly description of event
+ */
+void
+lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
+                 const char *exit_reason)
+{
+    if (event == NULL) {
+        return;
+    }
+
+    event->rc = rc;
+    event->op_status = op_status;
+
+    if (!pcmk__str_eq(event->exit_reason, exit_reason, pcmk__str_none)) {
+        free((void *) event->exit_reason);
+        event->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Clear an executor event's exit reason, output, and error output
+ *
+ * \param[in] event  Executor event to reset
+ */
+void
+lrmd__reset_result(lrmd_event_data_t *event)
+{
+    if (event == NULL) {
+        return;
+    }
+
+    free((void *) event->exit_reason);
+    event->exit_reason = NULL;
+
+    free((void *) event->output);
+    event->output = NULL;
 }

@@ -516,7 +516,11 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
-    if (op->delegate == NULL) {
+    if (data == NULL) {
+        data = create_xml_node(NULL, "remote-op");
+        local_data = data;
+
+    } else if (op->delegate == NULL) {
         switch (rc) {
             case -ENODEV:
             case -EHOSTUNREACH:
@@ -525,11 +529,6 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
                 op->delegate = delegate_from_xml(data);
                 break;
         }
-    }
-
-    if (data == NULL) {
-        data = create_xml_node(NULL, "remote-op");
-        local_data = data;
     }
 
     if(dup) {

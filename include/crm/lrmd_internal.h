@@ -35,6 +35,11 @@ int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
 int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
 
+void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
+                      int op_status, const char *exit_reason);
+
+void lrmd__reset_result(lrmd_event_data_t *event);
+
 /* Shared functions for IPC proxy back end */
 
 typedef struct remote_proxy_s {

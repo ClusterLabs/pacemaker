@@ -16,6 +16,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
 
 
@@ -791,16 +792,17 @@ pcmk__free_graph(crm_graph_t *graph)
  * \internal
  * \brief Synthesize an executor event from a graph action
  *
- * \param[in] resource  If not NULL, use greater call ID than in this XML
- * \param[in] action    Graph action
- * \param[in] status    What to use as event execution status
- * \param[in] rc        What to use as event exit status
+ * \param[in] resource     If not NULL, use greater call ID than in this XML
+ * \param[in] action       Graph action
+ * \param[in] status       What to use as event execution status
+ * \param[in] rc           What to use as event exit status
+ * \param[in] exit_reason  What to use as event exit reason
  *
  * \return Newly allocated executor event on success, or NULL otherwise
  */
 lrmd_event_data_t *
 pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
-                              int status, int rc)
+                              int status, int rc, const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
     GHashTableIter iter;
@@ -818,8 +820,7 @@ pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
     op = lrmd_new_event(ID(action_resource),
                         crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                         action->interval_ms);
-    op->rc = rc;
-    op->op_status = status;
+    lrmd__set_result(op, rc, status, exit_reason);
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
     op->params = pcmk__strkey_table(free, free);

@@ -24,6 +24,7 @@
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -121,8 +122,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     xmlNode *xop = NULL;
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
-    op->rc = outcome;
-    op->op_status = PCMK_EXEC_DONE;
+    lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
     op->params = NULL;          /* TODO: Fill me in */
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;
@@ -524,7 +524,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
         char *spec = (char *)gIter->data;
 
         int rc = 0;
-        int outcome = 0;
+        int outcome = PCMK_OCF_OK;
         guint interval_ms = 0;
 
         char *key = NULL;
@@ -609,7 +609,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     int rc = 0;
     GList *gIter = NULL;
     lrmd_event_data_t *op = NULL;
-    int target_outcome = 0;
+    int target_outcome = PCMK_OCF_OK;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -680,7 +680,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
-                                       target_outcome);
+                                       target_outcome, "User-injected result");
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 
