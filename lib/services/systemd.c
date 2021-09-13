@@ -570,8 +570,6 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
             op->rc = PCMK_OCF_OK;
         }
     }
-
-    operation_finalize(op);
 }
 
 static void
@@ -589,6 +587,7 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
     systemd_exec_result(reply, op);
+    operation_finalize(op);
 
     if(reply) {
         dbus_message_unref(reply);
