@@ -311,58 +311,97 @@ systemd_loadunit_cb(DBusPendingCall *pending, void *user_data)
     }
 }
 
-static char *
-systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
+/*!
+ * \internal
+ * \brief Execute a systemd action, given the unit name
+ *
+ * \param[in]  arg_name  Unit name (possibly shortened, i.e. without ".service")
+ * \param[in]  op        Action to execute (if NULL, just get the object path)
+ * \param[out] path      If non-NULL and \p op is NULL or synchronous, where to
+ *                       store DBus object path for specified unit
+ *
+ * \return Standard Pacemaker return code (for NULL \p op, pcmk_rc_ok means unit
+ *         was found; for synchronous actions, pcmk_rc_ok means unit was
+ *         executed, with the actual result stored in \p op; for asynchronous
+ *         actions, pcmk_rc_ok means action was initiated)
+ * \note It is the caller's responsibility to free the return value if non-NULL.
+ */
+static int
+invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
 {
     DBusMessage *msg;
     DBusMessage *reply = NULL;
-    DBusPendingCall* pending = NULL;
+    DBusPendingCall *pending = NULL;
     char *name = NULL;
 
-/*
-  Equivalent to GetUnit if it's already loaded
-  <method name="LoadUnit">
-   <arg name="name" type="s" direction="in"/>
-   <arg name="unit" type="o" direction="out"/>
-  </method>
- */
-
-    if (systemd_init() == FALSE) {
-        return FALSE;
+    if (!systemd_init()) {
+        if (op != NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+        }
+        return ENOTCONN;
     }
 
+    /* Create a LoadUnit DBus method (equivalent to GetUnit if already loaded),
+     * which makes the unit usable via further DBus methods.
+     *
+     * <method name="LoadUnit">
+     *  <arg name="name" type="s" direction="in"/>
+     *  <arg name="unit" type="o" direction="out"/>
+     * </method>
+     */
     msg = systemd_new_method("LoadUnit");
     CRM_ASSERT(msg != NULL);
 
+    // Add the (expanded) unit name as the argument
     name = systemd_service_name(arg_name);
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
+                                            DBUS_TYPE_INVALID));
     free(name);
 
-    if(op == NULL || op->synchronous) {
+    if ((op == NULL) || op->synchronous) {
+        // For synchronous ops, wait for a reply and extract the result
         const char *unit = NULL;
-        char *munit = NULL;
+        int rc = pcmk_rc_ok;
 
         reply = systemd_send_recv(msg, NULL,
                                   (op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT));
         dbus_message_unref(msg);
 
         unit = systemd_loadunit_result(reply, op);
-        if(unit) {
-            munit = strdup(unit);
+        if (unit == NULL) {
+            rc = ENOENT;
+            if (path != NULL) {
+                *path = NULL;
+            }
+        } else if (path != NULL) {
+            *path = strdup(unit);
+            if (*path == NULL) {
+                rc = ENOMEM;
+            }
         }
-        if(reply) {
+
+        if (reply != NULL) {
             dbus_message_unref(reply);
         }
-        return munit;
+        return rc;
     }
 
+    // For asynchronous ops, initiate the LoadUnit call and return
     pending = systemd_send(msg, systemd_loadunit_cb, op, op->timeout);
-    if(pending) {
-        services_set_op_pending(op, pending);
+    if (pending == NULL) {
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
+        dbus_message_unref(msg);
+        return ECOMM;
     }
 
+    // LoadUnit was successfully initiated
+    op->rc = PCMK_OCF_UNKNOWN;
+    op->status = PCMK_EXEC_PENDING;
+    services_set_op_pending(op, pending);
     dbus_message_unref(msg);
-    return NULL;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -490,17 +529,10 @@ systemd_unit_listall(void)
 gboolean
 systemd_unit_exists(const char *name)
 {
-    char *unit = NULL;
-
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
-    unit = systemd_unit_by_name(name, NULL);
-    if(unit) {
-        free(unit);
-        return TRUE;
-    }
-    return FALSE;
+    return invoke_unit_by_name(name, NULL, NULL) == pcmk_rc_ok;
 }
 
 static char *
@@ -508,9 +540,9 @@ systemd_unit_metadata(const char *name, int timeout)
 {
     char *meta = NULL;
     char *desc = NULL;
-    char *path = systemd_unit_by_name(name, NULL);
+    char *path = NULL;
 
-    if (path) {
+    if (invoke_unit_by_name(name, NULL, &path) == pcmk_rc_ok) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
         desc = systemd_get_property(path, "Description", NULL, NULL, NULL,
                                     timeout);
@@ -874,17 +906,11 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    // Initialize rc/status in case systemd_unit_by_name() doesn't set them
+    // Initialize rc/status in case invoke_unit_by_name() doesn't set them
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
     op->status = PCMK_EXEC_DONE;
 
-    {
-        char *unit = systemd_unit_by_name(op->agent, op);
-
-        free(unit);
-    }
-
-    if (op->opaque->pending != NULL) { // Successfully initiated async op
+    if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
         op->opaque->timerid = g_timeout_add(op->timeout + 5000,
                                             systemd_timeout_callback, op);
         services_add_inflight_op(op);
