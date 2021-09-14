@@ -19,7 +19,7 @@
 #include <dbus/dbus.h>
 #include <pcmk-dbus.h>
 
-gboolean systemd_unit_exec_with_unit(svc_action_t * op, const char *unit);
+static void invoke_unit_by_path(svc_action_t *op, const char *unit);
 
 #define BUS_NAME         "org.freedesktop.systemd1"
 #define BUS_NAME_MANAGER BUS_NAME ".Manager"
@@ -299,7 +299,7 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
 
     if (op != NULL) {
         if (path != NULL) {
-            systemd_unit_exec_with_unit(op, path);
+            invoke_unit_by_path(op, path);
 
         } else if (!(op->synchronous)) {
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -787,16 +787,21 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
     }
 }
 
-gboolean
-systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
+/*!
+ * \internal
+ * \brief Invoke a systemd unit, given its DBus object path
+ *
+ * \param[in] op    Action to execute
+ * \param[in] unit  DBus object path of systemd unit to invoke
+ */
+static void
+invoke_unit_by_path(svc_action_t *op, const char *unit)
 {
-    const char *method = op->action;
+    const char *method = NULL;
     DBusMessage *msg = NULL;
     DBusMessage *reply = NULL;
 
-    CRM_ASSERT(unit);
-
-    if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) || pcmk__str_eq(method, "status", pcmk__str_casei)) {
+    if (pcmk__str_any_of(op->action, "monitor", "status", NULL)) {
         DBusPendingCall *pending = NULL;
         char *state;
 
@@ -807,32 +812,39 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         if (op->synchronous) {
             systemd_unit_check("ActiveState", state, op);
             free(state);
-            return op->rc == PCMK_OCF_OK;
-        } else if (pending) {
-            services_set_op_pending(op, pending);
-            return TRUE;
+
+        } else if (pending == NULL) { // Could not get ActiveState property
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+            services__finalize_async_op(op);
 
         } else {
-            return services__finalize_async_op(op) == pcmk_rc_ok;
+            services_set_op_pending(op, pending);
         }
+        return;
 
-    } else if (g_strcmp0(method, "start") == 0) {
+    } else if (pcmk__str_eq(op->action, "start", pcmk__str_none)) {
         method = "StartUnit";
         systemd_create_override(op->agent, op->timeout);
 
-    } else if (g_strcmp0(method, "stop") == 0) {
+    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
         method = "StopUnit";
         systemd_remove_override(op->agent, op->timeout);
 
-    } else if (g_strcmp0(method, "restart") == 0) {
+    } else if (pcmk__str_eq(op->action, "restart", pcmk__str_none)) {
         method = "RestartUnit";
 
     } else {
         op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
-        goto cleanup;
+        op->status = PCMK_EXEC_ERROR;
+        if (!(op->synchronous)) {
+            services__finalize_async_op(op);
+        }
+        return;
     }
 
-    crm_debug("Calling %s for %s: %s", method, op->rsc, unit);
+    crm_trace("Calling %s for unit path %s named %s",
+              method, unit, crm_str(op->rsc));
 
     msg = systemd_new_method(method);
     CRM_ASSERT(msg != NULL);
@@ -848,36 +860,28 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         free(name);
     }
 
-    if (op->synchronous == FALSE) {
+    if (op->synchronous) {
+        reply = systemd_send_recv(msg, NULL, op->timeout);
+        dbus_message_unref(msg);
+        systemd_exec_result(reply, op);
+        if (reply != NULL) {
+            dbus_message_unref(reply);
+        }
+
+    } else {
         DBusPendingCall *pending = systemd_send(msg, systemd_async_dispatch,
                                                 op, op->timeout);
 
         dbus_message_unref(msg);
-        if(pending) {
-            services_set_op_pending(op, pending);
-            return TRUE;
+        if (pending == NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+            services__finalize_async_op(op);
 
         } else {
-            return services__finalize_async_op(op) == pcmk_rc_ok;
+            services_set_op_pending(op, pending);
         }
-
-    } else {
-        reply = systemd_send_recv(msg, NULL, op->timeout);
-        dbus_message_unref(msg);
-        systemd_exec_result(reply, op);
-
-        if(reply) {
-            dbus_message_unref(reply);
-        }
-        return FALSE;
     }
-
-  cleanup:
-    if (op->synchronous == FALSE) {
-        return services__finalize_async_op(op) == pcmk_rc_ok;
-    }
-
-    return op->rc == PCMK_OCF_OK;
 }
 
 static gboolean
