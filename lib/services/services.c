@@ -718,7 +718,7 @@ action_exec_helper(svc_action_t * op)
     } else if (op->standard && strcasecmp(op->standard,
                                           PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
 #if SUPPORT_SYSTEMD
-        return systemd_unit_exec(op);
+        return services__execute_systemd(op) == pcmk_rc_ok;
 #endif
     } else {
         return services_os_action_execute(op);
