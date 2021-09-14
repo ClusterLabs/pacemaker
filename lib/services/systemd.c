@@ -288,25 +288,33 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
     return path;
 }
 
-
+/*!
+ * \internal
+ * \brief Execute a systemd action after its LoadUnit completes
+ *
+ * \param[in] pending    If not NULL, DBus call associated with LoadUnit request
+ * \param[in] user_data  Action to execute
+ */
 static void
-systemd_loadunit_cb(DBusPendingCall *pending, void *user_data)
+loadunit_completed(DBusPendingCall *pending, void *user_data)
 {
     DBusMessage *reply = NULL;
-    svc_action_t * op = user_data;
+    svc_action_t *op = user_data;
 
-    if(pending) {
+    crm_trace("LoadUnit result for %s arrived", op->id);
+
+    // Grab the reply
+    if (pending != NULL) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    crm_trace("Got result: %p for %p / %p for %s", reply, pending, op->opaque->pending, op->id);
-
+    // The call is no longer pending
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
 
+    // Execute the desired action based on the reply
     systemd_loadunit_result(reply, user_data);
-
-    if(reply) {
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
 }
@@ -388,7 +396,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     }
 
     // For asynchronous ops, initiate the LoadUnit call and return
-    pending = systemd_send(msg, systemd_loadunit_cb, op, op->timeout);
+    pending = systemd_send(msg, loadunit_completed, op, op->timeout);
     if (pending == NULL) {
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->status = PCMK_EXEC_ERROR;
