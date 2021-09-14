@@ -711,25 +711,35 @@ handle_duplicate_recurring(svc_action_t * op)
  * \brief Execute an action appropriately according to its standard
  *
  * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return code
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
  */
-inline static gboolean
-action_exec_helper(svc_action_t * op)
+static int
+execute_action(svc_action_t *op)
 {
 #if SUPPORT_UPSTART
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART,
                      pcmk__str_casei)) {
-        return services__execute_upstart(op) == pcmk_rc_ok;
+        return services__execute_upstart(op);
     }
 #endif
 
 #if SUPPORT_SYSTEMD
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
                      pcmk__str_casei)) {
-        return services__execute_systemd(op) == pcmk_rc_ok;
+        return services__execute_systemd(op);
     }
 #endif
 
-    return services__execute_file(op) == pcmk_rc_ok;
+    return services__execute_file(op);
 }
 
 void
@@ -793,7 +803,7 @@ services_action_async_fork_notify(svc_action_t * op,
         return TRUE;
     }
 
-    return action_exec_helper(op);
+    return execute_action(op) == pcmk_rc_ok;
 }
 
 gboolean
@@ -827,7 +837,6 @@ handle_blocked_ops(void)
     GList *executed_ops = NULL;
     GList *gIter = NULL;
     svc_action_t *op = NULL;
-    gboolean res = FALSE;
 
     if (processing_blocked_ops) {
         /* avoid nested calling of this function */
@@ -844,8 +853,7 @@ handle_blocked_ops(void)
             continue;
         }
         executed_ops = g_list_append(executed_ops, op);
-        res = action_exec_helper(op);
-        if (res == FALSE) {
+        if (execute_action(op) != pcmk_rc_ok) {
             op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
@@ -898,7 +906,7 @@ action_get_metadata(svc_action_t *op)
     }
 #endif
 
-    return action_exec_helper(op);
+    return execute_action(op) == pcmk_rc_ok;
 }
 
 gboolean
@@ -923,7 +931,7 @@ services_action_sync(svc_action_t * op)
          */
         rc = action_get_metadata(op);
     } else {
-        rc = action_exec_helper(op);
+        rc = (execute_action(op) == pcmk_rc_ok);
     }
     crm_trace(" > " PCMK__OP_FMT ": %s = %d",
               op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
