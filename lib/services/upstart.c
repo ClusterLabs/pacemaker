@@ -413,10 +413,24 @@ upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
     }
 }
 
-/* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
-/* For a synchronous 'op', returns FALSE if 'op' fails */
-gboolean
-upstart_job_exec(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Execute an Upstart action
+ *
+ * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return code
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
+ */
+int
+services__execute_upstart(svc_action_t *op)
 {
     char *job = NULL;
     int arg_wait = TRUE;
@@ -428,20 +442,32 @@ upstart_job_exec(svc_action_t * op)
     DBusMessage *reply = NULL;
     DBusMessageIter iter, array_iter;
 
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    CRM_ASSERT(upstart_init());
+    CRM_ASSERT(op != NULL);
+
+    if ((op->action == NULL) || (op->agent == NULL)) {
+        op->rc = PCMK_OCF_NOT_CONFIGURED;
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        goto cleanup;
+    }
+
+    if (!upstart_init()) {
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
+        goto cleanup;
+    }
 
     if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         op->stdout_data = upstart_job_metadata(op->agent);
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
         goto cleanup;
     }
 
-    if(!upstart_job_by_name(op->agent, &job, op->timeout)) {
-        crm_debug("Could not obtain job named '%s' to %s", op->agent, action);
-        if (!g_strcmp0(action, "stop")) {
+    if (!upstart_job_by_name(op->agent, &job, op->timeout)) {
+        crm_debug("Could not find Upstart job '%s' to %s", op->agent, action);
+        if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
             op->rc = PCMK_OCF_OK;
-
+            op->status = PCMK_EXEC_DONE;
         } else {
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_EXEC_NOT_INSTALLED;
@@ -450,44 +476,56 @@ upstart_job_exec(svc_action_t * op)
     }
 
     if (pcmk__strcase_any_of(op->action, "monitor", "status", NULL)) {
+        DBusPendingCall *pending = NULL;
+        char *state = NULL;
         char *path = get_first_instance(job, op->timeout);
 
         op->rc = PCMK_OCF_NOT_RUNNING;
-        if(path) {
-            DBusPendingCall *pending = NULL;
-            char *state = pcmk_dbus_get_property(
-                upstart_proxy, BUS_NAME, path, UPSTART_06_API ".Instance", "state",
-                op->synchronous?NULL:upstart_job_check, op,
-                op->synchronous?NULL:&pending, op->timeout);
-
-            free(job);
-            free(path);
-
-            if(op->synchronous) {
-                upstart_job_check("state", state, op);
-                free(state);
-                return op->rc == PCMK_OCF_OK;
-            } else if (pending) {
-                services_set_op_pending(op, pending);
-                services_add_inflight_op(op);
-                return TRUE;
-            }
-            return FALSE;
+        op->status = PCMK_EXEC_DONE;
+        if (path == NULL) {
+            goto cleanup;
         }
+        state = pcmk_dbus_get_property(upstart_proxy, BUS_NAME, path,
+                                       UPSTART_06_API ".Instance", "state",
+                                       op->synchronous? NULL : upstart_job_check,
+                                       op,
+                                       op->synchronous? NULL : &pending,
+                                       op->timeout);
+        free(path);
+
+        if (op->synchronous) {
+            upstart_job_check("state", state, op);
+            free(state);
+
+        } else if (pending != NULL) { // Successfully initiated async op
+            free(job);
+            services_set_op_pending(op, pending);
+            services_add_inflight_op(op);
+            return pcmk_rc_ok;
+        }
+
         goto cleanup;
 
-    } else if (!g_strcmp0(action, "start")) {
+    } else if (pcmk__str_eq(action, "start", pcmk__str_none)) {
         action = "Start";
-    } else if (!g_strcmp0(action, "stop")) {
+
+    } else if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
         action = "Stop";
-    } else if (!g_strcmp0(action, "restart")) {
+
+    } else if (pcmk__str_eq(action, "restart", pcmk__str_none)) {
         action = "Restart";
+
     } else {
         op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
+        op->status = PCMK_EXEC_ERROR_HARD;
         goto cleanup;
     }
 
-    crm_debug("Calling %s for %s on %s", action, op->rsc, job);
+    // Initialize rc/status in case called functions don't set them
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_DONE;
+
+    crm_debug("Calling %s for %s on %s", action, crm_str(op->rsc), job);
 
     msg = dbus_message_new_method_call(BUS_NAME, // target for the method call
                                        job, // object to call on
@@ -507,59 +545,63 @@ upstart_job_exec(svc_action_t * op)
 
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
 
-    if (op->synchronous == FALSE) {
-        DBusPendingCall* pending = pcmk_dbus_send(msg, upstart_proxy, upstart_async_dispatch, op, op->timeout);
-        free(job);
+    if (!(op->synchronous)) {
+        DBusPendingCall *pending = pcmk_dbus_send(msg, upstart_proxy,
+                                                  upstart_async_dispatch, op,
+                                                  op->timeout);
 
-        if(pending) {
+        if (pending != NULL) { // Successfully initiated async op
+            free(job);
             services_set_op_pending(op, pending);
             services_add_inflight_op(op);
-            return TRUE;
+            return pcmk_rc_ok;
         }
-        return FALSE;
+        goto cleanup;
     }
 
     dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
     if (dbus_error_is_set(&error)) {
-        if(!upstart_mask_error(op, error.name)) {
+        if (!upstart_mask_error(op, error.name)) {
             crm_err("Could not issue %s for %s: %s (%s)",
                     action, op->rsc, error.message, job);
         }
         dbus_error_free(&error);
 
-    } else if (!g_strcmp0(op->action, "stop")) {
-        /* No return vaue */
+    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+        // DBus call does not return a value
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
 
-    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
         crm_warn("Call to %s passed but return type was unexpected", op->action);
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
 
     } else {
         const char *path = NULL;
 
-        dbus_message_get_args (reply, NULL,
-                               DBUS_TYPE_OBJECT_PATH, &path,
-                               DBUS_TYPE_INVALID);
+        dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, &path,
+                              DBUS_TYPE_INVALID);
         crm_info("Call to %s passed: %s", op->action, path);
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     }
 
-
-  cleanup:
+cleanup:
     free(job);
-    if(msg) {
+    if (msg != NULL) {
         dbus_message_unref(msg);
     }
-
-    if(reply) {
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
 
-    if (op->synchronous == FALSE) {
-        return services__finalize_async_op(op) == pcmk_rc_ok;
+    if (op->synchronous) {
+        return (op->rc == PCMK_OCF_OK)? pcmk_rc_ok : pcmk_rc_error;
+    } else {
+        return services__finalize_async_op(op);
     }
-    return op->rc == PCMK_OCF_OK;
 }

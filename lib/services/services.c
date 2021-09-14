@@ -713,7 +713,7 @@ action_exec_helper(svc_action_t * op)
     if (op->standard
         && (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0)) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op);
+        return upstart_job_exec(op) == pcmk_rc_ok;
 #endif
     } else if (op->standard && strcasecmp(op->standard,
                                           PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
