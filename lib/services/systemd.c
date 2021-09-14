@@ -252,21 +252,42 @@ systemd_mask_error(svc_action_t *op, const char *error)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Extract unit path from LoadUnit reply, and execute action
+ *
+ * \param[in] reply  LoadUnit reply
+ * \param[in] op     Action to execute (or NULL to just return path)
+ *
+ * \return DBus object path for specified unit if successful (only valid for
+ *         lifetime of \p reply), otherwise NULL
+ */
 static const char *
-systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
+execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
 {
     const char *path = NULL;
     DBusError error;
 
-    if (pcmk_dbus_find_error((void*)&path, reply, &error)) {
-        if(op && !systemd_mask_error(op, error.name)) {
-            crm_err("Could not load systemd unit %s for %s: %s",
-                    op->agent, op->id, error.message);
+    /* path here is not used other than as a non-NULL flag to indicate that a
+     * request was indeed sent
+     */
+    if (pcmk_dbus_find_error((void *) &path, reply, &error)) {
+        if (op != NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+            if (!systemd_mask_error(op, error.name)) {
+                crm_err("Could not load systemd unit %s for %s: %s",
+                        op->agent, op->id, error.message);
+            }
         }
         dbus_error_free(&error);
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
+        if (op != NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+        }
         crm_err("Could not load systemd unit %s for %s: "
                 "systemd reply has unexpected type", op->agent, op->id);
 
@@ -276,11 +297,13 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
                                DBUS_TYPE_INVALID);
     }
 
-    if(op) {
-        if (path) {
+    if (op != NULL) {
+        if (path != NULL) {
             systemd_unit_exec_with_unit(op, path);
 
-        } else if (op->synchronous == FALSE) {
+        } else if (!(op->synchronous)) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
             services__finalize_async_op(op);
         }
     }
@@ -313,7 +336,7 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
     services_set_op_pending(op, NULL);
 
     // Execute the desired action based on the reply
-    systemd_loadunit_result(reply, user_data);
+    execute_after_loadunit(reply, user_data);
     if (reply != NULL) {
         dbus_message_unref(reply);
     }
@@ -376,7 +399,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
                                   (op? op->timeout : DBUS_TIMEOUT_USE_DEFAULT));
         dbus_message_unref(msg);
 
-        unit = systemd_loadunit_result(reply, op);
+        unit = execute_after_loadunit(reply, op);
         if (unit == NULL) {
             rc = ENOENT;
             if (path != NULL) {
