@@ -423,7 +423,7 @@ services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
 {
     action->synchronous = false;
     action->opaque->callback = cb;
-    return services_os_action_execute(action);
+    return services__execute_file(action) == pcmk_rc_ok;
 }
 
 #if SUPPORT_DBUS
@@ -721,7 +721,7 @@ action_exec_helper(svc_action_t * op)
         return services__execute_systemd(op) == pcmk_rc_ok;
 #endif
     } else {
-        return services_os_action_execute(op);
+        return services__execute_file(op) == pcmk_rc_ok;
     }
     /* The 'op' has probably been freed if the execution functions return TRUE
        for the asynchronous 'op'. */
