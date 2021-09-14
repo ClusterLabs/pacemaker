@@ -635,24 +635,34 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous unit start, stop, or restart
+ *
+ * \param[in] pending    If not NULL, DBus call associated with request
+ * \param[in] user_data  Action that was executed
+ */
 static void
-systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
+unit_method_complete(DBusPendingCall *pending, void *user_data)
 {
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    if(pending) {
+    crm_trace("Result for %s arrived", op->id);
+
+    // Grab the reply
+    if (pending != NULL) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    crm_trace("Got result: %p for %p for %s, %s", reply, pending, op->rsc, op->action);
-
+    // The call is no longer pending
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
+
+    // Determine result and finalize action
     systemd_exec_result(reply, op);
     services__finalize_async_op(op);
-
-    if(reply) {
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
 }
@@ -885,8 +895,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         }
 
     } else {
-        DBusPendingCall *pending = systemd_send(msg, systemd_async_dispatch,
-                                                op, op->timeout);
+        DBusPendingCall *pending = systemd_send(msg, unit_method_complete, op,
+                                                op->timeout);
 
         dbus_message_unref(msg);
         if (pending == NULL) {
