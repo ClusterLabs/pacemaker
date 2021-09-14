@@ -605,33 +605,47 @@ systemd_unit_metadata(const char *name, int timeout)
     return meta;
 }
 
+/*!
+ * \internal
+ * \brief Determine result of method from reply
+ *
+ * \param[in] reply  Reply to start, stop, or restart request
+ * \param[in] op     Action that was executed
+ */
 static void
-systemd_exec_result(DBusMessage *reply, svc_action_t *op)
+process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
 {
     DBusError error;
 
-    if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
-
-        /* ignore "already started" or "not running" errors */
+    /* The first use of error here is not used other than as a non-NULL flag to
+     * indicate that a request was indeed sent
+     */
+    if (pcmk_dbus_find_error((void *) &error, reply, &error)) {
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         if (!systemd_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s", op->action, op->rsc, error.message);
+            crm_err("DBus request for %s of %s failed: %s",
+                    op->action, crm_str(op->rsc), error.message);
         }
         dbus_error_free(&error);
 
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_warn("DBus request for %s of %s succeeded but "
+                 "return type was unexpected", op->action, crm_str(op->rsc));
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
     } else {
-        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
-            crm_warn("Call to %s passed but return type was unexpected", op->action);
-            op->rc = PCMK_OCF_OK;
+        const char *path = NULL;
 
-        } else {
-            const char *path = NULL;
-
-            dbus_message_get_args (reply, NULL,
-                                   DBUS_TYPE_OBJECT_PATH, &path,
-                                   DBUS_TYPE_INVALID);
-            crm_info("Call to %s passed: %s", op->action, path);
-            op->rc = PCMK_OCF_OK;
-        }
+        dbus_message_get_args(reply, NULL,
+                              DBUS_TYPE_OBJECT_PATH, &path,
+                              DBUS_TYPE_INVALID);
+        crm_debug("DBus request for %s of %s using %s succeeded",
+                  op->action, crm_str(op->rsc), path);
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     }
 }
 
@@ -660,7 +674,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     services_set_op_pending(op, NULL);
 
     // Determine result and finalize action
-    systemd_exec_result(reply, op);
+    process_unit_method_reply(reply, op);
     services__finalize_async_op(op);
     if (reply != NULL) {
         dbus_message_unref(reply);
@@ -889,7 +903,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     if (op->synchronous) {
         reply = systemd_send_recv(msg, NULL, op->timeout);
         dbus_message_unref(msg);
-        systemd_exec_result(reply, op);
+        process_unit_method_reply(reply, op);
         if (reply != NULL) {
             dbus_message_unref(reply);
         }
