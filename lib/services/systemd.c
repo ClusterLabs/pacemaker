@@ -757,31 +757,47 @@ systemd_remove_override(const char *agent, int timeout)
     free(override_file);
 }
 
+/*!
+ * \internal
+ * \brief Parse result of systemd status check
+ *
+ * Set a status action's exit status and execution status based on a DBus
+ * property check result, and finalize the action if asynchronous.
+ *
+ * \param[in] name      DBus interface name for property that was checked
+ * \param[in] state     Property value
+ * \param[in] userdata  Status action that check was done for
+ */
 static void
-systemd_unit_check(const char *name, const char *state, void *userdata)
+parse_status_result(const char *name, const char *state, void *userdata)
 {
-    svc_action_t * op = userdata;
+    svc_action_t *op = userdata;
 
-    crm_trace("Resource %s has %s='%s'", op->rsc, name, state);
+    crm_trace("Resource %s has %s='%s'",
+              crm_str(op->rsc), name, crm_str(state));
 
-    if(state == NULL) {
-        op->rc = PCMK_OCF_NOT_RUNNING;
-
-    } else if (g_strcmp0(state, "active") == 0) {
+    if (pcmk__str_eq(state, "active", pcmk__str_none)) {
         op->rc = PCMK_OCF_OK;
-    } else if (g_strcmp0(state, "reloading") == 0) {
+        op->status = PCMK_EXEC_DONE;
+
+    } else if (pcmk__str_eq(state, "reloading", pcmk__str_none)) {
         op->rc = PCMK_OCF_OK;
-    } else if (g_strcmp0(state, "activating") == 0) {
+        op->status = PCMK_EXEC_DONE;
+
+    } else if (pcmk__str_eq(state, "activating", pcmk__str_none)) {
         op->rc = PCMK_OCF_UNKNOWN;
         op->status = PCMK_EXEC_PENDING;
-    } else if (g_strcmp0(state, "deactivating") == 0) {
+
+    } else if (pcmk__str_eq(state, "deactivating", pcmk__str_none)) {
         op->rc = PCMK_OCF_UNKNOWN;
         op->status = PCMK_EXEC_PENDING;
+
     } else {
         op->rc = PCMK_OCF_NOT_RUNNING;
+        op->status = PCMK_EXEC_DONE;
     }
 
-    if (op->synchronous == FALSE) {
+    if (!(op->synchronous)) {
         services_set_op_pending(op, NULL);
         services__finalize_async_op(op);
     }
@@ -806,11 +822,11 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         char *state;
 
         state = systemd_get_property(unit, "ActiveState",
-                                     (op->synchronous? NULL : systemd_unit_check),
+                                     (op->synchronous? NULL : parse_status_result),
                                      op, (op->synchronous? NULL : &pending),
                                      op->timeout);
         if (op->synchronous) {
-            systemd_unit_check("ActiveState", state, op);
+            parse_status_result("ActiveState", state, op);
             free(state);
 
         } else if (pending == NULL) { // Could not get ActiveState property
