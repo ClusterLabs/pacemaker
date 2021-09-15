@@ -15,7 +15,7 @@ typedef struct pcmk_child_s {
     pid_t pid;
     int start_seq;
     int respawn_count;
-    gboolean respawn;
+    bool respawn;
     const char *name;
     const char *uid;
     const char *command;

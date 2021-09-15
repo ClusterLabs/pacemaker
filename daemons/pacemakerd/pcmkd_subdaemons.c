@@ -31,30 +31,30 @@
 
 static pcmk_child_t pcmk_children[] = {
     {
-        0, 0, 0, FALSE, "none", NULL, NULL, NULL
+        0, 0, 0, false, "none", NULL, NULL, NULL
     },
     {
-        0, 3, 0, TRUE,  "pacemaker-execd", NULL,
+        0, 3, 0, true,  "pacemaker-execd", NULL,
         CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD
     },
     {
-        0, 1, 0, TRUE,  "pacemaker-based", CRM_DAEMON_USER,
+        0, 1, 0, true,  "pacemaker-based", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO
     },
     {
-        0, 6, 0, TRUE, "pacemaker-controld", CRM_DAEMON_USER,
+        0, 6, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD
     },
     {
-        0, 4, 0, TRUE, "pacemaker-attrd", CRM_DAEMON_USER,
+        0, 4, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD
     },
     {
-        0, 5, 0, TRUE, "pacemaker-schedulerd", CRM_DAEMON_USER,
+        0, 5, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE
     },
     {
-        0, 2, 0, TRUE, "pacemaker-fenced", NULL,
+        0, 2, 0, true, "pacemaker-fenced", NULL,
         CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng"
     },
 };
@@ -118,7 +118,7 @@ check_active_before_startup_processes(gpointer user_data)
                         break;
                     case pcmk_rc_ipc_unresponsive:
                     case pcmk_rc_ipc_pid_only: // This case: it was previously OK
-                        if (pcmk_children[lpc].respawn == TRUE) {
+                        if (pcmk_children[lpc].respawn) {
                             crm_err("%s[%lld] terminated%s", pcmk_children[lpc].name,
                                     (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[lpc].pid),
                                     (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
@@ -182,14 +182,14 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
             case CRM_EX_FATAL:
                 crm_warn("Shutting cluster down because %s[%d] had fatal failure",
                          name, pid);
-                child->respawn = FALSE;
+                child->respawn = false;
                 fatal_error = TRUE;
                 pcmk_shutdown(SIGTERM);
                 break;
 
             case CRM_EX_PANIC:
                 crm_emerg("%s[%d] instructed the machine to reset", name, pid);
-                child->respawn = FALSE;
+                child->respawn = false;
                 fatal_error = TRUE;
                 pcmk__panic(__func__);
                 pcmk_shutdown(SIGTERM);
@@ -214,7 +214,7 @@ pcmk_process_exit(pcmk_child_t * child)
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
         crm_err("Child respawn count exceeded by %s", child->name);
-        child->respawn = FALSE;
+        child->respawn = false;
     }
 
     if (shutdown_trigger) {
@@ -286,7 +286,7 @@ pcmk_shutdown_worker(gpointer user_data)
                                  child->command);
                     }
                     next_log = now + 30;
-                    child->respawn = FALSE;
+                    child->respawn = false;
                     stop_child(child, SIGTERM);
                     if (phase < pcmk_children[PCMK_CHILD_CONTROLD].start_seq) {
                         g_timeout_add(SHUTDOWN_ESCALATION_PERIOD,
