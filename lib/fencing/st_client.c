@@ -752,14 +752,14 @@ static int
 svc_action_to_errno(svc_action_t *svc_action) {
     int rv = pcmk_ok;
 
-    if (svc_action->rc > 0) {
-        /* Try to provide a useful error code based on the fence agent's
-            * error output.
-            */
-        if (svc_action->rc == PCMK_OCF_TIMEOUT) {
+    if (svc_action->status == PCMK_EXEC_TIMEOUT) {
             rv = -ETIME;
 
-        } else if (svc_action->stderr_data == NULL) {
+    } else if (svc_action->rc != PCMK_OCF_OK) {
+        /* Try to provide a useful error code based on the fence agent's
+         * error output.
+         */
+        if (svc_action->stderr_data == NULL) {
             rv = -ENODATA;
 
         } else if (strstr(svc_action->stderr_data, "imed out")) {

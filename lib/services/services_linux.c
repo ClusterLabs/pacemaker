@@ -615,7 +615,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
         crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                  op->id, op->pid, strsignal(signo), signo);
         op->status = PCMK_EXEC_ERROR;
-        op->rc = PCMK_OCF_SIGNAL;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
     }
 
     log_op_output(op);
@@ -648,13 +648,13 @@ services__handle_exec_error(svc_action_t * op, int error)
     } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         rc_not_installed = NAGIOS_NOT_INSTALLED;
         rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_EXEC_ERROR;
+        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
 #endif
 
     } else {
         rc_not_installed = PCMK_OCF_NOT_INSTALLED;
         rc_insufficient_priv = PCMK_OCF_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_EXEC_ERROR;
+        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
     }
 
     switch (error) {   /* see execve(2), stat(2) and fork(2) */

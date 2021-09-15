@@ -1,6 +1,9 @@
 /*
- * Copyright (C) 2010 Senko Rasic <senko.rasic@dobarkod.hr>
- * Copyright (c) 2010 Ante Karamatic <ivoks@init.hr>
+ * Original copyright 2010 Senko Rasic <senko.rasic@dobarkod.hr>
+ *                         and Ante Karamatic <ivoks@init.hr>
+ * Later changes copyright 2012-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -300,8 +303,6 @@ upstart_job_check(const char *name, const char *state, void *userdata)
 
     if (state && g_strcmp0(state, "running") == 0) {
         op->rc = PCMK_OCF_OK;
-    /* } else if (g_strcmp0(state, "activating") == 0) { */
-    /*     op->rc = PCMK_OCF_PENDING; */
     } else {
         op->rc = PCMK_OCF_NOT_RUNNING;
     }

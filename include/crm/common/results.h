@@ -154,8 +154,9 @@ enum pcmk_rc_e {
  * \brief Exit status codes for resource agents
  *
  * The OCF Resource Agent API standard enumerates the possible exit status codes
- * that agents should return. Pacemaker adds some more to cover problems with
- * executing the agent, and to use a single set of codes for all agent types.
+ * that agents should return. Besides being used with OCF agents, these values
+ * are also used by the executor as a universal status for all agent standards;
+ * actual results are mapped to these before returning them to clients.
  */
 enum ocf_exitcode {
     PCMK_OCF_OK                   = 0,   //!< Success
@@ -171,18 +172,34 @@ enum ocf_exitcode {
     PCMK_OCF_DEGRADED             = 190, //!< Service active but more likely to fail soon
     PCMK_OCF_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
 
-    // Pacemaker extensions
+    /* The rest are Pacemaker extensions, not in the OCF standard. The executor
+     * returns PCMK_OCF_TIMEOUT for agent timeouts, and the controller records
+     * PCMK_OCF_UNKNOWN for pending actions, and PCMK_OCF_TIMEOUT for executor
+     * communication timeouts. PCMK_OCF_CONNECTION_DIED is used only with older
+     * DCs that don't support PCMK_EXEC_NOT_CONNECTED.
+     *
+     * @TODO These should be deprecated, and existing execution status codes
+     * (enum pcmk_exec_status) should be relied on for these instead
+     * (PCMK_EXEC_PENDING for the purposes of PCMK_OCF_UNKNOWN, and
+     * PCMK_EXEC_TIMEOUT for PCMK_OCF_TIMEOUT). It might be worthwhile to keep
+     * PCMK_OCF_UNKNOWN as an invalid value for initializing new action objects.
+     * However, backward compatibility must be considered (processing old saved
+     * CIB files, rolling upgrades with older DCs, older Pacemaker Remote nodes
+     * or connection hosts, and older bundles).
+     */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
-    PCMK_OCF_EXEC_ERROR           = 192, //!< Error executing the agent
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
-    PCMK_OCF_SIGNAL               = 194, //!< Agent terminated due to signal
-    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
-    PCMK_OCF_PENDING              = 196, //!< Multi-stage execution in progress
-    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
     PCMK_OCF_TIMEOUT              = 198, //!< Action did not complete in time
-    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // Former Pacemaker extensions
+    PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
+    PCMK_OCF_SIGNAL               = 194, //!< \deprecated (Unused)
+    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
+    PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
+    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
+    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
+
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
     PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
 
@@ -207,7 +224,7 @@ enum ocf_exitcode {
  * OSes we don't support -- for example, OpenVMS considers 1 success!).
  *
  * For init scripts, the LSB gives meaning to 0-7, and sets aside 150-199 for
- * application use. OCF adds 8-9 and 189-199.
+ * application use. OCF adds 8-9 and 190-191.
  *
  * sysexits.h was an attempt to give additional meanings, but never really
  * caught on. It uses 0 and 64-78.
@@ -268,6 +285,16 @@ typedef enum crm_exit_e {
 
     // Other
     CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
+
+    /* Anything above 128 overlaps with some shells' use of these values for
+     * "interrupted by signal N", and so may be unreliable when detected by
+     * shell scripts.
+     */
+
+    // OCF Resource Agent API 1.1
+    CRM_EX_DEGRADED             = 190, //!< Service active but more likely to fail soon
+    CRM_EX_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
+
     CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;
 

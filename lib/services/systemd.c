@@ -710,9 +710,11 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
     } else if (g_strcmp0(state, "reloading") == 0) {
         op->rc = PCMK_OCF_OK;
     } else if (g_strcmp0(state, "activating") == 0) {
-        op->rc = PCMK_OCF_PENDING;
+        op->rc = PCMK_OCF_UNKNOWN;
+        op->status = PCMK_EXEC_PENDING;
     } else if (g_strcmp0(state, "deactivating") == 0) {
-        op->rc = PCMK_OCF_PENDING;
+        op->rc = PCMK_OCF_UNKNOWN;
+        op->status = PCMK_EXEC_PENDING;
     } else {
         op->rc = PCMK_OCF_NOT_RUNNING;
     }
