@@ -228,28 +228,38 @@ systemd_daemon_reload(int timeout)
     return TRUE;
 }
 
-static bool
-systemd_mask_error(svc_action_t *op, const char *error)
+/*!
+ * \internal
+ * \brief Set an action result based on a method error
+ *
+ * \param[in] op     Action to set result for
+ * \param[in] error  Method error
+ */
+static void
+set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
-    if(strstr(error, "org.freedesktop.systemd1.InvalidName")
-       || strstr(error, "org.freedesktop.systemd1.LoadFailed")
-       || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_ERROR;
+
+    if (strstr(error->name, "org.freedesktop.systemd1.InvalidName")
+        || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
+        || strstr(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
 
         if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
-            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
+            crm_trace("Masking systemd stop failure (%s) for %s "
+                      "because unknown service can be considered stopped",
+                      error->name, crm_str(op->rsc));
             op->rc = PCMK_OCF_OK;
-            return TRUE;
-
-        } else {
-            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
-            op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_EXEC_NOT_INSTALLED;
-            return FALSE;
+            op->status = PCMK_EXEC_DONE;
+            return;
         }
+
+        op->rc = PCMK_OCF_NOT_INSTALLED;
+        op->status = PCMK_EXEC_NOT_INSTALLED;
     }
 
-    return FALSE;
+    crm_err("DBus request for %s of systemd unit %s for resource %s failed: %s",
+            op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
 /*!
@@ -273,12 +283,7 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
      */
     if (pcmk_dbus_find_error((void *) &path, reply, &error)) {
         if (op != NULL) {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
-            if (!systemd_mask_error(op, error.name)) {
-                crm_err("Could not load systemd unit %s for %s: %s",
-                        op->agent, op->id, error.message);
-            }
+            set_result_from_method_error(op, &error);
         }
         dbus_error_free(&error);
 
@@ -621,12 +626,7 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
      * indicate that a request was indeed sent
      */
     if (pcmk_dbus_find_error((void *) &error, reply, &error)) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
-        if (!systemd_mask_error(op, error.name)) {
-            crm_err("DBus request for %s of %s failed: %s",
-                    op->action, crm_str(op->rsc), error.message);
-        }
+        set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
