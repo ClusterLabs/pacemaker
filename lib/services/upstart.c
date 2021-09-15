@@ -61,55 +61,71 @@ upstart_cleanup(void)
     }
 }
 
-static gboolean
-upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
+/*!
+ * \internal
+ * \brief Get the DBus object path corresponding to a job name
+ *
+ * \param[in]  arg_name  Name of job to get path for
+ * \param[out] path      If not NULL, where to store DBus object path
+ * \param[in]  timeout   Give up after this many seconds
+ *
+ * \return true if object path was found, false otherwise
+ * \note The caller is responsible for freeing *path if it is non-NULL.
+ */
+static bool
+object_path_for_job(const gchar *arg_name, char **path, int timeout)
 {
-/*
-  com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
-*/
+    /*
+        com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
+    */
     DBusError error;
     DBusMessage *msg;
     DBusMessage *reply = NULL;
-    const char *method = "GetJobByName";
+    bool rc = false;
 
-    if(upstart_init() == FALSE) {
-        return FALSE;
+    if (path != NULL) {
+        *path = NULL;
+    }
+
+    if (!upstart_init()) {
+        return false;
     }
     msg = dbus_message_new_method_call(BUS_NAME, // target for the method call
                                        BUS_PATH, // object to call on
-                                       UPSTART_06_API, // interface to call on
-                                       method); // method name
+                                       UPSTART_06_API,  // interface to call on
+                                       "GetJobByName"); // method name
 
     dbus_error_init(&error);
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &arg_name, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &arg_name,
+                                            DBUS_TYPE_INVALID));
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
+        crm_err("Could not get DBus object path for %s: %s",
+                arg_name, error.message);
         dbus_error_free(&error);
 
-    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
-        crm_err("Invalid return type for %s", method);
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_err("Could not get DBus object path for %s: Invalid return type",
+                arg_name);
 
     } else {
-        if(out_unit) {
-            char *path = NULL;
-
-            dbus_message_get_args (reply, NULL,
-                                   DBUS_TYPE_OBJECT_PATH, &path,
-                                   DBUS_TYPE_INVALID);
-
-            *out_unit = strdup(path);
+        if (path != NULL) {
+            dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, path,
+                                  DBUS_TYPE_INVALID);
+            if (*path != NULL) {
+                *path = strdup(*path);
+            }
         }
-        dbus_message_unref(reply);
-        return TRUE;
+        rc = true;
     }
 
-    if(reply) {
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
-    return FALSE;
+    return rc;
 }
 
 static void
@@ -233,7 +249,7 @@ upstart_job_listall(void)
 gboolean
 upstart_job_exists(const char *name)
 {
-    return upstart_job_by_name(name, NULL, DBUS_TIMEOUT_USE_DEFAULT);
+    return object_path_for_job(name, NULL, DBUS_TIMEOUT_USE_DEFAULT);
 }
 
 static char *
@@ -465,8 +481,7 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (!upstart_job_by_name(op->agent, &job, op->timeout)) {
-        crm_debug("Could not find Upstart job '%s' to %s", op->agent, action);
+    if (!object_path_for_job(op->agent, &job, op->timeout)) {
         if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
             op->rc = PCMK_OCF_OK;
             op->status = PCMK_EXEC_DONE;
@@ -474,6 +489,13 @@ services__execute_upstart(svc_action_t *op)
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_EXEC_NOT_INSTALLED;
         }
+        goto cleanup;
+    }
+
+    if (job == NULL) {
+        // Shouldn't normally be possible -- maybe a memory error
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         goto cleanup;
     }
 
