@@ -497,7 +497,11 @@ services__execute_upstart(svc_action_t *op)
             upstart_job_check("state", state, op);
             free(state);
 
-        } else if (pending != NULL) { // Successfully initiated async op
+        } else if (pending == NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+
+        } else { // Successfully initiated async op
             free(job);
             services_set_op_pending(op, pending);
             services_add_inflight_op(op);
@@ -550,19 +554,27 @@ services__execute_upstart(svc_action_t *op)
                                                   upstart_async_dispatch, op,
                                                   op->timeout);
 
-        if (pending != NULL) { // Successfully initiated async op
+        if (pending == NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+            goto cleanup;
+
+        } else { // Successfully initiated async op
             free(job);
             services_set_op_pending(op, pending);
             services_add_inflight_op(op);
             return pcmk_rc_ok;
         }
-        goto cleanup;
     }
+
+    // Synchronous call
 
     dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
     if (dbus_error_is_set(&error)) {
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         if (!upstart_mask_error(op, error.name)) {
             crm_err("Could not issue %s for %s: %s (%s)",
                     action, op->rsc, error.message, job);
