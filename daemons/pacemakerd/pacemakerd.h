@@ -21,7 +21,7 @@ typedef struct pcmk_child_s {
     const char *command;
     const char *endpoint;  /* IPC server name */
 
-    gboolean active_before_startup;
+    bool active_before_startup;
 } pcmk_child_t;
 
 #define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))

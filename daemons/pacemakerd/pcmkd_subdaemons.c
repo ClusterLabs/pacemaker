@@ -105,7 +105,7 @@ check_active_before_startup_processes(gpointer user_data)
 
     for (start_seq = 1; start_seq < max; start_seq++) {
         for (lpc = 0; lpc < max; lpc++) {
-            if (pcmk_children[lpc].active_before_startup == FALSE) {
+            if (!pcmk_children[lpc].active_before_startup) {
                 /* we are already tracking it as a child process. */
                 continue;
             } else if (start_seq != pcmk_children[lpc].start_seq) {
@@ -209,7 +209,7 @@ static void
 pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
-    child->active_before_startup = FALSE;
+    child->active_before_startup = false;
 
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
@@ -233,7 +233,7 @@ pcmk_process_exit(pcmk_child_t * child)
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
         /* need to monitor how it evolves, and start new process if badly */
-        child->active_before_startup = TRUE;
+        child->active_before_startup = true;
         if (!global_keep_tracking) {
             global_keep_tracking = true;
             g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
@@ -354,7 +354,7 @@ start_child(pcmk_child_t * child)
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
-    child->active_before_startup = FALSE;
+    child->active_before_startup = false;
 
     if (child->command == NULL) {
         crm_info("Nothing to do for child \"%s\"", child->name);
@@ -694,7 +694,7 @@ find_and_track_existing_processes(void)
                                (long long) PCMK__SPECIAL_PID_AS_0(
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
-                    pcmk_children[i].active_before_startup = TRUE;
+                    pcmk_children[i].active_before_startup = true;
                     tracking = true;
                     break;
                 case pcmk_rc_ipc_pid_only:
