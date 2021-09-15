@@ -31,31 +31,37 @@
 
 static pcmk_child_t pcmk_children[] = {
     {
-        0, 0, 0, false, "none", NULL, NULL, NULL
+        0, 0, 0, false, "none", NULL, NULL, NULL, false
     },
     {
         0, 3, 0, true,  "pacemaker-execd", NULL,
-        CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD
+        CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD,
+        false
     },
     {
         0, 1, 0, true,  "pacemaker-based", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO
+        CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO,
+        true
     },
     {
         0, 6, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD
+        CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD,
+        true
     },
     {
         0, 4, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD
+        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
+        false
     },
     {
         0, 5, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
-        CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE
+        CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
+        true
     },
     {
         0, 2, 0, true, "pacemaker-fenced", NULL,
-        CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng"
+        CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng",
+        true
     },
 };
 

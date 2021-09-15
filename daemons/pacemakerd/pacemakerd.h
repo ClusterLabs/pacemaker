@@ -20,6 +20,7 @@ typedef struct pcmk_child_s {
     const char *uid;
     const char *command;
     const char *endpoint;  /* IPC server name */
+    bool needs_cluster;
 
     bool active_before_startup;
 } pcmk_child_t;
