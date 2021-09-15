@@ -7,35 +7,41 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-full_path(void)
+full_path(void **state)
 {
     char *path = NULL;
 
     path = pcmk__full_path("file", "/dir");
-    g_assert_cmpint(strcmp(path, "/dir/file"), ==, 0);
+    assert_int_equal(strcmp(path, "/dir/file"), 0);
     free(path);
 
     path = pcmk__full_path("/full/path", "/dir");
-    g_assert_cmpint(strcmp(path, "/full/path"), ==, 0);
+    assert_int_equal(strcmp(path, "/full/path"), 0);
     free(path);
 
     path = pcmk__full_path("../relative/path", "/dir");
-    g_assert_cmpint(strcmp(path, "/dir/../relative/path"), ==, 0);
+    assert_int_equal(strcmp(path, "/dir/../relative/path"), 0);
     free(path);
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(full_path),
+    };
 
-    g_test_add_func("/common/io/full_path/full_path", full_path);
-
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

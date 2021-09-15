@@ -10,7 +10,6 @@
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
-# m4/glibtests.m4 is copied from https://gitlab.gnome.org/GNOME/glib/blob/master/m4macros/glibtests.m4.
 EXTRA_DIST		= CONTRIBUTING.md	\
 			  GNUmakefile		\
 			  INSTALL.md		\
@@ -18,7 +17,6 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  autogen.sh		\
 			  m4/CC_CHECK_LDFLAGS.m4	\
 			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/glibtests.m4	\
 			  m4/gnulib-cache.m4	\
 			  m4/gnulib-tool.m4	\
 			  m4/PKG_CHECK_VAR.m4	\

@@ -9,57 +9,63 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>
-#include <stdbool.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 #include <glib.h>
 #include <bzlib.h>
 
 static void
-test_for_pcmk_rc_name(void) {
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_name(pcmk_rc_error-1), "pcmk_rc_unknown_format", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_name(pcmk_rc_ok), "pcmk_rc_ok", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_name(pcmk_rc_ok), "pcmk_rc_ok", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_name(-7777777), "Unknown", pcmk__str_none), ==, 0);
+test_for_pcmk_rc_name(void **state) {
+    assert_string_equal(pcmk_rc_name(pcmk_rc_error-1), "pcmk_rc_unknown_format");
+    assert_string_equal(pcmk_rc_name(pcmk_rc_ok), "pcmk_rc_ok");
+    assert_string_equal(pcmk_rc_name(pcmk_rc_ok), "pcmk_rc_ok");
+    assert_string_equal(pcmk_rc_name(-7777777), "Unknown");
 }
 
 static void
-test_for_pcmk_rc_str(void) {
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_str(pcmk_rc_error-1), "Unknown output format", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_str(pcmk_rc_ok), "OK", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(pcmk_rc_str(-1), "Unknown error", pcmk__str_none), ==, 0);
+test_for_pcmk_rc_str(void **state) {
+    assert_string_equal(pcmk_rc_str(pcmk_rc_error-1), "Unknown output format");
+    assert_string_equal(pcmk_rc_str(pcmk_rc_ok), "OK");
+    assert_string_equal(pcmk_rc_str(-1), "Unknown error");
 }
 
 static void
-test_for_crm_exit_name(void) {
-    g_assert_cmpint(pcmk__strcmp(crm_exit_name(CRM_EX_OK), "CRM_EX_OK", pcmk__str_none), ==, 0);
+test_for_crm_exit_name(void **state) {
+    assert_string_equal(crm_exit_name(CRM_EX_OK), "CRM_EX_OK");
 }
 
 static void
-test_for_crm_exit_str(void) {
-    g_assert_cmpint(pcmk__strcmp(crm_exit_str(CRM_EX_OK), "OK", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(crm_exit_str(129), "Interrupted by signal", pcmk__str_none), ==, 0);
-    g_assert_cmpint(pcmk__strcmp(crm_exit_str(-7777777), "Unknown exit status", pcmk__str_none), ==, 0);
+test_for_crm_exit_str(void **state) {
+    assert_string_equal(crm_exit_str(CRM_EX_OK), "OK");
+    assert_string_equal(crm_exit_str(129), "Interrupted by signal");
+    assert_string_equal(crm_exit_str(-7777777), "Unknown exit status");
 }
 
 static void
-test_for_pcmk_rc2exitc(void) {
-    g_assert_cmpint(pcmk_rc2exitc(pcmk_rc_ok), ==, CRM_EX_OK);
-    g_assert_cmpint(pcmk_rc2exitc(-7777777), ==, CRM_EX_ERROR);  
+test_for_pcmk_rc2exitc(void **state) {
+    assert_int_equal(pcmk_rc2exitc(pcmk_rc_ok), CRM_EX_OK);
+    assert_int_equal(pcmk_rc2exitc(-7777777), CRM_EX_ERROR);
 }
 
 static void
-test_for_bz2_strerror(void) {
-    g_assert_cmpint(pcmk__strcmp(bz2_strerror(BZ_STREAM_END), "Ok", pcmk__str_none), ==, 0);
+test_for_bz2_strerror(void **state) {
+    assert_string_equal(bz2_strerror(BZ_STREAM_END), "Ok");
 }
 
 int main(int argc, char **argv) {
-    g_test_init(&argc, &argv, NULL);
-    g_test_add_func("/common/results/test_for_pcmk_rc_name", test_for_pcmk_rc_name);
-    g_test_add_func("/common/results/test_for_pcmk_rc_str", test_for_pcmk_rc_str);
-    g_test_add_func("/common/results/test_for_crm_exit_name", test_for_crm_exit_name);
-    g_test_add_func("/common/results/test_for_crm_exit_str", test_for_crm_exit_str);
-    g_test_add_func("/common/results/test_for_pcmk_rc2exitc", test_for_pcmk_rc2exitc);
-    g_test_add_func("/common/results/test_for_bz2_strerror", test_for_bz2_strerror);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(test_for_pcmk_rc_name),
+        cmocka_unit_test(test_for_pcmk_rc_str),
+        cmocka_unit_test(test_for_crm_exit_name),
+        cmocka_unit_test(test_for_crm_exit_str),
+        cmocka_unit_test(test_for_pcmk_rc2exitc),
+        cmocka_unit_test(test_for_bz2_strerror),
+    };
 
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

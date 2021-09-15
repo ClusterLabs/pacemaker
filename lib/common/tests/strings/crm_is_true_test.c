@@ -9,53 +9,61 @@
 
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-bad_input(void) {
-    g_assert_false(crm_is_true(NULL));
+bad_input(void **state) {
+    assert_false(crm_is_true(NULL));
 }
 
 static void
-is_true(void) {
-    g_assert_true(crm_is_true("true"));
-    g_assert_true(crm_is_true("TrUe"));
-    g_assert_true(crm_is_true("on"));
-    g_assert_true(crm_is_true("ON"));
-    g_assert_true(crm_is_true("yes"));
-    g_assert_true(crm_is_true("yES"));
-    g_assert_true(crm_is_true("y"));
-    g_assert_true(crm_is_true("Y"));
-    g_assert_true(crm_is_true("1"));
+is_true(void **state) {
+    assert_true(crm_is_true("true"));
+    assert_true(crm_is_true("TrUe"));
+    assert_true(crm_is_true("on"));
+    assert_true(crm_is_true("ON"));
+    assert_true(crm_is_true("yes"));
+    assert_true(crm_is_true("yES"));
+    assert_true(crm_is_true("y"));
+    assert_true(crm_is_true("Y"));
+    assert_true(crm_is_true("1"));
 }
 
 static void
-is_false(void) {
-    g_assert_false(crm_is_true("false"));
-    g_assert_false(crm_is_true("fAlSe"));
-    g_assert_false(crm_is_true("off"));
-    g_assert_false(crm_is_true("OFF"));
-    g_assert_false(crm_is_true("no"));
-    g_assert_false(crm_is_true("No"));
-    g_assert_false(crm_is_true("n"));
-    g_assert_false(crm_is_true("N"));
-    g_assert_false(crm_is_true("0"));
+is_false(void **state) {
+    assert_false(crm_is_true("false"));
+    assert_false(crm_is_true("fAlSe"));
+    assert_false(crm_is_true("off"));
+    assert_false(crm_is_true("OFF"));
+    assert_false(crm_is_true("no"));
+    assert_false(crm_is_true("No"));
+    assert_false(crm_is_true("n"));
+    assert_false(crm_is_true("N"));
+    assert_false(crm_is_true("0"));
 
-    g_assert_false(crm_is_true(""));
-    g_assert_false(crm_is_true("blahblah"));
+    assert_false(crm_is_true(""));
+    assert_false(crm_is_true("blahblah"));
 
-    g_assert_false(crm_is_true("truedat"));
-    g_assert_false(crm_is_true("onnn"));
-    g_assert_false(crm_is_true("yep"));
-    g_assert_false(crm_is_true("Y!"));
-    g_assert_false(crm_is_true("100"));
+    assert_false(crm_is_true("truedat"));
+    assert_false(crm_is_true("onnn"));
+    assert_false(crm_is_true("yep"));
+    assert_false(crm_is_true("Y!"));
+    assert_false(crm_is_true("100"));
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(bad_input),
+        cmocka_unit_test(is_true),
+        cmocka_unit_test(is_false),
+    };
 
-    g_test_add_func("/common/strings/crm_is_true/bad_input", bad_input);
-    g_test_add_func("/common/strings/crm_is_true/is_true", is_true);
-    g_test_add_func("/common/strings/crm_is_true/is_false", is_false);
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

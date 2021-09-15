@@ -84,8 +84,6 @@ export CC_IN_CONFIGURE
 
 LDD=ldd
 
-GLIB_TESTS
-
 dnl ========================================================================
 dnl Compiler characteristics
 dnl ========================================================================
@@ -1039,6 +1037,38 @@ dnl ========================================================================
 AC_CHECK_DECLS([CLOCK_MONOTONIC], [PCMK_FEATURES="$PCMK_FEATURES monotonic"], [], [[
     #include <time.h>
 ]])
+
+dnl ========================================================================
+dnl Unit test declarations
+dnl ========================================================================
+
+AC_CHECK_DECLS([assert_float_equal], [], [], [[
+    #include <stdarg.h>
+    #include <stddef.h>
+    #include <setjmp.h>
+    #include <cmocka.h>
+]])
+
+cc_temp_flags "$CFLAGS -Wl,--wrap=uname"
+
+WRAPPABLE_UNAME="no"
+
+AC_MSG_CHECKING([if uname() can be wrapped])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/utsname.h>
+int __wrap_uname(struct utsname *buf) {
+return 100;
+}
+int main(int argc, char **argv) {
+struct utsname x;
+return uname(&x) == 100 ? 0 : 1;
+}
+]])],
+                   [ WRAPPABLE_UNAME="yes" ], [ WRAPPABLE_UNAME="no"])
+AC_MSG_RESULT([$WRAPPABLE_UNAME])
+AM_CONDITIONAL([WRAPPABLE_UNAME], [test "$WRAPPABLE_UNAME" = "yes"])
+
+cc_restore_flags
 
 dnl ========================================================================
 dnl Structures
