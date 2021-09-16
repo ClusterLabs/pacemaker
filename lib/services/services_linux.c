@@ -857,12 +857,19 @@ action_launch_child(svc_action_t *op)
     _exit(op->rc);
 }
 
+/*!
+ * \internal
+ * \brief Wait for synchronous action to complete, and set its result
+ *
+ * \param[in] op    Action to wait for
+ * \param[in] data  Child signal data
+ */
 static void
-action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
+wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 {
     int status = 0;
     int timeout = op->timeout;
-    time_t start = -1;
+    time_t start = time(NULL);
     struct pollfd fds[3];
     int wait_rc = 0;
 
@@ -879,7 +886,6 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     fds[2].revents = 0;
 
     crm_trace("Waiting for %s[%d]", op->id, op->pid);
-    start = time(NULL);
     do {
         int poll_rc = poll(fds, 3, timeout);
 
@@ -925,26 +931,30 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
 
     crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
     if (wait_rc <= 0) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
 
-        if (op->timeout > 0 && timeout <= 0) {
+        if ((op->timeout > 0) && (timeout <= 0)) {
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_TIMEOUT;
             crm_warn("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_ERROR;
         }
 
         /* If only child hasn't been successfully waited for, yet.
            This is to limit killing wrong target a bit more. */
-        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+        if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
                 crm_warn("Could not kill rogue child %s[%d]: %s",
                          op->id, op->pid, pcmk_strerror(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
-            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
+            while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
+                   && (errno == EINTR)) {
+                /* keep waiting */;
+            }
         }
 
     } else if (WIFEXITED(status)) {
@@ -955,15 +965,22 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
+        op->rc = services__generic_error(op);
         op->status = PCMK_EXEC_ERROR;
         crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                 op->id, op->pid, strsignal(signo), signo);
-    }
+
 #ifdef WCOREDUMP
-    if (WCOREDUMP(status)) {
-        crm_err("%s[%d] dumped core", op->id, op->pid);
-    }
+        if (WCOREDUMP(status)) {
+            crm_warn("%s[%d] dumped core", op->id, op->pid);
+        }
 #endif
+
+    } else {
+        // Shouldn't be possible to get here
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR;
+    }
 
     finish_op_output(op, true);
     finish_op_output(op, false);
@@ -1151,7 +1168,7 @@ services__execute_file(svc_action_t *op)
     }
 
     if (op->synchronous) {
-        action_synced_wait(op, &data);
+        wait_for_sync_result(op, &data);
         sigchld_cleanup(&data);
         goto done;
     }
