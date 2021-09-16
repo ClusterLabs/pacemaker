@@ -23,6 +23,20 @@
 #include <crm/cluster.h>
 #include <crm/msg_xml.h>
 
+typedef struct pcmk_child_s {
+    pid_t pid;
+    int start_seq;
+    int respawn_count;
+    bool respawn;
+    const char *name;
+    const char *uid;
+    const char *command;
+    const char *endpoint;  /* IPC server name */
+    bool needs_cluster;
+
+    bool active_before_startup;
+} pcmk_child_t;
+
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 #define SHUTDOWN_ESCALATION_PERIOD 180000  /* 3m */
 
