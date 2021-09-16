@@ -312,18 +312,28 @@ get_first_instance(const gchar * job, int timeout)
     return instance;
 }
 
+/*!
+ * \internal
+ * \brief Parse result of Upstart status check
+ *
+ * \param[in] name      DBus interface name for property that was checked
+ * \param[in] state     Property value
+ * \param[in] userdata  Status action that check was done for
+ */
 static void
-upstart_job_check(const char *name, const char *state, void *userdata)
+parse_status_result(const char *name, const char *state, void *userdata)
 {
-    svc_action_t * op = userdata;
+    svc_action_t *op = userdata;
 
-    if (state && g_strcmp0(state, "running") == 0) {
+    if (pcmk__str_eq(state, "running", pcmk__str_none)) {
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     } else {
         op->rc = PCMK_OCF_NOT_RUNNING;
+        op->status = PCMK_EXEC_DONE;
     }
 
-    if (op->synchronous == FALSE) {
+    if (!(op->synchronous)) {
         services_set_op_pending(op, NULL);
         services__finalize_async_op(op);
     }
@@ -511,14 +521,14 @@ services__execute_upstart(svc_action_t *op)
         }
         state = pcmk_dbus_get_property(upstart_proxy, BUS_NAME, path,
                                        UPSTART_06_API ".Instance", "state",
-                                       op->synchronous? NULL : upstart_job_check,
+                                       op->synchronous? NULL : parse_status_result,
                                        op,
                                        op->synchronous? NULL : &pending,
                                        op->timeout);
         free(path);
 
         if (op->synchronous) {
-            upstart_job_check("state", state, op);
+            parse_status_result("state", state, op);
             free(state);
 
         } else if (pending == NULL) {
