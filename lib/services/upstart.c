@@ -313,29 +313,31 @@ upstart_job_check(const char *name, const char *state, void *userdata)
     }
 }
 
+#define METADATA_FORMAT                                                     \
+    "<?xml version=\"1.0\"?>\n"                                             \
+    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
+    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
+    "  <version>1.1</version>\n"                                            \
+    "  <longdesc lang=\"en\">\n"                                            \
+    "    Upstart agent for controlling the system %s service\n"             \
+    "  </longdesc>\n"                                                       \
+    "  <shortdesc lang=\"en\">Upstart job for %s</shortdesc>\n"             \
+    "  <parameters/>\n"                                                     \
+    "  <actions>\n"                                                         \
+    "    <action name=\"start\"     timeout=\"15\" />\n"                    \
+    "    <action name=\"stop\"      timeout=\"15\" />\n"                    \
+    "    <action name=\"status\"    timeout=\"15\" />\n"                    \
+    "    <action name=\"restart\"   timeout=\"15\" />\n"                    \
+    "    <action name=\"monitor\"   timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n" \
+    "    <action name=\"meta-data\" timeout=\"5\" />\n"                     \
+    "  </actions>\n"                                                        \
+    "  <special tag=\"upstart\"/>\n"                                        \
+    "</resource-agent>\n"
+
 static char *
 upstart_job_metadata(const char *name)
 {
-    return crm_strdup_printf("<?xml version=\"1.0\"?>\n"
-                           "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                           "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"
-                           "  <version>1.0</version>\n"
-                           "  <longdesc lang=\"en\">\n"
-                           "    Upstart agent for controlling the system %s service\n"
-                           "  </longdesc>\n"
-                           "  <shortdesc lang=\"en\">%s upstart agent</shortdesc>\n"
-                           "  <parameters>\n"
-                           "  </parameters>\n"
-                           "  <actions>\n"
-                           "    <action name=\"start\"   timeout=\"15\" />\n"
-                           "    <action name=\"stop\"    timeout=\"15\" />\n"
-                           "    <action name=\"status\"  timeout=\"15\" />\n"
-                           "    <action name=\"restart\"  timeout=\"15\" />\n"
-                           "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-                           "    <action name=\"meta-data\"  timeout=\"5\" />\n"
-                           "  </actions>\n"
-                           "  <special tag=\"upstart\">\n"
-                           "  </special>\n" "</resource-agent>\n", name, name, name);
+    return crm_strdup_printf(METADATA_FORMAT, name, name, name);
 }
 
 static bool
