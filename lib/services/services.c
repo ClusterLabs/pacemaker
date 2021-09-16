@@ -149,7 +149,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
 
 /*!
  * \internal
- * \brief Create an uninitialized svc_action_t instance
+ * \brief Create a simple svc_action_t instance
  *
  * \return Newly allocated instance (or NULL if not enough memory)
  */
@@ -168,6 +168,9 @@ new_action(void)
         return NULL;
     }
 
+    // Initialize result
+    op->rc = PCMK_OCF_UNKNOWN;
+    op->status = PCMK_EXEC_UNKNOWN;
     return op;
 }
 
@@ -370,6 +373,10 @@ resources_action_create(const char *name, const char *standard,
         services_action_free(op);
         return NULL;
     } else {
+        // Preserve public API backward compatibility
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
         return op;
     }
 }

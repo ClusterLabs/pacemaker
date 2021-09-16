@@ -1969,7 +1969,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     if (action == NULL) {
         return -ENOMEM;
     }
-    if (action->rc != PCMK_OCF_OK) {
+    if (action->rc != PCMK_OCF_UNKNOWN) {
         services_action_free(action);
         return -EINVAL;
     }

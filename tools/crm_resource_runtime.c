@@ -1742,7 +1742,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
                                           0, timeout_ms, params, 0);
-    if ((op == NULL) || (op->rc != PCMK_OCF_OK)) {
+    if ((op == NULL) || (op->rc != PCMK_OCF_UNKNOWN)) {
         const char *reason = NULL;
 
         if (op == NULL) {

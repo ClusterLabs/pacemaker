@@ -1398,7 +1398,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         goto exec_done;
     }
 
-    if (action->rc != PCMK_OCF_OK) {
+    if (action->rc != PCMK_OCF_UNKNOWN) {
         pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
         services_action_free(action);
         goto exec_done;
