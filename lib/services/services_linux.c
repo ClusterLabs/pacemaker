@@ -590,13 +590,27 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous child process
+ *
+ * \param[in] p         Child process that completed
+ * \param[in] pid       Process ID of child
+ * \param[in] core      (unused)
+ * \param[in] signo     Signal that interrupted child, if any
+ * \param[in] exitcode  Exit status of child process
+ */
 static void
-operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
+                      int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
 
     mainloop_clear_child_userdata(p);
-    CRM_ASSERT(op->pid == pid);
+    CRM_CHECK(op->pid == pid,
+              op->rc = services__generic_error(op);
+              op->status = PCMK_EXEC_ERROR;
+              return);
 
     /* Depending on the priority the mainloop gives the stdout and stderr
      * file descriptors, this function could be called before everything has
@@ -1176,7 +1190,7 @@ services__execute_file(svc_action_t *op)
     crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
     mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
                                   pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
-                                  operation_finished);
+                                  async_action_complete);
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,

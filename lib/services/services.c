@@ -606,7 +606,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* If the op has a PID, it's an in-flight child process, so kill it.
      *
      * Whether the kill succeeds or fails, the main loop will send the op to
-     * operation_finished() (and thus services__finalize_async_op()) when the
+     * async_action_complete() (and thus services__finalize_async_op()) when the
      * process goes away.
      */
     if (op->pid != 0) {
