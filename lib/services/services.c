@@ -406,13 +406,20 @@ services__create_resource_action(const char *name, const char *standard,
             GHashTableIter iter;
             char *key = NULL;
             char *value = NULL;
-            int index = 1;
-            static int args_size = sizeof(op->opaque->args) / sizeof(char *);
+            int index = 1; // 0 is already set to executable name
 
             g_hash_table_iter_init(&iter, op->params);
 
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
-                   index <= args_size - 3) {
+            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+
+                if (index > (PCMK__NELEM(op->opaque->args) - 2)) {
+                    crm_info("Cannot prepare %s action for %s: Too many parameters",
+                             action, name);
+                    services__set_result(op, NAGIOS_STATE_UNKNOWN,
+                                         PCMK_EXEC_ERROR_HARD,
+                                         "Too many parameters");
+                    break;
+                }
 
                 if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei) || strstr(key, CRM_META "_")) {
                     continue;
