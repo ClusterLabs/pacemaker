@@ -366,30 +366,45 @@ upstart_job_metadata(const char *name)
     return crm_strdup_printf(METADATA_FORMAT, name, name, name);
 }
 
-static bool
-upstart_mask_error(svc_action_t *op, const char *error)
+/*!
+ * \internal
+ * \brief Set an action result based on a method error
+ *
+ * \param[in] op     Action to set result for
+ * \param[in] error  Method error
+ */
+static void
+set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
-    if(strstr(error, UPSTART_06_API ".Error.UnknownInstance")) {
-        if(pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
-            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
-            op->rc = PCMK_OCF_OK;
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_ERROR;
 
-        } else if(pcmk__str_eq(op->action, "start", pcmk__str_casei)) {
-            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
-            op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_EXEC_NOT_INSTALLED;
+    if (strstr(error->name, UPSTART_06_API ".Error.UnknownInstance")) {
+
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+            crm_trace("Masking stop failure (%s) for %s "
+                      "because unknown service can be considered stopped",
+                      error->name, crm_str(op->rsc));
+            op->rc = PCMK_OCF_OK;
+            op->status = PCMK_EXEC_DONE;
+            return;
         }
-        return TRUE;
+
+        op->rc = PCMK_OCF_NOT_INSTALLED;
+        op->status = PCMK_EXEC_NOT_INSTALLED;
 
     } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
-               && strstr(error, UPSTART_06_API ".Error.AlreadyStarted")) {
-        crm_trace("Mapping %s failure for %s: starting a started resource is allowed", op->action, op->rsc);
+               && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
+        crm_trace("Masking start failure (%s) for %s "
+                  "because already started resource is OK",
+                  error->name, crm_str(op->rsc));
         op->rc = PCMK_OCF_OK;
-        return TRUE;
+        op->status = PCMK_EXEC_DONE;
+        return;
     }
 
-    return FALSE;
+    crm_err("DBus request for %s of Upstart job %s for resource %s failed: %s",
+            op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
 /*!
@@ -414,13 +429,7 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
     // Determine result
     dbus_error_init(&error);
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-
-        /* ignore "already started" or "not running" errors */
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
-        if (!upstart_mask_error(op, error.name)) {
-            crm_err("%s for %s: %s", op->action, op->rsc, error.message);
-        }
+        set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
     } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
@@ -623,12 +632,7 @@ services__execute_upstart(svc_action_t *op)
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
     if (dbus_error_is_set(&error)) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
-        if (!upstart_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)",
-                    action, op->rsc, error.message, job);
-        }
+        set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
     } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
