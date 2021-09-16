@@ -571,6 +571,26 @@ systemd_unit_exists(const char *name)
     return invoke_unit_by_name(name, NULL, NULL) == pcmk_rc_ok;
 }
 
+#define METADATA_FORMAT                                                     \
+    "<?xml version=\"1.0\"?>\n"                                             \
+    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
+    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
+    "  <version>1.1</version>\n"                                            \
+    "  <longdesc lang=\"en\">\n"                                            \
+    "    %s\n"                                                              \
+    "  </longdesc>\n"                                                       \
+    "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"       \
+    "  <parameters/>\n"                                                     \
+    "  <actions>\n"                                                         \
+    "    <action name=\"start\"     timeout=\"100\" />\n"                   \
+    "    <action name=\"stop\"      timeout=\"100\" />\n"                   \
+    "    <action name=\"status\"    timeout=\"100\" />\n"                   \
+    "    <action name=\"monitor\"   timeout=\"100\" interval=\"60\"/>\n"    \
+    "    <action name=\"meta-data\" timeout=\"5\"   />\n"                   \
+    "  </actions>\n"                                                        \
+    "  <special tag=\"systemd\"/>\n"                                        \
+    "</resource-agent>\n"
+
 static char *
 systemd_unit_metadata(const char *name, int timeout)
 {
@@ -586,25 +606,7 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    meta = crm_strdup_printf("<?xml version=\"1.0\"?>\n"
-                           "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                           "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"
-                           "  <version>1.0</version>\n"
-                           "  <longdesc lang=\"en\">\n"
-                           "    %s\n"
-                           "  </longdesc>\n"
-                           "  <shortdesc lang=\"en\">systemd unit file for %s</shortdesc>\n"
-                           "  <parameters>\n"
-                           "  </parameters>\n"
-                           "  <actions>\n"
-                           "    <action name=\"start\"   timeout=\"100\" />\n"
-                           "    <action name=\"stop\"    timeout=\"100\" />\n"
-                           "    <action name=\"status\"  timeout=\"100\" />\n"
-                           "    <action name=\"monitor\" timeout=\"100\" interval=\"60\"/>\n"
-                           "    <action name=\"meta-data\"  timeout=\"5\" />\n"
-                           "  </actions>\n"
-                           "  <special tag=\"systemd\">\n"
-                           "  </special>\n" "</resource-agent>\n", name, desc, name);
+    meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
     free(desc);
     free(path);
     return meta;
