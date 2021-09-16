@@ -122,6 +122,11 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
+    if (action->rc != PCMK_OCF_UNKNOWN) {
+        rc = -E2BIG;
+        goto err;
+    }
+
     rc = services_action_user(action, CRM_DAEMON_USER);
     if (rc < 0) {
         goto err;

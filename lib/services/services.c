@@ -467,18 +467,38 @@ svc_action_t *
 services_action_create_generic(const char *exec, const char *args[])
 {
     svc_action_t *op = new_action();
-    unsigned int cur_arg;
 
     CRM_ASSERT(op != NULL);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
+    if ((op->opaque->exec == NULL) || (op->opaque->args[0] == NULL)) {
+        crm_crit("Cannot prepare action for '%s': %s", exec, strerror(ENOMEM));
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             strerror(ENOMEM));
+        return op;
+    }
 
-    for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
+    if (args == NULL) {
+        return op;
+    }
+
+    for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
+
+        if (cur_arg == PCMK__NELEM(op->opaque->args)) {
+            crm_info("Cannot prepare action for '%s': Too many arguments",
+                     exec);
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_ERROR_HARD, "Too many arguments");
+            break;
+        }
+
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
-
-        if (cur_arg == PCMK__NELEM(op->opaque->args) - 1) {
-            crm_err("svc_action_t args list not long enough for '%s' execution request.", exec);
+        if (op->opaque->args[cur_arg] == NULL) {
+            crm_crit("Cannot prepare action for '%s': %s",
+                     exec, strerror(ENOMEM));
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 strerror(ENOMEM));
             break;
         }
     }
