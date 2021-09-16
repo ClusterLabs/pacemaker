@@ -629,7 +629,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
         op->status = PCMK_EXEC_TIMEOUT;
-        op->rc = PCMK_OCF_TIMEOUT;
+        op->rc = services__generic_error(op);
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was

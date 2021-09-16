@@ -770,11 +770,6 @@ stonith2uniform_rc(const char *action, int rc)
             rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
             break;
 
-        case -ETIME:
-        case -ETIMEDOUT:
-            rc = PCMK_OCF_TIMEOUT;
-            break;
-
         default:
             rc = PCMK_OCF_UNKNOWN_ERROR;
             break;
@@ -1060,7 +1055,7 @@ action_complete(svc_action_t * action)
                        cmd->rsc_id,
                        (cmd->real_action? cmd->real_action : cmd->action),
                        cmd->result.exit_status, time_sum, timeout_left);
-            pcmk__set_result(&(cmd->result), PCMK_OCF_TIMEOUT,
+            pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_TIMEOUT,
                              "Investigate reason for timeout, and adjust "
                              "configured operation timeout if necessary");
