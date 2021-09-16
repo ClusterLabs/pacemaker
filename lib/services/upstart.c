@@ -308,21 +308,21 @@ get_first_instance(const gchar * job, int timeout)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Call to %s failed: %s", method, error.message);
+        crm_info("Call to %s failed: %s", method, error.message);
         dbus_error_free(&error);
         goto done;
 
     } else if(reply == NULL) {
-        crm_err("Call to %s failed: no reply", method);
+        crm_info("Call to %s failed: no reply", method);
         goto done;
 
     } else if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Call to %s failed: Message has no arguments", method);
+        crm_info("Call to %s failed: Message has no arguments", method);
         goto done;
     }
 
     if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __func__, __LINE__)) {
-        crm_err("Call to %s failed: Message has invalid arguments", method);
+        crm_info("Call to %s failed: Message has invalid arguments", method);
         goto done;
     }
 
@@ -432,8 +432,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         return;
     }
 
-    crm_err("DBus request for %s of Upstart job %s for resource %s failed: %s",
-            op->action, op->agent, crm_str(op->rsc), error->message);
+    crm_info("DBus request for %s of Upstart job %s for resource %s failed: %s",
+             op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
 /*!
@@ -468,7 +468,7 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
-        crm_warn("DBus request for %s of %s succeeded but "
+        crm_info("DBus request for %s of %s succeeded but "
                  "return type was unexpected", op->action, crm_str(op->rsc));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
@@ -667,7 +667,8 @@ services__execute_upstart(svc_action_t *op)
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
-        crm_warn("Call to %s passed but return type was unexpected", op->action);
+        crm_info("Call to %s passed but return type was unexpected",
+                 op->action);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
     } else {
@@ -675,7 +676,7 @@ services__execute_upstart(svc_action_t *op)
 
         dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
-        crm_info("Call to %s passed: %s", op->action, path);
+        crm_debug("Call to %s passed: %s", op->action, path);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
 

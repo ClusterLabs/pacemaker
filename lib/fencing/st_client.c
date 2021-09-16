@@ -276,14 +276,9 @@ stonith__watchdog_fencing_enabled_for_node(const char *node)
 static void
 log_action(stonith_action_t *action, pid_t pid)
 {
-    if (action->result.action_stdout != NULL) {
-        /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s[%d] stdout:", action->agent, pid);
-
-        crm_log_output(LOG_TRACE, prefix, action->result.action_stdout);
-        free(prefix);
-    }
-
+    /* The services library has already logged the output at info or debug
+     * level, so just raise to warning for stderr.
+     */
     if (action->result.action_stderr != NULL) {
         /* Logging the whole string confuses syslog when the string is xml */
         char *prefix = crm_strdup_printf("%s[%d] stderr:", action->agent, pid);
