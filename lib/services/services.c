@@ -882,43 +882,58 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
-static gboolean
-action_get_metadata(svc_action_t *op)
+/*!
+ * \internal
+ * \brief Execute a meta-data action appropriately to standard
+ *
+ * \param[in] op  Meta-data action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_metadata_action(svc_action_t *op)
 {
     const char *class = op->standard;
 
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        return EINVAL;
     }
 
     if (class == NULL) {
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        return EINVAL;
     }
 
     if (!strcmp(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(op->agent);
     }
-
     if (class == NULL) {
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_HARD;
+        return EINVAL;
     }
 
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
-        return (services__get_lsb_metadata(op->agent, &op->stdout_data) >= 0);
+        return pcmk_legacy2rc(services__get_lsb_metadata(op->agent,
+                                                         &op->stdout_data));
     }
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
+        return pcmk_legacy2rc(services__get_nagios_metadata(op->agent,
+                                                            &op->stdout_data));
     }
 #endif
 
-    return execute_action(op) == pcmk_rc_ok;
+    return execute_action(op);
 }
 
 gboolean
@@ -941,7 +956,7 @@ services_action_sync(svc_action_t * op)
          * services_action_async() doesn't treat meta-data actions specially, so
          * it will result in an error for classes that don't support the action.
          */
-        rc = action_get_metadata(op);
+        rc = (execute_metadata_action(op) == pcmk_rc_ok);
     } else {
         rc = (execute_action(op) == pcmk_rc_ok);
     }
