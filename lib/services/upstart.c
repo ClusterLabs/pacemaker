@@ -392,51 +392,68 @@ upstart_mask_error(svc_action_t *op, const char *error)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous job start, stop, or restart
+ *
+ * \param[in] pending    If not NULL, DBus call associated with request
+ * \param[in] user_data  Action that was executed
+ */
 static void
-upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
+job_method_complete(DBusPendingCall *pending, void *user_data)
 {
     DBusError error;
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    dbus_error_init(&error);
-    if(pending) {
+    // Grab the reply
+    if (pending != NULL) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
+    // Determine result
+    dbus_error_init(&error);
     if (pcmk_dbus_find_error(pending, reply, &error)) {
 
         /* ignore "already started" or "not running" errors */
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         if (!upstart_mask_error(op, error.name)) {
             crm_err("%s for %s: %s", op->action, op->rsc, error.message);
         }
         dbus_error_free(&error);
 
-    } else if (!g_strcmp0(op->action, "stop")) {
-        /* No return vaue */
+    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+        // Call has no return value
+        crm_debug("DBus request for stop of %s succeeded", crm_str(op->rsc));
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_warn("DBus request for %s of %s succeeded but "
+                 "return type was unexpected", op->action, crm_str(op->rsc));
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
 
     } else {
-        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
-            crm_warn("Call to %s passed but return type was unexpected", op->action);
-            op->rc = PCMK_OCF_OK;
+        const char *path = NULL;
 
-        } else {
-            const char *path = NULL;
-
-            dbus_message_get_args (reply, NULL,
-                                   DBUS_TYPE_OBJECT_PATH, &path,
-                                   DBUS_TYPE_INVALID);
-            crm_info("Call to %s passed: %s", op->action, path);
-            op->rc = PCMK_OCF_OK;
-        }
+        dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, &path,
+                              DBUS_TYPE_INVALID);
+        crm_debug("DBus request for %s of %s using %s succeeded",
+                  op->action, crm_str(op->rsc), path);
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     }
 
+    // The call is no longer pending
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
-    services__finalize_async_op(op);
 
-    if(reply) {
+    // Finalize action
+    services__finalize_async_op(op);
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
 }
@@ -572,20 +589,19 @@ services__execute_upstart(svc_action_t *op)
     CRM_ASSERT(msg != NULL);
 
     dbus_message_iter_init_append (msg, &iter);
-
-    CRM_LOG_ASSERT(dbus_message_iter_open_container (&iter,
-                                                     DBUS_TYPE_ARRAY,
-                                                     DBUS_TYPE_STRING_AS_STRING,
-                                                     &array_iter));
-
-    CRM_LOG_ASSERT(dbus_message_iter_append_basic (&array_iter, DBUS_TYPE_STRING, &arg_env));
-    CRM_LOG_ASSERT(dbus_message_iter_close_container (&iter, &array_iter));
-
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_iter_open_container(&iter,
+                                                    DBUS_TYPE_ARRAY,
+                                                    DBUS_TYPE_STRING_AS_STRING,
+                                                    &array_iter));
+    CRM_LOG_ASSERT(dbus_message_iter_append_basic(&array_iter,
+                                                  DBUS_TYPE_STRING, &arg_env));
+    CRM_LOG_ASSERT(dbus_message_iter_close_container(&iter, &array_iter));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait,
+                                            DBUS_TYPE_INVALID));
 
     if (!(op->synchronous)) {
         DBusPendingCall *pending = pcmk_dbus_send(msg, upstart_proxy,
-                                                  upstart_async_dispatch, op,
+                                                  job_method_complete, op,
                                                   op->timeout);
 
         if (pending == NULL) {
