@@ -130,4 +130,7 @@ void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 void pcmk__order_probes(pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+bool pcmk__is_failed_remote_node(pe_node_t *node);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

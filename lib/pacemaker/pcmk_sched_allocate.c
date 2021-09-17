@@ -845,9 +845,7 @@ probe_resources(pe_working_set_t * data_set)
 
         if (node->details->online == FALSE) {
 
-            if (pe__is_remote_node(node) && node->details->remote_rsc
-                && (get_remote_node_state(node) == remote_state_failed)) {
-
+            if (pcmk__is_failed_remote_node(node)) {
                 pe_fence_node(data_set, node, "the connection is unrecoverable", FALSE);
             }
             continue;
@@ -2621,4 +2619,19 @@ LogNodeActions(pe_working_set_t * data_set)
         free(node_name);
         free(task);
     }
+}
+
+/*!
+ * \internal
+ * \brief Check whether a node is a failed remote node
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a failed remote node, false otherwise
+ */
+bool
+pcmk__is_failed_remote_node(pe_node_t *node)
+{
+    return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
+           && (get_remote_node_state(node) == remote_state_failed);
 }
