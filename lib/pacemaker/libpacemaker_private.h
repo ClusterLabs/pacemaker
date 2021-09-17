@@ -139,4 +139,7 @@ void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 bool pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node);
 
+G_GNUC_INTERNAL
+pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
