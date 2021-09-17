@@ -72,6 +72,10 @@ DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
 DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
 		  $(CRM_LOG_DIR)
 
+install: install-recursive
+	msgfmt po/pacemaker.po -o /usr/share/locale/zh_CN/LC_MESSAGES/pacemaker.mo
+	msgfmt po/pacemaker_en.po -o /usr/share/locale/en_US/LC_MESSAGES/pacemaker.mo
+
 core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \

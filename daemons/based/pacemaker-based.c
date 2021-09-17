@@ -94,6 +94,15 @@ main(int argc, char **argv)
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
 
+    if( is_zh_language() ){
+         setlocale(LC_MESSAGES, "zh_CN.UTF-8");
+    }else{
+         setlocale(LC_MESSAGES, "en_US.UTF-8");
+    }
+    bindtextdomain(PACKAGE_NAME, PACKAGE_LOCALEDIR);
+    textdomain(PACKAGE_NAME);
+    bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
+
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "daemon for managing the configuration "

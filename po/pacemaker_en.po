@@ -1,0 +1,67 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-12-11 15:59+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+
+#: lib/cib/cib_utils.c:619
+msgid "enable-acl"
+msgstr "enable-acl"
+
+#: lib/cib/cib_utils.c:621
+msgid "Enable Access Control Lists (ACLs) for the CIB"
+msgstr "Enable Access Control Lists (ACLs) for the CIB"
+
+#: lib/cib/cib_utils.c:625
+msgid "cluster-ipc-limit"
+msgstr "cluster-ipc-limit"
+
+#: lib/cib/cib_utils.c:627
+msgid "Maximum IPC message backlog before disconnecting a cluster daemon"
+msgstr "Maximum IPC message backlog before disconnecting a cluster daemon"
+
+#: lib/cib/cib_utils.c:628
+msgid ""
+"Raise this if log has \"Evicting client\" messages for cluster daemon PIDs "
+"(a good value is the number of resources in the cluster multiplied by the "
+"number of nodes)."
+msgstr ""
+"Raise this if log has \"Evicting client\" messages for cluster daemon PIDs "
+"(a good value is the number of resources in the cluster multiplied by the "
+"number of nodes)."
+
+msgid "Whether watchdog integration is enabled"
+msgstr "Whether watchdog integration is enabled"
+
+msgid ""
+"Zero disables polling, while positive values are an interval in seconds(unless other units are specified, for example \"5min\")"
+msgstr ""
+"Zero disables polling, while positive values are an interval in seconds(unless other units are specified, for example \"5min\")"
+
+msgid ""
+"    <longdesc lang=\"en\">Optional</longdesc>\n"
+msgstr ""
+"    <longdesc lang=\"en\">Optional</longdesc>\n"
+
+msgid "'%s' is not a valid agent specification"
+msgstr "'%s' is not a valid agent specification"
+
+msgid "Metadata query for %s failed: %s\n"
+msgstr ", Metadata query for %s failed: %s\n"
+
+msgid "No such device or address"
+msgstr "No such device or address"
