@@ -1044,7 +1044,7 @@ services__execute_file(svc_action_t *op)
         close_pipe(stdout_fd);
         close_pipe(stderr_fd);
         sigchld_cleanup(&data);
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->rc = services__generic_error(op);
         op->status = PCMK_EXEC_ERROR;
         goto done;
     }
