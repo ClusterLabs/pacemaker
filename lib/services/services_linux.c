@@ -639,6 +639,111 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 
 /*!
  * \internal
+ * \brief Return agent standard's exit status for "generic error"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for errors in general.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__generic_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_UNKNOWN;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+#endif
+
+    return PCMK_OCF_UNKNOWN_ERROR;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "not installed"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "not installed" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__not_installed_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_NOT_INSTALLED;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_NOT_INSTALLED;
+    }
+#endif
+
+    return PCMK_OCF_NOT_INSTALLED;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "insufficient privileges"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "insufficient privileges" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__authorization_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_INSUFFICIENT_PRIV;
+    }
+#endif
+
+    return PCMK_OCF_INSUFFICIENT_PRIV;
+}
+
+/*!
+ * \internal
  * \brief Set operation rc and status per errno from stat(), fork() or execvp()
  *
  * \param[in,out] op     Operation to set rc and status for
@@ -649,45 +754,22 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
-    int rc_not_installed, rc_insufficient_priv, rc_exec_error;
-
-    /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
-        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
-
-        rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        rc_not_installed = NAGIOS_NOT_INSTALLED;
-        rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-#endif
-
-    } else {
-        rc_not_installed = PCMK_OCF_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_OCF_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-    }
-
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            op->rc = rc_not_installed;
+            op->rc = services__not_installed_error(op);
             op->status = PCMK_EXEC_NOT_INSTALLED;
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            op->rc = rc_insufficient_priv;
+            op->rc = services__authorization_error(op);
             op->status = PCMK_EXEC_ERROR;
             break;
         default:
-            op->rc = rc_exec_error;
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_ERROR;
     }
 }
