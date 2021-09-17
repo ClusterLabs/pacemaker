@@ -968,24 +968,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         // Get the resource instance attributes, evaluated properly for node
         GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
 
-        /* REMOTE_CONTAINER_HACK: If this is a remote connection resource with
-         * addr="#uname", pull the actual value from the parameters evaluated
-         * without a node (which was put there earlier in stage8() when the
-         * bundle's expand() method was called).
-         */
-        const char *remote_addr = g_hash_table_lookup(params,
-                                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
-
-        if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-            GHashTable *base = pe_rsc_params(action->rsc, NULL, data_set);
-
-            remote_addr = g_hash_table_lookup(base,
-                                              XML_RSC_ATTR_REMOTE_RA_ADDR);
-            if (remote_addr != NULL) {
-                g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
-                                    strdup(remote_addr));
-            }
-        }
+        pcmk__substitute_remote_addr(action->rsc, params, data_set);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 

@@ -142,4 +142,8 @@ bool pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node);
 G_GNUC_INTERNAL
 pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
 
+G_GNUC_INTERNAL
+void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
+                                  pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

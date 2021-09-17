@@ -645,3 +645,34 @@ pcmk__connection_host_for_action(pe_action_t *action)
               partial_migration? " (partial migration)" : "");
     return ended_on;
 }
+
+/*!
+ * \internal
+ * \brief Replace remote connection's addr="#uname" with actual address
+ *
+ * REMOTE_CONTAINER_HACK: If a given resource is a remote connection resource
+ * with its "addr" parameter set to "#uname", pull the actual value from the
+ * parameters evaluated without a node (which was put there earlier in stage8()
+ * when the bundle's expand() method was called).
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] params    Resource parameters evaluated per node
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
+                             pe_working_set_t *data_set)
+{
+    const char *remote_addr = g_hash_table_lookup(params,
+                                                  XML_RSC_ATTR_REMOTE_RA_ADDR);
+
+    if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
+        GHashTable *base = pe_rsc_params(rsc, NULL, data_set);
+
+        remote_addr = g_hash_table_lookup(base, XML_RSC_ATTR_REMOTE_RA_ADDR);
+        if (remote_addr != NULL) {
+            g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+                                strdup(remote_addr));
+        }
+    }
+}
