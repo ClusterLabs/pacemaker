@@ -518,3 +518,21 @@ pcmk__is_failed_remote_node(pe_node_t *node)
     return pe__is_remote_node(node) && (node->details->remote_rsc != NULL)
            && (get_remote_node_state(node) == remote_state_failed);
 }
+
+/*!
+ * \internal
+ * \brief Check whether a given resource corresponds to a given node as guest
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is a guest node and \p rsc is its containing
+ *         resource, otherwise false
+ */
+bool
+pcmk__rsc_corresponds_to_guest(pe_resource_t *rsc, pe_node_t *node)
+{
+    return (rsc != NULL) && (rsc->fillers != NULL) && (node != NULL)
+            && (node->details->remote_rsc != NULL)
+            && (node->details->remote_rsc->container == rsc);
+}
