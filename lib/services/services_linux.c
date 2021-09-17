@@ -665,7 +665,7 @@ services__generic_error(svc_action_t *op)
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return PCMK_OCF_UNKNOWN_ERROR;
+        return NAGIOS_STATE_UNKNOWN;
     }
 #endif
 
