@@ -146,4 +146,7 @@ G_GNUC_INTERNAL
 void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
                                   pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

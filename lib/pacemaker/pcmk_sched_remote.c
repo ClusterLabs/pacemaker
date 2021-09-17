@@ -676,3 +676,62 @@ pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
         }
     }
 }
+
+/*!
+ * \brief Add special bundle meta-attributes to XML
+ *
+ * If a given action will be executed on a guest node (including a bundle),
+ * add the special bundle meta-attribute "container-attribute-target" and
+ * environment variable "physical_host" as XML attributes (using meta-attribute
+ * naming).
+ *
+ * \param[in] args_xml   XML to add attributes to
+ * \param[in] action     Action to check
+ */
+void
+pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action)
+{
+    pe_node_t *host = NULL;
+    enum action_tasks task;
+
+    if (!pe__is_guest_node(action->node)) {
+        return;
+    }
+
+    task = text2task(action->task);
+    if ((task == action_notify) || (task == action_notified)) {
+        task = text2task(g_hash_table_lookup(action->meta, "notify_operation"));
+    }
+
+    switch (task) {
+        case stop_rsc:
+        case stopped_rsc:
+        case action_demote:
+        case action_demoted:
+            // "Down" actions take place on guest's current host
+            host = pe__current_node(action->node->details->remote_rsc->container);
+            break;
+
+        case start_rsc:
+        case started_rsc:
+        case monitor_rsc:
+        case action_promote:
+        case action_promoted:
+            // "Up" actions take place on guest's next host
+            host = action->node->details->remote_rsc->container->allocated_to;
+            break;
+
+        default:
+            break;
+    }
+
+    if (host != NULL) {
+        hash2metafield((gpointer) XML_RSC_ATTR_TARGET,
+                       (gpointer) g_hash_table_lookup(action->rsc->meta,
+                                                      XML_RSC_ATTR_TARGET),
+                       (gpointer) args_xml);
+        hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
+                       (gpointer) host->details->uname,
+                       (gpointer) args_xml);
+    }
+}
