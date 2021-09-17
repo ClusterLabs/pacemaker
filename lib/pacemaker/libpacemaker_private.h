@@ -133,4 +133,7 @@ void pcmk__order_probes(pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 bool pcmk__is_failed_remote_node(pe_node_t *node);
 
+G_GNUC_INTERNAL
+void pcmk__order_remote_connection_actions(pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
