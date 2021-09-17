@@ -1874,6 +1874,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
     } else if (pcmk__str_eq(check_type, "dynamic-list", pcmk__str_casei)) {
         time_t now = time(NULL);
+        int device_timeout = get_action_timeout(dev, "list", search->per_device_timeout);
+
+        if (device_timeout > search->per_device_timeout) {
+            crm_notice("Since the pcmk_list_timeout parameter of %s is larger than stonith-timeout(%d), timeout may occur",
+                  dev->id, search->per_device_timeout);
+        }
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -1891,6 +1897,13 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         }
 
     } else if (pcmk__str_eq(check_type, "status", pcmk__str_casei)) {
+        int device_timeout = get_action_timeout(dev, check_type, search->per_device_timeout);
+
+        if (device_timeout > search->per_device_timeout) {
+            crm_notice("Since the pcmk_status_timeout parameter of %s is larger than stonith-timeout(%d), timeout may occur",
+                  dev->id, search->per_device_timeout);
+        }
+
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                   check_type, dev->id, search->host, search->action);
         schedule_internal_command(__func__, dev, "status", search->host,
@@ -1925,18 +1938,11 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
     can_fence_host_with_device(dev, search);
 }
 
-#define DEFAULT_QUERY_TIMEOUT 20
 static void
 get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
                     void (*callback) (GList * devices, void *user_data))
 {
     struct device_search_s *search;
-    int per_device_timeout = DEFAULT_QUERY_TIMEOUT;
-    int devices_needing_async_query = 0;
-    char *key = NULL;
-    const char *check_type = NULL;
-    GHashTableIter gIter;
-    stonith_device_t *device = NULL;
     guint ndevices = g_hash_table_size(device_list);
 
     if (ndevices == 0) {
@@ -1950,35 +1956,9 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
         return;
     }
 
-    g_hash_table_iter_init(&gIter, device_list);
-    while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&device)) {
-        check_type = target_list_type(device);
-        if (pcmk__strcase_any_of(check_type, "status", "dynamic-list", NULL)) {
-            devices_needing_async_query++;
-        }
-    }
-
-    /* If we have devices that require an async event in order to know what
-     * nodes they can fence, we have to give the events a timeout. The total
-     * query timeout is divided among those events. */
-    if (devices_needing_async_query) {
-        per_device_timeout = timeout / devices_needing_async_query;
-        if (!per_device_timeout) {
-            crm_err("Fencing timeout %ds is too low; using %ds, "
-                    "but consider raising to at least %ds",
-                    timeout, DEFAULT_QUERY_TIMEOUT,
-                    DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
-            per_device_timeout = DEFAULT_QUERY_TIMEOUT;
-        } else if (per_device_timeout < DEFAULT_QUERY_TIMEOUT) {
-            crm_notice("Fencing timeout %ds is low for the current "
-                       "configuration; consider raising to at least %ds",
-                       timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
-        }
-    }
-
     search->host = host ? strdup(host) : NULL;
     search->action = action ? strdup(action) : NULL;
-    search->per_device_timeout = per_device_timeout;
+    search->per_device_timeout = timeout;
     /* We are guaranteed this many replies. Even if a device gets
      * unregistered some how during the async search, we will get
      * the correct number of replies. */
