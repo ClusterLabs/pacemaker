@@ -1217,10 +1217,9 @@ ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * running in a guest node and the resource that defines that node.
      */
     if (!pcmk_is_set(input->type, pe_order_preserve)
-        && action->rsc && action->rsc->fillers
-        && input->action->rsc && input->action->node
-        && input->action->node->details->remote_rsc
-        && (input->action->node->details->remote_rsc->container == action->rsc)) {
+        && (input->action->rsc != NULL)
+        && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
+
         crm_warn("Invalid ordering constraint between %s and %s",
                  input->action->rsc->id, action->rsc->id);
         return true;

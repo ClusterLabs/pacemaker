@@ -14,7 +14,7 @@ Current cluster status:
       * Stopped: [ remote1 ]
 
 Transition Summary:
-  * Fence (reboot) remote1 'resources are active and the connection is unrecoverable'
+  * Fence (reboot) remote1 'resources are active but connection is unrecoverable'
   * Fence (reboot) node1 'peer is no longer part of the cluster'
   * Stop       remote1     (            node1 )  due to node availability
   * Restart    killer      (            node2 )  due to resource definition change

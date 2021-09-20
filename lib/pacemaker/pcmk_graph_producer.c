@@ -605,101 +605,6 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
     return FALSE;
 }
 
-static pe_node_t *
-get_router_node(pe_action_t *action)
-{
-    pe_node_t *began_on = NULL;
-    pe_node_t *ended_on = NULL;
-    bool partial_migration = FALSE;
-    const char *task = action->task;
-
-    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)
-        || !pe__is_guest_or_remote_node(action->node)) {
-        return NULL;
-    }
-
-    CRM_ASSERT(action->node->details->remote_rsc != NULL);
-
-    began_on = pe__current_node(action->node->details->remote_rsc);
-    ended_on = action->node->details->remote_rsc->allocated_to;
-    if (action->node->details->remote_rsc
-        && (action->node->details->remote_rsc->container == NULL)
-        && action->node->details->remote_rsc->partial_migration_target) {
-        partial_migration = TRUE;
-    }
-
-    if (began_on == NULL) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "next node %s (starting)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (ended_on? ended_on->details->uname : "none"),
-                  partial_migration? " (partial migration)" : "");
-        return ended_on;
-    }
-
-    if (ended_on == NULL) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (stopping)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
-                  partial_migration? " (partial migration)" : "");
-        return began_on;
-    }
-
-    if (began_on->details == ended_on->details) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (not moving)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
-                  partial_migration? " (partial migration)" : "");
-        return began_on;
-    }
-
-    /* If we get here, the remote connection is moving during this transition.
-     * This means some actions for resources behind the connection will get
-     * routed through the cluster node the connection reource is currently on,
-     * and others are routed through the cluster node the connection will end up
-     * on.
-     */
-
-    if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
-        task = g_hash_table_lookup(action->meta, "notify_operation");
-    }
-
-    /*
-     * Stop, demote, and migration actions must occur before the connection can
-     * move (these actions are required before the remote resource can stop). In
-     * this case, we know these actions have to be routed through the initial
-     * cluster node the connection resource lived on before the move takes
-     * place.
-     *
-     * The exception is a partial migration of a (non-guest) remote connection
-     * resource; in that case, all actions (even these) will be ordered after
-     * the connection's pseudo-start on the migration target, so the target is
-     * the router node.
-     */
-    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
-                             "migrate_to", NULL) && !partial_migration) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (moving)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->details->uname : "none"),
-                  partial_migration? " (partial migration)" : "");
-        return began_on;
-    }
-
-    /* Everything else (start, promote, monitor, probe, refresh,
-     * clear failcount, delete, ...) must occur after the connection starts on
-     * the node it is moving to.
-     */
-    crm_trace("Routing %s for %s through remote connection's "
-              "next node %s (moving)%s",
-              action->task, (action->rsc? action->rsc->id : "no resource"),
-              (ended_on? ended_on->details->uname : "none"),
-              partial_migration? " (partial migration)" : "");
-    return ended_on;
-}
-
 /*!
  * \internal
  * \brief Add an XML node tag for a specified ID
@@ -961,7 +866,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
     if (needs_node_info && action->node != NULL) {
-        pe_node_t *router_node = get_router_node(action);
+        pe_node_t *router_node = pcmk__connection_host_for_action(action);
 
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
         crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
@@ -1063,24 +968,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         // Get the resource instance attributes, evaluated properly for node
         GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
 
-        /* REMOTE_CONTAINER_HACK: If this is a remote connection resource with
-         * addr="#uname", pull the actual value from the parameters evaluated
-         * without a node (which was put there earlier in stage8() when the
-         * bundle's expand() method was called).
-         */
-        const char *remote_addr = g_hash_table_lookup(params,
-                                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
-
-        if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-            GHashTable *base = pe_rsc_params(action->rsc, NULL, data_set);
-
-            remote_addr = g_hash_table_lookup(base,
-                                              XML_RSC_ATTR_REMOTE_RA_ADDR);
-            if (remote_addr != NULL) {
-                g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
-                                    strdup(remote_addr));
-            }
-        }
+        pcmk__substitute_remote_addr(action->rsc, params, data_set);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
@@ -1135,43 +1023,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
         }
 
-        if (action->node && /* make clang analyzer happy */
-            pe__is_guest_node(action->node)) {
-            pe_node_t *host = NULL;
-            enum action_tasks task = text2task(action->task);
-
-            if(task == action_notify || task == action_notified) {
-                const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
-                task = text2task(n_task);
-            }
-
-            // Differentiate between up and down actions
-            switch (task) {
-                case stop_rsc:
-                case stopped_rsc:
-                case action_demote:
-                case action_demoted:
-                    host = pe__current_node(action->node->details->remote_rsc->container);
-                    break;
-                case start_rsc:
-                case started_rsc:
-                case monitor_rsc:
-                case action_promote:
-                case action_promoted:
-                    host = action->node->details->remote_rsc->container->allocated_to;
-                    break;
-                default:
-                    break;
-            }
-
-            if(host) {
-                hash2metafield((gpointer)XML_RSC_ATTR_TARGET,
-                               (gpointer)g_hash_table_lookup(action->rsc->meta, XML_RSC_ATTR_TARGET), (gpointer)args_xml);
-                hash2metafield((gpointer) PCMK__ENV_PHYSICAL_HOST,
-                               (gpointer)host->details->uname,
-                               (gpointer)args_xml);
-            }
-        }
+        pcmk__add_bundle_meta_to_xml(args_xml, action);
 
     } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei) && action->node) {
         /* Pass the node's attributes as meta-attributes.
