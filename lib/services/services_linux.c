@@ -490,42 +490,57 @@ recurring_action_timer(gpointer data)
     return FALSE;
 }
 
-/* Returns FALSE if 'op' should be free'd by the caller */
-gboolean
-operation_finalize(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Finalize handling of an asynchronous operation
+ *
+ * Given a completed asynchronous operation, cancel or reschedule it as
+ * appropriate if recurring, call its callback if registered, stop tracking it,
+ * and clean it up.
+ *
+ * \param[in,out] op  Operation to finalize
+ *
+ * \return Standard Pacemaker return code
+ * \retval EINVAL      Caller supplied NULL or invalid \p op
+ * \retval EBUSY       Uncanceled recurring action has only been cleaned up
+ * \retval pcmk_rc_ok  Action has been freed
+ *
+ * \note If the return value is not pcmk_rc_ok, the caller is responsible for
+ *       freeing the action.
+ */
+int
+services__finalize_async_op(svc_action_t *op)
 {
-    int recurring = 0;
+    CRM_CHECK((op != NULL) && !(op->synchronous), return EINVAL);
 
-    if (op->interval_ms) {
+    if (op->interval_ms != 0) {
+        // Recurring operations must be either cancelled or rescheduled
         if (op->cancel) {
             op->status = PCMK_EXEC_CANCELLED;
             cancel_recurring_action(op);
         } else {
-            recurring = 1;
             op->opaque->repeat_timer = g_timeout_add(op->interval_ms,
-                                                     recurring_action_timer, (void *)op);
+                                                     recurring_action_timer,
+                                                     (void *) op);
         }
     }
 
-    if (op->opaque->callback) {
+    if (op->opaque->callback != NULL) {
         op->opaque->callback(op);
     }
 
+    // Stop tracking the operation (as in-flight or blocked)
     op->pid = 0;
-
     services_untrack_op(op);
 
-    if (!recurring && op->synchronous == FALSE) {
-        /*
-         * If this is a recurring action, do not free explicitly.
-         * It will get freed whenever the action gets cancelled.
-         */
-        services_action_free(op);
-        return TRUE;
+    if ((op->interval_ms != 0) && !(op->cancel)) {
+        // Do not free recurring actions (they will get freed when cancelled)
+        services_action_cleanup(op);
+        return EBUSY;
     }
 
-    services_action_cleanup(op);
-    return FALSE;
+    services_action_free(op);
+    return pcmk_rc_ok;
 }
 
 static void
@@ -619,7 +634,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     }
 
     log_op_output(op);
-    operation_finalize(op);
+    services__finalize_async_op(op);
 }
 
 /*!
@@ -874,10 +889,24 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     sigchld_close(fds[2].fd);
 }
 
-/* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
-/* For a synchronous 'op', returns FALSE if 'op' fails */
-gboolean
-services_os_action_execute(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Execute an action whose standard uses executable files
+ *
+ * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return value
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
+ */
+int
+services__execute_file(svc_action_t *op)
 {
     int stdout_fd[2];
     int stderr_fd[2];
@@ -886,16 +915,13 @@ services_os_action_execute(svc_action_t * op)
     struct stat st;
     struct sigchld_data_s data;
 
-    /* Fail fast */
-    if(stat(op->opaque->exec, &st) != 0) {
+    // Catch common failure conditions early
+    if (stat(op->opaque->exec, &st) != 0) {
         rc = errno;
         crm_warn("Cannot execute '%s': %s " CRM_XS " stat rc=%d",
                  op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
-        if (!op->synchronous) {
-            return operation_finalize(op);
-        }
-        return FALSE;
+        goto done;
     }
 
     if (pipe(stdout_fd) < 0) {
@@ -903,10 +929,7 @@ services_os_action_execute(svc_action_t * op)
         crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdout) rc=%d",
                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
-        if (!op->synchronous) {
-            return operation_finalize(op);
-        }
-        return FALSE;
+        goto done;
     }
 
     if (pipe(stderr_fd) < 0) {
@@ -917,10 +940,7 @@ services_os_action_execute(svc_action_t * op)
         crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
-        if (!op->synchronous) {
-            return operation_finalize(op);
-        }
-        return FALSE;
+        goto done;
     }
 
     if (pcmk_is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
@@ -933,10 +953,7 @@ services_os_action_execute(svc_action_t * op)
             crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
-            if (!op->synchronous) {
-                return operation_finalize(op);
-            }
-            return FALSE;
+            goto done;
         }
     }
 
@@ -945,7 +962,9 @@ services_os_action_execute(svc_action_t * op)
         close_pipe(stdout_fd);
         close_pipe(stderr_fd);
         sigchld_cleanup(&data);
-        return FALSE;
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
+        goto done;
     }
 
     op->pid = fork();
@@ -959,12 +978,11 @@ services_os_action_execute(svc_action_t * op)
             crm_err("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
-            if (!op->synchronous) {
-                return operation_finalize(op);
+            if (op->synchronous) {
+                sigchld_cleanup(&data);
             }
-
-            sigchld_cleanup(&data);
-            return FALSE;
+            goto done;
+            break;
 
         case 0:                /* Child */
             close(stdout_fd[0]);
@@ -1053,28 +1071,31 @@ services_os_action_execute(svc_action_t * op)
     if (op->synchronous) {
         action_synced_wait(op, &data);
         sigchld_cleanup(&data);
-    } else {
-        crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
-        mainloop_child_add_with_flags(op->pid,
-                                      op->timeout,
-                                      op->id,
-                                      op,
-                                      (op->flags & SVC_ACTION_LEAVE_GROUP) ? mainloop_leave_pid_group : 0,
-                                      operation_finished);
-
-
-        op->opaque->stdout_gsource = mainloop_add_fd(op->id,
-                                                     G_PRIORITY_LOW,
-                                                     op->opaque->stdout_fd, op, &stdout_callbacks);
-
-        op->opaque->stderr_gsource = mainloop_add_fd(op->id,
-                                                     G_PRIORITY_LOW,
-                                                     op->opaque->stderr_fd, op, &stderr_callbacks);
-
-        services_add_inflight_op(op);
+        goto done;
     }
 
-    return TRUE;
+    crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
+    mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
+                                  pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
+                                  operation_finished);
+
+    op->opaque->stdout_gsource = mainloop_add_fd(op->id,
+                                                 G_PRIORITY_LOW,
+                                                 op->opaque->stdout_fd, op,
+                                                 &stdout_callbacks);
+    op->opaque->stderr_gsource = mainloop_add_fd(op->id,
+                                                 G_PRIORITY_LOW,
+                                                 op->opaque->stderr_fd, op,
+                                                 &stderr_callbacks);
+    services_add_inflight_op(op);
+    return pcmk_rc_ok;
+
+done:
+    if (op->synchronous) {
+        return (op->rc == PCMK_OCF_OK)? pcmk_rc_ok : pcmk_rc_error;
+    } else {
+        return services__finalize_async_op(op);
+    }
 }
 
 static GList *

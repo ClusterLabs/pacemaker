@@ -259,11 +259,10 @@ services__lsb_agent_exists(const char *agent)
     return rc;
 }
 
-/* The remaining functions below are not used by the Pacemaker code base, and
- * are provided for API compatibility only.
- *
- * @TODO They should be removed or renamed.
- */
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/services_compat.h>
 
 svc_action_t *
 services_action_create(const char *name, const char *action,
@@ -279,3 +278,5 @@ services_list(void)
     return resources_list_agents(PCMK_RESOURCE_CLASS_LSB, NULL);
 }
 
+// LCOV_EXCL_STOP
+// End deprecated API

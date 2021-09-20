@@ -222,13 +222,23 @@ services__create_resource_action(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        char *dirs = strdup(OCF_RA_PATH);
+        char *dirs = NULL;
         char *dir = NULL;
         char *buf = NULL;
         struct stat st;
 
-        if (pcmk__str_empty(dirs)) {
-            free(dirs);
+        if (pcmk__str_empty(OCF_RA_PATH)) {
+            crm_err("Cannot execute OCF actions because resource agent path "
+                    "was not configured in this build");
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR_HARD;
+            return op;
+        }
+
+        dirs = strdup(OCF_RA_PATH);
+        if (dirs == NULL) {
+            crm_err("Cannot create %s operation for %s: %s",
+                    action, name, strerror(ENOMEM));
             services__handle_exec_error(op, ENOMEM);
             return op;
         }
@@ -247,6 +257,8 @@ services__create_resource_action(const char *name, const char *standard,
         if (buf) {
             op->opaque->exec = buf;
         } else {
+            crm_err("Cannot create %s operation for %s: %s",
+                    action, name, strerror(ENOENT));
             services__handle_exec_error(op, ENOENT);
             return op;
         }
@@ -423,7 +435,7 @@ services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
 {
     action->synchronous = false;
     action->opaque->callback = cb;
-    return services_os_action_execute(action);
+    return services__execute_file(action) == pcmk_rc_ok;
 }
 
 #if SUPPORT_DBUS
@@ -585,7 +597,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
         goto done;
     }
 
-    /* Tell operation_finalize() not to reschedule the operation */
+    // Tell services__finalize_async_op() not to reschedule the operation
     op->cancel = TRUE;
 
     /* Stop tracking it as a recurring operation, and stop its repeat timer */
@@ -594,8 +606,8 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* If the op has a PID, it's an in-flight child process, so kill it.
      *
      * Whether the kill succeeds or fails, the main loop will send the op to
-     * operation_finished() (and thus operation_finalize()) when the process
-     * goes away.
+     * operation_finished() (and thus services__finalize_async_op()) when the
+     * process goes away.
      */
     if (op->pid != 0) {
         crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
@@ -619,8 +631,9 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     }
 #endif
 
-    // The rest of this is essentially equivalent to operation_finalize(),
-    // except without calling handle_blocked_ops()
+    /* The rest of this is essentially equivalent to
+     * services__finalize_async_op(), minus the handle_blocked_ops() call.
+     */
 
     // Report operation as cancelled
     op->status = PCMK_EXEC_CANCELLED;
@@ -705,28 +718,40 @@ handle_duplicate_recurring(svc_action_t * op)
     return FALSE;
 }
 
-inline static gboolean
-action_exec_helper(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Execute an action appropriately according to its standard
+ *
+ * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return code
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
+ */
+static int
+execute_action(svc_action_t *op)
 {
-    /* Whether a/synchronous must be decided (op->synchronous) beforehand. */
-    if (op->standard
-        && (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0)) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op);
-#endif
-    } else if (op->standard && strcasecmp(op->standard,
-                                          PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-#if SUPPORT_SYSTEMD
-        return systemd_unit_exec(op);
-#endif
-    } else {
-        return services_os_action_execute(op);
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART,
+                     pcmk__str_casei)) {
+        return services__execute_upstart(op);
     }
-    /* The 'op' has probably been freed if the execution functions return TRUE
-       for the asynchronous 'op'. */
-    /* Avoid using the 'op' in here. */
+#endif
 
-    return FALSE;
+#if SUPPORT_SYSTEMD
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                     pcmk__str_casei)) {
+        return services__execute_systemd(op);
+    }
+#endif
+
+    return services__execute_file(op);
 }
 
 void
@@ -790,7 +815,7 @@ services_action_async_fork_notify(svc_action_t * op,
         return TRUE;
     }
 
-    return action_exec_helper(op);
+    return execute_action(op) == pcmk_rc_ok;
 }
 
 gboolean
@@ -824,7 +849,6 @@ handle_blocked_ops(void)
     GList *executed_ops = NULL;
     GList *gIter = NULL;
     svc_action_t *op = NULL;
-    gboolean res = FALSE;
 
     if (processing_blocked_ops) {
         /* avoid nested calling of this function */
@@ -841,12 +865,11 @@ handle_blocked_ops(void)
             continue;
         }
         executed_ops = g_list_append(executed_ops, op);
-        res = action_exec_helper(op);
-        if (res == FALSE) {
+        if (execute_action(op) != pcmk_rc_ok) {
             op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
-            operation_finalize(op);
+            services__finalize_async_op(op);
         }
     }
 
@@ -895,7 +918,7 @@ action_get_metadata(svc_action_t *op)
     }
 #endif
 
-    return action_exec_helper(op);
+    return execute_action(op) == pcmk_rc_ok;
 }
 
 gboolean
@@ -920,7 +943,7 @@ services_action_sync(svc_action_t * op)
          */
         rc = action_get_metadata(op);
     } else {
-        rc = action_exec_helper(op);
+        rc = (execute_action(op) == pcmk_rc_ok);
     }
     crm_trace(" > " PCMK__OP_FMT ": %s = %d",
               op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);

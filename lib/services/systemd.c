@@ -281,7 +281,7 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
             systemd_unit_exec_with_unit(op, path);
 
         } else if (op->synchronous == FALSE) {
-            operation_finalize(op);
+            services__finalize_async_op(op);
         }
     }
 
@@ -570,8 +570,6 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
             op->rc = PCMK_OCF_OK;
         }
     }
-
-    operation_finalize(op);
 }
 
 static void
@@ -589,6 +587,7 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
     systemd_exec_result(reply, op);
+    services__finalize_async_op(op);
 
     if(reply) {
         dbus_message_unref(reply);
@@ -721,7 +720,7 @@ systemd_unit_check(const char *name, const char *state, void *userdata)
 
     if (op->synchronous == FALSE) {
         services_set_op_pending(op, NULL);
-        operation_finalize(op);
+        services__finalize_async_op(op);
     }
 }
 
@@ -751,7 +750,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             return TRUE;
 
         } else {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
 
     } else if (g_strcmp0(method, "start") == 0) {
@@ -796,7 +795,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
             return TRUE;
 
         } else {
-            return operation_finalize(op);
+            return services__finalize_async_op(op) == pcmk_rc_ok;
         }
 
     } else {
@@ -812,7 +811,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
   cleanup:
     if (op->synchronous == FALSE) {
-        return operation_finalize(op);
+        return services__finalize_async_op(op) == pcmk_rc_ok;
     }
 
     return op->rc == PCMK_OCF_OK;
@@ -825,48 +824,75 @@ systemd_timeout_callback(gpointer p)
 
     op->opaque->timerid = 0;
     crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
-    operation_finalize(op);
-
+    services__finalize_async_op(op);
     return FALSE;
 }
 
-/* For an asynchronous 'op', returns FALSE if 'op' should be free'd by the caller */
-/* For a synchronous 'op', returns FALSE if 'op' fails */
-gboolean
-systemd_unit_exec(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Execute a systemd action
+ *
+ * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return code
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
+ */
+int
+services__execute_systemd(svc_action_t *op)
 {
-    char *unit = NULL;
+    CRM_ASSERT(op != NULL);
 
-    CRM_ASSERT(op);
-    CRM_ASSERT(systemd_init());
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    if ((op->action == NULL) || (op->agent == NULL)) {
+        op->rc = PCMK_OCF_NOT_CONFIGURED;
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        goto done;
+    }
+
+    if (!systemd_init()) {
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
+        goto done;
+    }
+
     crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
-              op->synchronous ? "" : "a", op->action, op->agent, op->rsc);
+              (op->synchronous? "" : "a"), op->action, op->agent,
+              crm_str(op->rsc));
 
     if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
-        // @TODO Implement an async meta-data call in executor API
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         op->rc = PCMK_OCF_OK;
-
-        if (op->synchronous == FALSE) {
-            return operation_finalize(op);
-        }
-        return TRUE;
+        op->status = PCMK_EXEC_DONE;
+        goto done;
     }
 
-    unit = systemd_unit_by_name(op->agent, op);
-    free(unit);
+    // Initialize rc/status in case systemd_unit_by_name() doesn't set them
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_DONE;
 
-    if (op->synchronous == FALSE) {
-        if (op->opaque->pending) {
-            op->opaque->timerid = g_timeout_add(op->timeout + 5000, systemd_timeout_callback, op);
-            services_add_inflight_op(op);
-            return TRUE;
+    {
+        char *unit = systemd_unit_by_name(op->agent, op);
 
-        } else {
-            return operation_finalize(op);
-        }
+        free(unit);
     }
 
-    return op->rc == PCMK_OCF_OK;
+    if (op->opaque->pending != NULL) { // Successfully initiated async op
+        op->opaque->timerid = g_timeout_add(op->timeout + 5000,
+                                            systemd_timeout_callback, op);
+        services_add_inflight_op(op);
+        return pcmk_rc_ok;
+    }
+
+done:
+    if (op->synchronous) {
+        return (op->rc == PCMK_OCF_OK)? pcmk_rc_ok : pcmk_rc_error;
+    } else {
+        return services__finalize_async_op(op);
+    }
 }

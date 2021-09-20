@@ -41,6 +41,13 @@ enum op_status {
     PCMK_LRM_OP_INVALID = PCMK_EXEC_INVALID,
 };
 
+//! \deprecated Use resources_action_create() instead
+svc_action_t *services_action_create(const char *name, const char *action,
+                                     guint interval_ms, int timeout);
+
+//! \deprecated Use resources_list_agents() instead
+GList *services_list(void);
+
 //! \deprecated Use pcmk_exec_status_str() instead
 static inline const char *
 services_lrm_status_str(enum op_status status)
