@@ -292,9 +292,12 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
         if (op != NULL) {
             op->rc = PCMK_OCF_UNKNOWN_ERROR;
             op->status = PCMK_EXEC_ERROR;
+            crm_err("Could not load systemd unit %s for %s: "
+                    "DBus reply has unexpected type", op->agent, op->id);
+        } else {
+            crm_err("Could not load systemd unit: "
+                    "DBus reply has unexpected type");
         }
-        crm_err("Could not load systemd unit %s for %s: "
-                "systemd reply has unexpected type", op->agent, op->id);
 
     } else {
         dbus_message_get_args (reply, NULL,
