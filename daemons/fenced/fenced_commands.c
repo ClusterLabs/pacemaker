@@ -2376,12 +2376,28 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
     }
 }
 
+/*!
+ * \internal
+ * \brief Reply to requester after asynchronous command completion
+ *
+ * \param[in] cmd      Command that completed
+ * \param[in] result   Result of command
+ * \param[in] pid      Process ID of command, if available
+ * \param[in] merged   If true, command was merged with another, not executed
+ */
 static void
-stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
-                         int pid, bool merged)
+send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
+                 int pid, bool merged)
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
+    const char *output = NULL;
+    int rc = pcmk_ok;
+
+    CRM_CHECK((cmd != NULL) && (result != NULL), return);
+
+    output = result->action_stdout;
+    rc = pcmk_rc2legacy(stonith__result2rc(result));
 
     reply = stonith_construct_async_reply(cmd, output, NULL, rc);
 
@@ -2513,9 +2529,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
         goto done;
     }
 
-    stonith_send_async_reply(cmd, result->action_stdout,
-                             pcmk_rc2legacy(stonith__result2rc(result)), pid,
-                             false);
+    send_async_reply(cmd, result, pid, false);
 
     if (result->exit_status != CRM_EX_OK) {
         goto done;
@@ -2563,9 +2577,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 
-        stonith_send_async_reply(cmd_other, result->action_stdout,
-                                 pcmk_rc2legacy(stonith__result2rc(result)),
-                                 pid, true);
+        send_async_reply(cmd_other, result, pid, true);
         cancel_stonith_command(cmd_other);
 
         free_async_command(cmd_other);
@@ -2604,26 +2616,28 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
         /* Order based on priority */
         devices = g_list_sort(devices, sort_device_priority);
         device = g_hash_table_lookup(device_list, devices->data);
-
-        if (device) {
-            cmd->device_list = devices;
-            cmd->device_next = devices->next;
-            devices = NULL;     /* list owned by cmd now */
-        }
     }
 
-    /* we have a device, schedule it for fencing. */
-    if (device) {
+    if (device == NULL) { // No device found
+        pcmk__action_result_t result = {
+            // Ensure we don't pass garbage to free()
+            .exit_reason = NULL,
+            .action_stdout = NULL,
+            .action_stderr = NULL
+        };
+
+        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                         "No fence device configured for target");
+        send_async_reply(cmd, &result, 0, false);
+        pcmk__reset_result(&result);
+        free_async_command(cmd);
+        g_list_free_full(devices, free);
+
+    } else { // Device found, schedule it for fencing
+        cmd->device_list = devices;
+        cmd->device_next = devices->next;
         schedule_stonith_command(cmd, device);
-        /* in progress */
-        return;
     }
-
-    /* no device found! */
-    stonith_send_async_reply(cmd, NULL, -ENODEV, 0, false);
-
-    free_async_command(cmd);
-    g_list_free_full(devices, free);
 }
 
 static int
