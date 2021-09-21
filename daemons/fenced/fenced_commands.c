@@ -477,7 +477,7 @@ stonith_device_execute(stonith_device_t * device)
                     "because unable to load CIB secrets: %s",
                      device->id, pcmk_rc_str(exec_rc));
             report_internal_result(cmd, CRM_EX_ERROR, PCMK_EXEC_NO_SECRETS,
-                                   NULL);
+                                   "Failed to get CIB secrets");
             goto done;
         }
     }
@@ -641,7 +641,7 @@ free_device(gpointer data)
 
         crm_warn("Removal of device '%s' purged operation '%s'", device->id, cmd->action);
         report_internal_result(cmd, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                               NULL);
+                               "Device was removed before action could be executed");
     }
     g_list_free(device->pending_ops);
 

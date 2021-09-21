@@ -207,7 +207,7 @@ static void
 set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
 {
     pcmk__set_result(&(action->result), svc_action->rc, svc_action->status,
-                     NULL);
+                     services__exit_reason(svc_action));
     pcmk__set_result_output(&(action->result),
                             services__grab_stdout(svc_action),
                             services__grab_stderr(svc_action));
@@ -706,7 +706,7 @@ stonith_action_create(const char *agent,
     action->max_retries = FAILURE_MAX_RETRIES;
 
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN,
-                     NULL);
+                     "Initialization bug in fencing library");
 
     if (device_args) {
         char buffer[512];
@@ -849,7 +849,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     if ((action->action == NULL) || (action->args == NULL)
         || (action->agent == NULL)) {
         pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR_FATAL, NULL);
+                         PCMK_EXEC_ERROR_FATAL, "Bug in fencing library");
         return -EINVAL;
     }
 
