@@ -62,7 +62,7 @@ struct device_search_s {
 };
 
 static gboolean stonith_device_dispatch(gpointer user_data);
-static void st_child_done(GPid pid, int rc, const char *output, gpointer user_data);
+static void st_child_done(int pid, int rc, const char *output, void *user_data);
 static void stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
                                const char *client_id);
 
@@ -99,7 +99,7 @@ typedef struct async_command_s {
     GList *device_next;
 
     void *internal_user_data;
-    void (*done_cb) (GPid pid, int rc, const char *output, gpointer user_data);
+    void (*done_cb) (int pid, int rc, const char *output, void *user_data);
     guint timer_sigterm;
     guint timer_sigkill;
     /*! If the operation timed out, this is the last signal
@@ -328,7 +328,7 @@ get_active_cmds(stonith_device_t * device)
 }
 
 static void
-fork_cb(GPid pid, gpointer user_data)
+fork_cb(int pid, void *user_data)
 {
     async_command_t *cmd = (async_command_t *) user_data;
     stonith_device_t * device =
@@ -1069,8 +1069,8 @@ schedule_internal_command(const char *origin,
                           const char *victim,
                           int timeout,
                           void *internal_user_data,
-                          void (*done_cb) (GPid pid, int rc, const char *output,
-                                           gpointer user_data))
+                          void (*done_cb) (int pid, int rc, const char *output,
+                                           void *user_data))
 {
     async_command_t *cmd = NULL;
 
@@ -1093,7 +1093,7 @@ schedule_internal_command(const char *origin,
 }
 
 static void
-status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
+status_search_cb(int pid, int rc, const char *output, void *user_data)
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
@@ -1124,7 +1124,7 @@ status_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 }
 
 static void
-dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
+dynamic_list_search_cb(int pid, int rc, const char *output, void *user_data)
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
@@ -2249,7 +2249,8 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 }
 
 static void
-stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid pid, int options)
+stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
+                         int pid, int options)
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
@@ -2331,7 +2332,7 @@ cancel_stonith_command(async_command_t * cmd)
 }
 
 static void
-st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
+st_child_done(int pid, int rc, const char *output, void *user_data)
 {
     stonith_device_t *device = NULL;
     stonith_device_t *next_device = NULL;

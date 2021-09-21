@@ -64,9 +64,9 @@ void stonith__action_result(stonith_action_t *action, int *rc, char **output,
 int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
-                             void (*done) (GPid pid, int rc, const char *output,
-                                           gpointer user_data),
-                             void (*fork_cb) (GPid pid, gpointer user_data));
+                             void (*done) (int pid, int rc, const char *output,
+                                           void *user_data),
+                             void (*fork_cb) (int pid, void *user_data));
 
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,

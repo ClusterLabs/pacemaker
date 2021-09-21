@@ -45,8 +45,8 @@ struct stonith_action_s {
     int timeout;
     int async;
     void *userdata;
-    void (*done_cb) (GPid pid, gint status, const char *output, gpointer user_data);
-    void (*fork_cb) (GPid pid, gpointer user_data);
+    void (*done_cb) (int pid, int status, const char *output, void *user_data);
+    void (*fork_cb) (int pid, void *user_data);
 
     svc_action_t *svc_action;
 
@@ -56,8 +56,7 @@ struct stonith_action_s {
     int remaining_timeout;
     int max_retries;
 
-    /* device output data */
-    GPid pid;
+    int pid;
     int rc;
     char *output;
     char *error;
@@ -925,9 +924,9 @@ internal_stonith_action_execute(stonith_action_t * action)
 int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
-                             void (*done) (GPid pid, int rc, const char *output,
-                                           gpointer user_data),
-                             void (*fork_cb) (GPid pid, gpointer user_data))
+                             void (*done) (int pid, int rc, const char *output,
+                                           void *user_data),
+                             void (*fork_cb) (int pid, void *user_data))
 {
     if (!action) {
         return -EINVAL;
