@@ -46,7 +46,8 @@ struct stonith_action_s {
     int timeout;
     int async;
     void *userdata;
-    void (*done_cb) (int pid, int status, const char *output, void *user_data);
+    void (*done_cb) (int pid, const pcmk__action_result_t *result,
+                     void *user_data);
     void (*fork_cb) (int pid, void *user_data);
 
     svc_action_t *svc_action;
@@ -811,9 +812,7 @@ stonith_action_async_done(svc_action_t *svc_action)
     }
 
     if (action->done_cb) {
-        action->done_cb(action->pid,
-                        pcmk_rc2legacy(stonith__result2rc(&(action->result))),
-                        action->result.action_stdout, action->userdata);
+        action->done_cb(action->pid, &(action->result), action->userdata);
     }
 
     action->svc_action = NULL; // don't remove our caller
@@ -933,7 +932,8 @@ internal_stonith_action_execute(stonith_action_t * action)
 int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
-                             void (*done) (int pid, int rc, const char *output,
+                             void (*done) (int pid,
+                                           const pcmk__action_result_t *result,
                                            void *user_data),
                              void (*fork_cb) (int pid, void *user_data))
 {
