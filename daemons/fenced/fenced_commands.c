@@ -2250,7 +2250,7 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
 
 static void
 stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
-                         int pid, int options)
+                         int pid, bool merged)
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
@@ -2271,10 +2271,10 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
         bcast = TRUE;
     }
 
-    log_operation(cmd, rc, pid, NULL, output, (options & st_reply_opt_merged ? TRUE : FALSE));
+    log_operation(cmd, rc, pid, NULL, output, merged);
     crm_log_xml_trace(reply, "Reply");
 
-    if (options & st_reply_opt_merged) {
+    if (merged) {
         crm_xml_add(reply, F_STONITH_MERGED, "true");
     }
 
@@ -2390,7 +2390,7 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
         goto done;
     }
 
-    stonith_send_async_reply(cmd, output, rc, pid, st_reply_opt_none);
+    stonith_send_async_reply(cmd, output, rc, pid, false);
 
     if (rc != 0) {
         goto done;
@@ -2438,7 +2438,7 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 
-        stonith_send_async_reply(cmd_other, output, rc, pid, st_reply_opt_merged);
+        stonith_send_async_reply(cmd_other, output, rc, pid, true);
         cancel_stonith_command(cmd_other);
 
         free_async_command(cmd_other);
@@ -2493,7 +2493,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 
     /* no device found! */
-    stonith_send_async_reply(cmd, NULL, -ENODEV, 0, st_reply_opt_none);
+    stonith_send_async_reply(cmd, NULL, -ENODEV, 0, false);
 
     free_async_command(cmd);
     g_list_free_full(devices, free);
