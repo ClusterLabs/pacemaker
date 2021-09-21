@@ -29,6 +29,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/services_internal.h>
 
 #include <crm/common/mainloop.h>
 
@@ -57,9 +58,7 @@ struct stonith_action_s {
     int max_retries;
 
     int pid;
-    int rc;
-    char *output;
-    char *error;
+    pcmk__action_result_t result;
 };
 
 typedef struct stonith_private_s {
@@ -120,6 +119,7 @@ static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 static int internal_stonith_action_execute(stonith_action_t * action);
 static void log_action(stonith_action_t *action, pid_t pid);
+static int result2rc(const pcmk__action_result_t *result);
 
 /*!
  * \brief Get agent namespace by name
@@ -196,6 +196,23 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
     return st_namespace_invalid;
 }
 
+/*!
+ * \internal
+ * \brief Set an action's result based on services library result
+ *
+ * \param[in] action      Fence action to set result for
+ * \param[in] svc_action  Service action to get result from
+ */
+static void
+set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
+{
+    pcmk__set_result(&(action->result), svc_action->rc, svc_action->status,
+                     NULL);
+    pcmk__set_result_output(&(action->result),
+                            services__grab_stdout(svc_action),
+                            services__grab_stderr(svc_action));
+}
+
 gboolean
 stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
 {
@@ -259,19 +276,19 @@ stonith__watchdog_fencing_enabled_for_node(const char *node)
 static void
 log_action(stonith_action_t *action, pid_t pid)
 {
-    if (action->output) {
+    if (action->result.action_stdout != NULL) {
         /* Logging the whole string confuses syslog when the string is xml */
         char *prefix = crm_strdup_printf("%s[%d] stdout:", action->agent, pid);
 
-        crm_log_output(LOG_TRACE, prefix, action->output);
+        crm_log_output(LOG_TRACE, prefix, action->result.action_stdout);
         free(prefix);
     }
 
-    if (action->error) {
+    if (action->result.action_stderr != NULL) {
         /* Logging the whole string confuses syslog when the string is xml */
         char *prefix = crm_strdup_printf("%s[%d] stderr:", action->agent, pid);
 
-        crm_log_output(LOG_WARNING, prefix, action->error);
+        crm_log_output(LOG_WARNING, prefix, action->result.action_stderr);
         free(prefix);
     }
 }
@@ -645,8 +662,7 @@ stonith__destroy_action(stonith_action_t *action)
         if (action->svc_action) {
             services_action_free(action->svc_action);
         }
-        free(action->output);
-        free(action->error);
+        pcmk__reset_result(&(action->result));
         free(action);
     }
 }
@@ -678,15 +694,15 @@ stonith__action_result(stonith_action_t *action, int *rc, char **output,
     }
     if (action != NULL) {
         if (rc) {
-            *rc = action->rc;
+            *rc = pcmk_rc2legacy(result2rc(&(action->result)));
         }
-        if (output && action->output) {
-            *output = action->output;
-            action->output = NULL; // hand off memory management to caller
+        if ((output != NULL) && (action->result.action_stdout != NULL)) {
+            *output = action->result.action_stdout;
+            action->result.action_stdout = NULL; // hand off ownership to caller
         }
-        if (error_output && action->error) {
-            *error_output = action->error;
-            action->error = NULL; // hand off memory management to caller
+        if ((error_output != NULL) && (action->result.action_stderr != NULL)) {
+            *error_output = action->result.action_stderr;
+            action->result.action_stderr = NULL; // hand off ownership to caller
         }
     }
 }
@@ -715,6 +731,9 @@ stonith_action_create(const char *agent,
     action->timeout = action->remaining_timeout = timeout;
     action->max_retries = FAILURE_MAX_RETRIES;
 
+    pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN,
+                     NULL);
+
     if (device_args) {
         char buffer[512];
         const char *value = NULL;
@@ -739,7 +758,8 @@ update_remaining_timeout(stonith_action_t * action)
         crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
                  action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
-    } else if ((action->rc != -ETIME) && diff < (action->timeout * 0.7)) {
+    } else if ((action->result.execution_status != PCMK_EXEC_TIMEOUT)
+               && (diff < (action->timeout * 0.7))) {
         /* only set remaining timeout period if there is 30%
          * or greater of the original timeout period left */
         action->remaining_timeout = action->timeout - diff;
@@ -750,31 +770,31 @@ update_remaining_timeout(stonith_action_t * action)
 }
 
 static int
-svc_action_to_errno(svc_action_t *svc_action) {
-    int rv = pcmk_ok;
+result2rc(const pcmk__action_result_t *result) {
+    int rc = pcmk_rc_ok;
 
-    if (svc_action->status == PCMK_EXEC_TIMEOUT) {
-            rv = -ETIME;
+    if (result->execution_status == PCMK_EXEC_TIMEOUT) {
+            rc = ETIME;
 
-    } else if (svc_action->rc != PCMK_OCF_OK) {
+    } else if (result->exit_status != CRM_EX_OK) {
         /* Try to provide a useful error code based on the fence agent's
          * error output.
          */
-        if (svc_action->stderr_data == NULL) {
-            rv = -ENODATA;
+        if (result->action_stderr == NULL) {
+            rc = ENODATA;
 
-        } else if (strstr(svc_action->stderr_data, "imed out")) {
+        } else if (strstr(result->action_stderr, "imed out")) {
             /* Some agents have their own internal timeouts */
-            rv = -ETIME;
+            rc = ETIME;
 
-        } else if (strstr(svc_action->stderr_data, "Unrecognised action")) {
-            rv = -EOPNOTSUPP;
+        } else if (strstr(result->action_stderr, "Unrecognised action")) {
+            rc = EOPNOTSUPP;
 
         } else {
-            rv = -pcmk_err_generic;
+            rc = pcmk_rc_error;
         }
     }
-    return rv;
+    return rc;
 }
 
 static void
@@ -782,11 +802,7 @@ stonith_action_async_done(svc_action_t *svc_action)
 {
     stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
 
-    action->rc = svc_action_to_errno(svc_action);
-    action->output = svc_action->stdout_data;
-    svc_action->stdout_data = NULL;
-    action->error = svc_action->stderr_data;
-    svc_action->stderr_data = NULL;
+    set_result_from_svc_action(action, svc_action);
 
     svc_action->params = NULL;
 
@@ -795,7 +811,9 @@ stonith_action_async_done(svc_action_t *svc_action)
 
     log_action(action, action->pid);
 
-    if (action->rc != pcmk_ok && update_remaining_timeout(action)) {
+    if ((action->result.exit_status != CRM_EX_OK)
+        && update_remaining_timeout(action)) {
+
         int rc = internal_stonith_action_execute(action);
         if (rc == pcmk_ok) {
             return;
@@ -803,7 +821,8 @@ stonith_action_async_done(svc_action_t *svc_action)
     }
 
     if (action->done_cb) {
-        action->done_cb(action->pid, action->rc, action->output, action->userdata);
+        action->done_cb(action->pid, pcmk_rc2legacy(result2rc(&(action->result))),
+                        action->result.action_stdout, action->userdata);
     }
 
     action->svc_action = NULL; // don't remove our caller
@@ -835,9 +854,13 @@ internal_stonith_action_execute(stonith_action_t * action)
     static int stonith_sequence = 0;
     char *buffer = NULL;
 
-    if ((action == NULL) || (action->action == NULL) || (action->args == NULL)
+    CRM_CHECK(action != NULL, return -EINVAL);
+
+    if ((action->action == NULL) || (action->args == NULL)
         || (action->agent == NULL)) {
-        return -EPROTO;
+        pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_ERROR_FATAL, NULL);
+        return -EINVAL;
     }
 
     if (!action->tries) {
@@ -857,6 +880,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     free(buffer);
 
     if (svc_action->rc != PCMK_OCF_UNKNOWN) {
+        set_result_from_svc_action(action, svc_action);
         services_action_free(svc_action);
         return -E2BIG;
     }
@@ -877,10 +901,7 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     /* keep retries from executing out of control and free previous results */
     if (is_retry) {
-        free(action->output);
-        action->output = NULL;
-        free(action->error);
-        action->error = NULL;
+        pcmk__reset_result(&(action->result));
         sleep(1);
     }
 
@@ -889,22 +910,19 @@ internal_stonith_action_execute(stonith_action_t * action)
         if (services_action_async_fork_notify(svc_action,
                                               &stonith_action_async_done,
                                               &stonith_action_async_forked)) {
+            pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN,
+                             PCMK_EXEC_PENDING, NULL);
             return pcmk_ok;
         }
 
     } else if (services_action_sync(svc_action)) { // sync success
         rc = pcmk_ok;
-        action->rc = svc_action_to_errno(svc_action);
-        action->output = svc_action->stdout_data;
-        svc_action->stdout_data = NULL;
-        action->error = svc_action->stderr_data;
-        svc_action->stderr_data = NULL;
 
     } else { // sync failure
-        action->rc = -ECONNABORTED;
-        rc = action->rc;
+        rc = -ECONNABORTED;
     }
 
+    set_result_from_svc_action(action, svc_action);
     svc_action->params = NULL;
     services_action_free(svc_action);
     return rc;
