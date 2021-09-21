@@ -119,7 +119,6 @@ static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 static int internal_stonith_action_execute(stonith_action_t * action);
 static void log_action(stonith_action_t *action, pid_t pid);
-static int result2rc(const pcmk__action_result_t *result);
 
 /*!
  * \brief Get agent namespace by name
@@ -694,7 +693,7 @@ stonith__action_result(stonith_action_t *action, int *rc, char **output,
     }
     if (action != NULL) {
         if (rc) {
-            *rc = pcmk_rc2legacy(result2rc(&(action->result)));
+            *rc = pcmk_rc2legacy(stonith__result2rc(&(action->result)));
         }
         if ((output != NULL) && (action->result.action_stdout != NULL)) {
             *output = action->result.action_stdout;
@@ -769,32 +768,49 @@ update_remaining_timeout(stonith_action_t * action)
     return action->remaining_timeout ? TRUE : FALSE;
 }
 
-static int
-result2rc(const pcmk__action_result_t *result) {
-    int rc = pcmk_rc_ok;
-
-    if (result->execution_status == PCMK_EXEC_TIMEOUT) {
-            rc = ETIME;
-
-    } else if (result->exit_status != CRM_EX_OK) {
-        /* Try to provide a useful error code based on the fence agent's
-         * error output.
-         */
-        if (result->action_stderr == NULL) {
-            rc = ENODATA;
-
-        } else if (strstr(result->action_stderr, "imed out")) {
-            /* Some agents have their own internal timeouts */
-            rc = ETIME;
-
-        } else if (strstr(result->action_stderr, "Unrecognised action")) {
-            rc = EOPNOTSUPP;
-
-        } else {
-            rc = pcmk_rc_error;
-        }
+/*!
+ * \internal
+ * \brief Map a fencing action result to a standard return code
+ *
+ * \param[in] result  Fencing action result to map
+ *
+ * \return Standard Pacemaker return code that best corresponds to \p result
+ */
+int
+stonith__result2rc(const pcmk__action_result_t *result)
+{
+    switch (result->execution_status) {
+        case PCMK_EXEC_CANCELLED:       return ECANCELED;
+        case PCMK_EXEC_TIMEOUT:         return ETIME;
+        case PCMK_EXEC_NOT_INSTALLED:   return ENOENT;
+        case PCMK_EXEC_NOT_SUPPORTED:   return EOPNOTSUPP;
+        case PCMK_EXEC_NOT_CONNECTED:   return ENOTCONN;
+        case PCMK_EXEC_NO_FENCE_DEVICE: return ENODEV;
+        case PCMK_EXEC_NO_SECRETS:      return EACCES;
+        default:                        break;
     }
-    return rc;
+
+    if (result->exit_status == CRM_EX_OK) {
+        return pcmk_rc_ok;
+    }
+
+    // Try to provide useful error code based on result's error output
+
+    if (result->action_stderr == NULL) {
+        return ENODATA;
+
+    } else if (strcasestr(result->action_stderr, "timed out")
+               || strcasestr(result->action_stderr, "timeout")) {
+        return ETIME;
+
+    } else if (strcasestr(result->action_stderr, "unrecognised action")
+               || strcasestr(result->action_stderr, "unrecognized action")
+               || strcasestr(result->action_stderr, "unsupported action")) {
+        return EOPNOTSUPP;
+    }
+
+    // Oh well, we tried
+    return pcmk_rc_error;
 }
 
 static void
@@ -821,7 +837,8 @@ stonith_action_async_done(svc_action_t *svc_action)
     }
 
     if (action->done_cb) {
-        action->done_cb(action->pid, pcmk_rc2legacy(result2rc(&(action->result))),
+        action->done_cb(action->pid,
+                        pcmk_rc2legacy(stonith__result2rc(&(action->result))),
                         action->result.action_stdout, action->userdata);
     }
 
