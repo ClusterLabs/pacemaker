@@ -225,10 +225,8 @@ crmd_exit(crm_exit_t exit_code)
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
      */
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
-    cib_free_callbacks(fsa_cib_conn);
-    fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+
+    controld_disconnect_cib_manager();
 
     verify_stopped(fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
