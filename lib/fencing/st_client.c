@@ -32,6 +32,8 @@
 
 #include <crm/common/mainloop.h>
 
+#include "fencing_private.h"
+
 CRM_TRACE_INIT_DATA(stonith);
 
 struct stonith_action_s {

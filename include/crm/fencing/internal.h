@@ -68,8 +68,6 @@ stonith_action_execute_async(stonith_action_t * action,
                                            gpointer user_data),
                              void (*fork_cb) (GPid pid, gpointer user_data));
 
-int stonith__execute(stonith_action_t *action);
-
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,
@@ -169,24 +167,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 /* Don't change 2 below as it would break rolling upgrade */
 #  define STONITH_WATCHDOG_AGENT_INTERNAL "#watchdog"
 #  define STONITH_WATCHDOG_ID             "watchdog"
-
-#  ifdef HAVE_STONITH_STONITH_H
-// utilities from st_lha.c
-int stonith__list_lha_agents(stonith_key_value_t **devices);
-int stonith__lha_metadata(const char *agent, int timeout, char **output);
-bool stonith__agent_is_lha(const char *agent);
-int stonith__lha_validate(stonith_t *st, int call_options, const char *target,
-                          const char *agent, GHashTable *params,
-                          int timeout, char **output, char **error_output);
-#  endif
-
-// utilities from st_rhcs.c
-int stonith__list_rhcs_agents(stonith_key_value_t **devices);
-int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
-bool stonith__agent_is_rhcs(const char *agent);
-int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
-                           const char *agent, GHashTable *params, const char *host_arg,
-                           int timeout, char **output, char **error_output);
 
 /* Exported for crm_mon to reference */
 int stonith__failed_history(pcmk__output_t *out, va_list args);
