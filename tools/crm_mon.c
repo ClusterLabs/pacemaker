@@ -29,7 +29,6 @@
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>

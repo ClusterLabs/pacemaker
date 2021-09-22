@@ -7,12 +7,41 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef CRM_MON__H
+#define CRM_MON__H
+
+#include <crm_internal.h>
+
 #include <glib.h>
 
 #include <crm/common/output_internal.h>
-#include <crm/common/curses_internal.h>
 #include <crm/pengine/pe_types.h>
 #include <crm/stonith-ng.h>
+
+/*
+ * The man pages for both curses and ncurses suggest inclusion of "curses.h".
+ * We believe the following to be acceptable and portable.
+ */
+
+#  if defined(HAVE_LIBNCURSES) || defined(HAVE_LIBCURSES)
+#    if defined(HAVE_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <ncurses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_NCURSES_NCURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <ncurses/ncurses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <curses.h>
+#      define CURSES_ENABLED 1
+#    elif defined(HAVE_CURSES_CURSES_H) && !defined(HAVE_INCOMPATIBLE_PRINTW)
+#      include <curses/curses.h>
+#      define CURSES_ENABLED 1
+#    else
+#      define CURSES_ENABLED 0
+#    endif
+#  else
+#    define CURSES_ENABLED 0
+#  endif
 
 typedef enum mon_output_format_e {
     mon_output_unset,
@@ -39,4 +68,6 @@ void blank_screen(void);
 #if CURSES_ENABLED
 extern GOptionEntry crm_mon_curses_output_entries[];
 #define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
+#endif
+
 #endif
