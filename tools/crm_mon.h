@@ -26,19 +26,6 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
-void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                  stonith_history_t *stonith_history, gboolean fence_history,
-                  unsigned int section_opts, unsigned int show_opts,
-                  const char *prefix, GList *unames, GList *resources);
-void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                      stonith_history_t *stonith_history, gboolean fence_history,
-                      unsigned int section_opts, unsigned int show_opts,
-                      const char *prefix, GList *unames, GList *resources);
-int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                      stonith_history_t *stonith_history, gboolean fence_history,
-                      unsigned int section_opts, unsigned int show_opts,
-                      const char *prefix, GList *unames, GList *resources);
-
 void crm_mon_register_messages(pcmk__output_t *out);
 
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);
@@ -53,6 +40,3 @@ void blank_screen(void);
 extern GOptionEntry crm_mon_curses_output_entries[];
 #define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
 #endif
-
-pcmk__output_t *crm_mon_mk_xml_output(char **argv);
-#define CRM_MON_SUPPORTED_FORMAT_XML { "xml", crm_mon_mk_xml_output, pcmk__xml_output_entries }
