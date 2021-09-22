@@ -499,49 +499,14 @@ static pcmk__message_entry_t fmt_functions[] = {
     { NULL, NULL, NULL }
 };
 
-void
-crm_mon_register_messages(pcmk__output_t *out) {
-    pcmk__register_messages(out, fmt_functions);
-}
-
-#else
-
-pcmk__output_t *
-crm_mon_mk_curses_output(char **argv) {
-    /* curses was disabled in the build, so fall back to text. */
-    return pcmk__mk_text_output(argv);
-}
-
-G_GNUC_PRINTF(2, 0)
-void
-curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
-    return;
-}
-
-G_GNUC_PRINTF(2, 3)
-void
-curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
-    return;
-}
-
-G_GNUC_PRINTF(2, 0)
-void
-curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
-    return;
-}
-
-G_GNUC_PRINTF(2, 3)
-void
-curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
-    return;
-}
-
-void
-crm_mon_register_messages(pcmk__output_t *out) {
-    return;
-}
-
 #endif
+
+void
+crm_mon_register_messages(pcmk__output_t *out) {
+#if CURSES_ENABLED
+    pcmk__register_messages(out, fmt_functions);
+#endif
+}
 
 void
 blank_screen(void)

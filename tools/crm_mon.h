@@ -55,17 +55,17 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
+void blank_screen(void);
+
 void crm_mon_register_messages(pcmk__output_t *out);
 
+#if CURSES_ENABLED
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);
 void curses_formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
-void blank_screen(void);
-
-#if CURSES_ENABLED
 extern GOptionEntry crm_mon_curses_output_entries[];
 #define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, crm_mon_curses_output_entries }
 #endif
