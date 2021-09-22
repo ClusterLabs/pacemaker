@@ -373,7 +373,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
         GList *lpc2 = NULL;
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed) {
+        if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             continue;
         }
 

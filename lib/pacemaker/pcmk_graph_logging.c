@@ -90,19 +90,19 @@ find_graph_action_by_id(crm_graph_t *graph, int id)
     return NULL;
 }
 
-static const char *
+const char *
 synapse_state_str(synapse_t *synapse)
 {
-    if (synapse->failed) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {
         return "Failed";
 
-    } else if (synapse->confirmed) {
+    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
         return "Completed";
 
-    } else if (synapse->executed) {
+    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
         return "In-flight";
 
-    } else if (synapse->ready) {
+    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return "Ready";
     }
     return "Pending";
@@ -176,7 +176,7 @@ log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
 {
     char *pending = NULL;
 
-    if (!synapse->executed) {
+    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
         pending = synapse_pending_inputs(graph, synapse);
     }
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
@@ -184,7 +184,7 @@ log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
                            pending);
     }
     free(pending);
-    if (!synapse->executed) {
+    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
         log_unresolved_inputs(log_level, graph, synapse);
     }
 }

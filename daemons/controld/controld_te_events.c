@@ -39,7 +39,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     for (; gIter != NULL; gIter = gIter->next) {
         synapse_t *synapse = (synapse_t *) gIter->data;
 
-        if (synapse->confirmed || synapse->failed) {
+        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
             continue;
         }
@@ -69,12 +69,12 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 
             if (pcmk__str_eq(target_uuid, down_node, pcmk__str_casei) || pcmk__str_eq(router_uuid, down_node, pcmk__str_casei)) {
                 action->failed = TRUE;
-                synapse->failed = TRUE;
+                pcmk__set_synapse_flags(synapse, pcmk__synapse_failed);
                 last_action = action->xml;
                 stop_te_timer(action->timer);
                 pcmk__update_graph(graph, action);
 
-                if (synapse->executed) {
+                if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",
                                action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
                 } else {
