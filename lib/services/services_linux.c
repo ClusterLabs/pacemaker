@@ -681,13 +681,13 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         /* If an in-flight recurring operation was killed because it was
          * cancelled, don't treat that as a failure.
          */
-        crm_info("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                 op->id, op->pid, strsignal(signo), signo);
+        crm_info("%s[%d] terminated with signal %d (%s)",
+                 op->id, op->pid, signo, strsignal(signo));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_CANCELLED, NULL);
 
     } else {
-        crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                 op->id, op->pid, strsignal(signo), signo);
+        crm_warn("%s[%d] terminated with signal %d (%s)",
+                 op->id, op->pid, signo, strsignal(signo));
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                              "Process interrupted by signal");
     }
@@ -1035,8 +1035,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
         services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
                              "Process interrupted by signal");
-        crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                op->id, op->pid, strsignal(signo), signo);
+        crm_err("%s[%d] terminated with signal %d (%s)",
+                op->id, op->pid, signo, strsignal(signo));
 
 #ifdef WCOREDUMP
         if (WCOREDUMP(status)) {
