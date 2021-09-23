@@ -29,7 +29,6 @@
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
@@ -1236,7 +1235,11 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                               "\tcrm_mon --output-as xml\n\n";
 
+#if CURSES_ENABLED
     context = pcmk__build_arg_context(args, "console (default), html, text, xml", group, NULL);
+#else
+    context = pcmk__build_arg_context(args, "text (default), html, xml", group, NULL);
+#endif
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
