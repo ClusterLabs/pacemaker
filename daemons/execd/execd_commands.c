@@ -786,11 +786,16 @@ nagios2uniform_rc(const char *action, int rc)
     switch (rc) {
         case NAGIOS_STATE_OK:
             return PCMK_OCF_OK;
+
         case NAGIOS_INSUFFICIENT_PRIV:
             return PCMK_OCF_INSUFFICIENT_PRIV;
+
         case NAGIOS_NOT_INSTALLED:
             return PCMK_OCF_NOT_INSTALLED;
+
         case NAGIOS_STATE_WARNING:
+            return PCMK_OCF_DEGRADED;
+
         case NAGIOS_STATE_CRITICAL:
         case NAGIOS_STATE_UNKNOWN:
         case NAGIOS_STATE_DEPENDENT:
