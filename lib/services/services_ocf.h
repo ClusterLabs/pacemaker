@@ -25,4 +25,7 @@ gboolean services__ocf_agent_exists(const char *provider, const char *agent);
 G_GNUC_INTERNAL
 int services__ocf_prepare(svc_action_t *op);
 
+G_GNUC_INTERNAL
+enum ocf_exitcode services__ocf2ocf(int exit_status);
+
 #endif  // PCMK__SERVICES_OCF__H

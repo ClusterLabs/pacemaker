@@ -55,6 +55,21 @@ services__upstart_prepare(svc_action_t *op)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Map a Upstart result to a standard OCF result
+ *
+ * \param[in] exit_status  Upstart result
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__upstart2ocf(int exit_status)
+{
+    // This library uses OCF codes for Upstart actions
+    return (enum ocf_exitcode) exit_status;
+}
+
 static gboolean
 upstart_init(void)
 {

@@ -309,6 +309,9 @@ svc_action_t *services_alert_create(const char *id, const char *exec,
 gboolean services_alert_async(svc_action_t *action,
                               void (*cb)(svc_action_t *op));
 
+enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
+                                      int exit_status);
+
     static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:
