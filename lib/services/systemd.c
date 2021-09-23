@@ -568,10 +568,29 @@ systemd_unit_listall(void)
 gboolean
 systemd_unit_exists(const char *name)
 {
+    char *path = NULL;
+    char *state = NULL;
+
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
-    return invoke_unit_by_name(name, NULL, NULL) == pcmk_rc_ok;
+    if ((invoke_unit_by_name(name, NULL, &path) != pcmk_rc_ok)
+        || (path == NULL)) {
+        return FALSE;
+    }
+
+    /* A successful LoadUnit is not sufficient to determine the unit's
+     * existence; it merely means the LoadUnit request received a reply.
+     * We must make another blocking call to check the LoadState property.
+     */
+    state = systemd_get_property(path, "LoadState", NULL, NULL, NULL,
+                                 DBUS_TIMEOUT_USE_DEFAULT);
+    if (pcmk__str_any_of(state, "loaded", "masked", NULL)) {
+        free(state);
+        return TRUE;
+    }
+    free(state);
+    return FALSE;
 }
 
 #define METADATA_FORMAT                                                     \
