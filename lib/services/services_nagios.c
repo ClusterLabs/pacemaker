@@ -112,9 +112,6 @@ services__nagios2ocf(int exit_status)
         case NAGIOS_INSUFFICIENT_PRIV:
             return PCMK_OCF_INSUFFICIENT_PRIV;
 
-        case NAGIOS_NOT_INSTALLED:
-            return PCMK_OCF_NOT_INSTALLED;
-
         case NAGIOS_STATE_WARNING:
             return PCMK_OCF_DEGRADED;
 

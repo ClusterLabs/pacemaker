@@ -758,7 +758,7 @@ services__not_installed_error(svc_action_t *op)
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return NAGIOS_NOT_INSTALLED;
+        return NAGIOS_STATE_UNKNOWN;
     }
 #endif
 
