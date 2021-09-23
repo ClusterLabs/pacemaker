@@ -61,55 +61,71 @@ upstart_cleanup(void)
     }
 }
 
-static gboolean
-upstart_job_by_name(const gchar * arg_name, gchar ** out_unit, int timeout)
+/*!
+ * \internal
+ * \brief Get the DBus object path corresponding to a job name
+ *
+ * \param[in]  arg_name  Name of job to get path for
+ * \param[out] path      If not NULL, where to store DBus object path
+ * \param[in]  timeout   Give up after this many seconds
+ *
+ * \return true if object path was found, false otherwise
+ * \note The caller is responsible for freeing *path if it is non-NULL.
+ */
+static bool
+object_path_for_job(const gchar *arg_name, char **path, int timeout)
 {
-/*
-  com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
-*/
+    /*
+        com.ubuntu.Upstart0_6.GetJobByName (in String name, out ObjectPath job)
+    */
     DBusError error;
     DBusMessage *msg;
     DBusMessage *reply = NULL;
-    const char *method = "GetJobByName";
+    bool rc = false;
 
-    if(upstart_init() == FALSE) {
-        return FALSE;
+    if (path != NULL) {
+        *path = NULL;
+    }
+
+    if (!upstart_init()) {
+        return false;
     }
     msg = dbus_message_new_method_call(BUS_NAME, // target for the method call
                                        BUS_PATH, // object to call on
-                                       UPSTART_06_API, // interface to call on
-                                       method); // method name
+                                       UPSTART_06_API,  // interface to call on
+                                       "GetJobByName"); // method name
 
     dbus_error_init(&error);
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &arg_name, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &arg_name,
+                                            DBUS_TYPE_INVALID));
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, timeout);
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not issue %s for %s: %s", method, arg_name, error.message);
+        crm_err("Could not get DBus object path for %s: %s",
+                arg_name, error.message);
         dbus_error_free(&error);
 
-    } else if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
-        crm_err("Invalid return type for %s", method);
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_err("Could not get DBus object path for %s: Invalid return type",
+                arg_name);
 
     } else {
-        if(out_unit) {
-            char *path = NULL;
-
-            dbus_message_get_args (reply, NULL,
-                                   DBUS_TYPE_OBJECT_PATH, &path,
-                                   DBUS_TYPE_INVALID);
-
-            *out_unit = strdup(path);
+        if (path != NULL) {
+            dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, path,
+                                  DBUS_TYPE_INVALID);
+            if (*path != NULL) {
+                *path = strdup(*path);
+            }
         }
-        dbus_message_unref(reply);
-        return TRUE;
+        rc = true;
     }
 
-    if(reply) {
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
-    return FALSE;
+    return rc;
 }
 
 static void
@@ -233,7 +249,7 @@ upstart_job_listall(void)
 gboolean
 upstart_job_exists(const char *name)
 {
-    return upstart_job_by_name(name, NULL, DBUS_TIMEOUT_USE_DEFAULT);
+    return object_path_for_job(name, NULL, DBUS_TIMEOUT_USE_DEFAULT);
 }
 
 static char *
@@ -296,119 +312,157 @@ get_first_instance(const gchar * job, int timeout)
     return instance;
 }
 
+/*!
+ * \internal
+ * \brief Parse result of Upstart status check
+ *
+ * \param[in] name      DBus interface name for property that was checked
+ * \param[in] state     Property value
+ * \param[in] userdata  Status action that check was done for
+ */
 static void
-upstart_job_check(const char *name, const char *state, void *userdata)
+parse_status_result(const char *name, const char *state, void *userdata)
 {
-    svc_action_t * op = userdata;
+    svc_action_t *op = userdata;
 
-    if (state && g_strcmp0(state, "running") == 0) {
+    if (pcmk__str_eq(state, "running", pcmk__str_none)) {
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     } else {
         op->rc = PCMK_OCF_NOT_RUNNING;
+        op->status = PCMK_EXEC_DONE;
     }
 
-    if (op->synchronous == FALSE) {
+    if (!(op->synchronous)) {
         services_set_op_pending(op, NULL);
         services__finalize_async_op(op);
     }
 }
 
+#define METADATA_FORMAT                                                     \
+    "<?xml version=\"1.0\"?>\n"                                             \
+    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"                   \
+    "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n" \
+    "  <version>1.1</version>\n"                                            \
+    "  <longdesc lang=\"en\">\n"                                            \
+    "    Upstart agent for controlling the system %s service\n"             \
+    "  </longdesc>\n"                                                       \
+    "  <shortdesc lang=\"en\">Upstart job for %s</shortdesc>\n"             \
+    "  <parameters/>\n"                                                     \
+    "  <actions>\n"                                                         \
+    "    <action name=\"start\"     timeout=\"15\" />\n"                    \
+    "    <action name=\"stop\"      timeout=\"15\" />\n"                    \
+    "    <action name=\"status\"    timeout=\"15\" />\n"                    \
+    "    <action name=\"restart\"   timeout=\"15\" />\n"                    \
+    "    <action name=\"monitor\"   timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n" \
+    "    <action name=\"meta-data\" timeout=\"5\" />\n"                     \
+    "  </actions>\n"                                                        \
+    "  <special tag=\"upstart\"/>\n"                                        \
+    "</resource-agent>\n"
+
 static char *
 upstart_job_metadata(const char *name)
 {
-    return crm_strdup_printf("<?xml version=\"1.0\"?>\n"
-                           "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                           "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"
-                           "  <version>1.0</version>\n"
-                           "  <longdesc lang=\"en\">\n"
-                           "    Upstart agent for controlling the system %s service\n"
-                           "  </longdesc>\n"
-                           "  <shortdesc lang=\"en\">%s upstart agent</shortdesc>\n"
-                           "  <parameters>\n"
-                           "  </parameters>\n"
-                           "  <actions>\n"
-                           "    <action name=\"start\"   timeout=\"15\" />\n"
-                           "    <action name=\"stop\"    timeout=\"15\" />\n"
-                           "    <action name=\"status\"  timeout=\"15\" />\n"
-                           "    <action name=\"restart\"  timeout=\"15\" />\n"
-                           "    <action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-                           "    <action name=\"meta-data\"  timeout=\"5\" />\n"
-                           "  </actions>\n"
-                           "  <special tag=\"upstart\">\n"
-                           "  </special>\n" "</resource-agent>\n", name, name, name);
+    return crm_strdup_printf(METADATA_FORMAT, name, name, name);
 }
 
-static bool
-upstart_mask_error(svc_action_t *op, const char *error)
+/*!
+ * \internal
+ * \brief Set an action result based on a method error
+ *
+ * \param[in] op     Action to set result for
+ * \param[in] error  Method error
+ */
+static void
+set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
-    if(strstr(error, UPSTART_06_API ".Error.UnknownInstance")) {
-        if(pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
-            crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
-            op->rc = PCMK_OCF_OK;
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->status = PCMK_EXEC_ERROR;
 
-        } else if(pcmk__str_eq(op->action, "start", pcmk__str_casei)) {
-            crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
-            op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_EXEC_NOT_INSTALLED;
+    if (strstr(error->name, UPSTART_06_API ".Error.UnknownInstance")) {
+
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+            crm_trace("Masking stop failure (%s) for %s "
+                      "because unknown service can be considered stopped",
+                      error->name, crm_str(op->rsc));
+            op->rc = PCMK_OCF_OK;
+            op->status = PCMK_EXEC_DONE;
+            return;
         }
-        return TRUE;
+
+        op->rc = PCMK_OCF_NOT_INSTALLED;
+        op->status = PCMK_EXEC_NOT_INSTALLED;
 
     } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
-               && strstr(error, UPSTART_06_API ".Error.AlreadyStarted")) {
-        crm_trace("Mapping %s failure for %s: starting a started resource is allowed", op->action, op->rsc);
+               && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
+        crm_trace("Masking start failure (%s) for %s "
+                  "because already started resource is OK",
+                  error->name, crm_str(op->rsc));
         op->rc = PCMK_OCF_OK;
-        return TRUE;
+        op->status = PCMK_EXEC_DONE;
+        return;
     }
 
-    return FALSE;
+    crm_err("DBus request for %s of Upstart job %s for resource %s failed: %s",
+            op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous job start, stop, or restart
+ *
+ * \param[in] pending    If not NULL, DBus call associated with request
+ * \param[in] user_data  Action that was executed
+ */
 static void
-upstart_async_dispatch(DBusPendingCall *pending, void *user_data)
+job_method_complete(DBusPendingCall *pending, void *user_data)
 {
     DBusError error;
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    dbus_error_init(&error);
-    if(pending) {
+    // Grab the reply
+    if (pending != NULL) {
         reply = dbus_pending_call_steal_reply(pending);
     }
 
+    // Determine result
+    dbus_error_init(&error);
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-
-        /* ignore "already started" or "not running" errors */
-        if (!upstart_mask_error(op, error.name)) {
-            crm_err("%s for %s: %s", op->action, op->rsc, error.message);
-        }
+        set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
-    } else if (!g_strcmp0(op->action, "stop")) {
-        /* No return vaue */
+    } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
+        // Call has no return value
+        crm_debug("DBus request for stop of %s succeeded", crm_str(op->rsc));
         op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_warn("DBus request for %s of %s succeeded but "
+                 "return type was unexpected", op->action, crm_str(op->rsc));
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
 
     } else {
-        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
-            crm_warn("Call to %s passed but return type was unexpected", op->action);
-            op->rc = PCMK_OCF_OK;
+        const char *path = NULL;
 
-        } else {
-            const char *path = NULL;
-
-            dbus_message_get_args (reply, NULL,
-                                   DBUS_TYPE_OBJECT_PATH, &path,
-                                   DBUS_TYPE_INVALID);
-            crm_info("Call to %s passed: %s", op->action, path);
-            op->rc = PCMK_OCF_OK;
-        }
+        dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, &path,
+                              DBUS_TYPE_INVALID);
+        crm_debug("DBus request for %s of %s using %s succeeded",
+                  op->action, crm_str(op->rsc), path);
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
     }
 
+    // The call is no longer pending
     CRM_LOG_ASSERT(pending == op->opaque->pending);
     services_set_op_pending(op, NULL);
-    services__finalize_async_op(op);
 
-    if(reply) {
+    // Finalize action
+    services__finalize_async_op(op);
+    if (reply != NULL) {
         dbus_message_unref(reply);
     }
 }
@@ -463,8 +517,7 @@ services__execute_upstart(svc_action_t *op)
         goto cleanup;
     }
 
-    if (!upstart_job_by_name(op->agent, &job, op->timeout)) {
-        crm_debug("Could not find Upstart job '%s' to %s", op->agent, action);
+    if (!object_path_for_job(op->agent, &job, op->timeout)) {
         if (pcmk__str_eq(action, "stop", pcmk__str_none)) {
             op->rc = PCMK_OCF_OK;
             op->status = PCMK_EXEC_DONE;
@@ -472,6 +525,13 @@ services__execute_upstart(svc_action_t *op)
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_EXEC_NOT_INSTALLED;
         }
+        goto cleanup;
+    }
+
+    if (job == NULL) {
+        // Shouldn't normally be possible -- maybe a memory error
+        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         goto cleanup;
     }
 
@@ -487,17 +547,21 @@ services__execute_upstart(svc_action_t *op)
         }
         state = pcmk_dbus_get_property(upstart_proxy, BUS_NAME, path,
                                        UPSTART_06_API ".Instance", "state",
-                                       op->synchronous? NULL : upstart_job_check,
+                                       op->synchronous? NULL : parse_status_result,
                                        op,
                                        op->synchronous? NULL : &pending,
                                        op->timeout);
         free(path);
 
         if (op->synchronous) {
-            upstart_job_check("state", state, op);
+            parse_status_result("state", state, op);
             free(state);
 
-        } else if (pending != NULL) { // Successfully initiated async op
+        } else if (pending == NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+
+        } else { // Successfully initiated async op
             free(job);
             services_set_op_pending(op, pending);
             services_add_inflight_op(op);
@@ -534,39 +598,41 @@ services__execute_upstart(svc_action_t *op)
     CRM_ASSERT(msg != NULL);
 
     dbus_message_iter_init_append (msg, &iter);
-
-    CRM_LOG_ASSERT(dbus_message_iter_open_container (&iter,
-                                                     DBUS_TYPE_ARRAY,
-                                                     DBUS_TYPE_STRING_AS_STRING,
-                                                     &array_iter));
-
-    CRM_LOG_ASSERT(dbus_message_iter_append_basic (&array_iter, DBUS_TYPE_STRING, &arg_env));
-    CRM_LOG_ASSERT(dbus_message_iter_close_container (&iter, &array_iter));
-
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait, DBUS_TYPE_INVALID));
+    CRM_LOG_ASSERT(dbus_message_iter_open_container(&iter,
+                                                    DBUS_TYPE_ARRAY,
+                                                    DBUS_TYPE_STRING_AS_STRING,
+                                                    &array_iter));
+    CRM_LOG_ASSERT(dbus_message_iter_append_basic(&array_iter,
+                                                  DBUS_TYPE_STRING, &arg_env));
+    CRM_LOG_ASSERT(dbus_message_iter_close_container(&iter, &array_iter));
+    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_BOOLEAN, &arg_wait,
+                                            DBUS_TYPE_INVALID));
 
     if (!(op->synchronous)) {
         DBusPendingCall *pending = pcmk_dbus_send(msg, upstart_proxy,
-                                                  upstart_async_dispatch, op,
+                                                  job_method_complete, op,
                                                   op->timeout);
 
-        if (pending != NULL) { // Successfully initiated async op
+        if (pending == NULL) {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+            op->status = PCMK_EXEC_ERROR;
+            goto cleanup;
+
+        } else { // Successfully initiated async op
             free(job);
             services_set_op_pending(op, pending);
             services_add_inflight_op(op);
             return pcmk_rc_ok;
         }
-        goto cleanup;
     }
+
+    // Synchronous call
 
     dbus_error_init(&error);
     reply = pcmk_dbus_send_recv(msg, upstart_proxy, &error, op->timeout);
 
     if (dbus_error_is_set(&error)) {
-        if (!upstart_mask_error(op, error.name)) {
-            crm_err("Could not issue %s for %s: %s (%s)",
-                    action, op->rsc, error.message, job);
-        }
+        set_result_from_method_error(op, &error);
         dbus_error_free(&error);
 
     } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
