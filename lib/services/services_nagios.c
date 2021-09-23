@@ -120,7 +120,6 @@ services__nagios2ocf(int exit_status)
 
         case NAGIOS_STATE_CRITICAL:
         case NAGIOS_STATE_UNKNOWN:
-        case NAGIOS_STATE_DEPENDENT:
         default:
             return PCMK_OCF_UNKNOWN_ERROR;
     }

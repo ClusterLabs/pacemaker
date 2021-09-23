@@ -88,10 +88,13 @@ enum nagios_exitcode {
     NAGIOS_STATE_WARNING   = 1,
     NAGIOS_STATE_CRITICAL  = 2,
     NAGIOS_STATE_UNKNOWN   = 3,
-    NAGIOS_STATE_DEPENDENT = 4,
 
     NAGIOS_INSUFFICIENT_PRIV = 100,
     NAGIOS_NOT_INSTALLED     = 101,
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    NAGIOS_STATE_DEPENDENT = 4, //! \deprecated Unused
+#endif
 };
 
 enum svc_action_flags {
