@@ -1800,8 +1800,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
 
     services_action_free(op);
-    /* See comment above about why we free params here. */
-    g_hash_table_destroy(params);
     return exit_code;
 }
 
