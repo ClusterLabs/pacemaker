@@ -2459,7 +2459,7 @@ stonith_action_str(const char *action)
  * \brief Parse a target name from one line of a target list string
  *
  * \param[in]     line    One line of a target list string
- * \parma[in]     len     String length of line
+ * \param[in]     len     String length of line
  * \param[in,out] output  List to add newly allocated target name to
  */
 static void

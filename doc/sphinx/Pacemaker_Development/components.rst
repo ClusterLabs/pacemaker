@@ -44,7 +44,7 @@ A fencing request can be initiated by the cluster or externally, using the
 libstonithd API.
 
 * The cluster always initiates fencing via
-  ``daemons/controld/controld_te_actions.c:te_fence_node()`` (which calls the
+  ``daemons/controld/controld_fencing.c:te_fence_node()`` (which calls the
   ``fence()`` API method). This occurs when a transition graph synapse contains
   a ``CRM_OP_FENCE`` XML operation.
 * The main external clients are ``stonith_admin`` and ``cts-fence-helper``.
@@ -100,10 +100,11 @@ or messaging layer callback, which calls:
   * ``handle_reply()`` which (for ``STONITH_OP_QUERY``) calls
 
     * ``process_remote_stonith_query()``, which allocates a new query result
-      structure, parses device information into it, and adds it to operation
-      object. It increments the number of replies received for this operation,
-      and compares it against the expected number of replies (i.e. the number
-      of active peers), and if this is the last expected reply, calls
+      structure, parses device information into it, and adds it to the
+      operation object. It increments the number of replies received for this
+      operation, and compares it against the expected number of replies (i.e.
+      the number of active peers), and if this is the last expected reply,
+      calls
 
       * ``call_remote_stonith()``, which calculates the timeout and sends
         ``STONITH_OP_FENCE`` request(s) to carry out the fencing. If the target

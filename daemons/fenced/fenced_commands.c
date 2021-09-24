@@ -1979,14 +1979,14 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->host = host ? strdup(host) : NULL;
     search->action = action ? strdup(action) : NULL;
     search->per_device_timeout = per_device_timeout;
-    /* We are guaranteed this many replies. Even if a device gets
-     * unregistered some how during the async search, we will get
-     * the correct number of replies. */
-    search->replies_needed = ndevices;
     search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
-    /* kick off the search */
+
+    /* We are guaranteed this many replies, even if a device is
+     * unregistered while the search is in progress.
+     */
+    search->replies_needed = ndevices;
 
     crm_debug("Searching %d device%s to see which can execute '%s' targeting %s",
               ndevices, pcmk__plural_s(ndevices),
@@ -2670,11 +2670,12 @@ void set_fencing_completed(remote_fencing_op_t * op)
 
 /*!
  * \internal
- * \brief Determine if we need to use an alternate node to
- * fence the target. If so return that node's uname
+ * \brief Look for alternate node needed if local node shouldn't fence target
  *
- * \retval NULL, no alternate host
- * \retval uname, uname of alternate host to use
+ * \param[in] target  Node that must be fenced
+ *
+ * \return Name of an alternate node that should fence \p target if any,
+ *         or NULL otherwise
  */
 static const char *
 check_alternate_host(const char *target)

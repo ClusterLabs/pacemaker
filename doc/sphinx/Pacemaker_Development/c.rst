@@ -475,6 +475,9 @@ API compatibility. However, there are exceptions:
 Enumerations
 ############
 
+* Enumerations should not have a ``typedef``, and do not require any naming
+  convention beyond what applies to all exposed symbols.
+
 * New values should usually be added to the end of public API enumerations,
   because the compiler will define the values to 0, 1, etc., in the order
   given, and inserting a value in the middle would change the numerical values
