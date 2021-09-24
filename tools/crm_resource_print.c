@@ -330,8 +330,11 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     }
 
     if (stdout_data || stderr_data) {
-        xmlNodePtr doc = string2xml(stdout_data);
+        xmlNodePtr doc = NULL;
 
+        if (stdout_data != NULL) {
+            doc = string2xml(stdout_data);
+        }
         if (doc != NULL) {
             out->output_xml(out, "command", stdout_data);
             xmlFreeNode(doc);
@@ -394,8 +397,11 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
                  type, rc);
 
     if (stdout_data || stderr_data) {
-        xmlNodePtr doc = string2xml(stdout_data);
+        xmlNodePtr doc = NULL;
 
+        if (stdout_data != NULL) {
+            doc = string2xml(stdout_data);
+        }
         if (doc != NULL) {
             out->output_xml(out, "command", stdout_data);
             xmlFreeNode(doc);
