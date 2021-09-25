@@ -802,6 +802,42 @@ services__authorization_error(svc_action_t *op)
 
 /*!
  * \internal
+ * \brief Return agent standard's exit status for "not configured"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "not configured" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__configuration_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_NOT_CONFIGURED;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_STATE_UNKNOWN;
+    }
+#endif
+
+    return PCMK_OCF_NOT_CONFIGURED;
+}
+
+
+/*!
+ * \internal
  * \brief Set operation rc and status per errno from stat(), fork() or execvp()
  *
  * \param[in,out] op     Operation to set rc and status for
@@ -876,7 +912,7 @@ action_launch_child(svc_action_t *op)
         } else {
             crm_err("failed to get secrets for %s, "
                     "considering resource not configured", op->rsc);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            _exit(services__configuration_error(op));
         }
     }
 #endif
@@ -889,20 +925,20 @@ action_launch_child(svc_action_t *op)
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
             crm_perror(LOG_ERR, "Could not set child group to %d", op->opaque->gid);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            _exit(services__authorization_error(op));
         }
 
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
             crm_perror(LOG_ERR, "Could not set child groups");
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            _exit(services__authorization_error(op));
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
             crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            _exit(services__authorization_error(op));
         }
     }
 
