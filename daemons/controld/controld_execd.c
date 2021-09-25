@@ -2666,6 +2666,11 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
                                    pcmk_exec_status_str(op->op_status));
     }
 
+    if ((op->exit_reason != NULL)
+        && ((op->op_status != PCMK_EXEC_DONE) || (op->rc != PCMK_OCF_OK))) {
+        g_string_append_printf(str, " (%s)", op->exit_reason);
+    }
+
     g_string_append_printf(str, " " CRM_XS " call=%d key=%s confirmed=%s",
                            op->call_id, op_key, pcmk__btoa(confirmed));
     if (op->op_status == PCMK_EXEC_DONE) {
