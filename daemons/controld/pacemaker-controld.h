@@ -34,5 +34,6 @@ void controld_remove_voter(const char *uname);
 void controld_election_fini(void);
 void controld_set_election_period(const char *value);
 void controld_stop_election_timer(void);
+void controld_disconnect_cib_manager(void);
 
 #endif
