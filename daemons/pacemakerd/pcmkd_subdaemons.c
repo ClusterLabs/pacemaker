@@ -106,7 +106,7 @@ static bool global_keep_tracking = false;
 static gboolean check_active_before_startup_processes(gpointer user_data);
 static int child_liveness(pcmk_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
-static gboolean start_child(pcmk_child_t * child);
+static int start_child(pcmk_child_t * child);
 static void pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
 static void pcmk_process_exit(pcmk_child_t * child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
@@ -343,7 +343,8 @@ pcmk_shutdown_worker(gpointer user_data)
         it shall hand over these descriptors here if/once they are successfully
         pre-opened in (presumably) child_liveness(), to avoid any remaining
         room for races */
-static gboolean
+ // \return Standard Pacemaker return code
+static int
 start_child(pcmk_child_t * child)
 {
     uid_t uid = 0;
@@ -357,7 +358,7 @@ start_child(pcmk_child_t * child)
 
     if (child->command == NULL) {
         crm_info("Nothing to do for child \"%s\"", child->name);
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
@@ -384,7 +385,7 @@ start_child(pcmk_child_t * child)
     if (child->uid) {
         if (crm_user_lookup(child->uid, &uid, &gid) < 0) {
             crm_err("Invalid user (%s) for %s: not found", child->uid, child->name);
-            return FALSE;
+            return EACCES;
         }
         crm_info("Using uid=%u and group=%u for process %s", uid, gid, child->name);
     }
@@ -399,7 +400,7 @@ start_child(pcmk_child_t * child)
         crm_info("Forked child %lld for process %s%s",
                  (long long) child->pid, child->name,
                  use_valgrind ? " (valgrind enabled: " VALGRIND_BIN ")" : "");
-        return TRUE;
+        return pcmk_rc_ok;
 
     } else {
         /* Start a new session */
@@ -464,7 +465,7 @@ start_child(pcmk_child_t * child)
         crm_crit("Could not execute %s: %s", child->command, strerror(errno));
         crm_exit(CRM_EX_FATAL);
     }
-    return TRUE;                /* never reached */
+    return pcmk_rc_ok;          /* never reached */
 }
 
 /*!
