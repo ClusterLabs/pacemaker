@@ -28,18 +28,38 @@ typedef enum {
 typedef struct te_timer_s crm_action_timer_t;
 typedef struct crm_graph_s crm_graph_t;
 
+enum pcmk__synapse_flags {
+    pcmk__synapse_ready       = (1 << 0),
+    pcmk__synapse_failed      = (1 << 1),
+    pcmk__synapse_executed    = (1 << 2),
+    pcmk__synapse_confirmed   = (1 << 3),
+};
+
 typedef struct synapse_s {
     int id;
     int priority;
 
-    gboolean ready;
-    gboolean failed;
-    gboolean executed;
-    gboolean confirmed;
+    uint32_t flags; // Group of pcmk__synapse_flags
 
     GList *actions;           /* crm_action_t* */
     GList *inputs;            /* crm_action_t* */
 } synapse_t;
+
+const char *synapse_state_str(synapse_t *synapse);
+
+#define pcmk__set_synapse_flags(synapse, flags_to_set) do {             \
+        (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
+            LOG_TRACE,                                                  \
+            "Synapse", "synapse",                       \
+            (synapse)->flags, (flags_to_set), #flags_to_set);           \
+    } while (0)
+
+#define pcmk__clear_synapse_flags(synapse, flags_to_clear) do {         \
+        (synapse)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
+            LOG_TRACE,                                                  \
+            "Synapse", "synapse",                      \
+            (synapse)->flags, (flags_to_clear), #flags_to_clear);       \
+    } while (0)
 
 typedef struct crm_action_s {
     int id;

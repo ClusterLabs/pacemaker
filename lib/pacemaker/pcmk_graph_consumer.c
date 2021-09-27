@@ -37,17 +37,17 @@
  * \param[in] action_id  ID of an action that completed
  *
  * \note The only substantial effect here is confirming synapse inputs.
- *       should_fire_synapse() will recalculate synapse->ready, so the only
- *       thing that uses the synapse->ready value from here is
+ *       should_fire_synapse() will recalculate pcmk__synapse_ready, so the only
+ *       thing that uses the pcmk__synapse_ready from here is
  *       synapse_state_str().
  */
 static void
 update_synapse_ready(synapse_t *synapse, int action_id)
 {
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return; // All inputs have already been confirmed
     }
-    synapse->ready = TRUE; // Presume ready until proven otherwise
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready); // Presume ready until proven otherwise
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
@@ -57,12 +57,12 @@ update_synapse_ready(synapse_t *synapse, int action_id)
             prereq->confirmed = TRUE;
 
         } else if (!(prereq->confirmed)) {
-            synapse->ready = FALSE;
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             crm_trace("Synapse %d still not ready after action %d",
                       synapse->id, action_id);
         }
     }
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         crm_trace("Synapse %d is now ready to execute", synapse->id);
     }
 }
@@ -94,9 +94,9 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
         }
     }
 
-    if (all_confirmed && !(synapse->confirmed)) {
+    if (all_confirmed && !(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
         crm_trace("Confirmed synapse %d", synapse->id);
-        synapse->confirmed = TRUE;
+        pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
     }
 }
 
@@ -113,10 +113,10 @@ pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed || synapse->failed) {
+        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
 
-        } else if (synapse->executed) {
+        } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             update_synapse_confirmed(synapse, action->id);
 
         } else if (!(action->failed) || (synapse->priority == INFINITY)) {
@@ -169,24 +169,24 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
     GList *lpc = NULL;
 
-    synapse->ready = TRUE;
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready);
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
         if (!(prereq->confirmed)) {
             crm_trace("Input %d for synapse %d not yet confirmed",
                       prereq->id, synapse->id);
-            synapse->ready = FALSE;
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
         } else if (prereq->failed && !(prereq->can_fail)) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
-            synapse->ready = FALSE;
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
         }
     }
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         crm_trace("Synapse %d is ready to execute", synapse->id);
     } else {
         return false;
@@ -270,14 +270,14 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 static int
 fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
-    synapse->executed = TRUE;
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
         if (!initiate_action(graph, action)) {
             crm_err("Failed initiating <%s id=%d> in synapse %d",
                     crm_element_name(action->xml), action->id, synapse->id);
-            synapse->confirmed = TRUE;
+            pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
             action->confirmed = TRUE;
             action->failed = TRUE;
             return pcmk_rc_error;
@@ -365,10 +365,10 @@ pcmk__execute_graph(crm_graph_t *graph)
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed) {
+        if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             graph->completed++;
 
-        } else if (!(synapse->failed) && synapse->executed) {
+        } else if (!(pcmk_is_set(synapse->flags, pcmk__synapse_failed)) && pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             graph->pending++;
         }
     }
@@ -386,11 +386,11 @@ pcmk__execute_graph(crm_graph_t *graph)
                       graph->batch_limit);
             break;
 
-        } else if (synapse->failed) {
+        } else if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {
             graph->skipped++;
             continue;
 
-        } else if (synapse->confirmed || synapse->executed) {
+        } else if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_executed)) {
             continue; // Already handled
 
         } else if (should_fire_synapse(graph, synapse)) {
@@ -403,7 +403,7 @@ pcmk__execute_graph(crm_graph_t *graph)
                 graph->fired--;
             }
 
-            if (!(synapse->confirmed)) {
+            if (!(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
                 graph->pending++;
             }
 
