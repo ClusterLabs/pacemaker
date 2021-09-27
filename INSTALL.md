@@ -16,6 +16,7 @@
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 | 0.17.0 or later | libqb-devel        | libqb-devel        | libqb-dev      |
 | 3.4 or later    | python3            | python3            | python3        |
+| 0.18  or later  | gettext-devel      | gettext-devel      | gettext        |
 
 Also: GNU make
 

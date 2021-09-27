@@ -248,6 +248,27 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
+
+dnl --disable-* options: internationalization
+
+AC_ARG_ENABLE([nls],
+    [AS_HELP_STRING([--disable-nls],
+        [Disable use of internationalization modules @<:@no@:>@])],
+        [disable_nls="yes"],
+        [disable_nls="no"]
+)
+yes_no_try "$disable_nls" "no"
+disable_nls=$?
+
+# Check for disable_nls
+AS_IF([test "${disable_nls}" = $DISABLED],
+      [
+          AC_DEFINE([ENABLE_NLS],[1],[Define to 1 if nls should be enabled])
+      ])
+
+AM_CONDITIONAL([NLS], [test "${disable_nls}" = "$DISABLED"])
+
+
 dnl --with-* options: basic parameters
 
 dnl This argument is defined via an M4 macro so default can be a variable
@@ -728,6 +749,10 @@ case "$host_os" in
         CFLAGS="$CFLAGS -I${prefix}/include"
         ;;
 esac
+
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION(0.18)
+
 
 AC_SUBST(INIT_EXT)
 AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
@@ -1345,6 +1370,12 @@ AC_SUBST(CRM_RSCTMP_DIR)
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
+
+if test x"${localedir}" =  x"\${datarootdir}/locale" || test x"${localedir}" = x""; then
+    localedir="/usr/share/locale"
+fi
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
+
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 

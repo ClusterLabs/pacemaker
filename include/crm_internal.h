@@ -43,6 +43,37 @@
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/internal.h>
 
+#  include <locale.h>
+#  include <libintl.h>
+#  define PACKAGE_NAME "pacemaker"
+
+#ifdef ENABLE_NLS
+#  define _(x) gettext(x)
+#else
+#  define _(x) x
+#endif
+
+static inline gboolean is_zh_language(void)
+{
+    FILE *fp = NULL;
+    char data[128] = {'0'};
+    char *p = NULL;
+    char* ret = NULL;
+    fp = fopen("/etc/locale.conf", "r");
+    if (fp == NULL){
+        return false;
+    }
+    ret = fgets(data, sizeof(data), fp);
+    if (ret == NULL){
+        return false;
+    }
+    p = strstr(data, "zh_CN");
+    if (p != NULL) {
+    	return true;
+    }
+    fclose(fp);
+    return false;
+}
 
 /*
  * XML attribute names used only by internal code

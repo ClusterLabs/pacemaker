@@ -23,7 +23,10 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  m4/REQUIRE_HEADER.m4	\
 			  m4/version.m4		\
 			  rpm/rpmlintrc		\
-			  rpm/pacemaker.spec.in
+			  rpm/pacemaker.spec.in \
+			  po/pacemaker.po       \
+                          po/pacemaker_en.po    \
+                          po/Makevars/Makevars.template
 
 DISTCLEANFILES		= config.status
 
@@ -71,6 +74,14 @@ DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
 ## owned by hacluster:haclient, mode 0770
 DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
 		  $(CRM_LOG_DIR)
+
+if NLS
+install: install-recursive
+	msgfmt po/pacemaker.po -o ${localedir}/zh_CN/LC_MESSAGES/pacemaker.mo
+	msgfmt po/pacemaker_en.po -o ${localedir}/en_US/LC_MESSAGES/pacemaker.mo
+
+endif
+
 
 core:
 	@echo "Building only core components and tests: $(CORE)"

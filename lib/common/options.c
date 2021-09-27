@@ -565,7 +565,7 @@ pcmk__print_option_metadata(const char *name, const char *version,
             "  <version>%s</version>\n"
             "  <longdesc lang=\"en\">%s</longdesc>\n"
             "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-            "  <parameters>\n", name, version, desc_long, desc_short);
+            "  <parameters>\n", name, version, _(desc_long), _(desc_short));
 
     for (lpc = 0; lpc < len; lpc++) {
         if ((option_list[lpc].description_long == NULL)
@@ -578,14 +578,14 @@ pcmk__print_option_metadata(const char *name, const char *version,
                 "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
                 "    </parameter>\n",
                 option_list[lpc].name,
-                option_list[lpc].description_short,
+                _(option_list[lpc].description_short),
                 option_list[lpc].type,
                 option_list[lpc].default_value,
                 option_list[lpc].description_long?
-                    option_list[lpc].description_long :
-                    option_list[lpc].description_short,
-                (option_list[lpc].values? "  Allowed values: " : ""),
-                (option_list[lpc].values? option_list[lpc].values : ""));
+                    _(option_list[lpc].description_long) :
+                    _(option_list[lpc].description_short),
+                (option_list[lpc].values? _("  Allowed values: ") : ""),
+                (option_list[lpc].values? _(option_list[lpc].values) : ""));
     }
     fprintf(stdout, "  </parameters>\n</resource-agent>\n");
 }

@@ -94,6 +94,20 @@ main(int argc, char **argv)
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
 
+#ifdef ENABLE_NLS
+
+    if( is_zh_language() ){
+         setlocale(LC_MESSAGES, "zh_CN.UTF-8");
+    }else{
+         setlocale(LC_MESSAGES, "en_US.UTF-8");
+    }
+
+    bindtextdomain(PACKAGE_NAME, PCMK__LOCALE_DIR);
+    textdomain(PACKAGE_NAME);
+    bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
+
+#endif
+
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "daemon for managing the configuration "
