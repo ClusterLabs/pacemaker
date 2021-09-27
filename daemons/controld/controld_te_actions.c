@@ -238,7 +238,7 @@ controld_record_action_timeout(crm_action_t *action)
      * to the executor.
      */
     op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
-                                       PCMK_OCF_TIMEOUT,
+                                       PCMK_OCF_UNKNOWN_ERROR,
                                        "Cluster communication timeout "
                                        "(no response from executor)");
     op->call_id = -1;

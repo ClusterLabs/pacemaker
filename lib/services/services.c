@@ -147,6 +147,32 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
+/*!
+ * \internal
+ * \brief Create a simple svc_action_t instance
+ *
+ * \return Newly allocated instance (or NULL if not enough memory)
+ */
+static svc_action_t *
+new_action(void)
+{
+    svc_action_t *op = calloc(1, sizeof(svc_action_t));
+
+    if (op == NULL) {
+        return NULL;
+    }
+
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    if (op->opaque == NULL) {
+        free(op);
+        return NULL;
+    }
+
+    // Initialize result
+    op->rc = PCMK_OCF_UNKNOWN;
+    op->status = PCMK_EXEC_UNKNOWN;
+    return op;
+}
 
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
@@ -156,6 +182,15 @@ services__create_resource_action(const char *name, const char *standard,
 {
     svc_action_t *op = NULL;
     uint32_t ra_caps = 0;
+
+    op = new_action();
+    if (op == NULL) {
+        crm_crit("Cannot prepare action: %s", strerror(ENOMEM));
+        if (params != NULL) {
+            g_hash_table_destroy(params);
+        }
+        return NULL;
+    }
 
     /*
      * Do some up front sanity checks before we go off and
@@ -193,8 +228,6 @@ services__create_resource_action(const char *name, const char *standard,
      * Sanity checks passed, proceed!
      */
 
-    op = calloc(1, sizeof(svc_action_t));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
     op->interval_ms = interval_ms;
     op->timeout = timeout;
@@ -340,6 +373,10 @@ resources_action_create(const char *name, const char *standard,
         services_action_free(op);
         return NULL;
     } else {
+        // Preserve public API backward compatibility
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
         return op;
     }
 }
@@ -347,11 +384,10 @@ resources_action_create(const char *name, const char *standard,
 svc_action_t *
 services_action_create_generic(const char *exec, const char *args[])
 {
-    svc_action_t *op;
+    svc_action_t *op = new_action();
     unsigned int cur_arg;
 
-    op = calloc(1, sizeof(*op));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    CRM_ASSERT(op != NULL);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
@@ -388,7 +424,6 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    CRM_ASSERT(action);
     action->timeout = timeout;
     action->id = strdup(id);
     action->params = params;
@@ -606,7 +641,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* If the op has a PID, it's an in-flight child process, so kill it.
      *
      * Whether the kill succeeds or fails, the main loop will send the op to
-     * operation_finished() (and thus services__finalize_async_op()) when the
+     * async_action_complete() (and thus services__finalize_async_op()) when the
      * process goes away.
      */
     if (op->pid != 0) {
@@ -866,7 +901,6 @@ handle_blocked_ops(void)
         }
         executed_ops = g_list_append(executed_ops, op);
         if (execute_action(op) != pcmk_rc_ok) {
-            op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
             services__finalize_async_op(op);
@@ -882,43 +916,58 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
-static gboolean
-action_get_metadata(svc_action_t *op)
+/*!
+ * \internal
+ * \brief Execute a meta-data action appropriately to standard
+ *
+ * \param[in] op  Meta-data action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_metadata_action(svc_action_t *op)
 {
     const char *class = op->standard;
 
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        return EINVAL;
     }
 
     if (class == NULL) {
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_FATAL;
+        return EINVAL;
     }
 
     if (!strcmp(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(op->agent);
     }
-
     if (class == NULL) {
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
-        return FALSE;
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR_HARD;
+        return EINVAL;
     }
 
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
-        return (services__get_lsb_metadata(op->agent, &op->stdout_data) >= 0);
+        return pcmk_legacy2rc(services__get_lsb_metadata(op->agent,
+                                                         &op->stdout_data));
     }
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
+        return pcmk_legacy2rc(services__get_nagios_metadata(op->agent,
+                                                            &op->stdout_data));
     }
 #endif
 
-    return execute_action(op) == pcmk_rc_ok;
+    return execute_action(op);
 }
 
 gboolean
@@ -941,7 +990,7 @@ services_action_sync(svc_action_t * op)
          * services_action_async() doesn't treat meta-data actions specially, so
          * it will result in an error for classes that don't support the action.
          */
-        rc = action_get_metadata(op);
+        rc = (execute_metadata_action(op) == pcmk_rc_ok);
     } else {
         rc = (execute_action(op) == pcmk_rc_ok);
     }

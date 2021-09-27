@@ -834,6 +834,11 @@ internal_stonith_action_execute(stonith_action_t * action)
     static int stonith_sequence = 0;
     char *buffer = NULL;
 
+    if ((action == NULL) || (action->action == NULL) || (action->args == NULL)
+        || (action->agent == NULL)) {
+        return -EPROTO;
+    }
+
     if (!action->tries) {
         action->initial_start_time = time(NULL);
     }
@@ -844,9 +849,6 @@ internal_stonith_action_execute(stonith_action_t * action)
                  action->tries, action->agent, action->action, action->remaining_timeout);
         is_retry = 1;
     }
-
-    if (action->args == NULL || action->agent == NULL)
-        goto fail;
 
     buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s",
                                basename(action->agent));
@@ -877,34 +879,27 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     if (action->async) {
         /* async */
-        if(services_action_async_fork_notify(svc_action,
-            &stonith_action_async_done,
-            &stonith_action_async_forked) == FALSE) {
-            services_action_free(svc_action);
-            svc_action = NULL;
-        } else {
-            rc = 0;
+        if (services_action_async_fork_notify(svc_action,
+                                              &stonith_action_async_done,
+                                              &stonith_action_async_forked)) {
+            return pcmk_ok;
         }
 
-    } else {
-        /* sync */
-        if (services_action_sync(svc_action)) {
-            rc = 0;
-            action->rc = svc_action_to_errno(svc_action);
-            action->output = svc_action->stdout_data;
-            svc_action->stdout_data = NULL;
-            action->error = svc_action->stderr_data;
-            svc_action->stderr_data = NULL;
-        } else {
-            action->rc = -ECONNABORTED;
-            rc = action->rc;
-        }
+    } else if (services_action_sync(svc_action)) { // sync success
+        rc = pcmk_ok;
+        action->rc = svc_action_to_errno(svc_action);
+        action->output = svc_action->stdout_data;
+        svc_action->stdout_data = NULL;
+        action->error = svc_action->stderr_data;
+        svc_action->stderr_data = NULL;
 
-        svc_action->params = NULL;
-        services_action_free(svc_action);
+    } else { // sync failure
+        action->rc = -ECONNABORTED;
+        rc = action->rc;
     }
 
-  fail:
+    svc_action->params = NULL;
+    services_action_free(svc_action);
     return rc;
 }
 

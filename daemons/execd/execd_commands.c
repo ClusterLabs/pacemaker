@@ -770,11 +770,6 @@ stonith2uniform_rc(const char *action, int rc)
             rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
             break;
 
-        case -ETIME:
-        case -ETIMEDOUT:
-            rc = PCMK_OCF_TIMEOUT;
-            break;
-
         default:
             rc = PCMK_OCF_UNKNOWN_ERROR;
             break;
@@ -1060,7 +1055,7 @@ action_complete(svc_action_t * action)
                        cmd->rsc_id,
                        (cmd->real_action? cmd->real_action : cmd->action),
                        cmd->result.exit_status, time_sum, timeout_left);
-            pcmk__set_result(&(cmd->result), PCMK_OCF_TIMEOUT,
+            pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_TIMEOUT,
                              "Investigate reason for timeout, and adjust "
                              "configured operation timeout if necessary");
@@ -1403,7 +1398,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         goto exec_done;
     }
 
-    if (action->rc != PCMK_OCF_OK) {
+    if (action->rc != PCMK_OCF_UNKNOWN) {
         pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
         services_action_free(action);
         goto exec_done;
@@ -1411,23 +1406,12 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     action->cb_data = cmd;
 
-    /* 'cmd' may not be valid after this point if
-     * services_action_async() returned TRUE
-     *
-     * Upstart and systemd both synchronously determine monitor/status
-     * results and call action_complete (which may free 'cmd') if necessary.
-     */
     if (services_action_async(action, action_complete)) {
+        /* When services_action_async() returns TRUE, the callback might have
+         * been called -- in this case action_complete(), which might free cmd,
+         * so cmd cannot be used here.
+         */
         return TRUE;
-    }
-
-    /* Asynchronous execution could not be initiated. services_action_async()
-     * should have already set an appropriate execution status, but as a
-     * fail-safe for cases where we've neglected to do so, make sure this is
-     * considered an execution error.
-     */
-    if (action->status == PCMK_EXEC_DONE) {
-        action->status = PCMK_EXEC_ERROR;
     }
 
     pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);

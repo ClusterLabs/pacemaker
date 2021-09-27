@@ -590,13 +590,27 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous child process
+ *
+ * \param[in] p         Child process that completed
+ * \param[in] pid       Process ID of child
+ * \param[in] core      (unused)
+ * \param[in] signo     Signal that interrupted child, if any
+ * \param[in] exitcode  Exit status of child process
+ */
 static void
-operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
+                      int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
 
     mainloop_clear_child_userdata(p);
-    CRM_ASSERT(op->pid == pid);
+    CRM_CHECK(op->pid == pid,
+              op->rc = services__generic_error(op);
+              op->status = PCMK_EXEC_ERROR;
+              return);
 
     /* Depending on the priority the mainloop gives the stdout and stderr
      * file descriptors, this function could be called before everything has
@@ -615,7 +629,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
         op->status = PCMK_EXEC_TIMEOUT;
-        op->rc = PCMK_OCF_TIMEOUT;
+        op->rc = services__generic_error(op);
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
@@ -639,6 +653,111 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 
 /*!
  * \internal
+ * \brief Return agent standard's exit status for "generic error"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for errors in general.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__generic_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_UNKNOWN;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_STATE_UNKNOWN;
+    }
+#endif
+
+    return PCMK_OCF_UNKNOWN_ERROR;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "not installed"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "not installed" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__not_installed_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_NOT_INSTALLED;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_NOT_INSTALLED;
+    }
+#endif
+
+    return PCMK_OCF_NOT_INSTALLED;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "insufficient privileges"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "insufficient privileges" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__authorization_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_INSUFFICIENT_PRIV;
+    }
+#endif
+
+    return PCMK_OCF_INSUFFICIENT_PRIV;
+}
+
+/*!
+ * \internal
  * \brief Set operation rc and status per errno from stat(), fork() or execvp()
  *
  * \param[in,out] op     Operation to set rc and status for
@@ -649,45 +768,22 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
-    int rc_not_installed, rc_insufficient_priv, rc_exec_error;
-
-    /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
-        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
-
-        rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        rc_not_installed = NAGIOS_NOT_INSTALLED;
-        rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-#endif
-
-    } else {
-        rc_not_installed = PCMK_OCF_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_OCF_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-    }
-
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            op->rc = rc_not_installed;
+            op->rc = services__not_installed_error(op);
             op->status = PCMK_EXEC_NOT_INSTALLED;
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            op->rc = rc_insufficient_priv;
+            op->rc = services__authorization_error(op);
             op->status = PCMK_EXEC_ERROR;
             break;
         default:
-            op->rc = rc_exec_error;
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_ERROR;
     }
 }
@@ -775,12 +871,19 @@ action_launch_child(svc_action_t *op)
     _exit(op->rc);
 }
 
+/*!
+ * \internal
+ * \brief Wait for synchronous action to complete, and set its result
+ *
+ * \param[in] op    Action to wait for
+ * \param[in] data  Child signal data
+ */
 static void
-action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
+wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 {
     int status = 0;
     int timeout = op->timeout;
-    time_t start = -1;
+    time_t start = time(NULL);
     struct pollfd fds[3];
     int wait_rc = 0;
 
@@ -797,7 +900,6 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     fds[2].revents = 0;
 
     crm_trace("Waiting for %s[%d]", op->id, op->pid);
-    start = time(NULL);
     do {
         int poll_rc = poll(fds, 3, timeout);
 
@@ -843,26 +945,30 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
 
     crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
     if (wait_rc <= 0) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
 
-        if (op->timeout > 0 && timeout <= 0) {
+        if ((op->timeout > 0) && (timeout <= 0)) {
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_TIMEOUT;
             crm_warn("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
+            op->rc = services__generic_error(op);
             op->status = PCMK_EXEC_ERROR;
         }
 
         /* If only child hasn't been successfully waited for, yet.
            This is to limit killing wrong target a bit more. */
-        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+        if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
                 crm_warn("Could not kill rogue child %s[%d]: %s",
                          op->id, op->pid, pcmk_strerror(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
-            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
+            while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
+                   && (errno == EINTR)) {
+                /* keep waiting */;
+            }
         }
 
     } else if (WIFEXITED(status)) {
@@ -873,15 +979,22 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
+        op->rc = services__generic_error(op);
         op->status = PCMK_EXEC_ERROR;
         crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                 op->id, op->pid, strsignal(signo), signo);
-    }
+
 #ifdef WCOREDUMP
-    if (WCOREDUMP(status)) {
-        crm_err("%s[%d] dumped core", op->id, op->pid);
-    }
+        if (WCOREDUMP(status)) {
+            crm_warn("%s[%d] dumped core", op->id, op->pid);
+        }
 #endif
+
+    } else {
+        // Shouldn't be possible to get here
+        op->rc = services__generic_error(op);
+        op->status = PCMK_EXEC_ERROR;
+    }
 
     finish_op_output(op, true);
     finish_op_output(op, false);
@@ -962,7 +1075,7 @@ services__execute_file(svc_action_t *op)
         close_pipe(stdout_fd);
         close_pipe(stderr_fd);
         sigchld_cleanup(&data);
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        op->rc = services__generic_error(op);
         op->status = PCMK_EXEC_ERROR;
         goto done;
     }
@@ -1069,7 +1182,7 @@ services__execute_file(svc_action_t *op)
     }
 
     if (op->synchronous) {
-        action_synced_wait(op, &data);
+        wait_for_sync_result(op, &data);
         sigchld_cleanup(&data);
         goto done;
     }
@@ -1077,7 +1190,7 @@ services__execute_file(svc_action_t *op)
     crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
     mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
                                   pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
-                                  operation_finished);
+                                  async_action_complete);
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,

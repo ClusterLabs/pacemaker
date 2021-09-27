@@ -26,7 +26,8 @@ extern "C" {
  * \param[in] timeout     Consider action failed if it does not complete in this many milliseconds
  * \param[in] params      Action parameters
  *
- * \return newly allocated action instance
+ * \return NULL if not enough memory, otherwise newly allocated action instance
+ *         (if its rc member is not PCMK_OCF_UNKNOWN, the action is invalid)
  *
  * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
  * \note The caller is responsible for freeing the return value using
