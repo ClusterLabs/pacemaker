@@ -117,7 +117,7 @@ check_active_before_startup_processes(gpointer user_data)
 {
     gboolean keep_tracking = FALSE;
 
-    for (int i = 0; i < SIZEOF(pcmk_children); i++) {
+    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
         if (!pcmk_children[i].active_before_startup) {
             /* we are already tracking it as a child process. */
             continue;
@@ -259,10 +259,10 @@ pcmk_process_exit(pcmk_child_t * child)
 static gboolean
 pcmk_shutdown_worker(gpointer user_data)
 {
-    static int phase = SIZEOF(pcmk_children) - 1;
+    static int phase = PCMK__NELEM(pcmk_children) - 1;
     static time_t next_log = 0;
 
-    if (phase == SIZEOF(pcmk_children) - 1) {
+    if (phase == PCMK__NELEM(pcmk_children) - 1) {
         crm_notice("Shutting down Pacemaker");
         pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_SHUTTINGDOWN;
     }
@@ -633,7 +633,7 @@ find_and_track_existing_processes(void)
 
     for (rounds = 1; rounds <= WAIT_TRIES; rounds++) {
         wait_in_progress = false;
-        for (i = 0; i < SIZEOF(pcmk_children); i++) {
+        for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
 
             if ((pcmk_children[i].endpoint == NULL)
                 || (pcmk_children[i].respawn_count < 0)) {
@@ -725,7 +725,7 @@ find_and_track_existing_processes(void)
         }
         pcmk__sleep_ms(250); // Wait a bit for changes to possibly happen
     }
-    for (i = 0; i < SIZEOF(pcmk_children); i++) {
+    for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
@@ -740,7 +740,7 @@ gboolean
 init_children_processes(void *user_data)
 {
     /* start any children that have not been detected */
-    for (int i = 0; i < SIZEOF(pcmk_children); i++) {
+    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
         if (pcmk_children[i].pid != 0) {
             /* we are already tracking it */
             continue;

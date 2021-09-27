@@ -11,7 +11,6 @@
 
 #include <stdint.h>
 
-#define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 #define MAX_RESPAWN		100
 
 extern GMainLoop *mainloop;
