@@ -274,6 +274,15 @@
             <optional>
                 <attribute name="message"> <text/> </attribute>
             </optional>
+            <optional>
+                <attribute name="execution_code"> <data type="integer" /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="execution_message"> <text/> </attribute>
+            </optional>
+            <optional>
+                <attribute name="reason"> <text/> </attribute>
+            </optional>
         </element>
     </define>
 
