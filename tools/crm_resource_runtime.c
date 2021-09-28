@@ -1734,6 +1734,29 @@ set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
     setenv("OCF_TRACE_FILE", "/dev/stderr", 0);
 }
 
+/*!
+ * \internal
+ * \brief Apply command-line overrides to resource parameters
+ *
+ * \param[in] params     Parameters to be passed to agent
+ * \param[in] overrides  Parameters to override (or NULL if none)
+ */
+static void
+apply_overrides(GHashTable *params, GHashTable *overrides)
+{
+    if (overrides != NULL) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name,
+                                      (gpointer *) &value)) {
+            g_hash_table_replace(params, strdup(name), strdup(value));
+        }
+    }
+}
+
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
@@ -1753,6 +1776,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
 
     set_agent_environment(params, timeout_ms, check_level, resource_verbose);
+    apply_overrides(params, override_hash);
 
     class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
                 rsc_class : resources_find_service_class(rsc_type);
@@ -1785,17 +1809,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                  action, rsc_name, rsc_class, (rsc_prov? ":" : ""),
                  (rsc_prov? rsc_prov : ""), rsc_type, reason);
         crm_exit((op == NULL)? CRM_EX_OSERR : op->rc);
-    }
-
-    if (override_hash) {
-        GHashTableIter iter;
-        char *name = NULL;
-        char *value = NULL;
-
-        g_hash_table_iter_init(&iter, override_hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            g_hash_table_replace(op->params, strdup(name), strdup(value));
-        }
     }
 
     if (services_action_sync(op)) {
