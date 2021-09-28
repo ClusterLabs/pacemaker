@@ -1692,6 +1692,48 @@ get_action(const char *rsc_action) {
     return action;
 }
 
+/*!
+ * \brief Set up environment variables as expected by resource agents
+ *
+ * When the cluster executes resource agents, it adds certain environment
+ * variables (directly or via resource meta-attributes) expected by some
+ * resource agents. Add the essential ones that many resource agents expect, so
+ * the behavior is the same for command-line execution.
+ *
+ * \param[in] params       Resource parameters that will be passed to agent
+ * \param[in] timeout_ms   Action timeout (in milliseconds)
+ * \param[in] check_level  OCF check level
+ * \param[in] verbosity    Verbosity level
+ */
+static void
+set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
+                      int verbosity)
+{
+    g_hash_table_insert(params, strdup("CRM_meta_timeout"),
+                        crm_strdup_printf("%d", timeout_ms));
+
+    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION),
+                        strdup(CRM_FEATURE_SET));
+
+    if (check_level >= 0) {
+        char *level = crm_strdup_printf("%d", check_level);
+
+        setenv("OCF_CHECK_LEVEL", level, 1);
+        free(level);
+    }
+
+    setenv("HA_debug", (verbosity > 0)? "1" : "0", 1);
+    if (verbosity > 1) {
+        setenv("OCF_TRACE_RA", "1", 1);
+    }
+
+    /* A resource agent using the standard ocf-shellfuncs library will not print
+     * messages to stderr if it doesn't have a controlling terminal (e.g. if
+     * crm_resource is called via script or ssh). This forces it to do so.
+     */
+    setenv("OCF_TRACE_FILE", "/dev/stderr", 0);
+}
+
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
@@ -1704,6 +1746,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     const char *action = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
+
+    // If no timeout was provided, use the same default as the cluster
+    if (timeout_ms == 0) {
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    }
+
+    set_agent_environment(params, timeout_ms, check_level, resource_verbose);
 
     class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
                 rsc_class : resources_find_service_class(rsc_type);
@@ -1721,24 +1770,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
     action = get_action(rsc_action);
 
-    /* If no timeout was provided, grab the default. */
-    if (timeout_ms == 0) {
-        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
-    }
-
-    /* add meta_timeout env needed by some resource agents */
-    g_hash_table_insert(params, strdup("CRM_meta_timeout"),
-                        crm_strdup_printf("%d", timeout_ms));
-
-    /* add crm_feature_set env needed by some resource agents */
-    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
-
-    if (check_level >= 0) {
-        char *level = crm_strdup_printf("%d", check_level);
-        setenv("OCF_CHECK_LEVEL", level, 1);
-        free(level);
-    }
-
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
                                           0, timeout_ms, params, 0);
@@ -1755,17 +1786,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                  (rsc_prov? rsc_prov : ""), rsc_type, reason);
         crm_exit((op == NULL)? CRM_EX_OSERR : op->rc);
     }
-
-    setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
-    if(resource_verbose > 1) {
-        setenv("OCF_TRACE_RA", "1", 1);
-    }
-
-    /* A resource agent using the standard ocf-shellfuncs library will not print
-     * messages to stderr if it doesn't have a controlling terminal (e.g. if
-     * crm_resource is called via script or ssh). This forces it to do so.
-     */
-    setenv("OCF_TRACE_FILE", "/dev/stderr", 0);
 
     if (override_hash) {
         GHashTableIter iter;
