@@ -1766,7 +1766,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  int check_level)
 {
     const char *class = NULL;
-    const char *action = NULL;
+    const char *action = get_action(rsc_action);
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
@@ -1778,9 +1778,19 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     set_agent_environment(params, timeout_ms, check_level, resource_verbose);
     apply_overrides(params, override_hash);
 
+    op = services__create_resource_action(rsc_name? rsc_name : "test",
+                                          rsc_class, rsc_prov, rsc_type, action,
+                                          0, timeout_ms, params, 0);
+    if (op == NULL) {
+        out->err(out, "Could not execute %s using %s%s%s:%s: %s",
+                 action, rsc_class, (rsc_prov? ":" : ""),
+                 (rsc_prov? rsc_prov : ""), rsc_type, strerror(ENOMEM));
+        g_hash_table_destroy(params);
+        return CRM_EX_OSERR;
+    }
+
     class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
                 rsc_class : resources_find_service_class(rsc_type);
-
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources yet",
                  rsc_action, class);
@@ -1792,23 +1802,11 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
-    action = get_action(rsc_action);
-
-    op = services__create_resource_action(rsc_name? rsc_name : "test",
-                                          rsc_class, rsc_prov, rsc_type, action,
-                                          0, timeout_ms, params, 0);
-    if ((op == NULL) || (op->rc != PCMK_OCF_UNKNOWN)) {
-        const char *reason = NULL;
-
-        if (op == NULL) {
-            reason = strerror(ENOMEM);
-        } else {
-            reason = crm_exit_str(op->rc);
-        }
+    if (op->rc != PCMK_OCF_UNKNOWN) {
         out->err(out, "Operation %s for %s (%s%s%s:%s) failed: %s",
                  action, rsc_name, rsc_class, (rsc_prov? ":" : ""),
-                 (rsc_prov? rsc_prov : ""), rsc_type, reason);
-        crm_exit((op == NULL)? CRM_EX_OSERR : op->rc);
+                 (rsc_prov? rsc_prov : ""), rsc_type, crm_exit_str(op->rc));
+        crm_exit(op->rc);
     }
 
     if (services_action_sync(op)) {
