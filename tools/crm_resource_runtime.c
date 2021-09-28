@@ -1794,16 +1794,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
     if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
                               PCMK_RESOURCE_CLASS_LSB, NULL)) {
-        out->err(out, "Sorry, the %s option doesn't support %s resources",
-                 rsc_action, ((class == NULL)? "unresolvable service" : class));
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+        services__set_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
+                             "Manual execution of this standard is unsupported");
     }
 
     if (op->rc != PCMK_OCF_UNKNOWN) {
-        out->err(out, "Operation %s for %s (%s%s%s:%s) failed: %s",
-                 action, rsc_name, rsc_class, (rsc_prov? ":" : ""),
-                 (rsc_prov? rsc_prov : ""), rsc_type, crm_exit_str(op->rc));
-        crm_exit(op->rc);
+        exit_code = op->rc;
+        goto done;
     }
 
     services_action_sync(op);
@@ -1819,6 +1816,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         exit_code = (crm_exit_t) services_get_ocf_exitcode(action, exit_code);
     }
 
+done:
     out->message(out, "resource-agent-action", resource_verbose, rsc_class,
                  rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
                  exit_code, op->status, op->stdout_data, op->stderr_data);
