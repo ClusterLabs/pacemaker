@@ -1765,7 +1765,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  int timeout_ms, int resource_verbose, gboolean force,
                                  int check_level)
 {
-    const char *class = NULL;
+    const char *class = rsc_class;
     const char *action = get_action(rsc_action);
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
@@ -1789,16 +1789,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         return CRM_EX_OSERR;
     }
 
-    class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
-                rsc_class : resources_find_service_class(rsc_type);
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        out->err(out, "Sorry, the %s option doesn't support %s resources yet",
-                 rsc_action, class);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    } else if (pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_SYSTEMD,
-                PCMK_RESOURCE_CLASS_UPSTART, PCMK_RESOURCE_CLASS_NAGIOS, NULL)) {
+    if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
+        class = resources_find_service_class(rsc_type);
+    }
+    if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
+                              PCMK_RESOURCE_CLASS_LSB, NULL)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources",
-                 rsc_action, class);
+                 rsc_action, ((class == NULL)? "unresolvable service" : class));
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
