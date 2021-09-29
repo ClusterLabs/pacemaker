@@ -221,6 +221,25 @@ pcmkd_shutdown_corosync(void)
     }
 }
 
+bool
+pcmkd_corosync_connected(void)
+{
+    cpg_handle_t local_handle = 0;
+    cpg_model_v1_data_t cpg_model_info = {CPG_MODEL_V1, NULL, NULL, NULL, 0};
+    int fd = -1;
+
+    if (cpg_model_initialize(&local_handle, CPG_MODEL_V1, (cpg_model_data_t *) &cpg_model_info, NULL) != CS_OK) {
+        return false;
+    }
+
+    if (cpg_fd_get(local_handle, &fd) != CS_OK) {
+        return false;
+    }
+
+    cpg_finalize(local_handle);
+
+    return true;
+}
 
 /* =::=::=::= Configuration =::=::=::= */
 static int
