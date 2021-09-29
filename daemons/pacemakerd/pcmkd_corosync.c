@@ -83,6 +83,7 @@ cluster_reconnect_cb(gpointer data)
         reconnect_timer = NULL;
         crm_notice("Cluster reconnect succeeded");
         mcp_read_config();
+        restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
         crm_info("Cluster reconnect failed"

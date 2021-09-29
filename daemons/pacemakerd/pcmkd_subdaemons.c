@@ -33,6 +33,8 @@ typedef struct pcmk_child_s {
     const char *endpoint;  /* IPC server name */
     bool needs_cluster;
 
+    /* Anything below here will be dynamically initialized */
+    bool needs_retry;
     bool active_before_startup;
 } pcmk_child_t;
 
@@ -261,6 +263,13 @@ pcmk_process_exit(pcmk_child_t * child)
         }
 
     } else {
+        if (child->needs_cluster && !pcmkd_cluster_connected()) {
+            crm_notice("Skipping cluster-based subdaemon %s until cluster returns",
+                       child->name);
+            child->needs_retry = true;
+            return;
+        }
+
         crm_notice("Respawning failed child process: %s", child->name);
         start_child(child);
     }
@@ -777,6 +786,21 @@ pcmk_shutdown(int nsig)
         shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
     }
     mainloop_set_trigger(shutdown_trigger);
+}
+
+void
+restart_cluster_subdaemons(void)
+{
+    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
+        if (!pcmk_children[i].needs_retry || pcmk_children[i].pid != 0) {
+            continue;
+        }
+
+        crm_notice("Respawning cluster-based subdaemon: %s", pcmk_children[i].name);
+        if (start_child(&pcmk_children[i])) {
+            pcmk_children[i].needs_retry = false;
+        }
+    }
 }
 
 static gboolean
