@@ -61,12 +61,12 @@ static pcmk_child_t pcmk_children[] = {
     {
         0, 0, true, "pacemaker-attrd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD,
-        false
+        true
     },
     {
         0, 0, true, "pacemaker-schedulerd", CRM_DAEMON_USER,
         CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE,
-        true
+        false
     },
     {
         0, 0, true, "pacemaker-controld", CRM_DAEMON_USER,
