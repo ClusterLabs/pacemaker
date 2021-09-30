@@ -11,20 +11,6 @@
 
 #include <stdint.h>
 
-typedef struct pcmk_child_s {
-    pid_t pid;
-    int start_seq;
-    int respawn_count;
-    gboolean respawn;
-    const char *name;
-    const char *uid;
-    const char *command;
-    const char *endpoint;  /* IPC server name */
-
-    gboolean active_before_startup;
-} pcmk_child_t;
-
-#define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 #define MAX_RESPAWN		100
 
 extern GMainLoop *mainloop;
