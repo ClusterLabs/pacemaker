@@ -1822,14 +1822,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
             exit_code = (crm_exit_t) services_get_ocf_exitcode(action,
                                                                exit_code);
         }
-
-        out->message(out, "resource-agent-action", resource_verbose, rsc_class,
-                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
-                     exit_code, op->status, op->stdout_data, op->stderr_data);
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
     }
 
+    out->message(out, "resource-agent-action", resource_verbose, rsc_class,
+                 rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
+                 exit_code, op->status, op->stdout_data, op->stderr_data);
     services_action_free(op);
     return exit_code;
 }
