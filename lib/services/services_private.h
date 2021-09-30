@@ -89,11 +89,6 @@ void services_untrack_op(svc_action_t *op);
 G_GNUC_INTERNAL
 gboolean is_op_blocked(const char *rsc);
 
-G_GNUC_INTERNAL
-void services__set_result(svc_action_t *action, int agent_status,
-                          enum pcmk_exec_status exec_status,
-                          const char *exit_reason);
-
 #if SUPPORT_DBUS
 G_GNUC_INTERNAL
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);

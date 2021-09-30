@@ -27,6 +27,7 @@
 #include "crm/crm.h"
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
+#include "crm/services_internal.h"
 
 #include "services_private.h"
 
