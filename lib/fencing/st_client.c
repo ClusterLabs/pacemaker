@@ -854,6 +854,12 @@ internal_stonith_action_execute(stonith_action_t * action)
                                basename(action->agent));
     svc_action = services_action_create_generic(buffer, NULL);
     free(buffer);
+
+    if (svc_action->rc != PCMK_OCF_UNKNOWN) {
+        services_action_free(svc_action);
+        return -E2BIG;
+    }
+
     svc_action->timeout = 1000 * action->remaining_timeout;
     svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
     svc_action->id = crm_strdup_printf("%s_%s_%d", basename(action->agent),

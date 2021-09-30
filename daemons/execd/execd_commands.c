@@ -30,8 +30,6 @@
 
 #include "pacemaker-execd.h"
 
-#define EXIT_REASON_MAX_LEN 128
-
 GHashTable *rsc_list = NULL;
 
 typedef struct lrmd_cmd_s {
@@ -860,41 +858,6 @@ notify_of_new_client(pcmk__client_t *new_client)
     free_xml(data.notify);
 }
 
-static char *
-parse_exit_reason(const char *output)
-{
-    const char *cur = NULL;
-    const char *last = NULL;
-    static int cookie_len = 0;
-    char *eol = NULL;
-    size_t reason_len = EXIT_REASON_MAX_LEN;
-
-    if (output == NULL) {
-        return NULL;
-    }
-
-    if (!cookie_len) {
-        cookie_len = strlen(PCMK_OCF_REASON_PREFIX);
-    }
-
-    cur = strstr(output, PCMK_OCF_REASON_PREFIX);
-    for (; cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
-        /* skip over the cookie delimiter string */
-        cur += cookie_len;
-        last = cur;
-    }
-    if (last == NULL) {
-        return NULL;
-    }
-
-    // Truncate everything after a new line, and limit reason string size
-    eol = strchr(last, '\n');
-    if (eol) {
-        reason_len = QB_MIN(reason_len, eol - last);
-    }
-    return strndup(last, reason_len);
-}
-
 void
 client_disconnect_cleanup(const char *client_id)
 {
@@ -937,7 +900,7 @@ action_complete(svc_action_t * action)
 
     cmd->last_pid = action->pid;
     pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
-                     action->status, NULL);
+                     action->status, services__exit_reason(action));
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
@@ -1066,10 +1029,6 @@ action_complete(svc_action_t * action)
 
     pcmk__set_result_output(&(cmd->result),
                             action->stdout_data, action->stderr_data);
-    if (action->stderr_data) {
-        cmd->result.exit_reason = parse_exit_reason(action->stderr_data);
-    }
-
     cmd_finalize(cmd, rsc);
 }
 
@@ -1390,16 +1349,15 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                      cmd->interval_ms, cmd->timeout,
                                      params_copy, cmd->service_flags);
 
-    if (!action) {
-        // Invalid arguments (which would be a bug) or out-of-memory
-        crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
+    if (action == NULL) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, "Internal Pacemaker error");
+                         PCMK_EXEC_ERROR, strerror(ENOMEM));
         goto exec_done;
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+        pcmk__set_result(&(cmd->result), action->rc, action->status,
+                         services__exit_reason(action));
         services_action_free(action);
         goto exec_done;
     }
@@ -1414,7 +1372,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return TRUE;
     }
 
-    pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+    pcmk__set_result(&(cmd->result), action->rc, action->status,
+                     services__exit_reason(action));
     services_action_free(action);
     action = NULL;
 

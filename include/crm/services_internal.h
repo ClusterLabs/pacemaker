@@ -39,6 +39,8 @@ svc_action_t *services__create_resource_action(const char *name, const char *sta
                                       int timeout /* ms */, GHashTable *params,
                                       enum svc_action_flags flags);
 
+const char *services__exit_reason(svc_action_t *action);
+
 #  ifdef __cplusplus
 }
 #  endif

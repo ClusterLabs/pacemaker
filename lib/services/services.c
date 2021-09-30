@@ -169,9 +169,84 @@ new_action(void)
     }
 
     // Initialize result
-    op->rc = PCMK_OCF_UNKNOWN;
-    op->status = PCMK_EXEC_UNKNOWN;
+    services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN, NULL);
     return op;
+}
+
+static bool
+required_argument_missing(uint32_t ra_caps, const char *name,
+                          const char *standard, const char *provider,
+                          const char *agent, const char *action)
+{
+    if (pcmk__str_empty(name)) {
+        crm_info("Cannot create operation without resource name (bug?)");
+        return true;
+    }
+
+    if (pcmk__str_empty(standard)) {
+        crm_info("Cannot create operation for %s without resource class (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+        && pcmk__str_empty(provider)) {
+        crm_info("Cannot create operation for %s resource %s "
+                 "without provider (bug?)", standard, name);
+        return true;
+    }
+
+    if (pcmk__str_empty(agent)) {
+        crm_info("Cannot create operation for %s without agent name (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk__str_empty(action)) {
+        crm_info("Cannot create operation for %s without action name (bug?)",
+                 name);
+        return true;
+    }
+    return false;
+}
+
+// \return Standard Pacemaker return code (pcmk_rc_ok or ENOMEM)
+static int
+copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
+                      const char *standard, const char *provider,
+                      const char *agent, const char *action)
+{
+    op->rsc = strdup(name);
+    if (op->rsc == NULL) {
+        return ENOMEM;
+    }
+
+    op->agent = strdup(agent);
+    if (op->agent == NULL) {
+        return ENOMEM;
+    }
+
+    op->standard = expand_resource_class(name, standard, agent);
+    if (op->standard == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+        action = "status";
+    }
+    op->action = strdup(action);
+    if (op->action == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
+        op->provider = strdup(provider);
+        if (op->provider == NULL) {
+            return ENOMEM;
+        }
+    }
+    return pcmk_rc_ok;
 }
 
 svc_action_t *
@@ -181,7 +256,7 @@ services__create_resource_action(const char *name, const char *standard,
                         GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
-    uint32_t ra_caps = 0;
+    uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     op = new_action();
     if (op == NULL) {
@@ -192,66 +267,35 @@ services__create_resource_action(const char *name, const char *standard,
         return NULL;
     }
 
-    /*
-     * Do some up front sanity checks before we go off and
-     * build the svc_action_t instance.
-     */
-
-    if (pcmk__str_empty(name)) {
-        crm_err("Cannot create operation without resource name");
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(standard)) {
-        crm_err("Cannot create operation for %s without resource class", name);
-        goto return_error;
-    }
-    ra_caps = pcmk_get_ra_caps(standard);
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
-        && pcmk__str_empty(provider)) {
-        crm_err("Cannot create operation for %s without provider", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(agent)) {
-        crm_err("Cannot create operation for %s without agent name", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(action)) {
-        crm_err("Cannot create operation for %s without operation name", name);
-        goto return_error;
-    }
-
-    /*
-     * Sanity checks passed, proceed!
-     */
-
-    op->rsc = strdup(name);
     op->interval_ms = interval_ms;
     op->timeout = timeout;
-    op->standard = expand_resource_class(name, standard, agent);
-    op->agent = strdup(agent);
-    op->sequence = ++operations;
     op->flags = flags;
-    op->id = pcmk__op_key(name, action, interval_ms);
+    op->sequence = ++operations;
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
-        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-
-        op->action = strdup("status");
-    } else {
-        op->action = strdup(action);
-    }
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
-        op->provider = strdup(provider);
-    }
-
+    // Take ownership of params
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
-        params = NULL; // so we don't free them in this function
+    } else if (params != NULL) {
+        g_hash_table_destroy(params);
+        params = NULL;
+    }
+
+    if (required_argument_missing(ra_caps, name, standard, provider, agent,
+                                  action)) {
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Required agent or action information missing");
+        return op;
+    }
+
+    op->id = pcmk__op_key(name, action, interval_ms);
+
+    if (copy_action_arguments(op, ra_caps, name, standard, provider, agent,
+                              action) != pcmk_rc_ok) {
+        crm_crit("Cannot prepare %s action for %s: %s",
+                 action, name, strerror(ENOMEM));
+        services__handle_exec_error(op, ENOMEM);
+        return op;
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
@@ -263,15 +307,16 @@ services__create_resource_action(const char *name, const char *standard,
         if (pcmk__str_empty(OCF_RA_PATH)) {
             crm_err("Cannot execute OCF actions because resource agent path "
                     "was not configured in this build");
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR_HARD;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_ERROR_HARD,
+                                 "No OCF agent path configured in build");
             return op;
         }
 
         dirs = strdup(OCF_RA_PATH);
         if (dirs == NULL) {
-            crm_err("Cannot create %s operation for %s: %s",
-                    action, name, strerror(ENOMEM));
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
             services__handle_exec_error(op, ENOMEM);
             return op;
         }
@@ -298,46 +343,95 @@ services__create_resource_action(const char *name, const char *standard,
 
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
+        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
+        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         op->opaque->exec = strdup("systemd-dbus");
+        if (op->opaque->exec == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
         op->opaque->exec = strdup("upstart-dbus");
+        if (op->opaque->exec == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
         op->opaque->exec = pcmk__full_path(op->agent, NAGIOS_PLUGIN_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
+        if (op->opaque->args[0] == NULL) {
+            crm_crit("Cannot prepare %s action for %s: %s",
+                     action, name, strerror(ENOMEM));
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
 
         if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {
             /* Invoke --version for a nagios probe */
             op->opaque->args[1] = strdup("--version");
+            if (op->opaque->args[1] == NULL) {
+                crm_crit("Cannot prepare %s action for %s: %s",
+                         action, name, strerror(ENOMEM));
+                services__handle_exec_error(op, ENOMEM);
+                return op;
+            }
 
         } else if (op->params) {
             GHashTableIter iter;
             char *key = NULL;
             char *value = NULL;
-            int index = 1;
-            static int args_size = sizeof(op->opaque->args) / sizeof(char *);
+            int index = 1; // 0 is already set to executable name
 
             g_hash_table_iter_init(&iter, op->params);
 
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
-                   index <= args_size - 3) {
+            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+
+                if (index > (PCMK__NELEM(op->opaque->args) - 2)) {
+                    crm_info("Cannot prepare %s action for %s: Too many parameters",
+                             action, name);
+                    services__set_result(op, NAGIOS_STATE_UNKNOWN,
+                                         PCMK_EXEC_ERROR_HARD,
+                                         "Too many parameters");
+                    break;
+                }
 
                 if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei) || strstr(key, CRM_META "_")) {
                     continue;
                 }
                 op->opaque->args[index++] = crm_strdup_printf("--%s", key);
                 op->opaque->args[index++] = strdup(value);
+                if (op->opaque->args[index - 1] == NULL) {
+                    crm_crit("Cannot prepare %s action for %s: %s",
+                             action, name, strerror(ENOMEM));
+                    services__handle_exec_error(op, ENOMEM);
+                    return op;
+                }
             }
         }
 
@@ -350,11 +444,6 @@ services__create_resource_action(const char *name, const char *standard,
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
         services__handle_exec_error(op, ENOENT);
-    }
-
-  return_error:
-    if(params) {
-        g_hash_table_destroy(params);
     }
 
     return op;
@@ -385,18 +474,38 @@ svc_action_t *
 services_action_create_generic(const char *exec, const char *args[])
 {
     svc_action_t *op = new_action();
-    unsigned int cur_arg;
 
     CRM_ASSERT(op != NULL);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
+    if ((op->opaque->exec == NULL) || (op->opaque->args[0] == NULL)) {
+        crm_crit("Cannot prepare action for '%s': %s", exec, strerror(ENOMEM));
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             strerror(ENOMEM));
+        return op;
+    }
 
-    for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
+    if (args == NULL) {
+        return op;
+    }
+
+    for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
+
+        if (cur_arg == PCMK__NELEM(op->opaque->args)) {
+            crm_info("Cannot prepare action for '%s': Too many arguments",
+                     exec);
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_ERROR_HARD, "Too many arguments");
+            break;
+        }
+
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
-
-        if (cur_arg == PCMK__NELEM(op->opaque->args) - 1) {
-            crm_err("svc_action_t args list not long enough for '%s' execution request.", exec);
+        if (op->opaque->args[cur_arg] == NULL) {
+            crm_crit("Cannot prepare action for '%s': %s",
+                     exec, strerror(ENOMEM));
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 strerror(ENOMEM));
             break;
         }
     }
@@ -573,6 +682,7 @@ services_action_free(svc_action_t * op)
         free(op->opaque->args[i]);
     }
 
+    free(op->opaque->exit_reason);
     free(op->opaque);
     free(op->rsc);
     free(op->action);
@@ -671,7 +781,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      */
 
     // Report operation as cancelled
-    op->status = PCMK_EXEC_CANCELLED;
+    services__set_result(op, op->rc, PCMK_EXEC_CANCELLED, NULL);
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -931,16 +1041,17 @@ execute_metadata_action(svc_action_t *op)
 
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_FATAL;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
     if (class == NULL) {
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_FATAL;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Agent standard not specified");
         return EINVAL;
     }
 
@@ -950,8 +1061,9 @@ execute_metadata_action(svc_action_t *op)
     if (class == NULL) {
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_HARD;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_HARD,
+                             "Agent standard could not be determined");
         return EINVAL;
     }
 
@@ -1210,4 +1322,45 @@ done:
     g_list_free(standards);
     g_list_free(providers);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action
+ *
+ * \param[out] action        Where to set action result
+ * \param[in]  agent_status  Exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  reason        Human-friendly description of event to set
+ */
+void
+services__set_result(svc_action_t *action, int agent_status,
+                     enum pcmk_exec_status exec_status, const char *reason)
+{
+    if (action == NULL) {
+        return;
+    }
+
+    action->rc = agent_status;
+    action->status = exec_status;
+
+    if (!pcmk__str_eq(action->opaque->exit_reason, reason,
+                      pcmk__str_none)) {
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the exit reason of an action
+ *
+ * \param[in] action  Action to check
+ *
+ * \return Action's exit reason (or NULL if none)
+ */
+const char *
+services__exit_reason(svc_action_t *action)
+{
+    return action->opaque->exit_reason;
 }
