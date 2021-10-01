@@ -28,6 +28,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
+#include "services_ocf.h"
 #include "services_lsb.h"
 
 #if SUPPORT_UPSTART
