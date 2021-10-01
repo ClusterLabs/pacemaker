@@ -11,6 +11,9 @@
 #  define SERVICES_NAGIOS__H
 
 G_GNUC_INTERNAL
+int services__nagios_prepare(svc_action_t *op);
+
+G_GNUC_INTERNAL
 GList *services__list_nagios_agents(void);
 
 G_GNUC_INTERNAL
