@@ -110,3 +110,46 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Prepare an OCF action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__ocf_prepare(svc_action_t *op)
+{
+    char *dirs = strdup(OCF_RA_PATH);
+    struct stat st;
+
+    if (dirs == NULL) {
+        return ENOMEM;
+    }
+
+    // Look for agent on path
+    for (char *dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        char *buf = crm_strdup_printf("%s/%s/%s", dir, op->provider, op->agent);
+
+        if (stat(buf, &st) == 0) {
+            op->opaque->exec = buf;
+            break;
+        }
+        free(buf);
+    }
+    free(dirs);
+
+    if (op->opaque->exec == NULL) {
+        return ENOENT;
+    }
+
+    op->opaque->args[0] = strdup(op->opaque->exec);
+    op->opaque->args[1] = strdup(op->action);
+    if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+        return ENOMEM;
+    }
+
+    return pcmk_rc_ok;
+}

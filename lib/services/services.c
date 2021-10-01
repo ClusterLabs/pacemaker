@@ -258,6 +258,7 @@ services__create_resource_action(const char *name, const char *standard,
 {
     svc_action_t *op = NULL;
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
+    int rc = pcmk_rc_ok;
 
     op = new_action();
     if (op == NULL) {
@@ -300,47 +301,7 @@ services__create_resource_action(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        char *dirs = NULL;
-        char *dir = NULL;
-        char *buf = NULL;
-        struct stat st;
-
-        dirs = strdup(OCF_RA_PATH);
-        if (dirs == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
-
-        for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-            buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
-            if (stat(buf, &st) == 0) {
-                break;
-            }
-            free(buf);
-            buf = NULL;
-        }
-
-        free(dirs);
-
-        if (buf) {
-            op->opaque->exec = buf;
-        } else {
-            crm_err("Cannot create %s operation for %s: %s",
-                    action, name, strerror(ENOENT));
-            services__handle_exec_error(op, ENOENT);
-            return op;
-        }
-
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
-        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__ocf_prepare(op);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
@@ -435,9 +396,14 @@ services__create_resource_action(const char *name, const char *standard,
 #endif
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
-        services__handle_exec_error(op, ENOENT);
+        rc = ENOENT;
     }
 
+    if (rc != pcmk_rc_ok) {
+        crm_err("Cannot prepare %s operation for %s: %s",
+                action, name, strerror(rc));
+        services__handle_exec_error(op, rc);
+    }
     return op;
 }
 
