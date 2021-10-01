@@ -304,15 +304,6 @@ services__create_resource_action(const char *name, const char *standard,
         char *buf = NULL;
         struct stat st;
 
-        if (pcmk__str_empty(OCF_RA_PATH)) {
-            crm_err("Cannot execute OCF actions because resource agent path "
-                    "was not configured in this build");
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
-                                 PCMK_EXEC_ERROR_HARD,
-                                 "No OCF agent path configured in build");
-            return op;
-        }
-
         dirs = strdup(OCF_RA_PATH);
         if (dirs == NULL) {
             crm_crit("Cannot prepare %s action for %s: %s",
