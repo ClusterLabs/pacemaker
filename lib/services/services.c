@@ -308,13 +308,7 @@ services__create_resource_action(const char *name, const char *standard,
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-        op->opaque->exec = strdup("systemd-dbus");
-        if (op->opaque->exec == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__systemd_prepare(op);
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {

@@ -27,6 +27,24 @@ static void invoke_unit_by_path(svc_action_t *op, const char *unit);
 #define BUS_NAME_UNIT    BUS_NAME ".Unit"
 #define BUS_PATH         "/org/freedesktop/systemd1"
 
+/*!
+ * \internal
+ * \brief Prepare a systemd action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__systemd_prepare(svc_action_t *op)
+{
+    op->opaque->exec = strdup("systemd-dbus");
+    if (op->opaque->exec == NULL) {
+        return ENOMEM;
+    }
+    return pcmk_rc_ok;
+}
+
 static inline DBusMessage *
 systemd_new_method(const char *method)
 {
