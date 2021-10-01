@@ -304,15 +304,7 @@ services__create_resource_action(const char *name, const char *standard,
         rc = services__ocf_prepare(op);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
-        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__lsb_prepare(op);
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {

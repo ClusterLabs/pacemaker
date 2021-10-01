@@ -259,6 +259,26 @@ services__lsb_agent_exists(const char *agent)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Prepare an LSB action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__lsb_prepare(svc_action_t *op)
+{
+    op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
+    op->opaque->args[0] = strdup(op->opaque->exec);
+    op->opaque->args[1] = strdup(op->action);
+    if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
+        return ENOMEM;
+    }
+    return pcmk_rc_ok;
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
