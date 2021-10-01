@@ -312,13 +312,7 @@ services__create_resource_action(const char *name, const char *standard,
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
-        op->opaque->exec = strdup("upstart-dbus");
-        if (op->opaque->exec == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__upstart_prepare(op);
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {

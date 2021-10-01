@@ -37,6 +37,24 @@
 */
 static DBusConnection *upstart_proxy = NULL;
 
+/*!
+ * \internal
+ * \brief Prepare an Upstart action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__upstart_prepare(svc_action_t *op)
+{
+    op->opaque->exec = strdup("upstart-dbus");
+    if (op->opaque->exec == NULL) {
+        return ENOMEM;
+    }
+    return pcmk_rc_ok;
+}
+
 static gboolean
 upstart_init(void)
 {
