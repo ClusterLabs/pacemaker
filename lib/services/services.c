@@ -663,7 +663,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      */
 
     // Report operation as cancelled
-    services__set_result(op, op->rc, PCMK_EXEC_CANCELLED, NULL);
+    services__set_cancelled(op);
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -1230,6 +1230,24 @@ services__set_result(svc_action_t *action, int agent_status,
                       pcmk__str_none)) {
         free(action->opaque->exit_reason);
         action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action to cancelled
+ *
+ * \param[out] action        Where to set action result
+ *
+ * \note This sets execution status but leaves the exit status unchanged
+ */
+void
+services__set_cancelled(svc_action_t *action)
+{
+    if (action != NULL) {
+        action->status = PCMK_EXEC_CANCELLED;
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = NULL;
     }
 }
 

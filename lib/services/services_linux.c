@@ -517,7 +517,7 @@ services__finalize_async_op(svc_action_t *op)
     if (op->interval_ms != 0) {
         // Recurring operations must be either cancelled or rescheduled
         if (op->cancel) {
-            services__set_result(op, op->rc, PCMK_EXEC_CANCELLED, NULL);
+            services__set_cancelled(op);
             cancel_recurring_action(op);
         } else {
             op->opaque->repeat_timer = g_timeout_add(op->interval_ms,

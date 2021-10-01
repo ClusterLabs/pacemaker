@@ -76,6 +76,9 @@ G_GNUC_INTERNAL
 void services__handle_exec_error(svc_action_t * op, int error);
 
 G_GNUC_INTERNAL
+void services__set_cancelled(svc_action_t *action);
+
+G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);
 
 G_GNUC_INTERNAL
