@@ -395,3 +395,16 @@ The failure is in ``lib/common/tests/strings/test-suite.log``:
 
 At this point, you need to determine whether your test case is incorrect or
 whether the code being tested is incorrect.  Fix whichever is wrong and continue.
+
+
+Debugging
+#########
+
+gdb
+___
+
+If you use ``gdb`` for debugging, some helper functions are defined in
+``devel/gdbhelpers``, which can be given to ``gdb`` using the ``-x`` option.
+
+From within the debugger, you can then invoke the ``pcmk`` command that
+will describe the helper functions available.
