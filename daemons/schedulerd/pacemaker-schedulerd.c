@@ -34,6 +34,7 @@ static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static pe_working_set_t *sched_data_set = NULL;
 static pcmk__output_t *out = NULL;
+static crm_exit_t exit_code = CRM_EX_OK;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_LOG,
@@ -314,7 +315,10 @@ main(int argc, char **argv)
     int flag;
     int index = 0;
     int argerr = 0;
+
     int rc = pcmk_rc_ok;
+
+    GError *error = NULL;
 
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
@@ -343,7 +347,7 @@ main(int argc, char **argv)
 
     if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         pe_metadata();
-        return CRM_EX_OK;
+        goto done;
     }
 
     if (optind > argc) {
@@ -359,16 +363,17 @@ main(int argc, char **argv)
 
     if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
         crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
-        fprintf(stderr,
-                "ERROR: Bad permissions on " PE_STATE_DIR " (see logs for details)\n");
-        fflush(stderr);
-        return CRM_EX_FATAL;
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "ERROR: Bad permissions on %s (see logs for details)", PE_STATE_DIR);
+        goto done;
     }
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
     pcmk__register_formats(NULL, formats);
@@ -376,7 +381,8 @@ main(int argc, char **argv)
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
         crm_err("Can't log resource details due to internal error: %s\n",
                 pcmk_rc_str(rc));
-        crm_exit(CRM_EX_FATAL);
+        exit_code = pcmk_rc2exitc(rc);
+        goto done;
     }
 
     pe__register_messages(out);
@@ -388,24 +394,31 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker scheduler successfully started and accepting connections");
     g_main_loop_run(mainloop);
+
+done:
+    pcmk__output_and_clear_error(error, NULL);
     pengine_shutdown(0);
 }
 
 void
 pengine_shutdown(int nsig)
 {
-    mainloop_del_ipc_server(ipcs);
-    ipcs = NULL;
+    if (ipcs != NULL) {
+        mainloop_del_ipc_server(ipcs);
+        ipcs = NULL;
+    }
 
-    pe_free_working_set(sched_data_set);
-    sched_data_set = NULL;
+    if (sched_data_set != NULL) {
+        pe_free_working_set(sched_data_set);
+        sched_data_set = NULL;
+    }
 
     pcmk__unregister_formats();
     if (out != NULL) {
-        out->finish(out, CRM_EX_OK, true, NULL);
+        out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
         out = NULL;
     }
 
-    crm_exit(CRM_EX_OK);
+    crm_exit(exit_code);
 }
