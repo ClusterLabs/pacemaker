@@ -2955,11 +2955,9 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
         }
 
         value = va_arg(pairs, const char *);
-        if (value == NULL) {
-            return;
+        if (value != NULL) {
+            crm_xml_add(node, name, value);
         }
-
-        crm_xml_add(node, name, value);
     }
 }
 

@@ -41,6 +41,10 @@ svc_action_t *services__create_resource_action(const char *name, const char *sta
 
 const char *services__exit_reason(svc_action_t *action);
 
+void services__set_result(svc_action_t *action, int agent_status,
+                          enum pcmk_exec_status exec_status,
+                          const char *exit_reason);
+
 #  ifdef __cplusplus
 }
 #  endif

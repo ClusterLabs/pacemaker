@@ -1692,72 +1692,38 @@ get_action(const char *rsc_action) {
     return action;
 }
 
-crm_exit_t
-cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
-                                 const char *rsc_class, const char *rsc_prov,
-                                 const char *rsc_type, const char *rsc_action,
-                                 GHashTable *params, GHashTable *override_hash,
-                                 int timeout_ms, int resource_verbose, gboolean force,
-                                 int check_level)
+/*!
+ * \brief Set up environment variables as expected by resource agents
+ *
+ * When the cluster executes resource agents, it adds certain environment
+ * variables (directly or via resource meta-attributes) expected by some
+ * resource agents. Add the essential ones that many resource agents expect, so
+ * the behavior is the same for command-line execution.
+ *
+ * \param[in] params       Resource parameters that will be passed to agent
+ * \param[in] timeout_ms   Action timeout (in milliseconds)
+ * \param[in] check_level  OCF check level
+ * \param[in] verbosity    Verbosity level
+ */
+static void
+set_agent_environment(GHashTable *params, int timeout_ms, int check_level,
+                      int verbosity)
 {
-    const char *class = NULL;
-    const char *action = NULL;
-    crm_exit_t exit_code = CRM_EX_OK;
-    svc_action_t *op = NULL;
-
-    class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
-                rsc_class : resources_find_service_class(rsc_type);
-
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        out->err(out, "Sorry, the %s option doesn't support %s resources yet",
-                 rsc_action, class);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    } else if (pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_SYSTEMD,
-                PCMK_RESOURCE_CLASS_UPSTART, PCMK_RESOURCE_CLASS_NAGIOS, NULL)) {
-        out->err(out, "Sorry, the %s option doesn't support %s resources",
-                 rsc_action, class);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    }
-
-    action = get_action(rsc_action);
-
-    /* If no timeout was provided, grab the default. */
-    if (timeout_ms == 0) {
-        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
-    }
-
-    /* add meta_timeout env needed by some resource agents */
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
                         crm_strdup_printf("%d", timeout_ms));
 
-    /* add crm_feature_set env needed by some resource agents */
-    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+    g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION),
+                        strdup(CRM_FEATURE_SET));
 
     if (check_level >= 0) {
         char *level = crm_strdup_printf("%d", check_level);
+
         setenv("OCF_CHECK_LEVEL", level, 1);
         free(level);
     }
 
-    op = services__create_resource_action(rsc_name? rsc_name : "test",
-                                          rsc_class, rsc_prov, rsc_type, action,
-                                          0, timeout_ms, params, 0);
-    if ((op == NULL) || (op->rc != PCMK_OCF_UNKNOWN)) {
-        const char *reason = NULL;
-
-        if (op == NULL) {
-            reason = strerror(ENOMEM);
-        } else {
-            reason = crm_exit_str(op->rc);
-        }
-        out->err(out, "Operation %s for %s (%s%s%s:%s) failed: %s",
-                 action, rsc_name, rsc_class, (rsc_prov? ":" : ""),
-                 (rsc_prov? rsc_prov : ""), rsc_type, reason);
-        crm_exit((op == NULL)? CRM_EX_OSERR : op->rc);
-    }
-
-    setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
-    if(resource_verbose > 1) {
+    setenv("HA_debug", (verbosity > 0)? "1" : "0", 1);
+    if (verbosity > 1) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
 
@@ -1766,39 +1732,95 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
      * crm_resource is called via script or ssh). This forces it to do so.
      */
     setenv("OCF_TRACE_FILE", "/dev/stderr", 0);
+}
 
-    if (override_hash) {
+/*!
+ * \internal
+ * \brief Apply command-line overrides to resource parameters
+ *
+ * \param[in] params     Parameters to be passed to agent
+ * \param[in] overrides  Parameters to override (or NULL if none)
+ */
+static void
+apply_overrides(GHashTable *params, GHashTable *overrides)
+{
+    if (overrides != NULL) {
         GHashTableIter iter;
         char *name = NULL;
         char *value = NULL;
 
-        g_hash_table_iter_init(&iter, override_hash);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            g_hash_table_replace(op->params, strdup(name), strdup(value));
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name,
+                                      (gpointer *) &value)) {
+            g_hash_table_replace(params, strdup(name), strdup(value));
         }
     }
+}
 
-    if (services_action_sync(op)) {
+crm_exit_t
+cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
+                                 const char *rsc_class, const char *rsc_prov,
+                                 const char *rsc_type, const char *rsc_action,
+                                 GHashTable *params, GHashTable *override_hash,
+                                 int timeout_ms, int resource_verbose, gboolean force,
+                                 int check_level)
+{
+    const char *class = rsc_class;
+    const char *action = get_action(rsc_action);
+    crm_exit_t exit_code = CRM_EX_OK;
+    svc_action_t *op = NULL;
+
+    // If no timeout was provided, use the same default as the cluster
+    if (timeout_ms == 0) {
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
+    }
+
+    set_agent_environment(params, timeout_ms, check_level, resource_verbose);
+    apply_overrides(params, override_hash);
+
+    op = services__create_resource_action(rsc_name? rsc_name : "test",
+                                          rsc_class, rsc_prov, rsc_type, action,
+                                          0, timeout_ms, params, 0);
+    if (op == NULL) {
+        out->err(out, "Could not execute %s using %s%s%s:%s: %s",
+                 action, rsc_class, (rsc_prov? ":" : ""),
+                 (rsc_prov? rsc_prov : ""), rsc_type, strerror(ENOMEM));
+        g_hash_table_destroy(params);
+        return CRM_EX_OSERR;
+    }
+
+    if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
+        class = resources_find_service_class(rsc_type);
+    }
+    if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
+                              PCMK_RESOURCE_CLASS_LSB, NULL)) {
+        services__set_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
+                             "Manual execution of this standard is unsupported");
+    }
+
+    if (op->rc != PCMK_OCF_UNKNOWN) {
         exit_code = op->rc;
-
-        /* Lookup exit code based on rc for LSB resources */
-        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei) &&
-              pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-
-            /* A simple cast is sufficient because services_get_ocf_exitcode()
-             * will only return OCF codes that overlap with crm_exit_t.
-             */
-            exit_code = (crm_exit_t) services_get_ocf_exitcode(action,
-                                                               exit_code);
-        }
-
-        out->message(out, "resource-agent-action", resource_verbose, rsc_class,
-                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
-                     exit_code, op->status, op->stdout_data, op->stderr_data);
-    } else {
-        exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
+        goto done;
     }
 
+    services_action_sync(op);
+    exit_code = op->rc;
+
+    // Map LSB status results to OCF results for consistent reporting to user
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
+
+        /* A simple cast is sufficient because services_get_ocf_exitcode()
+         * will only return OCF codes that overlap with crm_exit_t.
+         */
+        exit_code = (crm_exit_t) services_get_ocf_exitcode(action, exit_code);
+    }
+
+done:
+    out->message(out, "resource-agent-action", resource_verbose, rsc_class,
+                 rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
+                 exit_code, op->status, services__exit_reason(op),
+                 op->stdout_data, op->stderr_data);
     services_action_free(op);
     return exit_code;
 }

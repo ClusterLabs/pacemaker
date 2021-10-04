@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
 #include <sys/stat.h>
