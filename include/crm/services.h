@@ -358,41 +358,6 @@ enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
         }
     }
 
-    /**
-     * \brief Get OCF equivalent of LSB exit code
-     *
-     * \param[in] action        LSB action that produced exit code
-     * \param[in] lsb_exitcode  Exit code of LSB action
-     *
-     * \return PCMK_OCF_* constant that corresponds to LSB exit code
-     */
-    static inline enum ocf_exitcode
-    services_get_ocf_exitcode(const char *action, int lsb_exitcode)
-    {
-        /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action && strcmp(action, "status") && strcmp(action, "monitor")) {
-            if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-                return PCMK_OCF_UNKNOWN_ERROR;
-            }
-            return (enum ocf_exitcode)lsb_exitcode;
-        }
-
-        /* status has different return codes */
-        switch (lsb_exitcode) {
-            case PCMK_LSB_STATUS_OK:
-                return PCMK_OCF_OK;
-            case PCMK_LSB_STATUS_NOT_INSTALLED:
-                return PCMK_OCF_NOT_INSTALLED;
-            case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
-                return PCMK_OCF_INSUFFICIENT_PRIV;
-            case PCMK_LSB_STATUS_VAR_PID:
-            case PCMK_LSB_STATUS_VAR_LOCK:
-            case PCMK_LSB_STATUS_NOT_RUNNING:
-                return PCMK_OCF_NOT_RUNNING;
-        }
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/services_compat.h>
 #endif
