@@ -1804,16 +1804,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
 
     services_action_sync(op);
-    exit_code = op->rc;
 
-    // Map LSB status results to OCF results for consistent reporting to user
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
-        && pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
+    // Map results to OCF codes for consistent reporting to user
+    {
+        enum ocf_exitcode ocf_code = services_result2ocf(class, action, op->rc);
 
-        /* A simple cast is sufficient because services_get_ocf_exitcode()
-         * will only return OCF codes that overlap with crm_exit_t.
-         */
-        exit_code = (crm_exit_t) services_get_ocf_exitcode(action, exit_code);
+        // Cast variable instead of function return to keep compilers happy
+        exit_code = (crm_exit_t) ocf_code;
     }
 
 done:
