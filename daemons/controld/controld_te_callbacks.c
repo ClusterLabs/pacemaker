@@ -686,7 +686,8 @@ action_timer_callback(gpointer data)
                 timer->timeout + transition_graph->network_delay);
         pcmk__log_graph_action(LOG_ERR, timer->action);
 
-        timer->action->failed = TRUE;
+        crm__set_graph_action_flags(timer->action, pcmk__graph_action_failed);
+
         te_action_confirmed(timer->action, transition_graph);
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
 

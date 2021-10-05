@@ -118,10 +118,10 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *input = (crm_action_t *) lpc->data;
 
-        if (input->failed) {
+        if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
             pcmk__add_word(&pending, &pending_len, ID(input->xml));
 
-        } else if (input->confirmed) {
+        } else if (pcmk_is_set(input->flags, pcmk__graph_action_confirmed)) {
             // Confirmed successful inputs are not pending
 
         } else if (find_graph_action_by_id(graph, input->id) != NULL) {
