@@ -61,6 +61,14 @@ const char *synapse_state_str(synapse_t *synapse);
             (synapse)->flags, (flags_to_clear), #flags_to_clear);       \
     } while (0)
 
+enum pcmk__graph_action_flags {
+    pcmk__graph_action_sent_update   = (1 << 0),     /* sent to the CIB */
+    pcmk__graph_action_executed      = (1 << 1),     /* sent to the CRM */
+    pcmk__graph_action_confirmed     = (1 << 2),
+    pcmk__graph_action_failed        = (1 << 3),
+    pcmk__graph_action_can_fail      = (1 << 4),     //! \deprecated Will be removed in a future release
+};
+
 typedef struct crm_action_s {
     int id;
     int timeout;
@@ -71,16 +79,27 @@ typedef struct crm_action_s {
     crm_action_timer_t *timer;
     synapse_t *synapse;
 
-    gboolean sent_update;       /* sent to the CIB */
-    gboolean executed;          /* sent to the CRM */
-    gboolean confirmed;
-
-    gboolean failed;
-    gboolean can_fail; //! \deprecated Will be removed in a future release
+    uint32_t flags; // Group of pcmk__graph_action_flags
 
     xmlNode *xml;
 
 } crm_action_t;
+
+const char *action_state_str(crm_action_t *action);
+
+#define crm__set_graph_action_flags(action, flags_to_set) do {             \
+        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
+            LOG_TRACE,                                                \
+            "Action", "action",                                       \
+            (action)->flags, (flags_to_set), #flags_to_set);          \
+    } while (0)
+
+#define crm__clear_graph_action_flags(action, flags_to_clear) do {         \
+        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
+            LOG_TRACE,                                                \
+            "Action", "action",                                       \
+            (action)->flags, (flags_to_clear), #flags_to_clear);      \
+    } while (0)
 
 struct te_timer_s {
     int source_id;
