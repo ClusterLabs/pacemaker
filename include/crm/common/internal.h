@@ -23,6 +23,7 @@
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/iso8601_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/strings_internal.h>
 

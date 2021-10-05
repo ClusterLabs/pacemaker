@@ -31,7 +31,6 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>

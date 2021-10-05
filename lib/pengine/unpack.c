@@ -23,7 +23,6 @@
 #include <crm/common/util.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <pe_status_private.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
