@@ -121,7 +121,7 @@ services__get_lsb_metadata(const char *type, char **output)
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
     } else {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
-                 LSB_ROOT_DIR, type);
+                 PCMK__LSB_INIT_DIR, type);
     }
 
     crm_trace("Looking into %s", ra_pathname);
@@ -244,7 +244,7 @@ services__get_lsb_metadata(const char *type, char **output)
 GList *
 services__list_lsb_agents(void)
 {
-    return services_os_get_directory_list(LSB_ROOT_DIR, TRUE, TRUE);
+    return services_os_get_directory_list(PCMK__LSB_INIT_DIR, TRUE, TRUE);
 }
 
 bool
@@ -252,7 +252,7 @@ services__lsb_agent_exists(const char *agent)
 {
     bool rc = FALSE;
     struct stat st;
-    char *path = pcmk__full_path(agent, LSB_ROOT_DIR);
+    char *path = pcmk__full_path(agent, PCMK__LSB_INIT_DIR);
 
     rc = (stat(path, &st) == 0);
     free(path);
@@ -270,7 +270,7 @@ services__lsb_agent_exists(const char *agent)
 int
 services__lsb_prepare(svc_action_t *op)
 {
-    op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
+    op->opaque->exec = pcmk__full_path(op->agent, PCMK__LSB_INIT_DIR);
     op->opaque->args[0] = strdup(op->opaque->exec);
     op->opaque->args[1] = strdup(op->action);
     if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
