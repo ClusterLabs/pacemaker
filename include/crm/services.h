@@ -30,10 +30,6 @@ extern "C" {
 #  include <crm_config.h>       // OCF_ROOT_DIR
 #  include "common/results.h"
 
-#  ifndef LSB_ROOT_DIR
-#    define LSB_ROOT_DIR "/etc/init.d"
-#  endif
-
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"

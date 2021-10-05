@@ -25,6 +25,11 @@ extern "C" {
 
 #include <crm/common/results.h>
 
+#  ifndef LSB_ROOT_DIR
+     //! \deprecated Do not use
+#    define LSB_ROOT_DIR "/etc/init.d"
+#  endif
+
 //! \deprecated Use enum pcmk_exec_status instead
 enum op_status {
     PCMK_LRM_OP_UNKNOWN = PCMK_EXEC_UNKNOWN,
