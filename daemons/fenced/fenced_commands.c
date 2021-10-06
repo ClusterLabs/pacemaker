@@ -1104,6 +1104,14 @@ schedule_internal_command(const char *origin,
     schedule_stonith_command(cmd, device);
 }
 
+// Fence agent status commands use custom exit status codes
+enum fence_status_code {
+    fence_status_invalid    = -1,
+    fence_status_active     = 0,
+    fence_status_unknown    = 1,
+    fence_status_inactive   = 2,
+};
+
 static void
 status_search_cb(int pid, int rc, const char *output, void *user_data)
 {
@@ -1121,16 +1129,21 @@ status_search_cb(int pid, int rc, const char *output, void *user_data)
 
     mainloop_set_trigger(dev->work);
 
-    if (rc == 1 /* unknown */ ) {
-        crm_trace("Host %s is not known by %s", search->host, dev->id);
+    switch (rc) {
+        case fence_status_unknown:
+            crm_trace("Host %s is not known by %s", search->host, dev->id);
+            break;
 
-    } else if (rc == 0 /* active */  || rc == 2 /* inactive */ ) {
-        crm_trace("Host %s is known by %s", search->host, dev->id);
-        can = TRUE;
+        case fence_status_active:
+        case fence_status_inactive:
+            crm_trace("Host %s is known by %s", search->host, dev->id);
+            can = TRUE;
+            break;
 
-    } else {
-        crm_notice("Unknown result when testing if %s can fence %s: rc=%d", dev->id, search->host,
-                   rc);
+        default:
+            crm_notice("Unknown result when testing if %s can fence %s: rc=%d",
+                       dev->id, search->host, rc);
+            break;
     }
     search_devices_record_result(search, dev->id, can);
 }
