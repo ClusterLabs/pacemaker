@@ -373,6 +373,19 @@ get_agent_metadata_cb(gpointer data) {
     }
 }
 
+/*!
+ * \internal
+ * \brief Call a command's action callback for an internal (not library) result
+ *
+ * \param[in] cmd     Command to report result for
+ * \param[in] rc      Legacy return code to pass to callback
+ */
+static void
+report_internal_result(async_command_t *cmd, int rc)
+{
+    cmd->done_cb(0, rc, NULL, cmd);
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -433,7 +446,7 @@ stonith_device_execute(stonith_device_t * device)
             }
         } else {
             crm_info("Faking success for %s watchdog operation", cmd->action);
-            cmd->done_cb(0, 0, NULL, cmd);
+            report_internal_result(cmd, pcmk_ok);
             goto done;
         }
     }
@@ -448,7 +461,7 @@ stonith_device_execute(stonith_device_t * device)
         } else {
             crm_err("Considering %s unconfigured: Failed to get secrets",
                     device->id);
-            cmd->done_cb(0, -EACCES, NULL, cmd);
+            report_internal_result(cmd, -EACCES);
             goto done;
         }
     }
@@ -490,7 +503,7 @@ stonith_device_execute(stonith_device_t * device)
                  cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                  device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
-        cmd->done_cb(0, exec_rc, NULL, cmd);
+        report_internal_result(cmd, exec_rc);
         stonith__destroy_action(action);
     }
 
@@ -614,7 +627,7 @@ free_device(gpointer data)
         async_command_t *cmd = gIter->data;
 
         crm_warn("Removal of device '%s' purged operation '%s'", device->id, cmd->action);
-        cmd->done_cb(0, -ENODEV, NULL, cmd);
+        report_internal_result(cmd, -ENODEV);
     }
     g_list_free(device->pending_ops);
 
