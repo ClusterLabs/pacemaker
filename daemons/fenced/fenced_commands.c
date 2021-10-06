@@ -448,8 +448,7 @@ stonith_device_execute(stonith_device_t * device)
         } else {
             crm_err("Considering %s unconfigured: Failed to get secrets",
                     device->id);
-            exec_rc = PCMK_OCF_NOT_CONFIGURED;
-            cmd->done_cb(0, exec_rc, NULL, cmd);
+            cmd->done_cb(0, -EACCES, NULL, cmd);
             goto done;
         }
     }
