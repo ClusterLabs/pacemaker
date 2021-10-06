@@ -974,8 +974,8 @@ action_complete(svc_action_t * action)
     }
 #endif
 
-    pcmk__set_result_output(&(cmd->result),
-                            action->stdout_data, action->stderr_data);
+    pcmk__set_result_output(&(cmd->result), services__grab_stdout(action),
+                            services__grab_stderr(action));
     cmd_finalize(cmd, rsc);
 }
 
