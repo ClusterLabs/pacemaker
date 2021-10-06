@@ -181,7 +181,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     free_xml(converted);
 }
 
-static gboolean
+static void
 process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
@@ -201,13 +201,10 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
         crm_trace("Bad sys-to %s", crm_str(sys_to));
-        return FALSE;
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
         handle_pecalc_op(msg, xml_data, sender);
     }
-
-    return TRUE;
 }
 
 static int32_t
