@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,10 +123,10 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
 static int
 stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
 {
-    char *buffer = NULL;
     xmlNode *xml = NULL;
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
+    pcmk__action_result_t *result = NULL;
     stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0,
                                                      5, NULL, NULL, NULL);
     int rc = stonith__execute(action);
@@ -138,23 +138,31 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
         return rc;
     }
 
-    stonith__action_result(action, &rc, &buffer, NULL);
-    stonith__destroy_action(action);
-    if (rc < 0) {
-        crm_warn("Metadata action for %s failed: %s " CRM_XS "rc=%d",
-                 agent, pcmk_strerror(rc), rc);
-        free(buffer);
-        return rc;
+    result = stonith__action_result(action);
+
+    if (result->execution_status != PCMK_EXEC_DONE) {
+        crm_warn("Could not execute metadata action for %s: %s",
+                 agent, pcmk_exec_status_str(result->execution_status));
+        stonith__destroy_action(action);
+        return pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    if (buffer == NULL) {
+    if (result->exit_status != CRM_EX_OK) {
+        crm_warn("Metadata action for %s returned error code %d",
+                 agent, result->exit_status);
+        stonith__destroy_action(action);
+        return pcmk_rc2legacy(stonith__result2rc(result));
+    }
+
+    if (result->action_stdout == NULL) {
         crm_warn("Metadata action for %s returned no data", agent);
+        stonith__destroy_action(action);
         return -ENODATA;
     }
 
-    xml = string2xml(buffer);
-    free(buffer);
-    buffer = NULL;
+    xml = string2xml(result->action_stdout);
+    stonith__destroy_action(action);
+
     if (xml == NULL) {
         crm_warn("Metadata for %s is invalid", agent);
         return -pcmk_err_schema_validation;
@@ -289,7 +297,19 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
 
     rc = stonith__execute(action);
     if (rc == pcmk_ok) {
-        stonith__action_result(action, &rc, output, error_output);
+        pcmk__action_result_t *result = stonith__action_result(action);
+
+        rc = pcmk_rc2legacy(stonith__result2rc(result));
+
+        // Take ownership of output so stonith__destroy_action() doesn't free it
+        if (output != NULL) {
+            *output = result->action_stdout;
+            result->action_stdout = NULL;
+        }
+        if (error_output != NULL) {
+            *error_output = result->action_stderr;
+            result->action_stderr = NULL;
+        }
     }
     stonith__destroy_action(action);
     return rc;

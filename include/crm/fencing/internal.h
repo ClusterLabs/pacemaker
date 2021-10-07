@@ -58,8 +58,7 @@ stonith_action_t *stonith_action_create(const char *agent,
                                         GHashTable * port_map,
                                         const char * host_arg);
 void stonith__destroy_action(stonith_action_t *action);
-void stonith__action_result(stonith_action_t *action, int *rc, char **output,
-                            char **error_output);
+pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);
 
 int

@@ -670,40 +670,14 @@ stonith__destroy_action(stonith_action_t *action)
  * \internal
  * \brief Get the result of an executed stonith action
  *
- * \param[in,out] action        Executed action
- * \param[out]    rc            Where to store result code (or NULL)
- * \param[out]    output        Where to store standard output (or NULL)
- * \param[out]    error_output  Where to store standard error output (or NULL)
+ * \param[in] action  Executed action
  *
- * \note If output or error_output is not NULL, the caller is responsible for
- *       freeing the memory.
+ * \return Pointer to action's result (or NULL if \p action is NULL)
  */
-void
-stonith__action_result(stonith_action_t *action, int *rc, char **output,
-                       char **error_output)
+pcmk__action_result_t *
+stonith__action_result(stonith_action_t *action)
 {
-    if (rc) {
-        *rc = pcmk_ok;
-    }
-    if (output) {
-        *output = NULL;
-    }
-    if (error_output) {
-        *error_output = NULL;
-    }
-    if (action != NULL) {
-        if (rc) {
-            *rc = pcmk_rc2legacy(stonith__result2rc(&(action->result)));
-        }
-        if ((output != NULL) && (action->result.action_stdout != NULL)) {
-            *output = action->result.action_stdout;
-            action->result.action_stdout = NULL; // hand off ownership to caller
-        }
-        if ((error_output != NULL) && (action->result.action_stderr != NULL)) {
-            *error_output = action->result.action_stderr;
-            action->result.action_stderr = NULL; // hand off ownership to caller
-        }
-    }
+    return (action == NULL)? NULL : &(action->result);
 }
 
 #define FAILURE_MAX_RETRIES 2
