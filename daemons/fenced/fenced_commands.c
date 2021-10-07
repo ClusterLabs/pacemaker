@@ -112,8 +112,8 @@ typedef struct async_command_s {
     stonith_device_t *activating_on;
 } async_command_t;
 
-static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
-                                              xmlNode * data, int rc);
+static xmlNode *construct_async_reply(async_command_t *cmd,
+                                      const pcmk__action_result_t *result);
 
 static gboolean
 is_action_required(const char *action, stonith_device_t *device)
@@ -2399,7 +2399,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     output = result->action_stdout;
     rc = pcmk_rc2legacy(stonith__result2rc(result));
 
-    reply = stonith_construct_async_reply(cmd, output, NULL, rc);
+    reply = construct_async_reply(cmd, result);
 
     // Only replies for certain actions are broadcast
     if (pcmk__str_any_of(cmd->action, "metadata", "monitor", "list", "status",
@@ -2732,17 +2732,20 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Build an XML reply to an asynchronous fencing command
+ *
+ * \param[in] cmd     Fencing command that reply is for
+ * \param[in] result  Command result
+ */
 static xmlNode *
-stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode * data, int rc)
+construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
 {
-    xmlNode *reply = NULL;
-
-    crm_trace("Creating a basic reply");
-    reply = create_xml_node(NULL, T_STONITH_REPLY);
+    xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
     crm_xml_add(reply, "st_origin", __func__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
-
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
     crm_xml_add(reply, F_STONITH_DEVICE, cmd->device);
     crm_xml_add(reply, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
@@ -2753,15 +2756,9 @@ stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
-
-    crm_xml_add_int(reply, F_STONITH_RC, rc);
-
-    crm_xml_add(reply, "st_output", output);
-
-    if (data != NULL) {
-        crm_info("Attaching reply output");
-        add_message_xml(reply, F_STONITH_CALLDATA, data);
-    }
+    crm_xml_add_int(reply, F_STONITH_RC,
+                    pcmk_rc2legacy(stonith__result2rc(result)));
+    crm_xml_add(reply, "st_output", result->action_stdout);
     return reply;
 }
 
