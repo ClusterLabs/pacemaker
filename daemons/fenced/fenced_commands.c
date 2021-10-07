@@ -1144,6 +1144,18 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
 
     mainloop_set_trigger(dev->work);
 
+    if (result->execution_status != PCMK_EXEC_DONE) {
+        crm_warn("Assuming %s cannot fence %s "
+                 "because status could not be executed: %s%s%s%s",
+                 dev->id, search->host,
+                 pcmk_exec_status_str(result->execution_status),
+                 ((result->exit_reason == NULL)? "" : " ("),
+                 ((result->exit_reason == NULL)? "" : result->exit_reason),
+                 ((result->exit_reason == NULL)? "" : ")"));
+        search_devices_record_result(search, dev->id, FALSE);
+        return;
+    }
+
     switch (result->exit_status) {
         case fence_status_unknown:
             crm_trace("%s reported it cannot fence %s", dev->id, search->host);
@@ -1187,21 +1199,41 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
 
     mainloop_set_trigger(dev->work);
 
-    if (result->exit_status == CRM_EX_OK) {
+    if ((result->execution_status == PCMK_EXEC_DONE)
+        && (result->exit_status == CRM_EX_OK)) {
         crm_info("Refreshing target list for %s", dev->id);
         g_list_free_full(dev->targets, free);
         dev->targets = stonith__parse_targets(result->action_stdout);
         dev->targets_age = time(NULL);
 
     } else if (dev->targets != NULL) {
-        crm_info("Reusing most recent target list for %s "
-                 "because list returned error code %d",
-                 dev->id, result->exit_status);
+        if (result->execution_status == PCMK_EXEC_DONE) {
+            crm_info("Reusing most recent target list for %s "
+                     "because list returned error code %d",
+                     dev->id, result->exit_status);
+        } else {
+            crm_info("Reusing most recent target list for %s "
+                     "because list could not be executed: %s%s%s%s",
+                     dev->id, pcmk_exec_status_str(result->execution_status),
+                     ((result->exit_reason == NULL)? "" : " ("),
+                     ((result->exit_reason == NULL)? "" : result->exit_reason),
+                     ((result->exit_reason == NULL)? "" : ")"));
+        }
 
     } else { // We have never successfully executed list
-        crm_warn("Assuming %s cannot fence %s "
-                 "because list returned error code %d",
-                 dev->id, search->host, result->exit_status);
+        if (result->execution_status == PCMK_EXEC_DONE) {
+            crm_warn("Assuming %s cannot fence %s "
+                     "because list returned error code %d",
+                     dev->id, search->host, result->exit_status);
+        } else {
+            crm_warn("Assuming %s cannot fence %s "
+                     "because list could not be executed: %s%s%s%s",
+                     dev->id, search->host,
+                     pcmk_exec_status_str(result->execution_status),
+                     ((result->exit_reason == NULL)? "" : " ("),
+                     ((result->exit_reason == NULL)? "" : result->exit_reason),
+                     ((result->exit_reason == NULL)? "" : ")"));
+        }
 
         /* Fall back to pcmk_host_check="status" if the user didn't explicitly
          * specify "dynamic-list".
