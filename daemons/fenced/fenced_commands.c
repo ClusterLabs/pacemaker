@@ -1129,18 +1129,19 @@ status_search_cb(int pid, int rc, const char *output, void *user_data)
 
     switch (rc) {
         case fence_status_unknown:
-            crm_trace("Host %s is not known by %s", search->host, dev->id);
+            crm_trace("%s reported it cannot fence %s", dev->id, search->host);
             break;
 
         case fence_status_active:
         case fence_status_inactive:
-            crm_trace("Host %s is known by %s", search->host, dev->id);
+            crm_trace("%s reported it can fence %s", dev->id, search->host);
             can = TRUE;
             break;
 
         default:
-            crm_notice("Unknown result when testing if %s can fence %s: rc=%d",
-                       dev->id, search->host, rc);
+            crm_warn("Assuming %s cannot fence %s "
+                     "(status returned unknown code %d)",
+                     dev->id, search->host, rc);
             break;
     }
     search_devices_record_result(search, dev->id, can);
@@ -1168,21 +1169,30 @@ dynamic_list_search_cb(int pid, int rc, const char *output, void *user_data)
 
     mainloop_set_trigger(dev->work);
 
-    /* If we successfully got the targets earlier, don't disable. */
-    if (rc != 0 && !dev->targets) {
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
-            /*
-                If the operation fails if the user does not explicitly specify "dynamic-list", it will fall back to "status".
-            */
-            crm_notice("Disabling port list queries for %s (%d): %s", dev->id, rc, output);
-            g_hash_table_replace(dev->params,
-                             strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
-        }
-    } else if (!rc) {
-        crm_info("Refreshing port list for %s", dev->id);
+    if (rc == CRM_EX_OK) {
+        crm_info("Refreshing target list for %s", dev->id);
         g_list_free_full(dev->targets, free);
         dev->targets = stonith__parse_targets(output);
         dev->targets_age = time(NULL);
+
+    } else if (dev->targets != NULL) {
+        crm_info("Reusing most recent target list for %s "
+                 "because list returned error code %d",
+                 dev->id, rc);
+
+    } else { // We have never successfully executed list
+        crm_warn("Assuming %s cannot fence %s "
+                 "because list returned error code %d",
+                 dev->id, search->host, rc);
+
+        /* Fall back to pcmk_host_check="status" if the user didn't explicitly
+         * specify "dynamic-list".
+         */
+        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
+            crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
+            g_hash_table_replace(dev->params, strdup(PCMK_STONITH_HOST_CHECK),
+                                 strdup("status"));
+        }
     }
 
     if (dev->targets) {
