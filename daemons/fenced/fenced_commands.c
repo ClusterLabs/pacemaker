@@ -485,13 +485,13 @@ stonith_device_execute(stonith_device_t * device)
     cmd->activating_on = device;
     exec_rc = stonith_action_execute_async(action, (void *)cmd,
                                            cmd->done_cb, fork_cb);
-
     if (exec_rc < 0) {
         crm_warn("Operation '%s'%s%s using %s failed: %s " CRM_XS " rc=%d",
                  cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                  device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
         cmd->done_cb(0, exec_rc, NULL, cmd);
+        stonith__destroy_action(action);
     }
 
 done:
