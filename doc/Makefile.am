@@ -68,8 +68,10 @@ deprecated-clean:
 
 # Annotated source code as HTML
 
+# Cleaning first ensures we don't index unrelated stuff like RPM sources
 global:
 	$(MAKE) $(AM_MAKEFLAGS) -C .. clean-generic
+	$(MAKE) $(AM_MAKEFLAGS) -C ../rpm rpm-clean
 	cd .. && gtags -q && htags -sanhIT doc
 
 global-upload: global
