@@ -579,12 +579,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 rm -f %{buildroot}/%{_sbindir}/notifyServicelogEvent
 rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
 
-# Don't ship init scripts for systemd based platforms
-%if %{defined _unitdir}
-rm -f %{buildroot}/%{_initrddir}/pacemaker
-rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
-%endif
-
 # Byte-compile Python sources where suitable and the distro procedures known
 %if %{defined py_byte_compile}
 %{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
