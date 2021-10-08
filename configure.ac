@@ -209,6 +209,16 @@ dnl ===============================================
 dnl Actual library checks come later, but pkg-config can be used here to grab
 dnl external values to use as defaults for configure options
 
+dnl Per the autoconf docs, --enable-*/--disable-* options should control
+dnl features inherent to Pacemaker, while --with-*/--without-* options should
+dnl control the use of external software. However, --enable-*/--disable-* may
+dnl implicitly require additional external dependencies, and
+dnl --with-*/--without-* may implicitly enable or disable features, so the
+dnl line is blurry.
+dnl
+dnl We also use --with-* options for custom file, directory, and path
+dnl locations, since autoconf does not provide an option type for those.
+
 dnl --enable-* options: build process
 
 AC_ARG_ENABLE([quiet],
@@ -248,7 +258,7 @@ AC_ARG_ENABLE([upstart],
 yes_no_try "$enable_upstart" "try"
 enable_upstart=$?
 
-dnl --enable-* options: compatibility
+dnl --enable-* options: features inherent to Pacemaker
 
 AC_ARG_ENABLE([compat-2.0],
     [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
@@ -276,7 +286,7 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
-dnl --with-* options: basic parameters
+dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
