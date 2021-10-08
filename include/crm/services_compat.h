@@ -52,7 +52,7 @@ GList *services_list(void);
 static inline const char *
 services_lrm_status_str(enum op_status status)
 {
-    return pcmk_exec_status_str(status);
+    return pcmk_exec_status_str((enum pcmk_exec_status) status);
 }
 
 #ifdef __cplusplus

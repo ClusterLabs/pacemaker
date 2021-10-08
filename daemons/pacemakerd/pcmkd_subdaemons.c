@@ -115,7 +115,7 @@ static gboolean pcmk_shutdown_worker(gpointer user_data);
 static gboolean stop_child(pcmk_child_t * child, int signal);
 
 static bool
-pcmkd_cluster_connected()
+pcmkd_cluster_connected(void)
 {
 #if SUPPORT_COROSYNC
     return pcmkd_corosync_connected();
