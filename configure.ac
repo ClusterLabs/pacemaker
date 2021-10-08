@@ -527,6 +527,14 @@ AC_ARG_WITH([sanitizers],
   [ SANITIZERS="$withval" ],
   [ SANITIZERS="" ])
 
+dnl Environment variable options
+
+AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
+AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
+
+AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
+AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
+
 
 dnl ===============================================
 dnl General Processing
@@ -1702,12 +1710,6 @@ if export | fgrep " CFLAGS=" > /dev/null; then
     CFLAGS="$SAVED_CFLAGS"
     unset SAVED_CFLAGS
 fi
-
-AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
-AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
-
-AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
-AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
 
 CC_EXTRAS=""
 
