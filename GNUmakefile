@@ -105,15 +105,22 @@ RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)
 RPM_OPTS_toplevel	= --define "_sourcedir $(abs_builddir)" 		\
 			  --define "_specdir   $(RPM_SPEC_DIR_toplevel)"	\
 			  --define "_srcrpmdir $(RPM_SRCRPM_DIR_toplevel)"
+RPM_CLEAN_toplevel	=
 
 RPM_SPEC_DIR_subtree	= $(abs_builddir)/rpm/SPECS
 RPM_SRCRPM_DIR_subtree	= $(abs_builddir)/rpm/SRPMS
 RPM_OPTS_subtree	= --define "_sourcedir $(abs_builddir)" 		\
 			  --define "_topdir $(abs_builddir)/rpm"
+RPM_CLEAN_subtree	= "$(abs_builddir)/rpm/BUILD"		\
+			  "$(abs_builddir)/rpm/BUILDROOT"	\
+			  "$(abs_builddir)/rpm/RPMS"		\
+			  "$(abs_builddir)/rpm/SPECS"		\
+			  "$(abs_builddir)/rpm/SRPMS"
 
 RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMDEST))
 RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMDEST))
 RPM_OPTS	= $(RPM_OPTS_$(RPMDEST))
+RPM_CLEAN	= $(RPM_CLEAN_$(RPMDEST))
 
 WITH		?= --without doc
 BUILD_COUNTER	?= build.counter
@@ -223,17 +230,8 @@ rpm:	srpm
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild "$(RPM_SRCRPM_DIR)"/*.src.rpm
 
 .PHONY: rpm-clean
-rpm-clean:
-	-if [ "$(RPMDEST)" = "subtree" ]; then		\
-		rm -rf "$(abs_builddir)/rpm/BUILD"	\
-			"$(abs_builddir)/rpm/BUILDROOT"	\
-			"$(abs_builddir)/rpm/RPMS"	\
-			"$(abs_builddir)/rpm/SPECS"	\
-			"$(abs_builddir)/rpm/SRPMS";	\
-	else						\
-		rm -f $(abs_builddir)/$(PACKAGE).spec	\
-			$(abs_builddir)/*.src.rpm;	\
-	fi
+rpm-clean: spec-clean srpm-clean
+	-if [ -n "$(RPM_CLEAN)" ]; then rm -rf $(RPM_CLEAN); fi
 
 .PHONY: rpmlint
 rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
