@@ -430,6 +430,8 @@ gnulib-update:
 	maint/gnulib/gnulib-tool \
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
+	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = $(date +'%Y%m%d')/"	\
+		rpm/pacemaker.spec.in
 
 ## Coverage/profiling
 

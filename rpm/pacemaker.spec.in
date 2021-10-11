@@ -332,7 +332,7 @@ Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 # Bundled bits
 ## Pacemaker uses the crypto/md5-buffer module from gnulib
 %if 0%{?fedora} || 0%{?rhel}
-Provides:      bundled(gnulib)
+Provides:      bundled(gnulib) = 20200404
 %endif
 
 %description
