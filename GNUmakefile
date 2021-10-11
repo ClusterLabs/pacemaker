@@ -28,22 +28,12 @@ EXTRA_CLEAN_TARGETS	= ancillary-clean
 abs_srcdir	?= $(shell pwd)
 abs_builddir	?= $(shell pwd)
 
+# Define release-related variables
+include $(abs_srcdir)/mk/release.mk
+
 GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
 
 PACKAGE		?= pacemaker
-
-
-# Definitions that specify what various targets will apply to
-
-COMMIT  ?= HEAD
-
-# TAG defaults to DIST when not in a git checkout (e.g. from a distribution),
-# the tag name if COMMIT is tagged, and the full commit ID otherwise.
-TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
-	     test -n "$${T}" && echo "$${T}" \
-	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
-lparen = (
-rparen = )
 
 # SPEC_COMMIT is identical to TAG for DIST and tagged releases, otherwise it is
 # the short commit ID (which must be used in order for "make export" to use the
@@ -58,41 +48,13 @@ SPEC_COMMIT	?= $(shell						\
 		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 
-LAST_RC		?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'|sort -Vr|head -n 1)
-LAST_FINAL	?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*\)$$/\1/p'|sort -Vr|head -n 1)
-LAST_RELEASE	?= $(shell test "Pacemaker-$(VERSION)" = "Pacemaker-" && echo "$(LAST_FINAL)" || echo "Pacemaker-$(VERSION)")
-NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
-
 # indent target: Limit indent to these directories
 INDENT_DIRS	?= .
 
 # indent target: Extra options to pass to indent
 INDENT_OPTS	?=
 
-# This Makefile can create 2 types of distributions:
-#
-# - "make dist" is automake's native functionality, based on the various
-#   dist/nodist make variables; it always uses the current sources
-#
-# - "make export" is a custom target based on git archive and relevant entries
-#   from .gitattributes; it defaults to current sources but can use any git tag
-#
-# Both types use the TARFILE name for the result, though they generate
-# different contents.
-# 
-# The directory is named pacemaker-DIST when not in a git checkout (e.g.
-# from a distribution itself), pacemaker-<version_part_of_tag> for tagged
-# commits, and pacemaker-<short_commit> otherwise.
-distdir		= $(PACKAGE)-$(shell						\
-		  case $(TAG) in						\
-			DIST$(rparen)						\
-				echo DIST;;					\
-			Pacemaker-*$(rparen)					\
-		  		echo '$(TAG)' | cut -c11-;;			\
-		  	*$(rparen)						\
-		  		git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		  esac)$(shell							\
-		  if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
+distdir		= $(top_distdir)
 TARFILE		= $(abs_builddir)/$(distdir).tar.gz
 
 .PHONY: init
