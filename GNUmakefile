@@ -47,6 +47,15 @@ SPEC_COMMIT	?= $(shell						\
 		esac)$(shell						\
 		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
+SPEC_RELEASE	= $(shell case "$(WITH)" in 				\
+		  *pre_release*$(rparen)				\
+			[ "$(LAST_RELEASE)" = "$(TAG)" ]		\
+				&& echo "$(LAST_RELEASE)"		\
+				|| echo "$(NEXT_RELEASE)" ;;		\
+		  *$(rparen)						\
+			echo "$(LAST_RELEASE)" ;;			\
+		  esac)
+SPEC_RELEASE_NO	= $(shell echo $(SPEC_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)
 
 # indent target: Limit indent to these directories
 INDENT_DIRS	?= .
@@ -119,48 +128,6 @@ F	?= $(shell test ! -e /etc/fedora-release && echo 0; test -e /etc/fedora-releas
 ARCH	?= $(shell test ! -e /etc/fedora-release && uname -m; test -e /etc/fedora-release && rpm --eval %{_arch})
 MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 
-# rpmbuild wrapper that translates "--with[out] FEATURE" into RPM macros
-#
-# Unfortunately, at least recent versions of rpm do not support mentioned
-# switch.  To work this around, we can emulate mechanism that rpm uses
-# internally: unfold the flags into respective macro definitions:
-#
-#    --with[out] FOO  ->  --define "_with[out]_FOO --with[out]-FOO"
-#
-# $(1) ... WITH string (e.g., --with pre_release --without doc)
-# $(2) ... options following the initial "rpmbuild" in the command
-# $(3) ... final arguments determined with $2 (e.g., pacemaker.spec)
-#
-# Note that if $(3) is a specfile, extra case is taken so as to reflect
-# pcmkversion correctly (using in-place modification).
-#
-# Also note that both ways to specify long option with an argument
-# (i.e., what getopt and, importantly, rpm itself support) can be used:
-#
-#    --with FOO
-#    --with=FOO
-rpmbuild-with = \
-	WITH=$$(getopt -o "" -l with:,without: -- $(1)) || exit 1; \
-	CMD='rpmbuild $(2)'; PREREL=0; \
-	eval set -- "$${WITH}"; \
-	while true; do \
-		case "$$1" in \
-		--with) CMD="$${CMD} --define \"_with_$$2 --with-$$2\""; \
-			[ "$$2" != pre_release ] || PREREL=1; shift 2;; \
-		--without) CMD="$${CMD} --define \"_without_$$2 --without-$$2\""; \
-		        [ "$$2" != pre_release ] || PREREL=0; shift 2;; \
-		--) shift ; break ;; \
-		*) echo "cannot parse WITH: $$1"; exit 1;; \
-		esac; \
-	done; \
-	case "$(3)" in \
-	*.spec) { [ $${PREREL} -eq 0 ] || [ $(LAST_RELEASE) = $(TAG) ]; } \
-		&& sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3) \
-		|| sed -i "s/^\(%global pcmkversion \).*/\1$$(echo $(NEXT_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" $(3);; \
-	esac; \
-	CMD="$${CMD} $(3)"; \
-	eval "$${CMD}"
-
 # Depend on spec-clean so it gets rebuilt every time
 $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	$(AM_V_at)$(MKDIR_P) $(RPM_SPEC_DIR)	# might not exist in VPATH build
@@ -173,12 +140,12 @@ $(RPM_SPEC_DIR)/$(PACKAGE).spec: spec-clean rpm/pacemaker.spec.in
 	else 										\
 	    cat $(abs_srcdir)/rpm/pacemaker.spec.in;							\
 	fi | sed									\
-	    -e "s/^\(%global pcmkversion \).*/\1$$(echo $(LAST_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)/" \
-	    -e 's/global\ specversion\ .*/global\ specversion\ $(SPECVERSION)/' 	\
-	    -e 's/global\ commit\ .*/global\ commit\ $(SPEC_COMMIT)/'			\
-	    -e 's/global\ commit_abbrev\ .*/global\ commit_abbrev\ $(SPEC_ABBREV)/'	\
+	    -e 's/^\(%global pcmkversion \).*/\1$(SPEC_RELEASE_NO)/'			\
+	    -e 's/^\(%global specversion \).*/\1$(SPECVERSION)/' 			\
+	    -e 's/^\(%global commit \).*/\1$(SPEC_COMMIT)/'				\
+	    -e 's/^\(%global commit_abbrev \).*/\1$(SPEC_ABBREV)/'			\
 	    -e "s/PACKAGE_DATE/$$(date +'%a %b %d %Y')/"				\
-	    -e "s/PACKAGE_VERSION/$$(git describe --tags $(TAG) | sed -e s:Pacemaker-:: -e s:-.*::)/"	\
+	    -e 's/PACKAGE_VERSION/$(SPEC_RELEASE_NO)-$(SPECVERSION)/'			\
 	    > "$@"
 
 .PHONY: $(PACKAGE).spec
@@ -193,7 +160,7 @@ srpm:	export srpm-clean $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	if [ -e $(BUILD_COUNTER) ]; then					\
 		echo $(COUNT) > $(BUILD_COUNTER);				\
 	fi
-	$(call rpmbuild-with,$(WITH),-bs $(RPM_OPTS),$(RPM_SPEC_DIR)/$(PACKAGE).spec)
+	rpmbuild -bs $(RPM_OPTS) $(WITH) "$(RPM_SPEC_DIR)/$(PACKAGE).spec"
 
 .PHONY: srpm-clean
 srpm-clean:
@@ -253,7 +220,7 @@ rpm-dep: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 .PHONY: rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
-	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
+	rpmbuild $(RPM_OPTS) $(WITH) --rebuild "$(RPM_SRCRPM_DIR)"/*.src.rpm
 
 .PHONY: rpm-clean
 rpm-clean:

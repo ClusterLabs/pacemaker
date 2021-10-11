@@ -915,5 +915,5 @@ exit 0
 
 %changelog
 
-* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION-1
+* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION
  - See included ChangeLog file for details
