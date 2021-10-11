@@ -58,12 +58,9 @@ SPEC_COMMIT	?= $(shell						\
 		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 
-LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
-ifneq ($(origin VERSION), undefined)
-LAST_RELEASE	?= Pacemaker-$(VERSION)
-else
-LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | head -n 1)
-endif
+LAST_RC		?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*-rc[0-9]*\)$$/\1/p'|sort -Vr|head -n 1)
+LAST_FINAL	?= $(shell git tag -l|sed -n -e 's/^\(Pacemaker-[0-9.]*\)$$/\1/p'|sort -Vr|head -n 1)
+LAST_RELEASE	?= $(shell test "Pacemaker-$(VERSION)" = "Pacemaker-" && echo "$(LAST_FINAL)" || echo "Pacemaker-$(VERSION)")
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
 # indent target: Limit indent to these directories
