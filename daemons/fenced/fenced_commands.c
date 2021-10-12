@@ -2243,10 +2243,24 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
                         query, stonith_query_capable_device_cb);
 }
 
-#define ST_LOG_OUTPUT_MAX 512
+/*!
+ * \internal
+ * \brief Log the result of an asynchronous command
+ *
+ * \param[in] cmd        Command the result is for
+ * \param[in] rc         Legacy return code corresponding to result
+ * \param[in] pid        Process ID of command, if available
+ * \param[in] next       Alternate device that will be tried if command failed
+ * \param[in] output     Command output, if any
+ * \param[in] op_merged  Whether this command was merged with an earlier one
+ */
 static void
-log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output, gboolean op_merged)
+log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
+                 const char *output, gboolean op_merged)
 {
+    if (pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+        output = NULL;
+    }
     if (rc == 0) {
         next = NULL;
     }
@@ -2285,12 +2299,9 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
 
     reply = stonith_construct_async_reply(cmd, output, NULL, rc);
 
-    if (pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
-        /* Too verbose to log */
-        crm_trace("Metadata query for %s", cmd->device);
-        output = NULL;
-
-    } else if (pcmk__str_any_of(cmd->action, "monitor", "list", "status", NULL)) {
+    // Only replies for certain actions are broadcast
+    if (pcmk__str_any_of(cmd->action, "metadata", "monitor", "list", "status",
+                         NULL)) {
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
@@ -2299,7 +2310,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
         bcast = TRUE;
     }
 
-    log_operation(cmd, rc, pid, NULL, output, merged);
+    log_async_result(cmd, rc, pid, NULL, output, merged);
     crm_log_xml_trace(reply, "Reply");
 
     if (merged) {
@@ -2410,8 +2421,7 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, next_device->id, output, FALSE);
-
+        log_async_result(cmd, rc, pid, next_device->id, output, FALSE);
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */
         cmd = NULL;
