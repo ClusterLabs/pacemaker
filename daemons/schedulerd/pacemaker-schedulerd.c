@@ -418,12 +418,12 @@ pengine_shutdown(int nsig)
         sched_data_set = NULL;
     }
 
-    pcmk__unregister_formats();
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
         out = NULL;
     }
 
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
