@@ -13,5 +13,6 @@
 G_GNUC_INTERNAL int services__get_lsb_metadata(const char *type, char **output);
 G_GNUC_INTERNAL GList *services__list_lsb_agents(void);
 G_GNUC_INTERNAL bool services__lsb_agent_exists(const char *agent);
+G_GNUC_INTERNAL int services__lsb_prepare(svc_action_t *op);
 
 #endif

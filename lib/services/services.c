@@ -28,6 +28,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
+#include "services_ocf.h"
 #include "services_lsb.h"
 
 #if SUPPORT_UPSTART
@@ -257,6 +258,7 @@ services__create_resource_action(const char *name, const char *standard,
 {
     svc_action_t *op = NULL;
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
+    int rc = pcmk_rc_ok;
 
     op = new_action();
     if (op == NULL) {
@@ -299,153 +301,33 @@ services__create_resource_action(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        char *dirs = NULL;
-        char *dir = NULL;
-        char *buf = NULL;
-        struct stat st;
-
-        if (pcmk__str_empty(OCF_RA_PATH)) {
-            crm_err("Cannot execute OCF actions because resource agent path "
-                    "was not configured in this build");
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
-                                 PCMK_EXEC_ERROR_HARD,
-                                 "No OCF agent path configured in build");
-            return op;
-        }
-
-        dirs = strdup(OCF_RA_PATH);
-        if (dirs == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
-
-        for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-            buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
-            if (stat(buf, &st) == 0) {
-                break;
-            }
-            free(buf);
-            buf = NULL;
-        }
-
-        free(dirs);
-
-        if (buf) {
-            op->opaque->exec = buf;
-        } else {
-            crm_err("Cannot create %s operation for %s: %s",
-                    action, name, strerror(ENOENT));
-            services__handle_exec_error(op, ENOENT);
-            return op;
-        }
-
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
-        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__ocf_prepare(op);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
-        if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__lsb_prepare(op);
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-        op->opaque->exec = strdup("systemd-dbus");
-        if (op->opaque->exec == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__systemd_prepare(op);
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
-        op->opaque->exec = strdup("upstart-dbus");
-        if (op->opaque->exec == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
+        rc = services__upstart_prepare(op);
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        op->opaque->exec = pcmk__full_path(op->agent, NAGIOS_PLUGIN_DIR);
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        if (op->opaque->args[0] == NULL) {
-            crm_crit("Cannot prepare %s action for %s: %s",
-                     action, name, strerror(ENOMEM));
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
-
-        if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {
-            /* Invoke --version for a nagios probe */
-            op->opaque->args[1] = strdup("--version");
-            if (op->opaque->args[1] == NULL) {
-                crm_crit("Cannot prepare %s action for %s: %s",
-                         action, name, strerror(ENOMEM));
-                services__handle_exec_error(op, ENOMEM);
-                return op;
-            }
-
-        } else if (op->params) {
-            GHashTableIter iter;
-            char *key = NULL;
-            char *value = NULL;
-            int index = 1; // 0 is already set to executable name
-
-            g_hash_table_iter_init(&iter, op->params);
-
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-
-                if (index > (PCMK__NELEM(op->opaque->args) - 2)) {
-                    crm_info("Cannot prepare %s action for %s: Too many parameters",
-                             action, name);
-                    services__set_result(op, NAGIOS_STATE_UNKNOWN,
-                                         PCMK_EXEC_ERROR_HARD,
-                                         "Too many parameters");
-                    break;
-                }
-
-                if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei) || strstr(key, CRM_META "_")) {
-                    continue;
-                }
-                op->opaque->args[index++] = crm_strdup_printf("--%s", key);
-                op->opaque->args[index++] = strdup(value);
-                if (op->opaque->args[index - 1] == NULL) {
-                    crm_crit("Cannot prepare %s action for %s: %s",
-                             action, name, strerror(ENOMEM));
-                    services__handle_exec_error(op, ENOMEM);
-                    return op;
-                }
-            }
-        }
-
-        // Nagios actions don't need to keep the parameters
-        if (op->params != NULL) {
-            g_hash_table_destroy(op->params);
-            op->params = NULL;
-        }
+        rc = services__nagios_prepare(op);
 #endif
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
-        services__handle_exec_error(op, ENOENT);
+        rc = ENOENT;
     }
 
+    if (rc != pcmk_rc_ok) {
+        crm_err("Cannot prepare %s operation for %s: %s",
+                action, name, strerror(rc));
+        services__handle_exec_error(op, rc);
+    }
     return op;
 }
 
@@ -781,7 +663,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      */
 
     // Report operation as cancelled
-    services__set_result(op, op->rc, PCMK_EXEC_CANCELLED, NULL);
+    services__set_cancelled(op);
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -1348,6 +1230,24 @@ services__set_result(svc_action_t *action, int agent_status,
                       pcmk__str_none)) {
         free(action->opaque->exit_reason);
         action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action to cancelled
+ *
+ * \param[out] action        Where to set action result
+ *
+ * \note This sets execution status but leaves the exit status unchanged
+ */
+void
+services__set_cancelled(svc_action_t *action)
+{
+    if (action != NULL) {
+        action->status = PCMK_EXEC_CANCELLED;
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = NULL;
     }
 }
 

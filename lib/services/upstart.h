@@ -17,6 +17,9 @@
 G_GNUC_INTERNAL GList *upstart_job_listall(void);
 
 G_GNUC_INTERNAL
+int services__upstart_prepare(svc_action_t *op);
+
+G_GNUC_INTERNAL
 int services__execute_upstart(svc_action_t *op);
 
 G_GNUC_INTERNAL gboolean upstart_job_exists(const gchar * name);

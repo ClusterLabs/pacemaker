@@ -45,19 +45,14 @@ struct svc_action_private_s {
 };
 
 G_GNUC_INTERNAL
+GList *services_os_get_single_directory_list(const char *root, gboolean files,
+                                             gboolean executable);
+
+G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
 G_GNUC_INTERNAL
 int services__execute_file(svc_action_t *op);
-
-G_GNUC_INTERNAL
-GList *resources_os_list_ocf_providers(void);
-
-G_GNUC_INTERNAL
-GList *resources_os_list_ocf_agents(const char *provider);
-
-G_GNUC_INTERNAL
-gboolean services__ocf_agent_exists(const char *provider, const char *agent);
 
 G_GNUC_INTERNAL
 gboolean cancel_recurring_action(svc_action_t * op);
@@ -79,6 +74,9 @@ int services__authorization_error(svc_action_t *op);
 
 G_GNUC_INTERNAL
 void services__handle_exec_error(svc_action_t * op, int error);
+
+G_GNUC_INTERNAL
+void services__set_cancelled(svc_action_t *action);
 
 G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);
