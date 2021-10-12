@@ -2111,6 +2111,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/report.collector                              \
