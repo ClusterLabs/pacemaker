@@ -2258,34 +2258,57 @@ static void
 log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
                  const char *output, gboolean op_merged)
 {
-    if (pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
-        output = NULL;
-    }
-    if (rc == 0) {
+    int log_level = LOG_ERR;
+    int output_log_level = LOG_NEVER;
+
+    GString *msg = g_string_sized_new(80); // Reasonable starting size
+
+    // Choose log levels appropriately
+    if (rc == 0) { // Success
+        log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
+        if ((output != NULL)
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            output_log_level = LOG_DEBUG;
+        }
         next = NULL;
+    } else { // Failure
+        log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
+        if ((output != NULL)
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            output_log_level = LOG_WARNING;
+        }
     }
 
+    // Build the log message piece by piece
+    g_string_printf(msg, "Operation '%s' ", cmd->action);
+    if (pid != 0) {
+        g_string_append_printf(msg, "[%d] ", pid);
+    }
     if (cmd->victim != NULL) {
-        do_crm_log(((rc == 0)? LOG_NOTICE : LOG_ERR),
-                   "Operation '%s' [%d] (%scall %d from %s) targeting %s "
-                   "using %s returned %d (%s)%s%s",
-                   cmd->action, pid, (op_merged? "merged " : ""), cmd->id,
-                   cmd->client_name, cmd->victim,
-                   cmd->device, rc, pcmk_strerror(rc),
-                   (next? ", retrying with " : ""), (next ? next : ""));
-    } else {
-        do_crm_log_unlikely(((rc == 0)? LOG_DEBUG : LOG_NOTICE),
-                            "Operation '%s' [%d]%s using %s returned %d (%s)%s%s",
-                            cmd->action, pid, (op_merged? " (merged)" : ""),
-                            cmd->device, rc, pcmk_strerror(rc),
-                            (next? ", retrying with " : ""), (next ? next : ""));
+        g_string_append_printf(msg, "targeting %s ", cmd->victim);
     }
+    g_string_append_printf(msg, "using %s ", cmd->device);
 
-    if (output) {
-        // Output may have multiple lines
+    // Add result
+    g_string_append_printf(msg, "returned %d (%s)", rc, pcmk_strerror(rc));
+
+    // Add next device if appropriate
+    if (next != NULL) {
+        g_string_append_printf(msg, ", retrying with %s", next);
+    }
+    g_string_append_printf(msg, " " CRM_XS " %scall %d from %s",
+                           (op_merged? "merged " : ""), cmd->id,
+                           cmd->client_name);
+
+    // Log the result
+    do_crm_log(log_level, "%s", msg->str);
+    g_string_free(msg, TRUE);
+
+    // Log the output (which may have multiple lines), if appropriate
+    if (output_log_level != LOG_NEVER) {
         char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
 
-        crm_log_output(rc == 0 ? LOG_DEBUG : LOG_WARNING, prefix, output);
+        crm_log_output(output_log_level, prefix, output);
         free(prefix);
     }
 }
