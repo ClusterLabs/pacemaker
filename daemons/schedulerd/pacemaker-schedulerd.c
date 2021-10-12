@@ -125,9 +125,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
+    ipcs = pcmk__serve_schedulerd_ipc(&ipc_callbacks);
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Failed to create pacemaker-schedulerd server: exiting and inhibiting respawn");
         exit_code = CRM_EX_FATAL;
         goto done;
     }
@@ -158,6 +159,7 @@ void
 pengine_shutdown(int nsig)
 {
     if (ipcs != NULL) {
+        crm_trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }

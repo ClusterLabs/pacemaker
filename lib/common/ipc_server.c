@@ -945,6 +945,20 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
 }
 
 /*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemaker-schedulerd API
+ *
+ * \param[in] cb IPC callbacks
+ *
+ * \note This function exits fatally if unable to create the servers.
+ */
+qb_ipcs_service_t *
+pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
+{
+    return mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
+}
+
+/*!
  * \brief Check whether string represents a client name used by cluster daemons
  *
  * \param[in] name  String to check
