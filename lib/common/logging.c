@@ -131,6 +131,13 @@ crm_log_deinit(void)
 
 #define FMT_MAX 256
 
+/*!
+ * \internal
+ * \brief Set the log format string based on the passed-in method
+ *
+ * \param[in] method  The detail level of the log output
+ * \param[in] daemon  The daemon ID included in error messages
+ */
 static void
 set_format_string(int method, const char *daemon)
 {
@@ -710,6 +717,19 @@ crm_priority2int(const char *name)
 }
 
 
+/*!
+ * \brief Set PCMK_service environment variable
+ *
+ * The environemnt variable is set in one of two ways:
+ * - It is passed to the function via the "entity" parameter
+ * - It is derived from the executable name
+ *
+ * If it is already set, then it is not reset.
+ *
+ * \param[in] entity  If not NULL, will be assigned to the environment variable
+ * \param[in] argc    The number of command line parameters
+ * \param[in] argv    The command line parameter values
+ */
 static void
 set_identity(const char *entity, int argc, char **argv)
 {
