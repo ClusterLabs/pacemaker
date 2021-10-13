@@ -197,31 +197,44 @@ action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
            && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
 }
 
+/*!
+ * \internal
+ * \brief Log the result of an asynchronous command
+ *
+ * \param[in] cmd            Command to log result for
+ * \param[in] exec_time_ms   Execution time in milliseconds, if known
+ * \param[in] queue_time_ms  Queue time in milliseconds, if known
+ */
 static void
-log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
+log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
 {
-    char pid_str[32] = { 0, };
     int log_level = LOG_INFO;
-
-    if (cmd->last_pid) {
-        snprintf(pid_str, 32, "%d", cmd->last_pid);
-    }
+    GString *str = g_string_sized_new(100); // reasonable starting size
 
     if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
+
+    g_string_printf(str, "%s %s (call %d",
+                    cmd->rsc_id, cmd->action, cmd->call_id);
+    if (cmd->last_pid != 0) {
+        g_string_append_printf(str, ", PID %d", cmd->last_pid);
+    }
+    g_string_append_printf(str, ") exited with status %d",
+                           cmd->result.exit_status);
+
 #ifdef PCMK__TIME_USE_CGT
-    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
-               " (execution time %dms, queue time %dms)",
-               cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str,
-               cmd->result.exit_status, exec_time, queue_time);
-#else
-    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d",
-               cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str,
-               cmd->result.exit_status);
+    g_string_append_printf(str, " (execution time %s",
+                           pcmk__readable_interval(exec_time_ms));
+    if (queue_time_ms > 0) {
+        g_string_append_printf(str, " after being queued %s)",
+                               pcmk__readable_interval(queue_time_ms));
+    }
+    g_string_append(str, ")");
 #endif
+
+    do_crm_log(log_level, "%s", str->str);
+    g_string_free(str, TRUE);
 }
 
 static void
@@ -560,15 +573,14 @@ static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
     xmlNode *notify = NULL;
+    int exec_time = 0;
+    int queue_time = 0;
 
 #ifdef PCMK__TIME_USE_CGT
-    int exec_time = time_diff_ms(NULL, &(cmd->t_run));
-    int queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
-
-    log_finished(cmd, exec_time, queue_time);
-#else
-    log_finished(cmd, 0, 0);
+    exec_time = time_diff_ms(NULL, &(cmd->t_run));
+    queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
 #endif
+    log_finished(cmd, exec_time, queue_time);
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
