@@ -220,8 +220,16 @@ log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
     if (cmd->last_pid != 0) {
         g_string_append_printf(str, ", PID %d", cmd->last_pid);
     }
-    g_string_append_printf(str, ") exited with status %d",
-                           cmd->result.exit_status);
+    if (cmd->result.execution_status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, ") exited with status %d",
+                               cmd->result.exit_status);
+    } else {
+        g_string_append_printf(str, ") could not be executed: %s",
+                               pcmk_exec_status_str(cmd->result.execution_status));
+    }
+    if (cmd->result.exit_reason != NULL) {
+        g_string_append_printf(str, " (%s)", cmd->result.exit_reason);
+    }
 
 #ifdef PCMK__TIME_USE_CGT
     g_string_append_printf(str, " (execution time %s",
