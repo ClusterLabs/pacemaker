@@ -237,6 +237,11 @@ const char *get_schema_name(int version);
 const char *xml_latest_schema(void);
 gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 
+/*!
+ * \brief Initialize the CRM XML subsystem
+ *
+ * This method sets global XML settings and loads pacemaker schemas into the cache.
+ */
 void crm_xml_init(void);
 void crm_xml_cleanup(void);
 

@@ -131,6 +131,13 @@ crm_log_deinit(void)
 
 #define FMT_MAX 256
 
+/*!
+ * \internal
+ * \brief Set the log format string based on the passed-in method
+ *
+ * \param[in] method  The detail level of the log output
+ * \param[in] daemon  The daemon ID included in error messages
+ */
 static void
 set_format_string(int method, const char *daemon)
 {
@@ -710,6 +717,22 @@ crm_priority2int(const char *name)
 }
 
 
+/*!
+ * \internal
+ * \brief Set the identifier for the current process
+ *
+ * If the identifier crm_system_name is not already set, then it is set as follows:
+ * - it is passed to the function via the "entity" parameter, or
+ * - it is derived from the executable name
+ * 
+ * The identifier can be used in logs, IPC, and more.
+ * 
+ * This method also sets the PCMK_service environment variable.
+ *
+ * \param[in] entity  If not NULL, will be assigned to the identifier
+ * \param[in] argc    The number of command line parameters
+ * \param[in] argv    The command line parameter values
+ */
 static void
 set_identity(const char *entity, int argc, char **argv)
 {
