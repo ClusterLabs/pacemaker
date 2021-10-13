@@ -38,11 +38,10 @@ struct {
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static pe_working_set_t *sched_data_set = NULL;
-static pcmk__output_t *out = NULL;
+static pcmk__output_t *logger_out = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_LOG,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     { NULL, NULL, NULL }
@@ -66,7 +65,7 @@ init_working_set(void)
                                   pe_flag_no_counts|pe_flag_no_compat);
         pe__set_working_set_flags(sched_data_set,
                                   pe_flag_show_utilization);
-        sched_data_set->priv = out;
+        sched_data_set->priv = logger_out;
     } else {
         pe_reset_working_set(sched_data_set);
     }
@@ -321,8 +320,6 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_rc_ok;
-
     GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -377,19 +374,13 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
-        exit_code = pcmk_rc2exitc(rc);
+    logger_out = pcmk__new_logger();
+    if (logger_out == NULL) {
+        exit_code = CRM_EX_FATAL;
         goto done;
     }
 
-    pe__register_messages(out);
-    pcmk__register_lib_messages(out);
-
-    pcmk__output_set_log_level(out, LOG_TRACE);
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -418,10 +409,10 @@ pengine_shutdown(int nsig)
         sched_data_set = NULL;
     }
 
-    if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, exit_code, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
     }
 
     pcmk__unregister_formats();
