@@ -39,11 +39,13 @@ static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static pe_working_set_t *sched_data_set = NULL;
 static pcmk__output_t *logger_out = NULL;
+static pcmk__output_t *out = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
 
@@ -301,7 +303,7 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 };
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -312,7 +314,7 @@ build_arg_context(pcmk__common_args_t *args) {
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     return context;
 }
@@ -321,18 +323,32 @@ int
 main(int argc, char **argv)
 {
     GError *error = NULL;
+    int rc = pcmk_rc_ok;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGTERM, pengine_shutdown);
 
+    pcmk__register_formats(NULL, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        exit_code = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     if (options.remainder) {
         if (g_strv_length(options.remainder) == 1 &&
@@ -348,11 +364,8 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        g_strfreev(options.remainder);
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When pacemaker-schedulerd is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     pcmk__cli_init_logging("pacemaker-schedulerd", args->verbosity);
@@ -392,7 +405,7 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(error, out);
     pengine_shutdown(0);
 }
 
@@ -413,6 +426,12 @@ pengine_shutdown(int nsig)
         logger_out->finish(logger_out, exit_code, true, NULL);
         pcmk__output_free(logger_out);
         logger_out = NULL;
+    }
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
     }
 
     pcmk__unregister_formats();
