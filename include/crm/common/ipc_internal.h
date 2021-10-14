@@ -239,6 +239,12 @@ void pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
         qb_ipcs_service_t *ipcs_rw,
         qb_ipcs_service_t *ipcs_shm);
 
+static inline const char *
+pcmk__ipc_sys_name(const char *ipc_name, const char *fallback)
+{
+    return ipc_name ? ipc_name : ((crm_system_name ? crm_system_name : fallback));
+}
+
 #ifdef __cplusplus
 }
 #endif
