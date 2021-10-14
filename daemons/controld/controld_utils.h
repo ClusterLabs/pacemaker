@@ -71,7 +71,7 @@ _Noreturn void crmd_fast_exit(crm_exit_t exit_code);
 void pe_subsystem_free(void);
 void controld_stop_sched_timer(void);
 void controld_free_sched_timer(void);
-void controld_expect_sched_reply(xmlNode *msg);
+void controld_expect_sched_reply(char *ref);
 
 void fsa_dump_actions(uint64_t action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);

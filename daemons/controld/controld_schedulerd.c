@@ -270,17 +270,12 @@ controld_stop_sched_timer(void)
  * \internal
  * \brief Set the scheduler request currently being waited on
  *
- * \param[in] msg  Request to expect reply to (or NULL for none)
+ * \param[in] ref  Request to expect reply to (or NULL for none)
  */
 void
-controld_expect_sched_reply(xmlNode *msg)
+controld_expect_sched_reply(char *ref)
 {
-    char *ref = NULL;
-
-    if (msg) {
-        ref = crm_element_value_copy(msg, XML_ATTR_REFERENCE);
-        CRM_ASSERT(ref != NULL);
-
+    if (ref) {
         if (controld_sched_timer == NULL) {
             controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
                                                       SCHED_TIMEOUT_MS, FALSE,
@@ -472,7 +467,10 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
-        controld_expect_sched_reply(cmd);
+        char *ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
+
+        CRM_ASSERT(ref != NULL);
+        controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
                   fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     }
