@@ -2635,44 +2635,48 @@ static void
 log_executor_event(lrmd_event_data_t *op, const char *op_key,
                    const char *node_name, int update_id, gboolean confirmed)
 {
-    if (node_name == NULL) {
-        node_name = "unknown node"; // for logging
+    int log_level = LOG_ERR;
+    GString *str = g_string_sized_new(100); // reasonable starting size
+
+    g_string_printf(str, "Result of %s operation for %s",
+                    crm_action_str(op->op_type, op->interval_ms), op->rsc_id);
+
+    if (node_name != NULL) {
+        g_string_append_printf(str, " on %s", node_name);
     }
 
     switch (op->op_status) {
-        case PCMK_EXEC_CANCELLED:
-            crm_info("Result of %s operation for %s on %s: %s "
-                     CRM_XS " call=%d key=%s confirmed=%s",
-                     crm_action_str(op->op_type, op->interval_ms),
-                     op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                     op->call_id, op_key, pcmk__btoa(confirmed));
-            break;
-
         case PCMK_EXEC_DONE:
-            crm_notice("Result of %s operation for %s on %s: %s "
-                       CRM_XS " rc=%d call=%d key=%s confirmed=%s cib-update=%d",
-                       crm_action_str(op->op_type, op->interval_ms),
-                       op->rsc_id, node_name,
-                       services_ocf_exitcode_str(op->rc), op->rc,
-                       op->call_id, op_key, pcmk__btoa(confirmed), update_id);
+            log_level = LOG_NOTICE;
+            g_string_append_printf(str, ": %s",
+                                   services_ocf_exitcode_str(op->rc));
             break;
 
         case PCMK_EXEC_TIMEOUT:
-            crm_err("Result of %s operation for %s on %s: %s "
-                    CRM_XS " call=%d key=%s timeout=%dms",
-                    crm_action_str(op->op_type, op->interval_ms),
-                    op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                    op->call_id, op_key, op->timeout);
+            g_string_append_printf(str, ": %s after %s",
+                                   pcmk_exec_status_str(op->op_status),
+                                   pcmk__readable_interval(op->timeout));
             break;
 
+        case PCMK_EXEC_CANCELLED:
+            log_level = LOG_INFO;
+            // Fall through
         default:
-            crm_err("Result of %s operation for %s on %s: %s "
-                    CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
-                    crm_action_str(op->op_type, op->interval_ms),
-                    op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                    op->call_id, op_key, pcmk__btoa(confirmed), op->op_status,
-                    update_id);
+            g_string_append_printf(str, ": %s",
+                                   pcmk_exec_status_str(op->op_status));
     }
+
+    g_string_append_printf(str, " " CRM_XS " call=%d key=%s confirmed=%s",
+                           op->call_id, op_key, pcmk__btoa(confirmed));
+    if (op->op_status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, " rc=%d", op->rc);
+    }
+    if (update_id != 0) {
+        g_string_append_printf(str, " cib-update=%d", update_id);
+    }
+
+    do_crm_log(log_level, "%s", str->str);
+    g_string_free(str, TRUE);
 
     if (op->output != NULL) {
         char *prefix = crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
