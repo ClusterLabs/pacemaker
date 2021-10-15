@@ -11,6 +11,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 static GList *find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc,
                                     pe_resource_t * orig_rsc);
 
@@ -300,7 +302,7 @@ find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * 
         }
 
         if (constraint->score == INFINITY
-            && filter_colocation_constraint(rsc, rsc_rh, constraint, TRUE) == influence_rsc_location) {
+            && filter_colocation_constraint(rsc, rsc_rh, constraint, TRUE) == pcmk__coloc_affects_location) {
 
             if (rsc_rh->variant == pe_group) {
                 /* Need to use group_variant_data */
@@ -327,7 +329,7 @@ find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * 
         }
 
         if (constraint->score == INFINITY
-            && filter_colocation_constraint(rsc_lh, rsc, constraint, TRUE) == influence_rsc_location) {
+            && filter_colocation_constraint(rsc_lh, rsc, constraint, TRUE) == pcmk__coloc_affects_location) {
 
             if (rsc_lh->variant == pe_group) {
                 /* Need to use group_variant_data */

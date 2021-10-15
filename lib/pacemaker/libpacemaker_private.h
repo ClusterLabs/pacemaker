@@ -72,6 +72,20 @@ G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
 
 
+// Colocation constraints
+
+enum pcmk__coloc_affects {
+    pcmk__coloc_affects_nothing = 0,
+    pcmk__coloc_affects_location,
+    pcmk__coloc_affects_role,
+};
+
+G_GNUC_INTERNAL
+enum pcmk__coloc_affects filter_colocation_constraint(pe_resource_t *rsc_lh,
+                                                      pe_resource_t *rsc_rh,
+                                                      pcmk__colocation_t *constraint,
+                                                      gboolean preview);
+
 G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 

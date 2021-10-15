@@ -1715,13 +1715,13 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
-enum filter_colocation_res
+enum pcmk__coloc_affects
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                              pcmk__colocation_t *constraint, gboolean preview)
 {
     /* rh side must be allocated before we can process constraint */
     if (!preview && pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
     if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED) &&
@@ -1730,7 +1730,7 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
 
         /* LH and RH resources have already been allocated, place the correct
          * priority on LH rsc for the given promotable clone resource role */
-        return influence_rsc_priority;
+        return pcmk__coloc_affects_role;
     }
 
     if (!preview && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
@@ -1739,7 +1739,7 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
 
         if (rsc_lh->allocated_to == NULL) {
             // Dependent resource isn't allocated, so constraint doesn't matter
-            return influence_nothing;
+            return pcmk__coloc_affects_nothing;
         }
 
         if (constraint->score >= INFINITY) {
@@ -1763,37 +1763,37 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                         rsc_lh->id, rsc_rh->id, rh_node->details->uname);
             }
         }
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
     if (constraint->score > 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh != rsc_lh->next_role) {
         crm_trace("LH: Skipping constraint: \"%s\" state filter nextrole is %s",
                   role2text(constraint->role_lh), role2text(rsc_lh->next_role));
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
     if (constraint->score > 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh != rsc_rh->next_role) {
         crm_trace("RH: Skipping constraint: \"%s\" state filter", role2text(constraint->role_rh));
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
     if (constraint->score < 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
         crm_trace("LH: Skipping negative constraint: \"%s\" state filter",
                   role2text(constraint->role_lh));
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
     if (constraint->score < 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
         crm_trace("RH: Skipping negative constraint: \"%s\" state filter",
                   role2text(constraint->role_rh));
-        return influence_nothing;
+        return pcmk__coloc_affects_nothing;
     }
 
-    return influence_rsc_location;
+    return pcmk__coloc_affects_location;
 }
 
 static void
@@ -1906,7 +1906,7 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    enum filter_colocation_res filter_results;
+    enum pcmk__coloc_affects filter_results;
 
     CRM_ASSERT(rsc_lh);
     CRM_ASSERT(rsc_rh);
@@ -1916,13 +1916,13 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                  rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);
 
     switch (filter_results) {
-        case influence_rsc_priority:
+        case pcmk__coloc_affects_role:
             influence_priority(rsc_lh, rsc_rh, constraint);
             break;
-        case influence_rsc_location:
+        case pcmk__coloc_affects_location:
             colocation_match(rsc_lh, rsc_rh, constraint);
             break;
-        case influence_nothing:
+        case pcmk__coloc_affects_nothing:
         default:
             return;
     }
