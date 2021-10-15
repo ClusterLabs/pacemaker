@@ -587,3 +587,20 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
 
     return new_con;
 }
+
+/*!
+ * \internal
+ * \brief Apply all location constraints
+ *
+ * \param[in] data_set       Cluster working set
+ */
+void
+pcmk__apply_locations(pe_working_set_t *data_set)
+{
+    for (GList *iter = data_set->placement_constraints;
+         iter != NULL; iter = iter->next) {
+        pe__location_t *location = iter->data;
+
+        location->rsc_lh->cmds->rsc_location(location->rsc_lh, location);
+    }
+}

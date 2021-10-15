@@ -563,17 +563,6 @@ check_actions(pe_working_set_t * data_set)
     }
 }
 
-static void
-apply_placement_constraints(pe_working_set_t * data_set)
-{
-    for (GList *gIter = data_set->placement_constraints;
-         gIter != NULL; gIter = gIter->next) {
-        pe__location_t *cons = gIter->data;
-
-        cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
-    }
-}
-
 static gboolean
 failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
 {
@@ -986,7 +975,7 @@ stage2(pe_working_set_t * data_set)
         }
     }
 
-    apply_placement_constraints(data_set);
+    pcmk__apply_locations(data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
