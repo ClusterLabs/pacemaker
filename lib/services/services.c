@@ -531,6 +531,51 @@ services_action_cleanup(svc_action_t * op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Map an actual resource action result to a standard OCF result
+ *
+ * \param[in] standard     Agent standard (must not be "service")
+ * \param[in] action       Action that result is for
+ * \param[in] exit_status  Actual agent exit status
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services_result2ocf(const char *standard, const char *action, int exit_status)
+{
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
+        return services__ocf2ocf(exit_status);
+
+#if SUPPORT_SYSTEMD
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                            pcmk__str_casei)) {
+        return services__systemd2ocf(exit_status);
+#endif
+
+#if SUPPORT_UPSTART
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART,
+                            pcmk__str_casei)) {
+        return services__upstart2ocf(exit_status);
+#endif
+
+#if SUPPORT_NAGIOS
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS,
+                            pcmk__str_casei)) {
+        return services__nagios2ocf(exit_status);
+#endif
+
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB,
+                            pcmk__str_casei)) {
+        return services__lsb2ocf(action, exit_status);
+
+    } else {
+        crm_warn("Treating result from unknown standard '%s' as OCF",
+                 ((standard == NULL)? "unspecified" : standard));
+        return services__ocf2ocf(exit_status);
+    }
+}
+
 void
 services_action_free(svc_action_t * op)
 {

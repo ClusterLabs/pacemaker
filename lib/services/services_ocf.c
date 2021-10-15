@@ -153,3 +153,27 @@ services__ocf_prepare(svc_action_t *op)
 
     return pcmk_rc_ok;
 }
+
+/*!
+ * \internal
+ * \brief Map an actual OCF result to a standard OCF result
+ *
+ * \param[in] exit_status  Actual OCF agent exit status
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__ocf2ocf(int exit_status)
+{
+    switch (exit_status) {
+        case PCMK_OCF_DEGRADED:
+        case PCMK_OCF_DEGRADED_PROMOTED:
+            break;
+        default:
+            if ((exit_status < 0) || (exit_status > PCMK_OCF_FAILED_PROMOTED)) {
+                exit_status = PCMK_OCF_UNKNOWN_ERROR;
+            }
+            break;
+    }
+    return (enum ocf_exitcode) exit_status;
+}

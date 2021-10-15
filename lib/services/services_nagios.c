@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -92,6 +92,34 @@ services__nagios_prepare(svc_action_t *op)
         op->params = NULL;
     }
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Map a Nagios result to a standard OCF result
+ *
+ * \param[in] exit_status  Nagios exit status
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__nagios2ocf(int exit_status)
+{
+    switch (exit_status) {
+        case NAGIOS_STATE_OK:
+            return PCMK_OCF_OK;
+
+        case NAGIOS_INSUFFICIENT_PRIV:
+            return PCMK_OCF_INSUFFICIENT_PRIV;
+
+        case NAGIOS_STATE_WARNING:
+            return PCMK_OCF_DEGRADED;
+
+        case NAGIOS_STATE_CRITICAL:
+        case NAGIOS_STATE_UNKNOWN:
+        default:
+            return PCMK_OCF_UNKNOWN_ERROR;
+    }
 }
 
 static inline char *

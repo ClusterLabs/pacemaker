@@ -191,8 +191,9 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
     if (signo) {
         do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
-                   "%s[%d] terminated with signal %d (core=%d)",
-                   name, pid, signo, core);
+                   "%s[%d] terminated with signal %d (%s)%s",
+                   name, pid, signo, strsignal(signo),
+                   (core? " and dumped core" : ""));
 
     } else {
         switch(exitcode) {

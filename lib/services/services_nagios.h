@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,9 @@
 
 G_GNUC_INTERNAL
 int services__nagios_prepare(svc_action_t *op);
+
+G_GNUC_INTERNAL
+enum ocf_exitcode services__nagios2ocf(int exit_status);
 
 G_GNUC_INTERNAL
 GList *services__list_nagios_agents(void);

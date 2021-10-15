@@ -45,6 +45,21 @@ services__systemd_prepare(svc_action_t *op)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Map a systemd result to a standard OCF result
+ *
+ * \param[in] exit_status  Systemd result
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__systemd2ocf(int exit_status)
+{
+    // This library uses OCF codes for systemd actions
+    return (enum ocf_exitcode) exit_status;
+}
+
 static inline DBusMessage *
 systemd_new_method(const char *method)
 {

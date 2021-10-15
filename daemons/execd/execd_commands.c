@@ -728,22 +728,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 }
 
 static int
-ocf2uniform_rc(int rc)
-{
-    switch (rc) {
-        case PCMK_OCF_DEGRADED:
-        case PCMK_OCF_DEGRADED_PROMOTED:
-            break;
-        default:
-            if (rc < 0 || rc > PCMK_OCF_FAILED_PROMOTED) {
-                return PCMK_OCF_UNKNOWN_ERROR;
-            }
-    }
-
-    return rc;
-}
-
-static int
 stonith2uniform_rc(const char *action, int rc)
 {
     switch (rc) {
@@ -775,58 +759,21 @@ stonith2uniform_rc(const char *action, int rc)
     return rc;
 }
 
-#if SUPPORT_NAGIOS
 static int
-nagios2uniform_rc(const char *action, int rc)
-{
-    if (rc < 0) {
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    switch (rc) {
-        case NAGIOS_STATE_OK:
-            return PCMK_OCF_OK;
-        case NAGIOS_INSUFFICIENT_PRIV:
-            return PCMK_OCF_INSUFFICIENT_PRIV;
-        case NAGIOS_NOT_INSTALLED:
-            return PCMK_OCF_NOT_INSTALLED;
-        case NAGIOS_STATE_WARNING:
-        case NAGIOS_STATE_CRITICAL:
-        case NAGIOS_STATE_UNKNOWN:
-        case NAGIOS_STATE_DEPENDENT:
-        default:
-            return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    return PCMK_OCF_UNKNOWN_ERROR;
-}
-#endif
-
-static int
-get_uniform_rc(const char *standard, const char *action, int rc)
-{
-    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        return ocf2uniform_rc(rc);
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        return stonith2uniform_rc(action, rc);
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
-        return rc;
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_casei)) {
-        return rc;
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return nagios2uniform_rc(action, rc);
-#endif
-    } else {
-        return services_get_ocf_exitcode(action, rc);
-    }
-}
-
-static int
-action_get_uniform_rc(svc_action_t * action)
+action_get_uniform_rc(svc_action_t *action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
-    return get_uniform_rc(action->standard, cmd->action, action->rc);
+
+    if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
+                            pcmk__str_casei)) {
+        return stonith2uniform_rc(cmd->action, action->rc);
+    } else {
+        enum ocf_exitcode code = services_result2ocf(action->standard,
+                                                     cmd->action, action->rc);
+
+        // Cast variable instead of function return to keep compilers happy
+        return (int) code;
+    }
 }
 
 struct notify_new_client_data {

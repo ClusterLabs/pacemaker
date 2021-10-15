@@ -635,6 +635,8 @@ AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
 AC_SUBST(runstatedir)
 
 expand_path_option INITDIR
+AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
+                   [Location for LSB init scripts])
 
 expand_path_option docdir "${datadir}/doc/${PACKAGE}-${VERSION}"
 AC_SUBST(docdir)

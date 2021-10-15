@@ -19,6 +19,9 @@ G_GNUC_INTERNAL
 int services__systemd_prepare(svc_action_t *op);
 
 G_GNUC_INTERNAL
+enum ocf_exitcode services__systemd2ocf(int exit_status);
+
+G_GNUC_INTERNAL
 int services__execute_systemd(svc_action_t *op);
 
 G_GNUC_INTERNAL gboolean systemd_unit_exists(const gchar * name);
