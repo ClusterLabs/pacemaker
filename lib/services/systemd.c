@@ -396,7 +396,7 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
  *         was found; for synchronous actions, pcmk_rc_ok means unit was
  *         executed, with the actual result stored in \p op; for asynchronous
  *         actions, pcmk_rc_ok means action was initiated)
- * \note It is the caller's responsibility to free the return value if non-NULL.
+ * \note It is the caller's responsibility to free the path.
  */
 static int
 invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
@@ -617,6 +617,7 @@ systemd_unit_exists(const char *name)
      */
     state = systemd_get_property(path, "LoadState", NULL, NULL, NULL,
                                  DBUS_TIMEOUT_USE_DEFAULT);
+    free(path);
     if (pcmk__str_any_of(state, "loaded", "masked", NULL)) {
         free(state);
         return TRUE;
