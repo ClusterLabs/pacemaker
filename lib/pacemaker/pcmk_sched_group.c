@@ -599,3 +599,44 @@ void
 group_append_meta(pe_resource_t * rsc, xmlNode * xml)
 {
 }
+
+// Group implementation of resource_alloc_functions_t:colocated_resources()
+GList *
+pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                GList *colocated_rscs)
+{
+    pe_resource_t *child_rsc = NULL;
+    group_variant_data_t *group_data = NULL;
+
+    get_group_variant_data(group_data, rsc);
+
+    if (orig_rsc == NULL) {
+        orig_rsc = rsc;
+    }
+
+    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
+        /* This group has colocated members and/or is cloned -- either way,
+         * add every child's colocated resources to the list.
+         */
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            child_rsc = (pe_resource_t *) gIter->data;
+            colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
+                                                                  orig_rsc,
+                                                                  colocated_rscs);
+        }
+
+    } else if (group_data->first_child != NULL) {
+        /* This group's members are not colocated, and the group is not cloned,
+         * so just add the first child's colocations to the list.
+         */
+        child_rsc = group_data->first_child;
+        colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
+                                                              orig_rsc,
+                                                              colocated_rscs);
+    }
+
+    // Now consider colocations where the group itself is specified
+    colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
+
+    return colocated_rscs;
+}

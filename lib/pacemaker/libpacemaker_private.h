@@ -180,4 +180,19 @@ void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
 G_GNUC_INTERNAL
 void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 
+
+// Groups (pcmk_sched_group.c)
+
+G_GNUC_INTERNAL
+GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
+                                       pe_resource_t *orig_rsc,
+                                       GList *colocated_rscs);
+
+
+// Functions applying to more than one variant (pcmk_sched_resource.c)
+
+G_GNUC_INTERNAL
+GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                 GList *colocated_rscs);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
