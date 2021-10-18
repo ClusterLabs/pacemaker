@@ -301,8 +301,9 @@ find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * 
             continue;
         }
 
-        if (constraint->score == INFINITY
-            && filter_colocation_constraint(rsc, rsc_rh, constraint, TRUE) == pcmk__coloc_affects_location) {
+        if ((constraint->score == INFINITY) &&
+            (pcmk__colocation_affects(rsc, rsc_rh, constraint,
+                                      true) == pcmk__coloc_affects_location)) {
 
             if (rsc_rh->variant == pe_group) {
                 /* Need to use group_variant_data */
@@ -328,8 +329,9 @@ find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * 
             continue;
         }
 
-        if (constraint->score == INFINITY
-            && filter_colocation_constraint(rsc_lh, rsc, constraint, TRUE) == pcmk__coloc_affects_location) {
+        if ((constraint->score == INFINITY) &&
+            (pcmk__colocation_affects(rsc_lh, rsc, constraint,
+                                      true) == pcmk__coloc_affects_location)) {
 
             if (rsc_lh->variant == pe_group) {
                 /* Need to use group_variant_data */

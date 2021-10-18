@@ -1715,87 +1715,6 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
-enum pcmk__coloc_affects
-filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             pcmk__colocation_t *constraint, gboolean preview)
-{
-    /* rh side must be allocated before we can process constraint */
-    if (!preview && pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED) &&
-        rsc_lh->parent && pcmk_is_set(rsc_lh->parent->flags, pe_rsc_promotable)
-        && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-
-        /* LH and RH resources have already been allocated, place the correct
-         * priority on LH rsc for the given promotable clone resource role */
-        return pcmk__coloc_affects_role;
-    }
-
-    if (!preview && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-        // Log an error if we violated a mandatory colocation constraint
-        const pe_node_t *rh_node = rsc_rh->allocated_to;
-
-        if (rsc_lh->allocated_to == NULL) {
-            // Dependent resource isn't allocated, so constraint doesn't matter
-            return pcmk__coloc_affects_nothing;
-        }
-
-        if (constraint->score >= INFINITY) {
-            // Dependent resource must colocate with rh_node
-
-            if ((rh_node == NULL)
-                || (rh_node->details != rsc_lh->allocated_to->details)) {
-                crm_err("%s must be colocated with %s but is not (%s vs. %s)",
-                        rsc_lh->id, rsc_rh->id,
-                        rsc_lh->allocated_to->details->uname,
-                        (rh_node? rh_node->details->uname : "unallocated"));
-            }
-
-        } else if (constraint->score <= -INFINITY) {
-            // Dependent resource must anti-colocate with rh_node
-
-            if ((rh_node != NULL)
-                && (rsc_lh->allocated_to->details == rh_node->details)) {
-                crm_err("%s and %s must be anti-colocated but are allocated "
-                        "to the same node (%s)",
-                        rsc_lh->id, rsc_rh->id, rh_node->details->uname);
-            }
-        }
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if (constraint->score > 0
-        && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh != rsc_lh->next_role) {
-        crm_trace("LH: Skipping constraint: \"%s\" state filter nextrole is %s",
-                  role2text(constraint->role_lh), role2text(rsc_lh->next_role));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if (constraint->score > 0
-        && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh != rsc_rh->next_role) {
-        crm_trace("RH: Skipping constraint: \"%s\" state filter", role2text(constraint->role_rh));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if (constraint->score < 0
-        && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
-        crm_trace("LH: Skipping negative constraint: \"%s\" state filter",
-                  role2text(constraint->role_lh));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    if (constraint->score < 0
-        && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
-        crm_trace("RH: Skipping negative constraint: \"%s\" state filter",
-                  role2text(constraint->role_rh));
-        return pcmk__coloc_affects_nothing;
-    }
-
-    return pcmk__coloc_affects_location;
-}
-
 static void
 influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                    pcmk__colocation_t *constraint)
@@ -1910,7 +1829,8 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
     CRM_ASSERT(rsc_lh);
     CRM_ASSERT(rsc_rh);
-    filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint, FALSE);
+    filter_results = pcmk__colocation_affects(rsc_lh, rsc_rh, constraint,
+                                              false);
     pe_rsc_trace(rsc_lh, "%s %s with %s (%s, score=%d, filter=%d)",
                  ((constraint->score > 0)? "Colocating" : "Anti-colocating"),
                  rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);

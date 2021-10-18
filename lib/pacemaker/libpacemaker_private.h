@@ -81,10 +81,10 @@ enum pcmk__coloc_affects {
 };
 
 G_GNUC_INTERNAL
-enum pcmk__coloc_affects filter_colocation_constraint(pe_resource_t *rsc_lh,
-                                                      pe_resource_t *rsc_rh,
-                                                      pcmk__colocation_t *constraint,
-                                                      gboolean preview);
+enum pcmk__coloc_affects pcmk__colocation_affects(pe_resource_t *dependent,
+                                                  pe_resource_t *primary,
+                                                  pcmk__colocation_t *constraint,
+                                                  bool preview);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);

@@ -799,3 +799,115 @@ pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Determine how a colocation constraint should affect a resource
+ *
+ * Colocation constraints have different effects at different points in the
+ * scheduler sequence. Initially, they affect a resource's location; once that
+ * is determined, then for promotable clones they can affect a resource
+ * instance's role; after both are determined, the constraints no longer matter.
+ * Given a specific colocation constraint, check what has been done so far to
+ * determine what should be affected at the current point in the scheduler.
+ *
+ * \param[in] dependent   Dependent resource in colocation
+ * \param[in] primary     Primary resource in colocation
+ * \param[in] constraint  Colocation constraint
+ * \param[in] preview     If true, pretend resources have already been allocated
+ *
+ * \return How colocation constraint should be applied at this point
+ */
+enum pcmk__coloc_affects
+pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
+                         pcmk__colocation_t *constraint, bool preview)
+{
+    if (!preview && pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+        // Primary resource has not been allocated yet, so we can't do anything
+        return pcmk__coloc_affects_nothing;
+    }
+
+    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED)
+        && (dependent->parent != NULL)
+        && pcmk_is_set(dependent->parent->flags, pe_rsc_promotable)
+        && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+
+        /* This is a colocation by role, and the dependent is a promotable clone
+         * that has already been allocated, so the colocation should now affect
+         * the role.
+         */
+        return pcmk__coloc_affects_role;
+    }
+
+    if (!preview && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+        /* The dependent resource has already been through allocation, so the
+         * constraint no longer has any effect. Log an error if a mandatory
+         * colocation constraint has been violated.
+         */
+
+        const pe_node_t *rh_node = primary->allocated_to;
+
+        if (dependent->allocated_to == NULL) {
+            crm_trace("Skipping colocation '%s': %s will not run anywhere",
+                      constraint->id, dependent->id);
+
+        } else if (constraint->score >= INFINITY) {
+            // Dependent resource must colocate with primary resource
+
+            if ((rh_node == NULL)
+                || (rh_node->details != dependent->allocated_to->details)) {
+                crm_err("%s must be colocated with %s but is not (%s vs. %s)",
+                        dependent->id, primary->id,
+                        dependent->allocated_to->details->uname,
+                        (rh_node? rh_node->details->uname : "unallocated"));
+            }
+
+        } else if (constraint->score <= -CRM_SCORE_INFINITY) {
+            // Dependent resource must anti-colocate with primary resource
+
+            if ((rh_node != NULL)
+                && (dependent->allocated_to->details == rh_node->details)) {
+                crm_err("%s and %s must be anti-colocated but are allocated "
+                        "to the same node (%s)",
+                        dependent->id, primary->id, rh_node->details->uname);
+            }
+        }
+        return pcmk__coloc_affects_nothing;
+    }
+
+    if ((constraint->score > 0) && (constraint->role_lh != RSC_ROLE_UNKNOWN)
+        && (constraint->role_lh != dependent->next_role)) {
+
+        crm_trace("Skipping colocation '%s': dependent limited to %s role "
+                  "but %s next role is %s",
+                  constraint->id, role2text(constraint->role_lh),
+                  dependent->id, role2text(dependent->next_role));
+        return pcmk__coloc_affects_nothing;
+    }
+
+    if ((constraint->score > 0) && (constraint->role_rh != RSC_ROLE_UNKNOWN)
+        && (constraint->role_rh != primary->next_role)) {
+
+        crm_trace("Skipping colocation '%s': primary limited to %s role "
+                  "but %s next role is %s",
+                  constraint->id, role2text(constraint->role_rh),
+                  primary->id, role2text(primary->next_role));
+        return pcmk__coloc_affects_nothing;
+    }
+
+    if ((constraint->score < 0) && (constraint->role_lh != RSC_ROLE_UNKNOWN)
+        && (constraint->role_lh == dependent->next_role)) {
+        crm_trace("Skipping anti-colocation '%s': dependent role %s matches",
+                  constraint->id, role2text(constraint->role_lh));
+        return pcmk__coloc_affects_nothing;
+    }
+
+    if ((constraint->score < 0) && (constraint->role_rh != RSC_ROLE_UNKNOWN)
+        && (constraint->role_rh == primary->next_role)) {
+        crm_trace("Skipping anti-colocation '%s': primary role %s matches",
+                  constraint->id, role2text(constraint->role_rh));
+        return pcmk__coloc_affects_nothing;
+    }
+
+    return pcmk__coloc_affects_location;
+}
