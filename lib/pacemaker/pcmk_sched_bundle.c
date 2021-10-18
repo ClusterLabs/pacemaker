@@ -859,7 +859,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     pe__bundle_variant_data_t *bundle_data = NULL;
     get_bundle_variant_data(bundle_data, rsc);
 
-    native_rsc_location(rsc, constraint);
+    pcmk__apply_location(constraint, rsc);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {

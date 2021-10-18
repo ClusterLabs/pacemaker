@@ -71,6 +71,9 @@ pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc);
+
 
 // Colocation constraints
 

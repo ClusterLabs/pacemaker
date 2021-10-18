@@ -1988,58 +1988,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 void
 native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GList *gIter = NULL;
-    bool need_role = false;
-
-    CRM_CHECK((constraint != NULL) && (rsc != NULL), return);
-
-    // If a role was specified, ensure constraint is applicable
-    need_role = (constraint->role_filter > RSC_ROLE_UNKNOWN);
-    if (need_role && (constraint->role_filter != rsc->next_role)) {
-        pe_rsc_trace(rsc,
-                     "Not applying %s to %s because role will be %s not %s",
-                     constraint->id, rsc->id, role2text(rsc->next_role),
-                     role2text(constraint->role_filter));
-        return;
-    }
-
-    if (constraint->node_list_rh == NULL) {
-        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
-                     constraint->id, rsc->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Applying %s%s%s to %s", constraint->id,
-                 (need_role? " for role " : ""),
-                 (need_role? role2text(constraint->role_filter) : ""), rsc->id);
-
-    for (gIter = constraint->node_list_rh; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        pe_node_t *other_node = NULL;
-
-        other_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-
-        if (other_node != NULL) {
-            pe_rsc_trace(rsc, "* + %d on %s",
-                         node->weight, node->details->uname);
-            other_node->weight = pe__add_scores(other_node->weight,
-                                                node->weight);
-
-        } else {
-            pe_rsc_trace(rsc, "* = %d on %s",
-                         node->weight, node->details->uname);
-            other_node = pe__copy_node(node);
-            g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
-        }
-
-        if (other_node->rsc_discover_mode < constraint->discover_mode) {
-            if (constraint->discover_mode == pe_discover_exclusive) {
-                rsc->exclusive_discover = TRUE;
-            }
-            /* exclusive > never > always... always is default */
-            other_node->rsc_discover_mode = constraint->discover_mode;
-        }
-    }
+    pcmk__apply_location(constraint, rsc);
 }
 
 void

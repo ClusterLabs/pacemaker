@@ -604,3 +604,69 @@ pcmk__apply_locations(pe_working_set_t *data_set)
         location->rsc_lh->cmds->rsc_location(location->rsc_lh, location);
     }
 }
+
+/*!
+ * \internal
+ * \brief Apply a location constraint to a resource's allowed node weights
+ *
+ * \param[in] constraint  Location constraint to apply
+ * \param[in] rsc         Resource to apply constraint to
+ */
+void
+pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
+{
+    bool need_role = false;
+
+    CRM_CHECK((constraint != NULL) && (rsc != NULL), return);
+
+    // If a role was specified, ensure constraint is applicable
+    need_role = (constraint->role_filter > RSC_ROLE_UNKNOWN);
+    if (need_role && (constraint->role_filter != rsc->next_role)) {
+        pe_rsc_trace(rsc,
+                     "Not applying %s to %s because role will be %s not %s",
+                     constraint->id, rsc->id, role2text(rsc->next_role),
+                     role2text(constraint->role_filter));
+        return;
+    }
+
+    if (constraint->node_list_rh == NULL) {
+        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
+                     constraint->id, rsc->id);
+        return;
+    }
+
+    pe_rsc_trace(rsc, "Applying %s%s%s to %s", constraint->id,
+                 (need_role? " for role " : ""),
+                 (need_role? role2text(constraint->role_filter) : ""), rsc->id);
+
+    for (GList *gIter = constraint->node_list_rh; gIter != NULL;
+         gIter = gIter->next) {
+
+        pe_node_t *node = (pe_node_t *) gIter->data;
+        pe_node_t *weighted_node = NULL;
+
+        weighted_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
+                                                           node->details->id);
+        if (weighted_node == NULL) {
+            pe_rsc_trace(rsc, "* = %d on %s",
+                         node->weight, node->details->uname);
+            weighted_node = pe__copy_node(node);
+            g_hash_table_insert(rsc->allowed_nodes,
+                                (gpointer) weighted_node->details->id,
+                                weighted_node);
+        } else {
+            pe_rsc_trace(rsc, "* + %d on %s",
+                         node->weight, node->details->uname);
+            weighted_node->weight = pe__add_scores(weighted_node->weight,
+                                                   node->weight);
+        }
+
+        if (weighted_node->rsc_discover_mode < constraint->discover_mode) {
+            if (constraint->discover_mode == pe_discover_exclusive) {
+                rsc->exclusive_discover = TRUE;
+            }
+            /* exclusive > never > always... always is default */
+            weighted_node->rsc_discover_mode = constraint->discover_mode;
+        }
+    }
+}
