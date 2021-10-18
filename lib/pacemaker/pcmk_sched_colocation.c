@@ -914,6 +914,84 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
 
 /*!
  * \internal
+ * \brief Apply colocation to dependent for allocation purposes
+ *
+ * Update the allocated node weights of the dependent resource in a colocation,
+ * for the purposes of allocating it to a node
+ *
+ * \param[in] dependent   Dependent resource in colocation
+ * \param[in] primary     Primary resource in colocation
+ * \param[in] constraint  Colocation constraint
+ */
+void
+pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
+                             pcmk__colocation_t *constraint)
+{
+    const char *attribute = CRM_ATTR_ID;
+    const char *value = NULL;
+    GHashTable *work = NULL;
+    GHashTableIter iter;
+    pe_node_t *node = NULL;
+
+    if (constraint->node_attribute != NULL) {
+        attribute = constraint->node_attribute;
+    }
+
+    if (primary->allocated_to != NULL) {
+        value = pe_node_attribute_raw(primary->allocated_to, attribute);
+
+    } else if (constraint->score < 0) {
+        // Nothing to do (anti-colocation with something that is not running)
+        return;
+    }
+
+    work = pcmk__copy_node_table(dependent->allowed_nodes);
+
+    g_hash_table_iter_init(&iter, work);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        if (primary->allocated_to == NULL) {
+            pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s inactive)",
+                         constraint->id, dependent->id, node->details->uname,
+                         constraint->score, primary->id);
+            node->weight = pe__add_scores(-constraint->score, node->weight);
+
+        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
+                                pcmk__str_casei)) {
+            if (constraint->score < CRM_SCORE_INFINITY) {
+                pe_rsc_trace(dependent, "%s: %s@%s += %d",
+                             constraint->id, dependent->id,
+                             node->details->uname, constraint->score);
+                node->weight = pe__add_scores(constraint->score, node->weight);
+            }
+
+        } else if (constraint->score >= CRM_SCORE_INFINITY) {
+            pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s mismatch)",
+                         constraint->id, dependent->id, node->details->uname,
+                         constraint->score, attribute);
+            node->weight = pe__add_scores(-constraint->score, node->weight);
+        }
+    }
+
+    if (can_run_any(work) || (constraint->score <= -INFINITY)
+        || (constraint->score >= INFINITY)) {
+
+        g_hash_table_destroy(dependent->allowed_nodes);
+        dependent->allowed_nodes = work;
+        work = NULL;
+
+    } else {
+        pe_rsc_info(dependent,
+                    "%s: Rolling back scores from %s (no available nodes)",
+                    dependent->id, primary->id);
+    }
+
+    if (work != NULL) {
+        g_hash_table_destroy(work);
+    }
+}
+
+/*!
+ * \internal
  * \brief Apply colocation to dependent for role purposes
  *
  * Update the priority of the dependent resource in a colocation, for the

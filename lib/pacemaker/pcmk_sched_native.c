@@ -1715,71 +1715,6 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
-static void
-colocation_match(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                 pcmk__colocation_t *constraint)
-{
-    const char *attribute = CRM_ATTR_ID;
-    const char *value = NULL;
-    GHashTable *work = NULL;
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-
-    if (constraint->node_attribute != NULL) {
-        attribute = constraint->node_attribute;
-    }
-
-    if (rsc_rh->allocated_to) {
-        value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
-
-    } else if (constraint->score < 0) {
-        // Nothing to do (anti-colocation with something that is not running)
-        return;
-    }
-
-    work = pcmk__copy_node_table(rsc_lh->allowed_nodes);
-
-    g_hash_table_iter_init(&iter, work);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (rsc_rh->allocated_to == NULL) {
-            pe_rsc_trace(rsc_lh, "%s: %s@%s -= %d (%s inactive)",
-                         constraint->id, rsc_lh->id, node->details->uname,
-                         constraint->score, rsc_rh->id);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
-
-        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value, pcmk__str_casei)) {
-            if (constraint->score < CRM_SCORE_INFINITY) {
-                pe_rsc_trace(rsc_lh, "%s: %s@%s += %d",
-                             constraint->id, rsc_lh->id,
-                             node->details->uname, constraint->score);
-                node->weight = pe__add_scores(constraint->score, node->weight);
-            }
-
-        } else if (constraint->score >= CRM_SCORE_INFINITY) {
-            pe_rsc_trace(rsc_lh, "%s: %s@%s -= %d (%s mismatch)",
-                         constraint->id, rsc_lh->id, node->details->uname,
-                         constraint->score, attribute);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
-        }
-    }
-
-    if (can_run_any(work)
-        || constraint->score <= -INFINITY || constraint->score >= INFINITY) {
-        g_hash_table_destroy(rsc_lh->allowed_nodes);
-        rsc_lh->allowed_nodes = work;
-        work = NULL;
-
-    } else {
-        pe_rsc_info(rsc_lh,
-                    "%s: Rolling back scores from %s (no available nodes)",
-                    rsc_lh->id, rsc_rh->id);
-    }
-
-    if (work) {
-        g_hash_table_destroy(work);
-    }
-}
-
 void
 native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                          pcmk__colocation_t *constraint,
@@ -1800,7 +1735,7 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
             pcmk__apply_coloc_to_priority(rsc_lh, rsc_rh, constraint);
             break;
         case pcmk__coloc_affects_location:
-            colocation_match(rsc_lh, rsc_rh, constraint);
+            pcmk__apply_coloc_to_weights(rsc_lh, rsc_rh, constraint);
             break;
         case pcmk__coloc_affects_nothing:
         default:
