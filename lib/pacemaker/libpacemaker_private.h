@@ -87,6 +87,11 @@ enum pcmk__coloc_affects pcmk__colocation_affects(pe_resource_t *dependent,
                                                   bool preview);
 
 G_GNUC_INTERNAL
+void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *constraint);
+
+G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL

@@ -1716,46 +1716,6 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 }
 
 static void
-influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                   pcmk__colocation_t *constraint)
-{
-    const char *rh_value = NULL;
-    const char *lh_value = NULL;
-    const char *attribute = CRM_ATTR_ID;
-    int score_multiplier = 1;
-
-    if (!rsc_rh->allocated_to || !rsc_lh->allocated_to) {
-        return;
-    }
-
-    if (constraint->node_attribute != NULL) {
-        attribute = constraint->node_attribute;
-    }
-
-    lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
-    rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
-
-    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
-        if ((constraint->score == INFINITY)
-            && (constraint->role_lh == RSC_ROLE_PROMOTED)) {
-            rsc_lh->priority = -INFINITY;
-        }
-        return;
-    }
-
-    if (constraint->role_rh && (constraint->role_rh != rsc_rh->next_role)) {
-        return;
-    }
-
-    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
-        score_multiplier = -1;
-    }
-
-    rsc_lh->priority = pe__add_scores(score_multiplier * constraint->score,
-                                      rsc_lh->priority);
-}
-
-static void
 colocation_match(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                  pcmk__colocation_t *constraint)
 {
@@ -1837,7 +1797,7 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
     switch (filter_results) {
         case pcmk__coloc_affects_role:
-            influence_priority(rsc_lh, rsc_rh, constraint);
+            pcmk__apply_coloc_to_priority(rsc_lh, rsc_rh, constraint);
             break;
         case pcmk__coloc_affects_location:
             colocation_match(rsc_lh, rsc_rh, constraint);

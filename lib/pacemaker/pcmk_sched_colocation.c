@@ -911,3 +911,55 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
 
     return pcmk__coloc_affects_location;
 }
+
+/*!
+ * \internal
+ * \brief Apply colocation to dependent for role purposes
+ *
+ * Update the priority of the dependent resource in a colocation, for the
+ * purposes of selecting its role
+ *
+ * \param[in] dependent   Dependent resource in colocation
+ * \param[in] primary     Primary resource in colocation
+ * \param[in] constraint  Colocation constraint
+ */
+void
+pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
+                              pcmk__colocation_t *constraint)
+{
+    const char *rh_value = NULL;
+    const char *lh_value = NULL;
+    const char *attribute = CRM_ATTR_ID;
+    int score_multiplier = 1;
+
+    if ((primary->allocated_to == NULL) || (dependent->allocated_to == NULL)) {
+        return;
+    }
+
+    if (constraint->node_attribute != NULL) {
+        attribute = constraint->node_attribute;
+    }
+
+    lh_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
+    rh_value = pe_node_attribute_raw(primary->allocated_to, attribute);
+
+    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
+        if ((constraint->score == INFINITY)
+            && (constraint->role_lh == RSC_ROLE_PROMOTED)) {
+            dependent->priority = -INFINITY;
+        }
+        return;
+    }
+
+    if ((constraint->role_rh != RSC_ROLE_UNKNOWN)
+        && (constraint->role_rh != primary->next_role)) {
+        return;
+    }
+
+    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
+        score_multiplier = -1;
+    }
+
+    dependent->priority = pe__add_scores(score_multiplier * constraint->score,
+                                         dependent->priority);
+}
