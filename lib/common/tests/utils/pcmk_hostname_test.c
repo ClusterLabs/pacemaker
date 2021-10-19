@@ -26,7 +26,7 @@ __wrap_uname(struct utsname *buf)
     int retval = mock_type(int);
 
     if (retval == 0) {
-        strcpy(buf->nodename, mock_type(char *));
+        strcpy(buf->nodename, mock_ptr_type(char *));
     }
 
     return retval;

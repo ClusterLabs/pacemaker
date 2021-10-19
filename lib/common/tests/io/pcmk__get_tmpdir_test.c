@@ -30,7 +30,7 @@ __wrap_getenv(const char *name)
      * the mocked version is only called in that time.
      */
     if (use_mocked) {
-        return mock_type(char *);
+        return mock_ptr_type(char *);
     } else {
         return __real_getenv(name);
     }
