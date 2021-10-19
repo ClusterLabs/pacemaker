@@ -500,9 +500,6 @@ stonith_device_execute(stonith_device_t * device)
     exec_rc = stonith_action_execute_async(action, (void *)cmd,
                                            cmd->done_cb, fork_cb);
     if (exec_rc < 0) {
-        crm_warn("Operation '%s'%s%s using %s failed: %s " CRM_XS " rc=%d",
-                 cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
-                 device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
         report_internal_result(cmd, exec_rc);
         stonith__destroy_action(action);
@@ -2260,6 +2257,7 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
 {
     int log_level = LOG_ERR;
     int output_log_level = LOG_NEVER;
+    guint devices_remaining = g_list_length(cmd->device_next);
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
@@ -2295,6 +2293,11 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
     // Add next device if appropriate
     if (next != NULL) {
         g_string_append_printf(msg, ", retrying with %s", next);
+    }
+    if (devices_remaining > 0) {
+        g_string_append_printf(msg, " (%u device%s remaining)",
+                               (unsigned int) devices_remaining,
+                               pcmk__plural_s(devices_remaining));
     }
     g_string_append_printf(msg, " " CRM_XS " %scall %d from %s",
                            (op_merged? "merged " : ""), cmd->id,
@@ -2418,9 +2421,6 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
 
         mainloop_set_trigger(device->work);
     }
-
-    crm_debug("Operation '%s' using %s returned %d (%d devices remaining)",
-              cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if (rc == 0) {
         GList *iter;
