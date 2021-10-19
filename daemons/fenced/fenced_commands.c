@@ -2305,15 +2305,14 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
  * \brief Log the result of an asynchronous command
  *
  * \param[in] cmd        Command the result is for
- * \param[in] rc         Legacy return code corresponding to result
+ * \param[in] result     Result of command
  * \param[in] pid        Process ID of command, if available
  * \param[in] next       Alternate device that will be tried if command failed
- * \param[in] output     Command output, if any
  * \param[in] op_merged  Whether this command was merged with an earlier one
  */
 static void
-log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
-                 const char *output, gboolean op_merged)
+log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
+                 int pid, const char *next, bool op_merged)
 {
     int log_level = LOG_ERR;
     int output_log_level = LOG_NEVER;
@@ -2321,17 +2320,18 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
-    // Choose log levels appropriately
-    if (rc == 0) { // Success
+    // Choose log levels appropriately if we have a result
+    if ((result->execution_status == PCMK_EXEC_DONE)
+        && (result->exit_status == CRM_EX_OK))  { // Success
         log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
-        if ((output != NULL)
+        if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
     } else { // Failure
         log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
-        if ((output != NULL)
+        if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
             output_log_level = LOG_WARNING;
         }
@@ -2347,10 +2347,18 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
     }
     g_string_append_printf(msg, "using %s ", cmd->device);
 
-    // Add result
-    g_string_append_printf(msg, "returned %d (%s)", rc, pcmk_strerror(rc));
+    // Add exit status or execution status as appropriate
+    if (result->execution_status == PCMK_EXEC_DONE) {
+        g_string_append_printf(msg, "returned %d", result->exit_status);
+    } else {
+        g_string_append_printf(msg, "could not be executed: %s",
+                               pcmk_exec_status_str(result->execution_status));
+    }
 
-    // Add next device if appropriate
+    // Add exit reason and next device if appropriate
+    if (result->exit_reason != NULL) {
+        g_string_append_printf(msg, " (%s)", result->exit_reason);
+    }
     if (next != NULL) {
         g_string_append_printf(msg, ", retrying with %s", next);
     }
@@ -2371,7 +2379,7 @@ log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
     if (output_log_level != LOG_NEVER) {
         char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
 
-        crm_log_output(output_log_level, prefix, output);
+        crm_log_output(output_log_level, prefix, result->action_stdout);
         free(prefix);
     }
 }
@@ -2391,13 +2399,8 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
 {
     xmlNode *reply = NULL;
     gboolean bcast = FALSE;
-    const char *output = NULL;
-    int rc = pcmk_ok;
 
     CRM_CHECK((cmd != NULL) && (result != NULL), return);
-
-    output = result->action_stdout;
-    rc = pcmk_rc2legacy(stonith__result2rc(result));
 
     reply = construct_async_reply(cmd, result);
 
@@ -2412,7 +2415,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         bcast = TRUE;
     }
 
-    log_async_result(cmd, rc, pid, NULL, output, merged);
+    log_async_result(cmd, result, pid, NULL, merged);
     crm_log_xml_trace(reply, "Reply");
 
     if (merged) {
@@ -2436,6 +2439,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     if (stand_alone) {
         /* Do notification with a clean data object */
         xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
+        int rc = pcmk_rc2legacy(stonith__result2rc(result));
 
         crm_xml_add_int(notify_data, F_STONITH_RC, rc);
         crm_xml_add(notify_data, F_STONITH_TARGET, cmd->victim);
@@ -2521,8 +2525,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_async_result(cmd, pcmk_rc2legacy(stonith__result2rc(result)), pid,
-                         next_device->id, result->action_stdout, FALSE);
+        log_async_result(cmd, result, pid, next_device->id, false);
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */
         cmd = NULL;
