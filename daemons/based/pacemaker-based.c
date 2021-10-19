@@ -94,14 +94,9 @@ main(int argc, char **argv)
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
 
-#ifdef ENABLE_NLS
+#ifdef PCMK__Support_NLS
 
-    if( is_zh_language() ){
-         setlocale(LC_MESSAGES, "zh_CN.UTF-8");
-    }else{
-         setlocale(LC_MESSAGES, "en_US.UTF-8");
-    }
-
+    setlocale (LC_ALL, "");
     bindtextdomain(PACKAGE_NAME, PCMK__LOCALE_DIR);
     textdomain(PACKAGE_NAME);
     bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");

@@ -273,3 +273,7 @@ build.counter
 /test-driver
 /xml/crm.dtd
 ylwrap
+
+# Translations
+po/POTFILES
+*.pot

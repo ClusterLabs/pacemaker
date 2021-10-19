@@ -1,34 +1,28 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+# Copyright 2003-2021 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-11 15:59+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-
-#: lib/cib/cib_utils.c:619
-msgid "enable-acl"
-msgstr "启用ACL"
-
 #: lib/cib/cib_utils.c:621
 msgid "Enable Access Control Lists (ACLs) for the CIB"
 msgstr "为CIB启用访问控制列表(ACL)"
-
-#: lib/cib/cib_utils.c:625
-msgid "cluster-ipc-limit"
-msgstr "集群ipc限制"
 
 #: lib/cib/cib_utils.c:627
 msgid "Maximum IPC message backlog before disconnecting a cluster daemon"

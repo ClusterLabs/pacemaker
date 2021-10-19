@@ -249,25 +249,16 @@ enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 
-dnl --disable-* options: internationalization
-
-AC_ARG_ENABLE([nls],
-    [AS_HELP_STRING([--disable-nls],
-        [Disable use of internationalization modules @<:@no@:>@])],
-        [disable_nls="yes"],
-        [disable_nls="no"]
-)
-yes_no_try "$disable_nls" "no"
-disable_nls=$?
+dnl --disable-nls option 
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.19.4])
+AM_CONDITIONAL([USE_NLS], [test "x${USE_NLS}" = "xyes"])
 
 # Check for disable_nls
-AS_IF([test "${disable_nls}" = $DISABLED],
+AS_IF([test "x${USE_NLS}" = "xyes"],
       [
-          AC_DEFINE([ENABLE_NLS],[1],[Define to 1 if nls should be enabled])
-      ])
-
-AM_CONDITIONAL([NLS], [test "${disable_nls}" = "$DISABLED"])
-
+          AC_DEFINE([PCMK__Support_NLS],[1],[Define to 1 if USE_NLS should be enabled])
+])
 
 dnl --with-* options: basic parameters
 
@@ -625,6 +616,7 @@ eval includedir="`eval echo ${includedir}`"
 eval oldincludedir="`eval echo ${oldincludedir}`"
 eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
+eval localedir="`eval echo ${localedir}`"
 
 dnl Home-grown variables
 
@@ -679,7 +671,7 @@ AC_SUBST(BUG_URL)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir CONFIGDIR
+    mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
     if
@@ -749,10 +741,6 @@ case "$host_os" in
         CFLAGS="$CFLAGS -I${prefix}/include"
         ;;
 esac
-
-AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION(0.18)
-
 
 AC_SUBST(INIT_EXT)
 AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
@@ -1371,11 +1359,10 @@ PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
 
-if test x"${localedir}" =  x"\${datarootdir}/locale" || test x"${localedir}" = x""; then
-    localedir="/usr/share/locale"
+if test x"${localedir}" = x""; then
+    localedir="${datadir}/locale"
 fi
 AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
-
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
@@ -2136,6 +2123,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
                 xml/pacemaker-schemas.pc                            \
+                po/Makefile.in                                      \
 )
 
 dnl Now process the entire list of files added by previous

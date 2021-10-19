@@ -14,8 +14,7 @@ noinst_HEADERS	        = config.h 			\
 			  doxygen.h			\
 			  pacemaker.h \
 			  pacemaker-internal.h		\
-			  portability.h                 \
-			  gettext.h
+			  portability.h
 pkginclude_HEADERS	= crm_config.h
 
 SUBDIRS                 =  crm pcmki
