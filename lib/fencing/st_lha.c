@@ -24,6 +24,8 @@
 
 #include <stonith/stonith.h>
 
+#include "fencing_private.h"
+
 #define LHA_STONITH_LIBRARY "libstonith.so.1"
 
 static void *lha_agents_lib = NULL;
