@@ -643,7 +643,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
+        "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum, NULL, NULL
     },
     {
@@ -655,7 +655,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-controld", "1.0",
+    pcmk__print_option_metadata("pacemaker-controld",
                                 "Pacemaker controller options",
                                 "Cluster options used by Pacemaker's "
                                     "controller (formerly called crmd)",
