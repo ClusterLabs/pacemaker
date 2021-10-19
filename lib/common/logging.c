@@ -135,11 +135,17 @@ crm_log_deinit(void)
  * \internal
  * \brief Set the log format string based on the passed-in method
  *
- * \param[in] method  The detail level of the log output
- * \param[in] daemon  The daemon ID included in error messages
+ * \param[in] method        The detail level of the log output
+ * \param[in] daemon        The daemon ID included in error messages
+ * \param[in] use_pid       Cached result of getpid() call, for efficiency
+ * \param[in] use_nodename  Cached result of uname() call, for efficiency
+ *
  */
+
+/* XXX __attribute__((nonnull)) for use_nodename parameter */
 static void
-set_format_string(int method, const char *daemon)
+set_format_string(int method, const char *daemon, pid_t use_pid,
+                  const char *use_nodename)
 {
     if (method == QB_LOG_SYSLOG) {
         // The system log gets a simplified, user-friendly format
@@ -153,17 +159,10 @@ set_format_string(int method, const char *daemon)
         char fmt[FMT_MAX];
 
         if (method > QB_LOG_STDERR) {
-            struct utsname res;
-            const char *nodename = "localhost";
-
-            if (uname(&res) == 0) {
-                nodename = res.nodename;
-            }
-
             // If logging to file, prefix with timestamp, node name, daemon ID
             offset += snprintf(fmt + offset, FMT_MAX - offset,
                                TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
-                               nodename, daemon, (unsigned long) getpid());
+                                use_nodename, daemon, (unsigned long) use_pid);
         }
 
         // Add function name (in parentheses)
@@ -767,9 +766,11 @@ crm_log_preinit(const char *entity, int argc, char **argv)
 {
     /* Configure libqb logging with nothing turned on */
 
+    struct utsname res;
     int lpc = 0;
     int32_t qb_facility = 0;
-
+    pid_t pid = getpid();
+    const char *nodename = "localhost";
     static bool have_logging = FALSE;
 
     if(have_logging == FALSE) {
@@ -804,6 +805,9 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         // Shorter than default, generous for what we *should* send to syslog
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
 #endif
+        if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+            nodename = res.nodename;
+        }
 
         /* Set format strings and disable threading
          * Pacemaker and threads do not mix well (due to the amount of forking)
@@ -815,7 +819,7 @@ crm_log_preinit(const char *entity, int argc, char **argv)
             // End truncated lines with '...'
             qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-            set_format_string(lpc, crm_system_name);
+            set_format_string(lpc, crm_system_name, pid, nodename);
         }
     }
 }
