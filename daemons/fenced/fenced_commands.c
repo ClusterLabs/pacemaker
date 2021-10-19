@@ -1980,6 +1980,8 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
 
     search = calloc(1, sizeof(struct device_search_s));
     if (!search) {
+        crm_crit("Cannot search for capable fence devices: %s",
+                 strerror(ENOMEM));
         callback(NULL, user_data);
         return;
     }
