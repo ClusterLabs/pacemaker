@@ -31,6 +31,11 @@ EXTRA_DIST		= pacemaker.spec.in		\
 #
 # - toplevel (deprecated): RPM sources, spec, and source rpm in top-level build
 #   directory, everything else uses the usual rpmbuild defaults
+#
+# - anything else: The value will be treated as a directory path to be used for
+#   all RPM artifacts. WARNING: The entire directory will get removed with
+#   "make clean" or "make rpm-clean".
+#
 RPMDEST         	?= subtree
 
 RPM_SPEC_DIR_subtree	= $(abs_builddir)/SPECS
@@ -50,7 +55,17 @@ RPM_OPTS_toplevel	= --define "_sourcedir $(abs_builddir)/.." 		\
 			  --define "_srcrpmdir $(RPM_SRCRPM_DIR_toplevel)"
 RPM_CLEAN_toplevel	=
 
-RPMTYPE		= $(RPMDEST)
+RPM_SPEC_DIR_other	= $(RPMDEST)/SPECS
+RPM_SRCRPM_DIR_other	= $(RPMDEST)/SRPMS
+RPM_OPTS_other		= --define "_sourcedir $(abs_builddir)/.." 	\
+			  --define "_topdir $(RPMDEST)"
+RPM_CLEAN_other		= "$(RPMDEST)"
+
+RPMTYPE		= $(shell case "$(RPMDEST)" in 			\
+			toplevel$(rparen) echo toplevel ;;	\
+			subtree$(rparen) echo subtree ;;	\
+			*$(rparen) echo other ;;		\
+			esac)
 RPM_SPEC_DIR	= $(RPM_SPEC_DIR_$(RPMTYPE))
 RPM_SRCRPM_DIR	= $(RPM_SRCRPM_DIR_$(RPMTYPE))
 RPM_OPTS	= $(RPM_OPTS_$(RPMTYPE))
