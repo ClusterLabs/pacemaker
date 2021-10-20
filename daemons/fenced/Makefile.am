@@ -2,7 +2,7 @@
 # Original Author: Sun Jiang Dong <sunjd@cn.ibm.com>
 # Copyright 2004 International Business Machines
 #
-# with later changes copyright 2004-2019 the Pacemaker project contributors.
+# with later changes copyright 2004-2021 the Pacemaker project contributors.
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
@@ -10,6 +10,7 @@
 #
 
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/mk/man.mk
 
 halibdir	= $(CRM_DAEMON_DIR)
 
