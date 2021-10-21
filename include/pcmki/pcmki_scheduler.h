@@ -39,14 +39,14 @@ enum pe_weights {
 typedef struct {
     const char *id;
     const char *node_attribute;
-    pe_resource_t *rsc_lh;
-    pe_resource_t *rsc_rh;
+    pe_resource_t *dependent;   // The resource being colocated
+    pe_resource_t *primary;     // The resource the dependent is colocated with
 
-    int role_lh;
-    int role_rh;
+    int dependent_role; // Colocation applies only if dependent has this role
+    int primary_role;   // Colocation applies only if primary has this role
 
     int score;
-    bool influence; // Whether rsc_lh should influence active rsc_rh placement
+    bool influence; // Whether dependent influences active primary placement
 } pcmk__colocation_t;
 
 enum loss_ticket_policy_e {
@@ -88,7 +88,7 @@ extern const char *transition_idle_timeout;
  *
  * \param[in] colocation  Colocation constraint
  * \param[in] rsc         Right-hand instance (normally this will be
- *                        colocation->rsc_rh, which NULL will be treated as,
+ *                        colocation->primary, which NULL will be treated as,
  *                        but for clones or bundles with multiple instances
  *                        this can be a particular instance)
  *
@@ -99,7 +99,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
                                const pe_resource_t *rsc)
 {
     if (rsc == NULL) {
-        rsc = colocation->rsc_rh;
+        rsc = colocation->primary;
     }
 
     /* The left hand of a colocation influences the right hand's location

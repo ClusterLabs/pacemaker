@@ -51,16 +51,6 @@ enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children,
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
-enum filter_colocation_res {
-    influence_nothing = 0,
-    influence_rsc_location,
-    influence_rsc_priority,
-};
-
-extern enum filter_colocation_res
-filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             pcmk__colocation_t *constraint, gboolean preview);
-
 extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,
                                   GHashTable * utilization, gboolean plus);

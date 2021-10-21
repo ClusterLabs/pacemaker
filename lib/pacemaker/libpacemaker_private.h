@@ -56,6 +56,9 @@ bool pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 G_GNUC_INTERNAL
 void pcmk__create_internal_constraints(pe_working_set_t *data_set);
 
+
+// Location constraints
+
 G_GNUC_INTERNAL
 void pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
@@ -66,12 +69,43 @@ pe__location_t *pcmk__new_location(const char *id, pe_resource_t *rsc,
                                    pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+void pcmk__apply_locations(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc);
+
+
+// Colocation constraints
+
+enum pcmk__coloc_affects {
+    pcmk__coloc_affects_nothing = 0,
+    pcmk__coloc_affects_location,
+    pcmk__coloc_affects_role,
+};
+
+G_GNUC_INTERNAL
+enum pcmk__coloc_affects pcmk__colocation_affects(pe_resource_t *dependent,
+                                                  pe_resource_t *primary,
+                                                  pcmk__colocation_t *constraint,
+                                                  bool preview);
+
+G_GNUC_INTERNAL
+void pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
+                                  pe_resource_t *primary,
+                                  pcmk__colocation_t *constraint);
+
+G_GNUC_INTERNAL
+void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *constraint);
+
+G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
-                          pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                          const char *state_lh, const char *state_rh,
+                          pe_resource_t *dependent, pe_resource_t *primary,
+                          const char *dependent_role, const char *primary_role,
                           bool influence, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
@@ -148,5 +182,20 @@ void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
 
 G_GNUC_INTERNAL
 void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
+
+
+// Groups (pcmk_sched_group.c)
+
+G_GNUC_INTERNAL
+GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
+                                       pe_resource_t *orig_rsc,
+                                       GList *colocated_rscs);
+
+
+// Functions applying to more than one variant (pcmk_sched_resource.c)
+
+G_GNUC_INTERNAL
+GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                 GList *colocated_rscs);
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

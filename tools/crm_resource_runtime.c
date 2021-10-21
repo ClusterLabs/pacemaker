@@ -408,15 +408,19 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
             pe__set_resource_flags(rsc, pe_rsc_allocating);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
-                pe_resource_t *peer = cons->rsc_lh;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
-                if (cons->score > 0 && !pcmk_is_set(peer->flags, pe_rsc_allocating)) {
+                if ((cons->score > 0)
+                    && !pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
                     /* Don't get into colocation loops */
-                    crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
-                    cli_resource_update_attribute(peer, peer->id, NULL, attr_set_type,
-                                                  NULL, attr_name, attr_value, recursive,
-                                                  cib, cib_options, data_set, force);
+                    crm_debug("Setting %s=%s for dependent resource %s",
+                              attr_name, attr_value, cons->dependent->id);
+                    cli_resource_update_attribute(cons->dependent,
+                                                  cons->dependent->id, NULL,
+                                                  attr_set_type, NULL,
+                                                  attr_name, attr_value,
+                                                  recursive, cib, cib_options,
+                                                  data_set, force);
                 }
             }
         }

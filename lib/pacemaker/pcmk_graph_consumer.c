@@ -221,40 +221,41 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \param[in] graph   Transition graph containing action
  * \param[in] action  Action to execute
  *
- * \return TRUE if action was initiated, FALSE otherwise
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 initiate_action(crm_graph_t *graph, crm_action_t *action)
 {
     const char *id = ID(action->xml);
 
-    CRM_CHECK(!(pcmk_is_set(action->flags, pcmk__graph_action_executed)), return FALSE);
-    CRM_CHECK(id != NULL, return FALSE);
+    CRM_CHECK(id != NULL, return EINVAL);
+    CRM_CHECK(!pcmk_is_set(action->flags, pcmk__graph_action_executed),
+              return pcmk_rc_already);
 
     crm__set_graph_action_flags(action, pcmk__graph_action_executed);
     switch (action->type) {
         case action_type_pseudo:
             crm_trace("Executing pseudo-action %d (%s)", action->id, id);
-            return graph_fns->pseudo(graph, action);
+            return graph_fns->pseudo(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         case action_type_rsc:
             crm_trace("Executing resource action %d (%s)", action->id, id);
-            return graph_fns->rsc(graph, action);
+            return graph_fns->rsc(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         case action_type_crm:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                              CRM_OP_FENCE, pcmk__str_casei)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
-                return graph_fns->stonith(graph, action);
+                return graph_fns->stonith(graph, action)? pcmk_rc_ok : pcmk_rc_error;
             }
             crm_trace("Executing control action %d (%s)", action->id, id);
-            return graph_fns->crmd(graph, action);
+            return graph_fns->crmd(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         default:
             crm_err("Unsupported graph action type <%s id='%s'> (bug?)",
                     crm_element_name(action->xml), id);
-            return FALSE;
+            return EINVAL;
     }
 }
 
@@ -274,7 +275,7 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
-        if (!initiate_action(graph, action)) {
+        if (initiate_action(graph, action) != pcmk_rc_ok) {
             crm_err("Failed initiating <%s id=%d> in synapse %d",
                     crm_element_name(action->xml), action->id, synapse->id);
             pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
