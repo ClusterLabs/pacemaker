@@ -91,8 +91,7 @@ SPEC_COMMIT	?= $(shell						\
 		        echo '$(TAG)' ;;				\
 		    *$(rparen)						\
 		        git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		esac)$(shell						\
-		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
+		esac)$(DIRTY_EXT)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 SPEC_RELEASE	= $(shell case "$(WITH)" in 				\
 		  *pre_release*$(rparen)				\
@@ -119,7 +118,7 @@ export:
 	    echo "`date`: Using existing tarball: $(TARFILE)";				\
 	else										\
 	    cd $(abs_srcdir)/..;							\
-	    if [ -n "$(DIRTY)" ]; then 							\
+	    if [ -n "$(DIRTY_EXT)" ]; then 							\
 	        git commit -m "DO-NOT-PUSH" -a;						\
 	        git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
 	        git reset --mixed HEAD^;						\

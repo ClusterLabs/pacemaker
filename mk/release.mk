@@ -16,6 +16,13 @@ COMMIT  ?= HEAD
 TAG     ?= $(shell T=$$(git describe --tags --exact-match '$(COMMIT)' 2>/dev/null); \
 	     test -n "$${T}" && echo "$${T}" \
 	       || git log --pretty=format:%H -n 1 '$(COMMIT)' 2>/dev/null || echo DIST)
+
+# If DIRTY=anything is passed to make, generated versions will end in ".mod"
+# as long as there are uncommitted changes and COMMIT is not set.
+DIRTY_EXT	= $(shell if [ -n "$(DIRTY)" ] && [ "$(COMMIT)" == "HEAD" ]	\
+		             && ! git diff-index --quiet HEAD --; then		\
+		          echo .mod ; fi)
+
 lparen = (
 rparen = )
 
@@ -47,4 +54,4 @@ top_distdir	= $(PACKAGE)-$(shell						\
 				echo '$(TAG)' | cut -c11-;;			\
 			*$(rparen)						\
 				git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		  esac)$(shell if [ -n "$(DIRTY)" ]; then echo ".mod"; fi)
+		  esac)$(DIRTY_EXT)
