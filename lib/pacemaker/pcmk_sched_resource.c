@@ -35,7 +35,7 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     // Follow colocations where this resource is the dependent resource
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *primary = constraint->rsc_rh;
+        pe_resource_t *primary = constraint->primary;
 
         if (primary == orig_rsc) {
             continue; // Break colocation loop
@@ -54,7 +54,7 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     // Follow colocations where this resource is the primary resource
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *dependent = constraint->rsc_lh;
+        pe_resource_t *dependent = constraint->dependent;
 
         if (dependent == orig_rsc) {
             continue; // Break colocation loop

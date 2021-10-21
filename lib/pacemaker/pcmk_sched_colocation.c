@@ -27,7 +27,7 @@
     } while(0)
 
 static gint
-sort_cons_priority_lh(gconstpointer a, gconstpointer b)
+cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
     const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
     const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
@@ -39,21 +39,22 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
-    CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+    CRM_ASSERT(rsc_constraint1->dependent != NULL);
+    CRM_ASSERT(rsc_constraint1->primary != NULL);
 
-    if (rsc_constraint1->rsc_lh->priority > rsc_constraint2->rsc_lh->priority) {
+    if (rsc_constraint1->dependent->priority > rsc_constraint2->dependent->priority) {
         return -1;
     }
 
-    if (rsc_constraint1->rsc_lh->priority < rsc_constraint2->rsc_lh->priority) {
+    if (rsc_constraint1->dependent->priority < rsc_constraint2->dependent->priority) {
         return 1;
     }
 
     /* Process clones before primitives and groups */
-    if (rsc_constraint1->rsc_lh->variant > rsc_constraint2->rsc_lh->variant) {
+    if (rsc_constraint1->dependent->variant > rsc_constraint2->dependent->variant) {
         return -1;
-    } else if (rsc_constraint1->rsc_lh->variant < rsc_constraint2->rsc_lh->variant) {
+    }
+    if (rsc_constraint1->dependent->variant < rsc_constraint2->dependent->variant) {
         return 1;
     }
 
@@ -61,21 +62,22 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
      * clones (probably unnecessary, but avoids having to update regression
      * tests)
      */
-    if (rsc_constraint1->rsc_lh->variant == pe_clone) {
-        if (pcmk_is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
-            && !pcmk_is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+    if (rsc_constraint1->dependent->variant == pe_clone) {
+        if (pcmk_is_set(rsc_constraint1->dependent->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc_constraint2->dependent->flags, pe_rsc_promotable)) {
             return -1;
-        } else if (!pcmk_is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
-            && pcmk_is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+        } else if (!pcmk_is_set(rsc_constraint1->dependent->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc_constraint2->dependent->flags, pe_rsc_promotable)) {
             return 1;
         }
     }
 
-    return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
+    return strcmp(rsc_constraint1->dependent->id,
+                  rsc_constraint2->dependent->id);
 }
 
 static gint
-sort_cons_priority_rh(gconstpointer a, gconstpointer b)
+cmp_primary_priority(gconstpointer a, gconstpointer b)
 {
     const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
     const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
@@ -87,21 +89,21 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
-    CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+    CRM_ASSERT(rsc_constraint1->dependent != NULL);
+    CRM_ASSERT(rsc_constraint1->primary != NULL);
 
-    if (rsc_constraint1->rsc_rh->priority > rsc_constraint2->rsc_rh->priority) {
+    if (rsc_constraint1->primary->priority > rsc_constraint2->primary->priority) {
         return -1;
     }
 
-    if (rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
+    if (rsc_constraint1->primary->priority < rsc_constraint2->primary->priority) {
         return 1;
     }
 
     /* Process clones before primitives and groups */
-    if (rsc_constraint1->rsc_rh->variant > rsc_constraint2->rsc_rh->variant) {
+    if (rsc_constraint1->primary->variant > rsc_constraint2->primary->variant) {
         return -1;
-    } else if (rsc_constraint1->rsc_rh->variant < rsc_constraint2->rsc_rh->variant) {
+    } else if (rsc_constraint1->primary->variant < rsc_constraint2->primary->variant) {
         return 1;
     }
 
@@ -109,17 +111,17 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
      * clones (probably unnecessary, but avoids having to update regression
      * tests)
      */
-    if (rsc_constraint1->rsc_rh->variant == pe_clone) {
-        if (pcmk_is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
-            && !pcmk_is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+    if (rsc_constraint1->primary->variant == pe_clone) {
+        if (pcmk_is_set(rsc_constraint1->primary->flags, pe_rsc_promotable)
+            && !pcmk_is_set(rsc_constraint2->primary->flags, pe_rsc_promotable)) {
             return -1;
-        } else if (!pcmk_is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
-            && pcmk_is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+        } else if (!pcmk_is_set(rsc_constraint1->primary->flags, pe_rsc_promotable)
+            && pcmk_is_set(rsc_constraint2->primary->flags, pe_rsc_promotable)) {
             return 1;
         }
     }
 
-    return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
+    return strcmp(rsc_constraint1->primary->id, rsc_constraint2->primary->id);
 }
 
 /*!
@@ -175,20 +177,20 @@ anti_colocation_order(pe_resource_t *first_rsc, int first_role,
  * \internal
  * \brief Add a new colocation constraint to a cluster working set
  *
- * \param[in] id         XML ID for this constraint
- * \param[in] node_attr  Colocate by this attribute (or NULL for #uname)
- * \param[in] score      Constraint score
- * \param[in] rsc_lh     Resource to be colocated
- * \param[in] rsc_rh     Resource to colocate \p rsc_lh with
- * \param[in] state_lh   Current role of \p rsc_lh
- * \param[in] state_rh   Current role of \p rsc_rh
- * \param[in] influence  Whether colocation constraint has influence
- * \param[in] data_set   Cluster working set to add constraint to
+ * \param[in] id              XML ID for this constraint
+ * \param[in] node_attr       Colocate by this attribute (or NULL for #uname)
+ * \param[in] score           Constraint score
+ * \param[in] dependent       Resource to be colocated
+ * \param[in] primary         Resource to colocate \p dependent with
+ * \param[in] dependent_role  Current role of \p dependent
+ * \param[in] primary_role    Current role of \p primary
+ * \param[in] influence       Whether colocation constraint has influence
+ * \param[in] data_set        Cluster working set to add constraint to
  */
 void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
-                     pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                     const char *state_lh, const char *state_rh,
+                     pe_resource_t *dependent, pe_resource_t *primary,
+                     const char *dependent_role, const char *primary_role,
                      bool influence, pe_working_set_t *data_set)
 {
     pcmk__colocation_t *new_con = NULL;
@@ -197,7 +199,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         crm_trace("Ignoring colocation '%s' because score is 0", id);
         return;
     }
-    if ((rsc_lh == NULL) || (rsc_rh == NULL)) {
+    if ((dependent == NULL) || (primary == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
         return;
@@ -208,22 +210,22 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         return;
     }
 
-    if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S,
+    if (pcmk__str_eq(dependent_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        state_lh = RSC_ROLE_UNKNOWN_S;
+        dependent_role = RSC_ROLE_UNKNOWN_S;
     }
 
-    if (pcmk__str_eq(state_rh, RSC_ROLE_STARTED_S,
+    if (pcmk__str_eq(primary_role, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        state_rh = RSC_ROLE_UNKNOWN_S;
+        primary_role = RSC_ROLE_UNKNOWN_S;
     }
 
     new_con->id = id;
-    new_con->rsc_lh = rsc_lh;
-    new_con->rsc_rh = rsc_rh;
+    new_con->dependent = dependent;
+    new_con->primary = primary;
     new_con->score = score;
-    new_con->role_lh = text2role(state_lh);
-    new_con->role_rh = text2role(state_rh);
+    new_con->dependent_role = text2role(dependent_role);
+    new_con->primary_role = text2role(primary_role);
     new_con->node_attribute = node_attr;
     new_con->influence = influence;
 
@@ -231,23 +233,23 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         node_attr = CRM_ATTR_UNAME;
     }
 
-    pe_rsc_trace(rsc_lh, "%s ==> %s (%s %d)",
-                 rsc_lh->id, rsc_rh->id, node_attr, score);
+    pe_rsc_trace(dependent, "%s ==> %s (%s %d)",
+                 dependent->id, primary->id, node_attr, score);
 
-    rsc_lh->rsc_cons = g_list_insert_sorted(rsc_lh->rsc_cons, new_con,
-                                            sort_cons_priority_rh);
+    dependent->rsc_cons = g_list_insert_sorted(dependent->rsc_cons, new_con,
+                                               cmp_primary_priority);
 
-    rsc_rh->rsc_cons_lhs = g_list_insert_sorted(rsc_rh->rsc_cons_lhs, new_con,
-                                                sort_cons_priority_lh);
+    primary->rsc_cons_lhs = g_list_insert_sorted(primary->rsc_cons_lhs, new_con,
+                                                 cmp_dependent_priority);
 
     data_set->colocation_constraints = g_list_append(data_set->colocation_constraints,
                                                      new_con);
 
     if (score <= -INFINITY) {
-        anti_colocation_order(rsc_lh, new_con->role_lh, rsc_rh,
-                              new_con->role_rh, data_set);
-        anti_colocation_order(rsc_rh, new_con->role_rh, rsc_lh,
-                              new_con->role_lh, data_set);
+        anti_colocation_order(dependent, new_con->dependent_role, primary,
+                              new_con->primary_role, data_set);
+        anti_colocation_order(primary, new_con->primary_role, dependent,
+                              new_con->dependent_role, data_set);
     }
 }
 
@@ -476,59 +478,66 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     int score_i = 0;
 
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
-    const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
-    const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *dependent_id = crm_element_value(xml_obj,
+                                                 XML_COLOC_ATTR_SOURCE);
+    const char *primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    const char *dependent_role = crm_element_value(xml_obj,
+                                                   XML_COLOC_ATTR_SOURCE_ROLE);
+    const char *primary_role = crm_element_value(xml_obj,
+                                                 XML_COLOC_ATTR_TARGET_ROLE);
     const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
     // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
-    const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
-    const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
+    const char *dependent_instance = crm_element_value(xml_obj,
+                                                       XML_COLOC_ATTR_SOURCE_INSTANCE);
+    const char *primary_instance = crm_element_value(xml_obj,
+                                                     XML_COLOC_ATTR_TARGET_INSTANCE);
 
-    pe_resource_t *rsc_lh = pcmk__find_constraint_resource(data_set->resources, id_lh);
-    pe_resource_t *rsc_rh = pcmk__find_constraint_resource(data_set->resources, id_rh);
+    pe_resource_t *dependent = pcmk__find_constraint_resource(data_set->resources,
+                                                              dependent_id);
+    pe_resource_t *primary = pcmk__find_constraint_resource(data_set->resources,
+                                                            primary_id);
 
-    if (rsc_lh == NULL) {
+    if (dependent == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_lh);
+                         "does not exist", id, dependent_id);
         return;
 
-    } else if (rsc_rh == NULL) {
+    } else if (primary == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_rh);
+                         "does not exist", id, primary_id);
         return;
 
-    } else if ((instance_lh != NULL) && !pe_rsc_is_clone(rsc_lh)) {
+    } else if ((dependent_instance != NULL) && !pe_rsc_is_clone(dependent)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
-                         id, id_lh, instance_lh);
+                         id, dependent_id, dependent_instance);
         return;
 
-    } else if ((instance_rh != NULL) && !pe_rsc_is_clone(rsc_rh)) {
+    } else if ((primary_instance != NULL) && !pe_rsc_is_clone(primary)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
-                         id, id_rh, instance_rh);
+                         id, primary_id, primary_instance);
         return;
     }
 
-    if (instance_lh != NULL) {
-        rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
-        if (rsc_lh == NULL) {
+    if (dependent_instance != NULL) {
+        dependent = find_clone_instance(dependent, dependent_instance, data_set);
+        if (dependent == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
-                              id, id_lh, instance_lh);
+                              id, dependent_id, dependent_instance);
             return;
         }
     }
 
-    if (instance_rh != NULL) {
-        rsc_rh = find_clone_instance(rsc_rh, instance_rh, data_set);
-        if (rsc_rh == NULL) {
+    if (primary_instance != NULL) {
+        primary = find_clone_instance(primary, primary_instance, data_set);
+        if (primary == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
-                              "'%s'", id, id_rh, instance_rh);
+                              "'%s'", id, primary_id, primary_instance);
             return;
         }
     }
@@ -543,8 +552,9 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         score_i = char2score(score);
     }
 
-    pcmk__new_colocation(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh,
-                         unpack_influence(id, rsc_lh, influence_s), data_set);
+    pcmk__new_colocation(id, attr, score_i, dependent, primary,
+                         dependent_role, primary_role,
+                         unpack_influence(id, dependent, influence_s), data_set);
 }
 
 // \return Standard Pacemaker return code
@@ -553,19 +563,19 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                        pe_working_set_t *data_set)
 {
     const char *id = NULL;
-    const char *id_lh = NULL;
-    const char *id_rh = NULL;
-    const char *state_lh = NULL;
-    const char *state_rh = NULL;
+    const char *dependent_id = NULL;
+    const char *primary_id = NULL;
+    const char *dependent_role = NULL;
+    const char *primary_role = NULL;
 
-    pe_resource_t *rsc_lh = NULL;
-    pe_resource_t *rsc_rh = NULL;
+    pe_resource_t *dependent = NULL;
+    pe_resource_t *primary = NULL;
 
-    pe_tag_t *tag_lh = NULL;
-    pe_tag_t *tag_rh = NULL;
+    pe_tag_t *dependent_tag = NULL;
+    pe_tag_t *primary_tag = NULL;
 
-    xmlNode *rsc_set_lh = NULL;
-    xmlNode *rsc_set_rh = NULL;
+    xmlNode *dependent_set = NULL;
+    xmlNode *primary_set = NULL;
     bool any_sets = false;
 
     *expanded_xml = NULL;
@@ -586,70 +596,72 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
-    if (id_lh == NULL || id_rh == NULL) {
+    dependent_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    primary_id = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
+    if ((dependent_id == NULL) || (primary_id == NULL)) {
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
+    if (!pcmk__valid_resource_or_tag(data_set, dependent_id, &dependent,
+                                     &dependent_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_lh);
+                         "valid resource or tag", id, dependent_id);
         return pcmk_rc_schema_validation;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_rh, &rsc_rh, &tag_rh)) {
+    if (!pcmk__valid_resource_or_tag(data_set, primary_id, &primary,
+                                     &primary_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_rh);
+                         "valid resource or tag", id, primary_id);
         return pcmk_rc_schema_validation;
     }
 
-    if (rsc_lh && rsc_rh) {
+    if ((dependent != NULL) && (primary != NULL)) {
         /* Neither side references any template/tag. */
         return pcmk_rc_ok;
     }
 
-    if (tag_lh && tag_rh) {
+    if ((dependent_tag != NULL) && (primary_tag != NULL)) {
         // A colocation constraint between two templates/tags makes no sense
         pcmk__config_err("Ignoring constraint '%s' because two templates or "
                          "tags cannot be colocated", id);
         return pcmk_rc_schema_validation;
     }
 
-    state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
-    state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    dependent_role = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    primary_role = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert template/tag reference in "rsc" into resource_set under constraint
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
+    if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, XML_COLOC_ATTR_SOURCE,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
-    if (rsc_set_lh != NULL) {
-        if (state_lh != NULL) {
+    if (dependent_set != NULL) {
+        if (dependent_role != NULL) {
             // Move "rsc-role" into converted resource_set as "role"
-            crm_xml_add(rsc_set_lh, "role", state_lh);
+            crm_xml_add(dependent_set, "role", dependent_role);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
         any_sets = true;
     }
 
     // Convert template/tag reference in "with-rsc" into resource_set under constraint
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET,
+    if (!pcmk__tag_to_set(*expanded_xml, &primary_set, XML_COLOC_ATTR_TARGET,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
-    if (rsc_set_rh != NULL) {
-        if (state_rh != NULL) {
+    if (primary_set != NULL) {
+        if (primary_role != NULL) {
             // Move "with-rsc-role" into converted resource_set as "role"
-            crm_xml_add(rsc_set_rh, "role", state_rh);
+            crm_xml_add(primary_set, "role", primary_role);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
         }
         any_sets = true;
@@ -795,7 +807,7 @@ pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
         pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
 
         if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->rsc_lh, action->rsc, data_set);
+            mark_start_blocked(colocate_with->dependent, action->rsc, data_set);
         }
     }
 }
@@ -827,7 +839,7 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED)
+    if ((constraint->dependent_role >= RSC_ROLE_UNPROMOTED)
         && (dependent->parent != NULL)
         && pcmk_is_set(dependent->parent->flags, pe_rsc_promotable)
         && !pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
@@ -845,7 +857,7 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
          * colocation constraint has been violated.
          */
 
-        const pe_node_t *rh_node = primary->allocated_to;
+        const pe_node_t *primary_node = primary->allocated_to;
 
         if (dependent->allocated_to == NULL) {
             crm_trace("Skipping colocation '%s': %s will not run anywhere",
@@ -854,58 +866,62 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
         } else if (constraint->score >= INFINITY) {
             // Dependent resource must colocate with primary resource
 
-            if ((rh_node == NULL)
-                || (rh_node->details != dependent->allocated_to->details)) {
+            if ((primary_node == NULL) ||
+                (primary_node->details != dependent->allocated_to->details)) {
                 crm_err("%s must be colocated with %s but is not (%s vs. %s)",
                         dependent->id, primary->id,
                         dependent->allocated_to->details->uname,
-                        (rh_node? rh_node->details->uname : "unallocated"));
+                        (primary_node == NULL)? "unallocated" : primary_node->details->uname);
             }
 
         } else if (constraint->score <= -CRM_SCORE_INFINITY) {
             // Dependent resource must anti-colocate with primary resource
 
-            if ((rh_node != NULL)
-                && (dependent->allocated_to->details == rh_node->details)) {
+            if ((primary_node != NULL) &&
+                (dependent->allocated_to->details == primary_node->details)) {
                 crm_err("%s and %s must be anti-colocated but are allocated "
                         "to the same node (%s)",
-                        dependent->id, primary->id, rh_node->details->uname);
+                        dependent->id, primary->id, primary_node->details->uname);
             }
         }
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((constraint->score > 0) && (constraint->role_lh != RSC_ROLE_UNKNOWN)
-        && (constraint->role_lh != dependent->next_role)) {
+    if ((constraint->score > 0)
+        && (constraint->dependent_role != RSC_ROLE_UNKNOWN)
+        && (constraint->dependent_role != dependent->next_role)) {
 
         crm_trace("Skipping colocation '%s': dependent limited to %s role "
                   "but %s next role is %s",
-                  constraint->id, role2text(constraint->role_lh),
+                  constraint->id, role2text(constraint->dependent_role),
                   dependent->id, role2text(dependent->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((constraint->score > 0) && (constraint->role_rh != RSC_ROLE_UNKNOWN)
-        && (constraint->role_rh != primary->next_role)) {
+    if ((constraint->score > 0)
+        && (constraint->primary_role != RSC_ROLE_UNKNOWN)
+        && (constraint->primary_role != primary->next_role)) {
 
         crm_trace("Skipping colocation '%s': primary limited to %s role "
                   "but %s next role is %s",
-                  constraint->id, role2text(constraint->role_rh),
+                  constraint->id, role2text(constraint->primary_role),
                   primary->id, role2text(primary->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((constraint->score < 0) && (constraint->role_lh != RSC_ROLE_UNKNOWN)
-        && (constraint->role_lh == dependent->next_role)) {
+    if ((constraint->score < 0)
+        && (constraint->dependent_role != RSC_ROLE_UNKNOWN)
+        && (constraint->dependent_role == dependent->next_role)) {
         crm_trace("Skipping anti-colocation '%s': dependent role %s matches",
-                  constraint->id, role2text(constraint->role_lh));
+                  constraint->id, role2text(constraint->dependent_role));
         return pcmk__coloc_affects_nothing;
     }
 
-    if ((constraint->score < 0) && (constraint->role_rh != RSC_ROLE_UNKNOWN)
-        && (constraint->role_rh == primary->next_role)) {
+    if ((constraint->score < 0)
+        && (constraint->primary_role != RSC_ROLE_UNKNOWN)
+        && (constraint->primary_role == primary->next_role)) {
         crm_trace("Skipping anti-colocation '%s': primary role %s matches",
-                  constraint->id, role2text(constraint->role_rh));
+                  constraint->id, role2text(constraint->primary_role));
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1005,8 +1021,8 @@ void
 pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
                               pcmk__colocation_t *constraint)
 {
-    const char *rh_value = NULL;
-    const char *lh_value = NULL;
+    const char *dependent_value = NULL;
+    const char *primary_value = NULL;
     const char *attribute = CRM_ATTR_ID;
     int score_multiplier = 1;
 
@@ -1018,23 +1034,23 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
         attribute = constraint->node_attribute;
     }
 
-    lh_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
-    rh_value = pe_node_attribute_raw(primary->allocated_to, attribute);
+    dependent_value = pe_node_attribute_raw(dependent->allocated_to, attribute);
+    primary_value = pe_node_attribute_raw(primary->allocated_to, attribute);
 
-    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
+    if (!pcmk__str_eq(dependent_value, primary_value, pcmk__str_casei)) {
         if ((constraint->score == INFINITY)
-            && (constraint->role_lh == RSC_ROLE_PROMOTED)) {
+            && (constraint->dependent_role == RSC_ROLE_PROMOTED)) {
             dependent->priority = -INFINITY;
         }
         return;
     }
 
-    if ((constraint->role_rh != RSC_ROLE_UNKNOWN)
-        && (constraint->role_rh != primary->next_role)) {
+    if ((constraint->primary_role != RSC_ROLE_UNKNOWN)
+        && (constraint->primary_role != primary->next_role)) {
         return;
     }
 
-    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
+    if (constraint->dependent_role == RSC_ROLE_UNPROMOTED) {
         score_multiplier = -1;
     }
 
