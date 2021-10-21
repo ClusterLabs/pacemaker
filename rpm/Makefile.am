@@ -237,5 +237,33 @@ dirty:
 mock-clean:
 	-rm -rf "$(MOCK_DIR)"
 
+# Make debugging makefile issues easier
+vars:
+	@echo "COMMIT=$(COMMIT)"
+	@echo "TAG=$(TAG)"
+	@echo "DIRTY=$(DIRTY)"
+	@echo "DIRTY_EXT=$(DIRTY_EXT)"
+	@echo "LAST_RC=$(LAST_RC)"
+	@echo "LAST_FINAL=$(LAST_FINAL)"
+	@echo "LAST_RELEASE=$(LAST_RELEASE)"
+	@echo "NEXT_RELEASE=$(NEXT_RELEASE)"
+	@echo "top_distdir=$(top_distdir)"
+	@echo "RPMDEST=$(RPMDEST)"
+	@echo "RPMTYPE=$(RPMTYPE)"
+	@echo "RPM_SPEC_DIR=$(RPM_SPEC_DIR)"
+	@echo "RPM_SRCRPM_DIR=$(RPM_SRCRPM_DIR)"
+	@echo "RPM_OPTS=$(RPM_OPTS)"
+	@echo "RPM_CLEAN=$(RPM_CLEAN)"
+	@echo "WITH=$(WITH)"
+	@echo "BUILD_COUNTER=$(BUILD_COUNTER)"
+	@echo "LAST_COUNT=$(LAST_COUNT)"
+	@echo "COUNT=$(COUNT)"
+	@echo "SPECVERSION=$(SPECVERSION)"
+	@echo "SPEC_COMMIT=$(SPEC_COMMIT)"
+	@echo "SPEC_ABBREV=$(SPEC_ABBREV)"
+	@echo "SPEC_RELEASE=$(SPEC_RELEASE)"
+	@echo "SPEC_RELEASE_NO=$(SPEC_RELEASE_NO)"
+	@echo "TARFILE=$(TARFILE)"
+
 clean-local: mock-clean rpm-clean
 	-rm -f "$(TARFILE)"
