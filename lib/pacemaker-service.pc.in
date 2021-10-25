@@ -2,7 +2,7 @@ sub=crmservice
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
-ocfdir=@OCF_RA_DIR@
+ocfdir=@OCF_RA_INSTALL_DIR@
 
 Name:             lib${sub}
 URL:              @PACKAGE_URL@
