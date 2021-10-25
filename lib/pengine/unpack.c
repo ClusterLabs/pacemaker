@@ -3691,8 +3691,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return);
-    CRM_CHECK(status <= PCMK_EXEC_INVALID, return);
-    CRM_CHECK(status >= PCMK_EXEC_PENDING, return);
+    CRM_CHECK((status >= PCMK_EXEC_PENDING) && (status <= PCMK_EXEC_MAX),
+              return);
 
     if (!strcmp(task, CRMD_ACTION_NOTIFY) ||
         !strcmp(task, CRMD_ACTION_METADATA)) {

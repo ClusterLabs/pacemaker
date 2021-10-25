@@ -315,6 +315,9 @@ enum pcmk_exec_status {
     PCMK_EXEC_NOT_INSTALLED,    //!< Agent or dependency not available locally
     PCMK_EXEC_NOT_CONNECTED,    //!< No connection to executor
     PCMK_EXEC_INVALID,          //!< Action cannot be attempted (e.g. shutdown)
+
+    // Add new values above here then update this one below
+    PCMK_EXEC_MAX = PCMK_EXEC_INVALID, //!< Maximum value for this enum
 };
 
 const char *pcmk_rc_name(int rc);
