@@ -445,6 +445,7 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_EXEC_TIMEOUT:
         case PCMK_EXEC_ERROR:
         case PCMK_EXEC_NOT_CONNECTED:
+        case PCMK_EXEC_NO_FENCE_DEVICE:
         case PCMK_EXEC_INVALID:
             return TRUE;
 
