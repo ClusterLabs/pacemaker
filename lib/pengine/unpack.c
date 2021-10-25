@@ -3861,10 +3861,11 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_INVALID:
             break; // Not done, do error handling
 
-        /* This should only be possible in fence action results, not operation
+        /* These should only be possible in fence action results, not operation
          * history, but have some handling in place as a fail-safe.
          */
         case PCMK_EXEC_NO_FENCE_DEVICE:
+        case PCMK_EXEC_NO_SECRETS:
             status = PCMK_EXEC_ERROR_HARD;
             break; // Not done, do error handling
     }

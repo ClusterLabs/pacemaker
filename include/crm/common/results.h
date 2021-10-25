@@ -316,9 +316,10 @@ enum pcmk_exec_status {
     PCMK_EXEC_NOT_CONNECTED,    //!< No connection to executor
     PCMK_EXEC_INVALID,          //!< Action cannot be attempted (e.g. shutdown)
     PCMK_EXEC_NO_FENCE_DEVICE,  //!< No fence device is configured for target
+    PCMK_EXEC_NO_SECRETS,       //!< Necessary CIB secrets are unavailable
 
     // Add new values above here then update this one below
-    PCMK_EXEC_MAX = PCMK_EXEC_NO_FENCE_DEVICE, //!< Maximum value for this enum
+    PCMK_EXEC_MAX = PCMK_EXEC_NO_SECRETS, //!< Maximum value for this enum
 };
 
 const char *pcmk_rc_name(int rc);
@@ -351,6 +352,7 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
         case PCMK_EXEC_NOT_CONNECTED:   return "No executor connection";
         case PCMK_EXEC_INVALID:         return "Cannot execute now";
         case PCMK_EXEC_NO_FENCE_DEVICE: return "No fence device";
+        case PCMK_EXEC_NO_SECRETS:      return "CIB secrets unavailable";
         default:                        return "UNKNOWN!";
     }
 }
