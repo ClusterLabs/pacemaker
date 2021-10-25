@@ -452,15 +452,16 @@ stonith_device_execute(stonith_device_t * device)
     }
 
 #if SUPPORT_CIBSECRETS
-    if (pcmk__substitute_secrets(device->id, device->params) != pcmk_rc_ok) {
-        /* replacing secrets failed! */
+    exec_rc = pcmk__substitute_secrets(device->id, device->params);
+    if (exec_rc != pcmk_rc_ok) {
         if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
-            /* don't fail on stop! */
-            crm_info("Proceeding with stop operation for %s", device->id);
-
+            crm_info("Proceeding with stop operation for %s "
+                     "despite being unable to load CIB secrets (%s)",
+                     device->id, pcmk_rc_str(exec_rc));
         } else {
-            crm_err("Considering %s unconfigured: Failed to get secrets",
-                    device->id);
+            crm_err("Considering %s unconfigured "
+                    "because unable to load CIB secrets: %s",
+                     device->id, pcmk_rc_str(exec_rc));
             report_internal_result(cmd, -EACCES);
             goto done;
         }

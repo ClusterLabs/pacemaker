@@ -868,9 +868,30 @@ services__handle_exec_error(svc_action_t * op, int error)
     }
 }
 
+/*!
+ * \internal
+ * \brief Exit a child process that failed before executing agent
+ *
+ * \param[in] op           Action that failed
+ * \param[in] exit_status  Exit status code to use
+ * \param[in] exit_reason  Exit reason to output if for OCF agent
+ */
+static void
+exit_child(svc_action_t *op, int exit_status, const char *exit_reason)
+{
+    if ((op != NULL) && (exit_reason != NULL)
+        && pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF,
+                        pcmk__str_none)) {
+        fprintf(stderr, PCMK_OCF_REASON_PREFIX "%s\n", exit_reason);
+    }
+    _exit(exit_status);
+}
+
 static void
 action_launch_child(svc_action_t *op)
 {
+    int rc;
+
     /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
      * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
      * We do not want this to be inherited by the child process. By resetting this the signal
@@ -886,12 +907,12 @@ action_launch_child(svc_action_t *op)
         sp.sched_priority = 0;
 
         if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-            crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
+            crm_warn("Could not reset scheduling policy for %s", op->id);
         }
     }
 #endif
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-        crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
+        crm_warn("Could not reset process priority for %s", op->id);
     }
 
     /* Man: The call setpgrp() is equivalent to setpgid(0,0)
@@ -902,17 +923,26 @@ action_launch_child(svc_action_t *op)
 
     pcmk__close_fds_in_child(false);
 
-#if SUPPORT_CIBSECRETS
-    if (pcmk__substitute_secrets(op->rsc, op->params) != pcmk_rc_ok) {
-        /* replacing secrets failed! */
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
-            /* don't fail on stop! */
-            crm_info("proceeding with the stop operation for %s", op->rsc);
+    /* It would be nice if errors in this function could be reported as
+     * execution status (for example, PCMK_EXEC_NO_SECRETS for the secrets error
+     * below) instead of exit status. However, we've already forked, so
+     * exit status is all we have. At least for OCF actions, we can output an
+     * exit reason for the parent to parse.
+     */
 
+#if SUPPORT_CIBSECRETS
+    rc = pcmk__substitute_secrets(op->rsc, op->params);
+    if (rc != pcmk_rc_ok) {
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+            crm_info("Proceeding with stop operation for %s "
+                     "despite being unable to load CIB secrets (%s)",
+                     op->rsc, pcmk_rc_str(rc));
         } else {
-            crm_err("failed to get secrets for %s, "
-                    "considering resource not configured", op->rsc);
-            _exit(services__configuration_error(op));
+            crm_err("Considering %s unconfigured "
+                    "because unable to load CIB secrets: %s",
+                     op->rsc, pcmk_rc_str(rc));
+            exit_child(op, services__configuration_error(op),
+                       "Unable to load CIB secrets");
         }
     }
 #endif
@@ -924,31 +954,39 @@ action_launch_child(svc_action_t *op)
 
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_perror(LOG_ERR, "Could not set child group to %d", op->opaque->gid);
-            _exit(services__authorization_error(op));
+            crm_err("Considering %s unauthorized because could not set "
+                    "child group to %d: %s",
+                    op->id, op->opaque->gid, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not set group for child process");
         }
 
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
-            crm_perror(LOG_ERR, "Could not set child groups");
-            _exit(services__authorization_error(op));
+            crm_err("Considering %s unauthorized because could not "
+                    "clear supplementary groups: %s", op->id, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not clear supplementary groups for child process");
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
-            crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
-            _exit(services__authorization_error(op));
+            crm_err("Considering %s unauthorized because could not set user "
+                    "to %d: %s", op->id, op->opaque->uid, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not set user for child process");
         }
     }
 
-    /* execute the RA */
+    // Execute the agent (doesn't return if successful)
     execvp(op->opaque->exec, op->opaque->args);
 
-    /* Most cases should have been already handled by stat() */
-    services__handle_exec_error(op, errno);
-
-    _exit(op->rc);
+    // An earlier stat() should have avoided most possible errors
+    rc = errno;
+    services__handle_exec_error(op, rc);
+    crm_err("Unable to execute %s: %s", op->id, strerror(rc));
+    exit_child(op, op->rc, "Child process was unable to execute file");
 }
 
 /*!
