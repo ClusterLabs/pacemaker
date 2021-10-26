@@ -110,13 +110,17 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
                             ++alert_sequence_no);
 
     cb_data = calloc(1, sizeof(struct alert_cb_s));
-    CRM_CHECK(cb_data != NULL,
-              rc = -ENOMEM; goto err);
+    if (cb_data == NULL) {
+        rc = -errno;
+        goto err;
+    }
 
     /* coverity[deref_ptr] False Positive */
     cb_data->client_id = strdup(client->id);
-    CRM_CHECK(cb_data->client_id != NULL,
-              rc = -ENOMEM; goto err);
+    if (cb_data->client_id == NULL) {
+        rc = -errno;
+        goto err;
+    }
 
     crm_element_value_int(request, F_LRMD_CALLID, &(cb_data->call_id));
 
