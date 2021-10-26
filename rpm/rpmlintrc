@@ -1,41 +1,18 @@
-addFilter("E: non-standard-dir-perm .* 07.0")
-addFilter("W: shared-lib-calls-exit")
-
-# Really, really do not care
-addFilter("spelling-error")
-addFilter("mixed-use-of-spaces-and-tabs")
-
 # Mandated location for OCF directory
-addFilter("W: only-non-binary-in-usr-lib")
-addFilter("E: hardcoded-library-path in /usr/lib/ocf")
+addFilter("E: hardcoded-library-path in %{_prefix}/lib/ocf")
 
 # Common location used to guess systemd presence
 addFilter("E: hardcoded-library-path in /usr/lib/os-release")
-
-# It's there but rpmlint can't find it for some reason
-addFilter("no-status-entry /etc/rc.d/init.d/")
-
-# We don't want the cluster to start by default 
-addFilter("no-chkconfig-line /etc/rc.d/init.d/")
-
-# Not interested in lock files
-addFilter("subsys-not-used /etc/rc.d/init.d/")
 
 # When building developer packages
 addFilter("W: invalid-url Source0:")
 addFilter("W: unstripped-binary-or-object")
 addFilter("W: hidden-file-or-dir /var/lib/pacemaker/gcov")
-
-# Build artifacts
+addFilter("W: incoherent-version-in-changelog")
 addFilter("E: changelog-time-in-future")
-addFilter("pacemaker.src: W: strange-permission .* 0600")
-addFilter("enchant-dictionary-not-found en_US")
 
 # rpmlint doesn't like logrotate script being in pacemaker-cli package
 addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")
-
-# buildbot builds the not-yet-released version
-addFilter("W: incoherent-version-in-changelog")
 
 # pacemaker_remote scriptlets use a state file
 addFilter("W: dangerous-command-in-%(pre|postun|posttrans) rm")

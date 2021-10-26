@@ -189,10 +189,10 @@ pacemaker_*.info
 
 # Packaging artifacts
 *.rpm
-build.counter
-/mock
 /pacemaker.spec
-/rpm/[A-Z]*
+/rpm/[A-LN-Z]*
+/rpm/build.counter
+/rpm/mock
 
 # Project maintainer artifacts
 /maint/gnulib
@@ -206,6 +206,7 @@ build.counter
 /HTML
 /abi_dumps
 /abi-check
+/build.counter
 /compat_reports
 /compile
 /cts/.regression.failed.diff
@@ -266,6 +267,7 @@ build.counter
 /ltmain.sh
 /mcp
 /missing
+/mock
 /pacemaker-*.spec
 /pengine
 /py-compile

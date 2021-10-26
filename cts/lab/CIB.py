@@ -1,7 +1,7 @@
 """ CIB generator for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -127,8 +127,8 @@ class CIB12(ConfigBase):
         (rc, output) = self.Factory.rsh(self.Factory.target,
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
-            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}'"""
-            r""" /etc/corosync/corosync.conf""" % node_name, None)
+            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}'%s"""
+            % (node_name, CTSvars.COROSYNC_CONF), None)
 
         if rc == 0 and len(output) == 1:
             try:

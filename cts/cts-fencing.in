@@ -19,6 +19,7 @@ import signal
 # Prefer the source tree if available
 BUILD_DIR = "@abs_top_builddir@"
 SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
+COROSYNC_CONF = "@PCMK__COROSYNC_CONF@"
 TEST_DIR = sys.path[0]
 
 AUTOGEN_COROSYNC_TEMPLATE = """
@@ -544,7 +545,7 @@ class Tests(object):
         self.timeout = timeout
         self.force_wait = force_wait
         self.logdir = logdir
-        self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
+        self.autogen_corosync_cfg = not os.path.exists(COROSYNC_CONF)
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
@@ -1460,7 +1461,7 @@ class Tests(object):
         if use_corosync:
             if self.autogen_corosync_cfg:
                 logname = os.path.join(self.logdir, "corosync.log")
-                corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
+                corosync_cfg = io.open(COROSYNC_CONF, "w")
                 corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
                 corosync_cfg.close()
 
@@ -1483,7 +1484,7 @@ class Tests(object):
                     for line in logfile.readlines():
                         print(line.strip())
                     logfile.close()
-                os.remove("/etc/corosync/corosync.conf")
+                os.remove(COROSYNC_CONF)
 
         subprocess.call(["cts-support", "uninstall"])
 

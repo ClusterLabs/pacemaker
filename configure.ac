@@ -209,6 +209,16 @@ dnl ===============================================
 dnl Actual library checks come later, but pkg-config can be used here to grab
 dnl external values to use as defaults for configure options
 
+dnl Per the autoconf docs, --enable-*/--disable-* options should control
+dnl features inherent to Pacemaker, while --with-*/--without-* options should
+dnl control the use of external software. However, --enable-*/--disable-* may
+dnl implicitly require additional external dependencies, and
+dnl --with-*/--without-* may implicitly enable or disable features, so the
+dnl line is blurry.
+dnl
+dnl We also use --with-* options for custom file, directory, and path
+dnl locations, since autoconf does not provide an option type for those.
+
 dnl --enable-* options: build process
 
 AC_ARG_ENABLE([quiet],
@@ -248,7 +258,7 @@ AC_ARG_ENABLE([upstart],
 yes_no_try "$enable_upstart" "try"
 enable_upstart=$?
 
-dnl --enable-* options: compatibility
+dnl --enable-* options: features inherent to Pacemaker
 
 AC_ARG_ENABLE([compat-2.0],
     [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
@@ -276,7 +286,7 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
-dnl --with-* options: basic parameters
+dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
@@ -389,6 +399,15 @@ AC_ARG_WITH([corosync],
 )
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
+
+dnl @TODO This should be a corosync pkgconfig variable
+PCMK__COROSYNC_CONF=""
+AC_ARG_WITH([corosync-conf],
+    [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
+        location of Corosync configuration file
+        @<:@SYSCONFDIR/corosync/corosync.conf@:>@]))],
+    [ PCMK__COROSYNC_CONF="$withval" ]
+)
 
 AC_ARG_WITH([nagios],
     [AS_HELP_STRING([--with-nagios], [support nagios resources])]
@@ -527,6 +546,14 @@ AC_ARG_WITH([sanitizers],
   [ SANITIZERS="$withval" ],
   [ SANITIZERS="" ])
 
+dnl Environment variable options
+
+AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
+AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
+
+AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
+AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
+
 
 dnl ===============================================
 dnl General Processing
@@ -643,6 +670,9 @@ AC_SUBST(docdir)
 
 expand_path_option CONFIGDIR "${sysconfdir}/sysconfig"
 AC_SUBST(CONFIGDIR)
+
+expand_path_option PCMK__COROSYNC_CONF "${sysconfdir}/corosync/corosync.conf"
+AC_SUBST(PCMK__COROSYNC_CONF)
 
 expand_path_option CRM_LOG_DIR "${localstatedir}/log/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
@@ -1703,12 +1733,6 @@ if export | fgrep " CFLAGS=" > /dev/null; then
     unset SAVED_CFLAGS
 fi
 
-AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
-AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
-
-AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
-AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
-
 CC_EXTRAS=""
 
 AS_IF([test "$GCC" != yes], [CFLAGS="$CFLAGS -g"], [
@@ -2111,6 +2135,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/report.collector                              \

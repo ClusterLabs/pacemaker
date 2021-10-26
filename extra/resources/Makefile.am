@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2019 the Pacemaker project contributors
+# Copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,6 +8,7 @@
 #
 
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/mk/man.mk
 
 ocfdir			= @OCF_RA_INSTALL_DIR@/pacemaker
 dist_ocf_SCRIPTS	= attribute	\
