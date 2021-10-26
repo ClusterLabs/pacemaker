@@ -2671,13 +2671,14 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
         g_string_append_printf(str, " (%s)", op->exit_reason);
     }
 
-    g_string_append_printf(str, " " CRM_XS " call=%d key=%s confirmed=%s",
-                           op->call_id, op_key, pcmk__btoa(confirmed));
+    g_string_append(str, " " CRM_XS);
+    if (update_id != 0) {
+        g_string_append_printf(str, " CIB update %d,", update_id);
+    }
+    g_string_append_printf(str, " graph action %sconfirmed; call=%d key=%s",
+                           (confirmed? "" : "un"), op->call_id, op_key);
     if (op->op_status == PCMK_EXEC_DONE) {
         g_string_append_printf(str, " rc=%d", op->rc);
-    }
-    if (update_id != 0) {
-        g_string_append_printf(str, " cib-update=%d", update_id);
     }
 
     do_crm_log(log_level, "%s", str->str);

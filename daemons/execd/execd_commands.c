@@ -235,7 +235,7 @@ log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
     g_string_append_printf(str, " (execution time %s",
                            pcmk__readable_interval(exec_time_ms));
     if (queue_time_ms > 0) {
-        g_string_append_printf(str, " after being queued %s)",
+        g_string_append_printf(str, " after being queued %s",
                                pcmk__readable_interval(queue_time_ms));
     }
     g_string_append(str, ")");
