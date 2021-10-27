@@ -1309,3 +1309,41 @@ services__exit_reason(svc_action_t *action)
 {
     return action->opaque->exit_reason;
 }
+
+/*!
+ * \internal
+ * \brief Steal stdout from an action
+ *
+ * \param[in] action  Action whose stdout is desired
+ *
+ * \return Action's stdout (which may be NULL)
+ * \note Upon return, \p action will no longer track the output, so it is the
+ *       caller's responsibility to free the return value.
+ */
+char *
+services__grab_stdout(svc_action_t *action)
+{
+    char *output = action->stdout_data;
+
+    action->stdout_data = NULL;
+    return output;
+}
+
+/*!
+ * \internal
+ * \brief Steal stderr from an action
+ *
+ * \param[in] action  Action whose stderr is desired
+ *
+ * \return Action's stderr (which may be NULL)
+ * \note Upon return, \p action will no longer track the output, so it is the
+ *       caller's responsibility to free the return value.
+ */
+char *
+services__grab_stderr(svc_action_t *action)
+{
+    char *output = action->stderr_data;
+
+    action->stderr_data = NULL;
+    return output;
+}

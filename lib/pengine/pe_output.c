@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
 #include <crm/cib/util.h>

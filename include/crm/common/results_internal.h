@@ -35,7 +35,7 @@ void pcmk__set_result(pcmk__action_result_t *result, int exit_status,
                       const char *exit_reason);
 
 void pcmk__set_result_output(pcmk__action_result_t *result,
-                             const char *out, const char *err);
+                             char *out, char *err);
 
 void pcmk__reset_result(pcmk__action_result_t *result);
 

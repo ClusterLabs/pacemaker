@@ -2621,6 +2621,83 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Log the result of an executor action (actual or synthesized)
+ *
+ * \param[in] op         Executor action to log result for
+ * \param[in] op_key     Operation key for action
+ * \param[in] node_name  Name of node action was performed on, if known
+ * \param[in] update_id  Call ID for CIB update (or 0 if none)
+ * \param[in] confirmed  Whether to log that graph action was confirmed
+ */
+static void
+log_executor_event(lrmd_event_data_t *op, const char *op_key,
+                   const char *node_name, int update_id, gboolean confirmed)
+{
+    int log_level = LOG_ERR;
+    GString *str = g_string_sized_new(100); // reasonable starting size
+
+    g_string_printf(str, "Result of %s operation for %s",
+                    crm_action_str(op->op_type, op->interval_ms), op->rsc_id);
+
+    if (node_name != NULL) {
+        g_string_append_printf(str, " on %s", node_name);
+    }
+
+    switch (op->op_status) {
+        case PCMK_EXEC_DONE:
+            log_level = LOG_NOTICE;
+            g_string_append_printf(str, ": %s",
+                                   services_ocf_exitcode_str(op->rc));
+            break;
+
+        case PCMK_EXEC_TIMEOUT:
+            g_string_append_printf(str, ": %s after %s",
+                                   pcmk_exec_status_str(op->op_status),
+                                   pcmk__readable_interval(op->timeout));
+            break;
+
+        case PCMK_EXEC_CANCELLED:
+            log_level = LOG_INFO;
+            // Fall through
+        default:
+            g_string_append_printf(str, ": %s",
+                                   pcmk_exec_status_str(op->op_status));
+    }
+
+    if ((op->exit_reason != NULL)
+        && ((op->op_status != PCMK_EXEC_DONE) || (op->rc != PCMK_OCF_OK))) {
+        g_string_append_printf(str, " (%s)", op->exit_reason);
+    }
+
+    g_string_append(str, " " CRM_XS);
+    if (update_id != 0) {
+        g_string_append_printf(str, " CIB update %d,", update_id);
+    }
+    g_string_append_printf(str, " graph action %sconfirmed; call=%d key=%s",
+                           (confirmed? "" : "un"), op->call_id, op_key);
+    if (op->op_status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, " rc=%d", op->rc);
+    }
+
+    do_crm_log(log_level, "%s", str->str);
+    g_string_free(str, TRUE);
+
+    if (op->output != NULL) {
+        char *prefix = crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
+                                         op->rsc_id, op->op_type,
+                                         op->interval_ms, op->call_id);
+
+        if (op->rc) {
+            crm_log_output(LOG_NOTICE, prefix, op->output);
+        } else {
+            crm_log_output(LOG_DEBUG, prefix, op->output);
+        }
+        free(prefix);
+    }
+}
+
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                   active_op_t *pending, xmlNode *action_xml)
@@ -2820,58 +2897,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         }
     }
 
-    if (node_name == NULL) {
-        node_name = "unknown node"; // for logging
-    }
-
-    switch (op->op_status) {
-        case PCMK_EXEC_CANCELLED:
-            crm_info("Result of %s operation for %s on %s: %s "
-                     CRM_XS " call=%d key=%s confirmed=%s",
-                     crm_action_str(op->op_type, op->interval_ms),
-                     op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                     op->call_id, op_key, pcmk__btoa(removed));
-            break;
-
-        case PCMK_EXEC_DONE:
-            crm_notice("Result of %s operation for %s on %s: %s "
-                       CRM_XS " rc=%d call=%d key=%s confirmed=%s cib-update=%d",
-                       crm_action_str(op->op_type, op->interval_ms),
-                       op->rsc_id, node_name,
-                       services_ocf_exitcode_str(op->rc), op->rc,
-                       op->call_id, op_key, pcmk__btoa(removed), update_id);
-            break;
-
-        case PCMK_EXEC_TIMEOUT:
-            crm_err("Result of %s operation for %s on %s: %s "
-                    CRM_XS " call=%d key=%s timeout=%dms",
-                    crm_action_str(op->op_type, op->interval_ms),
-                    op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                    op->call_id, op_key, op->timeout);
-            break;
-
-        default:
-            crm_err("Result of %s operation for %s on %s: %s "
-                    CRM_XS " call=%d key=%s confirmed=%s status=%d cib-update=%d",
-                    crm_action_str(op->op_type, op->interval_ms),
-                    op->rsc_id, node_name, pcmk_exec_status_str(op->op_status),
-                    op->call_id, op_key, pcmk__btoa(removed), op->op_status,
-                    update_id);
-    }
-
-    if (op->output) {
-        char *prefix =
-            crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
-                              op->rsc_id, op->op_type, op->interval_ms,
-                              op->call_id);
-
-        if (op->rc) {
-            crm_log_output(LOG_NOTICE, prefix, op->output);
-        } else {
-            crm_log_output(LOG_DEBUG, prefix, op->output);
-        }
-        free(prefix);
-    }
+    log_executor_event(op, op_key, node_name, update_id, removed);
 
     if (lrm_state) {
         if (!pcmk__str_eq(op->op_type, RSC_METADATA, pcmk__str_casei)) {
