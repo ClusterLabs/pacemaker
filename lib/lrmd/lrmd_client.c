@@ -1049,8 +1049,11 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 static void
 copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
 {
+    CRM_ASSERT((dest != NULL) && (source != NULL) && (source->data != NULL));
+
     dest->data = gnutls_malloc(source->size);
     CRM_ASSERT(dest->data);
+
     memcpy(dest->data, source->data, source->size);
     dest->size = source->size;
 }
@@ -2325,12 +2328,14 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
 void
 lrmd_api_delete(lrmd_t * lrmd)
 {
-    if (!lrmd) {
+    if (lrmd == NULL) {
         return;
     }
-    lrmd->cmds->disconnect(lrmd);       /* no-op if already disconnected */
-    free(lrmd->cmds);
-    if (lrmd->lrmd_private) {
+    if (lrmd->cmds != NULL) { // Never NULL, but make static analysis happy
+        lrmd->cmds->disconnect(lrmd); // No-op if already disconnected
+        free(lrmd->cmds);
+    }
+    if (lrmd->lrmd_private != NULL) {
         lrmd_private_t *native = lrmd->lrmd_private;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -2340,9 +2345,8 @@ lrmd_api_delete(lrmd_t * lrmd)
         free(native->remote);
         free(native->token);
         free(native->peer_version);
+        free(lrmd->lrmd_private);
     }
-
-    free(lrmd->lrmd_private);
     free(lrmd);
 }
 
