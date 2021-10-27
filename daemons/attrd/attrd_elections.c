@@ -151,6 +151,14 @@ attrd_remove_voter(const crm_node_t *peer)
          * attributes.
          */
         attrd_start_election_if_needed();
+
+    /* If an election is in progress, we need to call election_check(), in case
+     * this lost peer is the only one that hasn't voted, otherwise the election
+     * would be pending until it's timed out.
+     */
+    } else if (election_state(writer) == election_in_progress) {
+       crm_debug("Checking election status upon loss of voter %s", peer->uname);
+       election_check(writer);
     }
 }
 
