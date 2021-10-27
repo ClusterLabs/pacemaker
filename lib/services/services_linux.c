@@ -808,13 +808,14 @@ services__authorization_error(svc_action_t *op)
  * to the action's agent standard must be used. This function returns a value
  * appropriate for "not configured" errors.
  *
- * \param[in] op  Action that error is for
+ * \param[in] op        Action that error is for
+ * \param[in] is_fatal  Whether problem is cluster-wide instead of only local
  *
  * \return Exit status appropriate to agent standard
  * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
  */
 int
-services__configuration_error(svc_action_t *op)
+services__configuration_error(svc_action_t *op, bool is_fatal)
 {
     if ((op == NULL) || (op->standard == NULL)) {
         return PCMK_OCF_UNKNOWN_ERROR;
@@ -832,7 +833,7 @@ services__configuration_error(svc_action_t *op)
     }
 #endif
 
-    return PCMK_OCF_NOT_CONFIGURED;
+    return is_fatal? PCMK_OCF_NOT_CONFIGURED : PCMK_OCF_INVALID_PARAM;
 }
 
 
@@ -941,7 +942,7 @@ action_launch_child(svc_action_t *op)
             crm_err("Considering %s unconfigured "
                     "because unable to load CIB secrets: %s",
                      op->rsc, pcmk_rc_str(rc));
-            exit_child(op, services__configuration_error(op),
+            exit_child(op, services__configuration_error(op, false),
                        "Unable to load CIB secrets");
         }
     }
