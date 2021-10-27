@@ -1186,6 +1186,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     gboolean global_update = FALSE;
     gboolean config_changed = FALSE;
     gboolean manage_counters = TRUE;
+    gboolean needs_election = TRUE;
 
     static mainloop_timer_t *digest_timer = NULL;
 
@@ -1312,6 +1313,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
             } else if (pcmk__str_eq(section, XML_CIB_TAG_CONFIGURATION, pcmk__str_casei)) {
                 send_r_notify = TRUE;
+                needs_election = FALSE;
             }
 
         } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
@@ -1351,7 +1353,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (send_r_notify) {
         const char *origin = crm_element_value(request, F_ORIG);
 
-        cib_replace_notify(origin, the_cib, rc, *cib_diff);
+        cib_replace_notify(origin, the_cib, rc, *cib_diff, needs_election);
     }
 
     xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);
