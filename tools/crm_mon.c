@@ -1107,6 +1107,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'R':
                 show_opts ^= pcmk_show_details;
+#ifdef PCMK__COMPAT_2_0
+                // Keep failed action output the same as 2.0.x
+                show_opts |= pcmk_show_failed_detail;
+#endif
                 break;
             case 't':
                 show_opts ^= pcmk_show_timing;
@@ -1618,6 +1622,11 @@ main(int argc, char **argv)
         pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
                               pcmk__itoa(options.reconnect_ms / 1000), NULL);
     }
+
+#ifdef PCMK__COMPAT_2_0
+    // Keep failed action output the same as 2.0.x
+    show_opts |= pcmk_show_failed_detail;
+#endif
 
     crm_info("Starting %s", crm_system_name);
 
