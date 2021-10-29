@@ -10,7 +10,7 @@ include $(top_srcdir)/mk/common.mk
 
 lib_LTLIBRARIES		= liblrmd.la
 
-liblrmd_la_LDFLAGS	= -version-info 29:2:1
+liblrmd_la_LDFLAGS	= -version-info 29:3:1
 
 liblrmd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 liblrmd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
