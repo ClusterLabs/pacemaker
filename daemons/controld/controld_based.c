@@ -43,7 +43,10 @@ do_cib_replaced(const char *event, xmlNode * msg)
 
     /* start the join process again so we get everyone's LRM status */
     populate_cib_nodes(node_update_quick|node_update_all, __func__);
-    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+
+    if (!crm_is_true(crm_element_value(msg, F_CIB_SKIP_ELECTION))) {
+        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+    }
 }
 
 void

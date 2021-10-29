@@ -234,7 +234,7 @@ attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
 }
 
 void
-cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff)
+cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff, gboolean skip_election)
 {
     xmlNode *replace_msg = NULL;
 
@@ -271,6 +271,7 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
     crm_xml_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
     crm_xml_add_int(replace_msg, F_CIB_RC, result);
+    crm_xml_add_boolean(replace_msg, F_CIB_SKIP_ELECTION, skip_election);
     attach_cib_generation(replace_msg, "cib-replace-generation", update);
 
     crm_log_xml_trace(replace_msg, "CIB Replaced");
