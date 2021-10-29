@@ -452,15 +452,16 @@ stonith_device_execute(stonith_device_t * device)
     }
 
 #if SUPPORT_CIBSECRETS
-    if (pcmk__substitute_secrets(device->id, device->params) != pcmk_rc_ok) {
-        /* replacing secrets failed! */
+    exec_rc = pcmk__substitute_secrets(device->id, device->params);
+    if (exec_rc != pcmk_rc_ok) {
         if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
-            /* don't fail on stop! */
-            crm_info("Proceeding with stop operation for %s", device->id);
-
+            crm_info("Proceeding with stop operation for %s "
+                     "despite being unable to load CIB secrets (%s)",
+                     device->id, pcmk_rc_str(exec_rc));
         } else {
-            crm_err("Considering %s unconfigured: Failed to get secrets",
-                    device->id);
+            crm_err("Considering %s unconfigured "
+                    "because unable to load CIB secrets: %s",
+                     device->id, pcmk_rc_str(exec_rc));
             report_internal_result(cmd, -EACCES);
             goto done;
         }
@@ -499,9 +500,6 @@ stonith_device_execute(stonith_device_t * device)
     exec_rc = stonith_action_execute_async(action, (void *)cmd,
                                            cmd->done_cb, fork_cb);
     if (exec_rc < 0) {
-        crm_warn("Operation '%s'%s%s using %s failed: %s " CRM_XS " rc=%d",
-                 cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
-                 device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
         report_internal_result(cmd, exec_rc);
         stonith__destroy_action(action);
@@ -1131,18 +1129,19 @@ status_search_cb(int pid, int rc, const char *output, void *user_data)
 
     switch (rc) {
         case fence_status_unknown:
-            crm_trace("Host %s is not known by %s", search->host, dev->id);
+            crm_trace("%s reported it cannot fence %s", dev->id, search->host);
             break;
 
         case fence_status_active:
         case fence_status_inactive:
-            crm_trace("Host %s is known by %s", search->host, dev->id);
+            crm_trace("%s reported it can fence %s", dev->id, search->host);
             can = TRUE;
             break;
 
         default:
-            crm_notice("Unknown result when testing if %s can fence %s: rc=%d",
-                       dev->id, search->host, rc);
+            crm_warn("Assuming %s cannot fence %s "
+                     "(status returned unknown code %d)",
+                     dev->id, search->host, rc);
             break;
     }
     search_devices_record_result(search, dev->id, can);
@@ -1170,21 +1169,30 @@ dynamic_list_search_cb(int pid, int rc, const char *output, void *user_data)
 
     mainloop_set_trigger(dev->work);
 
-    /* If we successfully got the targets earlier, don't disable. */
-    if (rc != 0 && !dev->targets) {
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
-            /*
-                If the operation fails if the user does not explicitly specify "dynamic-list", it will fall back to "status".
-            */
-            crm_notice("Disabling port list queries for %s (%d): %s", dev->id, rc, output);
-            g_hash_table_replace(dev->params,
-                             strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
-        }
-    } else if (!rc) {
-        crm_info("Refreshing port list for %s", dev->id);
+    if (rc == CRM_EX_OK) {
+        crm_info("Refreshing target list for %s", dev->id);
         g_list_free_full(dev->targets, free);
         dev->targets = stonith__parse_targets(output);
         dev->targets_age = time(NULL);
+
+    } else if (dev->targets != NULL) {
+        crm_info("Reusing most recent target list for %s "
+                 "because list returned error code %d",
+                 dev->id, rc);
+
+    } else { // We have never successfully executed list
+        crm_warn("Assuming %s cannot fence %s "
+                 "because list returned error code %d",
+                 dev->id, search->host, rc);
+
+        /* Fall back to pcmk_host_check="status" if the user didn't explicitly
+         * specify "dynamic-list".
+         */
+        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
+            crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
+            g_hash_table_replace(dev->params, strdup(PCMK_STONITH_HOST_CHECK),
+                                 strdup("status"));
+        }
     }
 
     if (dev->targets) {
@@ -1979,6 +1987,8 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
 
     search = calloc(1, sizeof(struct device_search_s));
     if (!search) {
+        crm_crit("Cannot search for capable fence devices: %s",
+                 strerror(ENOMEM));
         callback(NULL, user_data);
         return;
     }
@@ -2240,35 +2250,78 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
                         query, stonith_query_capable_device_cb);
 }
 
-#define ST_LOG_OUTPUT_MAX 512
+/*!
+ * \internal
+ * \brief Log the result of an asynchronous command
+ *
+ * \param[in] cmd        Command the result is for
+ * \param[in] rc         Legacy return code corresponding to result
+ * \param[in] pid        Process ID of command, if available
+ * \param[in] next       Alternate device that will be tried if command failed
+ * \param[in] output     Command output, if any
+ * \param[in] op_merged  Whether this command was merged with an earlier one
+ */
 static void
-log_operation(async_command_t * cmd, int rc, int pid, const char *next, const char *output, gboolean op_merged)
+log_async_result(async_command_t *cmd, int rc, int pid, const char *next,
+                 const char *output, gboolean op_merged)
 {
-    if (rc == 0) {
+    int log_level = LOG_ERR;
+    int output_log_level = LOG_NEVER;
+    guint devices_remaining = g_list_length(cmd->device_next);
+
+    GString *msg = g_string_sized_new(80); // Reasonable starting size
+
+    // Choose log levels appropriately
+    if (rc == 0) { // Success
+        log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
+        if ((output != NULL)
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            output_log_level = LOG_DEBUG;
+        }
         next = NULL;
+    } else { // Failure
+        log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
+        if ((output != NULL)
+            && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
+            output_log_level = LOG_WARNING;
+        }
     }
 
+    // Build the log message piece by piece
+    g_string_printf(msg, "Operation '%s' ", cmd->action);
+    if (pid != 0) {
+        g_string_append_printf(msg, "[%d] ", pid);
+    }
     if (cmd->victim != NULL) {
-        do_crm_log(((rc == 0)? LOG_NOTICE : LOG_ERR),
-                   "Operation '%s' [%d] (%scall %d from %s) targeting %s "
-                   "using %s returned %d (%s)%s%s",
-                   cmd->action, pid, (op_merged? "merged " : ""), cmd->id,
-                   cmd->client_name, cmd->victim,
-                   cmd->device, rc, pcmk_strerror(rc),
-                   (next? ", retrying with " : ""), (next ? next : ""));
-    } else {
-        do_crm_log_unlikely(((rc == 0)? LOG_DEBUG : LOG_NOTICE),
-                            "Operation '%s' [%d]%s using %s returned %d (%s)%s%s",
-                            cmd->action, pid, (op_merged? " (merged)" : ""),
-                            cmd->device, rc, pcmk_strerror(rc),
-                            (next? ", retrying with " : ""), (next ? next : ""));
+        g_string_append_printf(msg, "targeting %s ", cmd->victim);
     }
+    g_string_append_printf(msg, "using %s ", cmd->device);
 
-    if (output) {
-        // Output may have multiple lines
+    // Add result
+    g_string_append_printf(msg, "returned %d (%s)", rc, pcmk_strerror(rc));
+
+    // Add next device if appropriate
+    if (next != NULL) {
+        g_string_append_printf(msg, ", retrying with %s", next);
+    }
+    if (devices_remaining > 0) {
+        g_string_append_printf(msg, " (%u device%s remaining)",
+                               (unsigned int) devices_remaining,
+                               pcmk__plural_s(devices_remaining));
+    }
+    g_string_append_printf(msg, " " CRM_XS " %scall %d from %s",
+                           (op_merged? "merged " : ""), cmd->id,
+                           cmd->client_name);
+
+    // Log the result
+    do_crm_log(log_level, "%s", msg->str);
+    g_string_free(msg, TRUE);
+
+    // Log the output (which may have multiple lines), if appropriate
+    if (output_log_level != LOG_NEVER) {
         char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
 
-        crm_log_output(rc == 0 ? LOG_DEBUG : LOG_WARNING, prefix, output);
+        crm_log_output(output_log_level, prefix, output);
         free(prefix);
     }
 }
@@ -2282,12 +2335,9 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
 
     reply = stonith_construct_async_reply(cmd, output, NULL, rc);
 
-    if (pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
-        /* Too verbose to log */
-        crm_trace("Metadata query for %s", cmd->device);
-        output = NULL;
-
-    } else if (pcmk__str_any_of(cmd->action, "monitor", "list", "status", NULL)) {
+    // Only replies for certain actions are broadcast
+    if (pcmk__str_any_of(cmd->action, "metadata", "monitor", "list", "status",
+                         NULL)) {
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
@@ -2296,7 +2346,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
         bcast = TRUE;
     }
 
-    log_operation(cmd, rc, pid, NULL, output, merged);
+    log_async_result(cmd, rc, pid, NULL, output, merged);
     crm_log_xml_trace(reply, "Reply");
 
     if (merged) {
@@ -2382,9 +2432,6 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
         mainloop_set_trigger(device->work);
     }
 
-    crm_debug("Operation '%s' using %s returned %d (%d devices remaining)",
-              cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
-
     if (rc == 0) {
         GList *iter;
         /* see if there are any required devices left to execute for this op */
@@ -2407,8 +2454,7 @@ st_child_done(int pid, int rc, const char *output, void *user_data)
 
     /* this operation requires more fencing, hooray! */
     if (next_device) {
-        log_operation(cmd, rc, pid, next_device->id, output, FALSE);
-
+        log_async_result(cmd, rc, pid, next_device->id, output, FALSE);
         schedule_stonith_command(cmd, next_device);
         /* Prevent cmd from being freed */
         cmd = NULL;

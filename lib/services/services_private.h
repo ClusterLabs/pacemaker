@@ -73,7 +73,7 @@ G_GNUC_INTERNAL
 int services__authorization_error(svc_action_t *op);
 
 G_GNUC_INTERNAL
-int services__configuration_error(svc_action_t *op);
+int services__configuration_error(svc_action_t *op, bool is_fatal);
 
 G_GNUC_INTERNAL
 void services__handle_exec_error(svc_action_t * op, int error);
