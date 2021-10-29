@@ -53,10 +53,10 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
     if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
         return FALSE;
     } else if (!pcmk_is_set(((xml_private_t *)xml->doc->_private)->flags,
-                            xpf_tracking)) {
+                            pcmk__xf_tracking)) {
         return FALSE;
     } else if (lazy && !pcmk_is_set(((xml_private_t *)xml->doc->_private)->flags,
-                                    xpf_lazy)) {
+                                    pcmk__xf_lazy)) {
         return FALSE;
     }
     return TRUE;
@@ -129,8 +129,8 @@ pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 static void
 mark_xml_node_dirty(xmlNode *xml)
 {
-    pcmk__set_xml_doc_flag(xml, xpf_dirty);
-    set_parent_flag(xml, xpf_dirty);
+    pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
+    set_parent_flag(xml, pcmk__xf_dirty);
 }
 
 // Clear flags on XML node and its children
@@ -158,8 +158,8 @@ pcmk__mark_xml_created(xmlNode *xml)
     xml_private_t *p = xml->_private;
 
     if (p && pcmk__tracking_xml_changes(xml, FALSE)) {
-        if (!pcmk_is_set(p->flags, xpf_created)) {
-            pcmk__set_xml_flags(p, xpf_created);
+        if (!pcmk_is_set(p->flags, pcmk__xf_created)) {
+            pcmk__set_xml_flags(p, pcmk__xf_created);
             mark_xml_node_dirty(xml);
         }
         for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
@@ -176,8 +176,8 @@ pcmk__mark_xml_attr_dirty(xmlAttr *a)
     xml_private_t *p = NULL;
 
     p = a->_private;
-    pcmk__set_xml_flags(p, xpf_dirty|xpf_modified);
-    pcmk__clear_xml_flags(p, xpf_deleted);
+    pcmk__set_xml_flags(p, pcmk__xf_dirty|pcmk__xf_modified);
+    pcmk__clear_xml_flags(p, pcmk__xf_deleted);
     mark_xml_node_dirty(parent);
 }
 
@@ -249,7 +249,7 @@ new_private_data(xmlNode *node)
             p = calloc(1, sizeof(xml_private_t));
             p->check = XML_PRIVATE_MAGIC;
             /* Flags will be reset if necessary when tracking is enabled */
-            pcmk__set_xml_flags(p, xpf_dirty|xpf_created);
+            pcmk__set_xml_flags(p, pcmk__xf_dirty|pcmk__xf_created);
             node->_private = p;
             break;
         case XML_TEXT_NODE:
@@ -276,12 +276,12 @@ xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enf
 {
     xml_accept_changes(xml);
     crm_trace("Tracking changes%s to %p", enforce_acls?" with ACLs":"", xml);
-    pcmk__set_xml_doc_flag(xml, xpf_tracking);
+    pcmk__set_xml_doc_flag(xml, pcmk__xf_tracking);
     if(enforce_acls) {
         if(acl_source == NULL) {
             acl_source = xml;
         }
-        pcmk__set_xml_doc_flag(xml, xpf_acl_enabled);
+        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_enabled);
         pcmk__unpack_acl(acl_source, xml, user);
         pcmk__apply_acl(xml);
     }
@@ -291,14 +291,14 @@ bool xml_tracking_changes(xmlNode * xml)
 {
     return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
            && pcmk_is_set(((xml_private_t *)(xml->doc->_private))->flags,
-                          xpf_tracking);
+                          pcmk__xf_tracking);
 }
 
 bool xml_document_dirty(xmlNode *xml) 
 {
     return (xml != NULL) && (xml->doc != NULL) && (xml->doc->_private != NULL)
            && pcmk_is_set(((xml_private_t *)(xml->doc->_private))->flags,
-                          xpf_dirty);
+                          pcmk__xf_dirty);
 }
 
 /*!
@@ -333,10 +333,10 @@ marked_as_deleted(xmlAttrPtr a, void *user_data)
 {
     xml_private_t *p = a->_private;
 
-    if (pcmk_is_set(p->flags, xpf_deleted)) {
+    if (pcmk_is_set(p->flags, pcmk__xf_deleted)) {
         return true;
     }
-    p->flags = xpf_none;
+    p->flags = pcmk__xf_none;
     return false;
 }
 
@@ -345,7 +345,7 @@ static void
 accept_attr_deletions(xmlNode *xml)
 {
     // Clear XML node's flags
-    ((xml_private_t *) xml->_private)->flags = xpf_none;
+    ((xml_private_t *) xml->_private)->flags = pcmk__xf_none;
 
     // Remove this XML node's attributes that were marked as deleted
     pcmk__xe_remove_matching_attrs(xml, marked_as_deleted, NULL);
@@ -395,7 +395,7 @@ xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
     CRM_ASSERT(xml->doc);
 
     doc = xml->doc->_private;
-    if (!pcmk_is_set(doc->flags, xpf_dirty)) {
+    if (!pcmk_is_set(doc->flags, pcmk__xf_dirty)) {
         return;
     }
 
@@ -432,12 +432,12 @@ xml_accept_changes(xmlNode * xml)
 
     reset_xml_private_data(xml->doc->_private);
 
-    if (!pcmk_is_set(doc->flags, xpf_dirty)) {
-        doc->flags = xpf_none;
+    if (!pcmk_is_set(doc->flags, pcmk__xf_dirty)) {
+        doc->flags = pcmk__xf_none;
         return;
     }
 
-    doc->flags = xpf_none;
+    doc->flags = pcmk__xf_none;
     accept_attr_deletions(top);
 }
 
@@ -635,7 +635,7 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
     for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
-            if (!pcmk__check_acl(element, NULL, xpf_acl_write)) {
+            if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
                 crm_trace("ACLs prevent removal of attributes (%s and "
                           "possibly others) from %s element",
                           (const char *) a->name, (const char *) element->name);
@@ -644,8 +644,9 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
 
             if (pcmk__tracking_xml_changes(element, false)) {
                 // Leave (marked for removal) until after diff is calculated
-                set_parent_flag(element, xpf_dirty);
-                pcmk__set_xml_flags((xml_private_t *) a->_private, xpf_deleted);
+                set_parent_flag(element, pcmk__xf_dirty);
+                pcmk__set_xml_flags((xml_private_t *) a->_private,
+                                    pcmk__xf_deleted);
             } else {
                 xmlRemoveProp(a);
             }
@@ -773,7 +774,7 @@ free_xml_with_position(xmlNode * child, int position)
             /* Free everything */
             xmlFreeDoc(doc);
 
-        } else if (pcmk__check_acl(child, NULL, xpf_acl_write) == FALSE) {
+        } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
             int offset = 0;
             char buffer[PCMK__BUFFER_SIZE];
 
@@ -783,7 +784,7 @@ free_xml_with_position(xmlNode * child, int position)
 
         } else {
             if (doc && pcmk__tracking_xml_changes(child, FALSE)
-                && !pcmk_is_set(p->flags, xpf_created)) {
+                && !pcmk_is_set(p->flags, pcmk__xf_created)) {
                 int offset = 0;
                 char buffer[PCMK__BUFFER_SIZE];
 
@@ -803,13 +804,14 @@ free_xml_with_position(xmlNode * child, int position)
                             deleted_obj->position = position;
 
                         } else {
-                            deleted_obj->position = pcmk__xml_position(child, xpf_skip);
+                            deleted_obj->position = pcmk__xml_position(child,
+                                                                       pcmk__xf_skip);
                         }
                     }
 
                     p = doc->_private;
                     p->deleted_objs = g_list_append(p->deleted_objs, deleted_obj);
-                    pcmk__set_xml_doc_flag(child, xpf_dirty);
+                    pcmk__set_xml_doc_flag(child, pcmk__xf_dirty);
                 }
             }
             pcmk_free_xml_subtree(child);
@@ -1421,7 +1423,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     }
 
     p = attr->_private;
-    if (p && pcmk_is_set(p->flags, xpf_deleted)) {
+    if (p && pcmk_is_set(p->flags, pcmk__xf_deleted)) {
         return;
     }
 
@@ -1470,7 +1472,7 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
                 const char *p_value = pcmk__xml_attr_value(a);
                 char *p_copy = NULL;
 
-                if (pcmk_is_set(p->flags, xpf_deleted)) {
+                if (pcmk_is_set(p->flags, pcmk__xf_deleted)) {
                     continue;
                 } else if (pcmk_any_flags_set(options,
                                               xml_log_option_diff_plus
@@ -1552,13 +1554,13 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
     prefix_m = strdup(prefix);
     prefix_m[1] = '+';
 
-    if (pcmk_all_flags_set(p->flags, xpf_dirty|xpf_created)) {
+    if (pcmk_all_flags_set(p->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         /* Continue and log full subtree */
         pcmk__xe_log(log_level, file, function, line, prefix_m, data, depth,
                      options|xml_log_option_open|xml_log_option_close
                         |xml_log_option_children);
 
-    } else if (pcmk_is_set(p->flags, xpf_dirty)) {
+    } else if (pcmk_is_set(p->flags, pcmk__xf_dirty)) {
         char *spaces = calloc(80, 1);
         int s_count = 0, s_max = 80;
         char *prefix_del = NULL;
@@ -1572,7 +1574,7 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
         prefix_moved = strdup(prefix);
         prefix_moved[1] = '~';
 
-        if (pcmk_is_set(p->flags, xpf_moved)) {
+        if (pcmk_is_set(p->flags, pcmk__xf_moved)) {
             flags = prefix_moved;
         } else {
             flags = prefix;
@@ -1585,22 +1587,22 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
             const char *aname = (const char*) a->name;
 
             p = a->_private;
-            if (pcmk_is_set(p->flags, xpf_deleted)) {
+            if (pcmk_is_set(p->flags, pcmk__xf_deleted)) {
                 const char *value = crm_element_value(data, aname);
                 flags = prefix_del;
                 do_crm_log_alias(log_level, file, function, line,
                                  "%s %s @%s=%s", flags, spaces, aname, value);
 
-            } else if (pcmk_is_set(p->flags, xpf_dirty)) {
+            } else if (pcmk_is_set(p->flags, pcmk__xf_dirty)) {
                 const char *value = crm_element_value(data, aname);
 
-                if (pcmk_is_set(p->flags, xpf_created)) {
+                if (pcmk_is_set(p->flags, pcmk__xf_created)) {
                     flags = prefix_m;
 
-                } else if (pcmk_is_set(p->flags, xpf_modified)) {
+                } else if (pcmk_is_set(p->flags, pcmk__xf_modified)) {
                     flags = prefix;
 
-                } else if (pcmk_is_set(p->flags, xpf_moved)) {
+                } else if (pcmk_is_set(p->flags, pcmk__xf_moved)) {
                     flags = prefix_moved;
 
                 } else {
@@ -2029,7 +2031,7 @@ xml_has_children(const xmlNode * xml_root)
 void
 xml_remove_prop(xmlNode * obj, const char *name)
 {
-    if (pcmk__check_acl(obj, NULL, xpf_acl_write) == FALSE) {
+    if (pcmk__check_acl(obj, NULL, pcmk__xf_acl_write) == FALSE) {
         crm_trace("Cannot remove %s from %s", name, obj->name);
 
     } else if (pcmk__tracking_xml_changes(obj, FALSE)) {
@@ -2038,8 +2040,8 @@ xml_remove_prop(xmlNode * obj, const char *name)
         xmlAttr *attr = xmlHasProp(obj, (pcmkXmlStr) name);
 
         p = attr->_private;
-        set_parent_flag(obj, xpf_dirty);
-        pcmk__set_xml_flags(p, xpf_deleted);
+        set_parent_flag(obj, pcmk__xf_dirty);
+        pcmk__set_xml_flags(p, pcmk__xf_deleted);
     } else {
         xmlUnsetProp(obj, (pcmkXmlStr) name);
     }
@@ -2095,11 +2097,11 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     xmlAttr *attr = NULL;
 
     // Prevent the dirty flag being set recursively upwards
-    pcmk__clear_xml_flags(p, xpf_tracking);
+    pcmk__clear_xml_flags(p, pcmk__xf_tracking);
 
     // Restore the old value (and the tracking flag)
     attr = xmlSetProp(new_xml, (pcmkXmlStr) attr_name, (pcmkXmlStr) old_value);
-    pcmk__set_xml_flags(p, xpf_tracking);
+    pcmk__set_xml_flags(p, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
     p = attr->_private;
@@ -2150,10 +2152,10 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
     mark_xml_node_dirty(new_xml);
 
     // Mark attribute as changed
-    pcmk__set_xml_flags(p, xpf_dirty|xpf_moved);
+    pcmk__set_xml_flags(p, pcmk__xf_dirty|pcmk__xf_moved);
 
     p = (p_old > p_new)? old_attr->_private : new_attr->_private;
-    pcmk__set_xml_flags(p, xpf_skip);
+    pcmk__set_xml_flags(p, pcmk__xf_skip);
 }
 
 /*!
@@ -2178,12 +2180,14 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 
         } else {
             xml_private_t *p = new_attr->_private;
-            int new_pos = pcmk__xml_position((xmlNode*) new_attr, xpf_skip);
-            int old_pos = pcmk__xml_position((xmlNode*) old_attr, xpf_skip);
+            int new_pos = pcmk__xml_position((xmlNode*) new_attr,
+                                             pcmk__xf_skip);
+            int old_pos = pcmk__xml_position((xmlNode*) old_attr,
+                                             pcmk__xf_skip);
             const char *new_value = crm_element_value(new_xml, name);
 
             // This attribute isn't new
-            pcmk__clear_xml_flags(p, xpf_created);
+            pcmk__clear_xml_flags(p, pcmk__xf_created);
 
             if (strcmp(new_value, old_value) != 0) {
                 mark_attr_changed(new_xml, (const char *) old_xml->name, name,
@@ -2212,7 +2216,7 @@ mark_created_attrs(xmlNode *new_xml)
         xml_private_t *p = attr_iter->_private;
 
         attr_iter = attr_iter->next;
-        if (pcmk_is_set(p->flags, xpf_created)) {
+        if (pcmk_is_set(p->flags, pcmk__xf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
@@ -2222,7 +2226,7 @@ mark_created_attrs(xmlNode *new_xml)
             /* Check ACLs (we can't use the remove-then-create trick because it
              * would modify the attribute position).
              */
-            if (pcmk__check_acl(new_xml, attr_name, xpf_acl_write)) {
+            if (pcmk__check_acl(new_xml, attr_name, pcmk__xf_acl_write)) {
                 pcmk__mark_xml_attr_dirty(new_attr);
             } else {
                 // Creation was not allowed, so remove the attribute
@@ -2239,7 +2243,7 @@ mark_created_attrs(xmlNode *new_xml)
 static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    set_attrs_flag(new_xml, xpf_created); // cleared later if not really new
+    set_attrs_flag(new_xml, pcmk__xf_created); // cleared later if not really new
     xml_diff_old_attrs(old_xml, new_xml);
     mark_created_attrs(new_xml);
 }
@@ -2267,10 +2271,11 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
 
     // Remove the child again (which will track it in document's deleted_objs)
     free_xml_with_position(candidate,
-                           pcmk__xml_position(old_child, xpf_skip));
+                           pcmk__xml_position(old_child, pcmk__xf_skip));
 
     if (pcmk__xml_match(new_parent, old_child, true) == NULL) {
-        pcmk__set_xml_flags((xml_private_t *) (old_child->_private), xpf_skip);
+        pcmk__set_xml_flags((xml_private_t *) (old_child->_private),
+                            pcmk__xf_skip);
     }
 }
 
@@ -2284,14 +2289,14 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
               new_child->name, (ID(new_child)? ID(new_child) : "<no id>"),
               p_old, p_new, new_parent->name);
     mark_xml_node_dirty(new_parent);
-    pcmk__set_xml_flags(p, xpf_moved);
+    pcmk__set_xml_flags(p, pcmk__xf_moved);
 
     if (p_old > p_new) {
         p = old_child->_private;
     } else {
         p = new_child->_private;
     }
-    pcmk__set_xml_flags(p, xpf_skip);
+    pcmk__set_xml_flags(p, pcmk__xf_skip);
 }
 
 // Given original and new XML, mark new XML portions that have changed
@@ -2311,11 +2316,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     p = new_xml->_private;
     CRM_CHECK(p != NULL, return);
 
-    if(p->flags & xpf_processed) {
+    if(p->flags & pcmk__xf_processed) {
         /* Avoid re-comparing nodes */
         return;
     }
-    pcmk__set_xml_flags(p, xpf_processed);
+    pcmk__set_xml_flags(p, pcmk__xf_processed);
 
     xml_diff_attrs(old_xml, new_xml);
 
@@ -2342,13 +2347,13 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
         if(old_child == NULL) {
             // This is a newly created child
             p = new_child->_private;
-            pcmk__set_xml_flags(p, xpf_skip);
+            pcmk__set_xml_flags(p, pcmk__xf_skip);
             mark_xml_changes(old_child, new_child, TRUE);
 
         } else {
             /* Check for movement, we already checked for differences */
-            int p_new = pcmk__xml_position(new_child, xpf_skip);
-            int p_old = pcmk__xml_position(old_child, xpf_skip);
+            int p_new = pcmk__xml_position(new_child, pcmk__xf_skip);
+            int p_old = pcmk__xml_position(old_child, pcmk__xf_skip);
 
             if(p_old != p_new) {
                 mark_child_moved(old_child, new_xml, new_child, p_old, p_new);
@@ -2360,7 +2365,7 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
 void
 xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    pcmk__set_xml_doc_flag(new_xml, xpf_lazy);
+    pcmk__set_xml_doc_flag(new_xml, pcmk__xf_lazy);
     xml_calculate_changes(old_xml, new_xml);
 }
 
@@ -2425,14 +2430,14 @@ xmlNode *
 pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact)
 {
     xmlNode *a_child = NULL;
-    int search_offset = pcmk__xml_position(search_comment, xpf_skip);
+    int search_offset = pcmk__xml_position(search_comment, pcmk__xf_skip);
 
     CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
 
     for (a_child = pcmk__xml_first_child(root); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
         if (exact) {
-            int offset = pcmk__xml_position(a_child, xpf_skip);
+            int offset = pcmk__xml_position(a_child, pcmk__xf_skip);
             xml_private_t *p = a_child->_private;
 
             if (offset < search_offset) {
@@ -2442,7 +2447,7 @@ pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact)
                 return NULL;
             }
 
-            if (pcmk_is_set(p->flags, xpf_skip)) {
+            if (pcmk_is_set(p->flags, pcmk__xf_skip)) {
                 continue;
             }
         }

@@ -41,7 +41,7 @@ EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
 # Any file in this list is allowed to use any of the pcmk__ internal functions.
 # Coccinelle can use any transformation that depends on "internal" to rewrite
 # code to use the internal functions.
-MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../tools/*.c" -o -path "../daemons/*.c" -o -path '../include/pcmki/*h' -o -name '*internal.h')
+MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../lib/*private.h" -o -path "../tools/*.c" -o -path "../daemons/*.c" -o -path '../include/pcmki/*h' -o -name '*internal.h')
 
 # And then any file in this list is public API, which may not use internal
 # functions.  Thus, only those transformations that do not depend on "internal"
