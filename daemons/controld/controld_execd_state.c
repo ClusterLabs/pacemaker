@@ -86,6 +86,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.params = op->params;
 
     process_lrm_event(lrm_state, &event, op, NULL);
+    lrmd__reset_result(&event);
     return TRUE;
 }
 
