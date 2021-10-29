@@ -1,0 +1,284 @@
+#!@PYTHON@
+"""Dummy watchdog fence agent for providing meta-data for the pacemaker internal agent
+"""
+
+__copyright__ = "Copyright 2012-2021 the Pacemaker project contributors"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import io
+import os
+import re
+import sys
+import atexit
+import getopt
+
+AGENT_VERSION = "1.0.0"
+SHORT_DESC = "Dummy watchdog fence agent"
+LONG_DESC = """fence_watchdog just provides
+meta-data - actual fencing is done by the pacemaker internal watchdog agent."""
+
+ALL_OPT = {
+    "version" : {
+        "getopt" : "V",
+        "longopt" : "version",
+        "help" : "-V, --version                  Display version information and exit",
+        "required" : "0",
+        "shortdesc" : "Display version information and exit",
+        "order" : 53
+        },
+    "help"    : {
+        "getopt" : "h",
+        "longopt" : "help",
+        "help" : "-h, --help                     Display this help and exit",
+        "required" : "0",
+        "shortdesc" : "Display help and exit",
+        "order" : 54
+        },
+    "action" : {
+        "getopt" : "o:",
+        "longopt" : "action",
+        "help" : "-o, --action=[action]          Action: metadata",
+        "required" : "1",
+        "shortdesc" : "Fencing Action",
+        "default" : "metadata",
+        "order" : 1
+        },
+    "nodename" : {
+        "getopt" : "N:",
+        "longopt" : "nodename",
+        "help" : "-N, --nodename                 Node name of fence victim (ignored)",
+        "required" : "0",
+        "shortdesc" : "Ignored",
+        "order" : 2
+        },
+    "plug" : {
+        "getopt" : "n:",
+        "longopt" : "plug",
+        "help" : "-n, --plug=[id]                Physical plug number on device (ignored)",
+        "required" : "1",
+        "shortdesc" : "Ignored",
+        "order" : 4
+        }
+}
+
+
+def agent():
+    """ Return name this file was run as. """
+
+    return os.path.basename(sys.argv[0])
+
+
+def fail_usage(message):
+    """ Print a usage message and exit. """
+
+    sys.exit("%s\nPlease use '-h' for usage" % message)
+
+
+def show_docs(options):
+    """ Handle informational options (display info and exit). """
+
+    device_opt = options["device_opt"]
+
+    if "-h" in options:
+        usage(device_opt)
+        sys.exit(0)
+
+    if "-o" in options and options["-o"].lower() == "metadata":
+        metadata(device_opt, options)
+        sys.exit(0)
+
+    if "-V" in options:
+        print(AGENT_VERSION)
+        sys.exit(0)
+
+
+def sorted_options(avail_opt):
+    """ Return a list of all options, in their internally specified order. """
+
+    sorted_list = [(key, ALL_OPT[key]) for key in avail_opt]
+    sorted_list.sort(key=lambda x: x[1]["order"])
+    return sorted_list
+
+
+def usage(avail_opt):
+    """ Print a usage message. """
+    print(LONG_DESC)
+    print()
+    print("Usage:")
+    print("\t" + agent() + " [options]")
+    print("Options:")
+
+    for dummy, value in sorted_options(avail_opt):
+        if len(value["help"]) != 0:
+            print("   " + value["help"])
+
+
+def metadata(avail_opt, options):
+    """ Print agent metadata. """
+
+    print("""<?xml version="1.0" ?>
+<resource-agent name="%s" shortdesc="%s">
+<longdesc>%s</longdesc>
+<parameters>""" % (agent(), SHORT_DESC, LONG_DESC))
+
+    for option, dummy in sorted_options(avail_opt):
+        if "shortdesc" in ALL_OPT[option]:
+            print('    <parameter name="' + option +
+                  '" required="' + ALL_OPT[option]["required"] + '">')
+
+            default = ""
+            default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
+            default_name_no_arg = "-" + ALL_OPT[option]["getopt"]
+
+            if "default" in ALL_OPT[option]:
+                default = 'default="%s"' % str(ALL_OPT[option]["default"])
+            elif default_name_arg in options:
+                if options[default_name_arg]:
+                    try:
+                        default = 'default="%s"' % options[default_name_arg]
+                    except TypeError:
+                        ## @todo/@note: Currently there is no clean way how to handle lists
+                        ## we can create a string from it but we can't set it on command line
+                        default = 'default="%s"' % str(options[default_name_arg])
+            elif default_name_no_arg in options:
+                default = 'default="true"'
+
+            mixed = ALL_OPT[option]["help"]
+            ## split it between option and help text
+            res = re.compile(r"^(.*--\S+)\s+", re.IGNORECASE | re.S).search(mixed)
+            if None != res:
+                mixed = res.group(1)
+            mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
+            print('      <getopt mixed="' + mixed + '" />')
+
+            if ALL_OPT[option]["getopt"].count(":") > 0:
+                print('      <content type="string" ' + default + ' />')
+            else:
+                print('      <content type="boolean" ' + default + ' />')
+
+            print('      <shortdesc lang="en">' + ALL_OPT[option]["shortdesc"] + '</shortdesc>')
+            print('    </parameter>')
+
+    print('  </parameters>\n <actions>')
+    print('    <action name="on" />')
+    print('    <action name="off" />')
+    print('    <action name="reboot" />')
+    print('    <action name="monitor" />')
+    print('    <action name="list" />')
+    print('    <action name="metadata" />')
+    print('  </actions>')
+    print('</resource-agent>')
+
+
+def option_longopt(option):
+    """ Return the getopt-compatible long-option name of the given option. """
+
+    if ALL_OPT[option]["getopt"].endswith(":"):
+        return ALL_OPT[option]["longopt"] + "="
+    else:
+        return ALL_OPT[option]["longopt"]
+
+
+def opts_from_command_line(argv, avail_opt):
+    """ Read options from command-line arguments. """
+
+    # Prepare list of options for getopt
+    getopt_string = ""
+    longopt_list = []
+    for k in avail_opt:
+        if k in ALL_OPT:
+            getopt_string += ALL_OPT[k]["getopt"]
+        else:
+            fail_usage("Parse error: unknown option '" + k + "'")
+
+        if k in ALL_OPT and "longopt" in ALL_OPT[k]:
+            longopt_list.append(option_longopt(k))
+
+    try:
+        opt, dummy = getopt.gnu_getopt(argv, getopt_string, longopt_list)
+    except getopt.GetoptError as error:
+        fail_usage("Parse error: " + error.msg)
+
+    # Transform longopt to short one which are used in fencing agents
+    old_opt = opt
+    opt = {}
+    for old_option in dict(old_opt).keys():
+        if old_option.startswith("--"):
+            for option in ALL_OPT.keys():
+                if "longopt" in ALL_OPT[option] and "--" + ALL_OPT[option]["longopt"] == old_option:
+                    opt["-" + ALL_OPT[option]["getopt"].rstrip(":")] = dict(old_opt)[old_option]
+        else:
+            opt[old_option] = dict(old_opt)[old_option]
+
+    return opt
+
+
+def opts_from_stdin(avail_opt):
+    """ Read options from standard input. """
+
+    opt = {}
+    name = ""
+    for line in sys.stdin.readlines():
+        line = line.strip()
+        if line.startswith("#") or (len(line) == 0):
+            continue
+
+        (name, value) = (line + "=").split("=", 1)
+        value = value[:-1]
+
+        if name not in avail_opt:
+            print("Parse error: Ignoring unknown option '%s'" % line,
+                  file=sys.stderr)
+            continue
+
+        if ALL_OPT[name]["getopt"].endswith(":"):
+            opt["-"+ALL_OPT[name]["getopt"].rstrip(":")] = value
+        elif value.lower() in ["1", "yes", "on", "true"]:
+            opt["-"+ALL_OPT[name]["getopt"]] = "1"
+
+    return opt
+
+
+def process_input(avail_opt):
+    """ Set standard environment variables, and parse all options. """
+
+    # Set standard environment
+    os.putenv("LANG", "C")
+    os.putenv("LC_ALL", "C")
+
+    # Read options from command line or standard input
+    if len(sys.argv) > 1:
+        return opts_from_command_line(sys.argv[1:], avail_opt)
+    else:
+        return opts_from_stdin(avail_opt)
+
+
+def atexit_handler():
+    """ Close stdout on exit. """
+
+    try:
+        sys.stdout.close()
+        os.close(1)
+    except IOError:
+        sys.exit("%s failed to close standard output" % agent())
+
+
+def main():
+    """ Make it so! """
+
+    device_opt = ALL_OPT.keys()
+
+    ## Defaults for fence agent
+    atexit.register(atexit_handler)
+    options = process_input(device_opt)
+    options["device_opt"] = device_opt
+    show_docs(options)
+
+    print("Watchdog fencing may be initiated only by the cluster, not this agent.",
+          file=sys.stderr)
+
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

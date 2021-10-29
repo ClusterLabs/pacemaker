@@ -110,6 +110,7 @@ typedef struct stonith_history_s {
     int state;
     time_t completed;
     struct stonith_history_s *next;
+    long completed_nsec;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
@@ -151,16 +152,14 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Connect to the local stonith daemon.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
 
     /*!
      * \brief Disconnect from the local stonith daemon.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*disconnect)(stonith_t *st);
 
@@ -169,8 +168,7 @@ typedef struct stonith_api_operations_s
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*remove_device)(
         stonith_t *st, int options, const char *name);
@@ -180,8 +178,7 @@ typedef struct stonith_api_operations_s
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*register_device)(
         stonith_t *st, int options, const char *id,
@@ -190,8 +187,7 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Remove a fencing level for a specific node.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*remove_level)(
         stonith_t *st, int options, const char *node, int level);
@@ -200,8 +196,7 @@ typedef struct stonith_api_operations_s
      * \brief Register a fencing level containing the fencing devices to be used
      *        at that level for a specific node.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*register_level)(
         stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
@@ -211,8 +206,7 @@ typedef struct stonith_api_operations_s
      *
      * \note Value is returned in output.  Output must be freed when set.
      *
-     * \retval 0 success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*metadata)(stonith_t *st, int options,
             const char *device, const char *provider, char **output, int timeout);
@@ -224,8 +218,7 @@ typedef struct stonith_api_operations_s
      * \note list must be freed using stonith_key_value_freeall()
      * \note call_options parameter is not used, it is reserved for future use.
      *
-     * \retval num items in list on success
-     * \retval negative error code on failure
+     * \return Number of items in list on success, or negative errno otherwise
      */
     int (*list_agents)(stonith_t *stonith, int call_options, const char *provider,
             stonith_key_value_t **devices, int timeout);
@@ -233,24 +226,21 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Retrieve string listing hosts and port assignments from a local stonith device.
      *
-     * \retval 0 on success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*list)(stonith_t *st, int options, const char *id, char **list_output, int timeout);
 
     /*!
      * \brief Check to see if a local stonith device is reachable
      *
-     * \retval 0 on success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*monitor)(stonith_t *st, int options, const char *id, int timeout);
 
     /*!
      * \brief Check to see if a local stonith device's port is reachable
      *
-     * \retval 0 on success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*status)(stonith_t *st, int options, const char *id, const char *port, int timeout);
 
@@ -260,8 +250,7 @@ typedef struct stonith_api_operations_s
      * \note If node is provided, only devices that can fence the node id
      *       will be returned.
      *
-     * \retval num items in list on success
-     * \retval negative error code on failure
+     * \return Number of items in list on success, or negative errno otherwise
      */
     int (*query)(stonith_t *st, int options, const char *node,
             stonith_key_value_t **devices, int timeout);
@@ -278,8 +267,7 @@ typedef struct stonith_api_operations_s
      * \param timeout, The default per device timeout to use with each device
      *                 capable of fencing the target.
      *
-     * \retval 0 success
-     * \retval negative error code on failure.
+     * \return Legacy Pacemaker return code
      */
     int (*fence)(stonith_t *st, int options, const char *node, const char *action,
                  int timeout, int tolerance);
@@ -287,16 +275,14 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Manually confirm that a node is down.
      *
-     * \retval 0 success
-     * \retval negative error code on failure.
+     * \return Legacy Pacemaker return code
      */
     int (*confirm)(stonith_t *st, int options, const char *node);
 
     /*!
      * \brief Retrieve a list of fencing operations that have occurred for a specific node.
      *
-     * \retval 0 success
-     * \retval negative error code on failure.
+     * \return Legacy Pacemaker return code
      */
     int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
 
@@ -412,8 +398,7 @@ typedef struct stonith_api_operations_s
      * \param delay, Apply a fencing delay. Value -1 means disable also any
      *               static/random fencing delays from pcmk_delay_base/max
      *
-     * \retval 0 success
-     * \retval negative error code on failure.
+     * \return Legacy Pacemaker return code
      */
     int (*fence_with_delay)(stonith_t *st, int options, const char *node, const char *action,
                             int timeout, int tolerance, int delay);

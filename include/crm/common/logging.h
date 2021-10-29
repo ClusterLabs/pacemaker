@@ -105,6 +105,13 @@ void crm_update_callsites(void);
 
 void crm_log_deinit(void);
 
+/*!
+ * \brief Initializes the logging system and defaults to the least verbose output level
+ *
+ * \param[in] entity  If not NULL, will be used as the identity for logging purposes
+ * \param[in] argc    The number of command line parameters
+ * \param[in] argv    The command line parameter values
+ */
 void crm_log_preinit(const char *entity, int argc, char **argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);

@@ -8,6 +8,7 @@
 #
 
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/mk/man.mk
 
 halibdir		= $(CRM_DAEMON_DIR)
 
@@ -23,13 +24,13 @@ pacemaker_execd_SOURCES		= pacemaker-execd.c execd_commands.c \
 				  execd_alerts.c
 
 if BUILD_REMOTE
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker_remote
 sbin_PROGRAMS		= pacemaker-remoted
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker_remote.service
+else
+initdir			= $(INITDIR)
+init_SCRIPTS		= pacemaker_remote
 endif
-
 
 pacemaker_remoted_CPPFLAGS	= -DPCMK__COMPILE_REMOTE $(AM_CPPFLAGS)
 

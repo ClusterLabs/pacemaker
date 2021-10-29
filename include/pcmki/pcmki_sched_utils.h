@@ -17,24 +17,13 @@
 #include <crm/pengine/pe_types.h>
 #include <crm/pengine/internal.h>
 #include <pcmki/pcmki_scheduler.h>
+#include <pcmki/pcmki_transition.h>
+#include <pacemaker.h>
 
 /* Constraint helper functions */
 pcmk__colocation_t *invert_constraint(pcmk__colocation_t *constraint);
 
 pe__location_t *copy_constraint(pe__location_t *constraint);
-
-pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
-                             const char *discovery_mode, pe_node_t *node,
-                             pe_working_set_t *data_set);
-
-void pcmk__new_colocation(const char *id, const char *node_attr, int score,
-                          pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                          const char *state_lh, const char *state_rh,
-                          bool influence, pe_working_set_t *data_set);
-
-extern gboolean rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
-                               const char *state_lh, const char *loss_policy,
-                               pe_working_set_t * data_set);
 
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);
@@ -62,16 +51,6 @@ enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children,
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
-enum filter_colocation_res {
-    influence_nothing = 0,
-    influence_rsc_location,
-    influence_rsc_priority,
-};
-
-extern enum filter_colocation_res
-filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             pcmk__colocation_t *constraint, gboolean preview);
-
 extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,
                                   GHashTable * utilization, gboolean plus);
@@ -90,14 +69,15 @@ xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
 
 #  define LOAD_STOPPED "load_stopped"
 
-void modify_configuration(
-    pe_working_set_t * data_set, cib_t *cib,
-    const char *quorum, const char *watchdog, GList *node_up, GList *node_down, GList *node_fail,
-    GList *op_inject, GList *ticket_grant, GList *ticket_revoke,
-    GList *ticket_standby, GList *ticket_activate);
+void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
+                          pcmk_injections_t *injections);
 
-int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
+enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
 
 pcmk__output_t *pcmk__new_logger(void);
+
+bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                             pe_working_set_t *data_set,
+                             pe_resource_t **failed);
 
 #endif

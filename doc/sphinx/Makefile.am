@@ -8,6 +8,9 @@
 #
 include $(top_srcdir)/mk/common.mk
 
+# Define release-related variables
+include $(top_srcdir)/mk/release.mk
+
 # Things you might want to override on the command line
 
 # Books to generate
@@ -79,10 +82,6 @@ EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)		\
 RSYNC_OPTS      = -rlptvzxS --progress
 
 BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
-
-TAG	?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]		\
-	           && ( git tag --points-at HEAD | head -1 )			\
-		   || git log --pretty=format:Pacemaker-$(VERSION)-%h -n 1 HEAD)
 
 BOOK		= none
 

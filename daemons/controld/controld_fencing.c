@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
 #include <pacemaker-controld.h>
@@ -372,22 +373,22 @@ fail_incompletable_stonith(crm_graph_t *graph)
         GList *lpc2 = NULL;
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed) {
+        if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             continue;
         }
 
         for (lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
             crm_action_t *action = (crm_action_t *) lpc2->data;
 
-            if (action->type != action_type_crm || action->confirmed) {
+            if (action->type != action_type_crm || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             }
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
             if (task && pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
-                action->failed = TRUE;
+                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
-                update_graph(graph, action);
+                pcmk__update_graph(graph, action);
                 crm_notice("Failing action %d (%s): fencer terminated",
                            action->id, ID(action->xml));
             }
@@ -752,7 +753,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         const char *op = crm_meta_value(action->params, "stonith_action");
 
         crm_info("Stonith operation %d for %s passed", call_id, target);
-        if (action->confirmed == FALSE) {
+        if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
@@ -782,9 +783,9 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                 update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
                              is_remote_node);
 
-            } else if (action->sent_update == FALSE) {
+            } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
                 send_stonith_update(action, target, uuid);
-                action->sent_update = TRUE;
+                crm__set_graph_action_flags(action, pcmk__graph_action_sent_update);
             }
         }
         st_fail_count_reset(target);
@@ -793,7 +794,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         enum transition_action abort_action = tg_restart;
 
-        action->failed = TRUE;
+        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
         crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
                    call_id, target, pcmk_strerror(rc));
 
@@ -813,7 +814,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         abort_for_stonith_failure(abort_action, target, NULL);
     }
 
-    update_graph(transition_graph, action);
+    pcmk__update_graph(transition_graph, action);
     trigger_graph();
 
   bail:
@@ -884,6 +885,19 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
                                          "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;
+}
+
+bool
+controld_verify_stonith_watchdog_timeout(const char *value)
+{
+    gboolean rv = TRUE;
+
+    if (stonith_api && (stonith_api->state != stonith_disconnected) &&
+        stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                       fsa_our_uname)) {
+        rv = pcmk__valid_sbd_timeout(value);
+    }
+    return rv;
 }
 
 /* end stonith API client functions */

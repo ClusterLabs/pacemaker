@@ -29,10 +29,8 @@
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/curses_internal.h>
 #include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>
@@ -162,8 +160,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
-                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures;
+            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
+                   pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
@@ -193,6 +191,7 @@ struct {
     { "fencing-failed", pcmk_section_fence_failed },
     { "fencing-pending", pcmk_section_fence_pending },
     { "fencing-succeeded", pcmk_section_fence_worked },
+    { "maint-mode", pcmk_section_maint_mode },
     { "nodes", pcmk_section_nodes },
     { "operations", pcmk_section_operations },
     { "options", pcmk_section_options },
@@ -234,8 +233,8 @@ apply_exclude(const gchar *excludes, GError **error) {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, nodes, none, "
-                        "operations, options, resources, stack, summary, "
+                        "fencing-pending, fencing-succeeded, maint-mode, nodes, "
+                        "none, operations, options, resources, stack, summary, "
                         "tickets, times");
             result = FALSE;
             break;
@@ -276,8 +275,8 @@ apply_include(const gchar *includes, GError **error) {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         "default, failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, nodes, none, operations, "
-                        "options, resources, stack, summary, tickets, times");
+                        "fencing-pending, fencing-succeeded, maint-mode, nodes, none, "
+                        "operations, options, resources, stack, summary, tickets, times");
             result = FALSE;
             break;
         }
@@ -287,15 +286,9 @@ apply_include(const gchar *includes, GError **error) {
 }
 
 static gboolean
-apply_include_exclude(GSList *lst, mon_output_format_t fmt, GError **error) {
+apply_include_exclude(GSList *lst, GError **error) {
     gboolean rc = TRUE;
     GSList *node = lst;
-
-    /* Set the default of what to display here.  Note that we OR everything to
-     * show instead of set show directly because it could have already had some
-     * settings applied to it in main.
-     */
-    show |= default_includes(fmt);
 
     while (node != NULL) {
         char *s = node->data;
@@ -435,7 +428,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--exclude", "summary", data, err);
+    return user_include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
@@ -465,7 +458,7 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show_opts |= pcmk_show_timing;
-    return include_exclude_cb("--include", "operations", data, err);
+    return user_include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
@@ -484,34 +477,34 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "attributes", data, err);
+    return user_include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
         char *s = crm_strdup_printf("bans:%s", optarg);
-        gboolean rc = include_exclude_cb("--include", s, data, err);
+        gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;
     } else {
-        return include_exclude_cb("--include", "bans", data, err);
+        return user_include_exclude_cb("--include", "bans", data, err);
     }
 }
 
 static gboolean
 show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts", data, err);
+    return user_include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
 show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts,operations", data, err);
+    return user_include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
 show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "tickets", data, err);
+    return user_include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
@@ -1107,6 +1100,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'R':
                 show_opts ^= pcmk_show_details;
+#ifdef PCMK__COMPAT_2_0
+                // Keep failed action output the same as 2.0.x
+                show_opts |= pcmk_show_failed_detail;
+#endif
                 break;
             case 't':
                 show_opts ^= pcmk_show_timing;
@@ -1234,7 +1231,11 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Start crm_mon and export the current cluster status as XML to stdout, then exit:\n\n"
                               "\tcrm_mon --output-as xml\n\n";
 
+#if CURSES_ENABLED
     context = pcmk__build_arg_context(args, "console (default), html, text, xml", group, NULL);
+#else
+    context = pcmk__build_arg_context(args, "text (default), html, xml", group, NULL);
+#endif
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -1551,16 +1552,18 @@ main(int argc, char **argv)
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
+    show = default_includes(output_format);
+
     /* Apply --include/--exclude flags we used internally.  There's no error reporting
      * here because this would be a programming error.
      */
-    apply_include_exclude(options.includes_excludes, output_format, &error);
+    apply_include_exclude(options.includes_excludes, &error);
 
     /* And now apply any --include/--exclude flags the user gave on the command line.
      * These are done in a separate pass from the internal ones because we want to
      * make sure whatever the user specifies overrides whatever we do.
      */
-    if (!apply_include_exclude(options.user_includes_excludes, output_format, &error)) {
+    if (!apply_include_exclude(options.user_includes_excludes, &error)) {
         return clean_up(CRM_EX_USAGE);
     }
 
@@ -1614,6 +1617,11 @@ main(int argc, char **argv)
         pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
                               pcmk__itoa(options.reconnect_ms / 1000), NULL);
     }
+
+#ifdef PCMK__COMPAT_2_0
+    // Keep failed action output the same as 2.0.x
+    show_opts |= pcmk_show_failed_detail;
+#endif
 
     crm_info("Starting %s", crm_system_name);
 
@@ -1881,18 +1889,18 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     /* look up where we expected it to be? */
     desc = pcmk_strerror(pcmk_ok);
-    if (status == PCMK_LRM_OP_DONE && target_rc == rc) {
+    if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
             notify = FALSE;
         }
 
-    } else if (status == PCMK_LRM_OP_DONE) {
+    } else if (status == PCMK_EXEC_DONE) {
         desc = services_ocf_exitcode_str(rc);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
-        desc = services_lrm_status_str(status);
+        desc = pcmk_exec_status_str(status);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
@@ -2161,9 +2169,7 @@ mon_refresh_display(gpointer user_data)
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
     if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                   mon_data_set->input);
-        unpack_constraints(cib_constraints, mon_data_set);
+        pcmk__unpack_constraints(mon_data_set);
     }
 
     if (options.daemonize) {
@@ -2172,6 +2178,11 @@ mon_refresh_display(gpointer user_data)
 
     unames = pe__build_node_name_list(mon_data_set, options.only_node);
     resources = pe__build_rsc_list(mon_data_set, options.only_rsc);
+
+    /* Always print DC if NULL. */
+    if (mon_data_set->dc_node == NULL) {
+        show |= pcmk_section_dc;
+    }
 
     switch (output_format) {
         case mon_output_html:

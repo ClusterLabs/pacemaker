@@ -17,6 +17,8 @@
 #include <pacemaker-internal.h>
 #include <crm/services.h>
 
+#include "libpacemaker_private.h"
+
 // The controller removes the resource from the CIB, making this redundant
 // #define DELETE_THEN_REFRESH 1
 
@@ -346,19 +348,19 @@ is_nonempty_group(pe_resource_t *rsc)
  * \internal
  * \brief Incorporate colocation constraint scores into node weights
  *
- * \param[in,out] rsc    Resource being placed
- * \param[in]     rhs    ID of 'with' resource
- * \param[in,out] nodes  Nodes, with scores as of this point
- * \param[in]     attr   Colocation attribute (ID by default)
- * \param[in]     factor Incorporate scores multiplied by this factor
- * \param[in]     flags  Bitmask of enum pe_weights values
+ * \param[in,out] rsc         Resource being placed
+ * \param[in]     primary_id  ID of primary resource in constraint
+ * \param[in,out] nodes       Nodes, with scores as of this point
+ * \param[in]     attr        Colocation attribute (ID by default)
+ * \param[in]     factor      Incorporate scores multiplied by this factor
+ * \param[in]     flags       Bitmask of enum pe_weights values
  *
  * \return Nodes, with scores modified by this constraint
  * \note This function assumes ownership of the nodes argument. The caller
  *       should free the returned copy rather than the original.
  */
 GHashTable *
-pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
+pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
                            GHashTable *nodes, const char *attr, float factor,
                            uint32_t flags)
 {
@@ -366,7 +368,8 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     // Avoid infinite recursion
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
-        pe_rsc_info(rsc, "%s: Breaking dependency loop at %s", rhs, rsc->id);
+        pe_rsc_info(rsc, "%s: Breaking dependency loop at %s",
+                    primary_id, rsc->id);
         return nodes;
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
@@ -378,9 +381,9 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
                          "using last member %s (at %.6f)",
-                         rhs, rsc->id, last_rsc->id, factor);
-            work = pcmk__native_merge_weights(last_rsc, rhs, NULL, attr, factor,
-                                              flags);
+                         primary_id, rsc->id, last_rsc->id, factor);
+            work = pcmk__native_merge_weights(last_rsc, primary_id, NULL, attr,
+                                              factor, flags);
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
@@ -398,14 +401,14 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
          *       the right approach should be.
          */
         pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
-                     "(at %.6f)", rhs, rsc->id, factor);
+                     "(at %.6f)", primary_id, rsc->id, factor);
         work = pcmk__copy_node_table(nodes);
-        work = pcmk__native_merge_weights(rsc->children->data, rhs, work, attr,
-                                          factor, flags);
+        work = pcmk__native_merge_weights(rsc->children->data, primary_id, work,
+                                          attr, factor, flags);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
-                     rhs, rsc->id, factor);
+                     primary_id, rsc->id, factor);
         work = pcmk__copy_node_table(nodes);
         add_node_scores_matching_attr(work, rsc, attr, factor,
                                       pcmk_is_set(flags, pe_weights_positive));
@@ -441,26 +444,26 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
             pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
             if (pcmk_is_set(flags, pe_weights_forward)) {
-                other = constraint->rsc_rh;
+                other = constraint->primary;
             } else if (!pcmk__colocation_has_influence(constraint, NULL)) {
                 continue;
             } else {
-                other = constraint->rsc_lh;
+                other = constraint->dependent;
             }
 
             pe_rsc_trace(rsc, "Optionally merging score of '%s' constraint (%s with %s)",
-                         constraint->id, constraint->rsc_lh->id,
-                         constraint->rsc_rh->id);
-            work = pcmk__native_merge_weights(other, rhs, work,
+                         constraint->id, constraint->dependent->id,
+                         constraint->primary->id);
+            work = pcmk__native_merge_weights(other, primary_id, work,
                                               constraint->node_attribute,
                                               multiplier * constraint->score / (float) INFINITY,
                                               flags|pe_weights_rollback);
-            pe__show_node_weights(true, NULL, rhs, work, rsc->cluster);
+            pe__show_node_weights(true, NULL, primary_id, work, rsc->cluster);
         }
 
     } else if (pcmk_is_set(flags, pe_weights_rollback)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
-                    rhs, rsc->id);
+                    primary_id, rsc->id);
         g_hash_table_destroy(work);
         pe__clear_resource_flags(rsc, pe_rsc_merging);
         return nodes;
@@ -485,21 +488,6 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
     return work;
-}
-
-static inline bool
-node_has_been_unfenced(pe_node_t *node)
-{
-    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
-
-    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
-static inline bool
-is_unfence_device(pe_resource_t *rsc, pe_working_set_t *data_set)
-{
-    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }
 
 pe_node_t *
@@ -531,21 +519,22 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         GHashTable *archive = NULL;
-        pe_resource_t *rsc_rh = constraint->rsc_rh;
+        pe_resource_t *primary = constraint->primary;
 
-        if ((constraint->role_lh >= RSC_ROLE_PROMOTED)
+        if ((constraint->dependent_role >= RSC_ROLE_PROMOTED)
             || (constraint->score < 0 && constraint->score > -INFINITY)) {
             archive = pcmk__copy_node_table(rsc->allowed_nodes);
         }
 
         pe_rsc_trace(rsc,
                      "%s: Allocating %s first (constraint=%s score=%d role=%s)",
-                     rsc->id, rsc_rh->id, constraint->id,
-                     constraint->score, role2text(constraint->role_lh));
-        rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint, data_set);
+                     rsc->id, primary->id, constraint->id,
+                     constraint->score, role2text(constraint->dependent_role));
+        primary->cmds->allocate(primary, NULL, data_set);
+        rsc->cmds->rsc_colocation_lh(rsc, primary, constraint, data_set);
         if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
-            pe_rsc_info(rsc, "%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
+            pe_rsc_info(rsc, "%s: Rolling back scores from %s",
+                        rsc->id, primary->id);
             g_hash_table_destroy(rsc->allowed_nodes);
             rsc->allowed_nodes = archive;
             archive = NULL;
@@ -564,13 +553,12 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             continue;
         }
         pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
-                     constraint->id, constraint->rsc_lh->id,
-                     constraint->rsc_rh->id);
-        rsc->allowed_nodes =
-            constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-                                                    constraint->node_attribute,
-                                                    (float)constraint->score / INFINITY,
-                                                    pe_weights_rollback);
+                     constraint->id, constraint->dependent->id,
+                     constraint->primary->id);
+        rsc->allowed_nodes = constraint->dependent->cmds->merge_weights(
+            constraint->dependent, rsc->id, rsc->allowed_nodes,
+            constraint->node_attribute, constraint->score / (float) INFINITY,
+            pe_weights_rollback);
     }
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
@@ -822,8 +810,8 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             if (after_key) {
-                custom_action_order(rsc, NULL, cancel_op, rsc, after_key, NULL,
-                                    pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
+                                   pe_order_runnable_left, data_set);
             }
         }
 
@@ -864,23 +852,23 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        custom_action_order(rsc, start_key(rsc), NULL,
-                            NULL, strdup(key), mon,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, start_key(rsc), NULL, NULL, strdup(key), mon,
+                           pe_order_implies_then|pe_order_runnable_left,
+                           data_set);
 
-        custom_action_order(rsc, reload_key(rsc), NULL,
-                            NULL, strdup(key), mon,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, reload_key(rsc), NULL, NULL, strdup(key), mon,
+                           pe_order_implies_then|pe_order_runnable_left,
+                           data_set);
 
         if (rsc->next_role == RSC_ROLE_PROMOTED) {
-            custom_action_order(rsc, promote_key(rsc), NULL,
-                                rsc, NULL, mon,
-                                pe_order_optional | pe_order_runnable_left, data_set);
+            pcmk__new_ordering(rsc, promote_key(rsc), NULL, rsc, NULL, mon,
+                               pe_order_optional|pe_order_runnable_left,
+                               data_set);
 
         } else if (rsc->role == RSC_ROLE_PROMOTED) {
-            custom_action_order(rsc, demote_key(rsc), NULL,
-                                rsc, NULL, mon,
-                                pe_order_optional | pe_order_runnable_left, data_set);
+            pcmk__new_ordering(rsc, demote_key(rsc), NULL, rsc, NULL, mon,
+                               pe_order_optional|pe_order_runnable_left,
+                               data_set);
         }
     }
 }
@@ -976,8 +964,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                 || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
                 /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */
                 /* rsc->role == RSC_ROLE_STARTED: for a migration, cancel the monitor on the target node before start */
-                custom_action_order(rsc, NULL, cancel_op, rsc, start_key(rsc), NULL,
-                                    pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, NULL, cancel_op, rsc, start_key(rsc),
+                                   NULL, pe_order_runnable_left, data_set);
             }
 
             pe_rsc_info(rsc, "Cancel action %s (%s vs. %s) on %s",
@@ -1058,9 +1046,10 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-                custom_action_order(rsc, stop_key(rsc), stop,
-                                    NULL, strdup(key), stopped_mon,
-                                    pe_order_implies_then | pe_order_runnable_left, data_set);
+                pcmk__new_ordering(rsc, stop_key(rsc), stop, NULL, strdup(key),
+                                   stopped_mon,
+                                   pe_order_implies_then|pe_order_runnable_left,
+                                   data_set);
             }
 
         }
@@ -1149,34 +1138,33 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             migrate_from->needs = start->needs;
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                                NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                               NULL, pe_order_optional, data_set);
 
         } else {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, pe_order_optional, data_set);
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, rsc,
-                                pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                                pe_order_optional|pe_order_implies_first_migratable,
-                                data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                               NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                               NULL,
+                               pe_order_optional|pe_order_implies_first_migratable,
+                               data_set);
         }
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional|pe_order_implies_first_migratable,
-                            data_set);
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                            pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
-                            data_set);
-
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                           pe_order_optional|pe_order_implies_first_migratable,
+                           data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                           pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
+                           data_set);
     }
 
     if (migrate_to) {
@@ -1289,8 +1277,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         } else {
             const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-            // Resource was incorrectly multiply active
-            pe_proc_err("%s resource %s is active on %u nodes (%s)",
+            // Resource was (possibly) incorrectly multiply active
+            pe_proc_err("%s resource %s might be active on %u nodes (%s)",
                         crm_str(class), rsc->id, num_all_active,
                         recovery2text(rsc->recovery_type));
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
@@ -1508,29 +1496,29 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                          "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
-    custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                        rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                        pe_order_optional|pe_order_implies_then|pe_order_restart,
-                        data_set);
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                       rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                       pe_order_optional|pe_order_implies_then|pe_order_restart,
+                       data_set);
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
         || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_promoted_implies_first, data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                           pe_order_promoted_implies_first, data_set);
 
-        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
-                            pe_order_runnable_left, data_set);
+        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
+                           rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
+                           pe_order_runnable_left, data_set);
     }
 
     // Don't clear resource history if probing on same node
-    custom_action_order(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
-                        NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
-                        NULL, pe_order_same_node|pe_order_then_cancels_first,
-                        data_set);
+    pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
+                       NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
+                       NULL, pe_order_same_node|pe_order_then_cancels_first,
+                       data_set);
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
@@ -1562,14 +1550,14 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * it":
              *       stop this -> unfencing -> start that -> stop this
              */
-            custom_action_order(rsc, stop_key(rsc), NULL,
-                                NULL, strdup(unfence->uuid), unfence,
-                                pe_order_optional|pe_order_same_node, data_set);
+            pcmk__new_ordering(rsc, stop_key(rsc), NULL,
+                               NULL, strdup(unfence->uuid), unfence,
+                               pe_order_optional|pe_order_same_node, data_set);
 
-            custom_action_order(NULL, strdup(unfence->uuid), unfence,
-                                rsc, start_key(rsc), NULL,
-                                pe_order_implies_then_on_node|pe_order_same_node,
-                                data_set);
+            pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
+                               rsc, start_key(rsc), NULL,
+                               pe_order_implies_then_on_node|pe_order_same_node,
+                               data_set);
         }
     }
 
@@ -1591,8 +1579,9 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
-            custom_action_order(rsc, stop_key(rsc), NULL,
-                                NULL, load_stopped_task, load_stopped, pe_order_load, data_set);
+            pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
+                               load_stopped_task, load_stopped, pe_order_load,
+                               data_set);
         }
 
         for (GList *item = allowed_nodes; item; item = item->next) {
@@ -1606,12 +1595,13 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
-            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
-                                rsc, start_key(rsc), NULL, pe_order_load, data_set);
+            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
+                               rsc, start_key(rsc), NULL, pe_order_load,
+                               data_set);
 
-            custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
-                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                NULL, pe_order_load, data_set);
+            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
+                               NULL, pe_order_load, data_set);
 
             free(load_stopped_task);
         }
@@ -1637,8 +1627,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * so that if we detect the container running, we will trigger a new
              * transition and avoid the unnecessary recovery.
              */
-            new_rsc_order(rsc->container, RSC_STATUS, rsc, RSC_STOP,
-                          pe_order_optional, data_set);
+            pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
+                                         RSC_STOP, pe_order_optional, data_set);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1676,17 +1666,17 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             crm_trace("Order and colocate %s relative to its container %s",
                       rsc->id, rsc->container->id);
 
-            custom_action_order(rsc->container,
-                                pcmk__op_key(rsc->container->id, RSC_START, 0),
-                                NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
-                                NULL,
-                                pe_order_implies_then|pe_order_runnable_left,
-                                data_set);
+            pcmk__new_ordering(rsc->container,
+                               pcmk__op_key(rsc->container->id, RSC_START, 0),
+                               NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
+                               NULL,
+                               pe_order_implies_then|pe_order_runnable_left,
+                               data_set);
 
-            custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                                rsc->container,
-                                pcmk__op_key(rsc->container->id, RSC_STOP, 0),
-                                NULL, pe_order_implies_first, data_set);
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
+                               rsc->container,
+                               pcmk__op_key(rsc->container->id, RSC_STOP, 0),
+                               NULL, pe_order_implies_first, data_set);
 
             if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1707,339 +1697,51 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    if (rsc_lh == NULL) {
-        pe_err("rsc_lh was NULL for %s", constraint->id);
+    if (dependent == NULL) {
+        pe_err("dependent was NULL for %s", constraint->id);
         return;
 
-    } else if (constraint->rsc_rh == NULL) {
-        pe_err("rsc_rh was NULL for %s", constraint->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
-                 rsc_rh->id);
-
-    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
-}
-
-enum filter_colocation_res
-filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             pcmk__colocation_t *constraint, gboolean preview)
-{
-    /* rh side must be allocated before we can process constraint */
-    if (!preview && pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        return influence_nothing;
-    }
-
-    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED) &&
-        rsc_lh->parent && pcmk_is_set(rsc_lh->parent->flags, pe_rsc_promotable)
-        && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-
-        /* LH and RH resources have already been allocated, place the correct
-         * priority on LH rsc for the given promotable clone resource role */
-        return influence_rsc_priority;
-    }
-
-    if (!preview && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-        // Log an error if we violated a mandatory colocation constraint
-        const pe_node_t *rh_node = rsc_rh->allocated_to;
-
-        if (rsc_lh->allocated_to == NULL) {
-            // Dependent resource isn't allocated, so constraint doesn't matter
-            return influence_nothing;
-        }
-
-        if (constraint->score >= INFINITY) {
-            // Dependent resource must colocate with rh_node
-
-            if ((rh_node == NULL)
-                || (rh_node->details != rsc_lh->allocated_to->details)) {
-                crm_err("%s must be colocated with %s but is not (%s vs. %s)",
-                        rsc_lh->id, rsc_rh->id,
-                        rsc_lh->allocated_to->details->uname,
-                        (rh_node? rh_node->details->uname : "unallocated"));
-            }
-
-        } else if (constraint->score <= -INFINITY) {
-            // Dependent resource must anti-colocate with rh_node
-
-            if ((rh_node != NULL)
-                && (rsc_lh->allocated_to->details == rh_node->details)) {
-                crm_err("%s and %s must be anti-colocated but are allocated "
-                        "to the same node (%s)",
-                        rsc_lh->id, rsc_rh->id, rh_node->details->uname);
-            }
-        }
-        return influence_nothing;
-    }
-
-    if (constraint->score > 0
-        && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh != rsc_lh->next_role) {
-        crm_trace("LH: Skipping constraint: \"%s\" state filter nextrole is %s",
-                  role2text(constraint->role_lh), role2text(rsc_lh->next_role));
-        return influence_nothing;
-    }
-
-    if (constraint->score > 0
-        && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh != rsc_rh->next_role) {
-        crm_trace("RH: Skipping constraint: \"%s\" state filter", role2text(constraint->role_rh));
-        return influence_nothing;
-    }
-
-    if (constraint->score < 0
-        && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
-        crm_trace("LH: Skipping negative constraint: \"%s\" state filter",
-                  role2text(constraint->role_lh));
-        return influence_nothing;
-    }
-
-    if (constraint->score < 0
-        && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
-        crm_trace("RH: Skipping negative constraint: \"%s\" state filter",
-                  role2text(constraint->role_rh));
-        return influence_nothing;
-    }
-
-    return influence_rsc_location;
-}
-
-static void
-influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                   pcmk__colocation_t *constraint)
-{
-    const char *rh_value = NULL;
-    const char *lh_value = NULL;
-    const char *attribute = CRM_ATTR_ID;
-    int score_multiplier = 1;
-
-    if (!rsc_rh->allocated_to || !rsc_lh->allocated_to) {
+    } else if (constraint->primary == NULL) {
+        pe_err("primary was NULL for %s", constraint->id);
         return;
     }
 
-    if (constraint->node_attribute != NULL) {
-        attribute = constraint->node_attribute;
-    }
+    pe_rsc_trace(dependent,
+                 "Processing colocation constraint between %s and %s",
+                 dependent->id, primary->id);
 
-    lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
-    rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
-
-    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
-        if ((constraint->score == INFINITY)
-            && (constraint->role_lh == RSC_ROLE_PROMOTED)) {
-            rsc_lh->priority = -INFINITY;
-        }
-        return;
-    }
-
-    if (constraint->role_rh && (constraint->role_rh != rsc_rh->next_role)) {
-        return;
-    }
-
-    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
-        score_multiplier = -1;
-    }
-
-    rsc_lh->priority = pe__add_scores(score_multiplier * constraint->score,
-                                      rsc_lh->priority);
-}
-
-static void
-colocation_match(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                 pcmk__colocation_t *constraint)
-{
-    const char *attribute = CRM_ATTR_ID;
-    const char *value = NULL;
-    GHashTable *work = NULL;
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
-
-    if (constraint->node_attribute != NULL) {
-        attribute = constraint->node_attribute;
-    }
-
-    if (rsc_rh->allocated_to) {
-        value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
-
-    } else if (constraint->score < 0) {
-        // Nothing to do (anti-colocation with something that is not running)
-        return;
-    }
-
-    work = pcmk__copy_node_table(rsc_lh->allowed_nodes);
-
-    g_hash_table_iter_init(&iter, work);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (rsc_rh->allocated_to == NULL) {
-            pe_rsc_trace(rsc_lh, "%s: %s@%s -= %d (%s inactive)",
-                         constraint->id, rsc_lh->id, node->details->uname,
-                         constraint->score, rsc_rh->id);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
-
-        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value, pcmk__str_casei)) {
-            if (constraint->score < CRM_SCORE_INFINITY) {
-                pe_rsc_trace(rsc_lh, "%s: %s@%s += %d",
-                             constraint->id, rsc_lh->id,
-                             node->details->uname, constraint->score);
-                node->weight = pe__add_scores(constraint->score, node->weight);
-            }
-
-        } else if (constraint->score >= CRM_SCORE_INFINITY) {
-            pe_rsc_trace(rsc_lh, "%s: %s@%s -= %d (%s mismatch)",
-                         constraint->id, rsc_lh->id, node->details->uname,
-                         constraint->score, attribute);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
-        }
-    }
-
-    if (can_run_any(work)
-        || constraint->score <= -INFINITY || constraint->score >= INFINITY) {
-        g_hash_table_destroy(rsc_lh->allowed_nodes);
-        rsc_lh->allowed_nodes = work;
-        work = NULL;
-
-    } else {
-        pe_rsc_info(rsc_lh,
-                    "%s: Rolling back scores from %s (no available nodes)",
-                    rsc_lh->id, rsc_rh->id);
-    }
-
-    if (work) {
-        g_hash_table_destroy(work);
-    }
+    primary->cmds->rsc_colocation_rh(dependent, primary, constraint, data_set);
 }
 
 void
-native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+native_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    enum filter_colocation_res filter_results;
+    enum pcmk__coloc_affects filter_results;
 
-    CRM_ASSERT(rsc_lh);
-    CRM_ASSERT(rsc_rh);
-    filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint, FALSE);
-    pe_rsc_trace(rsc_lh, "%s %s with %s (%s, score=%d, filter=%d)",
+    CRM_ASSERT((dependent != NULL) && (primary != NULL));
+    filter_results = pcmk__colocation_affects(dependent, primary, constraint,
+                                              false);
+    pe_rsc_trace(dependent, "%s %s with %s (%s, score=%d, filter=%d)",
                  ((constraint->score > 0)? "Colocating" : "Anti-colocating"),
-                 rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);
+                 dependent->id, primary->id, constraint->id, constraint->score,
+                 filter_results);
 
     switch (filter_results) {
-        case influence_rsc_priority:
-            influence_priority(rsc_lh, rsc_rh, constraint);
+        case pcmk__coloc_affects_role:
+            pcmk__apply_coloc_to_priority(dependent, primary, constraint);
             break;
-        case influence_rsc_location:
-            colocation_match(rsc_lh, rsc_rh, constraint);
+        case pcmk__coloc_affects_location:
+            pcmk__apply_coloc_to_weights(dependent, primary, constraint);
             break;
-        case influence_nothing:
+        case pcmk__coloc_affects_nothing:
         default:
             return;
-    }
-}
-
-static gboolean
-filter_rsc_ticket(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket)
-{
-    if (rsc_ticket->role_lh != RSC_ROLE_UNKNOWN && rsc_ticket->role_lh != rsc_lh->role) {
-        pe_rsc_trace(rsc_lh, "LH: Skipping constraint: \"%s\" state filter",
-                     role2text(rsc_ticket->role_lh));
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-void
-rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working_set_t * data_set)
-{
-    if (rsc_ticket == NULL) {
-        pe_err("rsc_ticket was NULL");
-        return;
-    }
-
-    if (rsc_lh == NULL) {
-        pe_err("rsc_lh was NULL for %s", rsc_ticket->id);
-        return;
-    }
-
-    if (rsc_ticket->ticket->granted && rsc_ticket->ticket->standby == FALSE) {
-        return;
-    }
-
-    if (rsc_lh->children) {
-        GList *gIter = rsc_lh->children;
-
-        pe_rsc_trace(rsc_lh, "Processing ticket dependencies from %s", rsc_lh->id);
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            rsc_ticket_constraint(child_rsc, rsc_ticket, data_set);
-        }
-        return;
-    }
-
-    pe_rsc_trace(rsc_lh, "%s: Processing ticket dependency on %s (%s, %s)",
-                 rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id,
-                 role2text(rsc_ticket->role_lh));
-
-    if ((rsc_ticket->ticket->granted == FALSE)
-        && (rsc_lh->running_on != NULL)) {
-
-        GList *gIter = NULL;
-
-        switch (rsc_ticket->loss_policy) {
-            case loss_ticket_stop:
-                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
-                break;
-
-            case loss_ticket_demote:
-                // Promotion score will be set to -INFINITY in promotion_order()
-                if (rsc_ticket->role_lh != RSC_ROLE_PROMOTED) {
-                    resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
-                }
-                break;
-
-            case loss_ticket_fence:
-                if (filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
-                    return;
-                }
-
-                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
-
-                for (gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
-                    pe_node_t *node = (pe_node_t *) gIter->data;
-
-                    pe_fence_node(data_set, node, "deadman ticket was lost", FALSE);
-                }
-                break;
-
-            case loss_ticket_freeze:
-                if (filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
-                    return;
-                }
-                if (rsc_lh->running_on != NULL) {
-                    pe__clear_resource_flags(rsc_lh, pe_rsc_managed);
-                    pe__set_resource_flags(rsc_lh, pe_rsc_block);
-                }
-                break;
-        }
-
-    } else if (rsc_ticket->ticket->granted == FALSE) {
-
-        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
-            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__", data_set);
-        }
-
-    } else if (rsc_ticket->ticket->standby) {
-
-        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
-            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc_lh, NULL, -INFINITY, "__ticket_standby__", data_set);
-        }
     }
 }
 
@@ -2054,6 +1756,26 @@ is_primitive_action(pe_action_t *action)
 {
     return action && action->rsc && (action->rsc->variant == pe_native);
 }
+
+/*!
+ * \internal
+ * \brief Clear a single action flag and set reason text
+ *
+ * \param[in] action  Action whose flag should be cleared
+ * \param[in] flag    Action flag that should be cleared
+ * \param[in] reason  Action that is the reason why flag is being cleared
+ */
+#define clear_action_flag_because(action, flag, reason) do {                \
+        if (pcmk_is_set((action)->flags, (flag))) {                         \
+            pe__clear_action_flags(action, flag);                           \
+            if ((action)->rsc != (reason)->rsc) {                           \
+                char *reason_text = pe__action2reason((reason), (flag));    \
+                pe_action_set_reason((action), reason_text,                 \
+                                   ((flag) == pe_action_migrate_runnable)); \
+                free(reason_text);                                          \
+            }                                                               \
+        }                                                                   \
+    } while (0)
 
 /*!
  * \internal
@@ -2083,13 +1805,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
         reason = "restart";
     }
 
-    /* ... if 'then' is unrunnable start of managed resource (if a resource
+    /* ... if 'then' is unrunnable action on same resource (if a resource
      * should restart but can't start, we still want to stop)
      */
     if (pcmk_is_set(filter, pe_action_runnable)
         && !pcmk_is_set(then->flags, pe_action_runnable)
         && pcmk_is_set(then->rsc->flags, pe_rsc_managed)
-        && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
+        && (first->rsc == then->rsc)) {
         reason = "stop";
     }
 
@@ -2102,23 +1824,23 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
 
     // Make 'first' required if it is runnable
     if (pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' required if 'then' is required
     if (!pcmk_is_set(then->flags, pe_action_optional)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
     if (!pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-        pe_action_implies(first, then, pe_action_migrate_runnable);
+        clear_action_flag_because(first, pe_action_migrate_runnable, then);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
     if (!pcmk_is_set(first->flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(then, first, pe_action_runnable);
+        clear_action_flag_because(then, pe_action_runnable, first);
     }
 }
 
@@ -2131,10 +1853,6 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
-
-    crm_trace(   "Testing %s on %s (0x%.6x) with %s 0x%.6x",
-                 first->uuid, first->node ? first->node->details->uname : "[none]",
-                 first->flags, then->uuid, then->flags);
 
     if (type & pe_order_asymmetrical) {
         pe_resource_t *then_rsc = then->rsc;
@@ -2159,10 +1877,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
-            pe_action_implies(then, first, pe_action_optional);
-            pe_action_implies(then, first, pe_action_runnable);
-
-            pe_rsc_trace(then->rsc, "Unset optional and runnable on %s", then->uuid);
+            clear_action_flag_because(then, pe_action_optional, first);
+            clear_action_flag_because(then, pe_action_runnable, first);
         } else {
             /* ignore... then is allowed to start/stop if it wants to. */
         }
@@ -2175,18 +1891,12 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(flags, pe_action_optional)
             && pcmk_is_set(first_flags, pe_action_optional)) {
-            pe_rsc_trace(first->rsc,
-                         "Unset optional on %s because %s implies first",
-                         first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
 
         if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
             !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-
-            pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
-                         first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_migrate_runnable);
+            clear_action_flag_because(first, pe_action_migrate_runnable, then);
         }
     }
 
@@ -2194,17 +1904,14 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
-            pe_action_implies(first, then, pe_action_optional);
+
+            clear_action_flag_because(first, pe_action_optional, then);
 
             if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
                 !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-
-                pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
-                pe_action_implies(first, then, pe_action_migrate_runnable);
+                clear_action_flag_because(first, pe_action_migrate_runnable,
+                                          then);
             }
-            pe_rsc_trace(then->rsc,
-                         "Unset optional on %s because %s (promoted) implies first",
-                         first->uuid, then->uuid);
         }
     }
 
@@ -2213,14 +1920,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
             ((then->flags & pe_action_runnable) == FALSE)) {
-
-            pe_rsc_trace(then->rsc, "Unset runnable on %s because %s is neither runnable or migratable", first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_runnable);
+            clear_action_flag_because(first, pe_action_runnable, then);
         }
 
         if ((then->flags & pe_action_optional) == 0) {
-            pe_rsc_trace(then->rsc, "Unset optional on %s because %s is not optional", first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
     }
 
@@ -2228,20 +1932,18 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && pcmk_is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
-            pe_action_implies(then, first, pe_action_migrate_runnable);
+            clear_action_flag_because(then, pe_action_migrate_runnable, first);
             pe__clear_action_flags(then, pe_action_pseudo);
-            pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
-
     }
 
     if (pcmk_is_set(type, pe_order_runnable_left)
         && pcmk_is_set(filter, pe_action_runnable)
         && pcmk_is_set(then->flags, pe_action_runnable)
         && !pcmk_is_set(flags, pe_action_runnable)) {
-        pe_rsc_trace(then->rsc, "Unset runnable on %s because of %s", then->uuid, first->uuid);
-        pe_action_implies(then, first, pe_action_runnable);
-        pe_action_implies(then, first, pe_action_migrate_runnable);
+
+        clear_action_flag_because(then, pe_action_runnable, first);
+        clear_action_flag_because(then, pe_action_migrate_runnable, first);
     }
 
     if (pcmk_is_set(type, pe_order_implies_then)
@@ -2250,10 +1952,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && !pcmk_is_set(flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
-        pe_rsc_trace(then->rsc,
-                     "Unset optional on %s because %s implies 'then'",
-                     then->uuid, first->uuid);
-        pe_action_implies(then, first, pe_action_optional);
+        clear_action_flag_because(then, pe_action_optional, first);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
@@ -2263,9 +1962,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (then_flags != then->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_then);
         pe_rsc_trace(then->rsc,
-                     "Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
-                     then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
-                     then_flags, first->uuid, first->flags);
+                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
+                     "because of 'first' %s (0x%.6x)",
+                     then->uuid,
+                     then->node? then->node->details->uname : "no node",
+                     then->flags, then_flags, first->uuid, first->flags);
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
@@ -2276,8 +1977,10 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (first_flags != first->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_first);
         pe_rsc_trace(first->rsc,
-                     "First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
-                     first->uuid, first->node ? first->node->details->uname : "[none]",
+                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
+                     "because of 'then' %s (0x%.6x)",
+                     first->uuid,
+                     first->node? first->node->details->uname : "no node",
                      first->flags, first_flags, then->uuid, then->flags);
     }
 
@@ -2287,58 +1990,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 void
 native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GList *gIter = NULL;
-    bool need_role = false;
-
-    CRM_CHECK((constraint != NULL) && (rsc != NULL), return);
-
-    // If a role was specified, ensure constraint is applicable
-    need_role = (constraint->role_filter > RSC_ROLE_UNKNOWN);
-    if (need_role && (constraint->role_filter != rsc->next_role)) {
-        pe_rsc_trace(rsc,
-                     "Not applying %s to %s because role will be %s not %s",
-                     constraint->id, rsc->id, role2text(rsc->next_role),
-                     role2text(constraint->role_filter));
-        return;
-    }
-
-    if (constraint->node_list_rh == NULL) {
-        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
-                     constraint->id, rsc->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Applying %s%s%s to %s", constraint->id,
-                 (need_role? " for role " : ""),
-                 (need_role? role2text(constraint->role_filter) : ""), rsc->id);
-
-    for (gIter = constraint->node_list_rh; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        pe_node_t *other_node = NULL;
-
-        other_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-
-        if (other_node != NULL) {
-            pe_rsc_trace(rsc, "* + %d on %s",
-                         node->weight, node->details->uname);
-            other_node->weight = pe__add_scores(other_node->weight,
-                                                node->weight);
-
-        } else {
-            pe_rsc_trace(rsc, "* = %d on %s",
-                         node->weight, node->details->uname);
-            other_node = pe__copy_node(node);
-            g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
-        }
-
-        if (other_node->rsc_discover_mode < constraint->discover_mode) {
-            if (constraint->discover_mode == pe_discover_exclusive) {
-                rsc->exclusive_discover = TRUE;
-            }
-            /* exclusive > never > always... always is default */
-            other_node->rsc_discover_mode = constraint->discover_mode;
-        }
-    }
+    pcmk__apply_location(constraint, rsc);
 }
 
 void
@@ -2393,13 +2045,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->children) {
-        GList *gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            LogActions(child_rsc, data_set);
-        }
+        g_list_foreach(rsc->children, (GFunc) LogActions, data_set);
         return;
     }
 
@@ -2465,46 +2111,13 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
             pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (!node_has_been_unfenced(current)) {
+            if (!pcmk__node_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
     }
 
     return TRUE;
-}
-
-static void
-order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
-                      enum pe_ordering order, pe_working_set_t *data_set)
-{
-    /* When unfencing is in use, we order unfence actions before any probe or
-     * start of resources that require unfencing, and also of fence devices.
-     *
-     * This might seem to violate the principle that fence devices require
-     * only quorum. However, fence agents that unfence often don't have enough
-     * information to even probe or start unless the node is first unfenced.
-     */
-    if (is_unfence_device(rsc, data_set)
-        || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-
-        /* Start with an optional ordering. Requiring unfencing would result in
-         * the node being unfenced, and all its resources being stopped,
-         * whenever a new resource is added -- which would be highly suboptimal.
-         */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
-
-        order_actions(unfence, action, order);
-
-        if (!node_has_been_unfenced(node)) {
-            // But unfencing is required if it has never been done
-            char *reason = crm_strdup_printf("required by %s %s",
-                                             rsc->id, action->task);
-
-            trigger_unfencing(NULL, node, reason, NULL, data_set);
-            free(reason);
-        }
-    }
 }
 
 gboolean
@@ -2516,7 +2129,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
     pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
-    order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
+    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
@@ -2623,11 +2236,13 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
 
     delete_action(rsc, node, optional);
 
-    new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
-    new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
-                  optional ? pe_order_implies_then : pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
+                                 optional? pe_order_implies_then : pe_order_optional,
+                                 data_set);
 
     return TRUE;
 }
@@ -2766,11 +2381,11 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                  * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
-                custom_action_order(remote,
-                                    pcmk__op_key(remote->id, RSC_STATUS, 0),
-                                    NULL, top,
-                                    pcmk__op_key(top->id, RSC_START, 0), NULL,
-                                    pe_order_optional, data_set);
+                pcmk__new_ordering(remote,
+                                   pcmk__op_key(remote->id, RSC_STATUS, 0),
+                                   NULL, top,
+                                   pcmk__op_key(top->id, RSC_START, 0), NULL,
+                                   pe_order_optional, data_set);
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
@@ -2790,9 +2405,9 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
              * 'rsc' until 'remote' stops as this also implies that
              * 'rsc' is stopped - avoiding the need to probe
              */
-            custom_action_order(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
-                                NULL, top, pcmk__op_key(top->id, RSC_START, 0),
-                                NULL, pe_order_optional, data_set);
+            pcmk__new_ordering(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
+                               NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+                               NULL, pe_order_optional, data_set);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
             return FALSE;
@@ -2806,7 +2421,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     pe__clear_action_flags(probe, pe_action_optional);
 
-    order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, data_set);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -2823,7 +2438,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
@@ -2837,18 +2452,17 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         pe__set_order_flags(flags, pe_order_runnable_left);
     }
 
-    custom_action_order(rsc, NULL, probe,
-                        top, pcmk__op_key(top->id, RSC_START, 0), NULL,
-                        flags, data_set);
+    pcmk__new_ordering(rsc, NULL, probe, top,
+                       pcmk__op_key(top->id, RSC_START, 0), NULL, flags,
+                       data_set);
 
     // Order the probe before any agent reload
-    custom_action_order(rsc, NULL, probe,
-                        top, reload_key(rsc), NULL,
-                        pe_order_optional, data_set);
+    pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
+                       pe_order_optional, data_set);
 
 #if 0
     // complete is always null currently
-    if (!is_unfence_device(rsc, data_set)) {
+    if (!pcmk__is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
          * on rsc.probe. But this can't be the case for fence devices
          * with unfencing, as it would create graph loops.
@@ -2859,270 +2473,6 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 #endif
     return TRUE;
-}
-
-/*!
- * \internal
- * \brief Check whether a resource is known on a particular node
- *
- * \param[in] rsc   Resource to check
- * \param[in] node  Node to check
- *
- * \return TRUE if resource (or parent if an anonymous clone) is known
- */
-static bool
-rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
-{
-   if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
-       return TRUE;
-
-   } else if ((rsc->variant == pe_native)
-              && pe_rsc_is_anon_clone(rsc->parent)
-              && pe_hash_table_lookup(rsc->parent->known_on, node->details->id)) {
-       /* We check only the parent, not the uber-parent, because we cannot
-        * assume that the resource is known if it is in an anonymously cloned
-        * group (which may be only partially known).
-        */
-       return TRUE;
-   }
-   return FALSE;
-}
-
-/*!
- * \internal
- * \brief Order a resource's start and promote actions relative to fencing
- *
- * \param[in] rsc         Resource to be ordered
- * \param[in] stonith_op  Fence action
- * \param[in] data_set    Cluster information
- */
-static void
-native_start_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    pe_node_t *target;
-    GList *gIter = NULL;
-
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
-
-    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        switch (action->needs) {
-            case rsc_req_nothing:
-                // Anything other than start or promote requires nothing
-                break;
-
-            case rsc_req_stonith:
-                order_actions(stonith_op, action, pe_order_optional);
-                break;
-
-            case rsc_req_quorum:
-                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
-                    && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                    && !rsc_is_known_on(rsc, target)) {
-
-                    /* If we don't know the status of the resource on the node
-                     * we're about to shoot, we have to assume it may be active
-                     * there. Order the resource start after the fencing. This
-                     * is analogous to waiting for all the probes for a resource
-                     * to complete before starting it.
-                     *
-                     * The most likely explanation is that the DC died and took
-                     * its status with it.
-                     */
-                    pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                                 target->details->uname);
-                    order_actions(stonith_op, action,
-                                  pe_order_optional | pe_order_runnable_left);
-                }
-                break;
-        }
-    }
-}
-
-static void
-native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    GList *action_list = NULL;
-    bool order_implicit = false;
-
-    pe_resource_t *top = uber_parent(rsc);
-    pe_action_t *parent_stop = NULL;
-    pe_node_t *target;
-
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
-
-    /* Get a list of stop actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_STOP, FALSE);
-
-    /* If resource requires fencing, implicit actions must occur after fencing.
-     *
-     * Implied stops and demotes of resources running on guest nodes are always
-     * ordered after fencing, even if the resource does not require fencing,
-     * because guest node "fencing" is actually just a resource stop.
-     */
-    if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)
-        || pe__is_guest_node(target)) {
-
-        order_implicit = true;
-    }
-
-    if (action_list && order_implicit) {
-        parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
-    }
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        // The stop would never complete, so convert it into a pseudo-action.
-        pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
-
-        if (order_implicit) {
-            pe__set_action_flags(action, pe_action_implied_by_stonith);
-
-            /* Order the stonith before the parent stop (if any).
-             *
-             * Also order the stonith before the resource stop, unless the
-             * resource is inside a bundle -- that would cause a graph loop.
-             * We can rely on the parent stop's ordering instead.
-             *
-             * User constraints must not order a resource in a guest node
-             * relative to the guest node container resource. The
-             * pe_order_preserve flag marks constraints as generated by the
-             * cluster and thus immune to that check (and is irrelevant if
-             * target is not a guest).
-             */
-            if (!pe_rsc_is_bundled(rsc)) {
-                order_actions(stonith_op, action, pe_order_preserve);
-            }
-            order_actions(stonith_op, parent_stop, pe_order_preserve);
-        }
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
-                       rsc->id, (order_implicit? "after" : "because"),
-                       target->details->uname);
-        } else {
-            crm_info("%s is implicit %s %s is fenced",
-                     action->uuid, (order_implicit? "after" : "because"),
-                     target->details->uname);
-        }
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
-            /* Create a second notification that will be delivered
-             *   immediately after the node is fenced
-             *
-             * Basic problem:
-             * - C is a clone active on the node to be shot and stopping on another
-             * - R is a resource that depends on C
-             *
-             * + C.stop depends on R.stop
-             * + C.stopped depends on STONITH
-             * + C.notify depends on C.stopped
-             * + C.healthy depends on C.notify
-             * + R.stop depends on C.healthy
-             *
-             * The extra notification here changes
-             *  + C.healthy depends on C.notify
-             * into:
-             *  + C.healthy depends on C.notify'
-             *  + C.notify' depends on STONITH'
-             * thus breaking the loop
-             */
-            create_secondary_notification(action, rsc, stonith_op, data_set);
-        }
-
-/* From Bug #1601, successful fencing must be an input to a failed resources stop action.
-
-   However given group(rA, rB) running on nodeX and B.stop has failed,
-   A := stop healthy resource (rA.stop)
-   B := stop failed resource (pseudo operation B.stop)
-   C := stonith nodeX
-   A requires B, B requires C, C requires A
-   This loop would prevent the cluster from making progress.
-
-   This block creates the "C requires A" dependency and therefore must (at least
-   for now) be disabled.
-
-   Instead, run the block above and treat all resources on nodeX as B would be
-   (marked as a pseudo op depending on the STONITH).
-
-   TODO: Break the "A requires B" dependency in update_action() and re-enable this block
-
-   } else if(is_stonith == FALSE) {
-   crm_info("Moving healthy resource %s"
-   " off %s before fencing",
-   rsc->id, node->details->uname);
-
-   * stop healthy resources before the
-   * stonith op
-   *
-   custom_action_order(
-   rsc, stop_key(rsc), NULL,
-   NULL,strdup(CRM_OP_FENCE),stonith_op,
-   pe_order_optional, data_set);
-*/
-    }
-
-    g_list_free(action_list);
-
-    /* Get a list of demote actions potentially implied by the fencing */
-    action_list = pe__resource_actions(rsc, target, RSC_DEMOTE, FALSE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (action->node->details->online == FALSE || action->node->details->unclean == TRUE
-            || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-
-            if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-                pe_rsc_info(rsc,
-                            "Demote of failed resource %s is implicit after %s is fenced",
-                            rsc->id, target->details->uname);
-            } else {
-                pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, target->details->uname);
-            }
-
-            /* The demote would never complete and is now implied by the
-             * fencing, so convert it into a pseudo-action.
-             */
-            pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
-
-            if (pe_rsc_is_bundled(rsc)) {
-                /* Do nothing, let the recovery be ordered after the parent's implied stop */
-
-            } else if (order_implicit) {
-                order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
-            }
-        }
-    }
-
-    g_list_free(action_list);
-}
-
-void
-rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_set_t * data_set)
-{
-    if (rsc->children) {
-        GList *gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            rsc_stonith_ordering(child_rsc, stonith_op, data_set);
-        }
-
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
-
-    } else {
-        native_start_constraints(rsc, stonith_op, data_set);
-        native_stop_constraints(rsc, stonith_op, data_set);
-    }
 }
 
 void
@@ -3176,12 +2526,12 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
                            FALSE, TRUE, data_set);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
-    custom_action_order(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
-                        pe_order_optional|pe_order_then_cancels_first,
-                        data_set);
-    custom_action_order(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
-                        pe_order_optional|pe_order_then_cancels_first,
-                        data_set);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
 }
 
 void

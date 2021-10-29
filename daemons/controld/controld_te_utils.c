@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,8 +34,6 @@ stop_te_timer(crm_action_timer_t * timer)
 gboolean
 te_graph_trigger(gpointer user_data)
 {
-    enum transition_status graph_rc = -1;
-
     if (transition_graph == NULL) {
         crm_debug("Nothing to do");
         return TRUE;
@@ -57,14 +55,12 @@ te_graph_trigger(gpointer user_data)
     }
 
     if (transition_graph->complete == FALSE) {
+        enum transition_status graph_rc;
         int limit = transition_graph->batch_limit;
 
         transition_graph->batch_limit = throttle_get_total_job_limit(limit);
-        graph_rc = run_graph(transition_graph);
+        graph_rc = pcmk__execute_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
-
-        /* significant overhead... */
-        /* print_graph(LOG_TRACE, transition_graph); */
 
         if (graph_rc == transition_active) {
             crm_trace("Transition not yet complete");
@@ -76,8 +72,9 @@ te_graph_trigger(gpointer user_data)
         }
 
         if (graph_rc != transition_complete) {
-            crm_warn("Transition failed: %s", transition_status(graph_rc));
-            print_graph(LOG_NOTICE, transition_graph);
+            crm_warn("Transition failed: %s",
+                     pcmk__graph_status2text(graph_rc));
+            pcmk__log_graph(LOG_NOTICE, transition_graph);
         }
     }
 
@@ -133,6 +130,52 @@ abort_after_delay(int abort_priority, enum transition_action abort_action,
     abort_timer.action = abort_action;
     abort_timer.text = abort_text;
     abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, NULL);
+}
+
+static const char *
+abort2text(enum transition_action abort_action)
+{
+    switch (abort_action) {
+        case tg_done:
+            return "done";
+        case tg_stop:
+            return "stop";
+        case tg_restart:
+            return "restart";
+        case tg_shutdown:
+            return "shutdown";
+    }
+    return "unknown";
+}
+
+static bool
+update_abort_priority(crm_graph_t *graph, int priority,
+                      enum transition_action action, const char *abort_reason)
+{
+    bool change = FALSE;
+
+    if (graph == NULL) {
+        return change;
+    }
+
+    if (graph->abort_priority < priority) {
+        crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
+        graph->abort_priority = priority;
+        if (graph->abort_reason != NULL) {
+            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
+        }
+        graph->abort_reason = abort_reason;
+        change = TRUE;
+    }
+
+    if (graph->completion_action < action) {
+        crm_debug("Abort action %s superseded by %s: %s",
+                  abort2text(graph->completion_action), abort2text(action), abort_reason);
+        graph->completion_action = action;
+        change = TRUE;
+    }
+
+    return change;
 }
 
 void

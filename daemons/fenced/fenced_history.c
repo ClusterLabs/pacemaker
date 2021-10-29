@@ -149,7 +149,11 @@ op_time_sort(const void *a_voidp, const void *b_voidp)
     } else if (b_pending) {
         return 1;
     } else if ((*b)->completed == (*a)->completed) {
-        return 0;
+        if ((*b)->completed_nsec > (*a)->completed_nsec) {
+            return 1;
+        } else if ((*b)->completed_nsec == (*a)->completed_nsec) {
+            return 0;
+        }
     } else if ((*b)->completed > (*a)->completed) {
         return 1;
     }
@@ -230,6 +234,7 @@ stonith_xml_history_to_list(xmlNode *history)
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
         int state;
         long long completed;
+        long long completed_nsec = 0L;
 
         if (!id) {
             crm_warn("Malformed fencing history received from peer");
@@ -248,6 +253,8 @@ stonith_xml_history_to_list(xmlNode *history)
         op->client_name = crm_element_value_copy(xml_op, F_STONITH_CLIENTNAME);
         crm_element_value_ll(xml_op, F_STONITH_DATE, &completed);
         op->completed = (time_t) completed;
+        crm_element_value_ll(xml_op, F_STONITH_DATE_NSEC, &completed_nsec);
+        op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
 
@@ -346,6 +353,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
                 crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
                 crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
+                crm_xml_add_ll(entry, F_STONITH_DATE_NSEC, op->completed_nsec);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
             }
     }
@@ -363,7 +371,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_warn("Failing pending operation %.8s originated by us but "
                          "known only from peer history", op->id);
                 op->state = st_failed;
-                op->completed = time(NULL);
+                set_fencing_completed(op);
                 /* use -EHOSTUNREACH to not introduce a new return-code that might
                    trigger unexpected results at other places and to prevent
                    remote_op_done from setting the delegate if not present

@@ -109,7 +109,16 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib_remote_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
 
+    if (cib == NULL) {
+        return NULL;
+    }
+
     private = calloc(1, sizeof(cib_remote_opaque_t));
+
+    if (private == NULL) {
+        free(cib);
+        return NULL;
+    }
 
     cib->variant = cib_remote;
     cib->variant_opaque = private;

@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/iso8601.h>
@@ -210,7 +211,8 @@ build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
 
     const char *description = "This tool is currently experimental.\n"
-                              "The interface, behavior, and output may change with any version of pacemaker.";
+                              "The interface, behavior, and output may change "
+                              "with any version of Pacemaker.";
 
     context = pcmk__build_arg_context(args, NULL, NULL, NULL);
     g_option_context_set_description(context, description);
@@ -227,7 +229,6 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    cib_t *cib_conn = NULL;
     pe_working_set_t *data_set = NULL;
 
     crm_time_t *rule_date = NULL;
@@ -304,21 +305,11 @@ main(int argc, char **argv)
             goto done;
         }
     } else {
-        // Establish a connection to the CIB
-        cib_conn = cib_new();
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
-            exit_code = crm_errno2exit(rc);
-            goto done;
-        }
-    }
+        rc = cib__signon_query(NULL, &input);
 
-    /* Populate working set from CIB query */
-    if (input == NULL) {
-        rc = cib_conn->cmds->query(cib_conn, NULL, &input, cib_scope_local | cib_sync_call);
-        if (rc != pcmk_ok) {
-            exit_code = crm_errno2exit(rc);
+        if (rc != pcmk_rc_ok) {
+            CMD_ERR("CIB query failed: %s", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
     }
@@ -357,11 +348,6 @@ main(int argc, char **argv)
     }
 
 done:
-    if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
-
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
     pe_free_working_set(data_set);

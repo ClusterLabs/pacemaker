@@ -353,8 +353,9 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 /*!
  * \brief Parse a time+units string and return milliseconds equivalent
  *
- * \param[in] input  String with a number and units (optionally with whitespace
- *                   before and/or after the number)
+ * \param[in] input  String with a number and optional unit (optionally
+ *                   with whitespace before and/or after the number).  If
+ *                   missing, the unit defaults to seconds.
  *
  * \return Milliseconds corresponding to string expression, or
  *         PCMK__PARSE_INT_DEFAULT on error
@@ -869,73 +870,48 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
  * \internal
  * \brief Find a string in a list of strings
  *
- * Search \p lst for \p s, taking case into account.  As a special case,
- * if "*" is the only element of \p lst, the search is successful.
- *
- * Behavior can be changed with various flags:
- *
- * - pcmk__str_casei - By default, comparisons are done taking case into
- *                     account.  This flag makes comparisons case-insensitive.
- * - pcmk__str_null_matches - If the input string is NULL, return TRUE.
- *
- * \note The special "*" matching rule takes precedence over flags.  In
- *       particular, "*" will match a NULL input string even without
- *       pcmk__str_null_matches being specified.
+ * \note This function takes the same flags and has the same behavior as
+ *       pcmk__str_eq().
  *
  * \note No matter what input string or flags are provided, an empty
  *       list will always return FALSE.
  *
- * \param[in]  lst   List to search
  * \param[in]  s     String to search for
+ * \param[in]  lst   List to search
  * \param[in]  flags A bitfield of pcmk__str_flags to modify operation
  *
  * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
  */
 gboolean
-pcmk__str_in_list(GList *lst, const gchar *s, uint32_t flags)
+pcmk__str_in_list(const gchar *s, GList *lst, uint32_t flags)
 {
-    GCompareFunc fn;
-
-    if (lst == NULL) {
-        return FALSE;
+    for (GList *ele = lst; ele != NULL; ele = ele->next) {
+        if (pcmk__str_eq(s, ele->data, flags)) {
+            return TRUE;
+        }
     }
 
-    if (strcmp(lst->data, "*") == 0 && lst->next == NULL) {
-        return TRUE;
-    }
+    return FALSE;
+}
 
+static bool
+str_any_of(const char *s, va_list args, uint32_t flags)
+{
     if (s == NULL) {
         return pcmk_is_set(flags, pcmk__str_null_matches);
     }
 
-    if (pcmk_is_set(flags, pcmk__str_casei)) {
-        fn = (GCompareFunc) strcasecmp;
-    } else {
-        fn = (GCompareFunc) strcmp;
-    }
+    while (1) {
+        const char *ele = va_arg(args, const char *);
 
-    return g_list_find_custom(lst, s, fn) != NULL;
-}
-
-static bool
-str_any_of(bool casei, const char *s, va_list args)
-{
-    bool rc = false;
-
-    if (s != NULL) {
-        while (1) {
-            const char *ele = va_arg(args, const char *);
-
-            if (ele == NULL) {
-                break;
-            } else if (pcmk__str_eq(s, ele,
-                                    casei? pcmk__str_casei : pcmk__str_none)) {
-                rc = true;
-                break;
-            }
+        if (ele == NULL) {
+            break;
+        } else if (pcmk__str_eq(s, ele, flags)) {
+            return true;
         }
     }
-    return rc;
+
+    return false;
 }
 
 /*!
@@ -958,7 +934,7 @@ pcmk__strcase_any_of(const char *s, ...)
     bool rc;
 
     va_start(ap, s);
-    rc = str_any_of(true, s, ap);
+    rc = str_any_of(s, ap, pcmk__str_casei);
     va_end(ap);
     return rc;
 }
@@ -982,7 +958,7 @@ pcmk__str_any_of(const char *s, ...)
     bool rc;
 
     va_start(ap, s);
-    rc = str_any_of(false, s, ap);
+    rc = str_any_of(s, ap, pcmk__str_none);
     va_end(ap);
     return rc;
 }
@@ -1106,6 +1082,8 @@ pcmk__numeric_strcasecmp(const char *s1, const char *s2)
  *                     This can be combined with pcmk__str_regex.
  * - pcmk__str_null_matches - If one string is NULL and the other is not,
  *                            still return 0.
+ * - pcmk__str_star_matches - If one string is "*" and the other is not, still
+ *                            return 0.
  *
  * \param[in] s1    First string to compare
  * \param[in] s2    Second string to compare, or a regular expression to
@@ -1178,6 +1156,16 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         return 1;
     }
 
+    /* If this flag is set, return 0 if either (or both) of the input strings
+     * are "*".  If neither one is, we need to continue and compare them
+     * normally.
+     */
+    if (pcmk_is_set(flags, pcmk__str_star_matches)) {
+        if (strcmp(s1, "*") == 0 || strcmp(s2, "*") == 0) {
+            return 0;
+        }
+    }
+
     if (pcmk_is_set(flags, pcmk__str_casei)) {
         return strcasecmp(s1, s2);
     } else {
@@ -1186,6 +1174,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -1311,4 +1300,5 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
     return pcmk__numeric_strcasecmp(s1, s2);
 }
 
+// LCOV_EXCL_END
 // End deprecated API

@@ -211,6 +211,19 @@ require a prefix, though a unique prefix indicating an executable (controld,
 crm_mon, etc.) can be helpful to indicate symbols shared between multiple
 source files for the executable.
 
+Public API Deprecation
+______________________
+
+Public APIs may not be removed in most Pacemaker releases, but they may be
+deprecated.
+
+When a public API is deprecated, it is moved to a header whose name ends in
+``compat.h``. The original header includes the compatibility header only if the
+``PCMK_ALLOW_DEPRECATED`` symbol is undefined or defined to 1. This allows
+external code to continue using the deprecated APIs, but internal code is
+prevented from using them because the ``crm_internal.h`` header defines the
+symbol to 0.
+
 
 .. index::
    pair: C; boilerplate
@@ -475,6 +488,9 @@ API compatibility. However, there are exceptions:
 Enumerations
 ############
 
+* Enumerations should not have a ``typedef``, and do not require any naming
+  convention beyond what applies to all exposed symbols.
+
 * New values should usually be added to the end of public API enumerations,
   because the compiler will define the values to 0, 1, etc., in the order
   given, and inserting a value in the middle would change the numerical values
@@ -537,6 +553,76 @@ clearing them (see ``pcmk__set_flags_as()`` and ``pcmk__clear_flags_as()``,
 usually used via wrapper macros defined for specific flag groups). These
 convenience functions should be preferred to direct bitwise arithmetic, for
 readability and logging consistency.
+
+
+.. index::
+   pair: C; booleans
+   pair: C; bool
+   pair: C; gboolean
+
+Booleans
+########
+
+Boolean Types
+_____________
+
+Booleans in C can be represented by an integer type, ``bool``, or ``gboolean``.
+
+Integers are sometimes useful for storing booleans when they must be converted
+to and from a string, such as an XML attribute value (for which
+``crm_element_value_int()`` can be used). Integer booleans use 0 for false and
+nonzero (usually 1) for true.
+
+``gboolean`` should be used with glib APIs that specify it. ``gboolean`` should
+always be used with glib's ``TRUE`` and ``FALSE`` constants.
+
+Otherwise, ``bool`` should be preferred. ``bool`` should be used with the
+``true`` and ``false`` constants from the ``stdbool.h`` header.
+
+Testing Booleans
+________________
+
+Do not use equality operators when testing booleans. For example:
+
+.. code-block:: c
+
+   // Do this
+   if (bool1) {
+       fn();
+   }
+   if (!bool2) {
+       fn2();
+   }
+
+   // Not this
+   if (bool1 == true) {
+       fn();
+   }
+   if (bool2 == false) {
+       fn2();
+   }
+
+   // Otherwise there's no logical end ...
+   if ((bool1 == false) == true) {
+       fn();
+   }
+
+Conversely, equality operators *should* be used with non-boolean variables,
+even when just testing zero or nonzero:
+
+.. code-block:: c
+
+   int var1 = fn();
+
+   // Prefer this, because it gives a hint to the type when reading it
+   if (var1 == 0) {
+       fn2();
+   }
+
+   // Not this, because a reader could mistakenly assume it is a boolean
+   if (!var1) {
+       fn2();
+   }
 
 
 .. index::
@@ -653,24 +739,146 @@ Memory Management
 
 .. index::
    pair: C; logging
+   pair: C; output
 
-Logging
-#######
+Logging and Output
+##################
+
+Logging Vs. Output
+__________________
+
+Log messages and output messages are logically similar but distinct.
+Oversimplifying a bit, daemons log, and tools output.
+
+Log messages are intended to help with troubleshooting and debugging.
+They may have a high level of technical detail, and are usually filtered by
+severity -- for example, the system log by default gets messages of notice
+level and higher.
+
+Output is intended to let the user know what a tool is doing, and is generally
+terser and less technical, and may even be parsed by scripts. Output might have
+"verbose" and "quiet" modes, but it is not filtered by severity.
+
+Common Guidelines for All Messages
+__________________________________
 
 * When format strings are used for derived data types whose implementation may
   vary across platforms (``pid_t``, ``time_t``, etc.), the safest approach is
   to use ``%lld`` in the format string, and cast the value to ``long long``.
 
-* Do *not* pass ``NULL`` as an argument to satisfy the ``%s`` format specifier
-  in logging (and more generally, ``printf``-style) functions. When the string
-  "<null>" is a sufficient output representation in such case, you can use the
-  ``crm_str()`` convenience macro; otherwise, the ternary operator is an
-  obvious choice.
-
 * Do not rely on ``%s`` handling ``NULL`` values properly. While the standard
   library functions might, not all Pacemaker API using them does, and it's
   safest to get in the habit of always ensuring format values are non-NULL.
+  For debug and trace messages, the ``crm_str()`` macro is sufficient and will
+  map NULL to the string "<null>", but for other messages an understandable
+  string appropriate to the context should be used when the value is NULL.
 
+* The convenience macros ``pcmk__plural_s()`` and ``pcmk__plural_alt()`` are
+  handy when logging a word that may be singular or plural.
+
+Logging
+_______
+
+Pacemaker uses libqb for logging, but wraps it with a higher level of
+functionality (see ``include/crm/common/logging*h``).
+
+A few macros ``crm_err()``, ``crm_warn()``, etc. do most of the heavy lifting.
+
+By default, Pacemaker sends logs at notice level and higher to the system log,
+and logs at info level and higher to the detail log (typically
+``/var/log/pacemaker/pacemaker.log``). The intent is that most users will only
+ever need the system log, but for deeper troubleshooting and developer
+debugging, the detail log may be helpful, at the cost of being more technical
+and difficult to follow.
+
+The same message can have more detail in the detail log than in the system log,
+using libqb's "extended logging" feature:
+
+.. code-block:: c
+
+   /* The following will log a simple message in the system log, like:
+
+          warning: Action failed: Node not found
+
+      with extra detail in the detail log, like:
+
+          warning: Action failed: Node not found | rc=-1005 id=hgjjg-51006
+   */
+   crm_warn("Action failed: %s " CRM_XS " rc=%d id=%s",
+            pcmk_rc_str(rc), rc, id);
+
+
+Output
+______
+
+Pacemaker has a somewhat complicated system for tool output. The main benefit
+is that the user can select the output format with the ``--output-as`` option
+(usually "text" for human-friendly output or "xml" for reliably script-parsable
+output, though ``crm_mon`` additionally supports "console" and "html").
+
+A custom message can be defined with a unique string identifier, plus
+implementation functions for each supported format. The caller invokes the
+message using the identifier. The user selects the output format via
+``--output-as``, and the output code automatically calls the appropriate
+implementation function.
+
+The interface (most importantly ``pcmk__output_t``) is declared in
+``include/crm/common/output*h``. See the API comments and existing tools for
+examples.
+
+
+.. index::
+   pair: C; strings
+
+String Handling
+###############
+
+Define Constants for Magic Strings
+__________________________________
+
+A "magic" string is one used for control purposes rather than human reading,
+and which must be exactly the same every time it is used. Examples would be
+configuration option names, XML attribute names, or environment variable names.
+
+These should always be defined constants, rather than using the string literal
+everywhere. If someone mistypes a defined constant, the code won't compile, but
+if they mistype a literal, it could go unnoticed until a user runs into a
+problem.
+
+
+Library Functions
+_________________
+
+Pacemaker's libcrmcommon has a large number of functions to assist in string
+handling. The most commonly used ones are:
+
+* ``pcmk__str_eq()`` tests string equality (similar to ``strcmp()``), but can
+  handle NULL, and takes options for case-insensitive, whether NULL should be
+  considered a match, etc.
+* ``crm_strdup_printf()`` takes ``printf()``-style arguments and creates a
+  string from them (dynamically allocated, so it must be freed with
+  ``free()``). It asserts on memory failure, so the return value is always
+  non-NULL.
+
+String handling functions should almost always be internal API, since Pacemaker
+isn't intended to be used as a general-purpose library. Most are declared in
+``include/crm/common/strings_internal.h``. ``util.h`` has some older ones that
+are public API (for now, but will eventually be made internal).
+
+
+char*, gchar*, and GString
+__________________________
+
+When using dynamically allocated strings, be careful to always use the
+appropriate free function.
+
+* ``char*`` strings allocated with something like ``calloc()`` must be freed
+  with ``free()``. Most Pacemaker library functions that allocate strings use
+  this implementation.
+* glib functions often use ``gchar*`` instead, which must be freed with
+  ``g_free()``.
+* Occasionally, it's convenient to use glib's flexible ``GString*`` type, which
+  must be freed with ``g_string_free()``.
 
 .. index::
    pair: C; regular expression

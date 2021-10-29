@@ -74,7 +74,6 @@ gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 void verify_cib_options(GHashTable * options);
 gboolean cib_internal_config_changed(xmlNode * diff);
 
-extern GHashTable *cib_op_callback_table;
 typedef struct cib_notify_client_s {
     const char *event;
     const char *obj_id;         /* implement one day */
@@ -178,22 +177,22 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
 
 /*!
  * \internal
- * \brief Core function to manipulate with/query CIB/XML per xpath + arguments
- * \param[in] op, the operation to be performed:
- *                <tt>CIB_OP_{CREATE,DELETE,MODIFY,QUERY,REPLACE}</tt>
- * \param[in] options, ORed flags per relevant \c cib_call_options enumeration:
- *                     <tt>cib_{multiple,no_children,xpath_address}</tt>
- * \param[in] section, xpath defining place of interest in
- *                     <tt>{existing,result}_cib</tt>
- * \param[in] req, UNUSED
- * \param[in] input, the input operand for
- *                   <tt>CIB_OP_{CREATE,MODIFY,REPLACE}</tt>
- * \param[in] existing_cib, the input operand (CIB) for \c CIB_OP_QUERY
- * \param[inout] result_cib, the operand and result for
- *                           <tt>CIB_OP_{CREATE,DELETE,MODIFY,REPLACE}</tt>
- * \param[out] answer, the result for \c CIB_OP_QUERY, structured per \c options
+ * \brief Query or modify a CIB
  *
- * \retval \c pcmk_ok (0) for success, different value for failure
+ * \param[in]     op            CIB_OP_* operation to be performed
+ * \param[in]     options       Flag set of \c cib_call_options
+ * \param[in]     section       XPath to query or modify
+ * \param[in]     req           unused
+ * \param[in]     input         Portion of CIB to modify (used with
+ *                              CIB_OP_CREATE, CIB_OP_MODIFY, and
+ *                              CIB_OP_REPLACE)
+ * \param[in]     existing_cib  Input CIB (used with CIB_OP_QUERY)
+ * \param[in,out] result_cib    CIB copy to make changes in (used with
+ *                              CIB_OP_CREATE, CIB_OP_MODIFY, CIB_OP_DELETE, and
+ *                              CIB_OP_REPLACE)
+ * \param[out]    answer        Query result (used with CIB_OP_QUERY)
+ *
+ * \return Legacy Pacemaker return code
  */
 int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -214,5 +213,21 @@ int cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                const char *cib_filename);
 
 void cib__set_output(cib_t *cib, pcmk__output_t *out);
+
+cib_callback_client_t* cib__lookup_id (int call_id);
+
+/*!
+ * \internal
+ * \brief Connect to, query, and optionally disconnect from the CIB, returning
+ *        the resulting XML object.
+ *
+ * \param[out] cib        If non-NULL, a pointer to where to store the CIB
+ *                        connection.  In this case, it is up to the caller to
+ *                        disconnect from the CIB when finished.
+ * \param[out] cib_object A pointer to where to store the XML query result.
+ *
+ * \return A standard Pacemaker return code
+ */
+int cib__signon_query(cib_t **cib, xmlNode **cib_object);
 
 #endif

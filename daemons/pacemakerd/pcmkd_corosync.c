@@ -82,6 +82,9 @@ cluster_reconnect_cb(gpointer data)
         mainloop_timer_del(reconnect_timer);
         reconnect_timer = NULL;
         crm_notice("Cluster reconnect succeeded");
+        mcp_read_config();
+        restart_cluster_subdaemons();
+        return G_SOURCE_REMOVE;
     } else {
         crm_info("Cluster reconnect failed"
                  "(connection will be reattempted once per second)");
@@ -90,7 +93,7 @@ cluster_reconnect_cb(gpointer data)
      * In theory this will continue forever. In practice the CIB connection from
      * attrd will timeout and shut down Pacemaker when it gets bored.
      */
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 
@@ -219,6 +222,25 @@ pcmkd_shutdown_corosync(void)
     }
 }
 
+bool
+pcmkd_corosync_connected(void)
+{
+    cpg_handle_t local_handle = 0;
+    cpg_model_v1_data_t cpg_model_info = {CPG_MODEL_V1, NULL, NULL, NULL, 0};
+    int fd = -1;
+
+    if (cpg_model_initialize(&local_handle, CPG_MODEL_V1, (cpg_model_data_t *) &cpg_model_info, NULL) != CS_OK) {
+        return false;
+    }
+
+    if (cpg_fd_get(local_handle, &fd) != CS_OK) {
+        return false;
+    }
+
+    cpg_finalize(local_handle);
+
+    return true;
+}
 
 /* =::=::=::= Configuration =::=::=::= */
 static int
@@ -301,30 +323,30 @@ mcp_read_config(void)
 
     stack = get_cluster_type();
     if (stack != pcmk_cluster_corosync) {
-        crm_crit("Expected corosync stack but detected %s " CRM_XS " stack=%d",
-                 name_for_cluster_type(stack), stack);
+        crm_crit("Expected Corosync cluster layer but detected %s "
+                 CRM_XS " stack=%d", name_for_cluster_type(stack), stack);
         return FALSE;
     }
 
     crm_info("Reading configuration for %s stack",
              name_for_cluster_type(stack));
-    pcmk__set_env_option("cluster_type", "corosync");
-    pcmk__set_env_option("quorum_type", "corosync");
+    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync");
+    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync");
 
     // If debug logging is not configured, check whether corosync has it
-    if (pcmk__env_option("debug") == NULL) {
+    if (pcmk__env_option(PCMK__ENV_DEBUG) == NULL) {
         char *debug_enabled = NULL;
 
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
 
         if (crm_is_true(debug_enabled)) {
-            pcmk__set_env_option("debug", "1");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "1");
             if (get_crm_log_level() < LOG_DEBUG) {
                 set_crm_log_level(LOG_DEBUG);
             }
 
         } else {
-            pcmk__set_env_option("debug", "0");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "0");
         }
 
         free(debug_enabled);

@@ -19,6 +19,7 @@ import signal
 # Prefer the source tree if available
 BUILD_DIR = "@abs_top_builddir@"
 SCHEMA_DIR = "@CRM_SCHEMA_DIRECTORY@"
+COROSYNC_CONF = "@PCMK__COROSYNC_CONF@"
 TEST_DIR = sys.path[0]
 
 AUTOGEN_COROSYNC_TEMPLATE = """
@@ -109,7 +110,10 @@ def update_path():
 
 def find_validator(rng_file):
     if os.access("/usr/bin/xmllint", os.X_OK):
-        return ["xmllint", "--relaxng", rng_file, "-"]
+        if rng_file == None:
+            return ["xmllint", "-"]
+        else:
+            return ["xmllint", "--relaxng", rng_file, "-"]
     else:
         return None
 
@@ -123,7 +127,7 @@ def rng_directory():
         return SCHEMA_DIR
 
 
-def pipe_communicate(pipes, stderr=False, stdin=None):
+def pipe_communicate(pipes, check_stderr=False, stdin=None):
     """ Get text output from pipes """
 
     if stdin is not None:
@@ -132,7 +136,7 @@ def pipe_communicate(pipes, stderr=False, stdin=None):
         pipe_outputs = pipes.communicate()
 
     output = pipe_outputs[0].decode(sys.stdout.encoding)
-    if stderr:
+    if check_stderr:
         output = output + pipe_outputs[1].decode(sys.stderr.encoding)
     return output
 
@@ -240,7 +244,7 @@ class Test(object):
 
         self.executed = 0
 
-    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None, validate=True):
+    def __new_cmd(self, cmd, args, exitcode, stdout_match="", no_wait=0, stdout_negative_match="", kill=None, validate=True, check_rng=True, check_stderr=True):
         """ Add a command to be executed as part of this test """
 
         self.cmds.append(
@@ -253,6 +257,8 @@ class Test(object):
                 "stdout_negative_match" : stdout_negative_match,
                 "no_wait" : no_wait,
                 "validate" : validate,
+                "check_rng" : check_rng,
+                "check_stderr" : check_stderr,
             }
         )
 
@@ -347,10 +353,10 @@ class Test(object):
 
         self.negative_stonith_patterns.append(pattern)
 
-    def add_cmd(self, cmd, args, validate=True):
+    def add_cmd(self, cmd, args, validate=True, check_rng=True, check_stderr=True):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, CrmExit.OK, "", validate=validate)
+        self.__new_cmd(cmd, args, CrmExit.OK, "", validate=validate, check_rng=check_rng, check_stderr=check_stderr)
 
     def add_cmd_no_wait(self, cmd, args):
         """ Add a simple command to be executed (without waiting) as part of this test """
@@ -397,7 +403,7 @@ class Test(object):
         else:
             return CrmExit.OK
 
-        output = pipe_communicate(test, stderr=True)
+        output = pipe_communicate(test, check_stderr=args['check_stderr'])
         if self.verbose:
             print(output)
 
@@ -413,7 +419,10 @@ class Test(object):
             raise OutputFoundError(output)
 
         if args['validate']:
-            rng_file = rng_directory() + "/api/api-result.rng"
+            if args['check_rng']:
+                rng_file = rng_directory() + "/api/api-result.rng"
+            else:
+                rng_file = None
 
             cmd = find_validator(rng_file)
             if not cmd:
@@ -423,7 +432,7 @@ class Test(object):
                 print("\nRunning: "+" ".join(cmd))
 
             validator = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = pipe_communicate(validator, stderr=True, stdin=output)
+            output = pipe_communicate(validator, check_stderr=True, stdin=output)
 
             if self.verbose:
                 print(output)
@@ -508,6 +517,10 @@ class Test(object):
                 print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
                 self.set_error(i, cmd);
                 break
+            except XmlValidationError as e:
+                print("Step %d FAILED - xmllint failed: %s" % (i, e))
+                self.set_error(i, cmd);
+                break
             if self.verbose:
                 print("Step %d SUCCESS" % (i))
             i = i + 1
@@ -532,7 +545,7 @@ class Tests(object):
         self.timeout = timeout
         self.force_wait = force_wait
         self.logdir = logdir
-        self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
+        self.autogen_corosync_cfg = not os.path.exists(COROSYNC_CONF)
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
@@ -1133,7 +1146,7 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
-            test.add_stonith_log_pattern("does not advertise support for 'reboot', performing 'off'")
+            test.add_stonith_log_pattern("does not support reboot")
             test.add_stonith_log_pattern("using true1 returned 0 (OK)")
 
         # make sure reboot is used when reboot action is advertised
@@ -1423,13 +1436,32 @@ class Tests(object):
         test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using true2")
         test.add_stonith_neg_log_pattern("node_fake with true3")
 
+    def build_query_tests(self):
+        """ run stonith_admin --metadata for the fence_dummy agent and check command output """
+
+        test = self.new_test("get_metadata",
+                             "Run stonith_admin --metadata for the fence_dummy agent", 1)
+        test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -a fence_dummy --metadata", '<shortdesc lang')
+
+    def build_metadata_tests(self):
+        """ run fence-agents coming with pacemaker with -o metadata and check for valid xml """
+
+        test = self.new_test("check_metadata_dummy",
+                             "Run fence_dummy -o metadata and check for valid xml", 0)
+        test.add_cmd("fence_dummy", "-o metadata", check_rng=False, check_stderr=False)
+        # fence_dummy prints on stderr to check that tools just listen on stdout
+
+        test = self.new_test("check_metadata_watchdog",
+                             "Run fence_watchdog -o metadata and check for valid xml", 0)
+        test.add_cmd("fence_watchdog", "-o metadata", check_rng=False)
+
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
         if use_corosync:
             if self.autogen_corosync_cfg:
                 logname = os.path.join(self.logdir, "corosync.log")
-                corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
+                corosync_cfg = io.open(COROSYNC_CONF, "w")
                 corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
                 corosync_cfg.close()
 
@@ -1452,7 +1484,7 @@ class Tests(object):
                     for line in logfile.readlines():
                         print(line.strip())
                     logfile.close()
-                os.remove("/etc/corosync/corosync.conf")
+                os.remove(COROSYNC_CONF)
 
         subprocess.call(["cts-support", "uninstall"])
 
@@ -1551,6 +1583,8 @@ def main(argv):
         tests.build_unfence_on_target_tests()
         tests.build_nodeid_tests()
         tests.build_remap_tests()
+        tests.build_query_tests()
+        tests.build_metadata_tests()
 
         if opts.options['list-tests']:
             tests.print_list()

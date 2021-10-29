@@ -615,7 +615,35 @@ pcmk__close_fds_in_child(bool all)
     }
 }
 
+/*!
+ * \brief Duplicate a file path, inserting a prefix if not absolute
+ *
+ * \param[in] filename  File path to duplicate
+ * \param[in] dirname   If filename is not absolute, prefix to add
+ *
+ * \return Newly allocated memory with full path (guaranteed non-NULL)
+ */
+char *
+pcmk__full_path(const char *filename, const char *dirname)
+{
+    char *path = NULL;
+
+    CRM_ASSERT(filename != NULL);
+
+    if (filename[0] == '/') {
+        path = strdup(filename);
+        CRM_ASSERT(path != NULL);
+
+    } else {
+        CRM_ASSERT(dirname != NULL);
+        path = crm_strdup_printf("%s/%s", dirname, filename);
+    }
+
+    return path;
+}
+
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -630,4 +658,5 @@ crm_build_path(const char *path_c, mode_t mode)
     }
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

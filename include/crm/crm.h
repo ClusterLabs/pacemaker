@@ -64,9 +64,9 @@ extern "C" {
  * >=3.0.9:  DC will send its own shutdown request to all peers
  *           XML v2 patchsets are created by default
  * >=3.0.13: Fail counts include operation name and interval
- * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
+ * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.10.2"
+#  define CRM_FEATURE_SET		"3.11.0"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node

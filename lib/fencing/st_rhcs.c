@@ -19,6 +19,8 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
+#include "fencing_private.h"
+
 #define RH_STONITH_PREFIX "fence_"
 
 /*!

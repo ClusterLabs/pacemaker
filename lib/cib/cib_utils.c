@@ -20,7 +20,6 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
@@ -555,7 +554,8 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         output = get_message_xml(msg, F_CIB_CALLDATA);
     }
 
-    blob = pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
+    blob = cib__lookup_id(call_id);
+
     if (blob == NULL) {
         crm_trace("No callback found for call %d", call_id);
     }
@@ -647,7 +647,7 @@ static pcmk__cluster_option_t cib_opts[] = {
 void
 cib_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-based", "1.0",
+    pcmk__print_option_metadata("pacemaker-based",
                                 "Cluster Information Base manager options",
                                 "Cluster options used by Pacemaker's "
                                     "Cluster Information Base manager",
@@ -784,4 +784,42 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         }
     }
     return rc;
+}
+
+int
+cib__signon_query(cib_t **cib, xmlNode **cib_object)
+{
+    int rc = pcmk_rc_ok;
+    cib_t *cib_conn = NULL;
+
+    if (cib == NULL) {
+        cib_conn = cib_new();
+    } else {
+        *cib = cib_new();
+        cib_conn = *cib;
+    }
+
+    if (cib_conn == NULL) {
+        return ENOMEM;
+    }
+
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc == pcmk_rc_ok) {
+        rc = cib_conn->cmds->query(cib_conn, NULL, cib_object, cib_scope_local | cib_sync_call);
+        rc = pcmk_legacy2rc(rc);
+    }
+
+    if (cib == NULL) {
+        cib_conn->cmds->signoff(cib_conn);
+        cib_delete(cib_conn);
+        cib_conn = NULL;
+    }
+
+    if (cib_object == NULL) {
+        return pcmk_rc_no_input;
+    } else {
+        return rc;
+    }
 }

@@ -10,6 +10,8 @@
 #
 include $(top_srcdir)/mk/common.mk
 
+noinst_HEADERS		= fencing_private.h
+
 lib_LTLIBRARIES		= libstonithd.la
 
 libstonithd_la_LDFLAGS	= -version-info 31:1:5

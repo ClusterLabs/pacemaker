@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,37 +9,45 @@
 
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-clear_none(void) {
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0x00f, NULL), ==, 0x0f0);
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0xf0f, NULL), ==, 0x0f0);
+clear_none(void **state) {
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0x00f, NULL), 0x0f0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0xf0f, NULL), 0x0f0);
 }
 
 static void
-clear_some(void) {
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0x020, NULL), ==, 0x0d0);
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0x030, NULL), ==, 0x0c0);
+clear_some(void **state) {
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0x020, NULL), 0x0d0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0x030, NULL), 0x0c0);
 }
 
 static void
-clear_all(void) {
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0x0f0, NULL), ==, 0x000);
-    g_assert_cmphex(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                         "test", 0x0f0, 0xfff, NULL), ==, 0x000);
+clear_all(void **state) {
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0x0f0, NULL), 0x000);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                          "test", 0x0f0, 0xfff, NULL), 0x000);
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(clear_none),
+        cmocka_unit_test(clear_some),
+        cmocka_unit_test(clear_all),
+    };
 
-    g_test_add_func("/common/flags/clear/clear_none", clear_none);
-    g_test_add_func("/common/flags/clear/clear_some", clear_some);
-    g_test_add_func("/common/flags/clear/clear_all", clear_all);
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthIOWait resource agent
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,8 +26,8 @@ meta_data() {
         cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="HealthIOWait" version="1.0">
-<version>1.0</version>
+<resource-agent name="HealthIOWait" version="1.1">
+<version>1.1</version>
 
 <longdesc lang="en">
 System health agent that measures the CPU iowait via top and updates the #health-iowait attribute.
@@ -35,7 +35,7 @@ System health agent that measures the CPU iowait via top and updates the #health
 <shortdesc lang="en">System health based on CPU iowait measurement</shortdesc>
 
 <parameters>
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
@@ -43,22 +43,22 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/health-iowait-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="yellow_limit" unique="0">
+<parameter name="yellow_limit">
 <longdesc lang="en">
 Upper limit of iowait percentage to switch the health attribute to yellow. I.e.
 the #health-iowait will go yellow if the %iowait of the CPU gets higher than 10%.
 </longdesc>
 <shortdesc lang="en">Upper limit for yellow health attribute</shortdesc>
-<content type="string" default="10"/>
+<content type="integer" default="10"/>
 </parameter>
 
-<parameter name="red_limit" unique="0">
+<parameter name="red_limit">
 <longdesc lang="en">
 Upper limit of iowait percentage to switch the health attribute to red. I.e.
 the #health-iowait will go red if the %iowait of the CPU get higher than 15%.
 </longdesc>
 <shortdesc lang="en">Upper limit for red health attribute</shortdesc>
-<content type="string" default="15"/>
+<content type="integer" default="15"/>
 </parameter>
 
 </parameters>
@@ -126,12 +126,32 @@ agent_monitor() {
         return $OCF_NOT_RUNNING
 }
 
+is_integer() {
+    case "$1" in
+        ""|*[0-9]*) return 0 ;;
+        *)          return 1 ;;
+    esac
+}
+
+is_writable_dir() {
+    dir=$(dirname "$1")
+    [ -d "$dir" ] && [ -w "$dir" ] && [ -x "$dir" ]
+}
+
 agent_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    if [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]; then
-      return $OCF_ERR_ARGS
+
+    is_integer "$OCF_RESKEY_yellow_limit" && is_integer "$OCF_RESKEY_red_limit"
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_CONFIGURED
     fi
+
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        is_writable_dir "$OCF_RESKEY_state"
+        if [ $? -ne 0 ]; then
+          return $OCF_ERR_ARGS
+        fi
+    fi
+
     return $OCF_SUCCESS
 }
 

@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
 #include <crm/cib/util.h>
@@ -175,55 +174,6 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-static char *
-failed_action_string(xmlNodePtr xml_op) {
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int rc;
-    int status;
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
-
-    time_t last_change = 0;
-
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
-
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                &last_change) == pcmk_ok) {
-        crm_time_t *crm_when = crm_time_new(NULL);
-        char *time_s = NULL;
-        char *buf = NULL;
-
-        crm_time_set_timet(crm_when, &last_change);
-        time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-
-        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', "
-                                "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
-                                "='%s', queued=%sms, exec=%sms",
-                                op_key ? op_key : ID(xml_op),
-                                crm_element_value(xml_op, XML_ATTR_UNAME),
-                                services_ocf_exitcode_str(rc), rc,
-                                crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                services_lrm_status_str(status),
-                                exit_reason ? exit_reason : "none",
-                                time_s,
-                                crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                                crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-
-        crm_time_free(crm_when);
-        free(time_s);
-        return buf;
-    } else {
-        return crm_strdup_printf("%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                                 op_key ? op_key : ID(xml_op),
-                                 crm_element_value(xml_op, XML_ATTR_UNAME),
-                                 services_ocf_exitcode_str(rc), rc,
-                                 crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                 services_lrm_status_str(status),
-                                 exit_reason ? exit_reason : "none");
-    }
-}
-
 static const char *
 get_cluster_stack(pe_working_set_t *data_set)
 {
@@ -374,8 +324,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-stack", stack_s);
     }
 
-    /* Always print DC if none, even if not requested */
-    if (data_set->dc_node == NULL || pcmk_is_set(section_opts, pcmk_section_dc)) {
+    if (pcmk_is_set(section_opts, pcmk_section_dc)) {
         xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
                                                data_set->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
@@ -413,8 +362,10 @@ cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;
@@ -480,8 +431,10 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;
@@ -670,8 +623,8 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh), pcmk__str_none) &&
-            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)), pcmk__str_none)) {
+        if (!pcmk__str_in_list(rsc_printable_id(location->rsc_lh), only_rsc, pcmk__str_star_matches) &&
+            !pcmk__str_in_list(rsc_printable_id(uber_parent(location->rsc_lh)), only_rsc, pcmk__str_star_matches)) {
             continue;
         }
 
@@ -1159,22 +1112,178 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
+/*!
+ * \internal
+ * \brief Display a failed action in less-technical natural language
+ */
+static void
+failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
+                       const char *op_key, const char *node_name, int rc,
+                       int status, const char *exit_reason,
+                       const char *exec_time)
+{
+    char *rsc_id = NULL;
+    char *task = NULL;
+    guint interval_ms = 0;
+    const char *last_change_str = NULL;
+    time_t last_change_epoch = 0;
+    GString *str = NULL;
+
+    if (pcmk__str_empty(op_key)
+        || !parse_op_key(op_key, &rsc_id, &task, &interval_ms)) {
+        rsc_id = strdup("unknown resource");
+        task = strdup("unknown action");
+        interval_ms = 0;
+    }
+
+    str = g_string_sized_new(strlen(rsc_id) + strlen(task) + strlen(node_name)
+                             + 100); // reasonable starting size
+
+    g_string_printf(str, "%s ", rsc_id);
+
+    if (interval_ms != 0) {
+        g_string_append_printf(str, "%s-interval ",
+                               pcmk__readable_interval(interval_ms));
+    }
+    g_string_append_printf(str, "%s on %s",
+                           crm_action_str(task, interval_ms), node_name);
+
+    if (status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, " returned '%s'",
+                               services_ocf_exitcode_str(rc));
+    } else {
+        g_string_append_printf(str, " could not be executed (%s)",
+                               pcmk_exec_status_str(status));
+    }
+
+    if (!pcmk__str_empty(exit_reason)) {
+        g_string_append_printf(str, " because '%s'", exit_reason);
+    }
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change_epoch) == pcmk_ok) {
+        last_change_str = pcmk__epoch2str(&last_change_epoch);
+        if (last_change_str != NULL) {
+            g_string_append_printf(str, " at %s", last_change_str);
+        }
+    }
+    if (!pcmk__str_empty(exec_time)) {
+        int exec_time_ms = 0;
+
+        if ((pcmk__scan_min_int(exec_time, &exec_time_ms, 0) == pcmk_rc_ok)
+            && (exec_time_ms > 0)) {
+            g_string_append_printf(str, " after %s",
+                                   pcmk__readable_interval(exec_time_ms));
+        }
+    }
+
+    out->list_item(out, NULL, "%s", str->str);
+    g_string_free(str, TRUE);
+    free(rsc_id);
+    free(task);
+}
+
+/*!
+ * \internal
+ * \brief Display a failed action with technical details
+ */
+static void
+failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
+                        const char *op_key, const char *node_name, int rc,
+                        int status, const char *exit_reason,
+                        const char *exec_time)
+{
+    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+    const char *exit_status = services_ocf_exitcode_str(rc);
+    const char *lrm_status = pcmk_exec_status_str(status);
+    const char *last_change_str = NULL;
+    time_t last_change_epoch = 0;
+    GString *str = NULL;
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = "unknown operation";
+    }
+    if (pcmk__str_empty(exit_status)) {
+        exit_status = "unknown exit status";
+    }
+    if (pcmk__str_empty(call_id)) {
+        call_id = "unknown";
+    }
+
+    str = g_string_sized_new(strlen(op_key) + strlen(node_name)
+                             + strlen(exit_status) + strlen(call_id)
+                             + strlen(lrm_status) + 50); // rough estimate
+
+    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status='%s'",
+                    op_key, node_name, exit_status, rc, call_id, lrm_status);
+
+    if (!pcmk__str_empty(exit_reason)) {
+        g_string_append_printf(str, ", exitreason='%s'", exit_reason);
+    }
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change_epoch) == pcmk_ok) {
+        last_change_str = pcmk__epoch2str(&last_change_epoch);
+        if (last_change_str != NULL) {
+            g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
+                                   last_change_str);
+        }
+    }
+    if (!pcmk__str_empty(queue_time)) {
+        g_string_append_printf(str, ", queued=%sms", queue_time);
+    }
+    if (!pcmk__str_empty(exec_time)) {
+        g_string_append_printf(str, ", exec=%sms", exec_time);
+    }
+
+    out->list_item(out, NULL, "%s", str->str);
+    g_string_free(str, TRUE);
+}
+
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
 static int
-failed_action_text(pcmk__output_t *out, va_list args) {
+failed_action_default(pcmk__output_t *out, va_list args)
+{
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+    unsigned int show_opts = va_arg(args, unsigned int);
 
-    char *s = failed_action_string(xml_op);
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *exit_reason = crm_element_value(xml_op,
+                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
 
-    out->list_item(out, NULL, "%s", s);
-    free(s);
+    int rc;
+    int status;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = ID(xml_op);
+    }
+    if (pcmk__str_empty(node_name)) {
+        node_name = "unknown node";
+    }
+
+    if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+        failed_action_technical(out, xml_op, op_key, node_name, rc, status,
+                                exit_reason, exec_time);
+    } else {
+        failed_action_friendly(out, xml_op, op_key, node_name, rc, status,
+                               exit_reason, exec_time);
+    }
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
 static int
 failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+    unsigned int show_opts G_GNUC_UNUSED = va_arg(args, unsigned int);
 
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int rc;
@@ -1196,10 +1305,10 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         (op_key == NULL)? ID(xml_op) : op_key,
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "exitstatus", services_ocf_exitcode_str(rc),
-                                        "exitreason", reason_s,
+                                        "exitreason", crm_str(reason_s),
                                         "exitcode", rc_s,
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                        "status", services_lrm_status_str(status),
+                                        "status", pcmk_exec_status_str(status),
                                         NULL);
     free(rc_s);
 
@@ -1233,12 +1342,13 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
-                  "GList *", "gboolean")
+                  "GList *", "unsigned int", "gboolean")
 static int
 failed_action_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
+    unsigned int show_opts = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *xml_op = NULL;
@@ -1254,7 +1364,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), pcmk__str_casei)) {
+        if (!pcmk__str_in_list(crm_element_value(xml_op, XML_ATTR_UNAME), only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -1263,7 +1374,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc, pcmk__str_none)) {
+        if (!pcmk__str_in_list(rsc, only_rsc, pcmk__str_star_matches)) {
             free(rsc);
             continue;
         }
@@ -1271,7 +1382,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         free(rsc);
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
-        out->message(out, "failed-action", xml_op);
+        out->message(out, "failed-action", xml_op, show_opts);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -1627,7 +1738,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
                    crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                    crm_element_value(xml_op, XML_LRM_ATTR_RC),
                    last_change_str ? last_change_str : "",
-                   services_lrm_status_str(status));
+                   pcmk_exec_status_str(status));
 
     g_free(node_str);
     free(last_change_str);
@@ -1654,7 +1765,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
-                                        "status", services_lrm_status_str(status),
+                                        "status", pcmk_exec_status_str(status),
                                         NULL);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);
@@ -1740,7 +1851,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node, pcmk__str_star_matches|pcmk__str_casei)) {
             g_list_free(attr_list);
             continue;
         }
@@ -1840,8 +1951,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
          * For other resource types, is_filtered is okay.
          */
         if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) &&
-                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), pcmk__str_none)) {
+            if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) &&
+                !pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
                 continue;
             }
         } else {
@@ -1889,20 +2000,22 @@ node_history_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -1915,13 +2028,14 @@ node_list_html(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_text(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer = va_arg(args, gboolean);
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -1943,12 +2057,13 @@ node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             free(node_name);
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer == TRUE, rc, "Node List");
 
         /* Get node mode */
         if (node->details->unclean) {
@@ -2050,19 +2165,21 @@ node_list_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_xml(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
     out->begin_list(out, NULL, NULL, "nodes");
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -2100,7 +2217,8 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -2682,7 +2800,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "default", cluster_times_text },
     { "cluster-times", "html", cluster_times_html },
     { "cluster-times", "xml", cluster_times_xml },
-    { "failed-action", "default", failed_action_text },
+    { "failed-action", "default", failed_action_default },
     { "failed-action", "xml", failed_action_xml },
     { "failed-action-list", "default", failed_action_list },
     { "group", "default",  pe__group_default},

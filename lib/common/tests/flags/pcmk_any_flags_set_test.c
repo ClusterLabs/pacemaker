@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,26 +7,32 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include <stdio.h>
-#include <stdbool.h>
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-any_set(void) {
-    g_assert_false(pcmk_any_flags_set(0x000, 0x000));
-    g_assert_false(pcmk_any_flags_set(0x000, 0x001));
-    g_assert_true(pcmk_any_flags_set(0x00f, 0x001));
-    g_assert_false(pcmk_any_flags_set(0x00f, 0x010));
-    g_assert_true(pcmk_any_flags_set(0x00f, 0x011));
-    g_assert_false(pcmk_any_flags_set(0x000, 0x000));
-    g_assert_false(pcmk_any_flags_set(0x00f, 0x000));
+any_set(void **state) {
+    assert_false(pcmk_any_flags_set(0x000, 0x000));
+    assert_false(pcmk_any_flags_set(0x000, 0x001));
+    assert_true(pcmk_any_flags_set(0x00f, 0x001));
+    assert_false(pcmk_any_flags_set(0x00f, 0x010));
+    assert_true(pcmk_any_flags_set(0x00f, 0x011));
+    assert_false(pcmk_any_flags_set(0x000, 0x000));
+    assert_false(pcmk_any_flags_set(0x00f, 0x000));
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(any_set),
+    };
 
-    g_test_add_func("/common/flags/any_set/any_set", any_set);
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

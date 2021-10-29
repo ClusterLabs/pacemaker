@@ -14,6 +14,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define PE__VARIANT_BUNDLE 1
 #include <lib/pengine/variant.h>
 
@@ -58,45 +60,6 @@ get_containers_or_children(pe_resource_t *rsc)
 {
     return (rsc->variant == pe_container)?
            get_container_list(rsc) : rsc->children;
-}
-
-static bool
-migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                            pe_working_set_t *data_set)
-{
-    int fail_count, countdown;
-
-    /* Migration threshold of 0 means never force away */
-    if (rsc->migration_threshold == 0) {
-        return FALSE;
-    }
-
-    // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        return FALSE;
-    }
-
-    /* If there are no failures, there's no need to force away */
-    fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL,
-                                  data_set);
-    if (fail_count <= 0) {
-        return FALSE;
-    }
-
-    /* How many more times recovery will be tried on this node */
-    countdown = QB_MAX(rsc->migration_threshold - fail_count, 0);
-
-    if (countdown == 0) {
-        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
-                 rsc->id, node->details->uname, fail_count,
-                 rsc->migration_threshold);
-        return TRUE;
-    }
-
-    crm_info("%s can fail %d more times on %s before being forced off",
-             rsc->id, countdown, node->details->uname);
-    return FALSE;
 }
 
 pe_node_t *
@@ -165,8 +128,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
                 if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
-                } else if (!migration_threshold_reached(replica->child, node,
-                                                        data_set)) {
+                } else if (!pcmk__threshold_reached(replica->child, node,
+                                                    data_set, NULL)) {
                     node->weight = INFINITY;
                 }
             }
@@ -262,21 +225,31 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        new_rsc_order(rsc, RSC_START, bundle_data->child, RSC_START,
-                      pe_order_implies_first_printed, data_set);
-        new_rsc_order(rsc, RSC_STOP, bundle_data->child, RSC_STOP,
-                      pe_order_implies_first_printed, data_set);
+        pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
+                                     RSC_START, pe_order_implies_first_printed,
+                                     data_set);
+        pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
+                                     RSC_STOP, pe_order_implies_first_printed,
+                                     data_set);
 
         if (bundle_data->child->children) {
-            new_rsc_order(bundle_data->child, RSC_STARTED, rsc, RSC_STARTED,
-                          pe_order_implies_then_printed, data_set);
-            new_rsc_order(bundle_data->child, RSC_STOPPED, rsc, RSC_STOPPED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
+                                         RSC_STARTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
+                                         RSC_STOPPED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
         } else {
-            new_rsc_order(bundle_data->child, RSC_START, rsc, RSC_STARTED,
-                          pe_order_implies_then_printed, data_set);
-            new_rsc_order(bundle_data->child, RSC_STOP, rsc, RSC_STOPPED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
+                                         RSC_STARTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
+                                         RSC_STOPPED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
         }
     }
 
@@ -290,28 +263,33 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         replica->container->cmds->internal_constraints(replica->container,
                                                        data_set);
 
-        order_start_start(rsc, replica->container,
-                          pe_order_runnable_left|pe_order_implies_first_printed);
+        pcmk__order_starts(rsc, replica->container,
+                           pe_order_runnable_left|pe_order_implies_first_printed,
+                           data_set);
 
         if (replica->child) {
-            order_stop_stop(rsc, replica->child,
-                            pe_order_implies_first_printed);
+            pcmk__order_stops(rsc, replica->child,
+                              pe_order_implies_first_printed, data_set);
         }
-        order_stop_stop(rsc, replica->container,
-                        pe_order_implies_first_printed);
-        new_rsc_order(replica->container, RSC_START, rsc, RSC_STARTED,
-                      pe_order_implies_then_printed, data_set);
-        new_rsc_order(replica->container, RSC_STOP, rsc, RSC_STOPPED,
-                      pe_order_implies_then_printed, data_set);
+        pcmk__order_stops(rsc, replica->container,
+                          pe_order_implies_first_printed, data_set);
+        pcmk__order_resource_actions(replica->container, RSC_START, rsc,
+                                     RSC_STARTED, pe_order_implies_then_printed,
+                                     data_set);
+        pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
+                                     RSC_STOPPED, pe_order_implies_then_printed,
+                                     data_set);
 
         if (replica->ip) {
             replica->ip->cmds->internal_constraints(replica->ip, data_set);
 
-            // Start ip then container
-            new_rsc_order(replica->ip, RSC_START, replica->container, RSC_START,
-                          pe_order_runnable_left|pe_order_preserve, data_set);
-            new_rsc_order(replica->container, RSC_STOP, replica->ip, RSC_STOP,
-                          pe_order_implies_first|pe_order_preserve, data_set);
+            // Start IP then container
+            pcmk__order_starts(replica->ip, replica->container,
+                               pe_order_runnable_left|pe_order_preserve,
+                               data_set);
+            pcmk__order_stops(replica->container, replica->ip,
+                              pe_order_implies_first|pe_order_preserve,
+                              data_set);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,
@@ -342,26 +320,29 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
-            new_rsc_order(bundle_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
+                                         RSC_DEMOTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
 
             /* global demote before child demote */
-            new_rsc_order(rsc, RSC_DEMOTE, bundle_data->child, RSC_DEMOTE,
-                          pe_order_implies_first_printed, data_set);
+            pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
+                                         RSC_DEMOTE,
+                                         pe_order_implies_first_printed,
+                                         data_set);
 
             /* child promoted before global promoted */
-            new_rsc_order(bundle_data->child, RSC_PROMOTED, rsc, RSC_PROMOTED,
-                          pe_order_implies_then_printed, data_set);
+            pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
+                                         RSC_PROMOTED,
+                                         pe_order_implies_then_printed,
+                                         data_set);
 
             /* global promote before child promote */
-            new_rsc_order(rsc, RSC_PROMOTE, bundle_data->child, RSC_PROMOTE,
-                          pe_order_implies_first_printed, data_set);
+            pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
+                                         RSC_PROMOTE,
+                                         pe_order_implies_first_printed,
+                                         data_set);
         }
-
-    } else {
-//    int type = pe_order_optional | pe_order_implies_then | pe_order_restart;
-//        custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-//                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL, pe_order_optional, data_set);
     }
 }
 
@@ -428,7 +409,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 }
 
 void
-pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
+pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                                pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
@@ -481,53 +462,58 @@ int copies_per_node(pe_resource_t * rsc)
 }
 
 void
-pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                                pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
-    GList *allocated_rhs = NULL;
+    GList *allocated_primaries = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
-    CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
-    CRM_ASSERT(rsc_lh->variant == pe_native);
+    CRM_CHECK(dependent != NULL,
+              pe_err("dependent was NULL for %s", constraint->id); return);
+    CRM_CHECK(primary != NULL,
+              pe_err("primary was NULL for %s", constraint->id); return);
+    CRM_ASSERT(dependent->variant == pe_native);
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
+    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+        pe_rsc_trace(primary, "%s is still provisional", primary->id);
         return;
 
-    } else if(constraint->rsc_lh->variant > pe_group) {
-        pe_resource_t *rh_child = compatible_replica(rsc_lh, rsc,
-                                                  RSC_ROLE_UNKNOWN, FALSE,
-                                                  data_set);
+    } else if(constraint->dependent->variant > pe_group) {
+        pe_resource_t *primary_replica = compatible_replica(dependent, primary,
+                                                            RSC_ROLE_UNKNOWN,
+                                                            FALSE, data_set);
 
-        if (rh_child) {
-            pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
-            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint,
-                                            data_set);
+        if (primary_replica) {
+            pe_rsc_debug(primary, "Pairing %s with %s",
+                         dependent->id, primary_replica->id);
+            dependent->cmds->rsc_colocation_lh(dependent, primary_replica,
+                                               constraint, data_set);
 
         } else if (constraint->score >= INFINITY) {
-            crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);
-            assign_node(rsc_lh, NULL, TRUE);
+            crm_notice("Cannot pair %s with instance of %s",
+                       dependent->id, primary->id);
+            assign_node(dependent, NULL, TRUE);
 
         } else {
-            pe_rsc_debug(rsc, "Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);
+            pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
+                         dependent->id, primary->id);
         }
 
         return;
     }
 
-    get_bundle_variant_data(bundle_data, rsc);
-    pe_rsc_trace(rsc, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, rsc_lh->id, rsc->id, constraint->score);
+    get_bundle_variant_data(bundle_data, primary);
+    pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
+                 constraint->id, dependent->id, primary->id, constraint->score);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
         if (constraint->score < INFINITY) {
-            replica->container->cmds->rsc_colocation_rh(rsc_lh,
+            replica->container->cmds->rsc_colocation_rh(dependent,
                                                         replica->container,
                                                         constraint, data_set);
 
@@ -539,24 +525,26 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
+            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
+            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
-            pe_rsc_trace(rsc, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
-            allocated_rhs = g_list_prepend(allocated_rhs, chosen);
+            pe_rsc_trace(primary, "Allowing %s: %s %d",
+                         constraint->id, chosen->details->uname,
+                         chosen->weight);
+            allocated_primaries = g_list_prepend(allocated_primaries, chosen);
         }
     }
 
     if (constraint->score >= INFINITY) {
-        node_list_exclude(rsc_lh->allowed_nodes, allocated_rhs, FALSE);
+        node_list_exclude(dependent->allowed_nodes, allocated_primaries, FALSE);
     }
-    g_list_free(allocated_rhs);
+    g_list_free(allocated_primaries);
 }
 
 enum pe_action_flags
@@ -878,7 +866,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     pe__bundle_variant_data_t *bundle_data = NULL;
     get_bundle_variant_data(bundle_data, rsc);
 
-    native_rsc_location(rsc, constraint);
+    pcmk__apply_location(constraint, rsc);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1029,13 +1017,13 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                     if ((other != replica) && (other != NULL)
                         && (other->container != NULL)) {
 
-                        custom_action_order(replica->container,
-                                            pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                            NULL, other->container,
-                                            pcmk__op_key(other->container->id, RSC_START, 0),
-                                            NULL,
-                                            pe_order_optional|pe_order_same_node,
-                                            data_set);
+                        pcmk__new_ordering(replica->container,
+                                           pcmk__op_key(replica->container->id, RSC_STATUS, 0),
+                                           NULL, other->container,
+                                           pcmk__op_key(other->container->id, RSC_START, 0),
+                                           NULL,
+                                           pe_order_optional|pe_order_same_node,
+                                           data_set);
                     }
                 }
             }
@@ -1059,10 +1047,10 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 any_created = TRUE;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
-                custom_action_order(replica->container,
-                                    pcmk__op_key(replica->container->id, RSC_START, 0),
-                                    NULL, replica->remote, NULL, probe,
-                                    pe_order_probe, data_set);
+                pcmk__new_ordering(replica->container,
+                                   pcmk__op_key(replica->container->id, RSC_START, 0),
+                                   NULL, replica->remote, NULL, probe,
+                                   pe_order_probe, data_set);
             }
         }
     }

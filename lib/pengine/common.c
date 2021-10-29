@@ -47,7 +47,7 @@ static pcmk__cluster_option_t pe_opts[] = {
      * long description
      */
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
+        "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum,
         "What to do when the cluster does not have quorum",
         NULL
@@ -113,7 +113,7 @@ static pcmk__cluster_option_t pe_opts[] = {
             "potentially leading to data loss and/or service unavailability."
     },
     {
-        "stonith-action", NULL, "enum", "reboot, off, poweroff",
+        "stonith-action", NULL, "select", "reboot, off, poweroff",
         "reboot", check_stonith_action,
         "Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")",
@@ -245,7 +245,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Node health */
     {
-        "node-health-strategy", NULL, "enum",
+        "node-health-strategy", NULL, "select",
         "none, migrate-on-red, only-green, progressive, custom",
         "none", check_health,
         "How cluster should react to node health attributes",
@@ -280,7 +280,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /*Placement Strategy*/
     {
-        "placement-strategy", NULL, "enum",
+        "placement-strategy", NULL, "select",
         "default, utilization, minimal, balanced",
         "default", check_placement_strategy,
         "How the cluster should allocate resources to nodes",
@@ -291,7 +291,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 void
 pe_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-schedulerd", "1.0",
+    pcmk__print_option_metadata("pacemaker-schedulerd",
                                 "Pacemaker scheduler options",
                                 "Cluster options used by Pacemaker's scheduler"
                                     " (formerly called pengine)",

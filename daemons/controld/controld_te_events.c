@@ -39,7 +39,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     for (; gIter != NULL; gIter = gIter->next) {
         synapse_t *synapse = (synapse_t *) gIter->data;
 
-        if (synapse->confirmed || synapse->failed) {
+        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
             continue;
         }
@@ -48,7 +48,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
-            if (action->type == action_type_pseudo || action->confirmed) {
+            if (action->type == action_type_pseudo || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             } else if (action->type == action_type_crm) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -68,13 +68,13 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
             }
 
             if (pcmk__str_eq(target_uuid, down_node, pcmk__str_casei) || pcmk__str_eq(router_uuid, down_node, pcmk__str_casei)) {
-                action->failed = TRUE;
-                synapse->failed = TRUE;
+                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_synapse_flags(synapse, pcmk__synapse_failed);
                 last_action = action->xml;
                 stop_te_timer(action->timer);
-                update_graph(graph, action);
+                pcmk__update_graph(graph, action);
 
-                if (synapse->executed) {
+                if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",
                                action->id, crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY), down_node);
                 } else {
@@ -304,7 +304,7 @@ match_down_event(const char *target)
              gIter2 = gIter2->next) {
 
             match = (crm_action_t*)gIter2->data;
-            if (match->executed) {
+            if (pcmk_is_set(match->flags, pcmk__graph_action_confirmed)) {
                 xpath_ret = xpath_search(match->xml, xpath);
                 if (numXpathResults(xpath_ret) < 1) {
                     match = NULL;
@@ -357,7 +357,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     }
 
     crm_element_value_int(event, XML_LRM_ATTR_OPSTATUS, &status);
-    if (status == PCMK_LRM_OP_PENDING) {
+    if (status == PCMK_EXEC_PENDING) {
         return;
     }
 
@@ -398,7 +398,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              * scheduled in.
              */
 
-            if (status == PCMK_LRM_OP_CANCELLED) {
+            if (status == PCMK_EXEC_CANCELLED) {
                 confirm_cancel_action(id, get_node_id(event));
                 goto bail;
             }
@@ -424,7 +424,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             desc = "unknown";
             abort_transition(INFINITY, tg_restart, "Unknown event", event);
 
-        } else if (action->confirmed == TRUE) {
+        } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been
              * confirmed. This can happen e.g. when processing both an
              * "xxx_last_0" or "xxx_last_failure_0" record as well as the main
@@ -443,13 +443,13 @@ process_graph_event(xmlNode *event, const char *event_node)
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {
-                action->failed = TRUE;
+                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             }
 
             stop_te_timer(action->timer);
             te_action_confirmed(action, transition_graph);
 
-            if (action->failed) {
+            if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
                 abort_transition(action->synapse->priority + 1, tg_restart,
                                  "Event failed", event);
             }
@@ -464,11 +464,11 @@ process_graph_event(xmlNode *event, const char *event_node)
         uname = "unknown node";
     }
 
-    if (status == PCMK_LRM_OP_INVALID) {
+    if (status == PCMK_EXEC_INVALID) {
         // We couldn't attempt the action
         crm_info("Transition %d action %d (%s on %s): %s",
                  transition_num, action_num, id, uname,
-                 services_lrm_status_str(status));
+                 pcmk_exec_status_str(status));
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {

@@ -1288,6 +1288,7 @@ pcmk__search_known_node_cache(unsigned int id, const char *uname,
 
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/cluster/compat.h>
 
@@ -1303,4 +1304,5 @@ crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

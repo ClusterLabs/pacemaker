@@ -24,6 +24,7 @@
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -121,8 +122,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     xmlNode *xop = NULL;
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
-    op->rc = outcome;
-    op->op_status = 0;
+    lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
     op->params = NULL;          /* TODO: Fill me in */
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;
@@ -389,10 +389,7 @@ set_ticket_state_attr(const char *ticket_id, const char *attr_name,
 }
 
 void
-modify_configuration(pe_working_set_t * data_set, cib_t *cib,
-                     const char *quorum, const char *watchdog, GList *node_up, GList *node_down, GList *node_fail,
-                     GList *op_inject, GList *ticket_grant, GList *ticket_revoke,
-                     GList *ticket_standby, GList *ticket_activate)
+modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t *injections)
 {
     int rc = pcmk_ok;
     GList *gIter = NULL;
@@ -405,27 +402,27 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
     out = data_set->priv;
 
-    out->message(out, "inject-modify-config", quorum, watchdog);
+    out->message(out, "inject-modify-config", injections->quorum, injections->watchdog);
 
-    if (quorum) {
+    if (injections->quorum) {
         xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
 
         /* crm_xml_add(top, XML_ATTR_DC_UUID, dc_uuid);      */
-        crm_xml_add(top, XML_ATTR_HAVE_QUORUM, quorum);
+        crm_xml_add(top, XML_ATTR_HAVE_QUORUM, injections->quorum);
 
         rc = cib->cmds->modify(cib, NULL, top, cib_sync_call | cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    if (watchdog) {
+    if (injections->watchdog) {
         rc = update_attr_delegate(cib, cib_sync_call | cib_scope_local,
                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                             XML_ATTR_HAVE_WATCHDOG, watchdog, FALSE, NULL, NULL);
+                             XML_ATTR_HAVE_WATCHDOG, injections->watchdog, FALSE, NULL, NULL);
 
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = node_up; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_up; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
         out->message(out, "inject-modify-node", "Online", node);
@@ -439,7 +436,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free_xml(cib_node);
     }
 
-    for (gIter = node_down; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_down; gIter != NULL; gIter = gIter->next) {
         char xpath[STATUS_PATH_MAX];
         char *node = (char *)gIter->data;
 
@@ -464,7 +461,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
     }
 
-    for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->node_fail; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
         out->message(out, "inject-modify-node", "Failing", node);
@@ -479,7 +476,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free_xml(cib_node);
     }
 
-    for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_grant; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
@@ -490,7 +487,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_revoke; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
@@ -501,7 +498,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_standby; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_standby; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
@@ -512,7 +509,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = ticket_activate; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->ticket_activate; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
@@ -523,11 +520,11 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
     }
 
-    for (gIter = op_inject; gIter != NULL; gIter = gIter->next) {
+    for (gIter = injections->op_inject; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
 
         int rc = 0;
-        int outcome = 0;
+        int outcome = PCMK_OCF_OK;
         guint interval_ms = 0;
 
         char *key = NULL;
@@ -599,10 +596,10 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
 
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -612,7 +609,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     int rc = 0;
     GList *gIter = NULL;
     lrmd_event_data_t *op = NULL;
-    int target_outcome = 0;
+    int target_outcome = PCMK_OCF_OK;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -682,7 +679,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    op = convert_graph_action(cib_resource, action, 0, target_outcome);
+    op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
+                                       target_outcome, "User-injected result");
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 
@@ -719,7 +717,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
                          spec);
                 continue;
             }
-            action->failed = TRUE;
+            crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             graph->abort_priority = INFINITY;
             out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
             update_failcounts(cib_node, match_name, op->op_type,
@@ -738,8 +736,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
   done:
     free(node); free(uuid);
     free_xml(cib_node);
-    action->confirmed = TRUE;
-    update_graph(graph, action);
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -750,9 +748,9 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -788,17 +786,17 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
         free_xml(cib_node);
     }
 
-    action->confirmed = TRUE;
-    update_graph(graph, action);
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__update_graph(graph, action);
     free(target);
     return TRUE;
 }
 
-int
+enum transition_status
 run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
-    enum transition_status graph_rc = -1;
+    enum transition_status graph_rc;
 
     crm_graph_functions_t exec_fns = {
         exec_pseudo_action,
@@ -816,22 +814,23 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
     }
 
-    set_graph_functions(&exec_fns);
-    transition = unpack_graph(data_set->graph, crm_system_name);
-    print_graph(LOG_DEBUG, transition);
+    pcmk__set_graph_functions(&exec_fns);
+    transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
+    pcmk__log_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;
     do {
-        graph_rc = run_graph(transition);
+        graph_rc = pcmk__execute_graph(transition);
 
     } while (graph_rc == transition_active);
     fake_resource_list = NULL;
 
     if (graph_rc != transition_complete) {
-        out->err(out, "Transition failed: %s", transition_status(graph_rc));
-        print_graph(LOG_ERR, transition);
+        out->err(out, "Transition failed: %s",
+                 pcmk__graph_status2text(graph_rc));
+        pcmk__log_graph(LOG_ERR, transition);
     }
-    destroy_graph(transition);
+    pcmk__free_graph(transition);
     if (graph_rc != transition_complete) {
         out->err(out, "An invalid transition was produced");
     }
@@ -847,8 +846,5 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->end_list(out);
     }
 
-    if (graph_rc != transition_complete) {
-        return graph_rc;
-    }
-    return 0;
+    return graph_rc;
 }

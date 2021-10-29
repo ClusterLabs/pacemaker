@@ -75,11 +75,6 @@ function run_as_root() {
     if [ $EUID -eq 0 ]; then
         $CMD
 
-    elif [ -z $TRAVIS ]; then
-        # sudo doesn't work in buildbot, su doesn't work in travis
-        echo "Enter the root password..."
-        su root -c "$CMD"
-
     else
         echo "Enter the root password if prompted..."
         sudo -- $CMD

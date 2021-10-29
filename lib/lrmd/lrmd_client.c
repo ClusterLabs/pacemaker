@@ -28,12 +28,14 @@
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/msg_xml.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
@@ -246,9 +248,8 @@ lrmd_free_event(lrmd_event_data_t *event)
     free((void *) event->rsc_id);
     free((void *) event->op_type);
     free((void *) event->user_data);
-    free((void *) event->output);
-    free((void *) event->exit_reason);
     free((void *) event->remote_nodename);
+    lrmd__reset_result(event);
     if (event->params != NULL) {
         g_hash_table_destroy(event->params);
     }
@@ -303,9 +304,11 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 
         event.op_type = crm_element_value(msg, F_LRMD_RSC_ACTION);
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
+        event.type = lrmd_event_exec_complete;
+
+        // No need to duplicate the memory, so don't use setter functions
         event.output = crm_element_value(msg, F_LRMD_RSC_OUTPUT);
         event.exit_reason = crm_element_value(msg, F_LRMD_RSC_EXIT_REASON);
-        event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
     } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
@@ -875,7 +878,6 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     if (rc < 0) {
         crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
-        rc = -ECOMM;
         goto done;
 
     } else if(op_reply == NULL) {
@@ -934,7 +936,10 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
 
     value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
-    crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    if ((value) &&
+        (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
+       crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
@@ -1044,8 +1049,11 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 static void
 copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
 {
+    CRM_ASSERT((dest != NULL) && (source != NULL) && (source->data != NULL));
+
     dest->data = gnutls_malloc(source->size);
     CRM_ASSERT(dest->data);
+
     memcpy(dest->data, source->data, source->size);
     dest->size = source->size;
 }
@@ -1955,15 +1963,17 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     for (const lrmd_key_value_t *param = params; param; param = param->next) {
         g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
     }
-    action = resources_action_create(type, standard, provider, type,
-                                     CRMD_ACTION_METADATA, 0,
-                                     CRMD_METADATA_CALL_TIMEOUT, params_table,
-                                     0);
+    action = services__create_resource_action(type, standard, provider, type,
+                                              CRMD_ACTION_METADATA, 0,
+                                              CRMD_METADATA_CALL_TIMEOUT,
+                                              params_table, 0);
     lrmd_key_value_freeall(params);
 
     if (action == NULL) {
-        crm_err("Unable to retrieve meta-data for %s:%s:%s",
-                standard, provider, type);
+        return -ENOMEM;
+    }
+    if (action->rc != PCMK_OCF_UNKNOWN) {
+        services_action_free(action);
         return -EINVAL;
     }
 
@@ -2190,78 +2200,142 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create an executor API object
+ *
+ * \param[out] api       Will be set to newly created API object (it is the
+ *                       caller's responsibility to free this value with
+ *                       lrmd_api_delete() if this function succeeds)
+ * \param[in]  nodename  If the object will be used for a remote connection,
+ *                       the node name to use in cluster for remote executor
+ * \param[in]  server    If the object will be used for a remote connection,
+ *                       the resolvable host name to connect to
+ * \param[in]  port      If the object will be used for a remote connection,
+ *                       port number on \p server to connect to
+ *
+ * \return Standard Pacemaker return code
+ * \note If the caller leaves one of \p nodename or \p server NULL, the other's
+ *       value will be used for both. If the caller leaves both NULL, an API
+ *       object will be created for a local executor connection.
+ */
+int
+lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
+{
+    lrmd_private_t *pvt = NULL;
+
+    if (api == NULL) {
+        return EINVAL;
+    }
+    *api = NULL;
+
+    // Allocate all memory needed
+
+    *api = calloc(1, sizeof(lrmd_t));
+    if (*api == NULL) {
+        return ENOMEM;
+    }
+
+    pvt = calloc(1, sizeof(lrmd_private_t));
+    if (pvt == NULL) {
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+    (*api)->lrmd_private = pvt;
+
+    // @TODO Do we need to do this for local connections?
+    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
+
+    (*api)->cmds = calloc(1, sizeof(lrmd_api_operations_t));
+
+    if ((pvt->remote == NULL) || ((*api)->cmds == NULL)) {
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+
+    // Set methods
+    (*api)->cmds->connect = lrmd_api_connect;
+    (*api)->cmds->connect_async = lrmd_api_connect_async;
+    (*api)->cmds->is_connected = lrmd_api_is_connected;
+    (*api)->cmds->poke_connection = lrmd_api_poke_connection;
+    (*api)->cmds->disconnect = lrmd_api_disconnect;
+    (*api)->cmds->register_rsc = lrmd_api_register_rsc;
+    (*api)->cmds->unregister_rsc = lrmd_api_unregister_rsc;
+    (*api)->cmds->get_rsc_info = lrmd_api_get_rsc_info;
+    (*api)->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
+    (*api)->cmds->set_callback = lrmd_api_set_callback;
+    (*api)->cmds->get_metadata = lrmd_api_get_metadata;
+    (*api)->cmds->exec = lrmd_api_exec;
+    (*api)->cmds->cancel = lrmd_api_cancel;
+    (*api)->cmds->list_agents = lrmd_api_list_agents;
+    (*api)->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    (*api)->cmds->list_standards = lrmd_api_list_standards;
+    (*api)->cmds->exec_alert = lrmd_api_exec_alert;
+    (*api)->cmds->get_metadata_params = lrmd_api_get_metadata_params;
+
+    if ((nodename == NULL) && (server == NULL)) {
+        pvt->type = pcmk__client_ipc;
+    } else {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (nodename == NULL) {
+            nodename = server;
+        } else if (server == NULL) {
+            server = nodename;
+        }
+        pvt->type = pcmk__client_tls;
+        pvt->remote_nodename = strdup(nodename);
+        pvt->server = strdup(server);
+        if ((pvt->remote_nodename == NULL) || (pvt->server == NULL)) {
+            lrmd_api_delete(*api);
+            *api = NULL;
+            return ENOMEM;
+        }
+        pvt->port = port;
+        if (pvt->port == 0) {
+            pvt->port = crm_default_remote_port();
+        }
+#else
+        crm_err("Cannot communicate with Pacemaker Remote "
+                "because GnuTLS is not enabled for this build");
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return EOPNOTSUPP;
+#endif
+    }
+    return pcmk_rc_ok;
+}
+
 lrmd_t *
 lrmd_api_new(void)
 {
-    lrmd_t *new_lrmd = NULL;
-    lrmd_private_t *pvt = NULL;
+    lrmd_t *api = NULL;
 
-    new_lrmd = calloc(1, sizeof(lrmd_t));
-    pvt = calloc(1, sizeof(lrmd_private_t));
-    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
-    new_lrmd->cmds = calloc(1, sizeof(lrmd_api_operations_t));
-
-    pvt->type = pcmk__client_ipc;
-    new_lrmd->lrmd_private = pvt;
-
-    new_lrmd->cmds->connect = lrmd_api_connect;
-    new_lrmd->cmds->connect_async = lrmd_api_connect_async;
-    new_lrmd->cmds->is_connected = lrmd_api_is_connected;
-    new_lrmd->cmds->poke_connection = lrmd_api_poke_connection;
-    new_lrmd->cmds->disconnect = lrmd_api_disconnect;
-    new_lrmd->cmds->register_rsc = lrmd_api_register_rsc;
-    new_lrmd->cmds->unregister_rsc = lrmd_api_unregister_rsc;
-    new_lrmd->cmds->get_rsc_info = lrmd_api_get_rsc_info;
-    new_lrmd->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
-    new_lrmd->cmds->set_callback = lrmd_api_set_callback;
-    new_lrmd->cmds->get_metadata = lrmd_api_get_metadata;
-    new_lrmd->cmds->exec = lrmd_api_exec;
-    new_lrmd->cmds->cancel = lrmd_api_cancel;
-    new_lrmd->cmds->list_agents = lrmd_api_list_agents;
-    new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
-    new_lrmd->cmds->list_standards = lrmd_api_list_standards;
-    new_lrmd->cmds->exec_alert = lrmd_api_exec_alert;
-    new_lrmd->cmds->get_metadata_params = lrmd_api_get_metadata_params;
-
-    return new_lrmd;
+    CRM_ASSERT(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
+    return api;
 }
 
 lrmd_t *
 lrmd_remote_api_new(const char *nodename, const char *server, int port)
 {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    lrmd_t *new_lrmd = lrmd_api_new();
-    lrmd_private_t *native = new_lrmd->lrmd_private;
+    lrmd_t *api = NULL;
 
-    if (!nodename && !server) {
-        lrmd_api_delete(new_lrmd);
-        return NULL;
-    }
-
-    native->type = pcmk__client_tls;
-    native->remote_nodename = nodename ? strdup(nodename) : strdup(server);
-    native->server = server ? strdup(server) : strdup(nodename);
-    native->port = port;
-    if (native->port == 0) {
-        native->port = crm_default_remote_port();
-    }
-
-    return new_lrmd;
-#else
-    crm_err("Cannot communicate with Pacemaker Remote because GnuTLS is not enabled for this build");
-    return NULL;
-#endif
+    CRM_ASSERT(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
+    return api;
 }
 
 void
 lrmd_api_delete(lrmd_t * lrmd)
 {
-    if (!lrmd) {
+    if (lrmd == NULL) {
         return;
     }
-    lrmd->cmds->disconnect(lrmd);       /* no-op if already disconnected */
-    free(lrmd->cmds);
-    if (lrmd->lrmd_private) {
+    if (lrmd->cmds != NULL) { // Never NULL, but make static analysis happy
+        lrmd->cmds->disconnect(lrmd); // No-op if already disconnected
+        free(lrmd->cmds);
+    }
+    if (lrmd->lrmd_private != NULL) {
         lrmd_private_t *native = lrmd->lrmd_private;
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -2271,8 +2345,53 @@ lrmd_api_delete(lrmd_t * lrmd)
         free(native->remote);
         free(native->token);
         free(native->peer_version);
+        free(lrmd->lrmd_private);
+    }
+    free(lrmd);
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an executor event
+ *
+ * \param[in,out] event        Executor event to set
+ * \param[in]     rc           OCF exit status of event
+ * \param[in]     op_status    Executor status of event
+ * \param[in]     exit_reason  Human-friendly description of event
+ */
+void
+lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
+                 const char *exit_reason)
+{
+    if (event == NULL) {
+        return;
     }
 
-    free(lrmd->lrmd_private);
-    free(lrmd);
+    event->rc = rc;
+    event->op_status = op_status;
+
+    if (!pcmk__str_eq(event->exit_reason, exit_reason, pcmk__str_none)) {
+        free((void *) event->exit_reason);
+        event->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Clear an executor event's exit reason, output, and error output
+ *
+ * \param[in] event  Executor event to reset
+ */
+void
+lrmd__reset_result(lrmd_event_data_t *event)
+{
+    if (event == NULL) {
+        return;
+    }
+
+    free((void *) event->exit_reason);
+    event->exit_reason = NULL;
+
+    free((void *) event->output);
+    event->output = NULL;
 }

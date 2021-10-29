@@ -1,7 +1,7 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
-# Later changes copyright 2010-2018 the Pacemaker project contributors
+# Later changes copyright 2010-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -825,7 +825,7 @@ get_cluster_type() {
     # Now we're guessing...
 
     # TODO: Technically these could be anywhere :-/
-    elif [ -f /etc/corosync/corosync.conf ]; then
+    elif [ -f "@PCMK__COROSYNC_CONF@" ]; then
 	stack="corosync"
 
     else
@@ -845,7 +845,7 @@ find_cluster_cf() {
 	    best_file=""
 
 	    # TODO: Technically these could be anywhere :-/
-	    for cf in /etc/corosync/corosync.conf; do
+	    for cf in "@PCMK__COROSYNC_CONF@"; do
 		if [ -f $cf ]; then
 		    size=`wc -l $cf | awk '{print $1}'`
 		    if [ $size -gt $best_size ]; then

@@ -1335,6 +1335,7 @@ pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/pengine/rules_compat.h>
 
@@ -1412,4 +1413,5 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                          overwrite, &rule_data, NULL, unpack_attr_set);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

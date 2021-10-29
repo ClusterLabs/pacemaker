@@ -195,6 +195,7 @@ pcmk_stonith_param(const char *param)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/agents_compat.h>
 
@@ -204,4 +205,5 @@ crm_provider_required(const char *standard)
     return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

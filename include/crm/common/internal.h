@@ -23,6 +23,8 @@
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/iso8601_internal.h>
+#include <crm/common/results_internal.h>
 #include <crm/common/strings_internal.h>
 
 /* This says whether the current application is a Pacemaker daemon or not,
@@ -75,6 +77,7 @@ int pcmk__chown_series_sequence(const char *directory, const char *series,
                                 uid_t uid, gid_t gid);
 
 int pcmk__build_path(const char *path_c, mode_t mode);
+char *pcmk__full_path(const char *filename, const char *dirname);
 bool pcmk__daemon_can_write(const char *dir, const char *file);
 void pcmk__sync_directory(const char *name);
 
@@ -284,14 +287,6 @@ pcmk__realloc(void *ptr, size_t size)
     return new_ptr;
 }
 
-
-/* Error domains for use with g_set_error (from results.c) */
-
-GQuark pcmk__rc_error_quark(void);
-GQuark pcmk__exitc_error_quark(void);
-
-#define PCMK__RC_ERROR       pcmk__rc_error_quark()
-#define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
 
 static inline char *
 pcmk__getpid_s(void)

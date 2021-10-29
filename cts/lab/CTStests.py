@@ -2350,7 +2350,7 @@ class SimulStopLite(CTSTest):
         if did_fail:
             return self.failure("Active nodes exist: " + repr(up_nodes))
 
-        self.logger.log("Warn: All nodes stopped but CTS didnt detect: "
+        self.logger.log("Warn: All nodes stopped but CTS didn't detect: "
                     + repr(watch.unmatched))
 
         return self.failure("Missing log message: "+repr(watch.unmatched))

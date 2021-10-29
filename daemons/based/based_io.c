@@ -370,18 +370,23 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 static void
 cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    if (signo) {
-        crm_notice("Disk write process terminated with signal %d (pid=%d, core=%d)", signo, pid,
-                   core);
+    const char *errmsg = "Could not write CIB to disk";
 
-    } else  {
-        do_crm_log(exitcode == 0 ? LOG_TRACE : LOG_ERR, "Disk write process exited (pid=%d, rc=%d)",
-                   pid, exitcode);
+    if ((exitcode != 0) && cib_writes_enabled) {
+        cib_writes_enabled = FALSE;
+        errmsg = "Disabling CIB disk writes after failure";
     }
 
-    if (exitcode != 0 && cib_writes_enabled) {
-        crm_err("Disabling disk writes after write failure");
-        cib_writes_enabled = FALSE;
+    if ((signo == 0) && (exitcode == 0)) {
+        crm_trace("Disk write [%d] succeeded", (int) pid);
+
+    } else if (signo == 0) {
+        crm_err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+
+    } else {
+        crm_err("%s: process %d terminated with signal %d (%s)%s",
+                errmsg, (int) pid, signo, strsignal(signo),
+                (core? " and dumped core" : ""));
     }
 
     mainloop_trigger_complete(cib_writer);

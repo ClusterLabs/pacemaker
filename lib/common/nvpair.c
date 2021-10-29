@@ -20,7 +20,6 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
-#include <crm/common/iso8601_internal.h>
 #include "crmcommon_private.h"
 
 /*
@@ -353,7 +352,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
         }
     }
 
-    if (dirty && (pcmk__check_acl(node, name, xpf_acl_create) == FALSE)) {
+    if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
         crm_trace("Cannot add %s=%s to %s", name, value, node->name);
         return NULL;
     }
@@ -392,7 +391,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
     /* Could be re-setting the same value */
     CRM_CHECK(old_value != value, return value);
 
-    if (pcmk__check_acl(node, name, xpf_acl_write) == FALSE) {
+    if (pcmk__check_acl(node, name, pcmk__xf_acl_write) == FALSE) {
         /* Create a fake object linked to doc->_private instead? */
         crm_trace("Cannot replace %s=%s to %s", name, value, node->name);
         return NULL;
@@ -955,6 +954,7 @@ xml2list(xmlNode *parent)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -977,4 +977,5 @@ pcmk_format_named_time(const char *name, time_t epoch_time)
     return pcmk__format_named_time(name, epoch_time);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

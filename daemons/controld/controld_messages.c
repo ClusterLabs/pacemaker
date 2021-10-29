@@ -326,12 +326,12 @@ gboolean
 relay_message(xmlNode * msg, gboolean originated_locally)
 {
     int dest = 1;
-    int is_for_dc = 0;
-    int is_for_dcib = 0;
-    int is_for_te = 0;
-    int is_for_crm = 0;
-    int is_for_cib = 0;
-    int is_local = 0;
+    bool is_for_dc = false;
+    bool is_for_dcib = false;
+    bool is_for_te = false;
+    bool is_for_crm = false;
+    bool is_for_cib = false;
+    bool is_local = false;
     const char *host_to = crm_element_value(msg, F_CRM_HOST_TO);
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
@@ -370,10 +370,10 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     is_for_cib = (strcasecmp(CRM_SYSTEM_CIB, sys_to) == 0);
     is_for_crm = (strcasecmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 
-    is_local = 0;
+    is_local = false;
     if (pcmk__str_empty(host_to)) {
         if (is_for_dc || is_for_te) {
-            is_local = 0;
+            is_local = false;
 
         } else if (is_for_crm) {
             if (pcmk__strcase_any_of(task, CRM_OP_NODE_INFO,
@@ -383,24 +383,24 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                  * client may not know the local node name. Always handle these
                  * requests locally.
                  */
-                is_local = 1;
+                is_local = true;
             } else {
                 is_local = !originated_locally;
             }
 
         } else {
-            is_local = 1;
+            is_local = true;
         }
 
     } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
-        is_local = 1;
+        is_local = true;
     } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
         if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
             // Local delete of an offline node's resource history
-            is_local = 1;
+            is_local = true;
         }
     }
 
@@ -1268,7 +1268,7 @@ send_remote_state_message(const char *node_name, gboolean node_up)
         xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, fsa_our_dc,
                                       CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-        crm_info("Notifying DC %s of pacemaker_remote node %s %s",
+        crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
                  fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
         crm_xml_add(msg, XML_ATTR_ID, node_name);
         crm_xml_add_boolean(msg, XML_NODE_IN_CLUSTER, node_up);
@@ -1276,7 +1276,7 @@ send_remote_state_message(const char *node_name, gboolean node_up)
                              TRUE);
         free_xml(msg);
     } else {
-        crm_debug("No DC to notify of pacemaker_remote node %s %s",
+        crm_debug("No DC to notify of Pacemaker Remote node %s %s",
                   node_name, (node_up? "coming up" : "going down"));
     }
 }

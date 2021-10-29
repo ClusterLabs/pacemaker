@@ -131,8 +131,21 @@ crm_log_deinit(void)
 
 #define FMT_MAX 256
 
+/*!
+ * \internal
+ * \brief Set the log format string based on the passed-in method
+ *
+ * \param[in] method        The detail level of the log output
+ * \param[in] daemon        The daemon ID included in error messages
+ * \param[in] use_pid       Cached result of getpid() call, for efficiency
+ * \param[in] use_nodename  Cached result of uname() call, for efficiency
+ *
+ */
+
+/* XXX __attribute__((nonnull)) for use_nodename parameter */
 static void
-set_format_string(int method, const char *daemon)
+set_format_string(int method, const char *daemon, pid_t use_pid,
+                  const char *use_nodename)
 {
     if (method == QB_LOG_SYSLOG) {
         // The system log gets a simplified, user-friendly format
@@ -146,17 +159,10 @@ set_format_string(int method, const char *daemon)
         char fmt[FMT_MAX];
 
         if (method > QB_LOG_STDERR) {
-            struct utsname res;
-            const char *nodename = "localhost";
-
-            if (uname(&res) == 0) {
-                nodename = res.nodename;
-            }
-
             // If logging to file, prefix with timestamp, node name, daemon ID
             offset += snprintf(fmt + offset, FMT_MAX - offset,
                                TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
-                               nodename, daemon, (unsigned long) getpid());
+                                use_nodename, daemon, (unsigned long) use_pid);
         }
 
         // Add function name (in parentheses)
@@ -289,8 +295,8 @@ static void
 setenv_logfile(const char *filename)
 {
     // Some resource agents will log only if environment variable is set
-    if (pcmk__env_option("logfile") == NULL) {
-        pcmk__set_env_option("logfile", filename);
+    if (pcmk__env_option(PCMK__ENV_LOGFILE) == NULL) {
+        pcmk__set_env_option(PCMK__ENV_LOGFILE, filename);
     }
 }
 
@@ -710,6 +716,22 @@ crm_priority2int(const char *name)
 }
 
 
+/*!
+ * \internal
+ * \brief Set the identifier for the current process
+ *
+ * If the identifier crm_system_name is not already set, then it is set as follows:
+ * - it is passed to the function via the "entity" parameter, or
+ * - it is derived from the executable name
+ * 
+ * The identifier can be used in logs, IPC, and more.
+ * 
+ * This method also sets the PCMK_service environment variable.
+ *
+ * \param[in] entity  If not NULL, will be assigned to the identifier
+ * \param[in] argc    The number of command line parameters
+ * \param[in] argv    The command line parameter values
+ */
 static void
 set_identity(const char *entity, int argc, char **argv)
 {
@@ -744,9 +766,11 @@ crm_log_preinit(const char *entity, int argc, char **argv)
 {
     /* Configure libqb logging with nothing turned on */
 
+    struct utsname res;
     int lpc = 0;
     int32_t qb_facility = 0;
-
+    pid_t pid = getpid();
+    const char *nodename = "localhost";
     static bool have_logging = FALSE;
 
     if(have_logging == FALSE) {
@@ -781,6 +805,9 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         // Shorter than default, generous for what we *should* send to syslog
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
 #endif
+        if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+            nodename = res.nodename;
+        }
 
         /* Set format strings and disable threading
          * Pacemaker and threads do not mix well (due to the amount of forking)
@@ -792,7 +819,7 @@ crm_log_preinit(const char *entity, int argc, char **argv)
             // End truncated lines with '...'
             qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-            set_format_string(lpc, crm_system_name);
+            set_format_string(lpc, crm_system_name, pid, nodename);
         }
     }
 }
@@ -802,7 +829,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
              int argc, char **argv, gboolean quiet)
 {
     const char *syslog_priority = NULL;
-    const char *facility = pcmk__env_option("logfacility");
+    const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
     const char *f_copy = facility;
 
     pcmk__is_daemon = daemon;
@@ -822,7 +849,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else {
             facility = "none";
         }
-        pcmk__set_env_option("logfacility", facility);
+        pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility);
     }
 
     if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
@@ -833,13 +860,13 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(facility));
     }
 
-    if (pcmk__env_option_enabled(crm_system_name, "debug")) {
+    if (pcmk__env_option_enabled(crm_system_name, PCMK__ENV_DEBUG)) {
         /* Override the default setting */
         crm_log_level = LOG_DEBUG;
     }
 
     /* What lower threshold do we have for sending to syslog */
-    syslog_priority = pcmk__env_option("logpriority");
+    syslog_priority = pcmk__env_option(PCMK__ENV_LOGPRIORITY);
     if (syslog_priority) {
         crm_log_priority = crm_priority2int(syslog_priority);
     }
@@ -852,7 +879,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     /* Should we log to stderr */ 
-    if (pcmk__env_option_enabled(crm_system_name, "stderr")) {
+    if (pcmk__env_option_enabled(crm_system_name, PCMK__ENV_STDERR)) {
         /* Override the default setting */
         to_stderr = TRUE;
     }
@@ -860,7 +887,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     // Log to a file if we're a daemon or user asked for one
     {
-        const char *logfile = pcmk__env_option("logfile");
+        const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
         if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
@@ -870,14 +897,14 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     if (pcmk__is_daemon
-        && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
+        && pcmk__env_option_enabled(crm_system_name, PCMK__ENV_BLACKBOX)) {
         crm_enable_blackbox(0);
     }
 
     /* Summary */
     crm_trace("Quiet: %d, facility %s", quiet, f_copy);
-    pcmk__env_option("logfile");
-    pcmk__env_option("logfacility");
+    pcmk__env_option(PCMK__ENV_LOGFILE);
+    pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
     crm_update_callsites();
 
@@ -1061,6 +1088,7 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/logging_compat.h>
 
@@ -1077,4 +1105,5 @@ crm_add_logfile(const char *filename)
     return pcmk__add_logfile(filename) == pcmk_rc_ok;
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

@@ -31,12 +31,14 @@ pcmk__new_common_args(const char *summary)
 
     args = calloc(1, sizeof(pcmk__common_args_t));
     if (args == NULL) {
-        crm_exit(crm_errno2exit(-ENOMEM));
+        crm_exit(CRM_EX_OSERR);
     }
 
     args->summary = strdup(summary);
     if (args->summary == NULL) {
-        crm_exit(crm_errno2exit(-ENOMEM));
+        free(args);
+        args = NULL;
+        crm_exit(CRM_EX_OSERR);
     }
 
     return args;

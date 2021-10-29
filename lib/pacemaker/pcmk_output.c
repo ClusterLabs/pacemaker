@@ -24,10 +24,10 @@ colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
     char *retval = NULL;
 
     score = score2char(cons->score);
-    if (cons->role_rh > RSC_ROLE_STARTED) {
+    if (cons->primary_role > RSC_ROLE_STARTED) {
             retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
                                        rsc->id, score, dependents ? "needs" : "with",
-                                       role2text(cons->role_rh), cons->id);
+                                       role2text(cons->primary_role), cons->id);
     } else {
         retval = crm_strdup_printf("%s (score=%s, id=%s)",
                                    rsc->id, score, cons->id);
@@ -46,8 +46,8 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
     score = score2char(cons->score);
     node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
                                         "id", cons->id,
-                                        "rsc", cons->rsc_lh->id,
-                                        "with-rsc", cons->rsc_rh->id,
+                                        "rsc", cons->dependent->id,
+                                        "with-rsc", cons->primary->id,
                                         "score", score,
                                         NULL);
 
@@ -55,12 +55,14 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
         xmlSetProp(node, (pcmkXmlStr) "node-attribute", (pcmkXmlStr) cons->node_attribute);
     }
 
-    if (cons->role_lh != RSC_ROLE_UNKNOWN) {
-        xmlSetProp(node, (pcmkXmlStr) "rsc-role", (pcmkXmlStr) role2text(cons->role_lh));
+    if (cons->dependent_role != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "rsc-role",
+                   (pcmkXmlStr) role2text(cons->dependent_role));
     }
 
-    if (cons->role_rh != RSC_ROLE_UNKNOWN) {
-        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role", (pcmkXmlStr) role2text(cons->role_rh));
+    if (cons->primary_role != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role",
+                   (pcmkXmlStr) role2text(cons->primary_role));
     }
 
     free(score);
@@ -366,21 +368,23 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
-            out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_rh->id, cons->id);
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+            out->list_item(out, NULL, "%s (id=%s - loop)",
+                           cons->primary->id, cons->id);
             continue;
         }
 
-        hdr = colocations_header(cons->rsc_rh, cons, FALSE);
+        hdr = colocations_header(cons->primary, cons, FALSE);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
         /* Empty list header just for indentation of information about this resource. */
         out->begin_list(out, NULL, NULL, NULL);
 
-        out->message(out, "locations-list", cons->rsc_rh);
+        out->message(out, "locations-list", cons->primary);
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
+            out->message(out, "rsc-is-colocated-with-list",
+                         cons->primary, recursive);
         }
 
         out->end_list(out);
@@ -406,16 +410,17 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
-            colocations_xml_node(out, cons->rsc_rh, cons);
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+            colocations_xml_node(out, cons->primary, cons);
             continue;
         }
 
-        colocations_xml_node(out, cons->rsc_rh, cons);
-        do_locations_list_xml(out, cons->rsc_rh, false);
+        colocations_xml_node(out, cons->primary, cons);
+        do_locations_list_xml(out, cons->primary, false);
 
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
+            out->message(out, "rsc-is-colocated-with-list",
+                         cons->primary, recursive);
         }
     }
 
@@ -441,21 +446,23 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
 
-        if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
-            out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_lh->id, cons->id);
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+            out->list_item(out, NULL, "%s (id=%s - loop)",
+                           cons->dependent->id, cons->id);
             continue;
         }
 
-        hdr = colocations_header(cons->rsc_lh, cons, TRUE);
+        hdr = colocations_header(cons->dependent, cons, TRUE);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
         /* Empty list header just for indentation of information about this resource. */
         out->begin_list(out, NULL, NULL, NULL);
 
-        out->message(out, "locations-list", cons->rsc_lh);
+        out->message(out, "locations-list", cons->dependent);
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
+            out->message(out, "rscs-colocated-with-list",
+                         cons->dependent, recursive);
         }
 
         out->end_list(out);
@@ -481,16 +488,17 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
-            colocations_xml_node(out, cons->rsc_lh, cons);
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+            colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
 
-        colocations_xml_node(out, cons->rsc_lh, cons);
-        do_locations_list_xml(out, cons->rsc_lh, false);
+        colocations_xml_node(out, cons->dependent, cons);
+        do_locations_list_xml(out, cons->dependent, false);
 
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
+            out->message(out, "rscs-colocated-with-list",
+                         cons->dependent, recursive);
         }
     }
 
@@ -540,10 +548,7 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                 data_set->input);
-
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
@@ -565,10 +570,7 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                                 data_set->input);
-
-    unpack_constraints(cib_constraints, data_set);
+    pcmk__unpack_constraints(data_set);
 
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
@@ -655,6 +657,37 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
                                  "state", crm_str(state),
                                  "last_updated", crm_str(last_updated),
                                  NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_default(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    out->list_item(out, NULL, "Testing %s ... %.2f secs", xml_file,
+                   (end - start) / (float) CLOCKS_PER_SEC);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_xml(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
+
+    pcmk__output_create_xml_node(out, "timing",
+                                 "file", xml_file,
+                                 "duration", duration,
+                                 NULL);
+
+    free(duration);
     return pcmk_rc_ok;
 }
 
@@ -1475,9 +1508,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                               section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
         CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
-                                  resources, show_opts));
+                                  resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print resources section, if needed */
@@ -1505,7 +1537,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         CHECK_RC(rc, out->message(out, "failed-action-list", data_set, unames,
-                                  resources, rc == pcmk_rc_ok));
+                                  resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print failed stonith actions */
@@ -1591,7 +1623,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, resources, show_opts);
+        out->message(out, "node-list", data_set->nodes, unames, resources,
+                     show_opts, FALSE);
     }
 
     /* Print resources section, if needed */
@@ -1622,7 +1655,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     FALSE);
+                     show_opts, FALSE);
     }
 
     /* Print stonith history */
@@ -1666,7 +1699,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        out->message(out, "node-list", data_set->nodes, unames, resources, show_opts);
+        out->message(out, "node-list", data_set->nodes, unames, resources,
+                     show_opts, FALSE);
     }
 
     /* Print resources section, if needed */
@@ -1694,7 +1728,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     FALSE);
+                     show_opts, FALSE);
     }
 
     /* Print failed stonith actions */
@@ -1791,6 +1825,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-action", "xml", node_action_xml },
     { "pacemakerd-health", "default", pacemakerd_health_text },
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
+    { "profile", "default", profile_default, },
+    { "profile", "xml", profile_xml },
     { "rsc-action", "default", rsc_action_default },
     { "rsc-action-item", "default", rsc_action_item },
     { "rsc-action-item", "xml", rsc_action_item_xml },

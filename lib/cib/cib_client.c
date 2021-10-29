@@ -25,7 +25,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-GHashTable *cib_op_callback_table = NULL;
+static GHashTable *cib_op_callback_table = NULL;
 
 int cib_client_set_op_callback(cib_t * cib, void (*callback) (const xmlNode * msg, int call_id,
                                                               int rc, xmlNode * output));
@@ -355,6 +355,10 @@ cib_new_variant(void)
 
     new_cib = calloc(1, sizeof(cib_t));
 
+    if (new_cib == NULL) {
+        return NULL;
+    }
+
     remove_cib_op_callback(0, TRUE); /* remove all */
 
     new_cib->call_id = 1;
@@ -369,6 +373,11 @@ cib_new_variant(void)
 
     /* the rest will get filled in by the variant constructor */
     new_cib->cmds = calloc(1, sizeof(cib_api_operations_t));
+
+    if (new_cib->cmds == NULL) {
+        free(new_cib);
+        return NULL;
+    }
 
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
@@ -689,4 +698,10 @@ cib_dump_pending_callbacks(void)
         return;
     }
     return g_hash_table_foreach(cib_op_callback_table, cib_dump_pending_op, NULL);
+}
+
+cib_callback_client_t*
+cib__lookup_id (int call_id)
+{
+    return pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
 }

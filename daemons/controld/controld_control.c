@@ -225,10 +225,8 @@ crmd_exit(crm_exit_t exit_code)
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
      */
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
-    cib_free_callbacks(fsa_cib_conn);
-    fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+
+    controld_disconnect_cib_manager();
 
     verify_stopped(fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -571,7 +569,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
         "A cluster node may receive notification of its own fencing if fencing "
         "is misconfigured, or if fabric fencing is in use that doesn't cut "
         "cluster communication. Allowed values are \"stop\" to attempt to "
-        "immediately stop pacemaker and stay stopped, or \"panic\" to attempt "
+        "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
         "to immediately reboot the local node, falling back to stop on failure."
     },
     {
@@ -615,7 +613,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
-        "0", pcmk__valid_sbd_timeout,
+        "0", controld_verify_stonith_watchdog_timeout,
         "How long to wait before we can assume nodes are safely down "
             "when watchdog-based self-fencing via SBD is in use",
         "If nonzero, along with `have-watchdog=true` automatically set by the "
@@ -633,7 +631,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
             "If `stonith-watchdog-timeout` is set to a negative value, and "
             "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
             "+WARNING:+ In this case, it's essential (currently not verified by "
-            "pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
+            "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
             "all nodes."
     },
     {
@@ -645,7 +643,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
+        "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum, NULL, NULL
     },
     {
@@ -657,7 +655,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-controld", "1.0",
+    pcmk__print_option_metadata("pacemaker-controld",
                                 "Pacemaker controller options",
                                 "Cluster options used by Pacemaker's "
                                     "controller (formerly called crmd)",

@@ -68,6 +68,7 @@ configure
 /daemons/execd/pacemaker_remote
 /daemons/execd/pacemaker_remote.service
 /daemons/fenced/fence_legacy
+/daemons/fenced/fence_watchdog
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
@@ -170,7 +171,6 @@ TAGS
 coverity-*
 pacemaker_*.info
 /coverage
-/cts/.regression.failed.diff
 /cts/scheduler/*.ref
 /cts/scheduler/*.up
 /cts/scheduler/*.up.err
@@ -189,10 +189,10 @@ pacemaker_*.info
 
 # Packaging artifacts
 *.rpm
-build.counter
-/mock
 /pacemaker.spec
-/rpm/[A-Z]*
+/rpm/[A-LN-Z]*
+/rpm/build.counter
+/rpm/mock
 
 # Project maintainer artifacts
 /maint/gnulib
@@ -206,8 +206,10 @@ build.counter
 /HTML
 /abi_dumps
 /abi-check
+/build.counter
 /compat_reports
 /compile
+/cts/.regression.failed.diff
 /attrd
 /cib
 /config.guess
@@ -265,6 +267,7 @@ build.counter
 /ltmain.sh
 /mcp
 /missing
+/mock
 /pacemaker-*.spec
 /pengine
 /py-compile

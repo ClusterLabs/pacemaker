@@ -11,55 +11,10 @@
 #include <crm/msg_xml.h>
 #include <crm/lrmd.h>       // lrmd_event_data_t
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
-
-pe__location_t *
-rsc2node_new(const char *id, pe_resource_t *rsc,
-             int node_weight, const char *discover_mode,
-             pe_node_t *foo_node, pe_working_set_t *data_set)
-{
-    pe__location_t *new_con = NULL;
-
-    if (rsc == NULL || id == NULL) {
-        pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
-        return NULL;
-
-    } else if (foo_node == NULL) {
-        CRM_CHECK(node_weight == 0, return NULL);
-    }
-
-    new_con = calloc(1, sizeof(pe__location_t));
-    if (new_con != NULL) {
-        new_con->id = strdup(id);
-        new_con->rsc_lh = rsc;
-        new_con->node_list_rh = NULL;
-        new_con->role_filter = RSC_ROLE_UNKNOWN;
-
-
-        if (pcmk__str_eq(discover_mode, "always", pcmk__str_null_matches | pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_always;
-        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_never;
-        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
-            new_con->discover_mode = pe_discover_exclusive;
-            rsc->exclusive_discover = TRUE;
-        } else {
-            pe_err("Invalid %s value %s in location constraint", XML_LOCATION_ATTR_DISCOVERY, discover_mode);
-        }
-
-        if (foo_node != NULL) {
-            pe_node_t *copy = pe__copy_node(foo_node);
-
-            copy->weight = node_weight;
-            new_con->node_list_rh = g_list_prepend(NULL, copy);
-        }
-
-        data_set->placement_constraints = g_list_prepend(data_set->placement_constraints, new_con);
-        rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
-    }
-
-    return new_con;
-}
+#include <pacemaker.h>
+#include "libpacemaker_private.h"
 
 gboolean
 can_run_resources(const pe_node_t * node)
@@ -537,8 +492,7 @@ sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
                                              node, FALSE, TRUE, data_set);
 
-    crm_notice("Scheduling shutdown of node %s", node->details->uname);
-    shutdown_constraints(node, shutdown_op, data_set);
+    pcmk__order_stops_before_shutdown(node, shutdown_op, data_set);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     return shutdown_op;
 }
@@ -619,8 +573,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%u)",
-               origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
-               op->interval_ms);
+               origin, op->rsc_id, op->op_type,
+               pcmk_exec_status_str(op->op_status), op->interval_ms);
 
     crm_trace("DC version: %s", caller_version);
 
@@ -637,7 +591,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      */
     if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                          NULL)) {
-        if (op->op_status == PCMK_LRM_OP_DONE) {
+        if (op->op_status == PCMK_EXEC_DONE) {
             task = CRMD_ACTION_START;
         } else {
             task = CRMD_ACTION_STATUS;
@@ -653,14 +607,13 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         CRM_LOG_ASSERT(n_task != NULL);
         op_id = pcmk__notify_key(op->rsc_id, n_type, n_task);
 
-        if (op->op_status != PCMK_LRM_OP_PENDING) {
+        if (op->op_status != PCMK_EXEC_PENDING) {
             /* Ignore notify errors.
              *
              * @TODO It might be better to keep the correct result here, and
              * ignore it in process_graph_event().
              */
-            op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = 0;
+            lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
@@ -786,4 +739,90 @@ pcmk__new_logger(void)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
     return out;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource has reached its migration threshold on a node
+ *
+ * \param[in]  rsc       Resource to check
+ * \param[in]  node      Node to check
+ * \param[in]  data_set  Cluster working set
+ * \param[out] failed    If the threshold has been reached, this will be set to
+ *                       the resource that failed (possibly a parent of \p rsc)
+ *
+ * \return true if the migration threshold has been reached, false otherwise
+ */
+bool
+pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                        pe_working_set_t *data_set, pe_resource_t **failed)
+{
+    int fail_count, remaining_tries;
+    pe_resource_t *rsc_to_ban = rsc;
+
+    // Migration threshold of 0 means never force away
+    if (rsc->migration_threshold == 0) {
+        return false;
+    }
+
+    // If we're ignoring failures, also ignore the migration threshold
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        return false;
+    }
+
+    // If there are no failures, there's no need to force away
+    fail_count = pe_get_failcount(node, rsc, NULL,
+                                  pe_fc_effective|pe_fc_fillers, NULL,
+                                  data_set);
+    if (fail_count <= 0) {
+        return false;
+    }
+
+    // If failed resource is anonymous clone instance, we'll force clone away
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        rsc_to_ban = uber_parent(rsc);
+    }
+
+    // How many more times recovery will be tried on this node
+    remaining_tries = rsc->migration_threshold - fail_count;
+
+    if (remaining_tries <= 0) {
+        crm_warn("%s cannot run on %s due to reaching migration threshold "
+                 "(clean up resource to allow again)"
+                 CRM_XS " failures=%d migration-threshold=%d",
+                 rsc_to_ban->id, node->details->uname, fail_count,
+                 rsc->migration_threshold);
+        if (failed != NULL) {
+            *failed = rsc_to_ban;
+        }
+        return true;
+    }
+
+    crm_info("%s can fail %d more time%s on "
+             "%s before reaching migration threshold (%d)",
+             rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
+             node->details->uname, rsc->migration_threshold);
+    return false;
+}
+
+void
+pcmk_free_injections(pcmk_injections_t *injections)
+{
+    if (injections == NULL) {
+        return;
+    }
+
+    g_list_free_full(injections->node_up, g_free);
+    g_list_free_full(injections->node_down, g_free);
+    g_list_free_full(injections->node_fail, g_free);
+    g_list_free_full(injections->op_fail, g_free);
+    g_list_free_full(injections->op_inject, g_free);
+    g_list_free_full(injections->ticket_grant, g_free);
+    g_list_free_full(injections->ticket_revoke, g_free);
+    g_list_free_full(injections->ticket_standby, g_free);
+    g_list_free_full(injections->ticket_activate, g_free);
+    free(injections->quorum);
+    free(injections->watchdog);
+
+    free(injections);
 }

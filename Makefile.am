@@ -10,7 +10,6 @@
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
-# m4/glibtests.m4 is copied from https://gitlab.gnome.org/GNOME/glib/blob/master/m4macros/glibtests.m4.
 EXTRA_DIST		= CONTRIBUTING.md	\
 			  GNUmakefile		\
 			  INSTALL.md		\
@@ -18,14 +17,11 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  autogen.sh		\
 			  m4/CC_CHECK_LDFLAGS.m4	\
 			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/glibtests.m4	\
 			  m4/gnulib-cache.m4	\
 			  m4/gnulib-tool.m4	\
 			  m4/PKG_CHECK_VAR.m4	\
 			  m4/REQUIRE_HEADER.m4	\
-			  m4/version.m4		\
-			  rpm/rpmlintrc		\
-			  rpm/pacemaker.spec.in
+			  m4/version.m4
 
 DISTCLEANFILES		= config.status
 
@@ -52,7 +48,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 CORE_INSTALL	= replace include lib daemons tools xml
 
 # Only these will get built with a plain "make" or "make clean"
-CORE		= $(CORE_INSTALL) cts
+CORE		= $(CORE_INSTALL) cts rpm
 
 SUBDIRS	= $(CORE) devel doc etc extra maint tests
 

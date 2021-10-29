@@ -270,7 +270,7 @@ main(int argc, char **argv)
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if (rc != pcmk_rc_ok) {
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
@@ -354,7 +354,7 @@ main(int argc, char **argv)
 
     // OCF shell functions and cluster-glue need facility under different name
     {
-        const char *facility = pcmk__env_option("logfacility");
+        const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
         if (facility && !pcmk__str_eq(facility, "none", pcmk__str_casei)) {
             setenv("HA_LOGFACILITY", facility, 1);

@@ -39,8 +39,8 @@ Current cluster status:
     * stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	 Started controller-1 (UNCLEAN)
 
 Transition Summary:
-  * Fence (reboot) galera-2 'resources are in an unknown state and the connection is unrecoverable'
-  * Fence (reboot) messaging-1 'resources are active and the connection is unrecoverable'
+  * Fence (reboot) galera-2 'resources are in unknown state and connection is unrecoverable'
+  * Fence (reboot) messaging-1 'resources are active but connection is unrecoverable'
   * Fence (reboot) controller-1 'peer is no longer part of the cluster'
   * Stop       messaging-1                            (                 controller-1 )  due to node availability
   * Move       galera-0                               ( controller-1 -> controller-2 )

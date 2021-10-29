@@ -28,6 +28,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
+#include "services_ocf.h"
 #include "services_lsb.h"
 
 #if SUPPORT_UPSTART
@@ -147,22 +148,107 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
-#if SUPPORT_NAGIOS
 /*!
- * \brief Duplicate a file path, inserting a prefix if not absolute
+ * \internal
+ * \brief Create a simple svc_action_t instance
  *
- * \param[in] filename  File path to duplicate
- * \param[in] dirname   If filename is not absolute, prefix to add
- *
- * \return Newly allocated memory with full path
+ * \return Newly allocated instance (or NULL if not enough memory)
  */
-static char *
-dup_file_path(const char *filename, const char *dirname)
+static svc_action_t *
+new_action(void)
 {
-    return (*filename == '/')? strdup(filename)
-           : crm_strdup_printf("%s/%s", dirname, filename);
+    svc_action_t *op = calloc(1, sizeof(svc_action_t));
+
+    if (op == NULL) {
+        return NULL;
+    }
+
+    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    if (op->opaque == NULL) {
+        free(op);
+        return NULL;
+    }
+
+    // Initialize result
+    services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN, NULL);
+    return op;
 }
-#endif
+
+static bool
+required_argument_missing(uint32_t ra_caps, const char *name,
+                          const char *standard, const char *provider,
+                          const char *agent, const char *action)
+{
+    if (pcmk__str_empty(name)) {
+        crm_info("Cannot create operation without resource name (bug?)");
+        return true;
+    }
+
+    if (pcmk__str_empty(standard)) {
+        crm_info("Cannot create operation for %s without resource class (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+        && pcmk__str_empty(provider)) {
+        crm_info("Cannot create operation for %s resource %s "
+                 "without provider (bug?)", standard, name);
+        return true;
+    }
+
+    if (pcmk__str_empty(agent)) {
+        crm_info("Cannot create operation for %s without agent name (bug?)",
+                 name);
+        return true;
+    }
+
+    if (pcmk__str_empty(action)) {
+        crm_info("Cannot create operation for %s without action name (bug?)",
+                 name);
+        return true;
+    }
+    return false;
+}
+
+// \return Standard Pacemaker return code (pcmk_rc_ok or ENOMEM)
+static int
+copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
+                      const char *standard, const char *provider,
+                      const char *agent, const char *action)
+{
+    op->rsc = strdup(name);
+    if (op->rsc == NULL) {
+        return ENOMEM;
+    }
+
+    op->agent = strdup(agent);
+    if (op->agent == NULL) {
+        return ENOMEM;
+    }
+
+    op->standard = expand_resource_class(name, standard, agent);
+    if (op->standard == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+        action = "status";
+    }
+    op->action = strdup(action);
+    if (op->action == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
+        op->provider = strdup(provider);
+        if (op->provider == NULL) {
+            return ENOMEM;
+        }
+    }
+    return pcmk_rc_ok;
+}
 
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
@@ -171,163 +257,77 @@ services__create_resource_action(const char *name, const char *standard,
                         GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
-    uint32_t ra_caps = 0;
+    uint32_t ra_caps = pcmk_get_ra_caps(standard);
+    int rc = pcmk_rc_ok;
 
-    /*
-     * Do some up front sanity checks before we go off and
-     * build the svc_action_t instance.
-     */
-
-    if (pcmk__str_empty(name)) {
-        crm_err("Cannot create operation without resource name");
-        goto return_error;
+    op = new_action();
+    if (op == NULL) {
+        crm_crit("Cannot prepare action: %s", strerror(ENOMEM));
+        if (params != NULL) {
+            g_hash_table_destroy(params);
+        }
+        return NULL;
     }
 
-    if (pcmk__str_empty(standard)) {
-        crm_err("Cannot create operation for %s without resource class", name);
-        goto return_error;
-    }
-    ra_caps = pcmk_get_ra_caps(standard);
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
-        && pcmk__str_empty(provider)) {
-        crm_err("Cannot create operation for %s without provider", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(agent)) {
-        crm_err("Cannot create operation for %s without agent name", name);
-        goto return_error;
-    }
-
-    if (pcmk__str_empty(action)) {
-        crm_err("Cannot create operation for %s without operation name", name);
-        goto return_error;
-    }
-
-    /*
-     * Sanity checks passed, proceed!
-     */
-
-    op = calloc(1, sizeof(svc_action_t));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
-    op->rsc = strdup(name);
     op->interval_ms = interval_ms;
     op->timeout = timeout;
-    op->standard = expand_resource_class(name, standard, agent);
-    op->agent = strdup(agent);
-    op->sequence = ++operations;
     op->flags = flags;
-    op->id = pcmk__op_key(name, action, interval_ms);
+    op->sequence = ++operations;
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
-        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-
-        op->action = strdup("status");
-    } else {
-        op->action = strdup(action);
-    }
-
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
-        op->provider = strdup(provider);
-    }
-
+    // Take ownership of params
     if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
-        params = NULL; // so we don't free them in this function
+    } else if (params != NULL) {
+        g_hash_table_destroy(params);
+        params = NULL;
+    }
+
+    if (required_argument_missing(ra_caps, name, standard, provider, agent,
+                                  action)) {
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Required agent or action information missing");
+        return op;
+    }
+
+    op->id = pcmk__op_key(name, action, interval_ms);
+
+    if (copy_action_arguments(op, ra_caps, name, standard, provider, agent,
+                              action) != pcmk_rc_ok) {
+        crm_crit("Cannot prepare %s action for %s: %s",
+                 action, name, strerror(ENOMEM));
+        services__handle_exec_error(op, ENOMEM);
+        return op;
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        char *dirs = strdup(OCF_RA_PATH);
-        char *dir = NULL;
-        char *buf = NULL;
-        struct stat st;
-
-        if (pcmk__str_empty(dirs)) {
-            free(dirs);
-            services__handle_exec_error(op, ENOMEM);
-            return op;
-        }
-
-        for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-            buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
-            if (stat(buf, &st) == 0) {
-                break;
-            }
-            free(buf);
-            buf = NULL;
-        }
-
-        free(dirs);
-
-        if (buf) {
-            op->opaque->exec = buf;
-        } else {
-            services__handle_exec_error(op, ENOENT);
-            return op;
-        }
-
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
+        rc = services__ocf_prepare(op);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        op->opaque->exec = services__lsb_agent_path(op->agent);
-        op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(op->action);
+        rc = services__lsb_prepare(op);
 
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-        op->opaque->exec = strdup("systemd-dbus");
+        rc = services__systemd_prepare(op);
 #endif
 #if SUPPORT_UPSTART
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0) {
-        op->opaque->exec = strdup("upstart-dbus");
+        rc = services__upstart_prepare(op);
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        op->opaque->exec = dup_file_path(op->agent, NAGIOS_PLUGIN_DIR);
-        op->opaque->args[0] = strdup(op->opaque->exec);
-
-        if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {
-            /* Invoke --version for a nagios probe */
-            op->opaque->args[1] = strdup("--version");
-
-        } else if (op->params) {
-            GHashTableIter iter;
-            char *key = NULL;
-            char *value = NULL;
-            int index = 1;
-            static int args_size = sizeof(op->opaque->args) / sizeof(char *);
-
-            g_hash_table_iter_init(&iter, op->params);
-
-            while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
-                   index <= args_size - 3) {
-
-                if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei) || strstr(key, CRM_META "_")) {
-                    continue;
-                }
-                op->opaque->args[index++] = crm_strdup_printf("--%s", key);
-                op->opaque->args[index++] = strdup(value);
-            }
-        }
-
-        // Nagios actions don't need to keep the parameters
-        if (op->params != NULL) {
-            g_hash_table_destroy(op->params);
-            op->params = NULL;
-        }
+        rc = services__nagios_prepare(op);
 #endif
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
-        services__handle_exec_error(op, ENOENT);
+        rc = ENOENT;
     }
 
-  return_error:
-    if(params) {
-        g_hash_table_destroy(params);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Cannot prepare %s operation for %s: %s",
+                action, name, strerror(rc));
+        services__handle_exec_error(op, rc);
     }
-
     return op;
 }
 
@@ -344,6 +344,10 @@ resources_action_create(const char *name, const char *standard,
         services_action_free(op);
         return NULL;
     } else {
+        // Preserve public API backward compatibility
+        op->rc = PCMK_OCF_OK;
+        op->status = PCMK_EXEC_DONE;
+
         return op;
     }
 }
@@ -351,20 +355,39 @@ resources_action_create(const char *name, const char *standard,
 svc_action_t *
 services_action_create_generic(const char *exec, const char *args[])
 {
-    svc_action_t *op;
-    unsigned int cur_arg;
+    svc_action_t *op = new_action();
 
-    op = calloc(1, sizeof(*op));
-    op->opaque = calloc(1, sizeof(svc_action_private_t));
+    CRM_ASSERT(op != NULL);
 
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
+    if ((op->opaque->exec == NULL) || (op->opaque->args[0] == NULL)) {
+        crm_crit("Cannot prepare action for '%s': %s", exec, strerror(ENOMEM));
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             strerror(ENOMEM));
+        return op;
+    }
 
-    for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
+    if (args == NULL) {
+        return op;
+    }
+
+    for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
+
+        if (cur_arg == PCMK__NELEM(op->opaque->args)) {
+            crm_info("Cannot prepare action for '%s': Too many arguments",
+                     exec);
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_ERROR_HARD, "Too many arguments");
+            break;
+        }
+
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
-
-        if (cur_arg == PCMK__NELEM(op->opaque->args) - 1) {
-            crm_err("svc_action_t args list not long enough for '%s' execution request.", exec);
+        if (op->opaque->args[cur_arg] == NULL) {
+            crm_crit("Cannot prepare action for '%s': %s",
+                     exec, strerror(ENOMEM));
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 strerror(ENOMEM));
             break;
         }
     }
@@ -392,7 +415,6 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    CRM_ASSERT(action);
     action->timeout = timeout;
     action->id = strdup(id);
     action->params = params;
@@ -439,7 +461,7 @@ services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
 {
     action->synchronous = false;
     action->opaque->callback = cb;
-    return services_os_action_execute(action);
+    return services__execute_file(action) == pcmk_rc_ok;
 }
 
 #if SUPPORT_DBUS
@@ -509,6 +531,51 @@ services_action_cleanup(svc_action_t * op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Map an actual resource action result to a standard OCF result
+ *
+ * \param[in] standard     Agent standard (must not be "service")
+ * \param[in] action       Action that result is for
+ * \param[in] exit_status  Actual agent exit status
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services_result2ocf(const char *standard, const char *action, int exit_status)
+{
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
+        return services__ocf2ocf(exit_status);
+
+#if SUPPORT_SYSTEMD
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                            pcmk__str_casei)) {
+        return services__systemd2ocf(exit_status);
+#endif
+
+#if SUPPORT_UPSTART
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART,
+                            pcmk__str_casei)) {
+        return services__upstart2ocf(exit_status);
+#endif
+
+#if SUPPORT_NAGIOS
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS,
+                            pcmk__str_casei)) {
+        return services__nagios2ocf(exit_status);
+#endif
+
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB,
+                            pcmk__str_casei)) {
+        return services__lsb2ocf(action, exit_status);
+
+    } else {
+        crm_warn("Treating result from unknown standard '%s' as OCF",
+                 ((standard == NULL)? "unspecified" : standard));
+        return services__ocf2ocf(exit_status);
+    }
+}
+
 void
 services_action_free(svc_action_t * op)
 {
@@ -542,6 +609,7 @@ services_action_free(svc_action_t * op)
         free(op->opaque->args[i]);
     }
 
+    free(op->opaque->exit_reason);
     free(op->opaque);
     free(op->rsc);
     free(op->action);
@@ -601,7 +669,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
         goto done;
     }
 
-    /* Tell operation_finalize() not to reschedule the operation */
+    // Tell services__finalize_async_op() not to reschedule the operation
     op->cancel = TRUE;
 
     /* Stop tracking it as a recurring operation, and stop its repeat timer */
@@ -610,8 +678,8 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     /* If the op has a PID, it's an in-flight child process, so kill it.
      *
      * Whether the kill succeeds or fails, the main loop will send the op to
-     * operation_finished() (and thus operation_finalize()) when the process
-     * goes away.
+     * async_action_complete() (and thus services__finalize_async_op()) when the
+     * process goes away.
      */
     if (op->pid != 0) {
         crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
@@ -635,11 +703,12 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     }
 #endif
 
-    // The rest of this is essentially equivalent to operation_finalize(),
-    // except without calling handle_blocked_ops()
+    /* The rest of this is essentially equivalent to
+     * services__finalize_async_op(), minus the handle_blocked_ops() call.
+     */
 
     // Report operation as cancelled
-    op->status = PCMK_LRM_OP_CANCELLED;
+    services__set_cancelled(op);
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -721,28 +790,40 @@ handle_duplicate_recurring(svc_action_t * op)
     return FALSE;
 }
 
-inline static gboolean
-action_exec_helper(svc_action_t * op)
+/*!
+ * \internal
+ * \brief Execute an action appropriately according to its standard
+ *
+ * \param[in] op  Action to execute
+ *
+ * \return Standard Pacemaker return code
+ * \retval EBUSY          Recurring operation could not be initiated
+ * \retval pcmk_rc_error  Synchronous action failed
+ * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
+ *                        should not be freed (because it already was or is
+ *                        pending)
+ *
+ * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
+ *       caller is responsible for freeing the action.
+ */
+static int
+execute_action(svc_action_t *op)
 {
-    /* Whether a/synchronous must be decided (op->synchronous) beforehand. */
-    if (op->standard
-        && (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_UPSTART) == 0)) {
 #if SUPPORT_UPSTART
-        return upstart_job_exec(op);
-#endif
-    } else if (op->standard && strcasecmp(op->standard,
-                                          PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
-#if SUPPORT_SYSTEMD
-        return systemd_unit_exec(op);
-#endif
-    } else {
-        return services_os_action_execute(op);
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_UPSTART,
+                     pcmk__str_casei)) {
+        return services__execute_upstart(op);
     }
-    /* The 'op' has probably been freed if the execution functions return TRUE
-       for the asynchronous 'op'. */
-    /* Avoid using the 'op' in here. */
+#endif
 
-    return FALSE;
+#if SUPPORT_SYSTEMD
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD,
+                     pcmk__str_casei)) {
+        return services__execute_systemd(op);
+    }
+#endif
+
+    return services__execute_file(op);
 }
 
 void
@@ -806,7 +887,7 @@ services_action_async_fork_notify(svc_action_t * op,
         return TRUE;
     }
 
-    return action_exec_helper(op);
+    return execute_action(op) == pcmk_rc_ok;
 }
 
 gboolean
@@ -840,7 +921,6 @@ handle_blocked_ops(void)
     GList *executed_ops = NULL;
     GList *gIter = NULL;
     svc_action_t *op = NULL;
-    gboolean res = FALSE;
 
     if (processing_blocked_ops) {
         /* avoid nested calling of this function */
@@ -857,12 +937,10 @@ handle_blocked_ops(void)
             continue;
         }
         executed_ops = g_list_append(executed_ops, op);
-        res = action_exec_helper(op);
-        if (res == FALSE) {
-            op->status = PCMK_LRM_OP_ERROR;
+        if (execute_action(op) != pcmk_rc_ok) {
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
-            operation_finalize(op);
+            services__finalize_async_op(op);
         }
     }
 
@@ -875,43 +953,60 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
-static gboolean
-action_get_metadata(svc_action_t *op)
+/*!
+ * \internal
+ * \brief Execute a meta-data action appropriately to standard
+ *
+ * \param[in] op  Meta-data action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_metadata_action(svc_action_t *op)
 {
     const char *class = op->standard;
 
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
-        return FALSE;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL, "Agent not specified");
+        return EINVAL;
     }
 
     if (class == NULL) {
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
-        return FALSE;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Agent standard not specified");
+        return EINVAL;
     }
 
     if (!strcmp(class, PCMK_RESOURCE_CLASS_SERVICE)) {
         class = resources_find_service_class(op->agent);
     }
-
     if (class == NULL) {
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
-        return FALSE;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_HARD,
+                             "Agent standard could not be determined");
+        return EINVAL;
     }
 
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
-        return (services__get_lsb_metadata(op->agent, &op->stdout_data) >= 0);
+        return pcmk_legacy2rc(services__get_lsb_metadata(op->agent,
+                                                         &op->stdout_data));
     }
 
 #if SUPPORT_NAGIOS
     if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
+        return pcmk_legacy2rc(services__get_nagios_metadata(op->agent,
+                                                            &op->stdout_data));
     }
 #endif
 
-    return action_exec_helper(op);
+    return execute_action(op);
 }
 
 gboolean
@@ -934,9 +1029,9 @@ services_action_sync(svc_action_t * op)
          * services_action_async() doesn't treat meta-data actions specially, so
          * it will result in an error for classes that don't support the action.
          */
-        rc = action_get_metadata(op);
+        rc = (execute_metadata_action(op) == pcmk_rc_ok);
     } else {
-        rc = action_exec_helper(op);
+        rc = (execute_action(op) == pcmk_rc_ok);
     }
     crm_trace(" > " PCMK__OP_FMT ": %s = %d",
               op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
@@ -1154,4 +1249,101 @@ done:
     g_list_free(standards);
     g_list_free(providers);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action
+ *
+ * \param[out] action        Where to set action result
+ * \param[in]  agent_status  Exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  reason        Human-friendly description of event to set
+ */
+void
+services__set_result(svc_action_t *action, int agent_status,
+                     enum pcmk_exec_status exec_status, const char *reason)
+{
+    if (action == NULL) {
+        return;
+    }
+
+    action->rc = agent_status;
+    action->status = exec_status;
+
+    if (!pcmk__str_eq(action->opaque->exit_reason, reason,
+                      pcmk__str_none)) {
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action to cancelled
+ *
+ * \param[out] action        Where to set action result
+ *
+ * \note This sets execution status but leaves the exit status unchanged
+ */
+void
+services__set_cancelled(svc_action_t *action)
+{
+    if (action != NULL) {
+        action->status = PCMK_EXEC_CANCELLED;
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the exit reason of an action
+ *
+ * \param[in] action  Action to check
+ *
+ * \return Action's exit reason (or NULL if none)
+ */
+const char *
+services__exit_reason(svc_action_t *action)
+{
+    return action->opaque->exit_reason;
+}
+
+/*!
+ * \internal
+ * \brief Steal stdout from an action
+ *
+ * \param[in] action  Action whose stdout is desired
+ *
+ * \return Action's stdout (which may be NULL)
+ * \note Upon return, \p action will no longer track the output, so it is the
+ *       caller's responsibility to free the return value.
+ */
+char *
+services__grab_stdout(svc_action_t *action)
+{
+    char *output = action->stdout_data;
+
+    action->stdout_data = NULL;
+    return output;
+}
+
+/*!
+ * \internal
+ * \brief Steal stderr from an action
+ *
+ * \param[in] action  Action whose stderr is desired
+ *
+ * \return Action's stderr (which may be NULL)
+ * \note Upon return, \p action will no longer track the output, so it is the
+ *       caller's responsibility to free the return value.
+ */
+char *
+services__grab_stderr(svc_action_t *action)
+{
+    char *output = action->stderr_data;
+
+    action->stderr_data = NULL;
+    return output;
 }

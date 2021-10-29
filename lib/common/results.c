@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -250,7 +250,19 @@ static struct pcmk__rc_info {
     { "pcmk_rc_underflow",
       "Value too small to be stored in data type",
       -pcmk_err_generic,
-    }
+    },
+    { "pcmk_rc_dot_error",
+      "Error writing dot(1) file",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_graph_error",
+      "Error writing graph file",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_invalid_transition",
+      "Cluster simulation produced invalid transition",
+      -pcmk_err_generic,
+    },
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
@@ -517,6 +529,8 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_UNSATISFIED: return "CRM_EX_UNSATISFIED";
         case CRM_EX_OLD: return "CRM_EX_OLD";
         case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
+        case CRM_EX_DEGRADED: return "CRM_EX_DEGRADED";
+        case CRM_EX_DEGRADED_PROMOTED: return "CRM_EX_DEGRADED_PROMOTED";
         case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
     }
     return "CRM_EX_UNKNOWN";
@@ -564,6 +578,8 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_UNSATISFIED: return "Not applicable under current conditions";
         case CRM_EX_OLD: return "Update was older than existing configuration";
         case CRM_EX_TIMEOUT: return "Timeout occurred";
+        case CRM_EX_DEGRADED: return "Service is active but might fail soon";
+        case CRM_EX_DEGRADED_PROMOTED: return "Service is promoted but might fail soon";
         case CRM_EX_MAX: return "Error occurred";
     }
     if ((exit_code > 128) && (exit_code < CRM_EX_MAX)) {
@@ -672,6 +688,8 @@ pcmk_rc2exitc(int rc)
 
         case EIO:
         case pcmk_rc_no_output:
+        case pcmk_rc_dot_error:
+        case pcmk_rc_graph_error:
             return CRM_EX_IOERR;
 
         case ENOTSUP:
@@ -719,6 +737,38 @@ pcmk_rc2exitc(int rc)
             return CRM_EX_ERROR;
     }
 }
+
+/*!
+ * \brief Map a function return code to the most similar OCF exit code
+ *
+ * \param[in] rc  Function return code
+ *
+ * \return Most similar OCF exit code
+ */
+enum ocf_exitcode
+pcmk_rc2ocf(int rc)
+{
+    switch (rc) {
+        case pcmk_rc_ok:
+            return PCMK_OCF_OK;
+
+        case pcmk_rc_bad_nvpair:
+            return PCMK_OCF_INVALID_PARAM;
+
+        case EACCES:
+            return PCMK_OCF_INSUFFICIENT_PRIV;
+
+        case ENOTSUP:
+#if EOPNOTSUPP != ENOTSUP
+        case EOPNOTSUPP:
+#endif
+            return PCMK_OCF_UNIMPLEMENT_FEATURE;
+
+        default:
+            return PCMK_OCF_UNKNOWN_ERROR;
+    }
+}
+
 
 // Other functions
 
@@ -779,4 +829,84 @@ crm_exit(crm_exit_t rc)
     qb_log_fini(); // Don't log anything after this point
 
     exit(rc);
+}
+
+/*
+ * External action results
+ */
+
+/*!
+ * \internal
+ * \brief Set the result of an action
+ *
+ * \param[out] result        Where to set action result
+ * \param[in]  exit_status   OCF exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  exit_reason   Human-friendly description of event to set
+ */
+void
+pcmk__set_result(pcmk__action_result_t *result, int exit_status,
+                 enum pcmk_exec_status exec_status, const char *exit_reason)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    result->exit_status = exit_status;
+    result->execution_status = exec_status;
+
+    if (!pcmk__str_eq(result->exit_reason, exit_reason, pcmk__str_none)) {
+        free(result->exit_reason);
+        result->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the output of an action
+ *
+ * \param[out] result         Action result to set output for
+ * \param[in]  out            Action output to set (must be dynamically
+ *                            allocated)
+ * \param[in]  err            Action error output to set (must be dynamically
+ *                            allocated)
+ *
+ * \note \p result will take ownership of \p out and \p err, so the caller
+ *       should not free them.
+ */
+void
+pcmk__set_result_output(pcmk__action_result_t *result, char *out, char *err)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    free(result->action_stdout);
+    result->action_stdout = out;
+
+    free(result->action_stderr);
+    result->action_stderr = err;
+}
+
+/*!
+ * \internal
+ * \brief Clear a result's exit reason, output, and error output
+ *
+ * \param[in] result  Result to reset
+ */
+void
+pcmk__reset_result(pcmk__action_result_t *result)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    free(result->exit_reason);
+    result->exit_reason = NULL;
+
+    free(result->action_stdout);
+    result->action_stdout = NULL;
+
+    free(result->action_stderr);
+    result->action_stderr = NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,11 +25,102 @@
 #include <sys/resource.h>
 
 #include "crm/crm.h"
+#include <crm/msg_xml.h>
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
 
 #include "services_private.h"
 #include "services_nagios.h"
+
+/*!
+ * \internal
+ * \brief Prepare a Nagios action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__nagios_prepare(svc_action_t *op)
+{
+    op->opaque->exec = pcmk__full_path(op->agent, NAGIOS_PLUGIN_DIR);
+    op->opaque->args[0] = strdup(op->opaque->exec);
+    if (op->opaque->args[0] == NULL) {
+        return ENOMEM;
+    }
+
+    if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei)
+        && (op->interval_ms == 0)) {
+
+        // Invoke --version for a nagios probe
+        op->opaque->args[1] = strdup("--version");
+        if (op->opaque->args[1] == NULL) {
+            return ENOMEM;
+        }
+
+    } else if (op->params != NULL) {
+        GHashTableIter iter;
+        char *key = NULL;
+        char *value = NULL;
+        int index = 1; // 0 is already set to executable name
+
+        g_hash_table_iter_init(&iter, op->params);
+
+        while (g_hash_table_iter_next(&iter, (gpointer *) & key,
+                                      (gpointer *) & value)) {
+
+            if (index > (PCMK__NELEM(op->opaque->args) - 2)) {
+                return E2BIG;
+            }
+
+            if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei)
+                || strstr(key, CRM_META "_")) {
+                continue;
+            }
+
+            op->opaque->args[index++] = crm_strdup_printf("--%s", key);
+            op->opaque->args[index++] = strdup(value);
+            if (op->opaque->args[index - 1] == NULL) {
+                return ENOMEM;
+            }
+        }
+    }
+
+    // Nagios actions don't need to keep the parameters
+    if (op->params != NULL) {
+        g_hash_table_destroy(op->params);
+        op->params = NULL;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Map a Nagios result to a standard OCF result
+ *
+ * \param[in] exit_status  Nagios exit status
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__nagios2ocf(int exit_status)
+{
+    switch (exit_status) {
+        case NAGIOS_STATE_OK:
+            return PCMK_OCF_OK;
+
+        case NAGIOS_INSUFFICIENT_PRIV:
+            return PCMK_OCF_INSUFFICIENT_PRIV;
+
+        case NAGIOS_STATE_WARNING:
+            return PCMK_OCF_DEGRADED;
+
+        case NAGIOS_STATE_CRITICAL:
+        case NAGIOS_STATE_UNKNOWN:
+        default:
+            return PCMK_OCF_UNKNOWN_ERROR;
+    }
+}
 
 static inline char *
 nagios_metadata_name(const char *plugin)

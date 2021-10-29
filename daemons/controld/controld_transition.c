@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
 static crm_graph_t *
 create_blank_graph(void)
 {
-    crm_graph_t *a_graph = unpack_graph(NULL, NULL);
+    crm_graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
 
     a_graph->complete = TRUE;
     a_graph->abort_reason = "DC Takeover";
@@ -44,7 +44,7 @@ do_te_control(long long action,
 
     if (action & A_TE_STOP) {
         if (transition_graph) {
-            destroy_graph(transition_graph);
+            pcmk__free_graph(transition_graph);
             transition_graph = NULL;
         }
 
@@ -96,10 +96,10 @@ do_te_control(long long action,
     }
 
     if (init_ok) {
-        set_graph_functions(&te_graph_fns);
+        pcmk__set_graph_functions(&te_graph_fns);
 
         if (transition_graph) {
-            destroy_graph(transition_graph);
+            pcmk__free_graph(transition_graph);
         }
 
         /* create a blank one */
@@ -132,7 +132,6 @@ do_te_invoke(long long action,
         }
 
     } else if (action & A_TE_HALT) {
-        crm_debug("Halting the transition: %s", transition_graph->complete ? "inactive" : "active");
         abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
         if (transition_graph->complete == FALSE) {
             crmd_fsa_stall(FALSE);
@@ -179,8 +178,8 @@ do_te_invoke(long long action,
                   crm_log_xml_err(input->msg, "Bad command");
                   return);
 
-        destroy_graph(transition_graph);
-        transition_graph = unpack_graph(graph_data, graph_input);
+        pcmk__free_graph(transition_graph);
+        transition_graph = pcmk__unpack_graph(graph_data, graph_input);
         if (transition_graph == NULL) {
             CRM_CHECK(transition_graph != NULL,);
             transition_graph = create_blank_graph();
@@ -208,7 +207,7 @@ do_te_invoke(long long action,
         }
 
         trigger_graph();
-        print_graph(LOG_TRACE, transition_graph);
+        pcmk__log_graph(LOG_TRACE, transition_graph);
 
         if (graph_data != input->xml) {
             free_xml(graph_data);

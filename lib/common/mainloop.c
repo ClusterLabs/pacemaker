@@ -1104,7 +1104,7 @@ child_timeout_callback(gpointer p)
 
     child->timerid = 0;
     if (child->timeout) {
-        crm_crit("%s process (PID %d) will not die!", child->desc, (int)child->pid);
+        crm_warn("%s process (PID %d) will not die!", child->desc, (int)child->pid);
         return FALSE;
     }
 
@@ -1115,7 +1115,7 @@ child_timeout_callback(gpointer p)
     }
 
     child->timeout = TRUE;
-    crm_warn("%s process (PID %d) timed out", child->desc, (int)child->pid);
+    crm_debug("%s process (PID %d) timed out", child->desc, (int)child->pid);
 
     child->timerid = g_timeout_add(5000, child_timeout_callback, child);
     return FALSE;
@@ -1488,6 +1488,7 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/mainloop_compat.h>
 
@@ -1497,4 +1498,5 @@ crm_signal(int sig, void (*dispatch) (int sig))
     return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

@@ -7,48 +7,53 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
 #include <crm_internal.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-add_words(void)
+add_words(void **state)
 {
     char *list = NULL;
     size_t list_len = 0;
 
     pcmk__add_word(&list, &list_len, "hello");
     pcmk__add_word(&list, &list_len, "world");
-    g_assert_cmpint(strcmp(list, "hello world"), ==, 0);
+    assert_int_equal(strcmp(list, "hello world"), 0);
     free(list);
 }
 
 static void
-add_with_no_len(void)
+add_with_no_len(void **state)
 {
     char *list = NULL;
 
     pcmk__add_word(&list, NULL, "hello");
     pcmk__add_word(&list, NULL, "world");
-    g_assert_cmpint(strcmp(list, "hello world"), ==, 0);
+    assert_int_equal(strcmp(list, "hello world"), 0);
     free(list);
 }
 
 static void
-add_nothing(void)
+add_nothing(void **state)
 {
     char *list = NULL;
 
     pcmk__add_word(&list, NULL, "hello");
     pcmk__add_word(&list, NULL, NULL);
     pcmk__add_word(&list, NULL, "");
-    g_assert_cmpint(strcmp(list, "hello"), ==, 0);
+    assert_int_equal(strcmp(list, "hello"), 0);
     free(list);
 }
 
 static void
-add_with_null(void)
+add_with_null(void **state)
 {
     char *list = NULL;
     size_t list_len = 0;
@@ -56,12 +61,12 @@ add_with_null(void)
     pcmk__add_separated_word(&list, &list_len, "hello", NULL);
     pcmk__add_separated_word(&list, &list_len, "world", NULL);
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", NULL);
-    g_assert_cmpint(strcmp(list, "hello world I am a unit test"), ==, 0);
+    assert_int_equal(strcmp(list, "hello world I am a unit test"), 0);
     free(list);
 }
 
 static void
-add_with_comma(void)
+add_with_comma(void **state)
 {
     char *list = NULL;
     size_t list_len = 0;
@@ -69,12 +74,12 @@ add_with_comma(void)
     pcmk__add_separated_word(&list, &list_len, "hello", ",");
     pcmk__add_separated_word(&list, &list_len, "world", ",");
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", ",");
-    g_assert_cmpint(strcmp(list, "hello,world,I am a unit test"), ==, 0);
+    assert_int_equal(strcmp(list, "hello,world,I am a unit test"), 0);
     free(list);
 }
 
 static void
-add_with_comma_and_space(void)
+add_with_comma_and_space(void **state)
 {
     char *list = NULL;
     size_t list_len = 0;
@@ -82,23 +87,22 @@ add_with_comma_and_space(void)
     pcmk__add_separated_word(&list, &list_len, "hello", ", ");
     pcmk__add_separated_word(&list, &list_len, "world", ", ");
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", ", ");
-    g_assert_cmpint(strcmp(list, "hello, world, I am a unit test"), ==, 0);
+    assert_int_equal(strcmp(list, "hello, world, I am a unit test"), 0);
     free(list);
 }
 
 int
 main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(add_words),
+        cmocka_unit_test(add_with_no_len),
+        cmocka_unit_test(add_nothing),
+        cmocka_unit_test(add_with_null),
+        cmocka_unit_test(add_with_comma),
+        cmocka_unit_test(add_with_comma_and_space),
+    };
 
-    g_test_add_func("/common/strings/add_word/add_words", add_words);
-    g_test_add_func("/common/strings/add_word/add_with_no_len",
-                    add_with_no_len);
-    g_test_add_func("/common/strings/add_word/add_nothing", add_nothing);
-    g_test_add_func("/common/strings/add_word/add_with_null", add_with_null);
-    g_test_add_func("/common/strings/add_word/add_with_comma", add_with_comma);
-    g_test_add_func("/common/strings/add_word/add_with_comma_and_space",
-                    add_with_comma_and_space);
-
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

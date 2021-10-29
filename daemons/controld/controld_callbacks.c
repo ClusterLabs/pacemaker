@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,7 +260,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
                 /* tengine_stonith_callback() confirms fence actions */
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",
-                          (down->confirmed? "after" : "before"), node->uname);
+                          (pcmk_is_set(down->flags, pcmk__graph_action_confirmed)? "after" : "before"), node->uname);
 
             } else if (!appeared && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
 
@@ -276,7 +276,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     crm_notice("%s of peer %s is complete " CRM_XS " action=%d",
                                task, node->uname, down->id);
-                    update_graph(transition_graph, down);
+                    pcmk__update_graph(transition_graph, down);
                     trigger_graph();
                 }
 
@@ -312,7 +312,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* Trigger resource placement on newly integrated nodes */
             if (appeared) {
                 abort_transition(INFINITY, tg_restart,
-                                 "pacemaker_remote node integrated", NULL);
+                                 "Pacemaker Remote node integrated", NULL);
             }
         }
 

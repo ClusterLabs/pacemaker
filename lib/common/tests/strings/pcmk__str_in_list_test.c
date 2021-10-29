@@ -9,106 +9,110 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>
-#include <stdbool.h>
 #include <glib.h>
 
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
+
 static void
-empty_input_list(void) {
-    g_assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_null_matches));
-    g_assert_false(pcmk__str_in_list(NULL, "xxx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(NULL, "", pcmk__str_none));
+empty_input_list(void **state) {
+    assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_none));
+    assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_null_matches));
+    assert_false(pcmk__str_in_list("xxx", NULL, pcmk__str_none));
+    assert_false(pcmk__str_in_list("", NULL, pcmk__str_none));
 }
 
 static void
-empty_string(void) {
+empty_string(void **state) {
     GList *list = NULL;
 
     list = g_list_prepend(list, (gpointer) "xxx");
 
-    g_assert_false(pcmk__str_in_list(list, NULL, pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, NULL, pcmk__str_null_matches));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_null_matches));
+    assert_false(pcmk__str_in_list(NULL, list, pcmk__str_none));
+    assert_true(pcmk__str_in_list(NULL, list, pcmk__str_null_matches));
+    assert_false(pcmk__str_in_list("", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("", list, pcmk__str_null_matches));
 
     g_list_free(list);
 }
 
 static void
-star_matches(void) {
-    GList *list = NULL;
-
-    list = g_list_prepend(list, (gpointer) "*");
-
-    g_assert_true(pcmk__str_in_list(list, "xxx", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "yyy", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "XXX", pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, NULL, pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, NULL, pcmk__str_null_matches));
-
-    g_list_free(list);
-}
-
-static void
-star_doesnt_match(void) {
+star_matches(void **state) {
     GList *list = NULL;
 
     list = g_list_prepend(list, (gpointer) "*");
     list = g_list_append(list, (gpointer) "more");
 
-    g_assert_false(pcmk__str_in_list(list, "xxx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "yyy", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "XXX", pcmk__str_casei));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_none));
+    assert_true(pcmk__str_in_list("xxx", list, pcmk__str_star_matches));
+    assert_true(pcmk__str_in_list("yyy", list, pcmk__str_star_matches));
+    assert_true(pcmk__str_in_list("XXX", list, pcmk__str_star_matches|pcmk__str_casei));
+    assert_true(pcmk__str_in_list("", list, pcmk__str_star_matches));
 
     g_list_free(list);
 }
 
 static void
-in_list(void) {
+star_doesnt_match(void **state) {
+    GList *list = NULL;
+
+    list = g_list_prepend(list, (gpointer) "*");
+
+    assert_false(pcmk__str_in_list("xxx", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("yyy", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("XXX", list, pcmk__str_casei));
+    assert_false(pcmk__str_in_list("", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list(NULL, list, pcmk__str_star_matches));
+
+    g_list_free(list);
+}
+
+static void
+in_list(void **state) {
     GList *list = NULL;
 
     list = g_list_prepend(list, (gpointer) "xxx");
     list = g_list_prepend(list, (gpointer) "yyy");
     list = g_list_prepend(list, (gpointer) "zzz");
 
-    g_assert_true(pcmk__str_in_list(list, "xxx", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "XXX", pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "yyy", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "YYY", pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "zzz", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "ZZZ", pcmk__str_casei));
+    assert_true(pcmk__str_in_list("xxx", list, pcmk__str_none));
+    assert_true(pcmk__str_in_list("XXX", list, pcmk__str_casei));
+    assert_true(pcmk__str_in_list("yyy", list, pcmk__str_none));
+    assert_true(pcmk__str_in_list("YYY", list, pcmk__str_casei));
+    assert_true(pcmk__str_in_list("zzz", list, pcmk__str_none));
+    assert_true(pcmk__str_in_list("ZZZ", list, pcmk__str_casei));
 
     g_list_free(list);
 }
 
 static void
-not_in_list(void) {
+not_in_list(void **state) {
     GList *list = NULL;
 
     list = g_list_prepend(list, (gpointer) "xxx");
     list = g_list_prepend(list, (gpointer) "yyy");
 
-    g_assert_false(pcmk__str_in_list(list, "xx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "XXX", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "zzz", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "zzz", pcmk__str_casei));
+    assert_false(pcmk__str_in_list("xx", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("XXX", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("zzz", list, pcmk__str_none));
+    assert_false(pcmk__str_in_list("zzz", list, pcmk__str_casei));
 
     g_list_free(list);
 }
 
 int main(int argc, char **argv)
 {
-    g_test_init(&argc, &argv, NULL);
+    const struct CMUnitTest tests[] = {
+        cmocka_unit_test(empty_input_list),
+        cmocka_unit_test(empty_string),
+        cmocka_unit_test(star_matches),
+        cmocka_unit_test(star_doesnt_match),
+        cmocka_unit_test(in_list),
+        cmocka_unit_test(not_in_list),
+    };
 
-    g_test_add_func("/common/strings/in_list/empty_list", empty_input_list);
-    g_test_add_func("/common/strings/in_list/empty_string", empty_string);
-    g_test_add_func("/common/strings/in_list/star_matches", star_matches);
-    g_test_add_func("/common/strings/in_list/star_doesnt_match", star_doesnt_match);
-    g_test_add_func("/common/strings/in_list/in", in_list);
-    g_test_add_func("/common/strings/in_list/not_in", not_in_list);
-
-    return g_test_run();
+    cmocka_set_message_output(CM_OUTPUT_TAP);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }

@@ -268,8 +268,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
+                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         free(count);
@@ -315,8 +315,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
+                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
     gboolean active = rsc->fns->active(rsc, TRUE);
     gboolean partially_active = rsc->fns->active(rsc, FALSE);
@@ -402,11 +402,11 @@ pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
 {
     gboolean passes = FALSE;
 
-    if (check_parent && pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), pcmk__str_none)) {
+    if (check_parent && pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
-    } else if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none)) {
+    } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
-    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none)) {
+    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else {
         for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {

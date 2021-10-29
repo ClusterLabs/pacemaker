@@ -97,6 +97,21 @@ Groups inherit the ``priority``, ``target-role``, and ``is-managed`` properties
 from primitive resources. See :ref:`resource_options` for information about
 those properties.
    
+.. table:: **Group-specific configuration options**
+
+   +-------------------+-----------------+-------------------------------------------------------+
+   | Meta-Attribute    | Default         | Description                                           |
+   +===================+=================+=======================================================+
+   | ordered           | true            |  .. index::                                           |
+   |                   |                 |     single: group; option, ordered                    |
+   |                   |                 |     single: option; ordered (group)                   |
+   |                   |                 |     single: ordered; group option                     |
+   |                   |                 |                                                       |
+   |                   |                 | If **true**, group members will be started in the     |
+   |                   |                 | order they are listed in the configuration (and       |
+   |                   |                 | stopped in the reverse order).                        |
+   +-------------------+-----------------+-------------------------------------------------------+
+
 Group Instance Attributes
 _________________________
 

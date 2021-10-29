@@ -46,6 +46,27 @@ do_cib_replaced(const char *event, xmlNode * msg)
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }
 
+void
+controld_disconnect_cib_manager(void)
+{
+    CRM_ASSERT(fsa_cib_conn != NULL);
+
+    crm_info("Disconnecting from the CIB manager");
+
+    controld_clear_fsa_input_flags(R_CIB_CONNECTED);
+
+    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
+    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
+    cib_free_callbacks(fsa_cib_conn);
+    if (fsa_cib_conn->state != cib_disconnected) {
+        /* Does not require a set_slave() reply to sign out from based. */
+        fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
+        fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+    }
+
+    crm_notice("Disconnected from the CIB manager");
+}
+
 /* A_CIB_STOP, A_CIB_START, O_CIB_RESTART */
 void
 do_cib_control(long long action,
@@ -63,18 +84,8 @@ do_cib_control(long long action,
             return;
         }
 
-        crm_info("Disconnecting from the CIB manager");
-        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
+        controld_disconnect_cib_manager();
 
-        fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
-        fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
-
-        if (fsa_cib_conn->state != cib_disconnected) {
-            /* Does not require a set_slave() reply to sign out from based. */
-            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
-            fsa_cib_conn->cmds->signoff(fsa_cib_conn);
-        }
-        crm_notice("Disconnected from the CIB manager");
     }
 
     if (action & A_CIB_START) {

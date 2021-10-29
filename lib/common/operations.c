@@ -437,15 +437,17 @@ gboolean
 did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 {
     switch (op->op_status) {
-        case PCMK_LRM_OP_CANCELLED:
-        case PCMK_LRM_OP_PENDING:
+        case PCMK_EXEC_CANCELLED:
+        case PCMK_EXEC_PENDING:
             return FALSE;
 
-        case PCMK_LRM_OP_NOTSUPPORTED:
-        case PCMK_LRM_OP_TIMEOUT:
-        case PCMK_LRM_OP_ERROR:
-        case PCMK_LRM_OP_NOT_CONNECTED:
-        case PCMK_LRM_OP_INVALID:
+        case PCMK_EXEC_NOT_SUPPORTED:
+        case PCMK_EXEC_TIMEOUT:
+        case PCMK_EXEC_ERROR:
+        case PCMK_EXEC_NOT_CONNECTED:
+        case PCMK_EXEC_NO_FENCE_DEVICE:
+        case PCMK_EXEC_NO_SECRETS:
+        case PCMK_EXEC_INVALID:
             return TRUE;
 
         default:

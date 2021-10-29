@@ -32,6 +32,8 @@
 
 #include <crm/common/mainloop.h>
 
+#include "fencing_private.h"
+
 CRM_TRACE_INIT_DATA(stonith);
 
 struct stonith_action_s {
@@ -43,8 +45,8 @@ struct stonith_action_s {
     int timeout;
     int async;
     void *userdata;
-    void (*done_cb) (GPid pid, gint status, const char *output, gpointer user_data);
-    void (*fork_cb) (GPid pid, gpointer user_data);
+    void (*done_cb) (int pid, int status, const char *output, void *user_data);
+    void (*fork_cb) (int pid, void *user_data);
 
     svc_action_t *svc_action;
 
@@ -54,8 +56,7 @@ struct stonith_action_s {
     int remaining_timeout;
     int max_retries;
 
-    /* device output data */
-    GPid pid;
+    int pid;
     int rc;
     char *output;
     char *error;
@@ -130,7 +131,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
         return st_namespace_any;
 
     } else if (!strcmp(namespace_s, "redhat")
@@ -193,6 +194,66 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
 
     crm_err("Unknown fence agent: %s", agent);
     return st_namespace_invalid;
+}
+
+gboolean
+stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
+{
+    gboolean rv = FALSE;
+    stonith_t *stonith_api = st?st:stonith_api_new();
+    char *list = NULL;
+
+    if(stonith_api) {
+        if (stonith_api->state == stonith_disconnected) {
+            int rc = stonith_api->cmds->connect(stonith_api, "stonith-api", NULL);
+
+            if (rc != pcmk_ok) {
+                crm_err("Failed connecting to Stonith-API for watchdog-fencing-query.");
+            }
+        }
+
+        if (stonith_api->state != stonith_disconnected) {
+            /* caveat!!!
+             * this might fail when when stonithd is just updating the device-list
+             * probably something we should fix as well for other api-calls */
+            int rc = stonith_api->cmds->list(stonith_api, st_opt_sync_call, STONITH_WATCHDOG_ID, &list, 0);
+            if ((rc != pcmk_ok) || (list == NULL)) {
+                /* due to the race described above it can happen that
+                 * we drop in here - so as not to make remote nodes
+                 * panic on that answer
+                 */
+                crm_warn("watchdog-fencing-query failed");
+            } else if (list[0] == '\0') {
+                rv = TRUE;
+            } else {
+                GList *targets = stonith__parse_targets(list);
+                rv = pcmk__str_in_list(node, targets, pcmk__str_casei);
+                g_list_free_full(targets, free);
+            }
+            free(list);
+            if (!st) {
+                /* if we're provided the api we still might have done the
+                 * connection - but let's assume the caller won't bother
+                 */
+                stonith_api->cmds->disconnect(stonith_api);
+            }
+        }
+
+        if (!st) {
+            stonith_api_delete(stonith_api);
+        }
+    } else {
+        crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
+    }
+    crm_trace("Pacemaker assumes node %s %sto do watchdog-fencing.",
+              node, rv?"":"not ");
+    return rv;
+}
+
+gboolean
+stonith__watchdog_fencing_enabled_for_node(const char *node)
+{
+    return stonith__watchdog_fencing_enabled_for_node_api(NULL, node);
 }
 
 static void
@@ -692,14 +753,14 @@ static int
 svc_action_to_errno(svc_action_t *svc_action) {
     int rv = pcmk_ok;
 
-    if (svc_action->rc > 0) {
-        /* Try to provide a useful error code based on the fence agent's
-            * error output.
-            */
-        if (svc_action->rc == PCMK_OCF_TIMEOUT) {
+    if (svc_action->status == PCMK_EXEC_TIMEOUT) {
             rv = -ETIME;
 
-        } else if (svc_action->stderr_data == NULL) {
+    } else if (svc_action->rc != PCMK_OCF_OK) {
+        /* Try to provide a useful error code based on the fence agent's
+         * error output.
+         */
+        if (svc_action->stderr_data == NULL) {
             rv = -ENODATA;
 
         } else if (strstr(svc_action->stderr_data, "imed out")) {
@@ -774,6 +835,11 @@ internal_stonith_action_execute(stonith_action_t * action)
     static int stonith_sequence = 0;
     char *buffer = NULL;
 
+    if ((action == NULL) || (action->action == NULL) || (action->args == NULL)
+        || (action->agent == NULL)) {
+        return -EPROTO;
+    }
+
     if (!action->tries) {
         action->initial_start_time = time(NULL);
     }
@@ -785,13 +851,16 @@ internal_stonith_action_execute(stonith_action_t * action)
         is_retry = 1;
     }
 
-    if (action->args == NULL || action->agent == NULL)
-        goto fail;
-
     buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s",
                                basename(action->agent));
     svc_action = services_action_create_generic(buffer, NULL);
     free(buffer);
+
+    if (svc_action->rc != PCMK_OCF_UNKNOWN) {
+        services_action_free(svc_action);
+        return -E2BIG;
+    }
+
     svc_action->timeout = 1000 * action->remaining_timeout;
     svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
     svc_action->id = crm_strdup_printf("%s_%s_%d", basename(action->agent),
@@ -817,34 +886,27 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     if (action->async) {
         /* async */
-        if(services_action_async_fork_notify(svc_action,
-            &stonith_action_async_done,
-            &stonith_action_async_forked) == FALSE) {
-            services_action_free(svc_action);
-            svc_action = NULL;
-        } else {
-            rc = 0;
+        if (services_action_async_fork_notify(svc_action,
+                                              &stonith_action_async_done,
+                                              &stonith_action_async_forked)) {
+            return pcmk_ok;
         }
 
-    } else {
-        /* sync */
-        if (services_action_sync(svc_action)) {
-            rc = 0;
-            action->rc = svc_action_to_errno(svc_action);
-            action->output = svc_action->stdout_data;
-            svc_action->stdout_data = NULL;
-            action->error = svc_action->stderr_data;
-            svc_action->stderr_data = NULL;
-        } else {
-            action->rc = -ECONNABORTED;
-            rc = action->rc;
-        }
+    } else if (services_action_sync(svc_action)) { // sync success
+        rc = pcmk_ok;
+        action->rc = svc_action_to_errno(svc_action);
+        action->output = svc_action->stdout_data;
+        svc_action->stdout_data = NULL;
+        action->error = svc_action->stderr_data;
+        svc_action->stderr_data = NULL;
 
-        svc_action->params = NULL;
-        services_action_free(svc_action);
+    } else { // sync failure
+        action->rc = -ECONNABORTED;
+        rc = action->rc;
     }
 
-  fail:
+    svc_action->params = NULL;
+    services_action_free(svc_action);
     return rc;
 }
 
@@ -862,9 +924,9 @@ internal_stonith_action_execute(stonith_action_t * action)
 int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
-                             void (*done) (GPid pid, int rc, const char *output,
-                                           gpointer user_data),
-                             void (*fork_cb) (GPid pid, gpointer user_data))
+                             void (*done) (int pid, int rc, const char *output,
+                                           void *user_data),
+                             void (*fork_cb) (int pid, void *user_data))
 {
     if (!action) {
         return -EINVAL;
@@ -1130,6 +1192,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
              op = pcmk__xml_next(op)) {
             stonith_history_t *kvp;
             long long completed;
+            long long completed_nsec = 0L;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1139,6 +1202,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->client = crm_element_value_copy(op, F_STONITH_CLIENTNAME);
             crm_element_value_ll(op, F_STONITH_DATE, &completed);
             kvp->completed = (time_t) completed;
+            crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
+            kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
 
             if (last) {
@@ -2396,7 +2461,7 @@ stonith_action_str(const char *action)
  * \brief Parse a target name from one line of a target list string
  *
  * \param[in]     line    One line of a target list string
- * \parma[in]     len     String length of line
+ * \param[in]     len     String length of line
  * \param[in,out] output  List to add newly allocated target name to
  */
 static void
@@ -2539,7 +2604,8 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
             pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
-            (event->completed < prev_hp->completed)) {
+            ((event->completed < prev_hp->completed) || 
+             ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
             ret = TRUE;
             break;
         }
@@ -2565,13 +2631,15 @@ stonith__sort_history(stonith_history_t *history)
         tmp = hp->next;
         if ((hp->state == st_done) || (hp->state == st_failed)) {
             /* sort into new */
-            if ((!new) || (hp->completed > new->completed)) {
+            if ((!new) || (hp->completed > new->completed) || 
+                ((hp->completed == new->completed) && (hp->completed_nsec > new->completed_nsec))) {
                 hp->next = new;
                 new = hp;
             } else {
                 np = new;
                 do {
-                    if ((!np->next) || (hp->completed > np->next->completed)) {
+                    if ((!np->next) || (hp->completed > np->next->completed) ||
+                        ((hp->completed == np->next->completed) && (hp->completed_nsec > np->next->completed_nsec))) {
                         hp->next = np->next;
                         np->next = hp;
                         break;
@@ -2696,6 +2764,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 const char *get_stonith_provider(const char *agent, const char *provider);
 
@@ -2705,4 +2774,5 @@ get_stonith_provider(const char *agent, const char *provider)
     return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

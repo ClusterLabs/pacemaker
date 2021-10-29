@@ -18,6 +18,7 @@ noinst_HEADERS		= pcmki_error.h \
 			  pcmki_sched_notif.h \
 			  pcmki_sched_utils.h \
 			  pcmki_scheduler.h \
+			  pcmki_simulate.h \
 			  pcmki_transition.h
 
 .PHONY: $(ARCHIVE_VERSION)

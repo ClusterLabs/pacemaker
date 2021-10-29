@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <errno.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
@@ -73,8 +76,8 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.user_data = op->user_data;
     event.timeout = 0;
     event.interval_ms = op->interval_ms;
-    event.rc = PCMK_OCF_UNKNOWN_ERROR;
-    event.op_status = PCMK_LRM_OP_NOT_CONNECTED;
+    lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                     "Action was pending when executor connection was dropped");
     event.t_run = (unsigned int) op->start_time;
     event.t_rcchange = (unsigned int) op->start_time;
 
@@ -359,30 +362,38 @@ lrm_state_poke_connection(lrm_state_t * lrm_state)
 {
 
     if (!lrm_state->conn) {
-        return -1;
+        return -ENOTCONN;
     }
     return ((lrmd_t *) lrm_state->conn)->cmds->poke_connection(lrm_state->conn);
 }
 
+// \return Standard Pacemaker return code
 int
-lrm_state_ipc_connect(lrm_state_t * lrm_state)
+controld_connect_local_executor(lrm_state_t *lrm_state)
 {
-    int ret;
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
-        lrm_state->conn = lrmd_api_new();
-        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, lrm_op_callback);
+    if (lrm_state->conn == NULL) {
+        lrmd_t *api = NULL;
+
+        rc = lrmd__new(&api, NULL, NULL, 0);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        api->cmds->set_callback(api, lrm_op_callback);
+        lrm_state->conn = api;
     }
 
-    ret = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
+    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn,
+                                                     CRM_SYSTEM_CRMD, NULL);
+    rc = pcmk_legacy2rc(rc);
 
-    if (ret != pcmk_ok) {
-        lrm_state->num_lrm_register_fails++;
-    } else {
+    if (rc == pcmk_rc_ok) {
         lrm_state->num_lrm_register_fails = 0;
+    } else {
+        lrm_state->num_lrm_register_fails++;
     }
-
-    return ret;
+    return rc;
 }
 
 static remote_proxy_t *
@@ -555,33 +566,39 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 }
 
 
+// \return Standard Pacemaker return code
 int
-lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
-                               int timeout_ms)
+controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
+                                 int port, int timeout_ms)
 {
-    int ret;
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
-        lrm_state->conn = lrmd_remote_api_new(lrm_state->node_name, server, port);
-        if (!lrm_state->conn) {
-            return -1;
+    if (lrm_state->conn == NULL) {
+        lrmd_t *api = NULL;
+
+        rc = lrmd__new(&api, lrm_state->node_name, server, port);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+                     CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+
+            return rc;
         }
-        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, remote_lrm_op_callback);
-        lrmd_internal_set_proxy_callback(lrm_state->conn, lrm_state, crmd_remote_proxy_cb);
+        lrm_state->conn = api;
+        api->cmds->set_callback(api, remote_lrm_op_callback);
+        lrmd_internal_set_proxy_callback(api, lrm_state, crmd_remote_proxy_cb);
     }
 
-    crm_trace("initiating remote connection to %s at %d with timeout %d", server, port, timeout_ms);
-    ret =
-        ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn, lrm_state->node_name,
-                                                          timeout_ms);
-
-    if (ret != pcmk_ok) {
-        lrm_state->num_lrm_register_fails++;
-    } else {
+    crm_trace("Initiating remote connection to %s:%d with timeout %dms",
+              server, port, timeout_ms);
+    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn,
+                                                           lrm_state->node_name,
+                                                           timeout_ms);
+    if (rc == pcmk_ok) {
         lrm_state->num_lrm_register_fails = 0;
+    } else {
+        lrm_state->num_lrm_register_fails++; // Ignored for remote connections
     }
-
-    return ret;
+    return pcmk_legacy2rc(rc);
 }
 
 int
@@ -661,32 +678,57 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
 
 }
 
+/*!
+ * \internal
+ * \brief Initiate a resource agent action
+ *
+ * \param[in]  lrm_state       Executor state object
+ * \param[in]  rsc_id          ID of resource for action
+ * \param[in]  action          Action to execute
+ * \param[in]  userdata        String to copy and pass to execution callback
+ * \param[in]  interval_ms     Action interval (in milliseconds)
+ * \param[in]  timeout_ms      Action timeout (in milliseconds)
+ * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
+ * \param[in]  params          Resource parameters
+ * \param[out] call_id         Where to store call ID on success
+ *
+ * \return Standard Pacemaker return code
+ * \note This takes ownership of \p params, which should not be used or freed
+ *       after calling this function.
+ */
 int
-lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-               const char *userdata, guint interval_ms,
-               int timeout,     /* ms */
-               int start_delay, /* ms */
-               lrmd_key_value_t * params)
+controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
+                                const char *action, const char *userdata,
+                                guint interval_ms, int timeout_ms,
+                                int start_delay_ms, lrmd_key_value_t *params,
+                                int *call_id)
 {
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
+    if (lrm_state->conn == NULL) {
         lrmd_key_value_freeall(params);
-        return -ENOTCONN;
-    }
+        rc = ENOTCONN;
 
-    if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        return remote_ra_exec(lrm_state, rsc_id, action, userdata, interval_ms,
-                              timeout, start_delay, params);
-    }
+    } else if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+        rc = controld_execute_remote_agent(lrm_state, rsc_id, action,
+                                           userdata, interval_ms, timeout_ms,
+                                           start_delay_ms, params, call_id);
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,
-                                                    rsc_id,
-                                                    action,
-                                                    userdata,
-                                                    interval_ms,
-                                                    timeout,
-                                                    start_delay,
-                                                    lrmd_opt_notify_changes_only, params);
+    } else {
+        rc = ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn, rsc_id,
+                                                      action, userdata,
+                                                      interval_ms, timeout_ms,
+                                                      start_delay_ms,
+                                                      lrmd_opt_notify_changes_only,
+                                                      params);
+        if (rc < 0) {
+            rc = pcmk_legacy2rc(rc);
+        } else {
+            *call_id = rc;
+            rc = pcmk_rc_ok;
+        }
+    }
+    return rc;
 }
 
 int

@@ -402,6 +402,12 @@ class Tests(object):
         self.action_timeout = " -t 9000 "
         if self.tls:
             self.rsc_classes.remove("stonith")
+
+        try:
+            self.rsc_classes.remove("nagios")
+        except ValueError: # Not found
+            pass
+
         if "systemd" in self.rsc_classes:
             try:
                 # This code doesn't need this import, but pacemaker-cts-dummyd
@@ -684,7 +690,7 @@ class Tests(object):
                      '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete"')
         test.add_cmd('-c exec -r test_rsc -a start -k monitor_delay -v 30 ' +
                      '-t 1000 -w') # -t must be less than self.action_timeout
-        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:OCF_TIMEOUT op_status:Timed Out" '
+        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:error op_status:Timed Out" '
                      + self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
@@ -1193,28 +1199,28 @@ class TestOptions(object):
                 self.options['run-only-pattern'] = args[i+1]
                 skip = 1
 
-    def show_usage(self):
-        """ Show command usage """
+def show_usage():
+    """ Show command usage """
 
-        print("usage: " + sys.argv[0] + " [options]")
-        print("If no options are provided, all tests will run")
-        print("Options:")
-        print("\t [--help | -h]                        Show usage")
-        print("\t [--list-tests | -l]                  Print out all registered tests.")
-        print("\t [--run-only | -r 'testname']         Run a specific test")
-        print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--timeout | -t 'floating point number']"
-              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
-              "\n\t\tDefaults to 2. The value 0 means no limit.")
-        print("\t [--force-wait | -w]"
-              "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-        if REMOTE_ENABLED:
-            print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
-        print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-        print("\n\tExample: Run only the test 'start_stop'")
-        print("\t\t " + sys.argv[0] + " --run-only start_stop")
-        print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
+    print("usage: " + sys.argv[0] + " [options]")
+    print("If no options are provided, all tests will run")
+    print("Options:")
+    print("\t [--help | -h]                        Show usage")
+    print("\t [--list-tests | -l]                  Print out all registered tests.")
+    print("\t [--run-only | -r 'testname']         Run a specific test")
+    print("\t [--verbose | -V]                     Verbose output")
+    print("\t [--timeout | -t 'floating point number']"
+            "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+            "\n\t\tDefaults to 2. The value 0 means no limit.")
+    print("\t [--force-wait | -w]"
+            "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
+    if REMOTE_ENABLED:
+        print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
+    print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
+    print("\n\tExample: Run only the test 'start_stop'")
+    print("\t\t " + sys.argv[0] + " --run-only start_stop")
+    print("\n\tExample: Run only the tests with the string 'systemd' present in them")
+    print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
 
 
 def main(argv):
@@ -1224,6 +1230,10 @@ def main(argv):
 
     opts = TestOptions()
     opts.build_options(argv)
+
+    if opts.options['show-usage']:
+        show_usage()
+        sys.exit(CrmExit.OK)
 
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)
@@ -1238,15 +1248,15 @@ def main(argv):
         tests.build_custom_tests()
         tests.build_stress_tests()
 
+        if opts.options['list-tests']:
+            tests.print_list()
+            sys.exit(CrmExit.OK)
+
         tests.setup_test_environment()
 
         print("Starting ...")
 
-        if opts.options['list-tests']:
-            tests.print_list()
-        elif opts.options['show-usage']:
-            opts.show_usage()
-        elif opts.options['run-only-pattern'] != "":
+        if opts.options['run-only-pattern'] != "":
             tests.run_tests_matching(opts.options['run-only-pattern'])
             tests.print_results()
         elif opts.options['run-only'] != "":

@@ -1,49 +1,32 @@
 Evolution of the project
 ------------------------
 
-Foreword
-########
+This section will not generally be of interest, but may occasionally
+shed light on why the current code is structured the way it is when
+investigating some thorny issue.
 
-This chapter is currently not meant as a definite summary of how
-Pacemaker got into where it stands now, but rather to provide few valuable
-pointers an entusiasts (presumably software archeologist type of person)
-may find useful.  Moreover, well-intentioned contributors to Pacemaker
-project may want to review them occasionally since, as the famous quote
-has it, "those who do not learn history are doomed to repeat it".
-
-For anything more talkative with less emphasis on actual code, other
-places will serve better for the time being (and if not, should not be
-too hard to volunteer extensions to those writeups):
-
-* `main entry at ClusterLabs community wiki <https://wiki.clusterlabs.org/wiki/Pacemaker>`_
-* `entry at wikipedia.org <https://en.wikipedia.org/wiki/Pacemaker_(software)>`_
-* `brief section dedicated to Pacemaker in Digimer's tutorial regarding setting
-  up the cluster with the old Red Hat Cluster Suite like stack
-  <https://www.alteeve.com/w/AN!Cluster_Tutorial_2#What_about_Pacemaker.3F>`_
-
-
-Ancestor: Heartbeat project
+Origin in Heartbeat project
 ###########################
 
 Pacemaker can be considered as a spin-off from Heartbeat, the original
 comprehensive high availability suite started by Alan Robertson. Some
 portions of code are shared, at least on the conceptual level if not verbatim,
-till today, even if the effective percentage continually declines.  Note that
-till Pacemaker 2.0, it also used to stand for one (and initially the only) of
-supported messaging back-ends (removal of this support made for one such
-notable drop of reused code), see also
-`pre-2.0 commit 55ab749bf
-<https://github.com/ClusterLabs/pacemaker/commit/55ab749bf0f0143bd1cd050c1bbe302aecb3898e>`_.
+till today, even if the effective percentage continually declines.
+
+Before Pacemaker 2.0, Pacemaker supported Heartbeat as a cluster layer
+alternative to Corosync. That support was dropped for the 2.0.0 release (see
+`commit 55ab749bf
+<https://github.com/ClusterLabs/pacemaker/commit/55ab749bf0f0143bd1cd050c1bbe302aecb3898e>`_).
 
 An archive of a 2016 checkout of the Heartbeat code base is shared as a
-`dedicated read-only repository
-<https://gitlab.com/poki/archived-heartbeat>`_ , and anchored there, the most
-notable commits are:
+`read-only repository <https://gitlab.com/poki/archived-heartbeat>`_. Notable
+commits include:
 
-* `initial check-in of what turned up to be the basis for Pacemaker later on
+* `creation of Heartbeat's "new cluster resource manager," which evolved into
+  Pacemaker
   <https://gitlab.com/poki/archived-heartbeat/commit/bb48551be418291c46980511aa31c7c2df3a85e4>`_
 
-* `drop of now-detached Pacemaker code
+* `deletion of the new CRM from Heartbeat after Pacemaker had been split off
   <https://gitlab.com/poki/archived-heartbeat/commit/74573ac6182785820d765ec76c5d70086381931a>`_
 
 Regarding Pacemaker's split from heartbeat, it evolved stepwise (as opposed to

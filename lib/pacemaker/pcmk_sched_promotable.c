@@ -12,6 +12,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
@@ -28,16 +30,19 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
         if (clone_data->ordered && last != NULL) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* last child promote before promoted started */
-            new_rsc_order(last, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
+            pcmk__order_resource_actions(last, RSC_PROMOTE, rsc, RSC_PROMOTED,
+                                         type, data_set);
         }
         return;
     }
 
     /* child promote before global promoted */
-    new_rsc_order(child, RSC_PROMOTE, rsc, RSC_PROMOTED, type, data_set);
+    pcmk__order_resource_actions(child, RSC_PROMOTE, rsc, RSC_PROMOTED, type,
+                                 data_set);
 
     /* global promote before child promote */
-    new_rsc_order(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
+    pcmk__order_resource_actions(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type,
+                                 data_set);
 
     if (clone_data->ordered) {
         pe_rsc_trace(rsc, "Ordered version");
@@ -47,8 +52,9 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
 
         }
         /* else: child/child relative promote */
-        order_start_start(last, child, type);
-        new_rsc_order(last, RSC_PROMOTE, child, RSC_PROMOTE, type, data_set);
+        pcmk__order_starts(last, child, type, data_set);
+        pcmk__order_resource_actions(last, RSC_PROMOTE, child, RSC_PROMOTE,
+                                     type, data_set);
 
     } else {
         pe_rsc_trace(rsc, "Un-ordered version");
@@ -64,27 +70,32 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
         if (clone_data->ordered && last != NULL) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* global demote before first child demote */
-            new_rsc_order(rsc, RSC_DEMOTE, last, RSC_DEMOTE, pe_order_optional, data_set);
+            pcmk__order_resource_actions(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
+                                         pe_order_optional, data_set);
         }
         return;
     }
 
     /* child demote before global demoted */
-    new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_implies_then_printed, data_set);
+    pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
+                                 pe_order_implies_then_printed, data_set);
 
     /* global demote before child demote */
-    new_rsc_order(rsc, RSC_DEMOTE, child, RSC_DEMOTE, pe_order_implies_first_printed, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, child, RSC_DEMOTE,
+                                 pe_order_implies_first_printed, data_set);
 
     if (clone_data->ordered && last != NULL) {
         pe_rsc_trace(rsc, "Ordered version");
 
         /* child/child relative demote */
-        new_rsc_order(child, RSC_DEMOTE, last, RSC_DEMOTE, type, data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, type,
+                                     data_set);
 
     } else if (clone_data->ordered) {
         pe_rsc_trace(rsc, "Ordered version (1st node)");
         /* first child stop before global stopped */
-        new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type, data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type,
+                                     data_set);
 
     } else {
         pe_rsc_trace(rsc, "Un-ordered version");
@@ -330,16 +341,16 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* (Re-)add location preferences of resources that a promoted instance
          * should/must be colocated with.
          */
-        if (constraint->role_lh == RSC_ROLE_PROMOTED) {
+        if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
             enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
 
-            pe_rsc_trace(rsc, "RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
+            pe_rsc_trace(rsc, "RHS: %s with %s: %d",
+                         constraint->dependent->id, constraint->primary->id,
                          constraint->score);
-            rsc->allowed_nodes =
-                constraint->rsc_rh->cmds->merge_weights(constraint->rsc_rh, rsc->id,
-                                                        rsc->allowed_nodes,
-                                                        constraint->node_attribute,
-                                                        (float)constraint->score / INFINITY, flags);
+            rsc->allowed_nodes = constraint->primary->cmds->merge_weights(
+                constraint->primary, rsc->id, rsc->allowed_nodes,
+                constraint->node_attribute,
+                constraint->score / (float) INFINITY, flags);
         }
     }
 
@@ -354,16 +365,15 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* (Re-)add location preferences of resources that wish to be colocated
          * with a promoted instance.
          */
-        if (constraint->role_rh == RSC_ROLE_PROMOTED) {
-            pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
+        if (constraint->primary_role == RSC_ROLE_PROMOTED) {
+            pe_rsc_trace(rsc, "LHS: %s with %s: %d",
+                         constraint->dependent->id, constraint->primary->id,
                          constraint->score);
-            rsc->allowed_nodes =
-                constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id,
-                                                        rsc->allowed_nodes,
-                                                        constraint->node_attribute,
-                                                        (float)constraint->score / INFINITY,
-                                                        (pe_weights_rollback |
-                                                         pe_weights_positive));
+            rsc->allowed_nodes = constraint->dependent->cmds->merge_weights(
+                constraint->dependent, rsc->id, rsc->allowed_nodes,
+                constraint->node_attribute,
+                constraint->score / (float) INFINITY,
+                pe_weights_rollback|pe_weights_positive);
         }
     }
 
@@ -640,19 +650,13 @@ set_role_unpromoted(pe_resource_t *rsc, bool current)
 }
 
 static void
-set_role_promoted(pe_resource_t *rsc)
+set_role_promoted(pe_resource_t *rsc, gpointer user_data)
 {
-    GList *gIter = rsc->children;
-
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
         pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        set_role_promoted(child_rsc);
-    }
+    g_list_foreach(rsc->children, (GFunc) set_role_promoted, NULL);
 }
 
 pe_node_t *
@@ -736,7 +740,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
 
-            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons,
+            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->primary, cons,
                                                data_set);
         }
 
@@ -798,7 +802,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         chosen->count++;
         pe_rsc_info(rsc, "Promoting %s (%s %s)",
                     child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_role_promoted(child_rsc);
+        set_role_promoted(child_rsc, NULL);
         promoted++;
     }
 
@@ -895,25 +899,32 @@ void
 promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     /* global stopped before start */
-    new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+                                 pe_order_optional, data_set);
 
     /* global stopped before promote */
-    new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 
     /* global demoted before start */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_START, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
+                                 pe_order_optional, data_set);
 
     /* global started before promote */
-    new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 
     /* global demoted before stop */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+                                 pe_order_optional, data_set);
 
     /* global demote before demoted */
-    new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
+                                 pe_order_optional, data_set);
 
     /* global demoted before promote */
-    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE, pe_order_optional, data_set);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, data_set);
 }
 
 
@@ -932,7 +943,8 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         /* child demote before promote */
-        new_rsc_order(child_rsc, RSC_DEMOTE, child_rsc, RSC_PROMOTE, pe_order_optional, data_set);
+        pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
+                                     RSC_PROMOTE, pe_order_optional, data_set);
 
         child_promoting_constraints(clone_data, pe_order_optional,
                                     rsc, child_rsc, last_rsc, data_set);
@@ -971,29 +983,29 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
 }
 
 void
-promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
 
-    if (pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-        GList *rhs = NULL;
+    if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+        GList *affected_nodes = NULL;
 
-        for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
+        for (gIter = primary->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
             pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
             enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 
-            pe_rsc_trace(rsc_rh, "Processing: %s", child_rsc->id);
-            if (chosen != NULL && next_role == constraint->role_rh) {
-                pe_rsc_trace(rsc_rh, "Applying: %s %s %s %d", child_rsc->id,
+            pe_rsc_trace(primary, "Processing: %s", child_rsc->id);
+            if ((chosen != NULL) && (next_role == constraint->primary_role)) {
+                pe_rsc_trace(primary, "Applying: %s %s %s %d", child_rsc->id,
                              role2text(next_role), chosen->details->uname, constraint->score);
                 if (constraint->score < INFINITY) {
-                    node_hash_update_one(rsc_lh->allowed_nodes, chosen,
+                    node_hash_update_one(dependent->allowed_nodes, chosen,
                                          constraint->node_attribute, constraint->score);
                 }
-                rhs = g_list_prepend(rhs, chosen);
+                affected_nodes = g_list_prepend(affected_nodes, chosen);
             }
         }
 
@@ -1001,31 +1013,36 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
          * this unconditionally would prevent unpromoted instances from being
          * started.
          */
-        if ((constraint->role_lh != RSC_ROLE_PROMOTED)
-            || (constraint->role_rh != RSC_ROLE_PROMOTED)) {
+        if ((constraint->dependent_role != RSC_ROLE_PROMOTED)
+            || (constraint->primary_role != RSC_ROLE_PROMOTED)) {
 
             if (constraint->score >= INFINITY) {
-                node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
+                node_list_exclude(dependent->allowed_nodes, affected_nodes,
+                                  TRUE);
             }
         }
-        g_list_free(rhs);
+        g_list_free(affected_nodes);
 
-    } else if (constraint->role_lh == RSC_ROLE_PROMOTED) {
-        pe_resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh,
-                                                        constraint->role_rh,
-                                                        FALSE, data_set);
+    } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
+        pe_resource_t *primary_instance;
 
-        if (rh_child == NULL && constraint->score >= INFINITY) {
-            pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);
-            rsc_lh->priority = -INFINITY;
+        primary_instance = find_compatible_child(dependent, primary,
+                                                 constraint->primary_role,
+                                                 FALSE, data_set);
+        if ((primary_instance == NULL) && (constraint->score >= INFINITY)) {
+            pe_rsc_trace(dependent, "%s can't be promoted %s",
+                         dependent->id, constraint->id);
+            dependent->priority = -INFINITY;
 
-        } else if (rh_child != NULL) {
-            int new_priority = pe__add_scores(rsc_lh->priority,
+        } else if (primary_instance != NULL) {
+            int new_priority = pe__add_scores(dependent->priority,
                                               constraint->score);
 
-            pe_rsc_debug(rsc_lh, "Applying %s to %s", constraint->id, rsc_lh->id);
-            pe_rsc_debug(rsc_lh, "\t%s: %d->%d", rsc_lh->id, rsc_lh->priority, new_priority);
-            rsc_lh->priority = new_priority;
+            pe_rsc_debug(dependent, "Applying %s to %s",
+                         constraint->id, dependent->id);
+            pe_rsc_debug(dependent, "\t%s: %d->%d",
+                         dependent->id, dependent->priority, new_priority);
+            dependent->priority = new_priority;
         }
     }
 

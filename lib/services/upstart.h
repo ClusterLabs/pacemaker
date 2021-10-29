@@ -15,7 +15,16 @@
 #  include "crm/services.h"
 
 G_GNUC_INTERNAL GList *upstart_job_listall(void);
-G_GNUC_INTERNAL gboolean upstart_job_exec(svc_action_t * op);
+
+G_GNUC_INTERNAL
+int services__upstart_prepare(svc_action_t *op);
+
+G_GNUC_INTERNAL
+enum ocf_exitcode services__upstart2ocf(int exit_status);
+
+G_GNUC_INTERNAL
+int services__execute_upstart(svc_action_t *op);
+
 G_GNUC_INTERNAL gboolean upstart_job_exists(const gchar * name);
 G_GNUC_INTERNAL void upstart_cleanup(void);
 

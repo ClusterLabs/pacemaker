@@ -324,6 +324,8 @@ Deleted crm_config option: id=(null) name=cluster-delay
 * Passed: crm_attribute  - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
 Current cluster status:
+  * Full List of Resources:
+    * No resources
 
 Performing Requested Modifications:
   * Bringing node node1 online
@@ -336,6 +338,8 @@ Revised Cluster Status:
   * Node List:
     * Online: [ node1 ]
 
+  * Full List of Resources:
+    * No resources
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
 <cib epoch="9" num_updates="2" admin_epoch="0">
   <configuration>
@@ -485,6 +489,19 @@ scope=status  name=fail-count-foo value=3
 </cib>
 =#=#=#= End test: Query a fail count - OK (0) =#=#=#=
 * Passed: crm_failcount  - Query a fail count
+=#=#=#= Begin test: Show node attributes with crm_simulate =#=#=#=
+Current cluster status:
+  * Node List:
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * No resources
+
+  * Node Attributes:
+    * Node: node1:
+      * ram                             	: 1024M     
+=#=#=#= End test: Show node attributes with crm_simulate - OK (0) =#=#=#=
+* Passed: crm_simulate   - Show node attributes with crm_simulate
 =#=#=#= Begin test: Delete a transient (fail-count) node attribute =#=#=#=
 Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
 
@@ -4095,6 +4112,669 @@ Resources colocated with clone:
 5
 =#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
 * Passed: crmadmin       - List guest,remote nodes
+=#=#=#= Begin test: Show allocation scores with crm_simulate =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon.xml --show-scores --output-as=xml">
+  <cluster_status>
+    <nodes>
+      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+      <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+      <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+    </nodes>
+    <resources>
+      <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+      </clone>
+      <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <clone id="inactive-clone" multi_state="false" unique="false" managed="true" disabled="true" failed="false" failure_ignored="false" target_role="stopped">
+        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </clone>
+      <group id="inactive-group" number_resources="2" managed="true" disabled="true">
+        <resource id="inactive-dummy-1" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="inactive-dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </group>
+      <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+        <replica id="0">
+          <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster01" id="1" cached="true"/>
+          </resource>
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+          </resource>
+          <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster01" id="1" cached="true"/>
+          </resource>
+          <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster01" id="1" cached="true"/>
+          </resource>
+        </replica>
+        <replica id="1">
+          <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster02" id="2" cached="true"/>
+          </resource>
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+          </resource>
+          <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster02" id="2" cached="true"/>
+          </resource>
+          <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster02" id="2" cached="true"/>
+          </resource>
+        </replica>
+        <replica id="2">
+          <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd-bundle-docker-2" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+          <resource id="httpd-bundle-2" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        </replica>
+      </bundle>
+      <group id="exim-group" number_resources="2" managed="true" disabled="false">
+        <resource id="Public-IP" resource_agent="ocf:heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+      </group>
+      <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <group id="mysql-group:0" number_resources="1" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster02" id="2" cached="true"/>
+          </resource>
+        </group>
+        <group id="mysql-group:1" number_resources="1" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+            <node name="cluster01" id="1" cached="true"/>
+          </resource>
+        </group>
+        <group id="mysql-group:2" number_resources="1" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        </group>
+        <group id="mysql-group:3" number_resources="1" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        </group>
+        <group id="mysql-group:4" number_resources="1" managed="true" disabled="false">
+          <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        </group>
+      </clone>
+      <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </clone>
+    </resources>
+  </cluster_status>
+  <allocations>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="ping-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="ping-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="ping:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="1" id="ping:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="1" id="ping:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="ping:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="ping:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="ping:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="ping:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="ping:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="Fencing"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Fencing"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="dummy"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="dummy"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-group"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-group"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="501" id="httpd:0"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="501" id="httpd:1"/>
+    <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="500" id="httpd:2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="10000" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="10000" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-1" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-2" score="0" id="httpd-bundle-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+    <node_weight function="pcmk__clone_allocate" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="exim-group"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="exim-group"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="Email"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Email"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="Email"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Email"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-clone-group"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-clone-group"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:4"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:4"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-group:1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
+    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-clone"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="1" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="1" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:4"/>
+    <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:4"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
+    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
+    <promotion_score id="promotable-rsc:0" score="9" node="cluster02"/>
+    <promotion_score id="promotable-rsc:2" score="0"/>
+    <promotion_score id="promotable-rsc:3" score="0"/>
+    <promotion_score id="promotable-rsc:4" score="0"/>
+    <promotion_score id="promotable-rsc:1" score="-1" node="cluster01"/>
+  </allocations>
+  <actions>
+    <rsc_action action="start" resource="httpd-bundle-2" node="cluster01" reason="unrunnable httpd-bundle-docker-2 start" blocked="true"/>
+    <rsc_action action="start" resource="httpd:2" node="httpd-bundle-2" reason="unrunnable httpd-bundle-docker-2 start" blocked="true"/>
+  </actions>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show allocation scores with crm_simulate - OK (0) =#=#=#=
+* Passed: crm_simulate   - Show allocation scores with crm_simulate
+=#=#=#= Begin test: Show utilization with crm_simulate =#=#=#=
+4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+[ cluster01 cluster02 ]
+[ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+Started: [ cluster01 cluster02 ]
+Fencing	(stonith:fence_xvm):	 Started cluster01
+dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+Stopped (disabled): [ cluster01 cluster02 ]
+inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+Email	(lsb:exim):	 Started cluster02
+Started: [ cluster01 cluster02 ]
+Promoted: [ cluster02 ]
+Unpromoted: [ cluster01 ]
+
+Only 'private' parameters to dummy_monitor_60000 on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+Original: cluster01 capacity:
+Original: cluster02 capacity:
+Original: httpd-bundle-0 capacity:
+Original: httpd-bundle-1 capacity:
+Original: httpd-bundle-2 capacity:
+native_assign_node: ping:0 utilization on cluster02:
+native_assign_node: ping:1 utilization on cluster01:
+native_assign_node: Fencing utilization on cluster01:
+native_assign_node: dummy utilization on cluster02:
+native_assign_node: httpd-bundle-docker-0 utilization on cluster01:
+native_assign_node: httpd-bundle-docker-1 utilization on cluster02:
+native_assign_node: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
+native_assign_node: httpd-bundle-0 utilization on cluster01:
+native_assign_node: httpd:0 utilization on httpd-bundle-0:
+native_assign_node: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
+native_assign_node: httpd-bundle-1 utilization on cluster02:
+native_assign_node: httpd:1 utilization on httpd-bundle-1:
+native_assign_node: httpd-bundle-2 utilization on cluster01:
+native_assign_node: httpd:2 utilization on httpd-bundle-2:
+native_assign_node: Public-IP utilization on cluster02:
+native_assign_node: Email utilization on cluster02:
+native_assign_node: mysql-proxy:0 utilization on cluster02:
+native_assign_node: mysql-proxy:1 utilization on cluster01:
+native_assign_node: promotable-rsc:0 utilization on cluster02:
+native_assign_node: promotable-rsc:1 utilization on cluster01:
+Remaining: cluster01 capacity:
+Remaining: cluster02 capacity:
+Remaining: httpd-bundle-0 capacity:
+Remaining: httpd-bundle-1 capacity:
+Remaining: httpd-bundle-2 capacity:
+
+Start      httpd-bundle-2     (      cluster01 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+=#=#=#= End test: Show utilization with crm_simulate - OK (0) =#=#=#=
+* Passed: crm_simulate   - Show utilization with crm_simulate
+=#=#=#= Begin test: Simulate injecting a failure =#=#=#=
+4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster01 cluster02 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+      * Email	(lsb:exim):	 Started cluster02
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster01 cluster02 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Promoted: [ cluster02 ]
+      * Unpromoted: [ cluster01 ]
+
+Performing Requested Modifications:
+  * Injecting ping_monitor_10000@cluster02=1 into the configuration
+  * Injecting attribute fail-count-ping#monitor_10000=value++ into /node_state '2'
+  * Injecting attribute last-failure-ping#monitor_10000= into /node_state '2'
+
+Transition Summary:
+  * Recover    ping:0             (      cluster02 )
+  * Start      httpd-bundle-2     (      cluster01 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+  * Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+
+Executing Cluster Transition:
+  * Cluster action:  clear_failcount for ping on cluster02
+  * Pseudo action:   ping-clone_stop_0
+  * Pseudo action:   httpd-bundle_start_0
+  * Resource action: ping            stop on cluster02
+  * Pseudo action:   ping-clone_stopped_0
+  * Pseudo action:   ping-clone_start_0
+  * Pseudo action:   httpd-bundle-clone_start_0
+  * Resource action: ping            start on cluster02
+  * Resource action: ping            monitor=10000 on cluster02
+  * Pseudo action:   ping-clone_running_0
+  * Pseudo action:   httpd-bundle-clone_running_0
+  * Pseudo action:   httpd-bundle_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster01 cluster02 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+      * Email	(lsb:exim):	 Started cluster02
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster01 cluster02 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Promoted: [ cluster02 ]
+      * Unpromoted: [ cluster01 ]
+=#=#=#= End test: Simulate injecting a failure - OK (0) =#=#=#=
+* Passed: crm_simulate   - Simulate injecting a failure
+=#=#=#= Begin test: Simulate bringing a node down =#=#=#=
+4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster01 cluster02 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+      * Email	(lsb:exim):	 Started cluster02
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster01 cluster02 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Promoted: [ cluster02 ]
+      * Unpromoted: [ cluster01 ]
+
+Performing Requested Modifications:
+  * Taking node cluster01 offline
+
+Transition Summary:
+  * Fence (off) httpd-bundle-0 (resource: httpd-bundle-docker-0) 'guest is unclean'
+  * Start      Fencing            (      cluster02 )
+  * Start      httpd-bundle-0     (      cluster02 )  due to unrunnable httpd-bundle-docker-0 start (blocked)
+  * Stop       httpd:0            ( httpd-bundle-0 )  due to unrunnable httpd-bundle-docker-0 start
+  * Start      httpd-bundle-2     (      cluster02 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+  * Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+
+Executing Cluster Transition:
+  * Resource action: Fencing         start on cluster02
+  * Pseudo action:   stonith-httpd-bundle-0-off on httpd-bundle-0
+  * Pseudo action:   httpd-bundle_stop_0
+  * Pseudo action:   httpd-bundle_start_0
+  * Resource action: Fencing         monitor=60000 on cluster02
+  * Pseudo action:   httpd-bundle-clone_stop_0
+  * Pseudo action:   httpd_stop_0
+  * Pseudo action:   httpd-bundle-clone_stopped_0
+  * Pseudo action:   httpd-bundle-clone_start_0
+  * Pseudo action:   httpd-bundle_stopped_0
+  * Pseudo action:   httpd-bundle-clone_running_0
+  * Pseudo action:   httpd-bundle_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster02 ]
+    * OFFLINE: [ cluster01 ]
+    * GuestOnline: [ httpd-bundle-1@cluster02 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster02 ]
+      * Stopped: [ cluster01 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster02
+    * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 FAILED
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+      * Email	(lsb:exim):	 Started cluster02
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster02 ]
+      * Stopped: [ cluster01 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Promoted: [ cluster02 ]
+      * Stopped: [ cluster01 ]
+=#=#=#= End test: Simulate bringing a node down - OK (0) =#=#=#=
+* Passed: crm_simulate   - Simulate bringing a node down
+=#=#=#= Begin test: Simulate a node failing =#=#=#=
+4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster01 cluster02 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+      * Email	(lsb:exim):	 Started cluster02
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster01 cluster02 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Promoted: [ cluster02 ]
+      * Unpromoted: [ cluster01 ]
+
+Performing Requested Modifications:
+  * Failing node cluster02
+
+Transition Summary:
+  * Fence (off) httpd-bundle-1 (resource: httpd-bundle-docker-1) 'guest is unclean'
+  * Fence (reboot) cluster02 'peer is no longer part of the cluster'
+  * Stop       ping:0                              (              cluster02 )  due to node availability
+  * Stop       dummy                               (              cluster02 )  due to node availability
+  * Stop       httpd-bundle-ip-192.168.122.132     (              cluster02 )  due to node availability
+  * Stop       httpd-bundle-docker-1               (              cluster02 )  due to node availability
+  * Stop       httpd-bundle-1                      (              cluster02 )  due to unrunnable httpd-bundle-docker-1 start
+  * Stop       httpd:1                             (         httpd-bundle-1 )  due to unrunnable httpd-bundle-docker-1 start
+  * Start      httpd-bundle-2                      (              cluster01 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+  * Start      httpd:2                             (         httpd-bundle-2 )  due to unrunnable httpd-bundle-docker-2 start (blocked)
+  * Move       Public-IP                           ( cluster02 -> cluster01 )
+  * Move       Email                               ( cluster02 -> cluster01 )
+  * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
+
+Executing Cluster Transition:
+  * Pseudo action:   httpd-bundle-1_stop_0
+  * Pseudo action:   promotable-clone_demote_0
+  * Pseudo action:   httpd-bundle_stop_0
+  * Pseudo action:   httpd-bundle_start_0
+  * Fencing cluster02 (reboot)
+  * Pseudo action:   ping-clone_stop_0
+  * Pseudo action:   dummy_stop_0
+  * Pseudo action:   httpd-bundle-docker-1_stop_0
+  * Pseudo action:   exim-group_stop_0
+  * Pseudo action:   Email_stop_0
+  * Pseudo action:   mysql-clone-group_stop_0
+  * Pseudo action:   promotable-rsc_demote_0
+  * Pseudo action:   promotable-clone_demoted_0
+  * Pseudo action:   promotable-clone_stop_0
+  * Pseudo action:   stonith-httpd-bundle-1-off on httpd-bundle-1
+  * Pseudo action:   ping_stop_0
+  * Pseudo action:   ping-clone_stopped_0
+  * Pseudo action:   httpd-bundle-clone_stop_0
+  * Pseudo action:   httpd-bundle-ip-192.168.122.132_stop_0
+  * Pseudo action:   Public-IP_stop_0
+  * Pseudo action:   mysql-group:0_stop_0
+  * Pseudo action:   mysql-proxy_stop_0
+  * Pseudo action:   promotable-rsc_stop_0
+  * Pseudo action:   promotable-clone_stopped_0
+  * Pseudo action:   httpd_stop_0
+  * Pseudo action:   httpd-bundle-clone_stopped_0
+  * Pseudo action:   httpd-bundle-clone_start_0
+  * Pseudo action:   exim-group_stopped_0
+  * Pseudo action:   exim-group_start_0
+  * Resource action: Public-IP       start on cluster01
+  * Resource action: Email           start on cluster01
+  * Pseudo action:   mysql-group:0_stopped_0
+  * Pseudo action:   mysql-clone-group_stopped_0
+  * Pseudo action:   httpd-bundle_stopped_0
+  * Pseudo action:   httpd-bundle-clone_running_0
+  * Pseudo action:   exim-group_running_0
+  * Pseudo action:   httpd-bundle_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 ]
+    * OFFLINE: [ cluster02 ]
+    * GuestOnline: [ httpd-bundle-0@cluster01 ]
+
+  * Full List of Resources:
+    * Clone Set: ping-clone [ping]:
+      * Started: [ cluster01 ]
+      * Stopped: [ cluster02 ]
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy	(ocf:pacemaker:Dummy):	 Stopped
+    * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+      * Stopped (disabled): [ cluster01 cluster02 ]
+    * Resource Group: inactive-group (disabled):
+      * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Container bundle set: httpd-bundle [pcmk:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * Resource Group: exim-group:
+      * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster01
+      * Email	(lsb:exim):	 Started cluster01
+    * Clone Set: mysql-clone-group [mysql-group]:
+      * Started: [ cluster01 ]
+      * Stopped: [ cluster02 ]
+    * Clone Set: promotable-clone [promotable-rsc] (promotable):
+      * Unpromoted: [ cluster01 ]
+      * Stopped: [ cluster02 ]
+=#=#=#= End test: Simulate a node failing - OK (0) =#=#=#=
+* Passed: crm_simulate   - Simulate a node failing
 =#=#=#= Begin test: List a promotable clone resource =#=#=#=
 resource promotable-clone is running on: cluster01
 resource promotable-clone is running on: cluster02 Promoted

@@ -241,13 +241,14 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     if (xml == NULL) {
         return;
-
-    } else if (strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
-        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
-        crm_trace("Got %p in %s", xml, XML_CIB_TAG_LRM);
     }
 
-    CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
+    if (strcmp(TYPE(xml), XML_CIB_TAG_LRM) == 0) {
+        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
+        CRM_CHECK(xml != NULL, return);
+    }
+
+    CRM_CHECK(strcmp(TYPE(xml), XML_LRM_TAG_RESOURCES) == 0, return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates
@@ -683,9 +684,10 @@ action_timer_callback(gpointer data)
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
                 timer->timeout + transition_graph->network_delay);
-        print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
+        pcmk__log_graph_action(LOG_ERR, timer->action);
 
-        timer->action->failed = TRUE;
+        crm__set_graph_action_flags(timer->action, pcmk__graph_action_failed);
+
         te_action_confirmed(timer->action, transition_graph);
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
 

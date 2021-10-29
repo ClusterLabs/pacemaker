@@ -53,10 +53,11 @@ extern "C" {
  * alternative interpretations. The legacy interpration is that the absolute
  * value of the return code is either a system error number or a custom
  * pcmk_err_* number. This is less than ideal because system error numbers are
- * constrained only to the positive int range, so there's the possibility
- * (though not noticed in the wild) that system errors and custom errors could
- * collide. The new intepretation is that negative values are from the pcmk_rc_e
- * enum, and positive values are system error numbers. Both use 0 for success.
+ * constrained only to the positive int range, so there's the possibility that
+ * system errors and custom errors could collide (which did in fact happen
+ * already on one architecture). The new intepretation is that negative values
+ * are from the pcmk_rc_e enum, and positive values are system error numbers.
+ * Both use 0 for success.
  *
  * For system error codes, see:
  * - /usr/include/asm-generic/errno.h
@@ -84,8 +85,8 @@ extern "C" {
 #  define pcmk_err_already              215
 /* On HPPA 215 is ENOSYM (Unknown error 215), which hopefully never happens. */
 #ifdef __hppa__
-#  define pcmk_err_bad_nvpair           250	/* 216 is ENOTSOCK */
-#  define pcmk_err_unknown_format       252	/* 217 is EDESTADDRREQ */
+#  define pcmk_err_bad_nvpair           250 /* 216 is ENOTSOCK */
+#  define pcmk_err_unknown_format       252 /* 217 is EDESTADDRREQ */
 #else
 #  define pcmk_err_bad_nvpair           216
 #  define pcmk_err_unknown_format       217
@@ -107,6 +108,9 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_invalid_transition  = -1031,
+    pcmk_rc_graph_error         = -1030,
+    pcmk_rc_dot_error           = -1029,
     pcmk_rc_underflow           = -1028,
     pcmk_rc_no_input            = -1027,
     pcmk_rc_no_output           = -1026,
@@ -144,38 +148,55 @@ enum pcmk_rc_e {
     // Positive values reserved for system error numbers
 };
 
-/* Uniform exit codes
- * Everything is mapped to its OCF equivalent so that Pacemaker only deals with one set of codes
+
+/*!
+ * \enum ocf_exitcode
+ * \brief Exit status codes for resource agents
+ *
+ * The OCF Resource Agent API standard enumerates the possible exit status codes
+ * that agents should return. Besides being used with OCF agents, these values
+ * are also used by the executor as a universal status for all agent standards;
+ * actual results are mapped to these before returning them to clients.
  */
 enum ocf_exitcode {
-    PCMK_OCF_OK                   = 0,
-    PCMK_OCF_UNKNOWN_ERROR        = 1,
-    PCMK_OCF_INVALID_PARAM        = 2,
-    PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,
-    PCMK_OCF_INSUFFICIENT_PRIV    = 4,
-    PCMK_OCF_NOT_INSTALLED        = 5,
-    PCMK_OCF_NOT_CONFIGURED       = 6,
-    PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
-    PCMK_OCF_RUNNING_PROMOTED     = 8,
-    PCMK_OCF_FAILED_PROMOTED      = 9,
+    PCMK_OCF_OK                   = 0,   //!< Success
+    PCMK_OCF_UNKNOWN_ERROR        = 1,   //!< Unspecified error
+    PCMK_OCF_INVALID_PARAM        = 2,   //!< Parameter invalid (in local context)
+    PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,   //!< Requested action not implemented
+    PCMK_OCF_INSUFFICIENT_PRIV    = 4,   //!< Insufficient privileges
+    PCMK_OCF_NOT_INSTALLED        = 5,   //!< Dependencies not available locally
+    PCMK_OCF_NOT_CONFIGURED       = 6,   //!< Parameter invalid (inherently)
+    PCMK_OCF_NOT_RUNNING          = 7,   //!< Service safely stopped
+    PCMK_OCF_RUNNING_PROMOTED     = 8,   //!< Service active and promoted
+    PCMK_OCF_FAILED_PROMOTED      = 9,   //!< Service failed and possibly in promoted role
+    PCMK_OCF_DEGRADED             = 190, //!< Service active but more likely to fail soon
+    PCMK_OCF_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
 
-
-    /* 150-199	reserved for application use */
-    PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
-
-    PCMK_OCF_DEGRADED           = 190, // Resource active but more likely to fail soon
-    PCMK_OCF_DEGRADED_PROMOTED  = 191, // Resource promoted but more likely to fail soon
-
-    PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
-    PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
-    PCMK_OCF_SIGNAL        = 194,
-    PCMK_OCF_NOT_SUPPORTED = 195,
-    PCMK_OCF_PENDING       = 196,
-    PCMK_OCF_CANCELLED     = 197,
-    PCMK_OCF_TIMEOUT       = 198,
-    PCMK_OCF_OTHER_ERROR   = 199, /* Keep the same codes as PCMK_LSB */
+    /* These two are Pacemaker extensions, not in the OCF standard. The
+     * controller records PCMK_OCF_UNKNOWN for pending actions.
+     * PCMK_OCF_CONNECTION_DIED is used only with older DCs that don't support
+     * PCMK_EXEC_NOT_CONNECTED.
+     *
+     * @TODO PCMK_OCF_UNKNOWN should be deprecated, and an execution status of
+     * PCMK_EXEC_PENDING relied on instead (though it might be worthwhile to
+     * keep PCMK_OCF_UNKNOWN as an invalid value for initializing new action
+     * objects). However, backward compatibility must be considered (processing
+     * old saved CIB files, rolling upgrades with older DCs, older
+     * Pacemaker Remote nodes or connection hosts, and older bundles).
+     */
+    PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
+    PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // Former Pacemaker extensions
+    PCMK_OCF_EXEC_ERROR           = 192, //!< \deprecated (Unused)
+    PCMK_OCF_SIGNAL               = 194, //!< \deprecated (Unused)
+    PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
+    PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
+    PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
+    PCMK_OCF_TIMEOUT              = 198, //!< \deprecated (Unused)
+    PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
+
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
     PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
 
@@ -187,8 +208,9 @@ enum ocf_exitcode {
 #endif
 };
 
-/*
- * Exit status codes
+/*!
+ * \enum crm_exit_e
+ * \brief Exit status codes for tools and daemons
  *
  * We want well-specified (i.e. OS-invariant) exit status codes for our daemons
  * and applications so they can be relied on by callers. (Function return codes
@@ -199,7 +221,7 @@ enum ocf_exitcode {
  * OSes we don't support -- for example, OpenVMS considers 1 success!).
  *
  * For init scripts, the LSB gives meaning to 0-7, and sets aside 150-199 for
- * application use. OCF adds 8-9 and 189-199.
+ * application use. OCF adds 8-9 and 190-191.
  *
  * sysexits.h was an attempt to give additional meanings, but never really
  * caught on. It uses 0 and 64-78.
@@ -214,58 +236,96 @@ enum ocf_exitcode {
  */
 typedef enum crm_exit_e {
     // Common convention
-    CRM_EX_OK                   =   0,
-    CRM_EX_ERROR                =   1,
+    CRM_EX_OK                   =   0, //!< Success
+    CRM_EX_ERROR                =   1, //!< Unspecified error
 
     // LSB + OCF
-    CRM_EX_INVALID_PARAM        =   2,
-    CRM_EX_UNIMPLEMENT_FEATURE  =   3,
-    CRM_EX_INSUFFICIENT_PRIV    =   4,
-    CRM_EX_NOT_INSTALLED        =   5,
-    CRM_EX_NOT_CONFIGURED       =   6,
-    CRM_EX_NOT_RUNNING          =   7,
+    CRM_EX_INVALID_PARAM        =   2, //!< Parameter invalid (in local context)
+    CRM_EX_UNIMPLEMENT_FEATURE  =   3, //!< Requested action not implemented
+    CRM_EX_INSUFFICIENT_PRIV    =   4, //!< Insufficient privileges
+    CRM_EX_NOT_INSTALLED        =   5, //!< Dependencies not available locally
+    CRM_EX_NOT_CONFIGURED       =   6, //!< Parameter invalid (inherently)
+    CRM_EX_NOT_RUNNING          =   7, //!< Service safely stopped
 
     // sysexits.h
-    CRM_EX_USAGE                =  64, // command line usage error
-    CRM_EX_DATAERR              =  65, // user-supplied data incorrect
-    CRM_EX_NOINPUT              =  66, // input file not available
-    CRM_EX_NOUSER               =  67, // user does not exist
-    CRM_EX_NOHOST               =  68, // host unknown
-    CRM_EX_UNAVAILABLE          =  69, // needed service unavailable
-    CRM_EX_SOFTWARE             =  70, // internal software bug
-    CRM_EX_OSERR                =  71, // external (OS/environmental) problem
-    CRM_EX_OSFILE               =  72, // system file not usable
-    CRM_EX_CANTCREAT            =  73, // file couldn't be created
-    CRM_EX_IOERR                =  74, // file I/O error
-    CRM_EX_TEMPFAIL             =  75, // try again
-    CRM_EX_PROTOCOL             =  76, // protocol violated
-    CRM_EX_NOPERM               =  77, // non-file permission issue
-    CRM_EX_CONFIG               =  78, // misconfiguration
+    CRM_EX_USAGE                =  64, //!< Command line usage error
+    CRM_EX_DATAERR              =  65, //!< User-supplied data incorrect
+    CRM_EX_NOINPUT              =  66, //!< Input file not available
+    CRM_EX_NOUSER               =  67, //!< User does not exist
+    CRM_EX_NOHOST               =  68, //!< Host unknown
+    CRM_EX_UNAVAILABLE          =  69, //!< Needed service unavailable
+    CRM_EX_SOFTWARE             =  70, //!< Internal software bug
+    CRM_EX_OSERR                =  71, //!< External (OS/environmental) problem
+    CRM_EX_OSFILE               =  72, //!< System file not usable
+    CRM_EX_CANTCREAT            =  73, //!< File couldn't be created
+    CRM_EX_IOERR                =  74, //!< File I/O error
+    CRM_EX_TEMPFAIL             =  75, //!< Try again
+    CRM_EX_PROTOCOL             =  76, //!< Protocol violated
+    CRM_EX_NOPERM               =  77, //!< Non-file permission issue
+    CRM_EX_CONFIG               =  78, //!< Misconfiguration
 
     // Custom
-    CRM_EX_FATAL                = 100, // do not respawn
-    CRM_EX_PANIC                = 101, // panic the local host
-    CRM_EX_DISCONNECT           = 102, // lost connection to something
-    CRM_EX_OLD                  = 103, // update older than existing config
-    CRM_EX_DIGEST               = 104, // digest comparison failed
-    CRM_EX_NOSUCH               = 105, // requested item does not exist
-    CRM_EX_QUORUM               = 106, // local partition does not have quorum
-    CRM_EX_UNSAFE               = 107, // requires --force or new conditions
-    CRM_EX_EXISTS               = 108, // requested item already exists
-    CRM_EX_MULTIPLE             = 109, // requested item has multiple matches
-    CRM_EX_EXPIRED              = 110, // requested item has expired
-    CRM_EX_NOT_YET_IN_EFFECT    = 111, // requested item is not in effect
-    CRM_EX_INDETERMINATE        = 112, // could not determine status
-    CRM_EX_UNSATISFIED          = 113, // requested item does not satisfy constraints
+    CRM_EX_FATAL                = 100, //!< Do not respawn
+    CRM_EX_PANIC                = 101, //!< Panic the local host
+    CRM_EX_DISCONNECT           = 102, //!< Lost connection to something
+    CRM_EX_OLD                  = 103, //!< Update older than existing config
+    CRM_EX_DIGEST               = 104, //!< Digest comparison failed
+    CRM_EX_NOSUCH               = 105, //!< Requested item does not exist
+    CRM_EX_QUORUM               = 106, //!< Local partition does not have quorum
+    CRM_EX_UNSAFE               = 107, //!< Requires --force or new conditions
+    CRM_EX_EXISTS               = 108, //!< Requested item already exists
+    CRM_EX_MULTIPLE             = 109, //!< Requested item has multiple matches
+    CRM_EX_EXPIRED              = 110, //!< Requested item has expired
+    CRM_EX_NOT_YET_IN_EFFECT    = 111, //!< Requested item is not in effect
+    CRM_EX_INDETERMINATE        = 112, //!< Could not determine status
+    CRM_EX_UNSATISFIED          = 113, //!< Requested item does not satisfy constraints
 
     // Other
-    CRM_EX_TIMEOUT              = 124, // convention from timeout(1)
-    CRM_EX_MAX                  = 255, // ensure crm_exit_t can hold this
+    CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
+
+    /* Anything above 128 overlaps with some shells' use of these values for
+     * "interrupted by signal N", and so may be unreliable when detected by
+     * shell scripts.
+     */
+
+    // OCF Resource Agent API 1.1
+    CRM_EX_DEGRADED             = 190, //!< Service active but more likely to fail soon
+    CRM_EX_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
+
+    CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;
+
+/*!
+ * \enum pcmk_exec_status
+ * \brief Execution status
+ *
+ * These codes are used to specify the result of the attempt to execute an
+ * agent, rather than the agent's result itself.
+ */
+enum pcmk_exec_status {
+    PCMK_EXEC_UNKNOWN = -2,     //!< Used only to initialize variables
+    PCMK_EXEC_PENDING = -1,     //!< Action is in progress
+    PCMK_EXEC_DONE,             //!< Action completed, result is known
+    PCMK_EXEC_CANCELLED,        //!< Action was cancelled
+    PCMK_EXEC_TIMEOUT,          //!< Action did not complete in time
+    PCMK_EXEC_NOT_SUPPORTED,    //!< Agent does not implement requested action
+    PCMK_EXEC_ERROR,            //!< Execution failed, may be retried
+    PCMK_EXEC_ERROR_HARD,       //!< Execution failed, do not retry on node
+    PCMK_EXEC_ERROR_FATAL,      //!< Execution failed, do not retry anywhere
+    PCMK_EXEC_NOT_INSTALLED,    //!< Agent or dependency not available locally
+    PCMK_EXEC_NOT_CONNECTED,    //!< No connection to executor
+    PCMK_EXEC_INVALID,          //!< Action cannot be attempted (e.g. shutdown)
+    PCMK_EXEC_NO_FENCE_DEVICE,  //!< No fence device is configured for target
+    PCMK_EXEC_NO_SECRETS,       //!< Necessary CIB secrets are unavailable
+
+    // Add new values above here then update this one below
+    PCMK_EXEC_MAX = PCMK_EXEC_NO_SECRETS, //!< Maximum value for this enum
+};
 
 const char *pcmk_rc_name(int rc);
 const char *pcmk_rc_str(int rc);
 crm_exit_t pcmk_rc2exitc(int rc);
+enum ocf_exitcode pcmk_rc2ocf(int rc);
 int pcmk_rc2legacy(int rc);
 int pcmk_legacy2rc(int legacy_rc);
 const char *pcmk_strerror(int rc);
@@ -275,6 +335,27 @@ crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
+
+static inline const char *
+pcmk_exec_status_str(enum pcmk_exec_status status)
+{
+    switch (status) {
+        case PCMK_EXEC_PENDING:         return "pending";
+        case PCMK_EXEC_DONE:            return "complete";
+        case PCMK_EXEC_CANCELLED:       return "Cancelled";
+        case PCMK_EXEC_TIMEOUT:         return "Timed Out";
+        case PCMK_EXEC_NOT_SUPPORTED:   return "NOT SUPPORTED";
+        case PCMK_EXEC_ERROR:           return "Error";
+        case PCMK_EXEC_ERROR_HARD:      return "Hard error";
+        case PCMK_EXEC_ERROR_FATAL:     return "Fatal error";
+        case PCMK_EXEC_NOT_INSTALLED:   return "Not installed";
+        case PCMK_EXEC_NOT_CONNECTED:   return "No executor connection";
+        case PCMK_EXEC_INVALID:         return "Cannot execute now";
+        case PCMK_EXEC_NO_FENCE_DEVICE: return "No fence device";
+        case PCMK_EXEC_NO_SECRETS:      return "CIB secrets unavailable";
+        default:                        return "UNKNOWN!";
+    }
+}
 
 #ifdef __cplusplus
 }

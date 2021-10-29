@@ -319,7 +319,7 @@ get_cluster_type(void)
         return cluster_type;
     }
 
-    cluster = pcmk__env_option("cluster_type");
+    cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
 
 #if SUPPORT_COROSYNC
     /* If nothing is defined in the environment, try corosync (if supported) */

@@ -306,6 +306,9 @@ BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
 
+# Required for "make check"
+BuildRequires: libcmocka-devel
+
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
 %endif
@@ -329,7 +332,7 @@ Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 # Bundled bits
 ## Pacemaker uses the crypto/md5-buffer module from gnulib
 %if 0%{?fedora} || 0%{?rhel}
-Provides:      bundled(gnulib)
+Provides:      bundled(gnulib) = 20200404
 %endif
 
 %description
@@ -576,12 +579,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 rm -f %{buildroot}/%{_sbindir}/notifyServicelogEvent
 rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
 
-# Don't ship init scripts for systemd based platforms
-%if %{defined _unitdir}
-rm -f %{buildroot}/%{_initrddir}/pacemaker
-rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
-%endif
-
 # Byte-compile Python sources where suitable and the distro procedures known
 %if %{defined py_byte_compile}
 %{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
@@ -734,6 +731,7 @@ exit 0
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/fence_legacy
+%{_sbindir}/fence_watchdog
 
 %doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
@@ -744,6 +742,7 @@ exit 0
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_legacy.*
+%doc %{_mandir}/man8/fence_watchdog.*
 %doc %{_mandir}/man8/pacemakerd.*
 
 %doc %{_datadir}/pacemaker/alerts
@@ -822,6 +821,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
+%exclude %{_mandir}/man8/fence_watchdog.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker-remoted.*
 
@@ -909,5 +909,5 @@ exit 0
 
 %changelog
 
-* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION-1
+* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION
  - See included ChangeLog file for details

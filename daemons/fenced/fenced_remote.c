@@ -457,6 +457,18 @@ handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
     }
 }
 
+static char *
+delegate_from_xml(xmlNode *xml)
+{
+    xmlNode *match = get_xpath_object("//@" F_STONITH_DELEGATE, xml, LOG_NEVER);
+
+    if (match == NULL) {
+        return crm_element_value_copy(xml, F_ORIG);
+    } else {
+        return crm_element_value_copy(match, F_STONITH_DELEGATE);
+    }
+}
+
 /*!
  * \internal
  * \brief Finalize a remote operation.
@@ -490,7 +502,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     xmlNode *local_data = NULL;
     gboolean op_merged = FALSE;
 
-    op->completed = time(NULL);
+    set_fencing_completed(op);
     clear_remote_op_timers(op);
     undo_op_remap(op);
 
@@ -504,19 +516,19 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
-    if (!op->delegate && data && rc != -ENODEV && rc != -EHOSTUNREACH) {
-        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data,
-                                          LOG_NEVER);
-        if(ndata) {
-            op->delegate = crm_element_value_copy(ndata, F_STONITH_DELEGATE);
-        } else { 
-            op->delegate = crm_element_value_copy(data, F_ORIG);
-        }
-    }
-
     if (data == NULL) {
         data = create_xml_node(NULL, "remote-op");
         local_data = data;
+
+    } else if (op->delegate == NULL) {
+        switch (rc) {
+            case -ENODEV:
+            case -EHOSTUNREACH:
+                break;
+            default:
+                op->delegate = delegate_from_xml(data);
+                break;
+        }
     }
 
     if(dup) {
@@ -976,7 +988,7 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
 
     op->state = st_done;
-    op->completed = time(NULL);
+    set_fencing_completed(op);
     op->delegate = strdup("a human");
 
     crm_notice("Injecting manual confirmation that %s is safely off/down",
@@ -1522,6 +1534,25 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
     }
 }
 
+static gboolean
+check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
+{
+    if (node_does_watchdog_fencing(op->target)) {
+
+        crm_notice("Waiting %lds for %s to self-fence (%s) for "
+                   "client %s " CRM_XS " id=%.8s",
+                   (stonith_watchdog_timeout_ms / 1000),
+                   op->target, op->action, op->client_name, op->id);
+        op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms,
+                                         remote_op_watchdog_done, op);
+        return TRUE;
+    } else {
+        crm_debug("Skipping fallback to watchdog-fencing as %s is "
+                 "not in host-list", op->target);
+    }
+    return FALSE;
+}
+
 void
 call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
 {
@@ -1592,25 +1623,32 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
             g_source_remove(op->op_timer_one);
         }
 
-        if(stonith_watchdog_timeout_ms > 0 && device && pcmk__str_eq(device, "watchdog", pcmk__str_casei)) {
-            crm_notice("Waiting %lds for %s to self-fence (%s) for client %s "
-                       CRM_XS " id=%.8s", (stonith_watchdog_timeout_ms / 1000),
-                       op->target, op->action, op->client_name, op->id);
-            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
+        if (!(stonith_watchdog_timeout_ms > 0 && (
+                (pcmk__str_eq(device, STONITH_WATCHDOG_ID,
+                                        pcmk__str_none)) ||
+                (pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
+                    && !pcmk__str_eq(op->action, "on", pcmk__str_casei))) &&
+             check_watchdog_fencing_and_wait(op))) {
 
-            /* TODO check devices to verify watchdog will be in use */
-        } else if(stonith_watchdog_timeout_ms > 0
-                  && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)
-                  && !pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
-            crm_notice("Waiting %lds for %s to self-fence (%s) for client %s "
-                       CRM_XS " id=%.8s", (stonith_watchdog_timeout_ms / 1000),
-                       op->target, op->action, op->client_name, op->id);
-            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
-
-        } else {
+            /* Some thoughts about self-fencing cases reaching this point:
+               - Actually check in check_watchdog_fencing_and_wait
+                 shouldn't fail if STONITH_WATCHDOG_ID is
+                 chosen as fencing-device and it being present implies
+                 watchdog-fencing is enabled anyway
+               - If watchdog-fencing is disabled either in general or for
+                 a specific target - detected in check_watchdog_fencing_and_wait -
+                 for some other kind of self-fencing we can't expect
+                 a success answer but timeout is fine if the node doesn't
+                 come back in between
+               - Delicate might be the case where we have watchdog-fencing
+                 enabled for a node but the watchdog-fencing-device isn't
+                 explicitly chosen for suicide. Local pe-execution in sbd
+                 may detect the node as unclean and lead to timely suicide.
+                 Otherwise the selection of stonith-watchdog-timeout at
+                 least is questionable.
+             */
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
         }
-
 
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
         peer->tried = TRUE;
@@ -1645,12 +1683,11 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
          * but we have all the expected replies, then no devices
          * are available to execute the fencing operation. */
 
-        if(stonith_watchdog_timeout_ms && pcmk__str_eq(device, "watchdog", pcmk__str_null_matches | pcmk__str_casei)) {
-            crm_notice("Waiting %lds for %s to self-fence (%s) for client %s "
-                       CRM_XS " id=%.8s", (stonith_watchdog_timeout_ms / 1000),
-                       op->target, op->action, op->client_name, op->id);
-            op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
-            return;
+        if(stonith_watchdog_timeout_ms > 0 && pcmk__str_eq(device,
+           STONITH_WATCHDOG_ID, pcmk__str_null_matches)) {
+            if (check_watchdog_fencing_and_wait(op)) {
+                return;
+            }
         }
 
         if (op->state == st_query) {

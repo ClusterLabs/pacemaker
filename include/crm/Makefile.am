@@ -14,7 +14,8 @@ headerdir=$(pkgincludedir)/crm
 header_HEADERS		= cib.h cluster.h compatibility.h crm.h \
 			  lrmd.h msg_xml.h services.h stonith-ng.h \
 			  crm_compat.h		\
-			  msg_xml_compat.h
+			  msg_xml_compat.h	\
+			  services_compat.h
 
 noinst_HEADERS		= lrmd_internal.h services_internal.h
 

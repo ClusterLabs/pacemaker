@@ -684,11 +684,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
         ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
     }
     if (rsc->children) {
-        GList *child;
-
-        for (child = rsc->children; child != NULL; child = child->next) {
-            disallow_node((pe_resource_t *) (child->data), uname);
-        }
+        g_list_foreach(rsc->children, (GFunc) disallow_node, (gpointer) uname);
     }
 }
 
@@ -699,7 +695,6 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
-        GList *rsc_iter = NULL;
         pe_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
@@ -775,9 +770,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * @TODO Possible alternative: ensure bundles are unpacked before other
          * resources, so the weight is correct before any copies are made.
          */
-        for (rsc_iter = data_set->resources; rsc_iter; rsc_iter = rsc_iter->next) {
-            disallow_node((pe_resource_t *) (rsc_iter->data), uname);
-        }
+        g_list_foreach(data_set->resources, (GFunc) disallow_node, (gpointer) uname);
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
@@ -1492,7 +1485,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
+    print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1615,7 +1608,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
+    print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1743,7 +1736,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
+    print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -2045,7 +2038,7 @@ pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none)) {
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else {
         get_bundle_variant_data(bundle_data, rsc);

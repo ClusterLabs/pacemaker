@@ -14,6 +14,7 @@ AM_CPPFLAGS			= -I$(top_srcdir)/include
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
 				  services_lsb.h services_nagios.h \
+				  services_ocf.h \
 				  services_private.h
 
 libcrmservice_la_LDFLAGS	= -version-info 30:4:2
@@ -27,6 +28,7 @@ libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la $(DBUS_LIB
 libcrmservice_la_SOURCES	= services.c
 libcrmservice_la_SOURCES	+= services_linux.c
 libcrmservice_la_SOURCES	+= services_lsb.c
+libcrmservice_la_SOURCES	+= services_ocf.c
 if BUILD_DBUS
 libcrmservice_la_SOURCES	+= dbus.c
 endif

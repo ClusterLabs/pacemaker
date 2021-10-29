@@ -277,6 +277,8 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
  *
  * \param[in,out] node XML node to add properties to
  * \param[in]     ...  NULL-terminated list of name/value pairs
+ *
+ * \note A NULL name terminates the arguments; a NULL value will be skipped.
  */
 void
 pcmk__xe_set_props(xmlNodePtr node, ...)

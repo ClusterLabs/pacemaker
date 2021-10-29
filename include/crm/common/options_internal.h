@@ -97,8 +97,8 @@ const char *pcmk__cluster_option(GHashTable *options,
                                  pcmk__cluster_option_t *option_list, int len,
                                  const char *name);
 
-void pcmk__print_option_metadata(const char *name, const char *version,
-                                 const char *desc_short, const char *desc_long,
+void pcmk__print_option_metadata(const char *name, const char *desc_short,
+                                 const char *desc_long,
                                  pcmk__cluster_option_t *option_list, int len);
 
 void pcmk__validate_cluster_options(GHashTable *options,
@@ -118,5 +118,18 @@ long pcmk__get_sbd_timeout(void);
 bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
+
+// constants for environment variable names
+#define PCMK__ENV_CLUSTER_TYPE "cluster_type"
+#define PCMK__ENV_QUORUM_TYPE "quorum_type"
+#define PCMK__ENV_DEBUG "debug"
+#define PCMK__ENV_LOGFILE "logfile"
+#define PCMK__ENV_LOGFACILITY "logfacility"
+#define PCMK__ENV_SHUTDOWN_DELAY "shutdown_delay"
+#define PCMK__ENV_NODE_START_STATE "node_start_state"
+#define PCMK__ENV_MCP "mcp"
+#define PCMK__ENV_LOGPRIORITY "logpriority"
+#define PCMK__ENV_STDERR "stderr"
+#define PCMK__ENV_BLACKBOX "blackbox"
 
 #endif // PCMK__OPTIONS_INTERNAL__H

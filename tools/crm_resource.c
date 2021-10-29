@@ -1132,8 +1132,13 @@ list_agents(pcmk__output_t *out, const char *agent_spec)
 {
     int rc = pcmk_rc_ok;
     char *provider = strchr(agent_spec, ':');
-    lrmd_t *lrmd_conn = lrmd_api_new();
+    lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
+
+    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
+    if (rc != pcmk_rc_ok) {
+        goto error;
+    }
 
     if (provider) {
         *provider++ = 0;
@@ -1147,6 +1152,7 @@ list_agents(pcmk__output_t *out, const char *agent_spec)
         rc = pcmk_rc_error;
     }
 
+error:
     if (rc != pcmk_rc_ok) {
         if (provider == NULL) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -1167,8 +1173,13 @@ list_providers(pcmk__output_t *out, const char *agent_spec)
 {
     int rc;
     const char *text = NULL;
-    lrmd_t *lrmd_conn = lrmd_api_new();
+    lrmd_t *lrmd_conn = NULL;
     lrmd_list_t *list = NULL;
+
+    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
+    if (rc != pcmk_rc_ok) {
+        goto error;
+    }
 
     switch (options.rsc_cmd) {
         case cmd_list_alternatives:
@@ -1210,6 +1221,7 @@ list_providers(pcmk__output_t *out, const char *agent_spec)
             return pcmk_rc_error;
     }
 
+error:
     if (rc != pcmk_rc_ok) {
         if (agent_spec != NULL) {
             rc = ENXIO;
@@ -1374,7 +1386,15 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
     char *provider = NULL;
     char *type = NULL;
     char *metadata = NULL;
-    lrmd_t *lrmd_conn = lrmd_api_new();
+    lrmd_t *lrmd_conn = NULL;
+
+    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not create executor connection");
+        lrmd_api_delete(lrmd_conn);
+        return rc;
+    }
 
     rc = crm_parse_agent_spec(agent_spec, &standard, &provider, &type);
     rc = pcmk_legacy2rc(rc);
@@ -1870,14 +1890,7 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
-
-            for (GList *lpc = data_set->resources; lpc != NULL;
-                 lpc = lpc->next) {
-
-                rsc = (pe_resource_t *) lpc->data;
-                cli_resource_print_cts(out, rsc);
-            }
-
+            g_list_foreach(data_set->resources, (GFunc) cli_resource_print_cts, out);
             cli_resource_print_cts_constraints(data_set);
             break;
 

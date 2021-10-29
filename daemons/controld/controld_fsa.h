@@ -426,7 +426,7 @@ enum crmd_fsa_input {
 
 #  define R_IN_RECOVERY     0x80000000ULL
 
-#define CRM_DIRECT_NACK_RC (99) // Deprecated (see PCMK_LRM_OP_INVALID)
+#define CRM_DIRECT_NACK_RC (99) // Deprecated (see PCMK_EXEC_INVALID)
 
 enum crmd_fsa_cause {
     C_UNKNOWN = 0,

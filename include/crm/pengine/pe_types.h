@@ -75,8 +75,8 @@ enum node_type {
 
 //! \deprecated will be removed in a future release
 enum pe_restart {
-    pe_restart_restart,
-    pe_restart_ignore
+    pe_restart_restart, //! \deprecated will be removed in a future release
+    pe_restart_ignore   //! \deprecated will be removed in a future release
 };
 
 //! Determine behavior of pe_find_resource_with_flags()
@@ -335,7 +335,6 @@ struct pe_resource_s {
 
     enum rsc_recovery_type recovery_type;
 
-    // @TODO only pe_restart_restart is of interest, so merge into flags
     enum pe_restart restart_type; //!< \deprecated will be removed in future release
 
     int priority;

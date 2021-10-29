@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -10,13 +10,14 @@
 
 /*!
  * \internal
- * \brief Check to see if target was fenced in the last few seconds.
- * \param tolerance, The number of seconds to look back in time
- * \param target, The node to search for
- * \param action, The action we want to match.
+ * \brief Check whether target has already been fenced recently
  *
- * \retval FALSE, not match
- * \retval TRUE, fencing operation took place in the last 'tolerance' number of seconds.
+ * \param[in] tolerance  Number of seconds to look back in time
+ * \param[in] target     Name of node to search for
+ * \param[in] action     Action we want to match
+ *
+ * \return TRUE if an equivalent fencing operation took place in the last
+ *         \p tolerance seconds, FALSE otherwise
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
@@ -64,14 +65,6 @@ enum st_remap_phase {
     st_phase_off = 1,
     st_phase_on = 2,
     st_phase_max = 3
-};
-
-/* These values provide additional information for STONITH's asynchronous reply response.
- * The st_reply_opt_merged value indicates an operation that has been merged and completed without being executed.
- */
-enum st_replay_option {
-    st_reply_opt_none            = 0x00000000,
-    st_reply_opt_merged          = 0x00000001,
 };
 
 typedef struct remote_fencing_op_s {
@@ -154,6 +147,9 @@ typedef struct remote_fencing_op_s {
     /*! List of duplicate operations attached to this operation. Once this operation
      * completes, the duplicate operations will be closed out as well. */
     GList *duplicates;
+
+    /*! The point at which the remote operation completed(nsec) */
+    long long completed_nsec;
 
 } remote_fencing_op_t;
 
@@ -258,16 +254,19 @@ void stonith_fence_history_trim(void);
 
 bool fencing_peer_active(crm_node_t *peer);
 
+void set_fencing_completed(remote_fencing_op_t * op);
+
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
-gboolean string_in_list(GList *list, const char *item);
-
 gboolean node_has_attr(const char *node, const char *name, const char *value);
+
+gboolean node_does_watchdog_fencing(const char *node);
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
+extern GList *stonith_watchdog_targets;
 
 extern GHashTable *stonith_remote_op_list;

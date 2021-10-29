@@ -42,6 +42,7 @@
 
 char *stonith_our_uname = NULL;
 long stonith_watchdog_timeout_ms = 0;
+GList *stonith_watchdog_targets = NULL;
 
 static GMainLoop *mainloop = NULL;
 
@@ -578,7 +579,44 @@ our_node_allowed_for(pe_resource_t *rsc)
 }
 
 static void
-watchdog_device_update(xmlNode *cib)
+watchdog_device_update(void)
+{
+    if (stonith_watchdog_timeout_ms > 0) {
+        if (!g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) &&
+            !stonith_watchdog_targets) {
+            /* getting here watchdog-fencing enabled, no device there yet
+               and reason isn't stonith_watchdog_targets preventing that
+             */
+            int rc;
+            xmlNode *xml;
+
+            xml = create_device_registration_xml(
+                    STONITH_WATCHDOG_ID,
+                    st_namespace_internal,
+                    STONITH_WATCHDOG_AGENT,
+                    NULL, /* stonith_device_register will add our
+                             own name as PCMK_STONITH_HOST_LIST param
+                             so we can skip that here
+                           */
+                    NULL);
+            rc = stonith_device_register(xml, NULL, TRUE);
+            free_xml(xml);
+            if (rc != pcmk_ok) {
+                crm_crit("Cannot register watchdog pseudo fence agent");
+                crm_exit(CRM_EX_FATAL);
+            }
+        }
+
+    } else {
+        /* be silent if no device - todo parameter to stonith_device_remove */
+        if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID)) {
+            stonith_device_remove(STONITH_WATCHDOG_ID, TRUE);
+        }
+    }
+}
+
+static void
+update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
     xmlNode *stonith_enabled_xml = NULL;
     const char *stonith_enabled_s = NULL;
@@ -608,33 +646,7 @@ watchdog_device_update(xmlNode *cib)
         }
     }
 
-    if (timeout_ms != stonith_watchdog_timeout_ms) {
-        crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
-        stonith_watchdog_timeout_ms = timeout_ms;
-
-        if (stonith_watchdog_timeout_ms > 0) {
-            int rc;
-            xmlNode *xml;
-            stonith_key_value_t *params = NULL;
-
-            params = stonith_key_value_add(params, PCMK_STONITH_HOST_LIST,
-                                           stonith_our_uname);
-
-            xml = create_device_registration_xml("watchdog", st_namespace_internal,
-                                                 STONITH_WATCHDOG_AGENT, params,
-                                                 NULL);
-            stonith_key_value_freeall(params, 1, 1);
-            rc = stonith_device_register(xml, NULL, FALSE);
-            free_xml(xml);
-            if (rc != pcmk_ok) {
-                crm_crit("Cannot register watchdog pseudo fence agent");
-                crm_exit(CRM_EX_FATAL);
-            }
-
-        } else {
-            stonith_device_remove("watchdog", FALSE);
-        }
-    }
+    stonith_watchdog_timeout_ms = timeout_ms;
 }
 
 /*!
@@ -674,6 +686,16 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
     /* If this STONITH resource is disabled, remove it. */
     if (pe__resource_is_disabled(rsc)) {
         crm_info("Device %s has been disabled", rsc->id);
+        return;
+    }
+
+    /* if watchdog-fencing is disabled handle any watchdog-fence
+       resource as if it was disabled
+     */
+    if ((stonith_watchdog_timeout_ms <= 0) &&
+        pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+        crm_info("Watchdog-fencing disabled thus handling "
+                 "device %s as disabled", rsc->id);
         return;
     }
 
@@ -747,7 +769,6 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 static void
 cib_devices_update(void)
 {
-    GList *gIter = NULL;
     GHashTableIter iter;
     stonith_device_t *device = NULL;
 
@@ -772,9 +793,12 @@ cib_devices_update(void)
         }
     }
 
-    for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
-        cib_device_update(gIter->data, fenced_data_set);
-    }
+    /* have list repopulated if cib has a watchdog-fencing-resource
+       TODO: keep a cached list for queries happening while we are refreshing
+     */
+    g_list_free_full(stonith_watchdog_targets, free);
+    stonith_watchdog_targets = NULL;
+    g_list_foreach(fenced_data_set->resources, (GFunc) cib_device_update, fenced_data_set);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
@@ -825,6 +849,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             if (search != NULL) {
                 *search = 0;
                 stonith_device_remove(rsc_id, TRUE);
+                /* watchdog_device_update called afterwards
+                   to fall back to implicit definition if needed */
             } else {
                 crm_warn("Ignoring malformed CIB update (resource deletion)");
             }
@@ -968,6 +994,24 @@ node_has_attr(const char *node, const char *name, const char *value)
     return (match != NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node does watchdog-fencing
+ *
+ * \param[in] node    Name of node to check
+ *
+ * \return TRUE if node found in stonith_watchdog_targets
+ *         or stonith_watchdog_targets is empty indicating
+ *         all nodes are doing watchdog-fencing
+ */
+gboolean
+node_does_watchdog_fencing(const char *node)
+{
+    return ((stonith_watchdog_targets == NULL) ||
+            pcmk__str_in_list(node, stonith_watchdog_targets, pcmk__str_casei));
+}
+
+
 static void
 update_fencing_topology(const char *event, xmlNode * msg)
 {
@@ -1073,6 +1117,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     xmlNode *stonith_enabled_xml = NULL;
     const char *stonith_enabled_s = NULL;
     static gboolean stonith_enabled_saved = TRUE;
+    long timeout_ms_saved = stonith_watchdog_timeout_ms;
+    gboolean need_full_refresh = FALSE;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1127,6 +1173,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
+    update_stonith_watchdog_timeout_ms(local_cib);
 
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
                                            local_cib, LOG_NEVER);
@@ -1134,23 +1181,30 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
 
-    watchdog_device_update(local_cib);
-
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
         crm_trace("Ignoring CIB updates while fencing is disabled");
         stonith_enabled_saved = FALSE;
-        return;
 
     } else if (stonith_enabled_saved == FALSE) {
         crm_info("Updating fencing device and topology lists "
                  "now that fencing is enabled");
         stonith_enabled_saved = TRUE;
-        fencing_topology_init();
-        cib_devices_update();
+        need_full_refresh = TRUE;
 
     } else {
-        update_fencing_topology(event, msg);
-        update_cib_stonith_devices(event, msg);
+        if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
+            need_full_refresh = TRUE;
+        } else {
+            update_fencing_topology(event, msg);
+            update_cib_stonith_devices(event, msg);
+            watchdog_device_update();
+        }
+    }
+
+    if (need_full_refresh) {
+        fencing_topology_init();
+        cib_devices_update();
+        watchdog_device_update();
     }
 }
 
@@ -1162,10 +1216,11 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     local_cib = copy_xml(output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
+    update_stonith_watchdog_timeout_ms(local_cib);
 
     fencing_topology_init();
-    watchdog_device_update(local_cib);
     cib_devices_update();
+    watchdog_device_update();
 }
 
 static void
@@ -1460,7 +1515,8 @@ main(int argc, char **argv)
                "different delays are configured on the nodes.\nUse this to "
                "enable a static delay for fencing actions.\nThe overall delay "
                "is derived from a random delay value adding this static delay "
-               "so that the sum is kept below the maximum delay.</longdesc>\n");
+               "so that the sum is kept below the maximum delay.\nSet to eg. "
+               "node1:1s;node2:5 to set different value per node.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
