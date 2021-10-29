@@ -160,9 +160,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
-                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures |
-                   pcmk_section_maint_mode;
+            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
+                   pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
