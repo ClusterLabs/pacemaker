@@ -428,7 +428,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--exclude", "summary", data, err);
+    return user_include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
@@ -458,7 +458,7 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show_opts |= pcmk_show_timing;
-    return include_exclude_cb("--include", "operations", data, err);
+    return user_include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
@@ -477,34 +477,34 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "attributes", data, err);
+    return user_include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
         char *s = crm_strdup_printf("bans:%s", optarg);
-        gboolean rc = include_exclude_cb("--include", s, data, err);
+        gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;
     } else {
-        return include_exclude_cb("--include", "bans", data, err);
+        return user_include_exclude_cb("--include", "bans", data, err);
     }
 }
 
 static gboolean
 show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts", data, err);
+    return user_include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
 show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts,operations", data, err);
+    return user_include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
 show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "tickets", data, err);
+    return user_include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
