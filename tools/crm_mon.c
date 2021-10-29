@@ -286,15 +286,9 @@ apply_include(const gchar *includes, GError **error) {
 }
 
 static gboolean
-apply_include_exclude(GSList *lst, mon_output_format_t fmt, GError **error) {
+apply_include_exclude(GSList *lst, GError **error) {
     gboolean rc = TRUE;
     GSList *node = lst;
-
-    /* Set the default of what to display here.  Note that we OR everything to
-     * show instead of set show directly because it could have already had some
-     * settings applied to it in main.
-     */
-    show |= default_includes(fmt);
 
     while (node != NULL) {
         char *s = node->data;
@@ -1558,16 +1552,18 @@ main(int argc, char **argv)
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
+    show = default_includes(output_format);
+
     /* Apply --include/--exclude flags we used internally.  There's no error reporting
      * here because this would be a programming error.
      */
-    apply_include_exclude(options.includes_excludes, output_format, &error);
+    apply_include_exclude(options.includes_excludes, &error);
 
     /* And now apply any --include/--exclude flags the user gave on the command line.
      * These are done in a separate pass from the internal ones because we want to
      * make sure whatever the user specifies overrides whatever we do.
      */
-    if (!apply_include_exclude(options.user_includes_excludes, output_format, &error)) {
+    if (!apply_include_exclude(options.user_includes_excludes, &error)) {
         return clean_up(CRM_EX_USAGE);
     }
 
