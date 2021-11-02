@@ -143,8 +143,8 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     xmlNode *cmd = NULL;
     int rc;
 
-    if (api == NULL) {
-        return EINVAL;
+    if (!pcmk_ipc_is_connected(api)) {
+        return ENOTCONN;
     }
 
     private = api->api_data;

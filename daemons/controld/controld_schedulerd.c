@@ -22,6 +22,8 @@
 
 #include <pacemaker-controld.h>
 
+static void pe_ipc_destroy(void);
+
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
 /*!
@@ -32,13 +34,11 @@ void
 pe_subsystem_free(void)
 {
     controld_clear_fsa_input_flags(R_PE_REQUIRED);
-    if (schedulerd_api) {
-        controld_expect_sched_reply(NULL);
-        pcmk_disconnect_ipc(schedulerd_api);
-        pcmk_free_ipc_api(schedulerd_api);
-        schedulerd_api = NULL;
-        controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    }
+    pcmk_disconnect_ipc(schedulerd_api);
+    pe_ipc_destroy();
+
+    pcmk_free_ipc_api(schedulerd_api);
+    schedulerd_api = NULL;
 }
 
 /*!
@@ -187,24 +187,20 @@ pe_subsystem_new(void)
 
     controld_set_fsa_input_flags(R_PE_REQUIRED);
 
-    if (schedulerd_api != NULL) {
-        pcmk_free_ipc_api(schedulerd_api);
-        schedulerd_api = NULL;
-    }
+    if (schedulerd_api == NULL) {
+        rc = pcmk_new_ipc_api(&schedulerd_api, pcmk_ipc_schedulerd);
 
-    rc = pcmk_new_ipc_api(&schedulerd_api, pcmk_ipc_schedulerd);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
-        return false;
+        if (rc != pcmk_rc_ok) {
+            crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
+            return false;
+        }
     }
 
     pcmk_register_ipc_callback(schedulerd_api, scheduler_event_callback, NULL);
+
     rc = pcmk_connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main);
     if (rc != pcmk_rc_ok) {
         crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
-        pcmk_free_ipc_api(schedulerd_api);
-        schedulerd_api = NULL;
         return false;
     }
 
@@ -223,7 +219,9 @@ do_pe_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_PE_STOP) {
-        pe_subsystem_free();
+        controld_clear_fsa_input_flags(R_PE_REQUIRED);
+        pcmk_disconnect_ipc(schedulerd_api);
+        pe_ipc_destroy();
     }
     if ((action & A_PE_START)
         && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
@@ -473,11 +471,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
     }
 
-    if (schedulerd_api) {
-        rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
-    } else {
-        rc = -ENOTCONN;
-    }
+    rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
 
     if (rc < 0) {
         crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
