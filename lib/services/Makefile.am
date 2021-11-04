@@ -17,7 +17,7 @@ noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
 				  services_ocf.h \
 				  services_private.h
 
-libcrmservice_la_LDFLAGS	= -version-info 30:4:2
+libcrmservice_la_LDFLAGS	= -version-info 30:5:2
 libcrmservice_la_CFLAGS		=
 
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)

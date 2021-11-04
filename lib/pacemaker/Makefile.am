@@ -18,7 +18,7 @@ lib_LTLIBRARIES	= libpacemaker.la
 
 ## SOURCES
 
-libpacemaker_la_LDFLAGS	= -version-info 3:1:2
+libpacemaker_la_LDFLAGS	= -version-info 4:0:3
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

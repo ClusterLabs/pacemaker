@@ -149,9 +149,7 @@ err:
         }
         free(cb_data);
     }
-    if (action) {
-        services_action_free(action);
-    }
+    services_action_free(action);
     return rc;
 }
 
