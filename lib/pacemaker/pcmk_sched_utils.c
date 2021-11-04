@@ -204,24 +204,6 @@ sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
     return g_list_sort_with_data(nodes, sort_node_weight, &nw);
 }
 
-void
-native_deallocate(pe_resource_t * rsc)
-{
-    if (rsc->allocated_to) {
-        pe_node_t *old = rsc->allocated_to;
-
-        crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-        pe__set_resource_flags(rsc, pe_rsc_provisional);
-        rsc->allocated_to = NULL;
-
-        old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
-        old->details->num_resources--;
-        /* old->count--; */
-        calculate_utilization(old->details->utilization, rsc->utilization, TRUE);
-        free(old);
-    }
-}
-
 gboolean
 native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 {
@@ -253,7 +235,7 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
      * new resource count
      */
 
-    native_deallocate(rsc);
+    pcmk__unassign_resource(rsc);
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {

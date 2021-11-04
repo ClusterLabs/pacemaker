@@ -514,7 +514,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
                  rsc->id, prefer->details->uname, chosen->details->uname);
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = backup;
-        native_deallocate(rsc);
+        pcmk__unassign_resource(rsc);
         chosen = NULL;
         backup = NULL;
     }

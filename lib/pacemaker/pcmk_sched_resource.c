@@ -76,3 +76,36 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
     return colocated_rscs;
 }
+
+/*!
+ * \internal
+ * \brief Remove any assignment of a specified resource to a node
+ *
+ * If a specified resource has been assigned to a node, remove that assignment
+ * and mark the resource as provisional again. This is not done recursively for
+ * children, so it should be called only for primitives.
+ *
+ * \param[in] rsc  Resource to unassign
+ */
+void
+pcmk__unassign_resource(pe_resource_t *rsc)
+{
+    pe_node_t *old = rsc->allocated_to;
+
+    if (old == NULL) {
+        return;
+    }
+
+    crm_info("Unassigning %s from %s", rsc->id, old->details->uname);
+    pe__set_resource_flags(rsc, pe_rsc_provisional);
+    rsc->allocated_to = NULL;
+
+    /* We're going to free the pe_node_t, but its details member is shared and
+     * will remain, so update that appropriately first.
+     */
+    old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
+                                                rsc);
+    old->details->num_resources--;
+    calculate_utilization(old->details->utilization, rsc->utilization, TRUE);
+    free(old);
+}

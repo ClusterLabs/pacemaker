@@ -198,4 +198,7 @@ G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
+G_GNUC_INTERNAL
+void pcmk__unassign_resource(pe_resource_t *rsc);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
