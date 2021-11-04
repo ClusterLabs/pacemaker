@@ -1066,8 +1066,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 {
     int timeout_ms = 0;
     const char *value = NULL;
-    bool is_probe = pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
-                    && (interval_ms == 0);
+    bool is_probe = false;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -1093,6 +1092,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     };
 
     CRM_CHECK(action && action->rsc, return);
+
+    is_probe = pcmk_is_probe(action->task, interval_ms);
 
     // Cluster-wide <op_defaults> <meta_attributes>
     pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,

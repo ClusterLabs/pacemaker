@@ -83,7 +83,6 @@ is_dangling_guest_node(pe_node_t *node)
     return FALSE;
 }
 
-
 /*!
  * \brief Schedule a fence action for a node
  *
@@ -2984,7 +2983,6 @@ static void
 unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
-    guint interval_ms = 0;
     bool is_probe = false;
     pe_action_t *action = NULL;
 
@@ -2998,10 +2996,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
     *last_failure = xml_op;
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    if ((interval_ms == 0) && !strcmp(task, CRMD_ACTION_STATUS)) {
-        is_probe = true;
-    }
+    is_probe = pcmk_xe_is_probe(xml_op);
 
     if (exit_reason == NULL) {
         exit_reason = "";
@@ -3163,8 +3158,9 @@ determine_op_status(
     }
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    if ((interval_ms == 0) && !strcmp(task, CRMD_ACTION_STATUS)) {
-        is_probe = true;
+    is_probe = pcmk_xe_is_probe(xml_op);
+
+    if (is_probe) {
         task = "probe";
     }
 
