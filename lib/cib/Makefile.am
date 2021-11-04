@@ -15,7 +15,7 @@ lib_LTLIBRARIES		= libcib.la
 libcib_la_SOURCES	= cib_ops.c cib_utils.c cib_client.c cib_native.c cib_attrs.c
 libcib_la_SOURCES	+= cib_file.c cib_remote.c
 
-libcib_la_LDFLAGS	= -version-info 29:0:2
+libcib_la_LDFLAGS	= -version-info 29:1:2
 libcib_la_CPPFLAGS	= -I$(top_srcdir) $(AM_CPPFLAGS)
 
 libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)

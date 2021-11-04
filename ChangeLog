@@ -1,3 +1,58 @@
+* Fri Oct 29 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2-rc1
+- Changesets: 448
+- Diff: 221 files changed, 16502 insertions(+), 11737 deletions(-)
+
+- Features added since Pacemaker-2.1.1
+  + build: when built with --with-initdir, Pacemaker uses the value to find
+           LSB resources (in addition to being where Pacemaker's own
+           init scripts are installed)
+  + build: cmocka is new dependency for unit tests ("make check")
+  + rpm: fence_watchdog now comes with pacemaker package (not pacemaker-cli)
+  + daemons: metadata for cluster options supports OCF 1.1 standard
+  + executor: nagios warning results now map to OCF "degraded" result code
+  + fencing: pcmk_delay_base can optionally specify different delays per node
+  + fencing: pcmk_host_map supports escaped characters such as spaces in values
+  + resources: HealthIOWait agent supports OCF 1.1 standard, and validate works
+  + tools: crm_mon shows exit reasons for actions failed due to internal errors
+  + tools: crm_mon failed action display is more human-friendly by default
+  + tools: crm_resource --force-* now outputs exit reasons if available
+
+- Fixes since Pacemaker-2.1.1
+  + tools: fix crm_mon --hide-headers and related options
+           (regression introduced in 2.0.4)
+  + attrd: check election status upon node loss to avoid election timeout
+  + controller: improved handling of executor connection failures
+  + executor: properly detect systemd unit existence
+  + pacemakerd: recover properly from Corosync crash
+  + fencing: fencing results are now sorted with sub-second resolution
+  + fencing: fix fence_watchdog version output, metadata output, and man page
+  + tools: map LSB status to OCF correctly with crm_resource --force-check
+
+- Public API changes since Pacemaker-2.1.1
+  + libcrmcommon: deprecate PCMK_OCF_EXEC_ERROR
+  + libcrmcommon: deprecate PCMK_OCF_PENDING
+  + libcrmcommon: deprecate PCMK_OCF_SIGNAL
+  + libcrmcommon: add CRM_EX_DEGRADED and CRM_EX_DEGRADED_PROMOTED
+  + libcrmcommon: add enum pcmk_exec_status
+  + libcrmcommon: add PCMK_EXEC_MAX
+  + libcrmcommon: add PCMK_EXEC_NO_FENCE_DEVICE
+  + libcrmcommon: add PCMK_EXEC_NO_SECRETS
+  + libcrmcommon: add pcmk_exec_status_str()
+  + libcrmcommon: add pcmk_rc2ocf()
+  + libcrmcommon: deprecate PCMK_OCF_TIMEOUT
+  + libcrmservice: add services_result2ocf()
+  + libcrmservice: deprecate enum op_status
+  + libcrmservice: deprecate LSB_ROOT_DIR
+  + libcrmservice: deprecate NAGIOS_NOT_INSTALLED
+  + libcrmservice: deprecate NAGIOS_STATE_DEPENDENT
+  + libcrmservice: deprecate services_get_ocf_exitcode()
+  + libcrmservice: deprecate services_list() and services_action_create()
+  + libcrmservice: deprecate services_lrm_status_str()
+  + libpacemaker: add enum pcmk_sim_flags
+  + libpacemaker: add pcmk_injections_t
+  + libpacemaker: add pcmk_free_injections()
+  + libpacemaker: add pcmk_simulate()
+
 * Thu Sep 09 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1
 - Changesets: 231
 - Diff:
