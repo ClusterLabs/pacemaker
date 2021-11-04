@@ -3671,7 +3671,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     const char *task = NULL;
     const char *task_key = NULL;
     const char *exit_reason = NULL;
-    bool expired = FALSE;
+    bool expired = false;
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
 
@@ -3727,7 +3727,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     if ((status != PCMK_EXEC_NOT_INSTALLED)
         && check_operation_expiry(rsc, node, rc, xml_op, data_set)) {
-        expired = TRUE;
+        expired = true;
     }
 
     if (!strcmp(task, CRMD_ACTION_STATUS)) {
