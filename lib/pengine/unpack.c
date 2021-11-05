@@ -23,7 +23,6 @@
 #include <crm/common/util.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <pe_status_private.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
@@ -3692,8 +3691,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return);
-    CRM_CHECK(status <= PCMK_EXEC_INVALID, return);
-    CRM_CHECK(status >= PCMK_EXEC_PENDING, return);
+    CRM_CHECK((status >= PCMK_EXEC_PENDING) && (status <= PCMK_EXEC_MAX),
+              return);
 
     if (!strcmp(task, CRMD_ACTION_NOTIFY) ||
         !strcmp(task, CRMD_ACTION_METADATA)) {
@@ -3780,7 +3779,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                    "(%s of %s on %s at %s)",
                    ID(xml_op), task, rsc->id, node->details->uname,
                    last_change_str(xml_op));
-            break;
+            goto done;
 
         case PCMK_EXEC_PENDING:
             if (!strcmp(task, CRMD_ACTION_START)) {
@@ -3816,14 +3815,14 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 #endif
                 }
             }
-            break;
+            goto done;
 
         case PCMK_EXEC_DONE:
             pe_rsc_trace(rsc, "%s of %s on %s completed at %s " CRM_XS " id=%s",
                          task, rsc->id, node->details->uname,
                          last_change_str(xml_op), ID(xml_op));
             update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
-            break;
+            goto done;
 
         case PCMK_EXEC_NOT_INSTALLED:
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
@@ -3838,7 +3837,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             }
             resource_location(parent, node, -INFINITY, "hard-error", data_set);
             unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
-            break;
+            goto done;
 
         case PCMK_EXEC_NOT_CONNECTED:
             if (pe__is_guest_or_remote_node(node)
@@ -3852,8 +3851,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 pe__set_resource_flags(node->details->remote_rsc,
                                        pe_rsc_failed|pe_rsc_stop);
             }
-
-            // fall through
+            break; // Not done, do error handling
 
         case PCMK_EXEC_ERROR:
         case PCMK_EXEC_ERROR_HARD:
@@ -3861,56 +3859,66 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_TIMEOUT:
         case PCMK_EXEC_NOT_SUPPORTED:
         case PCMK_EXEC_INVALID:
+            break; // Not done, do error handling
 
-            failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
-            if ((failure_strategy == action_fail_ignore)
-                || (failure_strategy == action_fail_restart_container
-                    && !strcmp(task, CRMD_ACTION_STOP))) {
-
-                crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s "
-                         "succeeded " CRM_XS " rc=%d id=%s",
-                         task, services_ocf_exitcode_str(rc),
-                         (*exit_reason? ": " : ""), exit_reason, rsc->id,
-                         node->details->uname, last_change_str(xml_op), rc,
-                         ID(xml_op));
-
-                update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure, on_fail, data_set);
-                crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-                pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
-
-                record_failed_op(xml_op, node, rsc, data_set);
-
-                if ((failure_strategy == action_fail_restart_container)
-                    && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
-                    *on_fail = failure_strategy;
-                }
-
-            } else {
-                unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
-
-                if(status == PCMK_EXEC_ERROR_HARD) {
-                    do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
-                               "Preventing %s from restarting on %s because "
-                               "of hard failure (%s%s%s)" CRM_XS " rc=%d id=%s",
-                               parent->id, node->details->uname,
-                               services_ocf_exitcode_str(rc),
-                               (*exit_reason? ": " : ""), exit_reason,
-                               rc, ID(xml_op));
-                    resource_location(parent, node, -INFINITY, "hard-error", data_set);
-
-                } else if(status == PCMK_EXEC_ERROR_FATAL) {
-                    crm_err("Preventing %s from restarting anywhere because "
-                            "of fatal failure (%s%s%s) " CRM_XS " rc=%d id=%s",
-                            parent->id, services_ocf_exitcode_str(rc),
-                            (*exit_reason? ": " : ""), exit_reason,
-                            rc, ID(xml_op));
-                    resource_location(parent, NULL, -INFINITY, "fatal-error", data_set);
-                }
-            }
-            break;
+        /* These should only be possible in fence action results, not operation
+         * history, but have some handling in place as a fail-safe.
+         */
+        case PCMK_EXEC_NO_FENCE_DEVICE:
+        case PCMK_EXEC_NO_SECRETS:
+            status = PCMK_EXEC_ERROR_HARD;
+            break; // Not done, do error handling
     }
 
-  done:
+    failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
+    if ((failure_strategy == action_fail_ignore)
+        || (failure_strategy == action_fail_restart_container
+            && !strcmp(task, CRMD_ACTION_STOP))) {
+
+        crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s "
+                 "succeeded " CRM_XS " rc=%d id=%s",
+                 task, services_ocf_exitcode_str(rc),
+                 (*exit_reason? ": " : ""), exit_reason, rsc->id,
+                 node->details->uname, last_change_str(xml_op), rc,
+                 ID(xml_op));
+
+        update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
+                              on_fail, data_set);
+        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+        pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
+
+        record_failed_op(xml_op, node, rsc, data_set);
+
+        if ((failure_strategy == action_fail_restart_container)
+            && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
+            *on_fail = failure_strategy;
+        }
+
+    } else {
+        unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail,
+                              data_set);
+
+        if (status == PCMK_EXEC_ERROR_HARD) {
+            do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
+                       "Preventing %s from restarting on %s because "
+                       "of hard failure (%s%s%s)" CRM_XS " rc=%d id=%s",
+                       parent->id, node->details->uname,
+                       services_ocf_exitcode_str(rc),
+                       (*exit_reason? ": " : ""), exit_reason,
+                       rc, ID(xml_op));
+            resource_location(parent, node, -INFINITY, "hard-error", data_set);
+
+        } else if (status == PCMK_EXEC_ERROR_FATAL) {
+            crm_err("Preventing %s from restarting anywhere because "
+                    "of fatal failure (%s%s%s) " CRM_XS " rc=%d id=%s",
+                    parent->id, services_ocf_exitcode_str(rc),
+                    (*exit_reason? ": " : ""), exit_reason,
+                    rc, ID(xml_op));
+            resource_location(parent, NULL, -INFINITY, "fatal-error", data_set);
+        }
+    }
+
+done:
     pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s",
                  rsc->id, task, role2text(rsc->role),
                  role2text(rsc->next_role));

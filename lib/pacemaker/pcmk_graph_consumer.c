@@ -37,32 +37,32 @@
  * \param[in] action_id  ID of an action that completed
  *
  * \note The only substantial effect here is confirming synapse inputs.
- *       should_fire_synapse() will recalculate synapse->ready, so the only
- *       thing that uses the synapse->ready value from here is
+ *       should_fire_synapse() will recalculate pcmk__synapse_ready, so the only
+ *       thing that uses the pcmk__synapse_ready from here is
  *       synapse_state_str().
  */
 static void
 update_synapse_ready(synapse_t *synapse, int action_id)
 {
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return; // All inputs have already been confirmed
     }
-    synapse->ready = TRUE; // Presume ready until proven otherwise
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready); // Presume ready until proven otherwise
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
         if (prereq->id == action_id) {
             crm_trace("Confirming input %d of synapse %d",
                       action_id, synapse->id);
-            prereq->confirmed = TRUE;
+            crm__set_graph_action_flags(prereq, pcmk__graph_action_confirmed);
 
-        } else if (!(prereq->confirmed)) {
-            synapse->ready = FALSE;
+        } else if (!(pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed))) {
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             crm_trace("Synapse %d still not ready after action %d",
                       synapse->id, action_id);
         }
     }
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         crm_trace("Synapse %d is now ready to execute", synapse->id);
     }
 }
@@ -85,18 +85,18 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
         if (action->id == action_id) {
             crm_trace("Confirmed action %d of synapse %d",
                       action_id, synapse->id);
-            action->confirmed = TRUE;
+            crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
 
-        } else if (all_confirmed && !(action->confirmed)) {
+        } else if (all_confirmed && !(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             all_confirmed = false;
             crm_trace("Synapse %d still not confirmed after action %d",
                       synapse->id, action_id);
         }
     }
 
-    if (all_confirmed && !(synapse->confirmed)) {
+    if (all_confirmed && !(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
         crm_trace("Confirmed synapse %d", synapse->id);
-        synapse->confirmed = TRUE;
+        pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
     }
 }
 
@@ -113,13 +113,13 @@ pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed || synapse->failed) {
+        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
 
-        } else if (synapse->executed) {
+        } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             update_synapse_confirmed(synapse, action->id);
 
-        } else if (!(action->failed) || (synapse->priority == INFINITY)) {
+        } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_failed)) || (synapse->priority == INFINITY)) {
             update_synapse_ready(synapse, action->id);
         }
     }
@@ -169,24 +169,24 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
     GList *lpc = NULL;
 
-    synapse->ready = TRUE;
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_ready);
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
-        if (!(prereq->confirmed)) {
+        if (!(pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed))) {
             crm_trace("Input %d for synapse %d not yet confirmed",
                       prereq->id, synapse->id);
-            synapse->ready = FALSE;
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
-        } else if (prereq->failed && !(prereq->can_fail)) {
+        } else if (pcmk_is_set(prereq->flags, pcmk__graph_action_failed) && !(pcmk_is_set(prereq->flags, pcmk__graph_action_can_fail))) {
             crm_trace("Input %d for synapse %d confirmed but failed",
                       prereq->id, synapse->id);
-            synapse->ready = FALSE;
+            pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
         }
     }
-    if (synapse->ready) {
+    if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         crm_trace("Synapse %d is ready to execute", synapse->id);
     } else {
         return false;
@@ -221,40 +221,41 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \param[in] graph   Transition graph containing action
  * \param[in] action  Action to execute
  *
- * \return TRUE if action was initiated, FALSE otherwise
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 initiate_action(crm_graph_t *graph, crm_action_t *action)
 {
     const char *id = ID(action->xml);
 
-    CRM_CHECK(!(action->executed), return FALSE);
-    CRM_CHECK(id != NULL, return FALSE);
+    CRM_CHECK(id != NULL, return EINVAL);
+    CRM_CHECK(!pcmk_is_set(action->flags, pcmk__graph_action_executed),
+              return pcmk_rc_already);
 
-    action->executed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_executed);
     switch (action->type) {
         case action_type_pseudo:
             crm_trace("Executing pseudo-action %d (%s)", action->id, id);
-            return graph_fns->pseudo(graph, action);
+            return graph_fns->pseudo(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         case action_type_rsc:
             crm_trace("Executing resource action %d (%s)", action->id, id);
-            return graph_fns->rsc(graph, action);
+            return graph_fns->rsc(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         case action_type_crm:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                              CRM_OP_FENCE, pcmk__str_casei)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
-                return graph_fns->stonith(graph, action);
+                return graph_fns->stonith(graph, action)? pcmk_rc_ok : pcmk_rc_error;
             }
             crm_trace("Executing control action %d (%s)", action->id, id);
-            return graph_fns->crmd(graph, action);
+            return graph_fns->crmd(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
         default:
             crm_err("Unsupported graph action type <%s id='%s'> (bug?)",
                     crm_element_name(action->xml), id);
-            return FALSE;
+            return EINVAL;
     }
 }
 
@@ -270,16 +271,15 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 static int
 fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
-    synapse->executed = TRUE;
+    pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
-        if (!initiate_action(graph, action)) {
+        if (initiate_action(graph, action) != pcmk_rc_ok) {
             crm_err("Failed initiating <%s id=%d> in synapse %d",
                     crm_element_name(action->xml), action->id, synapse->id);
-            synapse->confirmed = TRUE;
-            action->confirmed = TRUE;
-            action->failed = TRUE;
+            pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
+            crm__set_graph_action_flags(action, pcmk__graph_action_confirmed | pcmk__graph_action_failed);
             return pcmk_rc_error;
         }
     }
@@ -315,12 +315,12 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
 
     if (action->id == fail) {
         crm_err("Dummy event handler: pretending action %d failed", action->id);
-        action->failed = TRUE;
+        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = INFINITY;
     } else {
         crm_trace("Dummy event handler: action %d initiated", action->id);
     }
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return TRUE;
 }
@@ -365,10 +365,10 @@ pcmk__execute_graph(crm_graph_t *graph)
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (synapse->confirmed) {
+        if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             graph->completed++;
 
-        } else if (!(synapse->failed) && synapse->executed) {
+        } else if (!(pcmk_is_set(synapse->flags, pcmk__synapse_failed)) && pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
             graph->pending++;
         }
     }
@@ -386,11 +386,11 @@ pcmk__execute_graph(crm_graph_t *graph)
                       graph->batch_limit);
             break;
 
-        } else if (synapse->failed) {
+        } else if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {
             graph->skipped++;
             continue;
 
-        } else if (synapse->confirmed || synapse->executed) {
+        } else if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_executed)) {
             continue; // Already handled
 
         } else if (should_fire_synapse(graph, synapse)) {
@@ -403,7 +403,7 @@ pcmk__execute_graph(crm_graph_t *graph)
                 graph->fired--;
             }
 
-            if (!(synapse->confirmed)) {
+            if (!(pcmk_is_set(synapse->flags, pcmk__synapse_confirmed))) {
                 graph->pending++;
             }
 
@@ -525,9 +525,17 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
 
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
     if (value != NULL) {
-        crm_str_to_boolean(value, &(action->can_fail));
+
+        gboolean can_fail = FALSE;
+        crm_str_to_boolean(value, &can_fail);
+        if (can_fail) {
+            crm__set_graph_action_flags(action, pcmk__graph_action_can_fail);
+        } else {
+            crm__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
+        }
+
 #ifndef PCMK__COMPAT_2_0
-        if (action->can_fail) {
+        if (pcmk_is_set(action->flags, pcmk__graph_action_can_fail)) {
             crm_warn("Support for the can_fail meta-attribute is deprecated"
                      " and will be removed in a future release");
         }

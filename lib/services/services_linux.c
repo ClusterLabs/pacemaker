@@ -27,6 +27,7 @@
 #include "crm/crm.h"
 #include "crm/common/mainloop.h"
 #include "crm/services.h"
+#include "crm/services_internal.h"
 
 #include "services_private.h"
 
@@ -516,7 +517,7 @@ services__finalize_async_op(svc_action_t *op)
     if (op->interval_ms != 0) {
         // Recurring operations must be either cancelled or rescheduled
         if (op->cancel) {
-            op->status = PCMK_EXEC_CANCELLED;
+            services__set_cancelled(op);
             cancel_recurring_action(op);
         } else {
             op->opaque->repeat_timer = g_timeout_add(op->interval_ms,
@@ -590,13 +591,71 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
+// Truncate exit reasons at this many characters
+#define EXIT_REASON_MAX_LEN 128
+
 static void
-operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+parse_exit_reason_from_stderr(svc_action_t *op)
+{
+    const char *reason_start = NULL;
+    const char *reason_end = NULL;
+    const int prefix_len = strlen(PCMK_OCF_REASON_PREFIX);
+
+    if ((op->stderr_data == NULL) ||
+        // Only OCF agents have exit reasons in stderr
+        !pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_none)) {
+        return;
+    }
+
+    // Find the last occurrence of the magic string indicating an exit reason
+    for (const char *cur = strstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
+         cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
+
+        cur += prefix_len; // Skip over magic string
+        reason_start = cur;
+    }
+
+    if ((reason_start == NULL) || (reason_start[0] == '\n')
+        || (reason_start[0] == '\0')) {
+        return; // No or empty exit reason
+    }
+
+    // Exit reason goes to end of line (or end of output)
+    reason_end = strchr(reason_start, '\n');
+    if (reason_end == NULL) {
+        reason_end = reason_start + strlen(reason_start);
+    }
+
+    // Limit size of exit reason to something reasonable
+    if (reason_end > (reason_start + EXIT_REASON_MAX_LEN)) {
+        reason_end = reason_start + EXIT_REASON_MAX_LEN;
+    }
+
+    free(op->opaque->exit_reason);
+    op->opaque->exit_reason = strndup(reason_start, reason_end - reason_start);
+}
+
+/*!
+ * \internal
+ * \brief Process the completion of an asynchronous child process
+ *
+ * \param[in] p         Child process that completed
+ * \param[in] pid       Process ID of child
+ * \param[in] core      (unused)
+ * \param[in] signo     Signal that interrupted child, if any
+ * \param[in] exitcode  Exit status of child process
+ */
+static void
+async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
+                      int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
 
     mainloop_clear_child_userdata(p);
-    CRM_ASSERT(op->pid == pid);
+    CRM_CHECK(op->pid == pid,
+              services__set_result(op, services__generic_error(op),
+                                   PCMK_EXEC_ERROR, "Bug in mainloop handling");
+              return);
 
     /* Depending on the priority the mainloop gives the stdout and stderr
      * file descriptors, this function could be called before everything has
@@ -609,33 +668,174 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 
     if (signo == 0) {
         crm_debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
-        op->status = PCMK_EXEC_DONE;
-        op->rc = exitcode;
+        services__set_result(op, exitcode, PCMK_EXEC_DONE, NULL);
+        log_op_output(op);
+        parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
-        op->status = PCMK_EXEC_TIMEOUT;
-        op->rc = PCMK_OCF_TIMEOUT;
+        services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
+                             "Process did not exit within specified timeout");
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
          * cancelled, don't treat that as a failure.
          */
-        crm_info("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                 op->id, op->pid, strsignal(signo), signo);
-        op->status = PCMK_EXEC_CANCELLED;
-        op->rc = PCMK_OCF_OK;
+        crm_info("%s[%d] terminated with signal %d (%s)",
+                 op->id, op->pid, signo, strsignal(signo));
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_CANCELLED, NULL);
 
     } else {
-        crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                 op->id, op->pid, strsignal(signo), signo);
-        op->status = PCMK_EXEC_ERROR;
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        crm_warn("%s[%d] terminated with signal %d (%s)",
+                 op->id, op->pid, signo, strsignal(signo));
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             "Process interrupted by signal");
     }
 
-    log_op_output(op);
     services__finalize_async_op(op);
 }
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "generic error"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for errors in general.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__generic_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_UNKNOWN;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_STATE_UNKNOWN;
+    }
+#endif
+
+    return PCMK_OCF_UNKNOWN_ERROR;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "not installed"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "not installed" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__not_installed_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_NOT_INSTALLED;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_STATE_UNKNOWN;
+    }
+#endif
+
+    return PCMK_OCF_NOT_INSTALLED;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "insufficient privileges"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "insufficient privileges" errors.
+ *
+ * \param[in] op  Action that error is for
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__authorization_error(svc_action_t *op)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_INSUFFICIENT_PRIV;
+    }
+#endif
+
+    return PCMK_OCF_INSUFFICIENT_PRIV;
+}
+
+/*!
+ * \internal
+ * \brief Return agent standard's exit status for "not configured"
+ *
+ * When returning an internal error for an action, a value that is appropriate
+ * to the action's agent standard must be used. This function returns a value
+ * appropriate for "not configured" errors.
+ *
+ * \param[in] op        Action that error is for
+ * \param[in] is_fatal  Whether problem is cluster-wide instead of only local
+ *
+ * \return Exit status appropriate to agent standard
+ * \note Actions without a standard will get PCMK_OCF_UNKNOWN_ERROR.
+ */
+int
+services__configuration_error(svc_action_t *op, bool is_fatal)
+{
+    if ((op == NULL) || (op->standard == NULL)) {
+        return PCMK_OCF_UNKNOWN_ERROR;
+    }
+
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
+
+        return PCMK_LSB_NOT_CONFIGURED;
+    }
+
+#if SUPPORT_NAGIOS
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        return NAGIOS_STATE_UNKNOWN;
+    }
+#endif
+
+    return is_fatal? PCMK_OCF_NOT_CONFIGURED : PCMK_OCF_INVALID_PARAM;
+}
+
 
 /*!
  * \internal
@@ -649,52 +849,50 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
-    int rc_not_installed, rc_insufficient_priv, rc_exec_error;
-
-    /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
-        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
-
-        rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
-
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        rc_not_installed = NAGIOS_NOT_INSTALLED;
-        rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-#endif
-
-    } else {
-        rc_not_installed = PCMK_OCF_NOT_INSTALLED;
-        rc_insufficient_priv = PCMK_OCF_INSUFFICIENT_PRIV;
-        rc_exec_error = PCMK_OCF_UNKNOWN_ERROR;
-    }
-
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            op->rc = rc_not_installed;
-            op->status = PCMK_EXEC_NOT_INSTALLED;
+            services__set_result(op, services__not_installed_error(op),
+                                 PCMK_EXEC_NOT_INSTALLED, pcmk_rc_str(error));
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            op->rc = rc_insufficient_priv;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, services__authorization_error(op),
+                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
             break;
         default:
-            op->rc = rc_exec_error;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, services__generic_error(op),
+                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
     }
+}
+
+/*!
+ * \internal
+ * \brief Exit a child process that failed before executing agent
+ *
+ * \param[in] op           Action that failed
+ * \param[in] exit_status  Exit status code to use
+ * \param[in] exit_reason  Exit reason to output if for OCF agent
+ */
+static void
+exit_child(svc_action_t *op, int exit_status, const char *exit_reason)
+{
+    if ((op != NULL) && (exit_reason != NULL)
+        && pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF,
+                        pcmk__str_none)) {
+        fprintf(stderr, PCMK_OCF_REASON_PREFIX "%s\n", exit_reason);
+    }
+    _exit(exit_status);
 }
 
 static void
 action_launch_child(svc_action_t *op)
 {
+    int rc;
+
     /* SIGPIPE is ignored (which is different from signal blocking) by the gnutls library.
      * Depending on the libqb version in use, libqb may set SIGPIPE to be ignored as well. 
      * We do not want this to be inherited by the child process. By resetting this the signal
@@ -710,12 +908,12 @@ action_launch_child(svc_action_t *op)
         sp.sched_priority = 0;
 
         if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-            crm_perror(LOG_ERR, "Could not reset scheduling policy to SCHED_OTHER for %s", op->id);
+            crm_warn("Could not reset scheduling policy for %s", op->id);
         }
     }
 #endif
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-        crm_perror(LOG_ERR, "Could not reset process priority to 0 for %s", op->id);
+        crm_warn("Could not reset process priority for %s", op->id);
     }
 
     /* Man: The call setpgrp() is equivalent to setpgid(0,0)
@@ -726,17 +924,26 @@ action_launch_child(svc_action_t *op)
 
     pcmk__close_fds_in_child(false);
 
-#if SUPPORT_CIBSECRETS
-    if (pcmk__substitute_secrets(op->rsc, op->params) != pcmk_rc_ok) {
-        /* replacing secrets failed! */
-        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
-            /* don't fail on stop! */
-            crm_info("proceeding with the stop operation for %s", op->rsc);
+    /* It would be nice if errors in this function could be reported as
+     * execution status (for example, PCMK_EXEC_NO_SECRETS for the secrets error
+     * below) instead of exit status. However, we've already forked, so
+     * exit status is all we have. At least for OCF actions, we can output an
+     * exit reason for the parent to parse.
+     */
 
+#if SUPPORT_CIBSECRETS
+    rc = pcmk__substitute_secrets(op->rsc, op->params);
+    if (rc != pcmk_rc_ok) {
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
+            crm_info("Proceeding with stop operation for %s "
+                     "despite being unable to load CIB secrets (%s)",
+                     op->rsc, pcmk_rc_str(rc));
         } else {
-            crm_err("failed to get secrets for %s, "
-                    "considering resource not configured", op->rsc);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            crm_err("Considering %s unconfigured "
+                    "because unable to load CIB secrets: %s",
+                     op->rsc, pcmk_rc_str(rc));
+            exit_child(op, services__configuration_error(op, false),
+                       "Unable to load CIB secrets");
         }
     }
 #endif
@@ -748,41 +955,57 @@ action_launch_child(svc_action_t *op)
 
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_perror(LOG_ERR, "Could not set child group to %d", op->opaque->gid);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            crm_err("Considering %s unauthorized because could not set "
+                    "child group to %d: %s",
+                    op->id, op->opaque->gid, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not set group for child process");
         }
 
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
-            crm_perror(LOG_ERR, "Could not set child groups");
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            crm_err("Considering %s unauthorized because could not "
+                    "clear supplementary groups: %s", op->id, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not clear supplementary groups for child process");
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
-            crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
-            _exit(PCMK_OCF_NOT_CONFIGURED);
+            crm_err("Considering %s unauthorized because could not set user "
+                    "to %d: %s", op->id, op->opaque->uid, strerror(errno));
+            exit_child(op, services__authorization_error(op),
+                       "Could not set user for child process");
         }
     }
 
-    /* execute the RA */
+    // Execute the agent (doesn't return if successful)
     execvp(op->opaque->exec, op->opaque->args);
 
-    /* Most cases should have been already handled by stat() */
-    services__handle_exec_error(op, errno);
-
-    _exit(op->rc);
+    // An earlier stat() should have avoided most possible errors
+    rc = errno;
+    services__handle_exec_error(op, rc);
+    crm_err("Unable to execute %s: %s", op->id, strerror(rc));
+    exit_child(op, op->rc, "Child process was unable to execute file");
 }
 
+/*!
+ * \internal
+ * \brief Wait for synchronous action to complete, and set its result
+ *
+ * \param[in] op    Action to wait for
+ * \param[in] data  Child signal data
+ */
 static void
-action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
+wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 {
     int status = 0;
     int timeout = op->timeout;
-    time_t start = -1;
+    time_t start = time(NULL);
     struct pollfd fds[3];
     int wait_rc = 0;
+    const char *wait_reason = NULL;
 
     fds[0].fd = op->opaque->stdout_fd;
     fds[0].events = POLLIN;
@@ -797,9 +1020,10 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     fds[2].revents = 0;
 
     crm_trace("Waiting for %s[%d]", op->id, op->pid);
-    start = time(NULL);
     do {
         int poll_rc = poll(fds, 3, timeout);
+
+        wait_reason = NULL;
 
         if (poll_rc > 0) {
             if (fds[0].revents & POLLIN) {
@@ -818,9 +1042,10 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
                     break;
 
                 } else if (wait_rc < 0) {
+                    wait_reason = pcmk_rc_str(errno);
                     crm_warn("Wait for completion of %s[%d] failed: %s "
                              CRM_XS " source=waitpid",
-                             op->id, op->pid, pcmk_strerror(errno));
+                             op->id, op->pid, wait_reason);
                     wait_rc = 0; // Act as if process is still running
                 }
             }
@@ -831,9 +1056,9 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
             break;
 
         } else if ((poll_rc < 0) && (errno != EINTR)) {
+            wait_reason = pcmk_rc_str(errno);
             crm_err("Wait for completion of %s[%d] failed: %s "
-                    CRM_XS " source=poll",
-                    op->id, op->pid, pcmk_strerror(errno));
+                    CRM_XS " source=poll", op->id, op->pid, wait_reason);
             break;
         }
 
@@ -842,51 +1067,63 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
     } while ((op->timeout < 0 || timeout > 0));
 
     crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
-    if (wait_rc <= 0) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    finish_op_output(op, true);
+    finish_op_output(op, false);
+    close_op_input(op);
+    sigchld_close(fds[2].fd);
 
-        if (op->timeout > 0 && timeout <= 0) {
-            op->status = PCMK_EXEC_TIMEOUT;
+    if (wait_rc <= 0) {
+
+        if ((op->timeout > 0) && (timeout <= 0)) {
+            services__set_result(op, services__generic_error(op),
+                                 PCMK_EXEC_TIMEOUT,
+                                 "Process did not exit within specified timeout");
             crm_warn("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, services__generic_error(op),
+                                 PCMK_EXEC_ERROR, wait_reason);
         }
 
         /* If only child hasn't been successfully waited for, yet.
            This is to limit killing wrong target a bit more. */
-        if (wait_rc == 0 && waitpid(op->pid, &status, WNOHANG) == 0) {
+        if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
                 crm_warn("Could not kill rogue child %s[%d]: %s",
                          op->id, op->pid, pcmk_strerror(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
-            while (waitpid(op->pid, &status, 0) == (pid_t) -1 && errno == EINTR) /*omit*/;
+            while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
+                   && (errno == EINTR)) {
+                /* keep waiting */;
+            }
         }
 
     } else if (WIFEXITED(status)) {
-        op->status = PCMK_EXEC_DONE;
-        op->rc = WEXITSTATUS(status);
+        services__set_result(op, WEXITSTATUS(status), PCMK_EXEC_DONE, NULL);
+        parse_exit_reason_from_stderr(op);
         crm_info("%s[%d] exited with status %d", op->id, op->pid, op->rc);
 
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        op->status = PCMK_EXEC_ERROR;
-        crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
-                op->id, op->pid, strsignal(signo), signo);
-    }
+        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
+                             "Process interrupted by signal");
+        crm_err("%s[%d] terminated with signal %d (%s)",
+                op->id, op->pid, signo, strsignal(signo));
+
 #ifdef WCOREDUMP
-    if (WCOREDUMP(status)) {
-        crm_err("%s[%d] dumped core", op->id, op->pid);
-    }
+        if (WCOREDUMP(status)) {
+            crm_warn("%s[%d] dumped core", op->id, op->pid);
+        }
 #endif
 
-    finish_op_output(op, true);
-    finish_op_output(op, false);
-    close_op_input(op);
-    sigchld_close(fds[2].fd);
+    } else {
+        // Shouldn't be possible to get here
+        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
+                             "Unable to wait for child to complete");
+    }
 }
 
 /*!
@@ -962,8 +1199,8 @@ services__execute_file(svc_action_t *op)
         close_pipe(stdout_fd);
         close_pipe(stderr_fd);
         sigchld_cleanup(&data);
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
+        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
+                             "Could not manage signals for child process");
         goto done;
     }
 
@@ -1069,7 +1306,7 @@ services__execute_file(svc_action_t *op)
     }
 
     if (op->synchronous) {
-        action_synced_wait(op, &data);
+        wait_for_sync_result(op, &data);
         sigchld_cleanup(&data);
         goto done;
     }
@@ -1077,7 +1314,7 @@ services__execute_file(svc_action_t *op)
     crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
     mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
                                   pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
-                                  operation_finished);
+                                  async_action_complete);
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,
@@ -1098,7 +1335,7 @@ done:
     }
 }
 
-static GList *
+GList *
 services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
@@ -1176,93 +1413,4 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
     free(dirs);
 
     return result;
-}
-
-static GList *
-services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-    char buffer[PATH_MAX];
-
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
-        return result;
-    }
-
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = NULL;
-
-        sprintf(buffer, "%s/%s", dir, provider);
-        tmp = services_os_get_single_directory_list(buffer, files, executable);
-
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
-    }
-
-    free(dirs);
-
-    return result;
-}
-
-GList *
-resources_os_list_ocf_providers(void)
-{
-    return get_directory_list(OCF_RA_PATH, FALSE, TRUE);
-}
-
-GList *
-resources_os_list_ocf_agents(const char *provider)
-{
-    GList *gIter = NULL;
-    GList *result = NULL;
-    GList *providers = NULL;
-
-    if (provider) {
-        return services_os_get_directory_list_provider(OCF_RA_PATH, provider, TRUE, TRUE);
-    }
-
-    providers = resources_os_list_ocf_providers();
-    for (gIter = providers; gIter != NULL; gIter = gIter->next) {
-        GList *tmp1 = result;
-        GList *tmp2 = resources_os_list_ocf_agents(gIter->data);
-
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
-        }
-    }
-    g_list_free_full(providers, free);
-    return result;
-}
-
-gboolean
-services__ocf_agent_exists(const char *provider, const char *agent)
-{
-    gboolean rc = FALSE;
-    struct stat st;
-    char *dirs = strdup(OCF_RA_PATH);
-    char *dir = NULL;
-    char *buf = NULL;
-
-    if (provider == NULL || agent == NULL || pcmk__str_empty(dirs)) {
-        free(dirs);
-        return rc;
-    }
-
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
-        if (stat(buf, &st) == 0) {
-            free(buf);
-            rc = TRUE;
-            break;
-        }
-
-        free(buf);
-    }
-
-    free(dirs);
-
-    return rc;
 }

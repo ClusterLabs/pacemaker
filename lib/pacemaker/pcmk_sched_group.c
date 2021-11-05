@@ -356,75 +356,75 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
-    if (rsc_lh == NULL) {
-        pe_err("rsc_lh was NULL for %s", constraint->id);
+    if (dependent == NULL) {
+        pe_err("dependent was NULL for %s", constraint->id);
         return;
 
-    } else if (rsc_rh == NULL) {
-        pe_err("rsc_rh was NULL for %s", constraint->id);
+    } else if (primary == NULL) {
+        pe_err("primary was NULL for %s", constraint->id);
         return;
     }
 
-    gIter = rsc_lh->children;
-    pe_rsc_trace(rsc_lh, "Processing constraints from %s", rsc_lh->id);
+    gIter = dependent->children;
+    pe_rsc_trace(dependent, "Processing constraints from %s", dependent->id);
 
-    get_group_variant_data(group_data, rsc_lh);
+    get_group_variant_data(group_data, dependent);
 
     if (group_data->colocated) {
         group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
-                                                         rsc_rh, constraint,
+                                                         primary, constraint,
                                                          data_set);
         return;
 
     } else if (constraint->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation "
                          "between non-colocated group and %s",
-                         rsc_lh->id, rsc_rh->id);
+                         dependent->id, primary->id);
         return;
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint,
+        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint,
                                            data_set);
     }
 }
 
 void
-group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
-    GList *gIter = rsc_rh->children;
+    GList *gIter = primary->children;
     group_variant_data_t *group_data = NULL;
 
-    get_group_variant_data(group_data, rsc_rh);
-    CRM_CHECK(rsc_lh->variant == pe_native, return);
+    get_group_variant_data(group_data, primary);
+    CRM_CHECK(dependent->variant == pe_native, return);
 
-    pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
-                 rsc_rh->id, constraint->id, rsc_lh->id);
+    pe_rsc_trace(primary, "Processing RH %s of constraint %s (LH is %s)",
+                 primary->id, constraint->id, dependent->id);
 
-    if (pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
         if (constraint->score >= INFINITY) {
             /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(rsc_lh,
+            group_data->last_child->cmds->rsc_colocation_rh(dependent,
                                                             group_data->last_child,
                                                             constraint,
                                                             data_set);
         } else {
             /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(rsc_lh,
+            group_data->first_child->cmds->rsc_colocation_rh(dependent,
                                                              group_data->first_child,
                                                              constraint,
                                                              data_set);
@@ -434,14 +434,14 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
     } else if (constraint->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
-                         " non-colocated group %s", rsc_lh->id, rsc_rh->id);
+                         " non-colocated group %s", dependent->id, primary->id);
         return;
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
+        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
                                            data_set);
     }
 }
@@ -530,7 +530,7 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     pe_rsc_debug(rsc, "Processing rsc_location %s for %s", constraint->id, rsc->id);
 
-    native_rsc_location(rsc, constraint);
+    pcmk__apply_location(constraint, rsc);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -562,7 +562,7 @@ group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 GHashTable *
-pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
+pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
                           GHashTable *nodes, const char *attr, float factor,
                           uint32_t flags)
 {
@@ -572,21 +572,22 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
     get_group_variant_data(group_data, rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
-        pe_rsc_info(rsc, "Breaking dependency loop with %s at %s", rsc->id, rhs);
+        pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
+                    rsc->id, primary_id);
         return nodes;
     }
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    nodes =
-        group_data->first_child->cmds->merge_weights(group_data->first_child, rhs, nodes, attr,
-                                                     factor, flags);
+    nodes = group_data->first_child->cmds->merge_weights(group_data->first_child,
+                                                         primary_id, nodes,
+                                                         attr, factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
-                                           constraint->node_attribute,
+        nodes = pcmk__native_merge_weights(constraint->dependent, rsc->id,
+                                           nodes, constraint->node_attribute,
                                            constraint->score / (float) INFINITY,
                                            flags);
     }
@@ -598,4 +599,45 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
 void
 group_append_meta(pe_resource_t * rsc, xmlNode * xml)
 {
+}
+
+// Group implementation of resource_alloc_functions_t:colocated_resources()
+GList *
+pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                GList *colocated_rscs)
+{
+    pe_resource_t *child_rsc = NULL;
+    group_variant_data_t *group_data = NULL;
+
+    get_group_variant_data(group_data, rsc);
+
+    if (orig_rsc == NULL) {
+        orig_rsc = rsc;
+    }
+
+    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
+        /* This group has colocated members and/or is cloned -- either way,
+         * add every child's colocated resources to the list.
+         */
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            child_rsc = (pe_resource_t *) gIter->data;
+            colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
+                                                                  orig_rsc,
+                                                                  colocated_rscs);
+        }
+
+    } else if (group_data->first_child != NULL) {
+        /* This group's members are not colocated, and the group is not cloned,
+         * so just add the first child's colocations to the list.
+         */
+        child_rsc = group_data->first_child;
+        colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
+                                                              orig_rsc,
+                                                              colocated_rscs);
+    }
+
+    // Now consider colocations where the group itself is specified
+    colocated_rscs = pcmk__colocated_resources(rsc, orig_rsc, colocated_rscs);
+
+    return colocated_rscs;
 }

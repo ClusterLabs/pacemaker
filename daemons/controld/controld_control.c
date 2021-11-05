@@ -225,10 +225,8 @@ crmd_exit(crm_exit_t exit_code)
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
      */
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
-    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
-    cib_free_callbacks(fsa_cib_conn);
-    fsa_cib_conn->cmds->signoff(fsa_cib_conn);
+
+    controld_disconnect_cib_manager();
 
     verify_stopped(fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -645,7 +643,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
+        "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum, NULL, NULL
     },
     {
@@ -657,7 +655,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-controld", "1.0",
+    pcmk__print_option_metadata("pacemaker-controld",
                                 "Pacemaker controller options",
                                 "Cluster options used by Pacemaker's "
                                     "controller (formerly called crmd)",

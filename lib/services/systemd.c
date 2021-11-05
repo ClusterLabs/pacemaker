@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
 #include <sys/stat.h>
@@ -25,6 +26,39 @@ static void invoke_unit_by_path(svc_action_t *op, const char *unit);
 #define BUS_NAME_MANAGER BUS_NAME ".Manager"
 #define BUS_NAME_UNIT    BUS_NAME ".Unit"
 #define BUS_PATH         "/org/freedesktop/systemd1"
+
+/*!
+ * \internal
+ * \brief Prepare a systemd action
+ *
+ * \param[in] op  Action to prepare
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+services__systemd_prepare(svc_action_t *op)
+{
+    op->opaque->exec = strdup("systemd-dbus");
+    if (op->opaque->exec == NULL) {
+        return ENOMEM;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Map a systemd result to a standard OCF result
+ *
+ * \param[in] exit_status  Systemd result
+ *
+ * \return Standard OCF result
+ */
+enum ocf_exitcode
+services__systemd2ocf(int exit_status)
+{
+    // This library uses OCF codes for systemd actions
+    return (enum ocf_exitcode) exit_status;
+}
 
 static inline DBusMessage *
 systemd_new_method(const char *method)
@@ -238,8 +272,8 @@ systemd_daemon_reload(int timeout)
 static void
 set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    op->status = PCMK_EXEC_ERROR;
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Unable to invoke systemd DBus method");
 
     if (strstr(error->name, "org.freedesktop.systemd1.InvalidName")
         || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
@@ -249,13 +283,12 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
             crm_trace("Masking systemd stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
                       error->name, crm_str(op->rsc));
-            op->rc = PCMK_OCF_OK;
-            op->status = PCMK_EXEC_DONE;
+            services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
 
-        op->rc = PCMK_OCF_NOT_INSTALLED;
-        op->status = PCMK_EXEC_NOT_INSTALLED;
+        services__set_result(op, PCMK_OCF_NOT_INSTALLED,
+                             PCMK_EXEC_NOT_INSTALLED, "systemd unit not found");
     }
 
     crm_err("DBus request for %s of systemd unit %s for resource %s failed: %s",
@@ -290,8 +323,8 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
         if (op != NULL) {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 "systemd DBus method had unexpected reply");
             crm_err("Could not load systemd unit %s for %s: "
                     "DBus reply has unexpected type", op->agent, op->id);
         } else {
@@ -310,8 +343,8 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
             invoke_unit_by_path(op, path);
 
         } else if (!(op->synchronous)) {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 "No DBus object found for systemd unit");
             services__finalize_async_op(op);
         }
     }
@@ -363,7 +396,7 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
  *         was found; for synchronous actions, pcmk_rc_ok means unit was
  *         executed, with the actual result stored in \p op; for asynchronous
  *         actions, pcmk_rc_ok means action was initiated)
- * \note It is the caller's responsibility to free the return value if non-NULL.
+ * \note It is the caller's responsibility to free the path.
  */
 static int
 invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
@@ -375,8 +408,8 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
 
     if (!systemd_init()) {
         if (op != NULL) {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 "No DBus connection");
         }
         return ENOTCONN;
     }
@@ -429,15 +462,14 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     // For asynchronous ops, initiate the LoadUnit call and return
     pending = systemd_send(msg, loadunit_completed, op, op->timeout);
     if (pending == NULL) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             "Unable to send DBus message");
         dbus_message_unref(msg);
         return ECOMM;
     }
 
     // LoadUnit was successfully initiated
-    op->rc = PCMK_OCF_UNKNOWN;
-    op->status = PCMK_EXEC_PENDING;
+    services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
     services_set_op_pending(op, pending);
     dbus_message_unref(msg);
     return pcmk_rc_ok;
@@ -568,10 +600,30 @@ systemd_unit_listall(void)
 gboolean
 systemd_unit_exists(const char *name)
 {
+    char *path = NULL;
+    char *state = NULL;
+
     /* Note: Makes a blocking dbus calls
      * Used by resources_find_service_class() when resource class=service
      */
-    return invoke_unit_by_name(name, NULL, NULL) == pcmk_rc_ok;
+    if ((invoke_unit_by_name(name, NULL, &path) != pcmk_rc_ok)
+        || (path == NULL)) {
+        return FALSE;
+    }
+
+    /* A successful LoadUnit is not sufficient to determine the unit's
+     * existence; it merely means the LoadUnit request received a reply.
+     * We must make another blocking call to check the LoadState property.
+     */
+    state = systemd_get_property(path, "LoadState", NULL, NULL, NULL,
+                                 DBUS_TIMEOUT_USE_DEFAULT);
+    free(path);
+    if (pcmk__str_any_of(state, "loaded", "masked", NULL)) {
+        free(state);
+        return TRUE;
+    }
+    free(state);
+    return FALSE;
 }
 
 #define METADATA_FORMAT                                                     \
@@ -638,8 +690,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                                      __func__, __LINE__)) {
         crm_warn("DBus request for %s of %s succeeded but "
                  "return type was unexpected", op->action, crm_str(op->rsc));
-        op->rc = PCMK_OCF_OK;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE,
+                             "systemd DBus method had unexpected reply");
 
     } else {
         const char *path = NULL;
@@ -649,8 +701,7 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                               DBUS_TYPE_INVALID);
         crm_debug("DBus request for %s of %s using %s succeeded",
                   op->action, crm_str(op->rsc), path);
-        op->rc = PCMK_OCF_OK;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
 }
 
@@ -806,24 +857,19 @@ parse_status_result(const char *name, const char *state, void *userdata)
               crm_str(op->rsc), name, crm_str(state));
 
     if (pcmk__str_eq(state, "active", pcmk__str_none)) {
-        op->rc = PCMK_OCF_OK;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
     } else if (pcmk__str_eq(state, "reloading", pcmk__str_none)) {
-        op->rc = PCMK_OCF_OK;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
     } else if (pcmk__str_eq(state, "activating", pcmk__str_none)) {
-        op->rc = PCMK_OCF_UNKNOWN;
-        op->status = PCMK_EXEC_PENDING;
+        services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     } else if (pcmk__str_eq(state, "deactivating", pcmk__str_none)) {
-        op->rc = PCMK_OCF_UNKNOWN;
-        op->status = PCMK_EXEC_PENDING;
+        services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     } else {
-        op->rc = PCMK_OCF_NOT_RUNNING;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, state);
     }
 
     if (!(op->synchronous)) {
@@ -859,8 +905,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
             free(state);
 
         } else if (pending == NULL) { // Could not get ActiveState property
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 "Could not get unit state from DBus");
             services__finalize_async_op(op);
 
         } else {
@@ -880,8 +926,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         method = "RestartUnit";
 
     } else {
-        op->rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
-        op->status = PCMK_EXEC_ERROR;
+        services__set_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
+                             "Action not implemented for systemd resources");
         if (!(op->synchronous)) {
             services__finalize_async_op(op);
         }
@@ -919,8 +965,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
 
         dbus_message_unref(msg);
         if (pending == NULL) {
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                 "Unable to send DBus message");
             services__finalize_async_op(op);
 
         } else {
@@ -936,8 +982,8 @@ systemd_timeout_callback(gpointer p)
 
     op->opaque->timerid = 0;
     crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    op->status = PCMK_EXEC_TIMEOUT;
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
+                         "Systemd action did not complete within specified timeout");
     services__finalize_async_op(op);
     return FALSE;
 }
@@ -964,14 +1010,14 @@ services__execute_systemd(svc_action_t *op)
     CRM_ASSERT(op != NULL);
 
     if ((op->action == NULL) || (op->agent == NULL)) {
-        op->rc = PCMK_OCF_NOT_CONFIGURED;
-        op->status = PCMK_EXEC_ERROR_FATAL;
+        services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
+                             "Bug in action caller");
         goto done;
     }
 
     if (!systemd_init()) {
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->status = PCMK_EXEC_ERROR;
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             "No DBus connection");
         goto done;
     }
 
@@ -981,16 +1027,15 @@ services__execute_systemd(svc_action_t *op)
 
     if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
-        op->rc = PCMK_OCF_OK;
-        op->status = PCMK_EXEC_DONE;
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto done;
     }
 
     /* invoke_unit_by_name() should always override these values, which are here
      * just as a fail-safe in case there are any code paths that neglect to
      */
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    op->status = PCMK_EXEC_ERROR;
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Bug in service library");
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
         op->opaque->timerid = g_timeout_add(op->timeout + 5000,

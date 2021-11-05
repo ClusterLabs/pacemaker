@@ -18,7 +18,7 @@ lib_LTLIBRARIES	= libpacemaker.la
 
 ## SOURCES
 
-libpacemaker_la_LDFLAGS	= -version-info 3:1:2
+libpacemaker_la_LDFLAGS	= -version-info 4:0:3
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -52,6 +52,7 @@ libpacemaker_la_SOURCES += pcmk_sched_notif.c
 libpacemaker_la_SOURCES += pcmk_sched_ordering.c
 libpacemaker_la_SOURCES += pcmk_sched_promotable.c
 libpacemaker_la_SOURCES += pcmk_sched_remote.c
+libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c
 libpacemaker_la_SOURCES += pcmk_sched_transition.c
 libpacemaker_la_SOURCES += pcmk_sched_utilization.c

@@ -29,25 +29,25 @@
  */
 
 enum xml_private_flags {
-     xpf_none        = 0x0000,
-     xpf_dirty       = 0x0001,
-     xpf_deleted     = 0x0002,
-     xpf_created     = 0x0004,
-     xpf_modified    = 0x0008,
+     pcmk__xf_none        = 0x0000,
+     pcmk__xf_dirty       = 0x0001,
+     pcmk__xf_deleted     = 0x0002,
+     pcmk__xf_created     = 0x0004,
+     pcmk__xf_modified    = 0x0008,
 
-     xpf_tracking    = 0x0010,
-     xpf_processed   = 0x0020,
-     xpf_skip        = 0x0040,
-     xpf_moved       = 0x0080,
+     pcmk__xf_tracking    = 0x0010,
+     pcmk__xf_processed   = 0x0020,
+     pcmk__xf_skip        = 0x0040,
+     pcmk__xf_moved       = 0x0080,
 
-     xpf_acl_enabled = 0x0100,
-     xpf_acl_read    = 0x0200,
-     xpf_acl_write   = 0x0400,
-     xpf_acl_deny    = 0x0800,
+     pcmk__xf_acl_enabled = 0x0100,
+     pcmk__xf_acl_read    = 0x0200,
+     pcmk__xf_acl_write   = 0x0400,
+     pcmk__xf_acl_deny    = 0x0800,
 
-     xpf_acl_create  = 0x1000,
-     xpf_acl_denied  = 0x2000,
-     xpf_lazy        = 0x4000,
+     pcmk__xf_acl_create  = 0x1000,
+     pcmk__xf_acl_denied  = 0x2000,
+     pcmk__xf_lazy        = 0x4000,
 };
 
 /* When deleting portions of an XML tree, we keep a record so we can know later

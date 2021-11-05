@@ -16,8 +16,6 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
-#include <crm/common/iso8601_internal.h>
-
 static void
 readable_interval(void **state)
 {

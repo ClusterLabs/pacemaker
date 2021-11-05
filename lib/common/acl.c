@@ -185,13 +185,13 @@ parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
             }
 
         } else if (strcmp(XML_ACL_TAG_READ, tag) == 0) {
-            acls = create_acl(child, acls, xpf_acl_read);
+            acls = create_acl(child, acls, pcmk__xf_acl_read);
 
         } else if (strcmp(XML_ACL_TAG_WRITE, tag) == 0) {
-            acls = create_acl(child, acls, xpf_acl_write);
+            acls = create_acl(child, acls, pcmk__xf_acl_write);
 
         } else if (strcmp(XML_ACL_TAG_DENY, tag) == 0) {
-            acls = create_acl(child, acls, xpf_acl_deny);
+            acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
         } else {
             crm_warn("Ignoring unknown ACL %s '%s'",
@@ -227,13 +227,13 @@ parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
 static const char *
 acl_to_text(enum xml_private_flags flags)
 {
-    if (pcmk_is_set(flags, xpf_acl_deny)) {
+    if (pcmk_is_set(flags, pcmk__xf_acl_deny)) {
         return "deny";
 
-    } else if (pcmk_any_flags_set(flags, xpf_acl_write|xpf_acl_create)) {
+    } else if (pcmk_any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_acl_create)) {
         return "read/write";
 
-    } else if (pcmk_is_set(flags, xpf_acl_read)) {
+    } else if (pcmk_is_set(flags, pcmk__xf_acl_read)) {
         return "read";
     }
     return "none";
@@ -330,18 +330,18 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 static inline bool
 test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
 {
-    if (pcmk_is_set(allowed, xpf_acl_deny)) {
+    if (pcmk_is_set(allowed, pcmk__xf_acl_deny)) {
         return false;
 
     } else if (pcmk_all_flags_set(allowed, requested)) {
         return true;
 
-    } else if (pcmk_is_set(requested, xpf_acl_read)
-               && pcmk_is_set(allowed, xpf_acl_write)) {
+    } else if (pcmk_is_set(requested, pcmk__xf_acl_read)
+               && pcmk_is_set(allowed, pcmk__xf_acl_write)) {
         return true;
 
-    } else if (pcmk_is_set(requested, xpf_acl_create)
-               && pcmk_any_flags_set(allowed, xpf_acl_write|xpf_created)) {
+    } else if (pcmk_is_set(requested, pcmk__xf_acl_create)
+               && pcmk_any_flags_set(allowed, pcmk__xf_acl_write|pcmk__xf_created)) {
         return true;
     }
     return false;
@@ -355,7 +355,7 @@ purge_xml_attributes(xmlNode *xml)
     bool readable_children = false;
     xml_private_t *p = xml->_private;
 
-    if (test_acl_mode(p->flags, xpf_acl_read)) {
+    if (test_acl_mode(p->flags, pcmk__xf_acl_read)) {
         crm_trace("%s[@id=%s] is readable", crm_element_name(xml), ID(xml));
         return true;
     }
@@ -421,7 +421,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     }
 
     pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_doc_flag(target, xpf_acl_enabled);
+    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
     pcmk__apply_acl(target);
 
     doc = target->doc->_private;
@@ -429,7 +429,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         int max = 0;
         xml_acl_t *acl = aIter->data;
 
-        if (acl->mode != xpf_acl_deny) {
+        if (acl->mode != pcmk__xf_acl_deny) {
             /* Nothing to do */
 
         } else if (acl->xpath) {
@@ -530,13 +530,13 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
     xml_private_t *p = xml->_private;
 
-    if (pcmk_is_set(p->flags, xpf_created)) {
+    if (pcmk_is_set(p->flags, pcmk__xf_created)) {
         if (implicitly_allowed(xml)) {
             crm_trace("Creation of <%s> scaffolding with id=\"%s\""
                       " is implicitly allowed",
                       crm_element_name(xml), display_id(xml));
 
-        } else if (pcmk__check_acl(xml, NULL, xpf_acl_write)) {
+        } else if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
             crm_trace("ACLs allow creation of <%s> with id=\"%s\"",
                       crm_element_name(xml), display_id(xml));
 
@@ -566,7 +566,7 @@ xml_acl_denied(xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_private_t *p = xml->doc->_private;
 
-        return pcmk_is_set(p->flags, xpf_acl_denied);
+        return pcmk_is_set(p->flags, pcmk__xf_acl_denied);
     }
     return false;
 }
@@ -580,7 +580,7 @@ xml_acl_disable(xmlNode *xml)
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acl(xml);
         pcmk__apply_creation_acl(xml, false);
-        pcmk__clear_xml_flags(p, xpf_acl_enabled);
+        pcmk__clear_xml_flags(p, pcmk__xf_acl_enabled);
     }
 }
 
@@ -590,7 +590,7 @@ xml_acl_enabled(xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_private_t *p = xml->doc->_private;
 
-        return pcmk_is_set(p->flags, xpf_acl_enabled);
+        return pcmk_is_set(p->flags, pcmk__xf_acl_enabled);
     }
     return false;
 }
@@ -619,7 +619,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         if (docp->acls == NULL) {
             crm_trace("User '%s' without ACLs denied %s access to %s",
                       docp->user, acl_to_text(mode), buffer);
-            pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
+            pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
             return false;
         }
 
@@ -631,8 +631,8 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         if (name) {
             xmlAttr *attr = xmlHasProp(xml, (pcmkXmlStr) name);
 
-            if (attr && mode == xpf_acl_create) {
-                mode = xpf_acl_write;
+            if (attr && mode == pcmk__xf_acl_create) {
+                mode = pcmk__xf_acl_write;
             }
         }
 
@@ -641,11 +641,11 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             if (test_acl_mode(p->flags, mode)) {
                 return true;
 
-            } else if (pcmk_is_set(p->flags, xpf_acl_deny)) {
+            } else if (pcmk_is_set(p->flags, pcmk__xf_acl_deny)) {
                 crm_trace("%sACL denies user '%s' %s access to %s",
                           (parent != xml) ? "Parent " : "", docp->user,
                           acl_to_text(mode), buffer);
-                pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
+                pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
                 return false;
             }
             parent = parent->parent;
@@ -653,7 +653,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
         crm_trace("Default ACL denies user '%s' %s access to %s",
                   docp->user, acl_to_text(mode), buffer);
-        pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
+        pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
         return false;
     }
 

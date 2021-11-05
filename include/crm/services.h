@@ -30,10 +30,6 @@ extern "C" {
 #  include <crm_config.h>       // OCF_ROOT_DIR
 #  include "common/results.h"
 
-#  ifndef LSB_ROOT_DIR
-#    define LSB_ROOT_DIR "/etc/init.d"
-#  endif
-
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
@@ -88,10 +84,17 @@ enum nagios_exitcode {
     NAGIOS_STATE_WARNING   = 1,
     NAGIOS_STATE_CRITICAL  = 2,
     NAGIOS_STATE_UNKNOWN   = 3,
-    NAGIOS_STATE_DEPENDENT = 4,
 
+    /* This is a custom Pacemaker value (not a nagios convention), used as an
+     * intermediate value between the services library and the executor, so the
+     * executor can map it to the corresponding OCF code.
+     */
     NAGIOS_INSUFFICIENT_PRIV = 100,
-    NAGIOS_NOT_INSTALLED     = 101,
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    NAGIOS_STATE_DEPENDENT   = 4,   //! \deprecated Unused
+    NAGIOS_NOT_INSTALLED     = 101, //! \deprecated Unused
+#endif
 };
 
 enum svc_action_flags {
@@ -309,6 +312,9 @@ svc_action_t *services_alert_create(const char *id, const char *exec,
 gboolean services_alert_async(svc_action_t *action,
                               void (*cb)(svc_action_t *op));
 
+enum ocf_exitcode services_result2ocf(const char *standard, const char *action,
+                                      int exit_status);
+
     static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:
@@ -331,8 +337,6 @@ gboolean services_alert_async(svc_action_t *action,
                 return "promoted";
             case PCMK_OCF_FAILED_PROMOTED:
                 return "promoted (failed)";
-            case PCMK_OCF_TIMEOUT:
-                return "OCF_TIMEOUT";
             case PCMK_OCF_DEGRADED:
                 return "OCF_DEGRADED";
             case PCMK_OCF_DEGRADED_PROMOTED:
@@ -349,45 +353,12 @@ gboolean services_alert_async(svc_action_t *action,
                 return "interrupted by signal (DEPRECATED STATUS)";
             case PCMK_OCF_PENDING:
                 return "pending (DEPRECATED STATUS)";
+            case PCMK_OCF_TIMEOUT:
+                return "timeout (DEPRECATED STATUS)";
 #endif
             default:
                 return "unknown";
         }
-    }
-
-    /**
-     * \brief Get OCF equivalent of LSB exit code
-     *
-     * \param[in] action        LSB action that produced exit code
-     * \param[in] lsb_exitcode  Exit code of LSB action
-     *
-     * \return PCMK_OCF_* constant that corresponds to LSB exit code
-     */
-    static inline enum ocf_exitcode
-    services_get_ocf_exitcode(const char *action, int lsb_exitcode)
-    {
-        /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action && strcmp(action, "status") && strcmp(action, "monitor")) {
-            if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-                return PCMK_OCF_UNKNOWN_ERROR;
-            }
-            return (enum ocf_exitcode)lsb_exitcode;
-        }
-
-        /* status has different return codes */
-        switch (lsb_exitcode) {
-            case PCMK_LSB_STATUS_OK:
-                return PCMK_OCF_OK;
-            case PCMK_LSB_STATUS_NOT_INSTALLED:
-                return PCMK_OCF_NOT_INSTALLED;
-            case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
-                return PCMK_OCF_INSUFFICIENT_PRIV;
-            case PCMK_LSB_STATUS_VAR_PID:
-            case PCMK_LSB_STATUS_VAR_LOCK:
-            case PCMK_LSB_STATUS_NOT_RUNNING:
-                return PCMK_OCF_NOT_RUNNING;
-        }
-        return PCMK_OCF_UNKNOWN_ERROR;
     }
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

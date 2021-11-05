@@ -553,8 +553,8 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
 }
 
 void
-pcmk__print_option_metadata(const char *name, const char *version,
-                            const char *desc_short, const char *desc_long,
+pcmk__print_option_metadata(const char *name, const char *desc_short,
+                            const char *desc_long,
                             pcmk__cluster_option_t *option_list, int len)
 {
     int lpc = 0;
@@ -565,19 +565,23 @@ pcmk__print_option_metadata(const char *name, const char *version,
             "  <version>%s</version>\n"
             "  <longdesc lang=\"en\">%s</longdesc>\n"
             "  <shortdesc lang=\"en\">%s</shortdesc>\n"
+
             "  <parameters>\n", name, version, _(desc_long), _(desc_short));
+
+            "  <parameters>\n", name, PCMK_OCF_VERSION, desc_long, desc_short);
+
 
     for (lpc = 0; lpc < len; lpc++) {
         if ((option_list[lpc].description_long == NULL)
             && (option_list[lpc].description_short == NULL)) {
             continue;
         }
-        fprintf(stdout, "    <parameter name=\"%s\" unique=\"0\">\n"
+
+        fprintf(stdout, "    <parameter name=\"%s\">\n"
                 "      <shortdesc lang=\"en\">%s</shortdesc>\n"
-                "      <content type=\"%s\" default=\"%s\"/>\n"
-                "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
-                "    </parameter>\n",
+                "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
                 option_list[lpc].name,
+
                 _(option_list[lpc].description_short),
                 option_list[lpc].type,
                 option_list[lpc].default_value,
@@ -586,6 +590,41 @@ pcmk__print_option_metadata(const char *name, const char *version,
                     _(option_list[lpc].description_short),
                 (option_list[lpc].values? _("  Allowed values: ") : ""),
                 (option_list[lpc].values? _(option_list[lpc].values) : ""));
+
+                option_list[lpc].description_short,
+                option_list[lpc].description_long?
+                    option_list[lpc].description_long :
+                    option_list[lpc].description_short,
+                (option_list[lpc].values? "  Allowed values: " : ""),
+                (option_list[lpc].values? option_list[lpc].values : ""));
+
+        if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
+            char *str = strdup(option_list[lpc].values);
+            char delim[] = ", ";
+            char *ptr = strtok(str, delim);
+
+            fprintf(stdout, "      <content type=\"%s\" default=\"%s\">\n",
+                option_list[lpc].type,
+                option_list[lpc].default_value
+            );
+
+            while (ptr != NULL) {
+                fprintf(stdout, "        <option value=\"%s\" />\n", ptr);
+                ptr = strtok(NULL, delim);
+            }
+
+            fprintf(stdout, "      </content>\n");
+            free(str);
+
+        } else {
+            fprintf(stdout, "      <content type=\"%s\" default=\"%s\"/>\n",
+                option_list[lpc].type,
+                option_list[lpc].default_value
+            );
+        }
+
+        fprintf(stdout, "    </parameter>\n");
+
     }
     fprintf(stdout, "  </parameters>\n</resource-agent>\n");
 }

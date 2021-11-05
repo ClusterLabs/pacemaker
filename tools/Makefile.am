@@ -7,6 +7,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/mk/common.mk
+include $(top_srcdir)/mk/man.mk
 
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service

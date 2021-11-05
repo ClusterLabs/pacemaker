@@ -402,6 +402,12 @@ class Tests(object):
         self.action_timeout = " -t 9000 "
         if self.tls:
             self.rsc_classes.remove("stonith")
+
+        try:
+            self.rsc_classes.remove("nagios")
+        except ValueError: # Not found
+            pass
+
         if "systemd" in self.rsc_classes:
             try:
                 # This code doesn't need this import, but pacemaker-cts-dummyd
@@ -684,7 +690,7 @@ class Tests(object):
                      '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete"')
         test.add_cmd('-c exec -r test_rsc -a start -k monitor_delay -v 30 ' +
                      '-t 1000 -w') # -t must be less than self.action_timeout
-        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:OCF_TIMEOUT op_status:Timed Out" '
+        test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:error op_status:Timed Out" '
                      + self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")

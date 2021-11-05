@@ -67,14 +67,6 @@ enum st_remap_phase {
     st_phase_max = 3
 };
 
-/* These values provide additional information for STONITH's asynchronous reply response.
- * The st_reply_opt_merged value indicates an operation that has been merged and completed without being executed.
- */
-enum st_replay_option {
-    st_reply_opt_none            = 0x00000000,
-    st_reply_opt_merged          = 0x00000001,
-};
-
 typedef struct remote_fencing_op_s {
     /* The unique id associated with this operation */
     char *id;

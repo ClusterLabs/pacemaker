@@ -1104,7 +1104,7 @@ child_timeout_callback(gpointer p)
 
     child->timerid = 0;
     if (child->timeout) {
-        crm_crit("%s process (PID %d) will not die!", child->desc, (int)child->pid);
+        crm_warn("%s process (PID %d) will not die!", child->desc, (int)child->pid);
         return FALSE;
     }
 
@@ -1115,7 +1115,7 @@ child_timeout_callback(gpointer p)
     }
 
     child->timeout = TRUE;
-    crm_warn("%s process (PID %d) timed out", child->desc, (int)child->pid);
+    crm_debug("%s process (PID %d) timed out", child->desc, (int)child->pid);
 
     child->timerid = g_timeout_add(5000, child_timeout_callback, child);
     return FALSE;

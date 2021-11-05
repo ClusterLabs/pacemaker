@@ -172,24 +172,20 @@ enum ocf_exitcode {
     PCMK_OCF_DEGRADED             = 190, //!< Service active but more likely to fail soon
     PCMK_OCF_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
 
-    /* The rest are Pacemaker extensions, not in the OCF standard. The executor
-     * returns PCMK_OCF_TIMEOUT for agent timeouts, and the controller records
-     * PCMK_OCF_UNKNOWN for pending actions, and PCMK_OCF_TIMEOUT for executor
-     * communication timeouts. PCMK_OCF_CONNECTION_DIED is used only with older
-     * DCs that don't support PCMK_EXEC_NOT_CONNECTED.
+    /* These two are Pacemaker extensions, not in the OCF standard. The
+     * controller records PCMK_OCF_UNKNOWN for pending actions.
+     * PCMK_OCF_CONNECTION_DIED is used only with older DCs that don't support
+     * PCMK_EXEC_NOT_CONNECTED.
      *
-     * @TODO These should be deprecated, and existing execution status codes
-     * (enum pcmk_exec_status) should be relied on for these instead
-     * (PCMK_EXEC_PENDING for the purposes of PCMK_OCF_UNKNOWN, and
-     * PCMK_EXEC_TIMEOUT for PCMK_OCF_TIMEOUT). It might be worthwhile to keep
-     * PCMK_OCF_UNKNOWN as an invalid value for initializing new action objects.
-     * However, backward compatibility must be considered (processing old saved
-     * CIB files, rolling upgrades with older DCs, older Pacemaker Remote nodes
-     * or connection hosts, and older bundles).
+     * @TODO PCMK_OCF_UNKNOWN should be deprecated, and an execution status of
+     * PCMK_EXEC_PENDING relied on instead (though it might be worthwhile to
+     * keep PCMK_OCF_UNKNOWN as an invalid value for initializing new action
+     * objects). However, backward compatibility must be considered (processing
+     * old saved CIB files, rolling upgrades with older DCs, older
+     * Pacemaker Remote nodes or connection hosts, and older bundles).
      */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
-    PCMK_OCF_TIMEOUT              = 198, //!< Action did not complete in time
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // Former Pacemaker extensions
@@ -198,6 +194,7 @@ enum ocf_exitcode {
     PCMK_OCF_NOT_SUPPORTED        = 195, //!< \deprecated (Unused)
     PCMK_OCF_PENDING              = 196, //!< \deprecated (Unused)
     PCMK_OCF_CANCELLED            = 197, //!< \deprecated (Unused)
+    PCMK_OCF_TIMEOUT              = 198, //!< \deprecated (Unused)
     PCMK_OCF_OTHER_ERROR          = 199, //!< \deprecated (Unused)
 
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
@@ -318,6 +315,11 @@ enum pcmk_exec_status {
     PCMK_EXEC_NOT_INSTALLED,    //!< Agent or dependency not available locally
     PCMK_EXEC_NOT_CONNECTED,    //!< No connection to executor
     PCMK_EXEC_INVALID,          //!< Action cannot be attempted (e.g. shutdown)
+    PCMK_EXEC_NO_FENCE_DEVICE,  //!< No fence device is configured for target
+    PCMK_EXEC_NO_SECRETS,       //!< Necessary CIB secrets are unavailable
+
+    // Add new values above here then update this one below
+    PCMK_EXEC_MAX = PCMK_EXEC_NO_SECRETS, //!< Maximum value for this enum
 };
 
 const char *pcmk_rc_name(int rc);
@@ -349,6 +351,8 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
         case PCMK_EXEC_NOT_INSTALLED:   return "Not installed";
         case PCMK_EXEC_NOT_CONNECTED:   return "No executor connection";
         case PCMK_EXEC_INVALID:         return "Cannot execute now";
+        case PCMK_EXEC_NO_FENCE_DEVICE: return "No fence device";
+        case PCMK_EXEC_NO_SECRETS:      return "CIB secrets unavailable";
         default:                        return "UNKNOWN!";
     }
 }

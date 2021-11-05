@@ -110,7 +110,8 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts,
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status", data_set, 0, NULL, FALSE,
-                 section_opts, show_opts | pcmk_show_inactive_rscs,
+                 section_opts,
+                 show_opts | pcmk_show_inactive_rscs | pcmk_show_failed_detail,
                  NULL, all, all);
     out->end_list(out);
 

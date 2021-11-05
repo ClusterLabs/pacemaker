@@ -24,10 +24,10 @@ colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
     char *retval = NULL;
 
     score = score2char(cons->score);
-    if (cons->role_rh > RSC_ROLE_STARTED) {
+    if (cons->primary_role > RSC_ROLE_STARTED) {
             retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
                                        rsc->id, score, dependents ? "needs" : "with",
-                                       role2text(cons->role_rh), cons->id);
+                                       role2text(cons->primary_role), cons->id);
     } else {
         retval = crm_strdup_printf("%s (score=%s, id=%s)",
                                    rsc->id, score, cons->id);
@@ -46,8 +46,8 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
     score = score2char(cons->score);
     node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
                                         "id", cons->id,
-                                        "rsc", cons->rsc_lh->id,
-                                        "with-rsc", cons->rsc_rh->id,
+                                        "rsc", cons->dependent->id,
+                                        "with-rsc", cons->primary->id,
                                         "score", score,
                                         NULL);
 
@@ -55,12 +55,14 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
         xmlSetProp(node, (pcmkXmlStr) "node-attribute", (pcmkXmlStr) cons->node_attribute);
     }
 
-    if (cons->role_lh != RSC_ROLE_UNKNOWN) {
-        xmlSetProp(node, (pcmkXmlStr) "rsc-role", (pcmkXmlStr) role2text(cons->role_lh));
+    if (cons->dependent_role != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "rsc-role",
+                   (pcmkXmlStr) role2text(cons->dependent_role));
     }
 
-    if (cons->role_rh != RSC_ROLE_UNKNOWN) {
-        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role", (pcmkXmlStr) role2text(cons->role_rh));
+    if (cons->primary_role != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role",
+                   (pcmkXmlStr) role2text(cons->primary_role));
     }
 
     free(score);
@@ -366,21 +368,23 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
-            out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_rh->id, cons->id);
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+            out->list_item(out, NULL, "%s (id=%s - loop)",
+                           cons->primary->id, cons->id);
             continue;
         }
 
-        hdr = colocations_header(cons->rsc_rh, cons, FALSE);
+        hdr = colocations_header(cons->primary, cons, FALSE);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
         /* Empty list header just for indentation of information about this resource. */
         out->begin_list(out, NULL, NULL, NULL);
 
-        out->message(out, "locations-list", cons->rsc_rh);
+        out->message(out, "locations-list", cons->primary);
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
+            out->message(out, "rsc-is-colocated-with-list",
+                         cons->primary, recursive);
         }
 
         out->end_list(out);
@@ -406,16 +410,17 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
-            colocations_xml_node(out, cons->rsc_rh, cons);
+        if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
+            colocations_xml_node(out, cons->primary, cons);
             continue;
         }
 
-        colocations_xml_node(out, cons->rsc_rh, cons);
-        do_locations_list_xml(out, cons->rsc_rh, false);
+        colocations_xml_node(out, cons->primary, cons);
+        do_locations_list_xml(out, cons->primary, false);
 
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
+            out->message(out, "rsc-is-colocated-with-list",
+                         cons->primary, recursive);
         }
     }
 
@@ -441,21 +446,23 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
 
-        if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
-            out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_lh->id, cons->id);
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+            out->list_item(out, NULL, "%s (id=%s - loop)",
+                           cons->dependent->id, cons->id);
             continue;
         }
 
-        hdr = colocations_header(cons->rsc_lh, cons, TRUE);
+        hdr = colocations_header(cons->dependent, cons, TRUE);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
         /* Empty list header just for indentation of information about this resource. */
         out->begin_list(out, NULL, NULL, NULL);
 
-        out->message(out, "locations-list", cons->rsc_lh);
+        out->message(out, "locations-list", cons->dependent);
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
+            out->message(out, "rscs-colocated-with-list",
+                         cons->dependent, recursive);
         }
 
         out->end_list(out);
@@ -481,16 +488,17 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
-            colocations_xml_node(out, cons->rsc_lh, cons);
+        if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
+            colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
 
-        colocations_xml_node(out, cons->rsc_lh, cons);
-        do_locations_list_xml(out, cons->rsc_lh, false);
+        colocations_xml_node(out, cons->dependent, cons);
+        do_locations_list_xml(out, cons->dependent, false);
 
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
+            out->message(out, "rscs-colocated-with-list",
+                         cons->dependent, recursive);
         }
     }
 

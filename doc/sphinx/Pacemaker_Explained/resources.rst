@@ -213,17 +213,44 @@ discussed later in :ref:`fencing`.
 Nagios Plugins
 ______________
 
-Nagios Plugins [#]_ allow us to monitor services on remote hosts.
+Nagios Plugins [#]_ are a way to monitor services. Pacemaker can use these as
+resources, to react to a change in the service's status.
 
-Pacemaker is able to do remote monitoring with the plugins `if they are
-present`.
+To use plugins as resources, Pacemaker must have been built with support, and
+OCF-style meta-data for the plugins must be installed on nodes that can run
+them. Meta-data for several common plugins is provided by the
+`nagios-agents-metadata <https://github.com/ClusterLabs/nagios-agents-metadata>`_
+project.
 
-A common use case is to configure them as resources belonging to a resource
-container (usually a virtual machine), and the container will be restarted
-if any of them has failed. Another use is to configure them as ordinary
-resources to be used for monitoring hosts or services via the network.
+The supported parameters for such a resource are same as the long options of
+the plugin.
 
-The supported parameters are same as the long options of the plugin.
+Start and monitor actions for plugin resources are implemented as invoking the
+plugin. A plugin result of "OK" (0) is treated as success, a result of "WARN"
+(1) is treated as a successful but degraded service, and any other result is
+considered a failure.
+
+A plugin resource is not going to change its status after recovery by
+restarting the plugin, so using them alone does not make sense with ``on-fail``
+set (or left to default) to ``restart``. Another value could make sense, for
+example, if you want to fence or standby nodes that cannot reach some external
+service.
+
+A more common use case for plugin resources is to configure them with a
+``container`` meta-attribute set to the name of another resource that actually
+makes the service available, such as a virtual machine or container.
+
+With ``container`` set, the plugin resource will automatically be colocated
+with the containing resource and ordered after it, and the containing resource
+will be considered failed if the plugin resource fails. This allows monitoring
+of a service inside a virtual machine or container, with recovery of the
+virtual machine or container if the service fails.
+
+Configuring a virtual machine as a guest node, or a container as a
+:ref:`bundle <s-resource-bundle>`, is the preferred way of monitoring a service
+inside, but plugin resources can be useful when it is not practical to modify
+the virtual machine or container image for this purpose.
+
 
 .. _primitive-resource:
 

@@ -19,7 +19,10 @@
 | 0.19.4 or later | gettext-devel      | gettext-tools      | gettext        |
 | 0.19.8 or later |                    |                    | autopoint      |
 
-Also: GNU make
+Also:
+* make must be GNU (or compatible) (setting MAKE=gmake might also work but is
+  untested)
+* GNU (or compatible) getopt must be somewhere on the PATH
 
 ### Cluster Stack Dependencies
 
@@ -50,6 +53,7 @@ Also: GNU make
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
 | documentation (PDF)                             |                | latexmk texlive texlive-capt-of texlive-collection-xetex texlive-fncychap texlive-framed texlive-multirow texlive-needspace texlive-tabulary texlive-titlesec texlive-threeparttable texlive-upquote texlive-wrapfig texlive-xetex | texlive texlive-latex  | texlive texlive-latex-extra |
+| annotated source code as HTML via "make global" |                | global                  | global                  | global                  |
 | RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 | unit tests                                      |                | libcmocka-devel         | libcmocka-devel         | libcmocka-dev           |
 

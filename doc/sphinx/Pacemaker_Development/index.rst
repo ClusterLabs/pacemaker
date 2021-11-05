@@ -25,7 +25,6 @@ Table of Contents
    components
    helpers
    evolution
-   hacking
 
 Index
 -----

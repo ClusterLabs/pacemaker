@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
 #include <crm/cib/util.h>
@@ -1113,44 +1112,97 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
-static int
-failed_action_default(pcmk__output_t *out, va_list args)
+/*!
+ * \internal
+ * \brief Display a failed action in less-technical natural language
+ */
+static void
+failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
+                       const char *op_key, const char *node_name, int rc,
+                       int status, const char *exit_reason,
+                       const char *exec_time)
 {
-    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-    unsigned int show_opts G_GNUC_UNUSED = va_arg(args, unsigned int);
-
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
-    const char *exit_reason = crm_element_value(xml_op,
-                                                XML_LRM_ATTR_EXIT_REASON);
-    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
-    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
-
-    int rc;
-    int status;
-    const char *exit_status = NULL;
-    const char *lrm_status = NULL;
+    char *rsc_id = NULL;
+    char *task = NULL;
+    guint interval_ms = 0;
     const char *last_change_str = NULL;
     time_t last_change_epoch = 0;
     GString *str = NULL;
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
-    exit_status = services_ocf_exitcode_str(rc);
+    if (pcmk__str_empty(op_key)
+        || !parse_op_key(op_key, &rsc_id, &task, &interval_ms)) {
+        rsc_id = strdup("unknown resource");
+        task = strdup("unknown action");
+        interval_ms = 0;
+    }
 
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
-    lrm_status = pcmk_exec_status_str(status);
+    str = g_string_sized_new(strlen(rsc_id) + strlen(task) + strlen(node_name)
+                             + 100); // reasonable starting size
 
-    if (pcmk__str_empty(op_key)) {
-        op_key = ID(xml_op);
-        if (pcmk__str_empty(op_key)) {
-            op_key = "unknown operation";
+    g_string_printf(str, "%s ", rsc_id);
+
+    if (interval_ms != 0) {
+        g_string_append_printf(str, "%s-interval ",
+                               pcmk__readable_interval(interval_ms));
+    }
+    g_string_append_printf(str, "%s on %s",
+                           crm_action_str(task, interval_ms), node_name);
+
+    if (status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, " returned '%s'",
+                               services_ocf_exitcode_str(rc));
+    } else {
+        g_string_append_printf(str, " could not be executed (%s)",
+                               pcmk_exec_status_str(status));
+    }
+
+    if (!pcmk__str_empty(exit_reason)) {
+        g_string_append_printf(str, " because '%s'", exit_reason);
+    }
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change_epoch) == pcmk_ok) {
+        last_change_str = pcmk__epoch2str(&last_change_epoch);
+        if (last_change_str != NULL) {
+            g_string_append_printf(str, " at %s", last_change_str);
         }
     }
-    if (pcmk__str_empty(node_name)) {
-        node_name = "unknown node";
+    if (!pcmk__str_empty(exec_time)) {
+        int exec_time_ms = 0;
+
+        if ((pcmk__scan_min_int(exec_time, &exec_time_ms, 0) == pcmk_rc_ok)
+            && (exec_time_ms > 0)) {
+            g_string_append_printf(str, " after %s",
+                                   pcmk__readable_interval(exec_time_ms));
+        }
+    }
+
+    out->list_item(out, NULL, "%s", str->str);
+    g_string_free(str, TRUE);
+    free(rsc_id);
+    free(task);
+}
+
+/*!
+ * \internal
+ * \brief Display a failed action with technical details
+ */
+static void
+failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
+                        const char *op_key, const char *node_name, int rc,
+                        int status, const char *exit_reason,
+                        const char *exec_time)
+{
+    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+    const char *exit_status = services_ocf_exitcode_str(rc);
+    const char *lrm_status = pcmk_exec_status_str(status);
+    const char *last_change_str = NULL;
+    time_t last_change_epoch = 0;
+    GString *str = NULL;
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = "unknown operation";
     }
     if (pcmk__str_empty(exit_status)) {
         exit_status = "unknown exit status";
@@ -1187,6 +1239,43 @@ failed_action_default(pcmk__output_t *out, va_list args)
 
     out->list_item(out, NULL, "%s", str->str);
     g_string_free(str, TRUE);
+}
+
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
+static int
+failed_action_default(pcmk__output_t *out, va_list args)
+{
+    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+    unsigned int show_opts = va_arg(args, unsigned int);
+
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *exit_reason = crm_element_value(xml_op,
+                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
+
+    int rc;
+    int status;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = ID(xml_op);
+    }
+    if (pcmk__str_empty(node_name)) {
+        node_name = "unknown node";
+    }
+
+    if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+        failed_action_technical(out, xml_op, op_key, node_name, rc, status,
+                                exit_reason, exec_time);
+    } else {
+        failed_action_friendly(out, xml_op, op_key, node_name, rc, status,
+                               exit_reason, exec_time);
+    }
     return pcmk_rc_ok;
 }
 

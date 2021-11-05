@@ -97,8 +97,8 @@ const char *pcmk__cluster_option(GHashTable *options,
                                  pcmk__cluster_option_t *option_list, int len,
                                  const char *name);
 
-void pcmk__print_option_metadata(const char *name, const char *version,
-                                 const char *desc_short, const char *desc_long,
+void pcmk__print_option_metadata(const char *name, const char *desc_short,
+                                 const char *desc_long,
                                  pcmk__cluster_option_t *option_list, int len);
 
 void pcmk__validate_cluster_options(GHashTable *options,

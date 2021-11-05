@@ -28,18 +28,46 @@ typedef enum {
 typedef struct te_timer_s crm_action_timer_t;
 typedef struct crm_graph_s crm_graph_t;
 
+enum pcmk__synapse_flags {
+    pcmk__synapse_ready       = (1 << 0),
+    pcmk__synapse_failed      = (1 << 1),
+    pcmk__synapse_executed    = (1 << 2),
+    pcmk__synapse_confirmed   = (1 << 3),
+};
+
 typedef struct synapse_s {
     int id;
     int priority;
 
-    gboolean ready;
-    gboolean failed;
-    gboolean executed;
-    gboolean confirmed;
+    uint32_t flags; // Group of pcmk__synapse_flags
 
     GList *actions;           /* crm_action_t* */
     GList *inputs;            /* crm_action_t* */
 } synapse_t;
+
+const char *synapse_state_str(synapse_t *synapse);
+
+#define pcmk__set_synapse_flags(synapse, flags_to_set) do {             \
+        (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
+            LOG_TRACE,                                                  \
+            "Synapse", "synapse",                       \
+            (synapse)->flags, (flags_to_set), #flags_to_set);           \
+    } while (0)
+
+#define pcmk__clear_synapse_flags(synapse, flags_to_clear) do {         \
+        (synapse)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
+            LOG_TRACE,                                                  \
+            "Synapse", "synapse",                      \
+            (synapse)->flags, (flags_to_clear), #flags_to_clear);       \
+    } while (0)
+
+enum pcmk__graph_action_flags {
+    pcmk__graph_action_sent_update   = (1 << 0),     /* sent to the CIB */
+    pcmk__graph_action_executed      = (1 << 1),     /* sent to the CRM */
+    pcmk__graph_action_confirmed     = (1 << 2),
+    pcmk__graph_action_failed        = (1 << 3),
+    pcmk__graph_action_can_fail      = (1 << 4),     //! \deprecated Will be removed in a future release
+};
 
 typedef struct crm_action_s {
     int id;
@@ -51,16 +79,27 @@ typedef struct crm_action_s {
     crm_action_timer_t *timer;
     synapse_t *synapse;
 
-    gboolean sent_update;       /* sent to the CIB */
-    gboolean executed;          /* sent to the CRM */
-    gboolean confirmed;
-
-    gboolean failed;
-    gboolean can_fail; //! \deprecated Will be removed in a future release
+    uint32_t flags; // Group of pcmk__graph_action_flags
 
     xmlNode *xml;
 
 } crm_action_t;
+
+const char *action_state_str(crm_action_t *action);
+
+#define crm__set_graph_action_flags(action, flags_to_set) do {             \
+        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
+            LOG_TRACE,                                                \
+            "Action", "action",                                       \
+            (action)->flags, (flags_to_set), #flags_to_set);          \
+    } while (0)
+
+#define crm__clear_graph_action_flags(action, flags_to_clear) do {         \
+        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
+            LOG_TRACE,                                                \
+            "Action", "action",                                       \
+            (action)->flags, (flags_to_clear), #flags_to_clear);      \
+    } while (0)
 
 struct te_timer_s {
     int source_id;

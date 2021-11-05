@@ -30,6 +30,26 @@ struct resource_alloc_functions_s {
     void (*rsc_colocation_rh) (pe_resource_t *, pe_resource_t *,
                                pcmk__colocation_t *, pe_working_set_t *);
 
+    /*!
+     * \internal
+     * \brief Create list of all resources in colocations with a given resource
+     *
+     * Given a resource, create a list of all resources involved in mandatory
+     * colocations with it, whether directly or indirectly via chained colocations.
+     *
+     * \param[in] rsc             Resource to add to colocated list
+     * \param[in] orig_rsc        Resource originally requested
+     * \param[in] colocated_rscs  Existing list
+     *
+     * \return List of given resource and all resources involved in colocations
+     *
+     * \note This function is recursive; top-level callers should pass NULL as
+     *       \p colocated_rscs and \p orig_rsc, and the desired resource as
+     *       \p rsc. The recursive calls will use other values.
+     */
+    GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                  GList *colocated_rscs);
+
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
     enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
@@ -55,10 +75,10 @@ pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                  pe_working_set_t *data_set);
 extern void native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
-void native_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                               pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
-void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void native_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                               pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 extern enum pe_action_flags native_action_flags(pe_action_t * action, pe_node_t * node);
@@ -73,10 +93,10 @@ pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
 extern void group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
-void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                              pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
-void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                              pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 extern enum pe_action_flags group_action_flags(pe_action_t * action, pe_node_t * node);
@@ -93,12 +113,12 @@ gboolean pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                    pe_working_set_t *data_set);
 void pcmk__bundle_internal_constraints(pe_resource_t *rsc,
                                        pe_working_set_t *data_set);
-void pcmk__bundle_rsc_colocation_lh(pe_resource_t *lh_rsc,
-                                    pe_resource_t *rh_rsc,
+void pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent,
+                                    pe_resource_t *primary,
                                     pcmk__colocation_t *constraint,
                                     pe_working_set_t *data_set);
-void pcmk__bundle_rsc_colocation_rh(pe_resource_t *lh_rsc,
-                                    pe_resource_t *rh_rsc,
+void pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent,
+                                    pe_resource_t *primary,
                                     pcmk__colocation_t *constraint,
                                     pe_working_set_t *data_set);
 void pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
@@ -111,10 +131,10 @@ pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
 extern void clone_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
-void clone_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                              pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
-void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                              pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
@@ -130,7 +150,7 @@ pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,
 void create_promotable_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promotable_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
-void promotable_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+void promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                               pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 

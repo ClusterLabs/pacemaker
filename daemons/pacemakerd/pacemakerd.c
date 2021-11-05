@@ -270,7 +270,7 @@ main(int argc, char **argv)
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if (rc != pcmk_rc_ok) {
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));

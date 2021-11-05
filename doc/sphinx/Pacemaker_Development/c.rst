@@ -211,6 +211,19 @@ require a prefix, though a unique prefix indicating an executable (controld,
 crm_mon, etc.) can be helpful to indicate symbols shared between multiple
 source files for the executable.
 
+Public API Deprecation
+______________________
+
+Public APIs may not be removed in most Pacemaker releases, but they may be
+deprecated.
+
+When a public API is deprecated, it is moved to a header whose name ends in
+``compat.h``. The original header includes the compatibility header only if the
+``PCMK_ALLOW_DEPRECATED`` symbol is undefined or defined to 1. This allows
+external code to continue using the deprecated APIs, but internal code is
+prevented from using them because the ``crm_internal.h`` header defines the
+symbol to 0.
+
 
 .. index::
    pair: C; boilerplate
@@ -726,23 +739,92 @@ Memory Management
 
 .. index::
    pair: C; logging
+   pair: C; output
 
-Logging
-#######
+Logging and Output
+##################
+
+Logging Vs. Output
+__________________
+
+Log messages and output messages are logically similar but distinct.
+Oversimplifying a bit, daemons log, and tools output.
+
+Log messages are intended to help with troubleshooting and debugging.
+They may have a high level of technical detail, and are usually filtered by
+severity -- for example, the system log by default gets messages of notice
+level and higher.
+
+Output is intended to let the user know what a tool is doing, and is generally
+terser and less technical, and may even be parsed by scripts. Output might have
+"verbose" and "quiet" modes, but it is not filtered by severity.
+
+Common Guidelines for All Messages
+__________________________________
 
 * When format strings are used for derived data types whose implementation may
   vary across platforms (``pid_t``, ``time_t``, etc.), the safest approach is
   to use ``%lld`` in the format string, and cast the value to ``long long``.
 
-* Do *not* pass ``NULL`` as an argument to satisfy the ``%s`` format specifier
-  in logging (and more generally, ``printf``-style) functions. When the string
-  "<null>" is a sufficient output representation in such case, you can use the
-  ``crm_str()`` convenience macro; otherwise, the ternary operator is an
-  obvious choice.
-
 * Do not rely on ``%s`` handling ``NULL`` values properly. While the standard
   library functions might, not all Pacemaker API using them does, and it's
   safest to get in the habit of always ensuring format values are non-NULL.
+  For debug and trace messages, the ``crm_str()`` macro is sufficient and will
+  map NULL to the string "<null>", but for other messages an understandable
+  string appropriate to the context should be used when the value is NULL.
+
+* The convenience macros ``pcmk__plural_s()`` and ``pcmk__plural_alt()`` are
+  handy when logging a word that may be singular or plural.
+
+Logging
+_______
+
+Pacemaker uses libqb for logging, but wraps it with a higher level of
+functionality (see ``include/crm/common/logging*h``).
+
+A few macros ``crm_err()``, ``crm_warn()``, etc. do most of the heavy lifting.
+
+By default, Pacemaker sends logs at notice level and higher to the system log,
+and logs at info level and higher to the detail log (typically
+``/var/log/pacemaker/pacemaker.log``). The intent is that most users will only
+ever need the system log, but for deeper troubleshooting and developer
+debugging, the detail log may be helpful, at the cost of being more technical
+and difficult to follow.
+
+The same message can have more detail in the detail log than in the system log,
+using libqb's "extended logging" feature:
+
+.. code-block:: c
+
+   /* The following will log a simple message in the system log, like:
+
+          warning: Action failed: Node not found
+
+      with extra detail in the detail log, like:
+
+          warning: Action failed: Node not found | rc=-1005 id=hgjjg-51006
+   */
+   crm_warn("Action failed: %s " CRM_XS " rc=%d id=%s",
+            pcmk_rc_str(rc), rc, id);
+
+
+Output
+______
+
+Pacemaker has a somewhat complicated system for tool output. The main benefit
+is that the user can select the output format with the ``--output-as`` option
+(usually "text" for human-friendly output or "xml" for reliably script-parsable
+output, though ``crm_mon`` additionally supports "console" and "html").
+
+A custom message can be defined with a unique string identifier, plus
+implementation functions for each supported format. The caller invokes the
+message using the identifier. The user selects the output format via
+``--output-as``, and the output code automatically calls the appropriate
+implementation function.
+
+The interface (most importantly ``pcmk__output_t``) is declared in
+``include/crm/common/output*h``. See the API comments and existing tools for
+examples.
 
 
 .. index::

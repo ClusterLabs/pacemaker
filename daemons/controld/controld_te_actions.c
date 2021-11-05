@@ -238,7 +238,7 @@ controld_record_action_timeout(crm_action_t *action)
      * to the executor.
      */
     op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
-                                       PCMK_OCF_TIMEOUT,
+                                       PCMK_OCF_UNKNOWN_ERROR,
                                        "Cluster communication timeout "
                                        "(no response from executor)");
     op->call_id = -1;
@@ -257,7 +257,7 @@ controld_record_action_timeout(crm_action_t *action)
 
     crm_trace("Sent CIB update (call ID %d) for timeout of action %d (%s on %s)",
               rc, action->id, task_uuid, target);
-    action->sent_update = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_sent_update);
 }
 
 static gboolean
@@ -286,7 +286,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(action != NULL);
     CRM_ASSERT(action->xml != NULL);
 
-    action->executed = FALSE;
+    crm__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
@@ -348,7 +348,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     free(counter);
     free_xml(cmd);
 
-    action->executed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_executed);
 
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
@@ -356,13 +356,13 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
 
     } else if (no_wait) {
         crm_info("Action %d confirmed - no wait", action->id);
-        action->confirmed = TRUE; /* Just mark confirmed.
+        crm__set_graph_action_flags(action, pcmk__graph_action_confirmed); /* Just mark confirmed.
                                    * Don't bump the job count only to immediately decrement it
                                    */
         pcmk__update_graph(transition_graph, action);
         trigger_graph();
 
-    } else if (action->confirmed == TRUE) {
+    } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
         crm_debug("Action %d: %s %s on %s(timeout %dms) was already confirmed.",
                   action->id, task, task_uuid, on_node, action->timeout);
     } else {
@@ -550,12 +550,12 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
 void
 te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
 {
-    if (action->confirmed == FALSE) {
+    if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
         if ((action->type == action_type_rsc)
             && (crm_element_value(action->xml, XML_LRM_ATTR_TARGET) != NULL)) {
             te_update_job_count(action, -1);
         }
-        action->confirmed = TRUE;
+        crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     }
     if (graph) {
         pcmk__update_graph(graph, action);

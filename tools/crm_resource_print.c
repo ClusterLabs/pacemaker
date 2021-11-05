@@ -148,7 +148,7 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int")
+                  "const char *", "const char *", "int", "const char *")
 static int
 agent_status_default(pcmk__output_t *out, va_list args) {
     int status = va_arg(args, int);
@@ -158,41 +158,65 @@ agent_status_default(pcmk__output_t *out, va_list args) {
     const char *provider = va_arg(args, const char *);
     const char *type = va_arg(args, const char *);
     int rc = va_arg(args, int);
+    const char *exit_reason = va_arg(args, const char *);
 
     if (status == PCMK_EXEC_DONE) {
-        out->info(out, "Operation %s%s%s (%s%s%s:%s) returned: '%s' (%d)",
-                  action, name ? " for " : "", name ? name : "",
-                  class, provider ? ":" : "", provider ? provider : "", type,
-                  services_ocf_exitcode_str(rc), rc);
+        /* Operation <action> [for <resource>] (<class>[:<provider>]:<agent>)
+         * returned <exit-code> (<exit-description>[: <exit-reason>])
+         */
+        out->info(out, "Operation %s%s%s (%s%s%s:%s) returned %d (%s%s%s)",
+                  action,
+                  ((name == NULL)? "" : " for "), ((name == NULL)? "" : name),
+                  class,
+                  ((provider == NULL)? "" : ":"),
+                  ((provider == NULL)? "" : provider),
+                  type, rc, services_ocf_exitcode_str(rc),
+                  ((exit_reason == NULL)? "" : ": "),
+                  ((exit_reason == NULL)? "" : exit_reason));
     } else {
-        out->err(out, "Operation %s%s%s (%s%s%s:%s) failed: '%s' (%d)",
-                 action, name ? " for " : "", name ? name : "",
-                 class, provider ? ":" : "", provider ? provider : "", type,
-                 pcmk_exec_status_str(status), status);
+        /* Operation <action> [for <resource>] (<class>[:<provider>]:<agent>)
+         * could not be executed (<execution-status>[: <exit-reason>])
+         */
+        out->err(out,
+                 "Operation %s%s%s (%s%s%s:%s) could not be executed (%s%s%s)",
+                 action,
+                 ((name == NULL)? "" : " for "), ((name == NULL)? "" : name),
+                 class,
+                 ((provider == NULL)? "" : ":"),
+                 ((provider == NULL)? "" : provider),
+                 type, pcmk_exec_status_str(status),
+                 ((exit_reason == NULL)? "" : ": "),
+                 ((exit_reason == NULL)? "" : exit_reason));
     }
 
     return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int")
+                  "const char *", "const char *", "int", "const char *")
 static int
 agent_status_xml(pcmk__output_t *out, va_list args) {
-    int status G_GNUC_UNUSED = va_arg(args, int);
+    int status = va_arg(args, int);
     const char *action G_GNUC_UNUSED = va_arg(args, const char *);
     const char *name G_GNUC_UNUSED = va_arg(args, const char *);
     const char *class G_GNUC_UNUSED = va_arg(args, const char *);
     const char *provider G_GNUC_UNUSED = va_arg(args, const char *);
     const char *type G_GNUC_UNUSED = va_arg(args, const char *);
     int rc = va_arg(args, int);
+    const char *exit_reason = va_arg(args, const char *);
 
-    char *status_str = pcmk__itoa(rc);
+    char *exit_str = pcmk__itoa(rc);
+    char *status_str = pcmk__itoa(status);
 
     pcmk__output_create_xml_node(out, "agent-status",
-                                 "code", status_str,
+                                 "code", exit_str,
                                  "message", services_ocf_exitcode_str(rc),
+                                 "execution_code", status_str,
+                                 "execution_message", pcmk_exec_status_str(status),
+                                 "reason", exit_reason,
                                  NULL);
 
+    free(exit_str);
     free(status_str);
 
     return pcmk_rc_ok;
@@ -290,7 +314,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "char *", "char *")
+                  "int", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_default(pcmk__output_t *out, va_list args) {
     int verbose = va_arg(args, int);
@@ -303,6 +327,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     GHashTable *overrides = va_arg(args, GHashTable *);
     int rc = va_arg(args, int);
     int status = va_arg(args, int);
+    const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
     char *stderr_data = va_arg(args, char *);
 
@@ -322,7 +347,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     }
 
     out->message(out, "agent-status", status, action, rsc_name, class, provider,
-                 type, rc);
+                 type, rc, exit_reason);
 
     /* hide output for validate-all if not in verbose */
     if (verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei)) {
@@ -330,8 +355,11 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     }
 
     if (stdout_data || stderr_data) {
-        xmlNodePtr doc = string2xml(stdout_data);
+        xmlNodePtr doc = NULL;
 
+        if (stdout_data != NULL) {
+            doc = string2xml(stdout_data);
+        }
         if (doc != NULL) {
             out->output_xml(out, "command", stdout_data);
             xmlFreeNode(doc);
@@ -345,7 +373,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "char *", "char *")
+                  "int", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     int verbose G_GNUC_UNUSED = va_arg(args, int);
@@ -358,6 +386,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     GHashTable *overrides = va_arg(args, GHashTable *);
     int rc = va_arg(args, int);
     int status = va_arg(args, int);
+    const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
     char *stderr_data = va_arg(args, char *);
 
@@ -391,11 +420,14 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     }
 
     out->message(out, "agent-status", status, action, rsc_name, class, provider,
-                 type, rc);
+                 type, rc, exit_reason);
 
     if (stdout_data || stderr_data) {
-        xmlNodePtr doc = string2xml(stdout_data);
+        xmlNodePtr doc = NULL;
 
+        if (stdout_data != NULL) {
+            doc = string2xml(stdout_data);
+        }
         if (doc != NULL) {
             out->output_xml(out, "command", stdout_data);
             xmlFreeNode(doc);

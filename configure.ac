@@ -151,6 +151,34 @@ cc_restore_flags() {
     CFLAGS=$ac_save_CFLAGS
 }
 
+# expand_path_option $path_variable_name $default
+expand_path_option() {
+    # The first argument is the variable *name* (not value)
+    ac_path_varname="$1"
+
+    # Get the original value of the variable
+    ac_path_value=$(eval echo "\${${ac_path_varname}}")
+
+    # Expand any literal variable expressions in the value so that we don't
+    # end up with something like '${prefix}' in #defines etc.
+    #
+    # Autoconf deliberately leaves values unexpanded to allow overriding
+    # the configure script choices in make commands (for example,
+    # "make exec_prefix=/foo install"). No longer being able to do this seems
+    # like no great loss.
+    eval ac_path_value=$(eval echo "${ac_path_value}")
+
+    # Use (expanded) default if necessary
+    AS_IF([test x"${ac_path_value}" = x""],
+	  [eval ac_path_value=$(eval echo "$2")])
+
+    # Require a full path
+    AS_CASE(["$ac_path_value"],
+            [/*], [eval ${ac_path_varname}="$ac_path_value"],
+            [*], [AC_MSG_ERROR([$ac_path_varname value "$ac_path_value" is not a full path])]
+    )
+}
+
 # yes_no_try $user_response $default
 DISABLED=0
 REQUIRED=1
@@ -180,6 +208,16 @@ dnl ===============================================
 
 dnl Actual library checks come later, but pkg-config can be used here to grab
 dnl external values to use as defaults for configure options
+
+dnl Per the autoconf docs, --enable-*/--disable-* options should control
+dnl features inherent to Pacemaker, while --with-*/--without-* options should
+dnl control the use of external software. However, --enable-*/--disable-* may
+dnl implicitly require additional external dependencies, and
+dnl --with-*/--without-* may implicitly enable or disable features, so the
+dnl line is blurry.
+dnl
+dnl We also use --with-* options for custom file, directory, and path
+dnl locations, since autoconf does not provide an option type for those.
 
 dnl --enable-* options: build process
 
@@ -220,7 +258,7 @@ AC_ARG_ENABLE([upstart],
 yes_no_try "$enable_upstart" "try"
 enable_upstart=$?
 
-dnl --enable-* options: compatibility
+dnl --enable-* options: features inherent to Pacemaker
 
 AC_ARG_ENABLE([compat-2.0],
     [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
@@ -249,6 +287,7 @@ enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 
+
 dnl --disable-nls option 
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.19.4])
@@ -261,6 +300,9 @@ AS_IF([test "x${USE_NLS}" = "xyes"],
 ])
 
 dnl --with-* options: basic parameters
+
+dnl --with-* options: external software support, and custom locations
+
 
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
@@ -374,6 +416,15 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
+dnl @TODO This should be a corosync pkgconfig variable
+PCMK__COROSYNC_CONF=""
+AC_ARG_WITH([corosync-conf],
+    [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
+        location of Corosync configuration file
+        @<:@SYSCONFDIR/corosync/corosync.conf@:>@]))],
+    [ PCMK__COROSYNC_CONF="$withval" ]
+)
+
 AC_ARG_WITH([nagios],
     [AS_HELP_STRING([--with-nagios], [support nagios resources])]
 )
@@ -467,8 +518,6 @@ AC_ARG_WITH([ocfrapath],
     [ OCF_RA_PATH="$withval" ]
 )
 AC_SUBST(OCF_RA_PATH)
-AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
-                   [OCF directories to search for resource agents ])
 
 OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
 AC_ARG_WITH([ocfrainstalldir],
@@ -512,6 +561,14 @@ AC_ARG_WITH([sanitizers],
     [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
   [ SANITIZERS="$withval" ],
   [ SANITIZERS="" ])
+
+dnl Environment variable options
+
+AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
+AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
+
+AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
+AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
 
 
 dnl ===============================================
@@ -596,6 +653,7 @@ case $libdir in
         ;;
 esac
 
+
 dnl Expand autoconf variables so that we don't end up with '${prefix}'
 dnl in #defines and python scripts
 dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
@@ -618,46 +676,59 @@ eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
 eval localedir="`eval echo ${localedir}`"
 
+dnl Expand values of autoconf-provided directory options
+expand_path_option prefix
+expand_path_option exec_prefix
+expand_path_option bindir
+expand_path_option sbindir
+expand_path_option libexecdir
+expand_path_option datadir
+expand_path_option sysconfdir
+expand_path_option sharedstatedir
+expand_path_option localstatedir
+expand_path_option libdir
+expand_path_option includedir
+expand_path_option oldincludedir
+expand_path_option infodir
+expand_path_option mandir
+
+
 dnl Home-grown variables
 
-if [ test "x${runstatedir}" = "x" ]; then
-    if [ test "x${pcmk_runstatedir}" = "x" ]; then
-        runstatedir="${localstatedir}/run"
-    else
-        runstatedir="${pcmk_runstatedir}"
-    fi
-fi
-eval runstatedir="$(eval echo ${runstatedir})"
+AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
+expand_path_option runstatedir "${localstatedir}/run"
 AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
                    [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
 
-eval INITDIR="${INITDIR}"
-eval docdir="`eval echo ${docdir}`"
-if test x"${docdir}" = x""; then
-    docdir=${datadir}/doc/${PACKAGE}-${VERSION}
-fi
+expand_path_option INITDIR
+AC_DEFINE_UNQUOTED([PCMK__LSB_INIT_DIR], ["$INITDIR"],
+                   [Location for LSB init scripts])
+
+expand_path_option docdir "${datadir}/doc/${PACKAGE}-${VERSION}"
 AC_SUBST(docdir)
-if test x"${CONFIGDIR}" = x""; then
-    CONFIGDIR="${sysconfdir}/sysconfig"
-fi
+
+expand_path_option CONFIGDIR "${sysconfdir}/sysconfig"
 AC_SUBST(CONFIGDIR)
 
-if test x"${CRM_LOG_DIR}" = x""; then
-    CRM_LOG_DIR="${localstatedir}/log/pacemaker"
-fi
+expand_path_option PCMK__COROSYNC_CONF "${sysconfdir}/corosync/corosync.conf"
+AC_SUBST(PCMK__COROSYNC_CONF)
+
+expand_path_option CRM_LOG_DIR "${localstatedir}/log/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
 AC_SUBST(CRM_LOG_DIR)
 
-if test x"${CRM_BUNDLE_DIR}" = x""; then
-    CRM_BUNDLE_DIR="${localstatedir}/log/pacemaker/bundles"
-fi
+expand_path_option CRM_BUNDLE_DIR "${localstatedir}/log/pacemaker/bundles"
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
 
-eval PCMK__FENCE_BINDIR="`eval echo ${PCMK__FENCE_BINDIR}`"
+expand_path_option PCMK__FENCE_BINDIR
 AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
                    [Location for executable fence agents])
+
+expand_path_option OCF_RA_PATH
+AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+                   [OCF directories to search for resource agents ])
 
 AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
       [AC_MSG_ERROR([--with-gnutls-priorities value must not be empty])])
@@ -1707,12 +1778,6 @@ if export | fgrep " CFLAGS=" > /dev/null; then
     unset SAVED_CFLAGS
 fi
 
-AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
-AC_ARG_VAR([LDFLAGS_HARDENED_LIB], [extra linker flags for hardened libraries])
-
-AC_ARG_VAR([CFLAGS_HARDENED_EXE], [extra C compiler flags for hardened executables])
-AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables])
-
 CC_EXTRAS=""
 
 AS_IF([test "$GCC" != yes], [CFLAGS="$CFLAGS -g"], [
@@ -2115,6 +2180,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
                 tools/report.collector                              \

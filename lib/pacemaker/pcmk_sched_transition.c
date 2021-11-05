@@ -596,7 +596,7 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
 
     pcmk__update_graph(graph, action);
@@ -717,7 +717,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
                          spec);
                 continue;
             }
-            action->failed = TRUE;
+            crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             graph->abort_priority = INFINITY;
             out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
             update_failcounts(cib_node, match_name, op->op_type,
@@ -736,7 +736,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
   done:
     free(node); free(uuid);
     free_xml(cib_node);
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return TRUE;
 }
@@ -748,7 +748,7 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
     pcmk__update_graph(graph, action);
     return TRUE;
@@ -786,7 +786,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
         free_xml(cib_node);
     }
 
-    action->confirmed = TRUE;
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     free(target);
     return TRUE;

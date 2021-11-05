@@ -21,9 +21,7 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  m4/gnulib-tool.m4	\
 			  m4/PKG_CHECK_VAR.m4	\
 			  m4/REQUIRE_HEADER.m4	\
-			  m4/version.m4		\
-			  rpm/rpmlintrc		\
-			  rpm/pacemaker.spec.in
+			  m4/version.m4
 
 DISTCLEANFILES		= config.status
 
@@ -50,7 +48,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 CORE_INSTALL	= replace include lib daemons tools xml po
 
 # Only these will get built with a plain "make" or "make clean"
-CORE		= $(CORE_INSTALL) cts
+CORE		= $(CORE_INSTALL) cts rpm
 
 SUBDIRS	= $(CORE) devel doc etc extra maint tests
 

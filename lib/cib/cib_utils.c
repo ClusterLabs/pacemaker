@@ -20,7 +20,6 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
@@ -648,7 +647,7 @@ static pcmk__cluster_option_t cib_opts[] = {
 void
 cib_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-based", "1.0",
+    pcmk__print_option_metadata("pacemaker-based",
                                 "Cluster Information Base manager options",
                                 "Cluster options used by Pacemaker's "
                                     "Cluster Information Base manager",

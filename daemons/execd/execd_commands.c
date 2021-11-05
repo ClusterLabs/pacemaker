@@ -30,8 +30,6 @@
 
 #include "pacemaker-execd.h"
 
-#define EXIT_REASON_MAX_LEN 128
-
 GHashTable *rsc_list = NULL;
 
 typedef struct lrmd_cmd_s {
@@ -199,31 +197,52 @@ action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
            && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
 }
 
+/*!
+ * \internal
+ * \brief Log the result of an asynchronous command
+ *
+ * \param[in] cmd            Command to log result for
+ * \param[in] exec_time_ms   Execution time in milliseconds, if known
+ * \param[in] queue_time_ms  Queue time in milliseconds, if known
+ */
 static void
-log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
+log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
 {
-    char pid_str[32] = { 0, };
     int log_level = LOG_INFO;
-
-    if (cmd->last_pid) {
-        snprintf(pid_str, 32, "%d", cmd->last_pid);
-    }
+    GString *str = g_string_sized_new(100); // reasonable starting size
 
     if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
+
+    g_string_printf(str, "%s %s (call %d",
+                    cmd->rsc_id, cmd->action, cmd->call_id);
+    if (cmd->last_pid != 0) {
+        g_string_append_printf(str, ", PID %d", cmd->last_pid);
+    }
+    if (cmd->result.execution_status == PCMK_EXEC_DONE) {
+        g_string_append_printf(str, ") exited with status %d",
+                               cmd->result.exit_status);
+    } else {
+        g_string_append_printf(str, ") could not be executed: %s",
+                               pcmk_exec_status_str(cmd->result.execution_status));
+    }
+    if (cmd->result.exit_reason != NULL) {
+        g_string_append_printf(str, " (%s)", cmd->result.exit_reason);
+    }
+
 #ifdef PCMK__TIME_USE_CGT
-    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
-               " (execution time %dms, queue time %dms)",
-               cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str,
-               cmd->result.exit_status, exec_time, queue_time);
-#else
-    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d",
-               cmd->rsc_id, cmd->action, cmd->call_id,
-               (cmd->last_pid? ", PID " : ""), pid_str,
-               cmd->result.exit_status);
+    g_string_append_printf(str, " (execution time %s",
+                           pcmk__readable_interval(exec_time_ms));
+    if (queue_time_ms > 0) {
+        g_string_append_printf(str, " after being queued %s",
+                               pcmk__readable_interval(queue_time_ms));
+    }
+    g_string_append(str, ")");
 #endif
+
+    do_crm_log(log_level, "%s", str->str);
+    g_string_free(str, TRUE);
 }
 
 static void
@@ -562,15 +581,14 @@ static void
 send_cmd_complete_notify(lrmd_cmd_t * cmd)
 {
     xmlNode *notify = NULL;
+    int exec_time = 0;
+    int queue_time = 0;
 
 #ifdef PCMK__TIME_USE_CGT
-    int exec_time = time_diff_ms(NULL, &(cmd->t_run));
-    int queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
-
-    log_finished(cmd, exec_time, queue_time);
-#else
-    log_finished(cmd, 0, 0);
+    exec_time = time_diff_ms(NULL, &(cmd->t_run));
+    queue_time = time_diff_ms(&cmd->t_run, &(cmd->t_queue));
 #endif
+    log_finished(cmd, exec_time, queue_time);
 
     /* if the first notify result for a cmd has already been sent earlier, and the
      * the option to only send notifies on result changes is set. Check to see
@@ -730,22 +748,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 }
 
 static int
-ocf2uniform_rc(int rc)
-{
-    switch (rc) {
-        case PCMK_OCF_DEGRADED:
-        case PCMK_OCF_DEGRADED_PROMOTED:
-            break;
-        default:
-            if (rc < 0 || rc > PCMK_OCF_FAILED_PROMOTED) {
-                return PCMK_OCF_UNKNOWN_ERROR;
-            }
-    }
-
-    return rc;
-}
-
-static int
 stonith2uniform_rc(const char *action, int rc)
 {
     switch (rc) {
@@ -770,11 +772,6 @@ stonith2uniform_rc(const char *action, int rc)
             rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
             break;
 
-        case -ETIME:
-        case -ETIMEDOUT:
-            rc = PCMK_OCF_TIMEOUT;
-            break;
-
         default:
             rc = PCMK_OCF_UNKNOWN_ERROR;
             break;
@@ -782,58 +779,21 @@ stonith2uniform_rc(const char *action, int rc)
     return rc;
 }
 
-#if SUPPORT_NAGIOS
 static int
-nagios2uniform_rc(const char *action, int rc)
-{
-    if (rc < 0) {
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    switch (rc) {
-        case NAGIOS_STATE_OK:
-            return PCMK_OCF_OK;
-        case NAGIOS_INSUFFICIENT_PRIV:
-            return PCMK_OCF_INSUFFICIENT_PRIV;
-        case NAGIOS_NOT_INSTALLED:
-            return PCMK_OCF_NOT_INSTALLED;
-        case NAGIOS_STATE_WARNING:
-        case NAGIOS_STATE_CRITICAL:
-        case NAGIOS_STATE_UNKNOWN:
-        case NAGIOS_STATE_DEPENDENT:
-        default:
-            return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    return PCMK_OCF_UNKNOWN_ERROR;
-}
-#endif
-
-static int
-get_uniform_rc(const char *standard, const char *action, int rc)
-{
-    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        return ocf2uniform_rc(rc);
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        return stonith2uniform_rc(action, rc);
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
-        return rc;
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_casei)) {
-        return rc;
-#if SUPPORT_NAGIOS
-    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        return nagios2uniform_rc(action, rc);
-#endif
-    } else {
-        return services_get_ocf_exitcode(action, rc);
-    }
-}
-
-static int
-action_get_uniform_rc(svc_action_t * action)
+action_get_uniform_rc(svc_action_t *action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
-    return get_uniform_rc(action->standard, cmd->action, action->rc);
+
+    if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
+                            pcmk__str_casei)) {
+        return stonith2uniform_rc(cmd->action, action->rc);
+    } else {
+        enum ocf_exitcode code = services_result2ocf(action->standard,
+                                                     cmd->action, action->rc);
+
+        // Cast variable instead of function return to keep compilers happy
+        return (int) code;
+    }
 }
 
 struct notify_new_client_data {
@@ -863,41 +823,6 @@ notify_of_new_client(pcmk__client_t *new_client)
     crm_xml_add(data.notify, F_LRMD_OPERATION, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     free_xml(data.notify);
-}
-
-static char *
-parse_exit_reason(const char *output)
-{
-    const char *cur = NULL;
-    const char *last = NULL;
-    static int cookie_len = 0;
-    char *eol = NULL;
-    size_t reason_len = EXIT_REASON_MAX_LEN;
-
-    if (output == NULL) {
-        return NULL;
-    }
-
-    if (!cookie_len) {
-        cookie_len = strlen(PCMK_OCF_REASON_PREFIX);
-    }
-
-    cur = strstr(output, PCMK_OCF_REASON_PREFIX);
-    for (; cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
-        /* skip over the cookie delimiter string */
-        cur += cookie_len;
-        last = cur;
-    }
-    if (last == NULL) {
-        return NULL;
-    }
-
-    // Truncate everything after a new line, and limit reason string size
-    eol = strchr(last, '\n');
-    if (eol) {
-        reason_len = QB_MIN(reason_len, eol - last);
-    }
-    return strndup(last, reason_len);
 }
 
 void
@@ -942,7 +867,7 @@ action_complete(svc_action_t * action)
 
     cmd->last_pid = action->pid;
     pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
-                     action->status, NULL);
+                     action->status, services__exit_reason(action));
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
@@ -1060,7 +985,7 @@ action_complete(svc_action_t * action)
                        cmd->rsc_id,
                        (cmd->real_action? cmd->real_action : cmd->action),
                        cmd->result.exit_status, time_sum, timeout_left);
-            pcmk__set_result(&(cmd->result), PCMK_OCF_TIMEOUT,
+            pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_TIMEOUT,
                              "Investigate reason for timeout, and adjust "
                              "configured operation timeout if necessary");
@@ -1069,12 +994,8 @@ action_complete(svc_action_t * action)
     }
 #endif
 
-    pcmk__set_result_output(&(cmd->result),
-                            action->stdout_data, action->stderr_data);
-    if (action->stderr_data) {
-        cmd->result.exit_reason = parse_exit_reason(action->stderr_data);
-    }
-
+    pcmk__set_result_output(&(cmd->result), services__grab_stdout(action),
+                            services__grab_stderr(action));
     cmd_finalize(cmd, rsc);
 }
 
@@ -1395,42 +1316,31 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                      cmd->interval_ms, cmd->timeout,
                                      params_copy, cmd->service_flags);
 
-    if (!action) {
-        // Invalid arguments (which would be a bug) or out-of-memory
-        crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
+    if (action == NULL) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, "Internal Pacemaker error");
+                         PCMK_EXEC_ERROR, strerror(ENOMEM));
         goto exec_done;
     }
 
-    if (action->rc != PCMK_OCF_OK) {
-        pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+    if (action->rc != PCMK_OCF_UNKNOWN) {
+        pcmk__set_result(&(cmd->result), action->rc, action->status,
+                         services__exit_reason(action));
         services_action_free(action);
         goto exec_done;
     }
 
     action->cb_data = cmd;
 
-    /* 'cmd' may not be valid after this point if
-     * services_action_async() returned TRUE
-     *
-     * Upstart and systemd both synchronously determine monitor/status
-     * results and call action_complete (which may free 'cmd') if necessary.
-     */
     if (services_action_async(action, action_complete)) {
+        /* When services_action_async() returns TRUE, the callback might have
+         * been called -- in this case action_complete(), which might free cmd,
+         * so cmd cannot be used here.
+         */
         return TRUE;
     }
 
-    /* Asynchronous execution could not be initiated. services_action_async()
-     * should have already set an appropriate execution status, but as a
-     * fail-safe for cases where we've neglected to do so, make sure this is
-     * considered an execution error.
-     */
-    if (action->status == PCMK_EXEC_DONE) {
-        action->status = PCMK_EXEC_ERROR;
-    }
-
-    pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+    pcmk__set_result(&(cmd->result), action->rc, action->status,
+                     services__exit_reason(action));
     services_action_free(action);
     action = NULL;
 

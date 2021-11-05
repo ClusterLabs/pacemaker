@@ -332,7 +332,7 @@ Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 # Bundled bits
 ## Pacemaker uses the crypto/md5-buffer module from gnulib
 %if 0%{?fedora} || 0%{?rhel}
-Provides:      bundled(gnulib)
+Provides:      bundled(gnulib) = 20200404
 %endif
 
 %description
@@ -578,12 +578,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 # advanced users, we can reconsider.
 rm -f %{buildroot}/%{_sbindir}/notifyServicelogEvent
 rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
-
-# Don't ship init scripts for systemd based platforms
-%if %{defined _unitdir}
-rm -f %{buildroot}/%{_initrddir}/pacemaker
-rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
-%endif
 
 # Byte-compile Python sources where suitable and the distro procedures known
 %if %{defined py_byte_compile}
@@ -915,5 +909,5 @@ exit 0
 
 %changelog
 
-* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION-1
+* PACKAGE_DATE ClusterLabs <admin@clusterlabs.org> PACKAGE_VERSION
  - See included ChangeLog file for details

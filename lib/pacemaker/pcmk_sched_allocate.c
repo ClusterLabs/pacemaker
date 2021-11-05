@@ -40,6 +40,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      native_internal_constraints,
      native_rsc_colocation_lh,
      native_rsc_colocation_rh,
+     pcmk__colocated_resources,
      native_rsc_location,
      native_action_flags,
      native_update_actions,
@@ -54,6 +55,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_internal_constraints,
      group_rsc_colocation_lh,
      group_rsc_colocation_rh,
+     pcmk__group_colocated_resources,
      group_rsc_location,
      group_action_flags,
      group_update_actions,
@@ -68,6 +70,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_internal_constraints,
      clone_rsc_colocation_lh,
      clone_rsc_colocation_rh,
+     pcmk__colocated_resources,
      clone_rsc_location,
      clone_action_flags,
      pcmk__multi_update_actions,
@@ -82,6 +85,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__bundle_internal_constraints,
      pcmk__bundle_rsc_colocation_lh,
      pcmk__bundle_rsc_colocation_rh,
+     pcmk__colocated_resources,
      pcmk__bundle_rsc_location,
      pcmk__bundle_action_flags,
      pcmk__multi_update_actions,
@@ -563,17 +567,6 @@ check_actions(pe_working_set_t * data_set)
     }
 }
 
-static void
-apply_placement_constraints(pe_working_set_t * data_set)
-{
-    for (GList *gIter = data_set->placement_constraints;
-         gIter != NULL; gIter = gIter->next) {
-        pe__location_t *cons = gIter->data;
-
-        cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
-    }
-}
-
 static gboolean
 failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
 {
@@ -986,7 +979,7 @@ stage2(pe_working_set_t * data_set)
         }
     }
 
-    apply_placement_constraints(data_set);
+    pcmk__apply_locations(data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {

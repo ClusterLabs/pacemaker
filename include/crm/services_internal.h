@@ -26,7 +26,8 @@ extern "C" {
  * \param[in] timeout     Consider action failed if it does not complete in this many milliseconds
  * \param[in] params      Action parameters
  *
- * \return newly allocated action instance
+ * \return NULL if not enough memory, otherwise newly allocated action instance
+ *         (if its rc member is not PCMK_OCF_UNKNOWN, the action is invalid)
  *
  * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
  * \note The caller is responsible for freeing the return value using
@@ -37,6 +38,14 @@ svc_action_t *services__create_resource_action(const char *name, const char *sta
                                       const char *action, guint interval_ms,
                                       int timeout /* ms */, GHashTable *params,
                                       enum svc_action_flags flags);
+
+const char *services__exit_reason(svc_action_t *action);
+char *services__grab_stdout(svc_action_t *action);
+char *services__grab_stderr(svc_action_t *action);
+
+void services__set_result(svc_action_t *action, int agent_status,
+                          enum pcmk_exec_status exec_status,
+                          const char *exit_reason);
 
 #  ifdef __cplusplus
 }

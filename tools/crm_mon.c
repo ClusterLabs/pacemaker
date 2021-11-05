@@ -31,7 +31,6 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/internal.h>  // pcmk__ends_with_ext()
 #include <crm/common/ipc.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>
@@ -161,9 +160,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
-                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures |
-                   pcmk_section_maint_mode;
+            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
+                   pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
@@ -288,15 +286,9 @@ apply_include(const gchar *includes, GError **error) {
 }
 
 static gboolean
-apply_include_exclude(GSList *lst, mon_output_format_t fmt, GError **error) {
+apply_include_exclude(GSList *lst, GError **error) {
     gboolean rc = TRUE;
     GSList *node = lst;
-
-    /* Set the default of what to display here.  Note that we OR everything to
-     * show instead of set show directly because it could have already had some
-     * settings applied to it in main.
-     */
-    show |= default_includes(fmt);
 
     while (node != NULL) {
         char *s = node->data;
@@ -436,7 +428,7 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--exclude", "summary", data, err);
+    return user_include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
@@ -466,7 +458,7 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     show_opts |= pcmk_show_timing;
-    return include_exclude_cb("--include", "operations", data, err);
+    return user_include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
@@ -485,34 +477,34 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "attributes", data, err);
+    return user_include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
         char *s = crm_strdup_printf("bans:%s", optarg);
-        gboolean rc = include_exclude_cb("--include", s, data, err);
+        gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;
     } else {
-        return include_exclude_cb("--include", "bans", data, err);
+        return user_include_exclude_cb("--include", "bans", data, err);
     }
 }
 
 static gboolean
 show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts", data, err);
+    return user_include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
 show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "failcounts,operations", data, err);
+    return user_include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
 show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    return include_exclude_cb("--include", "tickets", data, err);
+    return user_include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
@@ -1108,6 +1100,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'R':
                 show_opts ^= pcmk_show_details;
+#ifdef PCMK__COMPAT_2_0
+                // Keep failed action output the same as 2.0.x
+                show_opts |= pcmk_show_failed_detail;
+#endif
                 break;
             case 't':
                 show_opts ^= pcmk_show_timing;
@@ -1556,16 +1552,18 @@ main(int argc, char **argv)
 
     /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
+    show = default_includes(output_format);
+
     /* Apply --include/--exclude flags we used internally.  There's no error reporting
      * here because this would be a programming error.
      */
-    apply_include_exclude(options.includes_excludes, output_format, &error);
+    apply_include_exclude(options.includes_excludes, &error);
 
     /* And now apply any --include/--exclude flags the user gave on the command line.
      * These are done in a separate pass from the internal ones because we want to
      * make sure whatever the user specifies overrides whatever we do.
      */
-    if (!apply_include_exclude(options.user_includes_excludes, output_format, &error)) {
+    if (!apply_include_exclude(options.user_includes_excludes, &error)) {
         return clean_up(CRM_EX_USAGE);
     }
 
@@ -1619,6 +1617,11 @@ main(int argc, char **argv)
         pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
                               pcmk__itoa(options.reconnect_ms / 1000), NULL);
     }
+
+#ifdef PCMK__COMPAT_2_0
+    // Keep failed action output the same as 2.0.x
+    show_opts |= pcmk_show_failed_detail;
+#endif
 
     crm_info("Starting %s", crm_system_name);
 

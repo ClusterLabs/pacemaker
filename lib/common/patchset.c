@@ -24,7 +24,6 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
@@ -92,13 +91,13 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     const char *value = NULL;
 
     // If this XML node is new, just report that
-    if (patchset && pcmk_is_set(p->flags, xpf_created)) {
+    if (patchset && pcmk_is_set(p->flags, pcmk__xf_created)) {
         int offset = 0;
         char buffer[PCMK__BUFFER_SIZE];
 
         if (pcmk__element_xpath(NULL, xml->parent, buffer, offset,
                                 sizeof(buffer)) > 0) {
-            int position = pcmk__xml_position(xml, xpf_deleted);
+            int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
@@ -117,7 +116,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         xmlNode *attr = NULL;
 
         p = pIter->_private;
-        if (!pcmk_any_flags_set(p->flags, xpf_deleted|xpf_dirty)) {
+        if (!pcmk_any_flags_set(p->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
             continue;
         }
 
@@ -139,7 +138,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         attr = create_xml_node(change, XML_DIFF_ATTR);
 
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, (const char *)pIter->name);
-        if (p->flags & xpf_deleted) {
+        if (p->flags & pcmk__xf_deleted) {
             crm_xml_add(attr, XML_DIFF_OP, "unset");
 
         } else {
@@ -159,7 +158,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
             p = pIter->_private;
-            if (!pcmk_is_set(p->flags, xpf_deleted)) {
+            if (!pcmk_is_set(p->flags, pcmk__xf_deleted)) {
                 value = crm_element_value(xml, (const char *) pIter->name);
                 crm_xml_add(result, (const char *)pIter->name, value);
             }
@@ -173,12 +172,12 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     p = xml->_private;
-    if (patchset && pcmk_is_set(p->flags, xpf_moved)) {
+    if (patchset && pcmk_is_set(p->flags, pcmk__xf_moved)) {
         int offset = 0;
         char buffer[PCMK__BUFFER_SIZE];
 
         crm_trace("%s.%s moved to position %d",
-                  xml->name, ID(xml), pcmk__xml_position(xml, xpf_skip));
+                  xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
         if (pcmk__element_xpath(NULL, xml, buffer, offset,
                                 sizeof(buffer)) > 0) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
@@ -186,7 +185,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             crm_xml_add(change, XML_DIFF_OP, "move");
             crm_xml_add(change, XML_DIFF_PATH, buffer);
             crm_xml_add_int(change, XML_DIFF_POSITION,
-                            pcmk__xml_position(xml, xpf_deleted));
+                            pcmk__xml_position(xml, pcmk__xf_deleted));
         }
     }
 }
@@ -201,7 +200,7 @@ is_config_change(xmlNode *xml)
     if (config) {
         p = config->_private;
     }
-    if ((p != NULL) && pcmk_is_set(p->flags, xpf_dirty)) {
+    if ((p != NULL) && pcmk_is_set(p->flags, pcmk__xf_dirty)) {
         return TRUE;
     }
 
@@ -1000,7 +999,7 @@ first_matching_xml_child(xmlNode *parent, const char *name, const char *id,
         // "position" makes sense only for XML comments for now
         if ((cIter->type == XML_COMMENT_NODE)
             && (position >= 0)
-            && (pcmk__xml_position(cIter, xpf_skip) != position)) {
+            && (pcmk__xml_position(cIter, pcmk__xf_skip) != position)) {
             continue;
         }
 
@@ -1247,7 +1246,7 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
 
             while ((match_child != NULL)
-                   && (position != pcmk__xml_position(match_child, xpf_skip))) {
+                   && (position != pcmk__xml_position(match_child, pcmk__xf_skip))) {
                 match_child = match_child->next;
             }
 
@@ -1273,11 +1272,11 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
             int position = 0;
 
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
-            if (position != pcmk__xml_position(match, xpf_skip)) {
+            if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 xmlNode *match_child = NULL;
                 int p = position;
 
-                if (p > pcmk__xml_position(match, xpf_skip)) {
+                if (p > pcmk__xml_position(match, pcmk__xf_skip)) {
                     p++; // Skip ourselves
                 }
 
@@ -1285,13 +1284,13 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
                 match_child = match->parent->children;
 
                 while ((match_child != NULL)
-                       && (p != pcmk__xml_position(match_child, xpf_skip))) {
+                       && (p != pcmk__xml_position(match_child, pcmk__xf_skip))) {
                     match_child = match_child->next;
                 }
 
                 crm_trace("Moving %s to position %d (was %d, prev %p, %s %p)",
                           match->name, position,
-                          pcmk__xml_position(match, xpf_skip),
+                          pcmk__xml_position(match, pcmk__xf_skip),
                           match->prev, (match_child? "next":"last"),
                           (match_child? match_child : match->parent->last));
 
@@ -1308,10 +1307,10 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
                           match->name, position);
             }
 
-            if (position != pcmk__xml_position(match, xpf_skip)) {
+            if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 crm_err("Moved %s.%s to position %d instead of %d (%p)",
                         match->name, ID(match),
-                        pcmk__xml_position(match, xpf_skip),
+                        pcmk__xml_position(match, pcmk__xf_skip),
                         position, match->prev);
                 rc = pcmk_rc_diff_failed;
             }
@@ -1576,7 +1575,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
         }
 
         right_val = crm_element_value(right, prop_name);
-        if ((right_val == NULL) || (p && pcmk_is_set(p->flags, xpf_deleted))) {
+        if ((right_val == NULL) || (p && pcmk_is_set(p->flags, pcmk__xf_deleted))) {
             /* new */
             *changed = TRUE;
             if (full) {
