@@ -207,4 +207,9 @@ bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
 G_GNUC_INTERNAL
 void pcmk__unassign_resource(pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                             pe_working_set_t *data_set,
+                             pe_resource_t **failed);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

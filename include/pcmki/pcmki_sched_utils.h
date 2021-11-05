@@ -72,8 +72,4 @@ enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, G
 
 pcmk__output_t *pcmk__new_logger(void);
 
-bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                             pe_working_set_t *data_set,
-                             pe_resource_t **failed);
-
 #endif
