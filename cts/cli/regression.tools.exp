@@ -4452,26 +4452,26 @@ Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:
 Original: httpd-bundle-1 capacity:
 Original: httpd-bundle-2 capacity:
-native_assign_node: ping:0 utilization on cluster02:
-native_assign_node: ping:1 utilization on cluster01:
-native_assign_node: Fencing utilization on cluster01:
-native_assign_node: dummy utilization on cluster02:
-native_assign_node: httpd-bundle-docker-0 utilization on cluster01:
-native_assign_node: httpd-bundle-docker-1 utilization on cluster02:
-native_assign_node: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
-native_assign_node: httpd-bundle-0 utilization on cluster01:
-native_assign_node: httpd:0 utilization on httpd-bundle-0:
-native_assign_node: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
-native_assign_node: httpd-bundle-1 utilization on cluster02:
-native_assign_node: httpd:1 utilization on httpd-bundle-1:
-native_assign_node: httpd-bundle-2 utilization on cluster01:
-native_assign_node: httpd:2 utilization on httpd-bundle-2:
-native_assign_node: Public-IP utilization on cluster02:
-native_assign_node: Email utilization on cluster02:
-native_assign_node: mysql-proxy:0 utilization on cluster02:
-native_assign_node: mysql-proxy:1 utilization on cluster01:
-native_assign_node: promotable-rsc:0 utilization on cluster02:
-native_assign_node: promotable-rsc:1 utilization on cluster01:
+pcmk__assign_primitive: ping:0 utilization on cluster02:
+pcmk__assign_primitive: ping:1 utilization on cluster01:
+pcmk__assign_primitive: Fencing utilization on cluster01:
+pcmk__assign_primitive: dummy utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-docker-0 utilization on cluster01:
+pcmk__assign_primitive: httpd-bundle-docker-1 utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
+pcmk__assign_primitive: httpd-bundle-0 utilization on cluster01:
+pcmk__assign_primitive: httpd:0 utilization on httpd-bundle-0:
+pcmk__assign_primitive: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-1 utilization on cluster02:
+pcmk__assign_primitive: httpd:1 utilization on httpd-bundle-1:
+pcmk__assign_primitive: httpd-bundle-2 utilization on cluster01:
+pcmk__assign_primitive: httpd:2 utilization on httpd-bundle-2:
+pcmk__assign_primitive: Public-IP utilization on cluster02:
+pcmk__assign_primitive: Email utilization on cluster02:
+pcmk__assign_primitive: mysql-proxy:0 utilization on cluster02:
+pcmk__assign_primitive: mysql-proxy:1 utilization on cluster01:
+pcmk__assign_primitive: promotable-rsc:0 utilization on cluster02:
+pcmk__assign_primitive: promotable-rsc:1 utilization on cluster01:
 Remaining: cluster01 capacity:
 Remaining: cluster02 capacity:
 Remaining: httpd-bundle-0 capacity:
@@ -4702,7 +4702,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0
