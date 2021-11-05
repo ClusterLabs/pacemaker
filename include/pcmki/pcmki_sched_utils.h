@@ -70,6 +70,4 @@ void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
 
 enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
 
-pcmk__output_t *pcmk__new_logger(void);
-
 #endif

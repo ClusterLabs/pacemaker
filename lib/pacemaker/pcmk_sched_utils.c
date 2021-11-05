@@ -616,30 +616,6 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     return xml_op;
 }
 
-pcmk__output_t *
-pcmk__new_logger(void)
-{
-    int rc = pcmk_rc_ok;
-    pcmk__output_t *out = NULL;
-    const char* argv[] = { "", NULL };
-    pcmk__supported_format_t formats[] = {
-        PCMK__SUPPORTED_FORMAT_LOG,
-        { NULL, NULL, NULL }
-    };
-
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
-        return NULL;
-    }
-
-    pe__register_messages(out);
-    pcmk__register_lib_messages(out);
-    return out;
-}
-
 void
 pcmk_free_injections(pcmk_injections_t *injections)
 {

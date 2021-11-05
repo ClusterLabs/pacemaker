@@ -30,6 +30,8 @@ void pcmk__register_lib_messages(pcmk__output_t *out);
 
 int pcmk__cluster_status_text(pcmk__output_t *out, va_list args);
 
+pcmk__output_t *pcmk__new_logger(void);
+
 #ifdef __cplusplus
 }
 #endif

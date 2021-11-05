@@ -43,3 +43,37 @@ pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
 
     pcmk__output_free(out);
 }
+
+/*!
+ * \internal
+ * \brief Create a new output object using the "log" format
+ *
+ * Create a new output object using the "log" format, and register the
+ * libpe_status and libpacemaker messages.
+ *
+ * \return Newly created output object, or NULL on error
+ */
+pcmk__output_t *
+pcmk__new_logger(void)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__output_t *out = NULL;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        return NULL;
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+    return out;
+}
+
