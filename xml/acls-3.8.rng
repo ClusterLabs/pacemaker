@@ -13,6 +13,9 @@
         <choice>
           <element name="acl_target">
             <attribute name="id"><text/></attribute>
+            <optional>
+              <attribute name="name"><text/></attribute>
+            </optional>
             <zeroOrMore>
               <element name="role">
                 <attribute name="id"><data type="IDREF"/></attribute>
@@ -22,6 +25,9 @@
           <element name="acl_group">
             <!-- Here 'id' is the name of a unix group -->
             <attribute name="id"><data type="ID"/></attribute>
+            <optional>
+              <attribute name="name"><text/></attribute>
+            </optional>
             <zeroOrMore>
               <element name="role">
                 <attribute name="id"><data type="IDREF"/></attribute>
