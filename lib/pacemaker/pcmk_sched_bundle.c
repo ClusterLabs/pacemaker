@@ -494,7 +494,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
-            assign_node(dependent, NULL, TRUE);
+            pcmk__assign_resource(dependent, NULL, true);
 
         } else {
             pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
@@ -671,7 +671,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if(assign_node(then_child, NULL, TRUE)) {
+                if (pcmk__assign_resource(then_child, NULL, true)) {
                     pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }

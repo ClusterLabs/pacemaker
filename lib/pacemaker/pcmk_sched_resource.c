@@ -177,6 +177,47 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 
 /*!
  * \internal
+ * \brief Assign a specified resource (of any variant) to a node
+ *
+ * Assign a specified resource and its children (if any) to a specified node, if
+ * the node can run the resource (or unconditionally, if \p force is true). Mark
+ * the resources as no longer provisional. If the resources can't be assigned
+ * (or \p chosen is NULL), unassign any previous assignments, set next role to
+ * stopped, and update any existing actions scheduled for them.
+ *
+ * \param[in] rsc     Resource to assign
+ * \param[in] chosen  Node to assign \p rsc to
+ * \param[in] force   If true, assign to \p chosen even if unavailable
+ *
+ * \return true if \p rsc could be assigned, otherwise false
+ *
+ * \note Assigning a resource to the NULL node using this function is different
+ *       from calling pcmk__unassign_resource(), in that it will also update any
+ *       actions created for the resource.
+ */
+bool
+pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
+{
+    bool changed = false;
+
+    if (rsc->children == NULL) {
+        if (rsc->allocated_to != NULL) {
+            changed = true;
+        }
+        pcmk__assign_primitive(rsc, node, force);
+
+    } else {
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+
+            changed |= pcmk__assign_resource(child_rsc, node, force);
+        }
+    }
+    return changed;
+}
+
+/*!
+ * \internal
  * \brief Remove any assignment of a specified resource to a node
  *
  * If a specified resource has been assigned to a node, remove that assignment

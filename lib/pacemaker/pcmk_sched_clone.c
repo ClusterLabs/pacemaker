@@ -1001,30 +1001,6 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 }
 
-bool
-assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
-{
-    bool changed = FALSE;
-
-    if (rsc->children) {
-
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            changed |= assign_node(child_rsc, node, force);
-        }
-
-        return changed;
-    }
-
-    if (rsc->allocated_to != NULL) {
-        changed = true;
-    }
-
-    pcmk__assign_primitive(rsc, node, force);
-    return changed;
-}
-
 gboolean
 is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
 {
@@ -1171,7 +1147,7 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
-            assign_node(dependent, NULL, TRUE);
+            pcmk__assign_resource(dependent, NULL, true);
 
         } else {
             pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
