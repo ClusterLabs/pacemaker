@@ -615,25 +615,3 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     free(key);
     return xml_op;
 }
-
-void
-pcmk_free_injections(pcmk_injections_t *injections)
-{
-    if (injections == NULL) {
-        return;
-    }
-
-    g_list_free_full(injections->node_up, g_free);
-    g_list_free_full(injections->node_down, g_free);
-    g_list_free_full(injections->node_fail, g_free);
-    g_list_free_full(injections->op_fail, g_free);
-    g_list_free_full(injections->op_inject, g_free);
-    g_list_free_full(injections->ticket_grant, g_free);
-    g_list_free_full(injections->ticket_revoke, g_free);
-    g_list_free_full(injections->ticket_standby, g_free);
-    g_list_free_full(injections->ticket_activate, g_free);
-    free(injections->quorum);
-    free(injections->watchdog);
-
-    free(injections);
-}

@@ -538,3 +538,25 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set, pcmk_injections_t *in
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
+
+void
+pcmk_free_injections(pcmk_injections_t *injections)
+{
+    if (injections == NULL) {
+        return;
+    }
+
+    g_list_free_full(injections->node_up, g_free);
+    g_list_free_full(injections->node_down, g_free);
+    g_list_free_full(injections->node_fail, g_free);
+    g_list_free_full(injections->op_fail, g_free);
+    g_list_free_full(injections->op_inject, g_free);
+    g_list_free_full(injections->ticket_grant, g_free);
+    g_list_free_full(injections->ticket_revoke, g_free);
+    g_list_free_full(injections->ticket_standby, g_free);
+    g_list_free_full(injections->ticket_activate, g_free);
+    free(injections->quorum);
+    free(injections->watchdog);
+
+    free(injections);
+}
