@@ -1021,7 +1021,7 @@ assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
         changed = true;
     }
 
-    native_assign_node(rsc, node, force);
+    pcmk__assign_primitive(rsc, node, force);
     return changed;
 }
 

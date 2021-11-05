@@ -31,8 +31,6 @@ GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
                             pe_working_set_t *data_set);
 
 extern gboolean can_run_resources(const pe_node_t * node);
-extern gboolean native_assign_node(pe_resource_t *rsc, pe_node_t *chosen,
-                                   gboolean force);
 
 extern void log_action(unsigned int log_level, const char *pre_text,
                        pe_action_t * action, gboolean details);
