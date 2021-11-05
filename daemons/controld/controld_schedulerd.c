@@ -22,7 +22,7 @@
 
 #include <pacemaker-controld.h>
 
-static void pe_ipc_destroy(void);
+static void handle_disconnect(void);
 
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
@@ -31,11 +31,11 @@ static pcmk_ipc_api_t *schedulerd_api = NULL;
  * \brief Close any scheduler connection and free associated memory
  */
 void
-pe_subsystem_free(void)
+controld_shutdown_schedulerd_ipc(void)
 {
     controld_clear_fsa_input_flags(R_PE_REQUIRED);
     pcmk_disconnect_ipc(schedulerd_api);
-    pe_ipc_destroy();
+    handle_disconnect();
 
     pcmk_free_ipc_api(schedulerd_api);
     schedulerd_api = NULL;
@@ -79,11 +79,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 /*!
  * \internal
  * \brief Respond to scheduler connection failure
- *
- * \param[in] user_data  Ignored
  */
 static void
-pe_ipc_destroy(void)
+handle_disconnect(void)
 {
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
@@ -168,7 +166,7 @@ scheduler_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
 
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
-            pe_ipc_destroy();
+            handle_disconnect();
             break;
 
         case pcmk_ipc_event_reply:
@@ -181,7 +179,7 @@ scheduler_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
 }
 
 static bool
-pe_subsystem_new(void)
+new_schedulerd_ipc_connection(void)
 {
     int rc;
 
@@ -221,7 +219,7 @@ do_pe_control(long long action,
     if (action & A_PE_STOP) {
         controld_clear_fsa_input_flags(R_PE_REQUIRED);
         pcmk_disconnect_ipc(schedulerd_api);
-        pe_ipc_destroy();
+        handle_disconnect();
     }
     if ((action & A_PE_START)
         && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
@@ -229,7 +227,7 @@ do_pe_control(long long action,
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
 
-        } else if (!pe_subsystem_new()) {
+        } else if (!new_schedulerd_ipc_connection()) {
             crm_warn("Could not connect to scheduler");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }

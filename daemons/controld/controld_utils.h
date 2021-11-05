@@ -68,7 +68,7 @@ enum node_update_flags {
 
 crm_exit_t crmd_exit(crm_exit_t exit_code);
 _Noreturn void crmd_fast_exit(crm_exit_t exit_code);
-void pe_subsystem_free(void);
+void controld_shutdown_schedulerd_ipc(void);
 void controld_stop_sched_timer(void);
 void controld_free_sched_timer(void);
 void controld_expect_sched_reply(char *ref);
