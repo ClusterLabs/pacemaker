@@ -143,15 +143,17 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
     if (result->execution_status != PCMK_EXEC_DONE) {
         crm_warn("Could not execute metadata action for %s: %s",
                  agent, pcmk_exec_status_str(result->execution_status));
+        rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
-        return pcmk_rc2legacy(stonith__result2rc(result));
+        return rc;
     }
 
     if (result->exit_status != CRM_EX_OK) {
         crm_warn("Metadata action for %s returned error code %d",
                  agent, result->exit_status);
+        rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
-        return pcmk_rc2legacy(stonith__result2rc(result));
+        return rc;
     }
 
     if (result->action_stdout == NULL) {
