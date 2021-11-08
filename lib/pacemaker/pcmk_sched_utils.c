@@ -428,7 +428,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
         && op->interval_ms == 0 && pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
-        do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
+        do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s",
                    digest, ID(update), magic, digest_source);
         free(digest_source);
     }

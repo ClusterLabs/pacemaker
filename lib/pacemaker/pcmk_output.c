@@ -1067,7 +1067,7 @@ node_action(pcmk__output_t *out, va_list args)
     } else if (reason) {
         out->list_item(out, NULL, "%s %s '%s'", task, node_name, reason);
     } else {
-        crm_notice(" * %s %s\n", task, node_name);
+        crm_notice(" * %s %s", task, node_name);
     }
 
     return pcmk_rc_ok;
@@ -1090,7 +1090,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
                                      "reason", reason,
                                      NULL);
     } else {
-        crm_notice(" * %s %s\n", task, node_name);
+        crm_notice(" * %s %s", task, node_name);
     }
 
     return pcmk_rc_ok;

@@ -67,7 +67,7 @@ pcmk__new_logger(void)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
+        crm_err("Can't log resource details due to internal error: %s",
                 pcmk_rc_str(rc));
         return NULL;
     }
