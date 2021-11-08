@@ -264,6 +264,9 @@ pcmk__ipc_methods_t *pcmk__controld_api_methods(void);
 G_GNUC_INTERNAL
 pcmk__ipc_methods_t *pcmk__pacemakerd_api_methods(void);
 
+G_GNUC_INTERNAL
+pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
+
 
 /*
  * Logging

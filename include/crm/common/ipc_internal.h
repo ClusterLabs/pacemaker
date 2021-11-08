@@ -226,6 +226,7 @@ void pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                             struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                                 struct qb_ipcs_service_handlers *cb);
+qb_ipcs_service_t *pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb);
 qb_ipcs_service_t *pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb);
 
 void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
@@ -237,6 +238,12 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
 void pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
         qb_ipcs_service_t *ipcs_rw,
         qb_ipcs_service_t *ipcs_shm);
+
+static inline const char *
+pcmk__ipc_sys_name(const char *ipc_name, const char *fallback)
+{
+    return ipc_name ? ipc_name : ((crm_system_name ? crm_system_name : fallback));
+}
 
 #ifdef __cplusplus
 }

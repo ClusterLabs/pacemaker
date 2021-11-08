@@ -183,7 +183,7 @@ crmd_exit(crm_exit_t exit_code)
     }
 
     controld_close_attrd_ipc();
-    pe_subsystem_free();
+    controld_shutdown_schedulerd_ipc();
     controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {

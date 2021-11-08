@@ -41,7 +41,7 @@
  *
  * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
  * \note This is intended to supersede crm_ipc_new() but currently only
- *       supports the controller & pacemakerd IPC API.
+ *       supports the controller, pacemakerd, and schedulerd IPC API.
  */
 int
 pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
@@ -88,6 +88,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         case pcmk_ipc_schedulerd:
+            (*api)->cmds = pcmk__schedulerd_api_methods();
             // @TODO max_size could vary by client, maybe take as argument?
             (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
@@ -263,7 +264,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
             return for_log? "launcher" : CRM_SYSTEM_MCP;
 
         case pcmk_ipc_schedulerd:
-            return for_log? "scheduler" : NULL /* CRM_SYSTEM_PENGINE */;
+            return for_log? "scheduler" : CRM_SYSTEM_PENGINE;
 
         default:
             return for_log? "Pacemaker" : NULL;

@@ -215,20 +215,22 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     xmlNode *cmd;
     int rc;
 
-    CRM_CHECK(api != NULL, return -EINVAL);
+    if (api == NULL) {
+        return EINVAL;
+    }
+
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
     cmd = create_request(task, NULL, NULL, CRM_SYSTEM_MCP,
-        ipc_name?ipc_name:((crm_system_name? crm_system_name : "client")),
-        private->client_uuid);
+                         pcmk__ipc_sys_name(ipc_name, "client"),
+                         private->client_uuid);
 
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't ping pacemakerd: %s rc=%d",
-                pcmk_rc_str(rc), rc);
-            rc = ECOMM;
+            crm_debug("Couldn't send request to pacemakerd: %s rc=%d",
+                      pcmk_rc_str(rc), rc);
         }
         free_xml(cmd);
     } else {

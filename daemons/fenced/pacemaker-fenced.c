@@ -1665,9 +1665,9 @@ main(int argc, char **argv)
     free(cluster);
     pe_free_working_set(fenced_data_set);
 
-    pcmk__unregister_formats();
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);
+    pcmk__unregister_formats();
 
     crm_exit(CRM_EX_OK);
 }
