@@ -42,15 +42,15 @@
 #  include <crm/common/output_internal.h>
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/internal.h>
-
 #  include <locale.h>
 #  include <gettext.h>
-#  define PACKAGE_NAME "pacemaker"
+
+#define N_(String) (String)
 
 #ifdef PCMK__Support_NLS
-#  define _(x) gettext(x)
+#  define _(String) gettext(String)
 #else
-#  define _(x) x
+#  define _(String) (String)
 #endif
 
 

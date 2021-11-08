@@ -95,12 +95,10 @@ main(int argc, char **argv)
     crm_ipc_t *old_instance = NULL;
 
 #ifdef PCMK__Support_NLS
-
     setlocale (LC_ALL, "");
-    bindtextdomain(PACKAGE_NAME, PCMK__LOCALE_DIR);
-    textdomain(PACKAGE_NAME);
-    bind_textdomain_codeset(PACKAGE_NAME, "UTF-8");
-
+    bindtextdomain(PACKAGE, PCMK__LOCALE_DIR);
+    textdomain(PACKAGE);
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
 #endif
 
     crm_log_preinit(NULL, argc, argv);

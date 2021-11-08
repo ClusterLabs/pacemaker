@@ -286,11 +286,9 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
-
-
 dnl --disable-nls option 
 AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION([0.19.4])
+AM_GNU_GETTEXT_VERSION(0.18)
 AM_CONDITIONAL([USE_NLS], [test "x${USE_NLS}" = "xyes"])
 
 # Check for disable_nls
@@ -299,11 +297,7 @@ AS_IF([test "x${USE_NLS}" = "xyes"],
           AC_DEFINE([PCMK__Support_NLS],[1],[Define to 1 if USE_NLS should be enabled])
 ])
 
-dnl --with-* options: basic parameters
-
 dnl --with-* options: external software support, and custom locations
-
-
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
     [AC_ARG_WITH([version],
@@ -653,7 +647,6 @@ case $libdir in
         ;;
 esac
 
-
 dnl Expand autoconf variables so that we don't end up with '${prefix}'
 dnl in #defines and python scripts
 dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
@@ -674,7 +667,6 @@ eval includedir="`eval echo ${includedir}`"
 eval oldincludedir="`eval echo ${oldincludedir}`"
 eval infodir="`eval echo ${infodir}`"
 eval mandir="`eval echo ${mandir}`"
-eval localedir="`eval echo ${localedir}`"
 
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
@@ -692,8 +684,11 @@ expand_path_option oldincludedir
 expand_path_option infodir
 expand_path_option mandir
 
-
 dnl Home-grown variables
+
+AS_IF([test x"${localedir}" = x""], [localedir="${datadir}/locale"])
+expand_path_option localedir "${datadir}/locale"
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
 
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
@@ -1429,11 +1424,6 @@ AC_SUBST(CRM_RSCTMP_DIR)
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-if test x"${localedir}" = x""; then
-    localedir="${datadir}/locale"
-fi
-AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 

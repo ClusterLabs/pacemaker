@@ -25,7 +25,6 @@
 
 #include <crm/crm.h>
 
-
 /*
  * Command-line option handling
  */
@@ -565,11 +564,7 @@ pcmk__print_option_metadata(const char *name, const char *desc_short,
             "  <version>%s</version>\n"
             "  <longdesc lang=\"en\">%s</longdesc>\n"
             "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-
-            "  <parameters>\n", name, version, _(desc_long), _(desc_short));
-
             "  <parameters>\n", name, PCMK_OCF_VERSION, desc_long, desc_short);
-
 
     for (lpc = 0; lpc < len; lpc++) {
         if ((option_list[lpc].description_long == NULL)
@@ -581,20 +576,10 @@ pcmk__print_option_metadata(const char *name, const char *desc_short,
                 "      <shortdesc lang=\"en\">%s</shortdesc>\n"
                 "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
                 option_list[lpc].name,
-
                 _(option_list[lpc].description_short),
-                option_list[lpc].type,
-                option_list[lpc].default_value,
                 option_list[lpc].description_long?
                     _(option_list[lpc].description_long) :
                     _(option_list[lpc].description_short),
-                (option_list[lpc].values? _("  Allowed values: ") : ""),
-                (option_list[lpc].values? _(option_list[lpc].values) : ""));
-
-                option_list[lpc].description_short,
-                option_list[lpc].description_long?
-                    option_list[lpc].description_long :
-                    option_list[lpc].description_short,
                 (option_list[lpc].values? "  Allowed values: " : ""),
                 (option_list[lpc].values? option_list[lpc].values : ""));
 

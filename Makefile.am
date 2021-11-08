@@ -70,11 +70,6 @@ DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
 DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
 		  $(CRM_LOG_DIR)
 
-if USE_NLS
-install: install-recursive
-	msgfmt po/zh_CN.po -o ${localedir}/zh_CN/LC_MESSAGES/pacemaker.mo
-endif
-
 core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
