@@ -1164,6 +1164,23 @@ cib_process_request(xmlNode *request, gboolean privileged,
     return;
 }
 
+static char *
+calculate_section_digest(const char *xpath, xmlNode * xml_obj)
+{
+    xmlNode *xml_section = NULL;
+
+    if (xml_obj == NULL) {
+        return NULL;
+    }
+
+    xml_section = get_xpath_object(xpath, xml_obj, LOG_TRACE);
+    if (xml_section == NULL) {
+        return NULL;
+    }
+    return calculate_xml_versioned_digest(xml_section, FALSE, TRUE, CRM_FEATURE_SET); 
+
+}
+
 static int
 cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gboolean privileged)
 {
@@ -1188,6 +1205,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     gboolean manage_counters = TRUE;
 
     static mainloop_timer_t *digest_timer = NULL;
+
+    char *current_nodes_digest = NULL;
+    char *current_alerts_digest = NULL;
+    char *current_status_digest = NULL;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1254,6 +1275,14 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib__clear_call_options(call_options, "call", cib_zero_copy);
         }
 
+        /* Calculate the hash value of the section before the change. */
+        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+            current_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, current_cib);
+            current_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, current_cib);
+            current_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, current_cib);
+            crm_trace("current-digest %s:%s:%s", current_nodes_digest, current_alerts_digest, current_status_digest);
+        }
+
         /* result_cib must not be modified after cib_perform_op() returns */
         rc = cib_perform_op(op, call_options, cib_op_func(call_type), FALSE,
                             section, request, input, manage_counters, &config_changed,
@@ -1298,21 +1327,36 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
-            if (section == NULL) {
-                send_r_notify = TRUE;
+            char *result_nodes_digest = NULL;
+            char *result_alerts_digest = NULL;
+            char *result_status_digest = NULL;
+            gboolean change_node_digest = TRUE;
+            gboolean change_alert_digest = TRUE;
+            gboolean change_status_digest= TRUE;
 
-            } else if (pcmk__str_eq(section, XML_TAG_CIB, pcmk__str_casei)) {
-                send_r_notify = TRUE;
+            /* Calculate the hash value of the changed section. */
+            result_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, result_cib);
+            result_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, result_cib);
+            result_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, result_cib);
+            crm_trace("result-digest %s:%s:%s", result_nodes_digest, result_alerts_digest, result_status_digest);
 
-            } else if (pcmk__str_eq(section, XML_CIB_TAG_NODES, pcmk__str_casei)) {
-                send_r_notify = TRUE;
+            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest, pcmk__str_none)) {
+                change_node_digest = FALSE;
+            }
+            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest, pcmk__str_none)) {
+                change_alert_digest = FALSE;
+            }
+            if (pcmk__str_eq(current_status_digest, result_status_digest, pcmk__str_none)) {
+                change_status_digest = FALSE;
+            }
 
-            } else if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
-                send_r_notify = TRUE;
-
-            } else if (pcmk__str_eq(section, XML_CIB_TAG_CONFIGURATION, pcmk__str_casei)) {
+            if (change_node_digest || change_alert_digest || change_status_digest) {
                 send_r_notify = TRUE;
             }
+            
+            free(result_nodes_digest);
+            free(result_alerts_digest);
+            free(result_status_digest);
 
         } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
@@ -1385,6 +1429,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (call_type >= 0) {
         cib_op_cleanup(call_type, call_options, &input, &output);
     }
+
+    free(current_nodes_digest);
+    free(current_alerts_digest);
+    free(current_status_digest);
 
     crm_trace("done");
     return rc;
