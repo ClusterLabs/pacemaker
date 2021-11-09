@@ -25,4 +25,4 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * fencer	(stonith:fence_ipmilan):	 Started node3
-    * rsc1	(lsb:rsc1):	 Stopped
+    * rsc1	(lsb:rsc1):	 Stopped (not installed) 

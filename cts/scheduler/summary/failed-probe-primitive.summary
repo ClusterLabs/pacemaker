@@ -4,8 +4,8 @@ Current cluster status:
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started cluster01
-    * dummy-1	(ocf:pacemaker:Dummy):	 Stopped
-    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy-1	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
+    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
     * dummy-3	(ocf:pacemaker:Dummy):	 FAILED cluster01
 
 Transition Summary:
@@ -22,6 +22,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started cluster01
-    * dummy-1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy-1	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
     * dummy-2	(ocf:pacemaker:Dummy):	 Started cluster02
-    * dummy-3	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (not installed) 
