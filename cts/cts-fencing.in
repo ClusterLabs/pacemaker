@@ -886,7 +886,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
             test.add_stonith_log_pattern("Total timeout set to 40")
-            test.add_stonith_log_pattern("targeting node3 using false returned -201")
+            test.add_stonith_log_pattern("targeting node3 using false returned 1")
             test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level fails.
@@ -920,8 +920,8 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
 
             test.add_stonith_log_pattern("Total timeout set to 18")
-            test.add_stonith_log_pattern("targeting node3 using false1 returned -201")
-            test.add_stonith_log_pattern("targeting node3 using false2 returned -201")
+            test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
+            test.add_stonith_log_pattern("targeting node3 using false2 returned 1")
             test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
             test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
 
@@ -987,7 +987,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
             test.add_stonith_log_pattern("Total timeout set to 8")
-            test.add_stonith_log_pattern("targeting node3 using false1 returned -201")
+            test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
             test.add_stonith_neg_log_pattern("targeting node3 using false2 returned ")
             test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
             test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
@@ -1147,7 +1147,7 @@ class Tests(object):
                          "--output-as=xml -R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
             test.add_stonith_log_pattern("does not support reboot")
-            test.add_stonith_log_pattern("using true1 returned 0 (OK)")
+            test.add_stonith_log_pattern("using true1 returned 0")
 
         # make sure reboot is used when reboot action is advertised
         for test_type in test_types:
@@ -1158,7 +1158,7 @@ class Tests(object):
                          "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
             test.add_stonith_neg_log_pattern("does not advertise support for 'reboot', performing 'off'")
-            test.add_stonith_log_pattern("using true1 returned 0 (OK)")
+            test.add_stonith_log_pattern("using true1 returned 0")
 
         # make sure requested fencing delay is applied only for the first device in the first level
         # make sure static delay from pcmk_delay_base is added
@@ -1240,8 +1240,8 @@ class Tests(object):
                      '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
         # both devices should be executed
-        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
-        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0")
+        test.add_stonith_log_pattern("using true2 returned 0")
 
         ### verify unfencing using automatic unfencing fails if any of the required agents fail
         test = self.new_test("cpg_unfence_required_2",
@@ -1264,8 +1264,8 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
-        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0")
+        test.add_stonith_log_pattern("using true2 returned 0")
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_4",
@@ -1296,10 +1296,10 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 3 -v false4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 4 -v true4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
-        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
-        test.add_stonith_log_pattern("using true3 returned 0 (OK)")
-        test.add_stonith_log_pattern("using true4 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0")
+        test.add_stonith_log_pattern("using true2 returned 0")
+        test.add_stonith_log_pattern("using true3 returned 0")
+        test.add_stonith_log_pattern("using true4 returned 0")
 
     def build_unfence_on_target_tests(self):
         """ Register tests that verify unfencing that runs on the target """

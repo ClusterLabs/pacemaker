@@ -232,7 +232,8 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
     }
 
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-        crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
+        crm_warn("Could not issue systemd reload %d: %s",
+                 reload_count, error.message);
         dbus_error_free(&error);
 
     } else {
@@ -291,8 +292,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
                              PCMK_EXEC_NOT_INSTALLED, "systemd unit not found");
     }
 
-    crm_err("DBus request for %s of systemd unit %s for resource %s failed: %s",
-            op->action, op->agent, crm_str(op->rsc), error->message);
+    crm_info("DBus request for %s of systemd unit %s for resource %s failed: %s",
+             op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
 /*!
@@ -325,11 +326,11 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  "systemd DBus method had unexpected reply");
-            crm_err("Could not load systemd unit %s for %s: "
-                    "DBus reply has unexpected type", op->agent, op->id);
+            crm_info("Could not load systemd unit %s for %s: "
+                     "DBus reply has unexpected type", op->agent, op->id);
         } else {
-            crm_err("Could not load systemd unit: "
-                    "DBus reply has unexpected type");
+            crm_info("Could not load systemd unit: "
+                     "DBus reply has unexpected type");
         }
 
     } else {
@@ -688,7 +689,7 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
-        crm_warn("DBus request for %s of %s succeeded but "
+        crm_info("DBus request for %s of %s succeeded but "
                  "return type was unexpected", op->action, crm_str(op->rsc));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE,
                              "systemd DBus method had unexpected reply");
@@ -981,7 +982,8 @@ systemd_timeout_callback(gpointer p)
     svc_action_t * op = p;
 
     op->opaque->timerid = 0;
-    crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
+    crm_info("%s action for systemd unit %s named '%s' timed out",
+             op->action, op->agent, op->rsc);
     services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
                          "Systemd action did not complete within specified timeout");
     services__finalize_async_op(op);

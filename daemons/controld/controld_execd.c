@@ -2684,16 +2684,15 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
     do_crm_log(log_level, "%s", str->str);
     g_string_free(str, TRUE);
 
-    if (op->output != NULL) {
-        char *prefix = crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
+    /* The services library has already logged the output at info or debug
+     * level, so just raise to notice if it looks like a failure.
+     */
+    if ((op->output != NULL) && (op->rc != PCMK_OCF_OK)) {
+        char *prefix = crm_strdup_printf(PCMK__OP_FMT "@%s output",
                                          op->rsc_id, op->op_type,
-                                         op->interval_ms, op->call_id);
+                                         op->interval_ms, node_name);
 
-        if (op->rc) {
-            crm_log_output(LOG_NOTICE, prefix, op->output);
-        } else {
-            crm_log_output(LOG_DEBUG, prefix, op->output);
-        }
+        crm_log_output(LOG_NOTICE, prefix, op->output);
         free(prefix);
     }
 }

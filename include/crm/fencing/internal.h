@@ -58,13 +58,14 @@ stonith_action_t *stonith_action_create(const char *agent,
                                         GHashTable * port_map,
                                         const char * host_arg);
 void stonith__destroy_action(stonith_action_t *action);
-void stonith__action_result(stonith_action_t *action, int *rc, char **output,
-                            char **error_output);
+pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
+int stonith__result2rc(const pcmk__action_result_t *result);
 
 int
 stonith_action_execute_async(stonith_action_t * action,
                              void *userdata,
-                             void (*done) (int pid, int rc, const char *output,
+                             void (*done) (int pid,
+                                           const pcmk__action_result_t *result,
                                            void *user_data),
                              void (*fork_cb) (int pid, void *user_data));
 

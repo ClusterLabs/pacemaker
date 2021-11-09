@@ -319,13 +319,13 @@ services__create_resource_action(const char *name, const char *standard,
         rc = services__nagios_prepare(op);
 #endif
     } else {
-        crm_err("Unknown resource standard: %s", op->standard);
+        crm_info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Cannot prepare %s operation for %s: %s",
-                action, name, strerror(rc));
+        crm_info("Cannot prepare %s operation for %s: %s",
+                 action, name, strerror(rc));
         services__handle_exec_error(op, rc);
     }
     return op;
@@ -967,14 +967,14 @@ execute_metadata_action(svc_action_t *op)
     const char *class = op->standard;
 
     if (op->agent == NULL) {
-        crm_err("meta-data requested without specifying agent");
+        crm_info("Meta-data requested without specifying agent");
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
     if (class == NULL) {
-        crm_err("meta-data requested for agent %s without specifying class",
+        crm_info("Meta-data requested for agent %s without specifying class",
                 op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL,
@@ -986,8 +986,8 @@ execute_metadata_action(svc_action_t *op)
         class = resources_find_service_class(op->agent);
     }
     if (class == NULL) {
-        crm_err("meta-data requested for %s, but could not determine class",
-                op->agent);
+        crm_info("Meta-data requested for %s, but could not determine class",
+                 op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_HARD,
                              "Agent standard could not be determined");

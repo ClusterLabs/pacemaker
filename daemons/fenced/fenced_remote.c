@@ -996,7 +996,7 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
 
     remote_op_done(op, msg, pcmk_ok, FALSE);
 
-    /* Replies are sent via done_cb->stonith_send_async_reply()->do_local_reply() */
+    // Replies are sent via done_cb -> send_async_reply() -> do_local_reply()
     return -EINPROGRESS;
 }
 
