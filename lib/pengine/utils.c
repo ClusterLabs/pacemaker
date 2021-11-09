@@ -2569,3 +2569,45 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
 
     return resources;
 }
+
+xmlNode *
+pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
+{
+    const char *rsc_id = rsc->id;
+
+    for (xmlNode *xml_op = pcmk__xml_first_child(rsc->cluster->failed); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
+        const char *value = NULL;
+        char *op_id = NULL;
+
+        /* This resource operation is not a failed probe. */
+        if (!pcmk_xe_mask_probe_failure(xml_op)) {
+            continue;
+        }
+
+        /* This resource operation was not run on the given node.  Note that if name is
+         * NULL, this will always succeed.
+         */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+        if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
+            continue;
+        }
+
+        /* This resource operation has no operation_key. */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (!parse_op_key(value ? value : ID(xml_op), &op_id, NULL, NULL)) {
+            continue;
+        }
+
+        /* This resource operation's ID does not match the rsc_id we are looking for. */
+        if (!pcmk__str_eq(op_id, rsc_id, pcmk__str_none)) {
+            free(op_id);
+            continue;
+        }
+
+        free(op_id);
+        return xml_op;
+    }
+
+    return NULL;
+}
