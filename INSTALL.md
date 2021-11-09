@@ -17,7 +17,7 @@
 | 0.17.0 or later | libqb-devel        | libqb-devel        | libqb-dev      |
 | 3.4 or later    | python3            | python3            | python3        |
 | 0.18 or later   | gettext-devel      | gettext-tools      | gettext        |
-| 0.19 or later   |                    |                    | autopoint      |
+| 0.18 or later   |                    |                    | autopoint      |
 
 Also:
 * make must be GNU (or compatible) (setting MAKE=gmake might also work but is

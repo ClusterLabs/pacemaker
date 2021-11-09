@@ -47,7 +47,7 @@
 
 #define N_(String) (String)
 
-#ifdef PCMK__Support_NLS
+#ifdef PCMK__SUPPORT_NLS
 #  define _(String) gettext(String)
 #else
 #  define _(String) (String)

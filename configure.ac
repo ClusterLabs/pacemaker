@@ -288,13 +288,12 @@ AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 dnl --disable-nls option 
 AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION(0.18)
-AM_CONDITIONAL([USE_NLS], [test "x${USE_NLS}" = "xyes"])
+AM_GNU_GETTEXT_VERSION([0.18])
 
 # Check for disable_nls
 AS_IF([test "x${USE_NLS}" = "xyes"],
       [
-          AC_DEFINE([PCMK__Support_NLS],[1],[Define to 1 if USE_NLS should be enabled])
+          AC_DEFINE([PCMK__SUPPORT_NLS],[1],[Define to 1 if USE_NLS should be enabled])
 ])
 
 dnl --with-* options: external software support, and custom locations
@@ -647,27 +646,6 @@ case $libdir in
         ;;
 esac
 
-dnl Expand autoconf variables so that we don't end up with '${prefix}'
-dnl in #defines and python scripts
-dnl NOTE: Autoconf deliberately leaves them unexpanded to allow
-dnl    make exec_prefix=/foo install
-dnl No longer being able to do this seems like no great loss to me...
-
-eval prefix="`eval echo ${prefix}`"
-eval exec_prefix="`eval echo ${exec_prefix}`"
-eval bindir="`eval echo ${bindir}`"
-eval sbindir="`eval echo ${sbindir}`"
-eval libexecdir="`eval echo ${libexecdir}`"
-eval datadir="`eval echo ${datadir}`"
-eval sysconfdir="`eval echo ${sysconfdir}`"
-eval sharedstatedir="`eval echo ${sharedstatedir}`"
-eval localstatedir="`eval echo ${localstatedir}`"
-eval libdir="`eval echo ${libdir}`"
-eval includedir="`eval echo ${includedir}`"
-eval oldincludedir="`eval echo ${oldincludedir}`"
-eval infodir="`eval echo ${infodir}`"
-eval mandir="`eval echo ${mandir}`"
-
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
 expand_path_option exec_prefix
@@ -686,7 +664,6 @@ expand_path_option mandir
 
 dnl Home-grown variables
 
-AS_IF([test x"${localedir}" = x""], [localedir="${datadir}/locale"])
 expand_path_option localedir "${datadir}/locale"
 AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
 
