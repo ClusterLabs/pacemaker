@@ -31,9 +31,6 @@ GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
                             pe_working_set_t *data_set);
 
 extern gboolean can_run_resources(const pe_node_t * node);
-extern gboolean native_assign_node(pe_resource_t *rsc, pe_node_t *chosen,
-                                   gboolean force);
-void native_deallocate(pe_resource_t * rsc);
 
 extern void log_action(unsigned int log_level, const char *pre_text,
                        pe_action_t * action, gboolean details);
@@ -46,7 +43,6 @@ pe_resource_t *find_compatible_child(pe_resource_t *local_child,
 pe_resource_t *find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
                                              enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current);
-bool assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force);
 enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node);
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
@@ -73,11 +69,5 @@ void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
                           pcmk_injections_t *injections);
 
 enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
-
-pcmk__output_t *pcmk__new_logger(void);
-
-bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                             pe_working_set_t *data_set,
-                             pe_resource_t **failed);
 
 #endif

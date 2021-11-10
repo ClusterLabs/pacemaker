@@ -198,4 +198,18 @@ G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
+G_GNUC_INTERNAL
+bool pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force);
+
+G_GNUC_INTERNAL
+bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
+
+G_GNUC_INTERNAL
+void pcmk__unassign_resource(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                             pe_working_set_t *data_set,
+                             pe_resource_t **failed);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

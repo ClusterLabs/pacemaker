@@ -85,7 +85,7 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                                      (flags_to_clear), #flags_to_clear);    \
     } while (0)
 
-static gboolean
+static bool
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
 {
     GList *nodes = NULL;
@@ -93,12 +93,12 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     pe_node_t *best = NULL;
     int multiple = 1;
     int length = 0;
-    gboolean result = FALSE;
+    bool result = false;
 
     process_utilization(rsc, &prefer, data_set);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to ? TRUE : FALSE;
+        return rsc->allocated_to != NULL;
     }
 
     // Sort allowed nodes by weight
@@ -196,7 +196,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                    chosen->details->uname, rsc->id, multiple, score);
     }
 
-    result = native_assign_node(rsc, chosen, FALSE);
+    result = pcmk__assign_primitive(rsc, chosen, false);
     g_list_free(nodes);
     return result;
 }
@@ -598,11 +598,11 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        native_assign_node(rsc, assign_to, TRUE);
+        pcmk__assign_primitive(rsc, assign_to, true);
 
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
-        native_assign_node(rsc, NULL, TRUE);
+        pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && native_choose_node(rsc, prefer, data_set)) {
