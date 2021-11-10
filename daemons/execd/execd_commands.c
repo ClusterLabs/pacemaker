@@ -1255,7 +1255,13 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     stonith_t *stonith_api = get_stonith_connection();
 
-    if (!stonith_api) {
+    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)
+        && (cmd->interval_ms == 0)) {
+        // Probes don't require a fencer connection
+        finalize_fence_device_probe(cmd, rsc->fence_probe_result);
+        return;
+
+    } else if (stonith_api == NULL) {
         rc = -ENOTCONN;
 
     } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
@@ -1268,12 +1274,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         rc = execd_stonith_stop(stonith_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
-        if (cmd->interval_ms > 0) {
-            do_monitor = TRUE;
-        } else {
-            finalize_fence_device_probe(cmd, rsc->fence_probe_result);
-            return;
-        }
+        do_monitor = TRUE;
     }
 
     if (do_monitor) {
