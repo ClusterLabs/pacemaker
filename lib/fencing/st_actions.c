@@ -360,6 +360,42 @@ stonith__result2rc(const pcmk__action_result_t *result)
     return pcmk_rc_error;
 }
 
+/*!
+ * \internal
+ * \brief Determine execution status equivalent of legacy fencer return code
+ *
+ * Fence action notifications, and fence action callbacks from older fencers
+ * (<=2.1.2) in a rolling upgrade, will have only a legacy return code. Map this
+ * to an execution status as best as possible (essentially, the inverse of
+ * stonith__result2rc()).
+ *
+ * \param[in] rc           Legacy return code from fencer
+ *
+ * \return Execution status best corresponding to \p rc
+ */
+int
+stonith__legacy2status(int rc)
+{
+    if (rc >= 0) {
+        return PCMK_EXEC_DONE;
+    }
+    switch (-rc) {
+        case EACCES:            return PCMK_EXEC_NO_SECRETS;
+        case ECANCELED:         return PCMK_EXEC_CANCELLED;
+        case EHOSTUNREACH:      return PCMK_EXEC_INVALID;
+        case EINPROGRESS:       return PCMK_EXEC_PENDING;
+        case ENODEV:            return PCMK_EXEC_NO_FENCE_DEVICE;
+        case ENOENT:            return PCMK_EXEC_NOT_INSTALLED;
+        case ENOTCONN:          return PCMK_EXEC_NOT_CONNECTED;
+        case EOPNOTSUPP:        return PCMK_EXEC_NOT_SUPPORTED;
+        case EPROTO:            return PCMK_EXEC_INVALID;
+        case EPROTONOSUPPORT:   return PCMK_EXEC_NOT_SUPPORTED;
+        case ETIME:             return PCMK_EXEC_TIMEOUT;
+        case ETIMEDOUT:         return PCMK_EXEC_TIMEOUT;
+        default:                return PCMK_EXEC_ERROR;
+    }
+}
+
 static void
 stonith_action_async_done(svc_action_t *svc_action)
 {

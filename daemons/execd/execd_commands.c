@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include <crm/crm.h>
+#include <crm/fencing/internal.h>
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
@@ -999,56 +1000,6 @@ action_complete(svc_action_t * action)
     cmd_finalize(cmd, rsc);
 }
 
-/*!
- * \internal
- * \brief Determine operation status of a stonith operation
- *
- * Non-stonith resource operations get their operation status directly from the
- * service library, but the fencer does not have an equivalent, so we must infer
- * an operation status from the fencer API's return code.
- *
- * \param[in] action       Name of action performed on stonith resource
- * \param[in] interval_ms  Action interval
- * \param[in] rc           Action result from fencer
- *
- * \return Operation status corresponding to fencer API return code
- */
-static int
-stonith_rc2status(const char *action, guint interval_ms, int rc)
-{
-    int status = PCMK_EXEC_DONE;
-
-    switch (rc) {
-        case pcmk_ok:
-            break;
-
-        case -EOPNOTSUPP:
-        case -EPROTONOSUPPORT:
-            status = PCMK_EXEC_NOT_SUPPORTED;
-            break;
-
-        case -ETIME:
-        case -ETIMEDOUT:
-            status = PCMK_EXEC_TIMEOUT;
-            break;
-
-        case -ENOTCONN:
-        case -ECOMM:
-            // Couldn't talk to fencer
-            status = PCMK_EXEC_ERROR;
-            break;
-
-        case -ENODEV:
-            // The device is not registered with the fencer
-            status = PCMK_EXEC_ERROR;
-            break;
-
-        default:
-            break;
-    }
-    return status;
-}
-
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
@@ -1062,8 +1013,19 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
      * the fencer return code.
      */
     if (cmd->result.execution_status != PCMK_EXEC_CANCELLED) {
-        cmd->result.execution_status = stonith_rc2status(cmd->action,
-                                                         cmd->interval_ms, rc);
+        cmd->result.execution_status = stonith__legacy2status(rc);
+
+        // Simplify status codes from fencer
+        switch (cmd->result.execution_status) {
+            case PCMK_EXEC_NOT_CONNECTED:
+            case PCMK_EXEC_INVALID:
+            case PCMK_EXEC_NO_FENCE_DEVICE:
+            case PCMK_EXEC_NO_SECRETS:
+                cmd->result.execution_status = PCMK_EXEC_ERROR;
+                break;
+            default:
+                break;
+        }
 
         // Certain successful actions change the known state of the resource
         if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {

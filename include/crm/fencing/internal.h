@@ -182,6 +182,8 @@ bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
 bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
 bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
+int stonith__legacy2status(int rc);
+
 /*!
  * \internal
  * \brief Is a fencing operation in pending state?
