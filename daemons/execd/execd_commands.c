@@ -285,7 +285,9 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
-    rsc->st_probe_rc = -ENODEV; // if stonith, initialize to "not running"
+
+    // Initialize fence device probes (to return "not running")
+    rsc->fence_probe_result = PCMK_EXEC_NO_FENCE_DEVICE;
     return rsc;
 }
 
@@ -1029,10 +1031,10 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
     if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
 
         if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
-            rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
+            rsc->fence_probe_result = PCMK_EXEC_DONE; // "running"
 
         } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
-            rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
+            rsc->fence_probe_result = PCMK_EXEC_NO_FENCE_DEVICE; // "not running"
         }
     }
 
@@ -1081,14 +1083,13 @@ stonith_connection_failed(void)
         if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             /* If we registered this fence device, we don't know whether the
              * fencer still has the registration or not. Cause future probes to
-             * return PCMK_OCF_UNKNOWN_ERROR until the resource is stopped or
-             * started successfully. This is especially important if the
-             * controller also went away (possibly due to a cluster layer
-             * restart) and won't receive our client notification of any
-             * monitors finalized below.
+             * return an error until the resource is stopped or started
+             * successfully. This is especially important if the controller also
+             * went away (possibly due to a cluster layer restart) and won't
+             * receive our client notification of any monitors finalized below.
              */
-            if (rsc->st_probe_rc == pcmk_ok) {
-                rsc->st_probe_rc = pcmk_err_generic;
+            if (rsc->fence_probe_result == PCMK_EXEC_DONE) {
+                rsc->fence_probe_result = PCMK_EXEC_NOT_CONNECTED;
             }
 
             if (rsc->active) {
@@ -1213,6 +1214,39 @@ execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief  Finalize the result of a fence device probe
+ *
+ * \param[in] cmd           Probe action
+ * \param[in] probe_result  Probe result
+ */
+static void
+finalize_fence_device_probe(lrmd_cmd_t *cmd, enum pcmk_exec_status probe_result)
+{
+    int exit_status = CRM_EX_ERROR;
+    const char *reason = NULL;
+
+    switch (probe_result) {
+        case PCMK_EXEC_DONE: // Device is "running"
+            exit_status = CRM_EX_OK;
+            break;
+
+        case PCMK_EXEC_NO_FENCE_DEVICE: // Device is "not running"
+            break;
+
+        case PCMK_EXEC_NOT_CONNECTED: // stonith_connection_failed()
+            reason = "Lost connection to fencer";
+            break;
+
+        default: // Shouldn't be possible
+            probe_result = PCMK_EXEC_ERROR;
+            reason = "Invalid fence device probe result (bug?)";
+            break;
+    }
+    stonith_action_complete(cmd, exit_status, probe_result, reason);
+}
+
 static void
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
@@ -1237,7 +1271,8 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         if (cmd->interval_ms > 0) {
             do_monitor = TRUE;
         } else {
-            rc = rsc->st_probe_rc;
+            finalize_fence_device_probe(cmd, rsc->fence_probe_result);
+            return;
         }
     }
 
