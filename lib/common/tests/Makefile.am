@@ -13,6 +13,7 @@ SUBDIRS = \
 	flags		\
 	io		\
 	iso8601		\
+	nvpair 		\
 	operations	\
 	results		\
 	strings		\
