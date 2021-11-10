@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -132,7 +132,10 @@ st_callback(stonith_t * st, stonith_event_t * e)
 static void
 st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    crm_notice("Call id %d completed with rc %d", data->call_id, data->rc);
+    crm_notice("Call %d exited %d: %s (%s)",
+               data->call_id, stonith__exit_status(data),
+               stonith__execution_status(data),
+               crm_str(stonith__exit_reason(data)));
 }
 
 static void
