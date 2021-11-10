@@ -1275,6 +1275,12 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         do_monitor = TRUE;
+
+    } else {
+        stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                PCMK_EXEC_ERROR,
+                                "Invalid fence device action (bug?)");
+        return;
     }
 
     if (do_monitor) {
