@@ -1262,7 +1262,10 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return;
 
     } else if (stonith_api == NULL) {
-        rc = -ENOTCONN;
+        stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
+                                PCMK_EXEC_NOT_CONNECTED,
+                                "No connection to fencer");
+        return;
 
     } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
