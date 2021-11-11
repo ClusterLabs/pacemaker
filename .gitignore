@@ -275,3 +275,7 @@ pacemaker_*.info
 /test-driver
 /xml/crm.dtd
 ylwrap
+
+# Translations
+po/POTFILES
+*.pot

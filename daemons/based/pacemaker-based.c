@@ -94,6 +94,13 @@ main(int argc, char **argv)
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
 
+#ifdef PCMK__SUPPORT_NLS
+    setlocale (LC_ALL, "");
+    bindtextdomain(PACKAGE, PCMK__LOCALE_DIR);
+    textdomain(PACKAGE);
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
+#endif
+
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "daemon for managing the configuration "
