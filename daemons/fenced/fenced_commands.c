@@ -128,7 +128,7 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     const char *value = NULL;
     int delay_max = 0;
 
-    if (!pcmk__strcase_any_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__is_fencing_action(action)) {
         return 0;
     }
 
@@ -146,7 +146,7 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
     char *hash_value = NULL;
     int delay_base = 0;
 
-    if (!pcmk__strcase_any_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__is_fencing_action(action)) {
         return 0;
     }
 
@@ -448,7 +448,7 @@ stonith_device_execute(stonith_device_t * device)
 
     if (pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                          STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
-        if (pcmk__strcase_any_of(cmd->action, "reboot", "off", NULL)) {
+        if (pcmk__is_fencing_action(cmd->action)) {
             if (node_does_watchdog_fencing(stonith_our_uname)) {
                 pcmk__panic(__func__);
                 goto done;
