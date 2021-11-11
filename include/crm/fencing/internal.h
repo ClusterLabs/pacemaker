@@ -60,6 +60,9 @@ stonith_action_t *stonith_action_create(const char *agent,
 void stonith__destroy_action(stonith_action_t *action);
 pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);
+void stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result);
+void stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result);
+xmlNode *stonith__find_xe_with_result(xmlNode *xml);
 
 int
 stonith_action_execute_async(stonith_action_t * action,

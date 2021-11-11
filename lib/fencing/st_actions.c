@@ -396,6 +396,113 @@ stonith__legacy2status(int rc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a fencing result to an XML element as attributes
+ *
+ * \param[in] xml     XML element to add result to
+ * \param[in] result  Fencing result to add (assume success if NULL)
+ */
+void
+stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
+{
+    int exit_status = CRM_EX_OK;
+    enum pcmk_exec_status execution_status = PCMK_EXEC_DONE;
+    const char *exit_reason = NULL;
+    const char *action_stdout = NULL;
+    int rc = pcmk_ok;
+
+    CRM_CHECK(xml != NULL, return);
+
+    if (result != NULL) {
+        exit_status = result->exit_status;
+        execution_status = result->execution_status;
+        exit_reason = result->exit_reason;
+        action_stdout = result->action_stdout;
+        rc = pcmk_rc2legacy(stonith__result2rc(result));
+    }
+
+    crm_xml_add_int(xml, XML_LRM_ATTR_OPSTATUS, (int) execution_status);
+    crm_xml_add_int(xml, XML_LRM_ATTR_RC, exit_status);
+    crm_xml_add(xml, XML_LRM_ATTR_EXIT_REASON, exit_reason);
+    crm_xml_add(xml, "st_output", action_stdout);
+
+    /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
+     * code that use libstonithd <=2.1.2 don't check for the full result, and
+     * need a legacy return code instead.
+     */
+    crm_xml_add_int(xml, F_STONITH_RC, rc);
+}
+
+/*!
+ * \internal
+ * \brief Find a fencing result beneath an XML element
+ *
+ * \param[in]  xml     XML element to search
+ *
+ * \return \p xml or descendent of it that contains a fencing result, else NULL
+ */
+xmlNode *
+stonith__find_xe_with_result(xmlNode *xml)
+{
+    xmlNode *match = get_xpath_object("//@" XML_LRM_ATTR_RC, xml, LOG_NEVER);
+
+    if (match == NULL) {
+        /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
+         * return code, not a full result, so check for that.
+         */
+        match = get_xpath_object("//@" F_STONITH_RC, xml, LOG_ERR);
+    }
+    return match;
+}
+
+/*!
+ * \internal
+ * \brief Get a fencing result from an XML element's attributes
+ *
+ * \param[in]  xml     XML element with fencing result
+ * \param[out] result  Where to store fencing result
+ */
+void
+stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result)
+{
+    int exit_status = CRM_EX_OK;
+    int execution_status = PCMK_EXEC_DONE;
+    const char *exit_reason = NULL;
+    char *action_stdout = NULL;
+
+    CRM_CHECK((xml != NULL) && (result != NULL), return);
+
+    exit_reason = crm_element_value(xml, XML_LRM_ATTR_EXIT_REASON);
+    action_stdout = crm_element_value_copy(xml, "st_output");
+
+    // A result must include an exit status and execution status
+    if ((crm_element_value_int(xml, XML_LRM_ATTR_RC, &exit_status) < 0)
+        || (crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS,
+                                  &execution_status) < 0)) {
+        int rc = pcmk_ok;
+        exit_status = CRM_EX_ERROR;
+
+        /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
+         * return code, not a full result, so check for that.
+         */
+        if (crm_element_value_int(xml, F_STONITH_RC, &rc) == 0) {
+            if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
+                exit_status = CRM_EX_OK;
+            }
+            execution_status = stonith__legacy2status(rc);
+            exit_reason = pcmk_strerror(rc);
+
+        } else {
+            execution_status = PCMK_EXEC_ERROR;
+            exit_reason = "Fencer reply contained neither a full result "
+                          "nor a legacy return code (bug?)";
+        }
+    }
+    pcmk__set_result(result, exit_status, execution_status, exit_reason);
+    pcmk__set_result_output(result, action_stdout, NULL);
+}
+
 static void
 stonith_action_async_done(svc_action_t *svc_action)
 {
