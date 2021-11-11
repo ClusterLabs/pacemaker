@@ -218,6 +218,7 @@ char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
 char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
                            const char *node);
 void pcmk__filter_op_for_digest(xmlNode *param_set);
+bool pcmk__is_fencing_action(const char *action);
 
 
 // bitwise arithmetic utilities

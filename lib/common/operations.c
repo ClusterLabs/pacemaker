@@ -523,3 +523,17 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                             CRMD_ACTION_NOTIFY, NULL);
 }
+
+/*!
+ * \internal
+ * \brief Check whether an action name is for a fencing action
+ *
+ * \param[in] action  Action name to check
+ *
+ * \return true if \p action is "off", "reboot", or "poweroff", otherwise false
+ */
+bool
+pcmk__is_fencing_action(const char *action)
+{
+    return pcmk__str_any_of(action, "off", "reboot", "poweroff", NULL);
+}
