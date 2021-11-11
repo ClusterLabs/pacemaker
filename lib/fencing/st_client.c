@@ -904,15 +904,20 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     if (msg == NULL) {
         // Fencer didn't reply in time
         rc = -ETIME;
+        CRM_LOG_ASSERT(call_id > 0);
 
     } else {
         // We have the fencer reply
 
-        crm_element_value_int(msg, F_STONITH_RC, &rc);
-        crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
-    }
+        if (crm_element_value_int(msg, F_STONITH_RC, &rc) != 0) {
+            rc = -pcmk_err_generic;
+        }
 
-    CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
+        if ((crm_element_value_int(msg, F_STONITH_CALLID, &call_id) != 0)
+            || (call_id <= 0)) {
+            crm_log_xml_warn(msg, "Bad fencer reply");
+        }
+    }
 
     blob = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
                                      call_id);
