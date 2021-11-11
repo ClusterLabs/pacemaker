@@ -1370,6 +1370,10 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
+        if (pcmk_xe_mask_probe_failure(xml_op)) {
+            continue;
+        }
+
         id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
         if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
             continue;
