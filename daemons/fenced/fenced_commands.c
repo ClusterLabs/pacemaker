@@ -2415,9 +2415,8 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     if (stand_alone) {
         /* Do notification with a clean data object */
         xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
-        int rc = pcmk_rc2legacy(stonith__result2rc(result));
 
-        crm_xml_add_int(notify_data, F_STONITH_RC, rc);
+        stonith__xe_set_result(notify_data, result);
         crm_xml_add(notify_data, F_STONITH_TARGET, cmd->victim);
         crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
         crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
@@ -2425,7 +2424,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
 
-        do_stonith_notify(T_STONITH_NOTIFY_FENCE, rc, notify_data);
+        do_stonith_notify(T_STONITH_NOTIFY_FENCE, pcmk_rc2legacy(stonith__result2rc(result)), notify_data);
         do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
     }
 }
@@ -2728,9 +2727,8 @@ construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
-    crm_xml_add_int(reply, F_STONITH_RC,
-                    pcmk_rc2legacy(stonith__result2rc(result)));
-    crm_xml_add(reply, F_STONITH_OUTPUT, result->action_stdout);
+
+    stonith__xe_set_result(reply, result);
     return reply;
 }
 
