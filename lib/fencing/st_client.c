@@ -882,15 +882,14 @@ invoke_fence_action_callback(stonith_t *st, int call_id, int rc, void *userdata,
  * \param[in] st        Fencer API connection
  * \param[in] msg       If non-NULL, fencer reply
  * \param[in] call_id   If \p msg is NULL, call ID of action that timed out
- * \param[in] rc        Legacy return code for result of action
  */
 static void
-invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id,
-                            int rc)
+invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
 {
     stonith_private_t *private = NULL;
     stonith_callback_client_t *blob = NULL;
     stonith_callback_client_t local_blob;
+    int rc = pcmk_ok;
 
     CRM_CHECK(stonith != NULL, return);
     CRM_CHECK(stonith->st_private != NULL, return);
@@ -902,7 +901,13 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id,
     local_blob.user_data = NULL;
     local_blob.only_success = FALSE;
 
-    if (msg != NULL) {
+    if (msg == NULL) {
+        // Fencer didn't reply in time
+        rc = -ETIME;
+
+    } else {
+        // We have the fencer reply
+
         crm_element_value_int(msg, F_STONITH_RC, &rc);
         crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
     }
@@ -946,7 +951,7 @@ stonith_async_timeout_handler(gpointer data)
     struct timer_rec_s *timer = data;
 
     crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
-    invoke_registered_callbacks(timer->stonith, NULL, timer->call_id, -ETIME);
+    invoke_registered_callbacks(timer->stonith, NULL, timer->call_id);
 
     /* Always return TRUE, never remove the handler
      * We do that in stonith_del_callback()
@@ -1021,7 +1026,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
-        invoke_registered_callbacks(st, blob.xml, 0, 0);
+        invoke_registered_callbacks(st, blob.xml, 0);
 
     } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
