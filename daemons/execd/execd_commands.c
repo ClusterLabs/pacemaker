@@ -1472,7 +1472,6 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                     xmlNode **reply)
 {
     int rc = pcmk_ok;
-    const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
 
     if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
@@ -1481,7 +1480,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         rc = -EPROTO;
     }
 
-    if (crm_is_true(is_ipc_provider)) {
+    if (pcmk__xe_attr_is_true(request, F_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
             // This is a remote connection from a cluster node's controller

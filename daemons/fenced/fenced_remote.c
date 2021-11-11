@@ -387,7 +387,7 @@ stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merg
     crm_xml_add_int(bcast, "count", count);
 
     if (op_merged) {
-        crm_xml_add(bcast, F_STONITH_MERGED, "true");
+        pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
     }
 
     add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
@@ -1836,7 +1836,7 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
     /* If a reboot is remapped to off+on, it's possible that a node is allowed
      * to perform one action but not another.
      */
-    if (crm_is_true(crm_element_value(xml, F_STONITH_ACTION_DISALLOWED))) {
+    if (pcmk__xe_attr_is_true(xml, F_STONITH_ACTION_DISALLOWED)) {
         props->disallowed[phase] = TRUE;
         crm_trace("Peer %s is disallowed from executing %s for device %s",
                   peer, action, device);

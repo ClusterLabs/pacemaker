@@ -109,8 +109,8 @@ create_dc_message(const char *join_op, const char *host_to)
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.
      */
-    crm_xml_add_boolean(msg, F_CRM_DC_LEAVING,
-                        pcmk_is_set(fsa_input_register, R_SHUTDOWN));
+    pcmk__xe_set_bool_attr(msg, F_CRM_DC_LEAVING,
+                           pcmk_is_set(fsa_input_register, R_SHUTDOWN));
     return msg;
 }
 
@@ -656,7 +656,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_debug("Acknowledging join-%d request from %s",
               current_join_id, join_to);
     acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
-    crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
+    pcmk__xe_set_bool_attr(acknak, CRM_OP_JOIN_ACKNAK, true);
     crm_update_peer_join(__func__, join_node, crm_join_finalized);
     pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
 

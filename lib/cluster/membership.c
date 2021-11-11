@@ -165,15 +165,13 @@ crm_remote_peer_cache_remove(const char *node_name)
 static const char *
 remote_state_from_cib(xmlNode *node_state)
 {
-    const char *status;
+    bool status = false;
 
-    status = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
-    if (status && !crm_is_true(status)) {
-        status = CRM_NODE_LOST;
+    if (pcmk__xe_get_bool_attr(node_state, XML_NODE_IN_CLUSTER, &status) == pcmk_rc_ok && !status) {
+        return CRM_NODE_LOST;
     } else {
-        status = CRM_NODE_MEMBER;
+        return CRM_NODE_MEMBER;
     }
-    return status;
 }
 
 /* user data for looping through remote node xpath searches */

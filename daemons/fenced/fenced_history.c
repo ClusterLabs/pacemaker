@@ -499,15 +499,12 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * otherwise broadcast what we have on top
             * marking as differential and merge in afterwards
             */
-            if (!history ||
-                !crm_is_true(crm_element_value(history,
-                                               F_STONITH_DIFFERENTIAL))) {
+            if (!history || !pcmk__xe_attr_is_true(history, F_STONITH_DIFFERENTIAL)) {
                 out_history =
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
                     crm_trace("Broadcasting history-diff to peers");
-                    crm_xml_add(out_history, F_STONITH_DIFFERENTIAL,
-                                XML_BOOLEAN_TRUE);
+                    pcmk__xe_set_bool_attr(out_history, F_STONITH_DIFFERENTIAL, true);
                     stonith_send_broadcast_history(out_history,
                         st_opt_broadcast | st_opt_discard_reply,
                         NULL);

@@ -603,11 +603,10 @@ parse_peer_options_v1(int call_type, xmlNode * request,
     const char *delegated = NULL;
     const char *originator = crm_element_value(request, F_ORIG);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
-    const char *update = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
     gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
 
-    if (crm_is_true(update)) {
+    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         *needs_reply = FALSE;
         if (is_reply) {
             *local_notify = TRUE;
@@ -701,7 +700,6 @@ parse_peer_options_v2(int call_type, xmlNode * request,
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *originator = crm_element_value(request, F_ORIG);
     const char *reply_to = crm_element_value(request, F_CIB_ISREPLY);
-    const char *update = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
     gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
 
@@ -754,7 +752,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
             return FALSE;
         }
 
-    } else if (crm_is_true(update)) {
+    } else if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         crm_info("Detected legacy %s global update from %s", op, originator);
         send_sync_request(NULL);
         legacy_mode = TRUE;
@@ -891,7 +889,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates, digest);
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
-        crm_xml_add(msg, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+        pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
         crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
@@ -934,7 +932,6 @@ cib_process_request(xmlNode *request, gboolean privileged,
     gboolean needs_reply = TRUE;    // Whether to build a reply
     gboolean local_notify = FALSE;  // Whether to notify (local) requester
     gboolean needs_forward = FALSE; // Whether to forward request somewhere else
-    gboolean global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
 
     xmlNode *op_reply = NULL;
     xmlNode *result_diff = NULL;
@@ -1051,7 +1048,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         if (!is_update) {
             level = LOG_TRACE;
 
-        } else if (global_update) {
+        } else if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
             switch (rc) {
                 case pcmk_ok:
                     level = LOG_INFO;
@@ -1249,8 +1246,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     /* Handle a valid write action */
-    global_update = crm_is_true(crm_element_value(request, F_CIB_GLOBAL_UPDATE));
-    if (global_update) {
+    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         /* legacy code */
         manage_counters = FALSE;
         cib__set_call_options(call_options, "call", cib_force_diff);

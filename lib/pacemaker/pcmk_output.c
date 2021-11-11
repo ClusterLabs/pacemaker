@@ -342,7 +342,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         crm_xml_add(xml, "reason", source->reason);
 
     } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
-        crm_xml_add(xml, "blocked", "true");
+        pcmk__xe_set_bool_attr(xml, "blocked", true);
 
     }
 

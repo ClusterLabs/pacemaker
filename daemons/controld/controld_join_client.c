@@ -34,7 +34,7 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 static void
 update_dc_expected(xmlNode *msg)
 {
-    if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
+    if (fsa_our_dc && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
 
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
@@ -229,7 +229,6 @@ do_cl_join_finalize_respond(long long action,
 
     int join_id = -1;
     const char *op = crm_element_value(input->msg, F_CRM_TASK);
-    const char *ack_nack = crm_element_value(input->msg, CRM_OP_JOIN_ACKNAK);
     const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
@@ -238,7 +237,7 @@ do_cl_join_finalize_respond(long long action,
     }
 
     /* calculate if it was an ack or a nack */
-    if (crm_is_true(ack_nack)) {
+    if (pcmk__xe_attr_is_true(input->msg, CRM_OP_JOIN_ACKNAK)) {
         was_nack = FALSE;
     }
 

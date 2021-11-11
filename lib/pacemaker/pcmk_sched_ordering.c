@@ -123,7 +123,8 @@ static enum ordering_symmetry
 get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
                       const char *parent_symmetrical_s)
 {
-    const char *symmetrical_s = NULL;
+    int rc = pcmk_rc_ok;
+    bool symmetric = false;
     enum pe_order_kind kind = parent_kind; // Default to parent's kind
 
     // Check ordering XML for explicit kind
@@ -133,12 +134,15 @@ get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
     }
 
     // Check ordering XML (and parent) for explicit symmetrical setting
-    symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-    if (symmetrical_s == NULL) {
-        symmetrical_s = parent_symmetrical_s;
+    rc = pcmk__xe_get_bool_attr(xml_obj, XML_CONS_ATTR_SYMMETRICAL, &symmetric);
+
+    if (rc != pcmk_rc_ok && parent_symmetrical_s != NULL) {
+        symmetric = crm_is_true(parent_symmetrical_s);
+        rc = pcmk_rc_ok;
     }
-    if (symmetrical_s != NULL) {
-        if (crm_is_true(symmetrical_s)) {
+
+    if (rc == pcmk_rc_ok) {
+        if (symmetric) {
             if (kind == pe_order_kind_serialize) {
                 pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
                                   " for '%s' because not valid with "
@@ -863,13 +867,11 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
     const char *action_1 = crm_element_value(set1, "action");
     const char *action_2 = crm_element_value(set2, "action");
 
-    const char *sequential_1 = crm_element_value(set1, "sequential");
-    const char *sequential_2 = crm_element_value(set2, "sequential");
-
-    const char *require_all_s = crm_element_value(set1, "require-all");
-    bool require_all = require_all_s? crm_is_true(require_all_s) : true;
-
     enum pe_ordering flags = pe_order_none;
+
+    bool require_all = true;
+
+    pcmk__xe_get_bool_attr(set1, "require-all", &require_all);
 
     if (action_1 == NULL) {
         action_1 = RSC_START;
@@ -938,7 +940,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
         return pcmk_rc_ok;
     }
 
-    if (crm_is_true(sequential_1)) {
+    if (pcmk__xe_attr_is_true(set1, "sequential")) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the first one
             xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
@@ -959,7 +961,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
         }
     }
 
-    if (crm_is_true(sequential_2)) {
+    if (pcmk__xe_attr_is_true(set2, "sequential")) {
         if (symmetry == ordering_symmetric_inverse) {
             // Get the last one
             const char *rid = NULL;

@@ -876,14 +876,12 @@ read_action_metadata(stonith_device_t *device)
     }
 
     for (lpc = 0; lpc < max; lpc++) {
-        const char *on_target = NULL;
         const char *action = NULL;
         xmlNode *match = getXpathResult(xpath, lpc);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
 
-        on_target = crm_element_value(match, "on_target");
         action = crm_element_value(match, "name");
 
         if(pcmk__str_eq(action, "list", pcmk__str_casei)) {
@@ -897,17 +895,13 @@ read_action_metadata(stonith_device_t *device)
                                       st_device_supports_reboot);
         } else if (pcmk__str_eq(action, "on", pcmk__str_casei)) {
             /* "automatic" means the cluster will unfence node when it joins */
-            const char *automatic = crm_element_value(match, "automatic");
-
             /* "required" is a deprecated synonym for "automatic" */
-            const char *required = crm_element_value(match, "required");
-
-            if (crm_is_true(automatic) || crm_is_true(required)) {
+            if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
         }
 
-        if (action && crm_is_true(on_target)) {
+        if (action && pcmk__xe_attr_is_true(match, "on_target")) {
             device->on_target_actions = add_action(device->on_target_actions, action);
         }
     }
@@ -2144,7 +2138,7 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
-        crm_xml_add(xml, F_STONITH_ACTION_DISALLOWED, XML_BOOLEAN_TRUE);
+        pcmk__xe_set_bool_attr(xml, F_STONITH_ACTION_DISALLOWED, true);
     }
 }
 
@@ -2419,7 +2413,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     crm_log_xml_trace(reply, "Reply");
 
     if (merged) {
-        crm_xml_add(reply, F_STONITH_MERGED, "true");
+        pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
     }
 
     if (bcast) {

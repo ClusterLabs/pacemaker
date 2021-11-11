@@ -16,6 +16,9 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
+#include "crm/common/util.h"
+#include "crm/common/xml_internal.h"
+#include "crm/msg_xml.h"
 #include "libpacemaker_private.h"
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
@@ -291,9 +294,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
-    const char *sequential = crm_element_value(set, "sequential");
     const char *ordering = crm_element_value(set, "ordering");
     int local_score = score;
+    bool sequential = false;
 
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
@@ -310,7 +313,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         ordering = "group";
     }
 
-    if ((sequential != NULL) && !crm_is_true(sequential)) {
+    if (pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok && !sequential) {
         return;
 
     } else if ((local_score > 0)
@@ -393,15 +396,17 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     const char *role_1 = crm_element_value(set1, "role");
     const char *role_2 = crm_element_value(set2, "role");
 
-    const char *sequential_1 = crm_element_value(set1, "sequential");
-    const char *sequential_2 = crm_element_value(set2, "sequential");
+    int rc = pcmk_rc_ok;
+    bool sequential = false;
 
     if (score == 0) {
         crm_trace("Ignoring colocation '%s' between sets because score is 0",
                   id);
         return;
     }
-    if ((sequential_1 == NULL) || crm_is_true(sequential_1)) {
+
+    rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
+    if (rc != pcmk_rc_ok || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
@@ -409,7 +414,8 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         }
     }
 
-    if ((sequential_2 == NULL) || crm_is_true(sequential_2)) {
+    rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
+    if (rc != pcmk_rc_ok || sequential) {
         // Get the last one
         const char *rid = NULL;
 
@@ -486,7 +492,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     const char *primary_role = crm_element_value(xml_obj,
                                                  XML_COLOC_ATTR_TARGET_ROLE);
     const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
-    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
     // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
     const char *dependent_instance = crm_element_value(xml_obj,
@@ -542,7 +547,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         }
     }
 
-    if (crm_is_true(symmetrical)) {
+    if (pcmk__xe_attr_is_true(xml_obj, XML_CONS_ATTR_SYMMETRICAL)) {
         pcmk__config_warn("The colocation constraint '"
                           XML_CONS_ATTR_SYMMETRICAL
                           "' attribute has been removed");
