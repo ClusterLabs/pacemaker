@@ -847,9 +847,21 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Invoke a (single) specified fence action callback
+ *
+ * \param[in] st        Fencer API connection
+ * \param[in] call_id   If positive, call ID of completed fence action, otherwise
+ *                      legacy return code for early action failure
+ * \param[in] rc        Legacy return code for action result
+ * \param[in] userdata  User data to pass to callback
+ * \param[in] callback  Fence action callback to invoke
+ */
 static void
-invoke_callback(stonith_t * st, int call_id, int rc, void *userdata,
-                void (*callback) (stonith_t * st, stonith_callback_data_t * data))
+invoke_fence_action_callback(stonith_t *st, int call_id, int rc, void *userdata,
+                             void (*callback) (stonith_t *st,
+                                               stonith_callback_data_t *data))
 {
     stonith_callback_data_t data = { 0, };
 
@@ -860,8 +872,21 @@ invoke_callback(stonith_t * st, int call_id, int rc, void *userdata,
     callback(st, &data);
 }
 
+/*!
+ * \internal
+ * \brief Invoke any callbacks registered for a specified fence action result
+ *
+ * Given a fence action result from the fencer, invoke any callback registered
+ * for that action, as well as any global callback registered.
+ *
+ * \param[in] st        Fencer API connection
+ * \param[in] msg       If non-NULL, fencer reply
+ * \param[in] call_id   If \p msg is NULL, call ID of action that timed out
+ * \param[in] rc        Legacy return code for result of action
+ */
 static void
-stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc)
+invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id,
+                            int rc)
 {
     stonith_private_t *private = NULL;
     stonith_callback_client_t *blob = NULL;
@@ -899,7 +924,8 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
         crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
+        invoke_fence_action_callback(stonith, call_id, rc, local_blob.user_data,
+                                     local_blob.callback);
 
     } else if (private->op_callback == NULL && rc != pcmk_ok) {
         crm_warn("Fencing command failed: %s", pcmk_strerror(rc));
@@ -908,7 +934,8 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     if (private->op_callback != NULL) {
         crm_trace("Invoking global callback for call %d", call_id);
-        invoke_callback(stonith, call_id, rc, NULL, private->op_callback);
+        invoke_fence_action_callback(stonith, call_id, rc, NULL,
+                                     private->op_callback);
     }
     crm_trace("OP callback activated.");
 }
@@ -919,7 +946,7 @@ stonith_async_timeout_handler(gpointer data)
     struct timer_rec_s *timer = data;
 
     crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
-    stonith_perform_callback(timer->stonith, NULL, timer->call_id, -ETIME);
+    invoke_registered_callbacks(timer->stonith, NULL, timer->call_id, -ETIME);
 
     /* Always return TRUE, never remove the handler
      * We do that in stonith_del_callback()
@@ -994,7 +1021,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
-        stonith_perform_callback(st, blob.xml, 0, 0);
+        invoke_registered_callbacks(st, blob.xml, 0, 0);
 
     } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
@@ -1229,7 +1256,8 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     } else if (call_id < 0) {
         if (!(options & st_opt_report_only_success)) {
             crm_trace("Call failed, calling %s: %s", callback_name, pcmk_strerror(call_id));
-            invoke_callback(stonith, call_id, call_id, user_data, callback);
+            invoke_fence_action_callback(stonith, call_id, call_id, user_data,
+                                         callback);
         } else {
             crm_warn("Fencer call failed: %s", pcmk_strerror(call_id));
         }
