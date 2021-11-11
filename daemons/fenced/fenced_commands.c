@@ -2385,32 +2385,31 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
                  int pid, bool merged)
 {
     xmlNode *reply = NULL;
-    gboolean bcast = FALSE;
+    bool bcast = false;
 
     CRM_CHECK((cmd != NULL) && (result != NULL), return);
 
     reply = construct_async_reply(cmd, result);
 
-    // Only replies for certain actions are broadcast
-    if (pcmk__str_any_of(cmd->action, "metadata", "monitor", "list", "status",
-                         NULL)) {
-        crm_trace("Never broadcast '%s' replies", cmd->action);
+    // If target was also the originator, broadcast fencing results for it
+    if (!stand_alone && pcmk__is_fencing_action(cmd->action)
+        && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei)) {
 
-    } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
-        crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
+        crm_trace("Broadcast '%s' result for %s (target was also originator)",
+                  cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
-        bcast = TRUE;
+        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+        bcast = true;
     }
 
     log_async_result(cmd, result, pid, NULL, merged);
-    crm_log_xml_trace(reply, "Reply");
 
     if (merged) {
         pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
     }
+    crm_log_xml_trace(reply, "Reply");
 
     if (bcast) {
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
 
     } else if (cmd->origin) {
