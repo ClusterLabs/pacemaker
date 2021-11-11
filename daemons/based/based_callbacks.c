@@ -1209,6 +1209,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *current_nodes_digest = NULL;
     char *current_alerts_digest = NULL;
     char *current_status_digest = NULL;
+    int change_section = cib_change_section_nodes | cib_change_section_alerts | cib_change_section_status;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1330,9 +1331,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
-            gboolean change_node_digest = TRUE;
-            gboolean change_alert_digest = TRUE;
-            gboolean change_status_digest= TRUE;
 
             /* Calculate the hash value of the changed section. */
             result_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, result_cib);
@@ -1341,16 +1339,16 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             crm_trace("result-digest %s:%s:%s", result_nodes_digest, result_alerts_digest, result_status_digest);
 
             if (pcmk__str_eq(current_nodes_digest, result_nodes_digest, pcmk__str_none)) {
-                change_node_digest = FALSE;
+                  change_section = change_section ^ cib_change_section_nodes;
             }
             if (pcmk__str_eq(current_alerts_digest, result_alerts_digest, pcmk__str_none)) {
-                change_alert_digest = FALSE;
+                  change_section = change_section ^ cib_change_section_alerts;
             }
             if (pcmk__str_eq(current_status_digest, result_status_digest, pcmk__str_none)) {
-                change_status_digest = FALSE;
+                  change_section = change_section ^ cib_change_section_status;
             }
 
-            if (change_node_digest || change_alert_digest || change_status_digest) {
+            if (change_section) {
                 send_r_notify = TRUE;
             }
             
@@ -1395,7 +1393,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (send_r_notify) {
         const char *origin = crm_element_value(request, F_ORIG);
 
-        cib_replace_notify(origin, the_cib, rc, *cib_diff);
+        cib_replace_notify(origin, the_cib, rc, *cib_diff, change_section);
     }
 
     xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);

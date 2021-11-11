@@ -58,6 +58,7 @@
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
+#  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"

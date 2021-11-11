@@ -67,6 +67,13 @@ enum cib_call_options {
     cib_force_diff      = 0x10000000
 };
 
+enum cib_change_section_info {
+    cib_change_section_none     = 0x00000000,
+    cib_change_section_nodes    = 0x00000001,
+    cib_change_section_alerts   = 0x00000002,
+    cib_change_section_status   = 0x00000004
+};
+
 typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
