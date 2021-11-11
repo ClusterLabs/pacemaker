@@ -2411,15 +2411,8 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
 
     if (bcast) {
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
-
-    } else if (cmd->origin) {
-        crm_trace("Directed reply to %s", cmd->origin);
-        send_cluster_message(crm_get_peer(0, cmd->origin), crm_msg_stonith_ng, reply, FALSE);
-
     } else {
-        crm_trace("Directed local %ssync reply to %s",
-                  (cmd->options & st_opt_sync_call) ? "" : "a-", cmd->client_name);
-        do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
+        stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);
     }
 
     if (stand_alone) {
@@ -2814,16 +2807,28 @@ check_alternate_host(const char *target)
     return alternate_host;
 }
 
+/*!
+ * \internal
+ * \brief Send a reply to a CPG peer or IPC client
+ *
+ * \param[in] reply         XML reply to send
+ * \param[in] call_options  Send synchronously if st_opt_sync_call is set here
+ * \param[in] remote_peer   If not NULL, name of peer node to send CPG reply
+ * \param[in] client_id     If not NULL, name of client to send IPC reply
+ */
 static void
-stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
+stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
                    const char *client_id)
 {
-    if (remote_peer) {
-        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng, reply, FALSE);
-    } else {
+    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client_id != NULL)),
+              return);
+
+    if (remote_peer == NULL) {
         do_local_reply(reply, client_id,
-                       pcmk_is_set(call_options, st_opt_sync_call),
-                       (remote_peer != NULL));
+                       pcmk_is_set(call_options, st_opt_sync_call), FALSE);
+    } else {
+        send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
+                             reply, FALSE);
     }
 }
 
