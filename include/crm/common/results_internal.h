@@ -30,6 +30,21 @@ typedef struct {
     char *action_stderr;    // Action error output
 } pcmk__action_result_t;
 
+/*!
+ * \internal
+ * \brief Static initialization for an action result
+ *
+ * \note Importantly, this ensures pcmk__reset_result() won't try to free
+ *       garbage.
+ */
+#define PCMK__UNKNOWN_RESULT {                  \
+        .exit_status = CRM_EX_OK,               \
+        .execution_status = PCMK_EXEC_UNKNOWN,  \
+        .exit_reason = NULL,                    \
+        .action_stdout = NULL,                  \
+        .action_stderr = NULL,                  \
+    }
+
 void pcmk__set_result(pcmk__action_result_t *result, int exit_status,
                       enum pcmk_exec_status exec_status,
                       const char *exit_reason);

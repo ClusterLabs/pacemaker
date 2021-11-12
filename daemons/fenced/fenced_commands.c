@@ -388,12 +388,7 @@ static void
 report_internal_result(async_command_t *cmd, int exit_status,
                        int execution_status, const char *exit_reason)
 {
-    pcmk__action_result_t result = {
-        // Ensure we don't pass garbage to free()
-        .exit_reason = NULL,
-        .action_stdout = NULL,
-        .action_stderr = NULL
-    };
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     pcmk__set_result(&result, exit_status, execution_status, exit_reason);
     cmd->done_cb(0, &result, cmd);
@@ -2616,12 +2611,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 
     if (device == NULL) { // No device found
-        pcmk__action_result_t result = {
-            // Ensure we don't pass garbage to free()
-            .exit_reason = NULL,
-            .action_stdout = NULL,
-            .action_stderr = NULL
-        };
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
         pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                          "No fence device configured for target");
