@@ -749,7 +749,12 @@ update_remaining_timeout(stonith_action_t * action)
 int
 stonith__result2rc(const pcmk__action_result_t *result)
 {
+    if (pcmk__result_ok(result)) {
+        return pcmk_rc_ok;
+    }
+
     switch (result->execution_status) {
+        case PCMK_EXEC_PENDING:         return EINPROGRESS;
         case PCMK_EXEC_CANCELLED:       return ECANCELED;
         case PCMK_EXEC_TIMEOUT:         return ETIME;
         case PCMK_EXEC_NOT_INSTALLED:   return ENOENT;
@@ -757,11 +762,28 @@ stonith__result2rc(const pcmk__action_result_t *result)
         case PCMK_EXEC_NOT_CONNECTED:   return ENOTCONN;
         case PCMK_EXEC_NO_FENCE_DEVICE: return ENODEV;
         case PCMK_EXEC_NO_SECRETS:      return EACCES;
-        default:                        break;
-    }
 
-    if (pcmk__result_ok(result)) {
-        return pcmk_rc_ok;
+        /* For the fencing API, PCMK_EXEC_INVALID is used with fencer API
+         * operations that don't involve executing an agent (for example,
+         * registering devices). This allows us to use the CRM_EX_* codes in the
+         * exit status for finer-grained responses.
+         */
+        case PCMK_EXEC_INVALID:
+            switch (result->exit_status) {
+                case CRM_EX_INSUFFICIENT_PRIV:  return EACCES;
+                case CRM_EX_PROTOCOL:           return EPROTO;
+
+               /* CRM_EX_EXPIRED is used for orphaned fencing operations left
+                * over from a previous instance of the fencer. For API backward
+                * compatibility, this is mapped to the previously used code for
+                * this case, EHOSTUNREACH.
+                */
+                case CRM_EX_EXPIRED:            return EHOSTUNREACH;
+                default:                        break;
+            }
+
+        default:
+            break;
     }
 
     // Try to provide useful error code based on result's error output
