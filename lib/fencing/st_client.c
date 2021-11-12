@@ -760,7 +760,7 @@ stonith__result2rc(const pcmk__action_result_t *result)
         default:                        break;
     }
 
-    if (result->exit_status == CRM_EX_OK) {
+    if (pcmk__result_ok(result)) {
         return pcmk_rc_ok;
     }
 
@@ -797,7 +797,7 @@ stonith_action_async_done(svc_action_t *svc_action)
 
     log_action(action, action->pid);
 
-    if ((action->result.exit_status != CRM_EX_OK)
+    if (!pcmk__result_ok(&(action->result))
         && update_remaining_timeout(action)) {
 
         int rc = internal_stonith_action_execute(action);

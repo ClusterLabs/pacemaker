@@ -878,7 +878,7 @@ action_complete(svc_action_t * action)
     }
 
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
-        if ((cmd->result.exit_status == PCMK_OCF_OK)
+        if (pcmk__result_ok(&(cmd->result))
             && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
@@ -894,7 +894,7 @@ action_complete(svc_action_t * action)
             if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
 
-            } else if ((cmd->result.exit_status == PCMK_OCF_OK)
+            } else if (pcmk__result_ok(&(cmd->result))
                        && pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
                 goagain = true;
 
@@ -927,12 +927,12 @@ action_complete(svc_action_t * action)
 #if SUPPORT_NAGIOS
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         if (action_matches(cmd, "monitor", 0)
-            && (cmd->result.exit_status == PCMK_OCF_OK)) {
+            && pcmk__result_ok(&(cmd->result))) {
             /* Successfully executed --version for the nagios plugin */
             cmd->result.exit_status = PCMK_OCF_NOT_RUNNING;
 
         } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)
-                   && (cmd->result.exit_status != PCMK_OCF_OK)) {
+                   && !pcmk__result_ok(&(cmd->result))) {
 #ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
@@ -955,7 +955,7 @@ action_complete(svc_action_t * action)
             cmd->start_delay = delay;
             cmd->timeout = timeout_left;
 
-            if (cmd->result.exit_status == PCMK_OCF_OK) {
+            if (pcmk__result_ok(&(cmd->result))) {
                 crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
                           cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
 
@@ -1066,7 +1066,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
                                                          cmd->interval_ms, rc);
 
         // Certain successful actions change the known state of the resource
-        if ((rsc != NULL) && (cmd->result.exit_status == PCMK_OCF_OK)) {
+        if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
             if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
                 rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
             } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {

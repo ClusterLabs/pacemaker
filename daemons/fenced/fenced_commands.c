@@ -1188,8 +1188,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
 
     mainloop_set_trigger(dev->work);
 
-    if ((result->execution_status == PCMK_EXEC_DONE)
-        && (result->exit_status == CRM_EX_OK)) {
+    if (pcmk__result_ok(result)) {
         crm_info("Refreshing target list for %s", dev->id);
         g_list_free_full(dev->targets, free);
         dev->targets = stonith__parse_targets(result->action_stdout);
@@ -2310,15 +2309,14 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
     // Choose log levels appropriately if we have a result
-    if ((result->execution_status == PCMK_EXEC_DONE)
-        && (result->exit_status == CRM_EX_OK))  { // Success
+    if (pcmk__result_ok(result)) {
         log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
         if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
-    } else { // Failure
+    } else {
         log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
         if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
@@ -2482,7 +2480,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     /* The device is ready to do something else now */
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
-        if (!device->verified && (result->exit_status == CRM_EX_OK) &&
+        if (!device->verified && pcmk__result_ok(result) &&
             (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
 
             device->verified = TRUE;
@@ -2491,7 +2489,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
         mainloop_set_trigger(device->work);
     }
 
-    if (result->exit_status == CRM_EX_OK) {
+    if (pcmk__result_ok(result)) {
         GList *iter;
         /* see if there are any required devices left to execute for this op */
         for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
@@ -2523,7 +2521,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
     send_async_reply(cmd, result, pid, false);
 
-    if (result->exit_status != CRM_EX_OK) {
+    if (!pcmk__result_ok(result)) {
         goto done;
     }
 

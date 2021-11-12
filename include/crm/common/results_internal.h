@@ -54,4 +54,20 @@ void pcmk__set_result_output(pcmk__action_result_t *result,
 
 void pcmk__reset_result(pcmk__action_result_t *result);
 
+/*!
+ * \internal
+ * \brief Check whether a result is OK
+ *
+ * \param[in] result
+ *
+ * \return true if the result's exit status is CRM_EX_OK and its
+ *         execution status is PCMK_EXEC_DONE, otherwise false
+ */
+static inline bool
+pcmk__result_ok(const pcmk__action_result_t *result)
+{
+    return (result != NULL) && (result->exit_status == CRM_EX_OK)
+            && (result->execution_status == PCMK_EXEC_DONE);
+}
+
 #endif // PCMK__COMMON_RESULTS_INTERNAL__H
