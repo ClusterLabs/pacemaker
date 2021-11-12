@@ -41,7 +41,7 @@
 
 /* When one fencer queries its peers for devices able to handle a fencing
  * request, each peer will reply with a list of such devices available to it.
- * Each reply will be parsed into a st_query_result_t, with each device's
+ * Each reply will be parsed into a peer_device_info_t, with each device's
  * information kept in a device_properties_t.
  */
 
@@ -72,18 +72,19 @@ typedef struct st_query_result_s {
     int ndevices;
     /* Devices available to this host that are capable of fencing the target */
     GHashTable *devices;
-} st_query_result_t;
+} peer_device_info_t;
 
 GHashTable *stonith_remote_op_list = NULL;
 
-void call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc);
+void call_remote_stonith(remote_fencing_op_t *op, peer_device_info_t *peer,
+                         int rc);
 static void remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup);
 extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                                   int call_options);
 
 static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(const remote_fencing_op_t *op,
-                                const st_query_result_t *chosen_peer);
+                                const peer_device_info_t *chosen_peer);
 
 static gint
 sort_strings(gconstpointer a, gconstpointer b)
@@ -95,7 +96,7 @@ static void
 free_remote_query(gpointer data)
 {
     if (data) {
-        st_query_result_t *query = data;
+        peer_device_info_t *query = data;
 
         crm_trace("Free'ing query result from %s", query->host);
         g_hash_table_destroy(query->devices);
@@ -150,8 +151,8 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
  * \return Number of devices available to peer that were not already executed
  */
 static int
-count_peer_devices(const remote_fencing_op_t *op, const st_query_result_t *peer,
-                   gboolean verified_only)
+count_peer_devices(const remote_fencing_op_t *op,
+                   const peer_device_info_t *peer, gboolean verified_only)
 {
     struct peer_count_data data;
 
@@ -175,7 +176,7 @@ count_peer_devices(const remote_fencing_op_t *op, const st_query_result_t *peer,
  * \return Device properties if found, NULL otherwise
  */
 static device_properties_t *
-find_peer_device(const remote_fencing_op_t *op, const st_query_result_t *peer,
+find_peer_device(const remote_fencing_op_t *op, const peer_device_info_t *peer,
                  const char *device)
 {
     device_properties_t *props = g_hash_table_lookup(peer->devices, device);
@@ -196,7 +197,7 @@ find_peer_device(const remote_fencing_op_t *op, const st_query_result_t *peer,
  * \return TRUE if device was found and marked, FALSE otherwise
  */
 static gboolean
-grab_peer_device(const remote_fencing_op_t *op, st_query_result_t *peer,
+grab_peer_device(const remote_fencing_op_t *op, peer_device_info_t *peer,
                  const char *device, gboolean verified_devices_only)
 {
     device_properties_t *props = find_peer_device(op, peer, device);
@@ -1216,7 +1217,7 @@ enum find_best_peer_options {
     FIND_PEER_VERIFIED_ONLY = 0x0004,
 };
 
-static st_query_result_t *
+static peer_device_info_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
 {
     GList *iter = NULL;
@@ -1227,7 +1228,7 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     }
 
     for (iter = op->query_results; iter != NULL; iter = iter->next) {
-        st_query_result_t *peer = iter->data;
+        peer_device_info_t *peer = iter->data;
 
         crm_trace("Testing result from %s targeting %s with %d device%s: %d %x",
                   peer->host, op->target, peer->ndevices,
@@ -1257,11 +1258,11 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     return NULL;
 }
 
-static st_query_result_t *
+static peer_device_info_t *
 stonith_choose_peer(remote_fencing_op_t * op)
 {
     const char *device = NULL;
-    st_query_result_t *peer = NULL;
+    peer_device_info_t *peer = NULL;
     uint32_t active = fencing_active_peers();
 
     do {
@@ -1317,8 +1318,8 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
-get_device_timeout(const remote_fencing_op_t *op, const st_query_result_t *peer,
-                   const char *device)
+get_device_timeout(const remote_fencing_op_t *op,
+                   const peer_device_info_t *peer, const char *device)
 {
     device_properties_t *props;
 
@@ -1338,7 +1339,7 @@ get_device_timeout(const remote_fencing_op_t *op, const st_query_result_t *peer,
 
 struct timeout_data {
     const remote_fencing_op_t *op;
-    const st_query_result_t *peer;
+    const peer_device_info_t *peer;
     int total_timeout;
 };
 
@@ -1365,7 +1366,7 @@ add_device_timeout(gpointer key, gpointer value, gpointer user_data)
 }
 
 static int
-get_peer_timeout(const remote_fencing_op_t *op, const st_query_result_t *peer)
+get_peer_timeout(const remote_fencing_op_t *op, const peer_device_info_t *peer)
 {
     struct timeout_data timeout;
 
@@ -1380,7 +1381,7 @@ get_peer_timeout(const remote_fencing_op_t *op, const st_query_result_t *peer)
 
 static int
 get_op_total_timeout(const remote_fencing_op_t *op,
-                     const st_query_result_t *chosen_peer)
+                     const peer_device_info_t *chosen_peer)
 {
     int total_timeout = 0;
     stonith_topology_t *tp = find_topology_for_host(op->target);
@@ -1403,7 +1404,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
             }
             for (device_list = tp->levels[i]; device_list; device_list = device_list->next) {
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
-                    const st_query_result_t *peer = iter->data;
+                    const peer_device_info_t *peer = iter->data;
 
                     if (find_peer_device(op, peer, device_list->data)) {
                         total_timeout += get_device_timeout(op, peer,
@@ -1555,7 +1556,7 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 }
 
 void
-call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
+call_remote_stonith(remote_fencing_op_t *op, peer_device_info_t *peer, int rc)
 {
     const char *device = NULL;
     int timeout = op->base_timeout;
@@ -1734,8 +1735,8 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
 static gint
 sort_peers(gconstpointer a, gconstpointer b)
 {
-    const st_query_result_t *peer_a = a;
-    const st_query_result_t *peer_b = b;
+    const peer_device_info_t *peer_a = a;
+    const peer_device_info_t *peer_b = b;
 
     return (peer_b->ndevices - peer_a->ndevices);
 }
@@ -1768,7 +1769,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
         for (device = tp->levels[i]; device; device = device->next) {
             match = NULL;
             for (iter = op->query_results; iter && !match; iter = iter->next) {
-                st_query_result_t *peer = iter->data;
+                peer_device_info_t *peer = iter->data;
 
                 if (skip_target && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
                     continue;
@@ -1850,31 +1851,31 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
  *
  * \param[in]     xml       XML node containing device properties
  * \param[in,out] op        Operation that query and reply relate to
- * \param[in,out] result    Peer's results
+ * \param[in,out] peer      Peer's device information
  * \param[in]     device    ID of device being parsed
  */
 static void
 add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
-                      st_query_result_t *result, const char *device)
+                      peer_device_info_t *peer, const char *device)
 {
     xmlNode *child;
     int verified = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
-    /* Add a new entry to this result's devices list */
+    /* Add a new entry to this peer's devices list */
     CRM_ASSERT(props != NULL);
-    g_hash_table_insert(result->devices, strdup(device), props);
+    g_hash_table_insert(peer->devices, strdup(device), props);
 
     /* Peers with verified (monitored) access will be preferred */
     crm_element_value_int(xml, F_STONITH_DEVICE_VERIFIED, &verified);
     if (verified) {
         crm_trace("Peer %s has confirmed a verified device %s",
-                  result->host, device);
+                  peer->host, device);
         props->verified = TRUE;
     }
 
     /* Parse action-specific device properties */
-    parse_action_specific(xml, result->host, device, op_requested_action(op),
+    parse_action_specific(xml, peer->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
     for (child = pcmk__xml_first_child(xml); child != NULL;
          child = pcmk__xml_next(child)) {
@@ -1883,10 +1884,10 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
          * winds up getting remapped.
          */
         if (pcmk__str_eq(ID(child), "off", pcmk__str_casei)) {
-            parse_action_specific(child, result->host, device, "off",
+            parse_action_specific(child, peer->host, device, "off",
                                   op, st_phase_off, props);
         } else if (pcmk__str_eq(ID(child), "on", pcmk__str_casei)) {
-            parse_action_specific(child, result->host, device, "on",
+            parse_action_specific(child, peer->host, device, "on",
                                   op, st_phase_on, props);
         }
     }
@@ -1903,17 +1904,17 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
  *
  * \return Newly allocated result structure with parsed reply
  */
-static st_query_result_t *
+static peer_device_info_t *
 add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml)
 {
-    st_query_result_t *result = calloc(1, sizeof(st_query_result_t));
+    peer_device_info_t *peer = calloc(1, sizeof(peer_device_info_t));
     xmlNode *child;
 
     // cppcheck seems not to understand the abort logic in CRM_CHECK
     // cppcheck-suppress memleak
-    CRM_CHECK(result != NULL, return NULL);
-    result->host = strdup(host);
-    result->devices = pcmk__strkey_table(free, free);
+    CRM_CHECK(peer != NULL, return NULL);
+    peer->host = strdup(host);
+    peer->devices = pcmk__strkey_table(free, free);
 
     /* Each child element describes one capable device available to the peer */
     for (child = pcmk__xml_first_child(xml); child != NULL;
@@ -1921,17 +1922,17 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
         const char *device = ID(child);
 
         if (device) {
-            add_device_properties(child, op, result, device);
+            add_device_properties(child, op, peer, device);
         }
     }
 
-    result->ndevices = g_hash_table_size(result->devices);
-    CRM_CHECK(ndevices == result->ndevices,
+    peer->ndevices = g_hash_table_size(peer->devices);
+    CRM_CHECK(ndevices == peer->ndevices,
               crm_err("Query claimed to have %d device%s but %d found",
-                      ndevices, pcmk__plural_s(ndevices), result->ndevices));
+                      ndevices, pcmk__plural_s(ndevices), peer->ndevices));
 
-    op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
-    return result;
+    op->query_results = g_list_insert_sorted(op->query_results, peer, sort_peers);
+    return peer;
 }
 
 /*!
@@ -1957,7 +1958,7 @@ process_remote_stonith_query(xmlNode * msg)
     const char *id = NULL;
     const char *host = NULL;
     remote_fencing_op_t *op = NULL;
-    st_query_result_t *result = NULL;
+    peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
 
@@ -1991,7 +1992,7 @@ process_remote_stonith_query(xmlNode * msg)
              op->replies, replies_expected, host,
              op->target, op->action, ndevices, pcmk__plural_s(ndevices), id);
     if (ndevices > 0) {
-        result = add_result(op, host, ndevices, dev);
+        peer = add_result(op, host, ndevices, dev);
     }
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
@@ -2001,7 +2002,7 @@ process_remote_stonith_query(xmlNode * msg)
         if (op->state == st_query && all_topology_devices_found(op)) {
             /* All the query results are in for the topology, start the fencing ops. */
             crm_trace("All topology devices found");
-            call_remote_stonith(op, result, pcmk_ok);
+            call_remote_stonith(op, peer, pcmk_ok);
 
         } else if (have_all_replies) {
             crm_info("All topology query replies have arrived, continuing (%d expected/%d received) ",
@@ -2010,15 +2011,15 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (op->state == st_query) {
-        int nverified = count_peer_devices(op, result, TRUE);
+        int nverified = count_peer_devices(op, peer, TRUE);
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
-        if (result && (host_is_target == FALSE) && nverified) {
+        if ((peer != NULL) && !host_is_target && nverified) {
             /* we have a verified device living on a peer that is not the target */
             crm_trace("Found %d verified device%s",
                       nverified, pcmk__plural_s(nverified));
-            call_remote_stonith(op, result, pcmk_ok);
+            call_remote_stonith(op, peer, pcmk_ok);
 
         } else if (have_all_replies) {
             crm_info("All query replies have arrived, continuing (%d expected/%d received) ",
@@ -2029,10 +2030,10 @@ process_remote_stonith_query(xmlNode * msg)
             crm_trace("Waiting for more peer results before launching fencing operation");
         }
 
-    } else if (result && (op->state == st_done)) {
+    } else if ((peer != NULL) && (op->state == st_done)) {
         crm_info("Discarding query result from %s (%d device%s): "
-                 "Operation is %s", result->host,
-                 result->ndevices, pcmk__plural_s(result->ndevices),
+                 "Operation is %s", peer->host,
+                 peer->ndevices, pcmk__plural_s(peer->ndevices),
                  stonith_op_state_str(op->state));
     }
 
