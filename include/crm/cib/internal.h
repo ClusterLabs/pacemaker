@@ -58,6 +58,7 @@
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
+#  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"
@@ -66,6 +67,14 @@
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
+
+enum cib_change_section_info {
+    cib_change_section_none     = 0x00000000,
+    cib_change_section_nodes    = 0x00000001,
+    cib_change_section_alerts   = 0x00000002,
+    cib_change_section_status   = 0x00000004
+};
+
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
