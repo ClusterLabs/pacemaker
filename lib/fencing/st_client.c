@@ -854,20 +854,23 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
  * \param[in] st        Fencer API connection
  * \param[in] call_id   If positive, call ID of completed fence action, otherwise
  *                      legacy return code for early action failure
- * \param[in] rc        Legacy return code for action result
+ * \param[in] result    Full result for action
  * \param[in] userdata  User data to pass to callback
  * \param[in] callback  Fence action callback to invoke
  */
 static void
-invoke_fence_action_callback(stonith_t *st, int call_id, int rc, void *userdata,
+invoke_fence_action_callback(stonith_t *st, int call_id,
+                             pcmk__action_result_t *result,
+                             void *userdata,
                              void (*callback) (stonith_t *st,
                                                stonith_callback_data_t *data))
 {
     stonith_callback_data_t data = { 0, };
 
     data.call_id = call_id;
-    data.rc = rc;
+    data.rc = pcmk_rc2legacy(stonith__result2rc(result));
     data.userdata = userdata;
+    data.opaque = (void *) result;
 
     callback(st, &data);
 }
@@ -888,7 +891,7 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
 {
     stonith_private_t *private = NULL;
     stonith_callback_client_t *cb_info = NULL;
-    int rc = pcmk_ok;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(stonith != NULL, return);
     CRM_CHECK(stonith->st_private != NULL, return);
@@ -897,20 +900,17 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
 
     if (msg == NULL) {
         // Fencer didn't reply in time
-        rc = -ETIME;
+        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
+                         "Timeout waiting for reply from fencer");
         CRM_LOG_ASSERT(call_id > 0);
 
     } else {
         // We have the fencer reply
-
-        if (crm_element_value_int(msg, F_STONITH_RC, &rc) != 0) {
-            rc = -pcmk_err_generic;
-        }
-
         if ((crm_element_value_int(msg, F_STONITH_CALLID, &call_id) != 0)
             || (call_id <= 0)) {
             crm_log_xml_warn(msg, "Bad fencer reply");
         }
+        stonith__xe_get_result(msg, &result);
     }
 
     if (call_id > 0) {
@@ -919,27 +919,29 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     }
 
     if ((cb_info != NULL) && (cb_info->callback != NULL)
-        && (rc == pcmk_ok || !(cb_info->only_success))) {
+        && (pcmk__result_ok(&result) || !(cb_info->only_success))) {
         crm_trace("Invoking callback %s for call %d",
                   crm_str(cb_info->id), call_id);
-        invoke_fence_action_callback(stonith, call_id, rc, cb_info->user_data,
-                                     cb_info->callback);
+        invoke_fence_action_callback(stonith, call_id, &result,
+                                     cb_info->user_data, cb_info->callback);
 
-    } else if ((private->op_callback == NULL) && (rc != pcmk_ok)) {
-        crm_warn("Fencing action without registered callback failed: %s",
-                 pcmk_strerror(rc));
+    } else if ((private->op_callback == NULL) && !pcmk__result_ok(&result)) {
+        crm_warn("Fencing action without registered callback failed: %d (%s)",
+                 result.exit_status,
+                 pcmk_exec_status_str(result.execution_status));
         crm_log_xml_debug(msg, "Failed fence update");
     }
 
     if (private->op_callback != NULL) {
         crm_trace("Invoking global callback for call %d", call_id);
-        invoke_fence_action_callback(stonith, call_id, rc, NULL,
+        invoke_fence_action_callback(stonith, call_id, &result, NULL,
                                      private->op_callback);
     }
 
     if (cb_info != NULL) {
         stonith_api_del_callback(stonith, call_id, FALSE);
     }
+    pcmk__reset_result(&result);
 }
 
 static gboolean
@@ -1252,14 +1254,18 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     CRM_CHECK(stonith->st_private != NULL, return -EINVAL);
     private = stonith->st_private;
 
-    if (call_id == 0) {
+    if (call_id == 0) { // Add global callback
         private->op_callback = callback;
 
-    } else if (call_id < 0) {
+    } else if (call_id < 0) { // Call failed immediately, so call callback now
         if (!(options & st_opt_report_only_success)) {
+            pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
             crm_trace("Call failed, calling %s: %s", callback_name, pcmk_strerror(call_id));
-            invoke_fence_action_callback(stonith, call_id, call_id, user_data,
-                                         callback);
+            pcmk__set_result(&result, CRM_EX_ERROR,
+                             stonith__legacy2status(call_id), NULL);
+            invoke_fence_action_callback(stonith, call_id, &result,
+                                         user_data, callback);
         } else {
             crm_warn("Fencer call failed: %s", pcmk_strerror(call_id));
         }
@@ -2291,6 +2297,57 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
     }
 
     freeXpathObject(xpath);
+}
+
+/*!
+ * \internal
+ * \brief Return the exit status from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Exit status from callback data
+ */
+int
+stonith__exit_status(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return CRM_EX_ERROR;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->exit_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the execution status from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Execution status from callback data
+ */
+int
+stonith__execution_status(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return PCMK_EXEC_UNKNOWN;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->execution_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the exit reason from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Exit reason from callback data
+ */
+const char *
+stonith__exit_reason(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return NULL;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->exit_reason;
 }
 
 // Deprecated functions kept only for backward API compatibility
