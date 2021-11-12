@@ -133,6 +133,8 @@ typedef struct stonith_event_s
     /*! The name of the client that initiated the action. */
     char *client_origin;
 
+    //! \internal This field should be treated as internal to Pacemaker
+    void *opaque;
 } stonith_event_t;
 
 typedef struct stonith_callback_data_s {
