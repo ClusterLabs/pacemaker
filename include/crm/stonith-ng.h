@@ -135,11 +135,13 @@ typedef struct stonith_event_s
 
 } stonith_event_t;
 
-typedef struct stonith_callback_data_s
-{
+typedef struct stonith_callback_data_s {
     int rc;
     int call_id;
     void *userdata;
+
+    //! \internal This field should be treated as internal to Pacemaker
+    void *opaque;
 } stonith_callback_data_t;
 
 typedef struct stonith_api_operations_s
