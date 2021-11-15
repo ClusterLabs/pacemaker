@@ -273,32 +273,35 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
 static int
 get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
 {
-    if (pe_rsc_is_clone(rsc)) {
-        const char *clone_min = NULL;
+    const char *clone_min = NULL;
+    bool require_all = false;
 
-        clone_min = g_hash_table_lookup(rsc->meta,
-                                        XML_RSC_ATTR_INCARNATION_MIN);
-        if (clone_min != NULL) {
-            int clone_min_int = 0;
+    if (!pe_rsc_is_clone(rsc)) {
+        return 0;
+    }
 
-            pcmk__scan_min_int(clone_min, &clone_min_int, 0);
-            return clone_min_int;
-        }
+    clone_min = g_hash_table_lookup(rsc->meta,
+                                    XML_RSC_ATTR_INCARNATION_MIN);
+    if (clone_min != NULL) {
+        int clone_min_int = 0;
 
-        /* @COMPAT 1.1.13:
-         * require-all=false is deprecated equivalent of clone-min=1
-         */
-        clone_min = crm_element_value(xml, "require-all");
-        if (clone_min != NULL) {
-            pe_warn_once(pe_wo_require_all,
-                         "Support for require-all in ordering constraints "
-                         "is deprecated and will be removed in a future release"
-                         " (use clone-min clone meta-attribute instead)");
-            if (!crm_is_true(clone_min)) {
-                return 1;
-            }
+        pcmk__scan_min_int(clone_min, &clone_min_int, 0);
+        return clone_min_int;
+    }
+
+    /* @COMPAT 1.1.13:
+     * require-all=false is deprecated equivalent of clone-min=1
+     */
+    if (pcmk__xe_get_bool_attr(xml, "require-all", &require_all) != ENODATA) {
+        pe_warn_once(pe_wo_require_all,
+                     "Support for require-all in ordering constraints "
+                     "is deprecated and will be removed in a future release"
+                     " (use clone-min clone meta-attribute instead)");
+        if (!require_all) {
+            return 1;
         }
     }
+
     return 0;
 }
 
