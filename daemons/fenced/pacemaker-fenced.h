@@ -233,9 +233,9 @@ xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
-void do_stonith_notify_device(int options, const char *op, int rc, const char *desc);
-void do_stonith_notify_level(int options, const char *op, int rc, const char *desc);
+void do_stonith_notify(const char *type, int result, xmlNode *data);
+void do_stonith_notify_device(const char *op, int rc, const char *desc);
+void do_stonith_notify_level(const char *op, int rc, const char *desc);
 
 remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
                                                 xmlNode *request,

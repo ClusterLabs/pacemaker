@@ -2428,8 +2428,8 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
 
-        do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data);
-        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
+        do_stonith_notify(T_STONITH_NOTIFY_FENCE, rc, notify_data);
+        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
     }
 
     free_xml(reply);
@@ -3082,7 +3082,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         } else {
             rc = -EACCES;
         }
-        do_stonith_notify_device(call_options, op, rc, device_id);
+        do_stonith_notify_device(op, rc, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
@@ -3093,7 +3093,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         } else {
             rc = -EACCES;
         }
-        do_stonith_notify_device(call_options, op, rc, device_id);
+        do_stonith_notify_device(op, rc, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
         char *device_id = NULL;
@@ -3103,7 +3103,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         } else {
             rc = -EACCES;
         }
-        do_stonith_notify_level(call_options, op, rc, device_id);
+        do_stonith_notify_level(op, rc, device_id);
         free(device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
@@ -3114,7 +3114,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         } else {
             rc = -EACCES;
         }
-        do_stonith_notify_level(call_options, op, rc, device_id);
+        do_stonith_notify_level(op, rc, device_id);
 
     } else if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         int node_id = 0;

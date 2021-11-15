@@ -357,7 +357,7 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
 }
 
 void
-do_stonith_notify(int options, const char *type, int result, xmlNode * data)
+do_stonith_notify(const char *type, int result, xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
@@ -380,7 +380,7 @@ do_stonith_notify(int options, const char *type, int result, xmlNode * data)
 }
 
 static void
-do_stonith_notify_config(int options, const char *op, int rc,
+do_stonith_notify_config(const char *op, int rc,
                          const char *desc, int active)
 {
     xmlNode *notify_data = create_xml_node(NULL, op);
@@ -390,20 +390,20 @@ do_stonith_notify_config(int options, const char *op, int rc,
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
 
-    do_stonith_notify(options, op, rc, notify_data);
+    do_stonith_notify(op, rc, notify_data);
     free_xml(notify_data);
 }
 
 void
-do_stonith_notify_device(int options, const char *op, int rc, const char *desc)
+do_stonith_notify_device(const char *op, int rc, const char *desc)
 {
-    do_stonith_notify_config(options, op, rc, desc, g_hash_table_size(device_list));
+    do_stonith_notify_config(op, rc, desc, g_hash_table_size(device_list));
 }
 
 void
-do_stonith_notify_level(int options, const char *op, int rc, const char *desc)
+do_stonith_notify_level(const char *op, int rc, const char *desc)
 {
-    do_stonith_notify_config(options, op, rc, desc, g_hash_table_size(topology));
+    do_stonith_notify_config(op, rc, desc, g_hash_table_size(topology));
 }
 
 static void
@@ -418,7 +418,7 @@ topology_remove_helper(const char *node, int level)
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
     rc = stonith_level_remove(data, &desc);
-    do_stonith_notify_level(0, STONITH_OP_LEVEL_DEL, rc, desc);
+    do_stonith_notify_level(STONITH_OP_LEVEL_DEL, rc, desc);
 
     free_xml(data);
     free(desc);
@@ -468,7 +468,7 @@ handle_topology_change(xmlNode *match, bool remove)
     }
 
     rc = stonith_level_register(match, &desc);
-    do_stonith_notify_level(0, STONITH_OP_LEVEL_ADD, rc, desc);
+    do_stonith_notify_level(STONITH_OP_LEVEL_ADD, rc, desc);
 
     free(desc);
 }
