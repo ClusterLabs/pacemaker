@@ -1,3 +1,13 @@
+* Mon Nov 15 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2-rc2
+- Changesets: 3
+- Diff: 4 files changed, 4 insertions(+), 2 deletions(-)
+
+- Fixes since Pacemaker-2.1.2-rc1
+  + fencing: mark state as done if remapped "on" times out
+  + executor: avoid memory leak for failed pending op
+    (regression introduced in 2.1.2-rc1)
+  + pkg-config: return correct value for ocfdir (regression introduced in 2.1.0)
+
 * Fri Oct 29 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2-rc1
 - Changesets: 448
 - Diff: 221 files changed, 16502 insertions(+), 11737 deletions(-)
@@ -810,7 +820,7 @@
     compare a node attribute against a resource parameter
   + New "stonith-max-attempts" cluster option to specify how many times
     fencing can fail for a target before the cluster will no longer
-    immediately re-attempt it (previously hard-coded at 10) 
+    immediately re-attempt it (previously hard-coded at 10)
   + New "cluster-ipc-limit" cluster option to avoid IPC client eviction in
     large clusters
   + Failures are now tracked per operation type, as well as per node and
