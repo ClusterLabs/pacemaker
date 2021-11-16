@@ -442,7 +442,7 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
         /* Result is <node_state> tag from <status> section */
 
         parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
-        if (crm_is_true(crm_element_value(result, XML_NODE_IS_REMOTE))) {
+        if (pcmk__xe_attr_is_true(result, XML_NODE_IS_REMOTE)) {
             parsed_is_remote = TRUE;
         }
     }

@@ -2476,7 +2476,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     } else {
         /* remote nodes uuid and uname are equal */
         uuid = node_name;
-        crm_xml_add(iter, XML_NODE_IS_REMOTE, "true");
+        pcmk__xe_set_bool_attr(iter, XML_NODE_IS_REMOTE, true);
     }
 
     CRM_LOG_ASSERT(uuid != NULL);

@@ -89,13 +89,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *attr = getXpathResult(xpathObj, lpc);
         const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-        const char *value = NULL;
 
-        if (pcmk__str_eq(CRM_OP_PROBED, name, pcmk__str_casei)) {
-            value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
-        }
-
-        if (crm_is_true(value) == FALSE) {
+        if (pcmk__str_eq(CRM_OP_PROBED, name, pcmk__str_casei) &&
+            !pcmk__xe_attr_is_true(attr, XML_NVPAIR_ATTR_VALUE)) {
             abort_transition(INFINITY, tg_restart, "Transient attribute: update", attr);
             crm_log_xml_trace(attr, "Abort");
             goto bail;

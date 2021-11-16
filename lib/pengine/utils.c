@@ -778,7 +778,6 @@ unpack_operation_on_fail(pe_action_t * action)
     const char *role = NULL;
     const char *on_fail = NULL;
     const char *interval_spec = NULL;
-    const char *enabled = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
     if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
@@ -798,6 +797,7 @@ unpack_operation_on_fail(pe_action_t * action)
         for (operation = pcmk__xe_first_child(action->rsc->ops_xml);
              (operation != NULL) && (value == NULL);
              operation = pcmk__xe_next(operation)) {
+            bool enabled = false;
 
             if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 continue;
@@ -805,11 +805,10 @@ unpack_operation_on_fail(pe_action_t * action)
             name = crm_element_value(operation, "name");
             role = crm_element_value(operation, "role");
             on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
-            enabled = crm_element_value(operation, "enabled");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             if (!on_fail) {
                 continue;
-            } else if (enabled && !crm_is_true(enabled)) {
+            } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
                 continue;
             } else if (!pcmk__str_eq(name, "monitor", pcmk__str_casei)
                        || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
@@ -854,7 +853,6 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
     const char *name = NULL;
-    const char *value = NULL;
     const char *interval_spec = NULL;
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
@@ -864,10 +862,12 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
          operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            bool enabled = false;
+
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            value = crm_element_value(operation, "enabled");
-            if (!include_disabled && value && crm_is_true(value) == FALSE) {
+            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
+                !enabled) {
                 continue;
             }
 
@@ -1375,7 +1375,6 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
     gboolean do_retry = TRUE;
     char *local_key = NULL;
     const char *name = NULL;
-    const char *value = NULL;
     const char *interval_spec = NULL;
     char *match_key = NULL;
     xmlNode *op = NULL;
@@ -1386,10 +1385,12 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
          operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            bool enabled = false;
+
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            value = crm_element_value(operation, "enabled");
-            if (!include_disabled && value && crm_is_true(value) == FALSE) {
+            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
+                !enabled) {
                 continue;
             }
 

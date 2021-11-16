@@ -377,7 +377,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         }
 
         /* Set sequential="false" for the resource_set */
-        crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
+        pcmk__xe_set_bool_attr(*rsc_set, "sequential", false);
 
     } else if ((rsc != NULL) && convert_rsc) {
         /* Even a regular resource is referenced by "attr", convert it into a resource_set.

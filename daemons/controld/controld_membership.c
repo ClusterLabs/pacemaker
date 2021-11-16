@@ -138,7 +138,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
     if (pcmk_is_set(node->flags, crm_remote_node)) {
-        crm_xml_add(node_state, XML_NODE_IS_REMOTE, XML_BOOLEAN_TRUE);
+        pcmk__xe_set_bool_attr(node_state, XML_NODE_IS_REMOTE, true);
     }
 
     set_uuid(node_state, XML_ATTR_UUID, node);
@@ -152,8 +152,8 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     crm_xml_add(node_state, XML_ATTR_UNAME, node->uname);
 
     if ((flags & node_update_cluster) && node->state) {
-        crm_xml_add_boolean(node_state, XML_NODE_IN_CLUSTER,
-                            pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
+        pcmk__xe_set_bool_attr(node_state, XML_NODE_IN_CLUSTER,
+                               pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
     }
 
     if (!pcmk_is_set(node->flags, crm_remote_node)) {

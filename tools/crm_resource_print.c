@@ -494,15 +494,15 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
-        crm_xml_add(node, "remain_stopped", "true");
+        pcmk__xe_set_bool_attr(node, "remain_stopped", true);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
-        crm_xml_add(node, "promotable", "false");
+        pcmk__xe_set_bool_attr(node, "promotable", false);
     }
 
     if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
-        crm_xml_add(node, "unmanaged", "true");
+        pcmk__xe_set_bool_attr(node, "unmanaged", true);
     }
 
     if (checks->lock_node) {

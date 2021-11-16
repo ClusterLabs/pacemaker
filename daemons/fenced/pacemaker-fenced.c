@@ -619,16 +619,15 @@ static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
     xmlNode *stonith_enabled_xml = NULL;
-    const char *stonith_enabled_s = NULL;
+    bool stonith_enabled = false;
+    int rc = pcmk_rc_ok;
     long timeout_ms = 0;
 
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
                                            cib, LOG_NEVER);
-    if (stonith_enabled_xml) {
-        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
-    }
+    rc = pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &stonith_enabled);
 
-    if (stonith_enabled_s == NULL || crm_is_true(stonith_enabled_s)) {
+    if (rc != pcmk_rc_ok || stonith_enabled) {
         xmlNode *stonith_watchdog_xml = NULL;
         const char *value = NULL;
 
@@ -1115,10 +1114,10 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
     xmlNode *stonith_enabled_xml = NULL;
-    const char *stonith_enabled_s = NULL;
     static gboolean stonith_enabled_saved = TRUE;
     long timeout_ms_saved = stonith_watchdog_timeout_ms;
     gboolean need_full_refresh = FALSE;
+    bool value = false;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1177,11 +1176,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
                                            local_cib, LOG_NEVER);
-    if (stonith_enabled_xml) {
-        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
-    }
-
-    if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
+    if (pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &value) == pcmk_rc_ok && !value) {
         crm_trace("Ignoring CIB updates while fencing is disabled");
         stonith_enabled_saved = FALSE;
 

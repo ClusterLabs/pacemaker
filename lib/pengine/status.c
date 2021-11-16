@@ -76,7 +76,6 @@ cluster_status(pe_working_set_t * data_set)
     xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
     xmlNode *cib_tags = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
                                          LOG_NEVER);
-    const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 
     crm_trace("Beginning unpack");
 
@@ -96,7 +95,7 @@ cluster_status(pe_working_set_t * data_set)
                                                    XML_ATTR_DC_UUID);
     }
 
-    if (crm_is_true(value)) {
+    if (pcmk__xe_attr_is_true(data_set->input, XML_ATTR_HAVE_QUORUM)) {
         pe__set_working_set_flags(data_set, pe_flag_have_quorum);
     } else {
         pe__clear_working_set_flags(data_set, pe_flag_have_quorum);

@@ -2437,7 +2437,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (rsc == NULL) {
-        crm_xml_add(node, "orphan", "true");
+        pcmk__xe_set_bool_attr(node, "orphan", true);
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->migration_threshold);
 

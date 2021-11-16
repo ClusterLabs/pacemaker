@@ -722,16 +722,19 @@ static enum crmd_fsa_input
 handle_remote_state(xmlNode *msg)
 {
     const char *remote_uname = ID(msg);
-    const char *remote_is_up = crm_element_value(msg, XML_NODE_IN_CLUSTER);
     crm_node_t *remote_peer;
+    bool remote_is_up = false;
+    int rc = pcmk_rc_ok;
 
-    CRM_CHECK(remote_uname && remote_is_up, return I_NULL);
+    rc = pcmk__xe_get_bool_attr(msg, XML_NODE_IN_CLUSTER, &remote_is_up);
+
+    CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
     remote_peer = crm_remote_peer_get(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
     pcmk__update_peer_state(__func__, remote_peer,
-                            crm_is_true(remote_is_up)? CRM_NODE_MEMBER : CRM_NODE_LOST,
+                            remote_is_up ? CRM_NODE_MEMBER : CRM_NODE_LOST,
                             0);
     return I_NULL;
 }
@@ -833,7 +836,7 @@ handle_node_info_request(xmlNode *msg)
     crm_xml_add(reply, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    crm_xml_add_boolean(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
     // Check whether client requested node info by ID and/or name
     crm_element_value_int(msg, XML_ATTR_ID, &node_id);
@@ -853,8 +856,8 @@ handle_node_info_request(xmlNode *msg)
         crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
         crm_xml_add(reply, XML_ATTR_UNAME, node->uname);
         crm_xml_add(reply, XML_NODE_IS_PEER, node->state);
-        crm_xml_add_boolean(reply, XML_NODE_IS_REMOTE,
-                            node->flags & crm_remote_node);
+        pcmk__xe_set_bool_attr(reply, XML_NODE_IS_REMOTE,
+                               pcmk_is_set(node->flags, crm_remote_node));
     }
 
     // Send reply
@@ -1271,7 +1274,7 @@ send_remote_state_message(const char *node_name, gboolean node_up)
         crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
                  fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
         crm_xml_add(msg, XML_ATTR_ID, node_name);
-        crm_xml_add_boolean(msg, XML_NODE_IN_CLUSTER, node_up);
+        pcmk__xe_set_bool_attr(msg, XML_NODE_IN_CLUSTER, node_up);
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, msg,
                              TRUE);
         free_xml(msg);
