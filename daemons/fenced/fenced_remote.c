@@ -608,7 +608,7 @@ remote_op_timeout_one(gpointer userdata)
 
     crm_notice("Peer's '%s' action targeting %s for client %s timed out " CRM_XS
                " id=%.8s", op->action, op->target, op->client_name, op->id);
-    call_remote_stonith(op, NULL, pcmk_ok);
+    call_remote_stonith(op, NULL, -ETIME);
     return FALSE;
 }
 
