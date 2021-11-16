@@ -940,7 +940,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             migrate_op = possible_matches->data;
         }
 
-        CRM_CHECK(next != NULL,);
+        CRM_CHECK(next != NULL,;);
         if (next == NULL) {
         } else if ((migrate_op != NULL) && (current != NULL)
                    && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
