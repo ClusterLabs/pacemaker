@@ -634,6 +634,7 @@ remote_op_timeout(gpointer userdata)
          * "off" phase completed successfully, so quit trying any further
          * devices, and return success.
          */
+        op->state = st_done;
         remote_op_done(op, NULL, pcmk_ok, FALSE);
         return FALSE;
     }

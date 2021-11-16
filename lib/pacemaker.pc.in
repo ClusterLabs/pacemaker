@@ -16,7 +16,7 @@ features=@PCMK_FEATURES@
 configdir=@CRM_CONFIG_DIR@
 schemadir=@CRM_SCHEMA_DIRECTORY@
 penginedir=@PE_STATE_DIR@
-ocfdir=@OCF_RA_DIR@
+ocfdir=@OCF_RA_INSTALL_DIR@
 
 Name:             lib${sub}
 URL:              @PACKAGE_URL@
