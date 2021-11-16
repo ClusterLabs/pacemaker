@@ -2883,6 +2883,32 @@ remove_relay_op(xmlNode * request)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether an API request was sent by a privileged user
+ *
+ * API commands related to fencing configuration may be done only by privileged
+ * IPC users (i.e. root or hacluster), because all other users should go through
+ * the CIB to have ACLs applied. If no client was given, this is a peer request,
+ * which is always allowed.
+ *
+ * \param[in] c   IPC client that sent request (or NULL if sent by CPG peer)
+ * \param[in] op  Requested API operation (for logging only)
+ *
+ * \return true if sender is peer or privileged client, otherwise false
+ */
+static inline bool
+is_privileged(pcmk__client_t *c, const char *op)
+{
+    if ((c == NULL) || pcmk_is_set(c->flags, pcmk__client_privileged)) {
+        return true;
+    } else {
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 crm_str(op), pcmk__client_name(c));
+        return false;
+    }
+}
+
 static void
 handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                xmlNode *request, const char *remote_peer)
@@ -2897,15 +2923,6 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
-
-    /* IPC commands related to fencing configuration may be done only by
-     * privileged users (i.e. root or hacluster), because all other users should
-     * go through the CIB to have ACLs applied.
-     *
-     * If no client was given, this is a peer request, which is always allowed.
-     */
-    bool allowed = (client == NULL)
-                   || pcmk_is_set(client->flags, pcmk__client_privileged);
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
@@ -3077,7 +3094,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
         const char *device_id = NULL;
 
-        if (allowed) {
+        if (is_privileged(client, op)) {
             rc = stonith_device_register(request, &device_id, FALSE);
         } else {
             rc = -EACCES;
@@ -3088,7 +3105,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
         const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
-        if (allowed) {
+        if (is_privileged(client, op)) {
             rc = stonith_device_remove(device_id, FALSE);
         } else {
             rc = -EACCES;
@@ -3098,7 +3115,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
         char *device_id = NULL;
 
-        if (allowed) {
+        if (is_privileged(client, op)) {
             rc = stonith_level_register(request, &device_id);
         } else {
             rc = -EACCES;
@@ -3109,7 +3126,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
         char *device_id = NULL;
 
-        if (allowed) {
+        if (is_privileged(client, op)) {
             rc = stonith_level_remove(request, &device_id);
         } else {
             rc = -EACCES;
@@ -3133,14 +3150,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     }
 
 done:
-    if (rc == -EACCES) {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 crm_str(op), pcmk__client_name(client));
-    }
-
     // Reply if result is known
     if (need_reply) {
-
         if (pcmk_is_set(call_options, st_opt_sync_call)) {
             CRM_ASSERT(client == NULL || client->request_id == id);
         }
