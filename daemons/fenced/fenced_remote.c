@@ -612,19 +612,17 @@ remote_op_timeout_one(gpointer userdata)
     return FALSE;
 }
 
-static gboolean
-remote_op_timeout(gpointer userdata)
+/*!
+ * \internal
+ * \brief Finalize a remote fencer operation that timed out
+ *
+ * \param[in] op      Fencer operation that timed out
+ */
+static void
+finalize_timed_out_op(remote_fencing_op_t *op)
 {
-    remote_fencing_op_t *op = userdata;
 
     op->op_timer_total = 0;
-
-    if (op->state == st_done) {
-        crm_debug("Action '%s' targeting %s for client %s already completed "
-                  CRM_XS " id=%.8s",
-                  op->action, op->target, op->client_name, op->id);
-        return FALSE;
-    }
 
     crm_debug("Action '%s' targeting %s for client %s timed out "
               CRM_XS " id=%.8s",
@@ -637,14 +635,35 @@ remote_op_timeout(gpointer userdata)
          */
         op->state = st_done;
         remote_op_done(op, NULL, pcmk_ok, FALSE);
-        return FALSE;
+        return;
     }
 
     op->state = st_failed;
 
     remote_op_done(op, NULL, -ETIME, FALSE);
+}
 
-    return FALSE;
+/*!
+ * \internal
+ * \brief Finalize a remote fencer operation that timed out
+ *
+ * \param[in] userdata  Fencer operation that timed out
+ *
+ * \return G_SOURCE_REMOVE (which tells glib not to restart timer)
+ */
+static gboolean
+remote_op_timeout(gpointer userdata)
+{
+    remote_fencing_op_t *op = userdata;
+
+    if (op->state == st_done) {
+        crm_debug("Action '%s' targeting %s for client %s already completed "
+                  CRM_XS " id=%.8s",
+                  op->action, op->target, op->client_name, op->id);
+    } else {
+        finalize_timed_out_op(userdata);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -670,7 +689,7 @@ remote_op_query_timeout(gpointer data)
             g_source_remove(op->op_timer_total);
             op->op_timer_total = 0;
         }
-        remote_op_timeout(op);
+        finalize_timed_out_op(op);
     }
 
     return FALSE;
@@ -1675,8 +1694,8 @@ call_remote_stonith(remote_fencing_op_t *op, peer_device_info_t *peer, int rc)
         crm_info("No remaining peers capable of fencing (%s) %s for client %s "
                  CRM_XS " state=%s", op->action, op->target, op->client_name,
                  stonith_op_state_str(op->state));
-        CRM_LOG_ASSERT(op->state < st_done);
-        remote_op_timeout(op);
+        CRM_CHECK(op->state < st_done, return);
+        finalize_timed_out_op(op);
 
     } else if(op->replies >= op->replies_expected || op->replies >= fencing_active_peers()) {
 //        int rc = -EHOSTUNREACH;
