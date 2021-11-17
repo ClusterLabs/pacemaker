@@ -8,10 +8,11 @@
 #
 
 SUBDIRS = \
+	acl			\
 	agents		\
 	cmdline		\
 	flags		\
-	io		\
+	io			\
 	iso8601		\
 	nvpair 		\
 	operations	\
