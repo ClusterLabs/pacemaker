@@ -224,17 +224,25 @@ attrd_cib_disconnect()
 void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
+    int change_section = cib_change_section_nodes | cib_change_section_status | cib_change_section_alerts;
+
     if (attrd_requesting_shutdown() || attrd_shutting_down()) {
         return;
     }
 
+    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
+
     if (attrd_election_won()) {
-        crm_notice("Updating all attributes after %s event", event);
-        write_attributes(TRUE, FALSE);
+        if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
+            crm_notice("Updating all attributes after %s event", event);
+            write_attributes(TRUE, FALSE);
+        }
     }
 
-    // Check for changes in alerts
-    mainloop_set_trigger(attrd_config_read);
+    if (change_section & cib_change_section_alerts) {
+        // Check for changes in alerts
+        mainloop_set_trigger(attrd_config_read);
+    }
 }
 
 /* strlen("value") */
