@@ -208,7 +208,6 @@ enum pcmk__acl_render_how {
  * \param[in] annotated_doc pcmk_acl_evaled_as_namespaces annotated XML
  * \param[in] how           render kind, see #pcmk__acl_render_how enumeration
  * \param[out] doc_txt_ptr  where to put the final outcome string
- * \param[out] doc_txt_len  length of the output string \p doc_txt_ptr
  * \return 0 or -1, see \c xsltSaveResultToString
  *
  * \note Currently, the function did not receive enough of testing regarding
@@ -216,7 +215,7 @@ enum pcmk__acl_render_how {
  *       than short-lived processes at this time.
  */
 int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
-                            xmlChar **doc_txt_ptr, int *doc_txt_len);
+                            xmlChar **doc_txt_ptr);
 
 /*!
  * \internal

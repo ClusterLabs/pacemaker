@@ -25,7 +25,6 @@
 #  include <libxslt/xsltutils.h>
 #endif
 
-#include <crm/compatibility.h>  /* PCMK_COMPAT_ACL_2_* */
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -904,22 +903,17 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
 }
 
 int
-pcmk_acl_evaled_as_namespaces(enum pcmk_acl_cred_type cred_type,
-                              const char *cred, xmlDoc *cib_doc,
+pcmk_acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
                               xmlDoc **acl_evaled_doc)
 {
-    /* XXX requires prior crm_xml_init */
-
     int ret, version;
     xmlNode *target, *comment;
     char comment_buf[256] = "access as evaluated for user ";
     const char *validation;
 
-    CRM_CHECK(cred != NULL, return -1);
-    CRM_CHECK(cib_doc != NULL, return -1);
-    CRM_CHECK(acl_evaled_doc != NULL, return -1);
-    /* XXX no proper support for groups yet */
-    CRM_CHECK(cred_type == PCMK_ACL_CRED_USER, return -2);
+    CRM_CHECK(cred != NULL, return EINVAL);
+    CRM_CHECK(cib_doc != NULL, return EINVAL);
+    CRM_CHECK(acl_evaled_doc != NULL, return EINVAL);
 
     if (!pcmk_acl_required(cred)) {
         /* nothing to evaluate */
@@ -931,10 +925,7 @@ pcmk_acl_evaled_as_namespaces(enum pcmk_acl_cred_type cred_type,
     validation = crm_element_value(xmlDocGetRootElement(cib_doc),
                                    XML_ATTR_VALIDATION);
     version = get_schema_version(validation);
-    if (get_schema_version(PCMK_COMPAT_ACL_2_MIN_INCL) > version
-            || (-1 != get_schema_version(PCMK_COMPAT_ACL_2_MAX_EXCL)
-                    && get_schema_version(PCMK_COMPAT_ACL_2_MAX_EXCL)
-                        <= version)) {
+    if (get_schema_version(PCMK_COMPAT_ACL_2_MIN_INCL) > version) {
         return -3;
     }
 
@@ -1040,7 +1031,7 @@ parse_params(xmlDoc *doc, const char **fallback)
 
 int
 pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
-                        xmlChar **doc_txt_ptr, int *doc_txt_len)
+                        xmlChar **doc_txt_ptr)
 {
 #if HAVE_LIBXSLT
     xmlDoc *xslt_doc;
@@ -1139,10 +1130,16 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
 
     if (res == NULL) {
-        ret = -1;
+        ret = EINVAL;
     } else {
-        ret = xsltSaveResultToString(doc_txt_ptr, doc_txt_len, res, xslt);
+        int doc_txt_len;
+        int temp = xsltSaveResultToString(doc_txt_ptr, &doc_txt_len, res, xslt);
         xmlFreeDoc(res);
+        if (temp == 0) {
+            ret = pcmk_rc_ok;
+        } else {
+            ret = EINVAL;
+        }
     }
     xsltFreeStylesheet(xslt);
     return ret;
