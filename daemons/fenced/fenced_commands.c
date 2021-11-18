@@ -2626,37 +2626,49 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     }
 }
 
-static int
-stonith_fence(xmlNode * msg)
+/*!
+ * \internal
+ * \brief Execute a fence action via the local node
+ *
+ * \param[in]  msg     Fencing request
+ * \param[out] result  Where to store result of fence action
+ */
+static void
+fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 {
     const char *device_id = NULL;
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg);
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
 
+    CRM_CHECK(result != NULL, return);
+
     if (cmd == NULL) {
-        return -EPROTO;
+        fenced_set_protocol_error(result);
+        return;
     }
 
     device_id = crm_element_value(dev, F_STONITH_DEVICE);
-    if (device_id) {
+    if (device_id != NULL) {
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
-            return -ENODEV;
+            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                             "Requested fence device not found");
+            return;
         }
         schedule_stonith_command(cmd, device);
 
     } else {
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
 
-        if (cmd->options & st_opt_cs_nodeid) {
-            int nodeid;
-            crm_node_t *node;
+        if (pcmk_is_set(cmd->options, st_opt_cs_nodeid)) {
+            int nodeid = 0;
+            crm_node_t *node = NULL;
 
             pcmk__scan_min_int(host, &nodeid, 0);
             node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
-            if (node) {
+            if (node != NULL) {
                 host = node->uname;
             }
         }
@@ -2666,7 +2678,7 @@ stonith_fence(xmlNode * msg)
                             TRUE, cmd, stonith_fence_get_devices_cb);
     }
 
-    return -EINPROGRESS;
+    pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
 }
 
 xmlNode *
@@ -3016,9 +3028,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         }
 
     } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
-
-        if (remote_peer || stand_alone) {
-            rc = stonith_fence(request);
+        if ((remote_peer != NULL) || stand_alone) {
+            fence_locally(request, &result);
+            rc = pcmk_rc2legacy(stonith__result2rc(&result));
 
         } else if (pcmk_is_set(call_options, st_opt_manual_ack)) {
             switch (fenced_handle_manual_confirmation(client, request)) {
