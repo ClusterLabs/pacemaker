@@ -3012,14 +3012,18 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         if (remote_peer || stand_alone) {
             rc = stonith_fence(request);
 
-        } else if (call_options & st_opt_manual_ack) {
-            remote_fencing_op_t *rop = NULL;
-            xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
-            const char *target = crm_element_value(dev, F_STONITH_TARGET);
-
-            crm_notice("Received manual confirmation that %s is fenced", target);
-            rop = initiate_remote_stonith_op(client, request, TRUE);
-            rc = stonith_manual_ack(request, rop);
+        } else if (pcmk_is_set(call_options, st_opt_manual_ack)) {
+            switch (fenced_handle_manual_confirmation(client, request)) {
+                case pcmk_rc_ok:
+                    rc = pcmk_ok;
+                    break;
+                case EINPROGRESS:
+                    rc = -EINPROGRESS;
+                    break;
+                default:
+                    rc = -EPROTO;
+                    break;
+            }
 
         } else {
             const char *alternate_host = NULL;

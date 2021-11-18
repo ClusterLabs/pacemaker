@@ -256,7 +256,7 @@ bool fencing_peer_active(crm_node_t *peer);
 
 void set_fencing_completed(remote_fencing_op_t * op);
 
-int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
+int fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 

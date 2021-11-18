@@ -1003,22 +1003,41 @@ static uint32_t fencing_active_peers(void)
     return count;
 }
 
+/*!
+ * \internal
+ * \brief Process a manual confirmation of a pending fence action
+ *
+ * \param[in]  client  IPC client that sent confirmation
+ * \param[in]  msg     Request XML with manual confirmation
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
+fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
 {
+    remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
 
+    CRM_CHECK(dev != NULL, return EPROTO);
+
+    crm_notice("Received manual confirmation that %s has been fenced",
+               crm_str(crm_element_value(dev, F_STONITH_TARGET)));
+    op = initiate_remote_stonith_op(client, msg, TRUE);
+    if (op == NULL) {
+        return EPROTO;
+    }
     op->state = st_done;
     set_fencing_completed(op);
     op->delegate = strdup("a human");
 
-    crm_notice("Injecting manual confirmation that %s is safely off/down",
-               crm_element_value(dev, F_STONITH_TARGET));
+    // For the fencer's purposes, the fencing operation is done
 
     remote_op_done(op, msg, pcmk_ok, FALSE);
 
-    // Replies are sent via done_cb -> send_async_reply() -> do_local_reply()
-    return -EINPROGRESS;
+    /* For the requester's purposes, the operation is still pending. The
+     * actual result will be sent asynchronously via the operation's done_cb().
+     */
+    return EINPROGRESS;
 }
 
 /*!
