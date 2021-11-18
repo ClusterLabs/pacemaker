@@ -1729,23 +1729,6 @@ stonith_level_remove(xmlNode *msg, char **desc)
     return pcmk_ok;
 }
 
-/*!
- * \internal
- * \brief Schedule an (asynchronous) action directly on a stonith device
- *
- * Handle a STONITH_OP_EXEC API message by scheduling a requested agent action
- * directly on a specified device. Only list, monitor, and status actions are
- * expected to use this call, though it should work with any agent command.
- *
- * \param[in]  msg     API message XML with desired action
- * \param[out] output  Unused
- *
- * \return -EINPROGRESS on success, -errno otherwise
- * \note If the action is monitor, the device must be registered via the API
- *       (CIB registration is not sufficient), because monitor should not be
- *       possible unless the device is "started" (API registered).
- */
-
 static char *
 list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
 {
@@ -1778,8 +1761,23 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
     return rv;
 }
 
-static int
-stonith_device_action(xmlNode * msg, char **output)
+/*!
+ * \internal
+ * \brief Execute a fence agent action directly (and asynchronously)
+ *
+ * Handle a STONITH_OP_EXEC API message by scheduling a requested agent action
+ * directly on a specified device. Only list, monitor, and status actions are
+ * expected to use this call, though it should work with any agent command.
+ *
+ * \param[in]  msg     Request XML specifying action
+ * \param[out] result  Where to store result of action
+ *
+ * \note If the action is monitor, the device must be registered via the API
+ *       (CIB registration is not sufficient), because monitor should not be
+ *       possible unless the device is "started" (API registered).
+ */
+static void
+execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 {
     xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
     xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
@@ -1792,39 +1790,56 @@ stonith_device_action(xmlNode * msg, char **output)
         crm_info("Malformed API action request: device %s, action %s",
                  (id? id : "not specified"),
                  (action? action : "not specified"));
-        return -EPROTO;
+        fenced_set_protocol_error(result);
+        return;
     }
 
     if (pcmk__str_eq(id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+        // Watchdog agent actions are implemented internally
         if (stonith_watchdog_timeout_ms <= 0) {
-            return -ENODEV;
-        } else {
-            if (pcmk__str_eq(action, "list", pcmk__str_casei)) {
-                *output = list_to_string(stonith_watchdog_targets, "\n", TRUE);
-                return pcmk_ok;
-            } else if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-                return pcmk_ok;
-            }
+            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                             "Watchdog fence device not configured");
+            return;
+
+        } else if (pcmk__str_eq(action, "list", pcmk__str_casei)) {
+            pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+            pcmk__set_result_output(result,
+                                    list_to_string(stonith_watchdog_targets,
+                                                   "\n", TRUE),
+                                    NULL);
+            return;
+
+        } else if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+            pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+            return;
         }
     }
 
     device = g_hash_table_lookup(device_list, id);
-    if ((device == NULL)
-        || (!device->api_registered && !strcmp(action, "monitor"))) {
-
-        // Monitors may run only on "started" (API-registered) devices
+    if (device == NULL) {
         crm_info("Ignoring API '%s' action request because device %s not found",
                  action, id);
-        return -ENODEV;
+        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                         NULL);
+        return;
+
+    } else if (!device->api_registered && !strcmp(action, "monitor")) {
+        // Monitors may run only on "started" (API-registered) devices
+        crm_info("Ignoring API '%s' action request because device %s not active",
+                 action, id);
+        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                         "Fence device not active");
+        return;
     }
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
-        return -EPROTO;
+        fenced_set_protocol_error(result);
+        return;
     }
 
     schedule_stonith_command(cmd, device);
-    return -EINPROGRESS;
+    pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
 }
 
 static void
@@ -2911,8 +2926,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     xmlNode *data = NULL;
     bool need_reply = true;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-    char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
@@ -2935,8 +2950,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         need_reply = false;
 
     } else if (pcmk__str_eq(op, STONITH_OP_EXEC, pcmk__str_none)) {
-        rc = stonith_device_action(request, &output);
-        need_reply = (rc != -EINPROGRESS);
+        execute_agent_action(request, &result);
+        need_reply = (result.execution_status != PCMK_EXEC_PENDING);
+        rc = pcmk_rc2legacy(stonith__result2rc(&result));
 
     } else if (pcmk__str_eq(op, STONITH_OP_TIMEOUT_UPDATE, pcmk__str_none)) {
         const char *call_id = crm_element_value(request, F_STONITH_CALLID);
@@ -3150,19 +3166,20 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 done:
     // Reply if result is known
     if (need_reply) {
-        xmlNode *reply = stonith_construct_reply(request, output, data, rc);
+        xmlNode *reply = stonith_construct_reply(request, result.action_stdout, data, rc);
 
         stonith_send_reply(reply, call_options, remote_peer, client_id);
         free_xml(reply);
     }
 
-    free(output);
     free_xml(data);
 
     crm_debug("Processed %s request from %s %s: %s (rc=%d)",
               op, ((client == NULL)? "peer" : "client"),
               ((client == NULL)? remote_peer : pcmk__client_name(client)),
               ((rc > 0)? "" : pcmk_strerror(rc)), rc);
+
+    pcmk__reset_result(&result);
 }
 
 static void
