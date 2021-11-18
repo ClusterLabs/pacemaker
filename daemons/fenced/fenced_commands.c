@@ -2917,7 +2917,6 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     int rc = -EOPNOTSUPP;
 
     xmlNode *data = NULL;
-    xmlNode *reply = NULL;
     bool need_reply = true;
 
     char *output = NULL;
@@ -2926,8 +2925,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
-    if (pcmk_is_set(call_options, st_opt_sync_call)) {
-        CRM_ASSERT(client == NULL || client->request_id == id);
+    if (pcmk_is_set(call_options, st_opt_sync_call) && (client != NULL)) {
+        CRM_ASSERT(client->request_id == id);
     }
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
@@ -3156,16 +3155,14 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 done:
     // Reply if result is known
     if (need_reply) {
-        if (pcmk_is_set(call_options, st_opt_sync_call)) {
-            CRM_ASSERT(client == NULL || client->request_id == id);
-        }
-        reply = stonith_construct_reply(request, output, data, rc);
+        xmlNode *reply = stonith_construct_reply(request, output, data, rc);
+
         stonith_send_reply(reply, call_options, remote_peer, client_id);
+        free_xml(reply);
     }
 
     free(output);
     free_xml(data);
-    free_xml(reply);
 
     crm_debug("Processed %s request from %s %s: %s (rc=%d)",
               op, ((client == NULL)? "peer" : "client"),
