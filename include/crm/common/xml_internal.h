@@ -186,37 +186,6 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
 
-enum pcmk__acl_render_how {
-    pcmk__acl_render_ns_simple = 1,
-    pcmk__acl_render_text,
-    pcmk__acl_render_color,
-};
-
-/*!
- * \internal
- * \brief Serialize-render already pcmk_acl_evaled_as_namespaces annotated XML
- *
- * This function is vitally coupled with externalized material:
- * - access-render-2.xsl
- *
- * In fact, it's just a wrapper for a graceful conducting of such
- * transformation, in particular, it cares about converting values of some
- * configuration parameters directly in said stylesheet since the desired
- * ANSI colors at the output are not expressible directly (alternative approach
- * to this preprocessing: eventual postprocessing, which is less handy here).
- *
- * \param[in] annotated_doc pcmk_acl_evaled_as_namespaces annotated XML
- * \param[in] how           render kind, see #pcmk__acl_render_how enumeration
- * \param[out] doc_txt_ptr  where to put the final outcome string
- * \return 0 or -1, see \c xsltSaveResultToString
- *
- * \note Currently, the function did not receive enough of testing regarding
- *       leak of resources, hence it is not recommended for anything other
- *       than short-lived processes at this time.
- */
-int pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how,
-                            xmlChar **doc_txt_ptr);
-
 /*!
  * \internal
  * \brief Return first non-text child node of an XML node

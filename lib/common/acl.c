@@ -32,6 +32,8 @@
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
+#include <pcmki/pcmki_acl.h>
+
 #define MAX_XPATH_LEN	4096
 
 typedef struct xml_acl_s {
@@ -903,7 +905,7 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
 }
 
 int
-pcmk_acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
+pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
                               xmlDoc **acl_evaled_doc)
 {
     int ret, version;
@@ -925,8 +927,8 @@ pcmk_acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     validation = crm_element_value(xmlDocGetRootElement(cib_doc),
                                    XML_ATTR_VALIDATION);
     version = get_schema_version(validation);
-    if (get_schema_version(PCMK_COMPAT_ACL_2_MIN_INCL) > version) {
-        return -3;
+    if (get_schema_version(PCMK__COMPAT_ACL_2_MIN_INCL) > version) {
+        return pcmk_rc_schema_validation;
     }
 
     target = copy_xml(xmlDocGetRootElement(cib_doc));
