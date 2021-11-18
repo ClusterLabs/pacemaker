@@ -38,7 +38,7 @@ typedef struct pcmk_child_s {
     bool active_before_startup;
 } pcmk_child_t;
 
-#define PCMK_PROCESS_CHECK_INTERVAL 5
+#define PCMK_PROCESS_CHECK_INTERVAL 1
 #define SHUTDOWN_ESCALATION_PERIOD 180000  /* 3m */
 
 /* Index into the array below */
@@ -82,6 +82,7 @@ static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 
 crm_trigger_t *shutdown_trigger = NULL;
 crm_trigger_t *startup_trigger = NULL;
+time_t subdaemon_check_progress = 0;
 
 /* When contacted via pacemakerd-api by a client having sbd in
  * the name we assume it is sbd-daemon which wants to know
@@ -103,7 +104,6 @@ gboolean running_with_sbd = FALSE; /* local copy */
 GMainLoop *mainloop = NULL;
 
 static gboolean fatal_error = FALSE;
-static bool global_keep_tracking = false;
 
 static gboolean check_active_before_startup_processes(gpointer user_data);
 static int child_liveness(pcmk_child_t *child);
@@ -127,44 +127,42 @@ pcmkd_cluster_connected(void)
 static gboolean
 check_active_before_startup_processes(gpointer user_data)
 {
-    gboolean keep_tracking = FALSE;
+    static int next_child = 0;
+    int rc = child_liveness(&pcmk_children[next_child]);
 
-    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (!pcmk_children[i].active_before_startup) {
-            /* we are already tracking it as a child process. */
-            continue;
-        } else {
-            int rc = child_liveness(&pcmk_children[i]);
-
-            switch (rc) {
-                case pcmk_rc_ok:
-                    break;
-                case pcmk_rc_ipc_unresponsive:
-                case pcmk_rc_ipc_pid_only: // This case: it was previously OK
-                    if (pcmk_children[i].respawn) {
-                        crm_err("%s[%lld] terminated%s", pcmk_children[i].name,
-                                (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[i].pid),
-                                (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
-                    } else {
-                        /* orderly shutdown */
-                        crm_notice("%s[%lld] terminated%s", pcmk_children[i].name,
-                                   (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[i].pid),
-                                   (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
-                    }
-                    pcmk_process_exit(&(pcmk_children[i]));
-                    continue;
-                default:
-                    crm_exit(CRM_EX_FATAL);
-                    break;  /* static analysis/noreturn */
+    switch (rc) {
+        case pcmk_rc_ok:
+            next_child++;
+            subdaemon_check_progress = time(NULL);
+            break;
+        case pcmk_rc_ipc_unresponsive:
+        case pcmk_rc_ipc_pid_only: // This case: it was previously OK
+            if (pcmk_children[next_child].respawn) {
+                crm_err("%s[%lld] terminated%s",
+                        pcmk_children[next_child].name,
+                        (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid),
+                        (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
+            } else {
+                /* orderly shutdown */
+                crm_notice("%s[%lld] terminated%s",
+                           pcmk_children[next_child].name,
+                           (long long) PCMK__SPECIAL_PID_AS_0(
+                                pcmk_children[next_child].pid),
+                           (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
             }
-        }
-        /* at least one of the processes found at startup
-         * is still going, so keep this recurring timer around */
-        keep_tracking = TRUE;
+            pcmk_process_exit(&(pcmk_children[next_child]));
+            break;
+        default:
+            crm_exit(CRM_EX_FATAL);
+            break;  /* static analysis/noreturn */
     }
 
-    global_keep_tracking = keep_tracking;
-    return keep_tracking;
+    if (next_child >= PCMK__NELEM(pcmk_children)) {
+        next_child = 0;
+    }
+
+    return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -257,11 +255,6 @@ pcmk_process_exit(pcmk_child_t * child)
                  child->name, child->endpoint);
         /* need to monitor how it evolves, and start new process if badly */
         child->active_before_startup = true;
-        if (!global_keep_tracking) {
-            global_keep_tracking = true;
-            g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
-                                  check_active_before_startup_processes, NULL);
-        }
 
     } else {
         if (child->needs_cluster && !pcmkd_cluster_connected()) {
@@ -647,7 +640,6 @@ child_liveness(pcmk_child_t *child)
 int
 find_and_track_existing_processes(void)
 {
-    bool tracking = false;
     bool wait_in_progress;
     int rc;
     size_t i, rounds;
@@ -715,7 +707,6 @@ find_and_track_existing_processes(void)
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
                     pcmk_children[i].active_before_startup = true;
-                    tracking = true;
                     break;
                 case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
@@ -750,10 +741,8 @@ find_and_track_existing_processes(void)
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
-    if (tracking) {
-        g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
+    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
                               check_active_before_startup_processes, NULL);
-    }
     return pcmk_rc_ok;
 }
 

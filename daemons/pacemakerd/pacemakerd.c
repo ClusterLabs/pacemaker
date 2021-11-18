@@ -259,6 +259,8 @@ main(int argc, char **argv)
     pcmk_ipc_api_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
+    subdaemon_check_progress = time(NULL);
+
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);

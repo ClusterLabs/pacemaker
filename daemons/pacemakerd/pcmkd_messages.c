@@ -25,7 +25,6 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     const char *value = NULL;
     xmlNode *ping = NULL;
     xmlNode *reply = NULL;
-    time_t pinged = time(NULL);
     const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
 
     /* Pinged for status */
@@ -36,7 +35,8 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     value = crm_element_value(msg, F_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
     crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
-    crm_xml_add_ll(ping, XML_ATTR_TSTAMP, (long long) pinged);
+    crm_xml_add_ll(ping, XML_ATTR_TSTAMP,
+                   (long long) subdaemon_check_progress);
     crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
     reply = create_reply(msg, ping);
     free_xml(ping);
