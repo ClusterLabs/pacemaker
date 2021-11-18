@@ -262,6 +262,13 @@ gboolean node_has_attr(const char *node, const char *name, const char *value);
 
 gboolean node_does_watchdog_fencing(const char *node);
 
+static inline void
+fenced_set_protocol_error(pcmk__action_result_t *result)
+{
+    pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                     "Fencer API request missing required information (bug?)");
+}
+
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
