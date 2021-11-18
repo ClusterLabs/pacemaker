@@ -1678,25 +1678,25 @@ stonith_level_register(xmlNode *msg, char **desc)
 int
 stonith_level_remove(xmlNode *msg, char **desc)
 {
-    int id = 0;
+    int id = -1;
     stonith_topology_t *tp;
     char *target;
 
     /* Unlike additions, removal requests should always have one level tag */
     xmlNode *level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_ERR);
 
-    CRM_CHECK(level != NULL, return -EINVAL);
+    CRM_CHECK(level != NULL, return -EPROTO);
 
     target = stonith_level_key(level, -1);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
+
+    CRM_CHECK((id >= 0) && (id < ST_LEVEL_MAX),
+              crm_log_xml_warn(msg, "invalid level");
+              free(target);
+              return -EPROTO);
+
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
-    }
-
-    /* Sanity-check arguments */
-    if (id >= ST_LEVEL_MAX) {
-        free(target);
-        return -EINVAL;
     }
 
     tp = g_hash_table_lookup(topology, target);
@@ -1714,7 +1714,7 @@ stonith_level_remove(xmlNode *msg, char **desc)
                  "(%d active %s remaining)", target, nentries,
                  pcmk__plural_alt(nentries, "entry", "entries"));
 
-    } else if (id > 0 && tp->levels[id] != NULL) {
+    } else if (tp->levels[id] != NULL) {
         guint nlevels;
 
         g_list_free_full(tp->levels[id], free);
