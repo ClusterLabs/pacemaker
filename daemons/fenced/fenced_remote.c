@@ -439,12 +439,19 @@ handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
     free_xml(notify_data);
 }
 
+/*!
+ * \internal
+ * \brief Finalize all duplicates of a given fencer operation
+ *
+ * \param[in] op         Fencer operation that completed
+ * \param[in] data       Top-level XML to add notification to
+ * \param[in] result     Full operation result
+ */
 static void
-handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
+finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data,
+                       pcmk__action_result_t *result)
 {
-    GList *iter = NULL;
-
-    for (iter = op->duplicates; iter != NULL; iter = iter->next) {
+    for (GList *iter = op->duplicates; iter != NULL; iter = iter->next) {
         remote_fencing_op_t *other = iter->data;
 
         if (other->state == st_duplicate) {
@@ -452,8 +459,9 @@ handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
             crm_debug("Performing duplicate notification for %s@%s: %s "
                       CRM_XS " id=%.8s",
                       other->client_name, other->originator,
-                      pcmk_strerror(rc), other->id);
-            remote_op_done(other, data, rc, TRUE);
+                      pcmk_exec_status_str(result->execution_status),
+                      other->id);
+            remote_op_done(other, data, pcmk_rc2legacy(stonith__result2rc(result)), TRUE);
 
         } else {
             // Possible if (for example) it timed out already
@@ -570,8 +578,13 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
 
     handle_local_reply_and_notify(op, data, rc);
 
-    if (dup == FALSE) {
-        handle_duplicates(op, data, rc);
+    if (!dup) {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
+        pcmk__set_result(&result,
+                         ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                         stonith__legacy2status(rc), NULL);
+        finalize_op_duplicates(op, data, &result);
     }
 
     /* Free non-essential parts of the record
