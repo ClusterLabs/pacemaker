@@ -1519,14 +1519,13 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
  * \internal
  * \brief Advance an operation to the next device in its topology
  *
- * \param[in,out] op      Operation to advance
- * \param[in]     device  ID of device just completed
- * \param[in]     msg     XML reply that contained device result (if available)
- * \param[in]     rc      Return code of device's execution
+ * \param[in] op      Fencer operation to advance
+ * \param[in] device  ID of device that just completed
+ * \param[in] msg     If not NULL, XML reply of last delegated fencing operation
  */
 static void
 advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
-                                 xmlNode *msg, int rc)
+                                 xmlNode *msg)
 {
     /* Advance to the next device at this topology level, if any */
     if (op->devices) {
@@ -1556,8 +1555,8 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
 
     if (op->devices) {
         /* Necessary devices remain, so execute the next one */
-        crm_trace("Next targeting %s on behalf of %s@%s (rc was %d)",
-                  op->target, op->client_name, op->originator, rc);
+        crm_trace("Next targeting %s on behalf of %s@%s",
+                  op->target, op->client_name, op->originator);
 
         // The requested delay has been applied for the first device
         if (op->delay > 0) {
@@ -1570,7 +1569,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
         crm_trace("Marking complex fencing op targeting %s as complete",
                   op->target);
         op->state = st_done;
-        remote_op_done(op, msg, rc, FALSE);
+        remote_op_done(op, msg, pcmk_ok, FALSE);
     }
 }
 
@@ -1701,7 +1700,7 @@ call_remote_stonith(remote_fencing_op_t *op, peer_device_info_t *peer, int rc)
          */
         crm_warn("Ignoring %s 'on' failure (no capable peers) targeting %s "
                  "after successful 'off'", device, op->target);
-        advance_topology_device_in_level(op, device, NULL, pcmk_ok);
+        advance_topology_device_in_level(op, device, NULL);
         return;
 
     } else if (op->owner == FALSE) {
@@ -2181,7 +2180,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         if (rc == pcmk_ok) {
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
-            advance_topology_device_in_level(op, device, msg, rc);
+            advance_topology_device_in_level(op, device, msg);
             return;
         } else {
             /* This device failed, time to try another topology level. If no other
