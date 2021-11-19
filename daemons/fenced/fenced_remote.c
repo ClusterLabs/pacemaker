@@ -2095,21 +2095,21 @@ process_remote_stonith_query(xmlNode * msg)
 void
 fenced_process_fencing_reply(xmlNode *msg)
 {
-    int rc = 0;
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);
 
     id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
     CRM_CHECK(id != NULL, return);
 
-    dev = get_xpath_object("//@" F_STONITH_RC, msg, LOG_ERR);
+    dev = stonith__find_xe_with_result(msg);
     CRM_CHECK(dev != NULL, return);
 
-    crm_element_value_int(dev, F_STONITH_RC, &rc);
+    stonith__xe_get_result(dev, &result);
 
     device = crm_element_value(dev, F_STONITH_DEVICE);
 
@@ -2117,7 +2117,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         op = g_hash_table_lookup(stonith_remote_op_list, id);
     }
 
-    if (op == NULL && rc == pcmk_ok) {
+    if ((op == NULL) && pcmk__result_ok(&result)) {
         /* Record successful fencing operations */
         const char *client_id = crm_element_value(dev, F_STONITH_CLIENTID);
 
@@ -2139,16 +2139,19 @@ fenced_process_fencing_reply(xmlNode *msg)
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
-        crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s "
+        crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s%s%s%s "
                   CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->originator,
-                  pcmk_strerror(rc), op->id);
-        if (rc == pcmk_ok) {
+                  pcmk_exec_status_str(result.execution_status),
+                  (result.exit_reason == NULL)? "" : " (",
+                  (result.exit_reason == NULL)? "" : result.exit_reason,
+                  (result.exit_reason == NULL)? "" : ")", op->id);
+        if (pcmk__result_ok(&result)) {
             op->state = st_done;
         } else {
             op->state = st_failed;
         }
-        remote_op_done(op, msg, rc, FALSE);
+        remote_op_done(op, msg, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
         return;
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
@@ -2162,28 +2165,35 @@ fenced_process_fencing_reply(xmlNode *msg)
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
         const char *device = crm_element_value(msg, F_STONITH_DEVICE);
 
-        crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: %s "
-                   CRM_XS " rc=%d",
+        crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: %s%s%s%s",
                    op->action, op->target, device, op->client_name,
-                   op->originator, pcmk_strerror(rc), rc);
+                   op->originator,
+                   pcmk_exec_status_str(result.execution_status),
+                  (result.exit_reason == NULL)? "" : " (",
+                  (result.exit_reason == NULL)? "" : result.exit_reason,
+                  (result.exit_reason == NULL)? "" : ")");
 
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
         if (op->state == st_done) {
-            remote_op_done(op, msg, rc, FALSE);
+            remote_op_done(op, msg, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
             return;
         }
 
-        if ((op->phase == 2) && (rc != pcmk_ok)) {
+        if ((op->phase == 2) && !pcmk__result_ok(&result)) {
             /* A remapped "on" failed, but the node was already turned off
              * successfully, so ignore the error and continue.
              */
-            crm_warn("Ignoring %s 'on' failure (exit code %d) targeting %s "
-                     "after successful 'off'", device, rc, op->target);
-            rc = pcmk_ok;
+            crm_warn("Ignoring %s 'on' failure (%s%s%s) targeting %s "
+                     "after successful 'off'",
+                     device, pcmk_exec_status_str(result.execution_status),
+                     (result.exit_reason == NULL)? "" : ": ",
+                     (result.exit_reason == NULL)? "" : result.exit_reason,
+                     op->target);
+            pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
-        if (rc == pcmk_ok) {
+        if (pcmk__result_ok(&result)) {
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
             advance_topology_device_in_level(op, device, msg);
@@ -2193,29 +2203,30 @@ fenced_process_fencing_reply(xmlNode *msg)
              * levels are available, mark this operation as failed and report results. */
             if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
-                remote_op_done(op, msg, rc, FALSE);
+                remote_op_done(op, msg, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
                 return;
             }
         }
-    } else if (rc == pcmk_ok && op->devices == NULL) {
+    } else if (pcmk__result_ok(&result) && (op->devices == NULL)) {
         crm_trace("All done for %s", op->target);
-
         op->state = st_done;
-        remote_op_done(op, msg, rc, FALSE);
+        remote_op_done(op, msg, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
         return;
-    } else if (rc == -ETIME && op->devices == NULL) {
+    } else if ((result.execution_status == PCMK_EXEC_TIMEOUT)
+               && (op->devices == NULL)) {
         /* If the operation timed out don't bother retrying other peers. */
         op->state = st_failed;
-        remote_op_done(op, msg, rc, FALSE);
+        remote_op_done(op, msg, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
         return;
     } else {
         /* fall-through and attempt other fencing action using another peer */
     }
 
     /* Retry on failure */
-    crm_trace("Next for %s on behalf of %s@%s (rc was %d)", op->target, op->originator,
-              op->client_name, rc);
-    call_remote_stonith(op, NULL, rc);
+    crm_trace("Next for %s on behalf of %s@%s (result was: %s)",
+              op->target, op->originator, op->client_name,
+              pcmk_exec_status_str(result.execution_status));
+    call_remote_stonith(op, NULL, pcmk_rc2legacy(stonith__result2rc(&result)));
 }
 
 gboolean
