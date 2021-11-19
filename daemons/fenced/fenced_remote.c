@@ -643,10 +643,12 @@ remote_op_timeout_one(gpointer userdata)
  * \brief Finalize a remote fencer operation that timed out
  *
  * \param[in] op      Fencer operation that timed out
+ * \param[in] reason  Readable description of what step timed out
  */
 static void
-finalize_timed_out_op(remote_fencing_op_t *op)
+finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
 {
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     op->op_timer_total = 0;
 
@@ -660,13 +662,13 @@ finalize_timed_out_op(remote_fencing_op_t *op)
          * devices, and return success.
          */
         op->state = st_done;
-        remote_op_done(op, NULL, pcmk_ok, FALSE);
-        return;
+        pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    } else {
+        op->state = st_failed;
+        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT, reason);
     }
-
-    op->state = st_failed;
-
-    remote_op_done(op, NULL, -ETIME, FALSE);
+    remote_op_done(op, NULL, pcmk_rc2legacy(stonith__result2rc(&result)), FALSE);
+    pcmk__reset_result(&result);
 }
 
 /*!
@@ -687,7 +689,8 @@ remote_op_timeout(gpointer userdata)
                   CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->id);
     } else {
-        finalize_timed_out_op(userdata);
+        finalize_timed_out_op(userdata, "Fencing could not be completed "
+                                        "within overall timeout");
     }
     return G_SOURCE_REMOVE;
 }
@@ -719,7 +722,8 @@ remote_op_query_timeout(gpointer data)
             g_source_remove(op->op_timer_total);
             op->op_timer_total = 0;
         }
-        finalize_timed_out_op(op);
+        finalize_timed_out_op(op, "No capable peers replied to device query "
+                                  "within timeout");
     }
 
     return FALSE;
@@ -1767,7 +1771,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer,
                  CRM_XS " state=%s", op->action, op->target, op->client_name,
                  stonith_op_state_str(op->state));
         CRM_CHECK(op->state < st_done, return);
-        finalize_timed_out_op(op);
+        finalize_timed_out_op(op, "All nodes failed, or are unable, to "
+                                  "fence target");
 
     } else if(op->replies >= op->replies_expected || op->replies >= fencing_active_peers()) {
         /* if the operation never left the query state,
