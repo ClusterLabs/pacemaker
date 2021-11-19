@@ -374,12 +374,21 @@ create_op_done_notify(remote_fencing_op_t * op, int rc)
     return notify_data;
 }
 
+/*!
+ * \internal
+ * \brief Broadcast a fence result notification to all CPG peers
+ *
+ * \param[in] op         Fencer operation that completed
+ * \param[in] result     Full operation result
+ * \param[in] op_merged  Whether this operation is a duplicate of another
+ */
 void
-stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged)
+fenced_broadcast_op_result(remote_fencing_op_t *op,
+                           pcmk__action_result_t *result, bool op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
-    xmlNode *notify_data = create_op_done_notify(op, rc);
+    xmlNode *notify_data = create_op_done_notify(op, pcmk_rc2legacy(stonith__result2rc(result)));
 
     count++;
     crm_trace("Broadcasting result to peers");
@@ -558,7 +567,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data,
     subt = crm_element_value(data, F_SUBTYPE);
     if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
         /* Defer notification until the bcast message arrives */
-        stonith_bcast_result_to_peers(op, pcmk_rc2legacy(stonith__result2rc(result)), op_merged);
+        fenced_broadcast_op_result(op, result, op_merged);
         free_xml(local_data);
         return;
     }

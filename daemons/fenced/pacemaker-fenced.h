@@ -153,13 +153,8 @@ typedef struct remote_fencing_op_s {
 
 } remote_fencing_op_t;
 
-/*!
- * \internal
- * \brief Broadcast the result of an operation to the peers.
- * \param op, Operation whose result should be broadcast
- * \param rc, Result of the operation
- */
-void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged);
+void fenced_broadcast_op_result(remote_fencing_op_t *op,
+                                pcmk__action_result_t *result, bool op_merged);
 
 // Fencer-specific client flags
 enum st_client_flags {
