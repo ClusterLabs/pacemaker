@@ -3142,7 +3142,6 @@ static int
 determine_op_status(
     pe_resource_t *rsc, int rc, int target_rc, pe_node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
 {
-    guint interval_ms = 0;
     bool is_probe = false;
     int result = PCMK_EXEC_DONE;
     const char *key = get_op_key(xml_op);
@@ -3157,7 +3156,6 @@ determine_op_status(
         exit_reason = "";
     }
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     is_probe = pcmk_xe_is_probe(xml_op);
 
     if (is_probe) {
@@ -3230,12 +3228,17 @@ determine_op_status(
             result = PCMK_EXEC_ERROR_FATAL;
             break;
 
-        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+        case PCMK_OCF_UNIMPLEMENT_FEATURE: {
+            guint interval_ms = 0;
+            crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
             if (interval_ms > 0) {
                 result = PCMK_EXEC_NOT_SUPPORTED;
                 break;
             }
             // fall through
+        }
+
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
