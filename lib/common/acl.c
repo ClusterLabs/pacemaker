@@ -823,10 +823,10 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
     for (i_node = xml_modify; i_node != NULL; i_node = i_node->next) {
         switch (i_node->type) {
         case XML_ELEMENT_NODE:
-            pcmk__set_xml_flag(i_node, xpf_tracking);
-            ns = !pcmk__check_acl(i_node, NULL, xpf_acl_read)
+            pcmk__set_xml_doc_flag(i_node, pcmk__xf_tracking);
+            ns = !pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)
                  ? NS_DENIED
-                 : !pcmk__check_acl(i_node, NULL, xpf_acl_write)
+                 : !pcmk__check_acl(i_node, NULL, pcmk__xf_acl_write)
                    ? NS_READABLE
                    : NS_WRITABLE;
             if (ns == NS_WRITABLE) {
@@ -866,11 +866,11 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
             /* we can utilize that parent has already been assigned the ns */
             ns = !pcmk__check_acl(i_node->parent,
                                  (const char *) i_node->name,
-                                 xpf_acl_read)
+                                 pcmk__xf_acl_read)
                  ? NS_DENIED
                  : !pcmk__check_acl(i_node,
                                    (const char *) i_node->name,
-                                   xpf_acl_write)
+                                   pcmk__xf_acl_write)
                    ? NS_READABLE
                    : NS_WRITABLE;
             if (ns == NS_WRITABLE) {
@@ -937,7 +937,7 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     }
 
     pcmk__unpack_acl(target, target, cred);
-    pcmk__set_xml_flag(target, xpf_acl_enabled);
+    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
     pcmk__apply_acl(target);
     ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
 
