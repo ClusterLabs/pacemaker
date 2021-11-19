@@ -1349,15 +1349,23 @@ get_event_data_xml(xmlNode *msg, const char *ntype)
  </notify>
 */
 static stonith_event_t *
-xml_to_event(xmlNode * msg)
+xml_to_event(xmlNode *msg, pcmk__action_result_t *result)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
 
+    CRM_ASSERT((event != NULL) && (result != NULL));
+
     crm_log_xml_trace(msg, "stonith_notify");
 
-    crm_element_value_int(msg, F_STONITH_RC, &(event->result));
+    // All notification types have the operation result
+    event->opaque = result;
+    stonith__xe_get_result(msg, result);
 
+    // @COMPAT The API originally provided the result as a legacy return code
+    event->result = pcmk_rc2legacy(stonith__result2rc(result));
+
+    // Fence notifications have additional information
     if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         xmlNode *data = get_event_data_xml(msg, ntype);
 
@@ -1392,6 +1400,7 @@ event_free(stonith_event_t * event)
     free(event->executioner);
     free(event->device);
     free(event->client_origin);
+    pcmk__reset_result((pcmk__action_result_t *) (event->opaque));
     free(event);
 }
 
@@ -1402,6 +1411,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
     stonith_notify_client_t *entry = data;
     stonith_event_t *st_event = NULL;
     const char *event = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     if (blob->xml == NULL) {
         crm_warn("Skipping callback - NULL message");
@@ -1427,7 +1437,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    st_event = xml_to_event(blob->xml);
+    st_event = xml_to_event(blob->xml, &result);
 
     crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, st_event);
@@ -2365,6 +2375,58 @@ stonith__exit_reason(stonith_callback_data_t *data)
     }
     return ((pcmk__action_result_t *) data->opaque)->exit_reason;
 }
+
+/*!
+ * \internal
+ * \brief Return the exit status from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Exit status from event
+ */
+int
+stonith__event_exit_status(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return CRM_EX_ERROR;
+    }
+    return ((pcmk__action_result_t *) event->opaque)->exit_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the execution status from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Execution status from event
+ */
+int
+stonith__event_execution_status(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return PCMK_EXEC_UNKNOWN;
+    }
+    return ((pcmk__action_result_t *) event->opaque)->execution_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the exit reason from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Exit reason from event
+ */
+const char *
+stonith__event_exit_reason(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return NULL;
+    }
+    return ((pcmk__action_result_t *) event->opaque)->exit_reason;
+}
+
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
