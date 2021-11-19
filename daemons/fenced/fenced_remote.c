@@ -616,7 +616,9 @@ remote_op_timeout_one(gpointer userdata)
 
     crm_notice("Peer's '%s' action targeting %s for client %s timed out " CRM_XS
                " id=%.8s", op->action, op->target, op->client_name, op->id);
-    pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT, NULL);
+    pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
+                     "Peer did not send fence result within timeout");
+
 
     // Try another device, if appropriate
     request_peer_fencing(op, NULL, &result);
