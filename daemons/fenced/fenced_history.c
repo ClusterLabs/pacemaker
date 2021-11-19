@@ -433,14 +433,11 @@ stonith_local_history(gboolean add_id, const char *target)
  *                      a reply from
  * \param[in] remote_peer
  * \param[in] options   call-options from the request
- *
- * \return always success as there is actully nothing that can go really wrong
  */
-int
+void
 stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
-    int rc = 0;
     const char *target = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
@@ -525,5 +522,4 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         *output = stonith_local_history(FALSE, target);
     }
     free_xml(out_history);
-    return rc;
 }

@@ -214,7 +214,7 @@ void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
 int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
-int stonith_device_remove(const char *id, gboolean from_cib);
+void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(xmlNode * msg, int mode);
 int stonith_level_kind(xmlNode * msg);
@@ -241,14 +241,14 @@ remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
                                                 xmlNode *request,
                                                 gboolean manual_ack);
 
-int process_remote_stonith_exec(xmlNode * msg);
+void fenced_process_fencing_reply(xmlNode *msg);
 
 int process_remote_stonith_query(xmlNode * msg);
 
 void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer);
 
-int stonith_fence_history(xmlNode *msg, xmlNode **output,
-                          const char *remote_peer, int options);
+void stonith_fence_history(xmlNode *msg, xmlNode **output,
+                           const char *remote_peer, int options);
 
 void stonith_fence_history_trim(void);
 

@@ -1411,8 +1411,8 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
     return pcmk_ok;
 }
 
-int
-stonith_device_remove(const char *id, gboolean from_cib)
+void
+stonith_device_remove(const char *id, bool from_cib)
 {
     stonith_device_t *device = g_hash_table_lookup(device_list, id);
     guint ndevices = 0;
@@ -1421,7 +1421,7 @@ stonith_device_remove(const char *id, gboolean from_cib)
         ndevices = g_hash_table_size(device_list);
         crm_info("Device '%s' not found (%d active device%s)",
                  id, ndevices, pcmk__plural_s(ndevices));
-        return pcmk_ok;
+        return;
     }
 
     if (from_cib) {
@@ -1443,7 +1443,6 @@ stonith_device_remove(const char *id, gboolean from_cib)
                   (device->cib_registered? " cib" : ""),
                   (device->api_registered? " api" : ""));
     }
-    return pcmk_ok;
 }
 
 /*!
@@ -3085,8 +3084,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         need_reply = (rc != -EINPROGRESS);
 
     } else if (pcmk__str_eq(op, STONITH_OP_FENCE_HISTORY, pcmk__str_none)) {
-        rc = stonith_fence_history(request, &data, remote_peer, call_options);
-        if (call_options & st_opt_discard_reply) {
+        stonith_fence_history(request, &data, remote_peer, call_options);
+        rc = pcmk_ok;
+        if (pcmk_is_set(call_options, st_opt_discard_reply)) {
             /* we don't expect answers to the broadcast
              * we might have sent out
              */
@@ -3109,7 +3109,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
         if (is_privileged(client, op)) {
-            rc = stonith_device_remove(device_id, FALSE);
+            stonith_device_remove(device_id, false);
+            rc = pcmk_ok;
         } else {
             rc = -EACCES;
         }
@@ -3179,7 +3180,7 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
     } else if (pcmk__str_any_of(op, T_STONITH_NOTIFY, STONITH_OP_FENCE, NULL)) {
-        process_remote_stonith_exec(request);
+        fenced_process_fencing_reply(request);
     } else {
         crm_err("Ignoring unknown %s reply from %s %s",
                 crm_str(op), ((client == NULL)? "peer" : "client"),

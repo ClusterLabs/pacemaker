@@ -445,7 +445,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 
         rsc_id = crm_element_value(match, XML_ATTR_ID);
 
-        stonith_device_remove(rsc_id, TRUE);
+        stonith_device_remove(rsc_id, true);
     }
 }
 
@@ -610,7 +610,7 @@ watchdog_device_update(void)
     } else {
         /* be silent if no device - todo parameter to stonith_device_remove */
         if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID)) {
-            stonith_device_remove(STONITH_WATCHDOG_ID, TRUE);
+            stonith_device_remove(STONITH_WATCHDOG_ID, true);
         }
     }
 }
@@ -847,7 +847,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             }
             if (search != NULL) {
                 *search = 0;
-                stonith_device_remove(rsc_id, TRUE);
+                stonith_device_remove(rsc_id, true);
                 /* watchdog_device_update called afterwards
                    to fall back to implicit definition if needed */
             } else {

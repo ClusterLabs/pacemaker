@@ -2086,11 +2086,9 @@ process_remote_stonith_query(xmlNode * msg)
  * or attempt another device as appropriate.
  *
  * \param[in] msg  XML reply received
- *
- * \return pcmk_ok on success, -errno on error
  */
-int
-process_remote_stonith_exec(xmlNode * msg)
+void
+fenced_process_fencing_reply(xmlNode *msg)
 {
     int rc = 0;
     const char *id = NULL;
@@ -2098,13 +2096,13 @@ process_remote_stonith_exec(xmlNode * msg)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_REMOTE_OP_ID, msg, LOG_ERR);
 
-    CRM_CHECK(dev != NULL, return -EPROTO);
+    CRM_CHECK(dev != NULL, return);
 
     id = crm_element_value(dev, F_STONITH_REMOTE_OP_ID);
-    CRM_CHECK(id != NULL, return -EPROTO);
+    CRM_CHECK(id != NULL, return);
 
     dev = get_xpath_object("//@" F_STONITH_RC, msg, LOG_ERR);
-    CRM_CHECK(dev != NULL, return -EPROTO);
+    CRM_CHECK(dev != NULL, return);
 
     crm_element_value_int(dev, F_STONITH_RC, &rc);
 
@@ -2125,35 +2123,35 @@ process_remote_stonith_exec(xmlNode * msg)
         /* Could be for an event that began before we started */
         /* TODO: Record the op for later querying */
         crm_info("Received peer result of unknown or expired operation %s", id);
-        return -EOPNOTSUPP;
+        return;
     }
 
     if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
         crm_err("Received outdated reply for device %s (instead of %s) to "
                 "fence (%s) %s. Operation already timed out at peer level.",
                 device, (const char *) op->devices->data, op->action, op->target);
-        return rc;
+        return;
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
         crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s "
-                  CRM_XS " rc=%d id=%.8s",
+                  CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->originator,
-                  pcmk_strerror(rc), rc, op->id);
+                  pcmk_strerror(rc), op->id);
         if (rc == pcmk_ok) {
             op->state = st_done;
         } else {
             op->state = st_failed;
         }
         remote_op_done(op, msg, rc, FALSE);
-        return pcmk_ok;
+        return;
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
         crm_err("Received non-broadcast fencing result for operation %.8s "
                 "we do not own (device %s targeting %s)",
                 op->id, device, op->target);
-        return rc;
+        return;
     }
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
@@ -2168,7 +2166,7 @@ process_remote_stonith_exec(xmlNode * msg)
          * and notify our local clients. */
         if (op->state == st_done) {
             remote_op_done(op, msg, rc, FALSE);
-            return rc;
+            return;
         }
 
         if ((op->phase == 2) && (rc != pcmk_ok)) {
@@ -2184,14 +2182,14 @@ process_remote_stonith_exec(xmlNode * msg)
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
             advance_topology_device_in_level(op, device, msg, rc);
-            return rc;
+            return;
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
             if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
                 remote_op_done(op, msg, rc, FALSE);
-                return rc;
+                return;
             }
         }
     } else if (rc == pcmk_ok && op->devices == NULL) {
@@ -2199,12 +2197,12 @@ process_remote_stonith_exec(xmlNode * msg)
 
         op->state = st_done;
         remote_op_done(op, msg, rc, FALSE);
-        return rc;
+        return;
     } else if (rc == -ETIME && op->devices == NULL) {
         /* If the operation timed out don't bother retrying other peers. */
         op->state = st_failed;
         remote_op_done(op, msg, rc, FALSE);
-        return rc;
+        return;
     } else {
         /* fall-through and attempt other fencing action using another peer */
     }
@@ -2213,7 +2211,6 @@ process_remote_stonith_exec(xmlNode * msg)
     crm_trace("Next for %s on behalf of %s@%s (rc was %d)", op->target, op->originator,
               op->client_name, rc);
     call_remote_stonith(op, NULL, rc);
-    return rc;
 }
 
 gboolean
