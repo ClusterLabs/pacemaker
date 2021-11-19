@@ -833,23 +833,23 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
                 if (ns_recycle_writable == NULL) {
                     ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                    NS_WRITABLE, ACL_NS_Q_WRITABLE);
-                    ret |= PCMK_ACL_VERDICT_WRITABLE;
                 }
                 xmlSetNs(i_node, ns_recycle_writable);
+                ret = pcmk_rc_ok;
             } else if (ns == NS_READABLE) {
                 if (ns_recycle_readable == NULL) {
                     ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                    NS_READABLE, ACL_NS_Q_READABLE);
-                    ret |= PCMK_ACL_VERDICT_READABLE;
                 }
                 xmlSetNs(i_node, ns_recycle_readable);
+                ret = pcmk_rc_ok;
             } else if (ns == NS_DENIED) {
                 if (ns_recycle_denied == NULL) {
                     ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                  NS_DENIED, ACL_NS_Q_DENIED);
-                    ret |= PCMK_ACL_VERDICT_DENIED;
                 };
                 xmlSetNs(i_node, ns_recycle_denied);
+                ret = pcmk_rc_ok;
             }
             /* XXX recursion can be turned into plain iteration to save stack */
             if (i_node->properties != NULL) {
@@ -877,23 +877,23 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
                 if (ns_recycle_writable == NULL) {
                     ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                    NS_WRITABLE, ACL_NS_Q_WRITABLE);
-                    ret |= PCMK_ACL_VERDICT_WRITABLE;
                 }
                 xmlSetNs(i_node, ns_recycle_writable);
+                ret = pcmk_rc_ok;
             } else if (ns == NS_READABLE) {
                 if (ns_recycle_readable == NULL) {
                     ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                    NS_READABLE, ACL_NS_Q_READABLE);
-                    ret |= PCMK_ACL_VERDICT_READABLE;
                 }
                 xmlSetNs(i_node, ns_recycle_readable);
+                ret = pcmk_rc_ok;
             } else if (ns == NS_DENIED) {
                 if (ns_recycle_denied == NULL) {
                     ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
                                                  NS_DENIED, ACL_NS_Q_DENIED);
-                    ret |= PCMK_ACL_VERDICT_DENIED;
                 }
                 xmlSetNs(i_node, ns_recycle_denied);
+                ret = pcmk_rc_ok;
             }
             break;
         default:
@@ -919,7 +919,7 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
 
     if (!pcmk_acl_required(cred)) {
         /* nothing to evaluate */
-        return 0;
+        return pcmk_rc_already;
     }
 
     /* XXX see the comment for this function, pacemaker-4.0 may need
@@ -933,7 +933,7 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
 
     target = copy_xml(xmlDocGetRootElement(cib_doc));
     if (target == NULL) {
-        return -1;
+        return EINVAL;
     }
 
     pcmk__unpack_acl(target, target, cred);
@@ -949,7 +949,7 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
             comment = xmlNewDocComment(target->doc, (pcmkXmlStr) comment_buf);
             if (comment == NULL) {
                 xmlFreeNode(target);
-                return -1;
+                return EINVAL;
             }
             xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         }
@@ -957,7 +957,7 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     } else {
         xmlFreeNode(target);
     }
-    return ret;
+    return pcmk_rc_ok;
 }
 
 /* this is used to dynamically adapt to user-modified stylesheet */
@@ -1098,7 +1098,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
         crm_crit("Problem in parsing %s", sfile);
-        return -1;
+        return EINVAL;
     }
     free(sfile);
     sfile = NULL;
