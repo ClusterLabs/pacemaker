@@ -14,6 +14,7 @@ include $(top_srcdir)/mk/tap.mk
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = parse_op_key_test \
 				 pcmk_is_probe_test \
-				 pcmk_xe_is_probe_test
+				 pcmk_xe_is_probe_test \
+				 pcmk_xe_mask_probe_failure_test
 
 TESTS = $(check_PROGRAMS)
