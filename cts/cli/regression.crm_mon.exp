@@ -3470,7 +3470,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3485,8 +3485,10 @@ Active Resources:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group (1 member inactive):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
+  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
@@ -3499,12 +3501,12 @@ Failed Resource Actions:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
-    <resources_configured number="14" disabled="1" blocked="0"/>
+    <resources_configured number="15" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
   </nodes>
@@ -3546,11 +3548,14 @@ Failed Resource Actions:
         </resource>
       </replica>
     </bundle>
-    <group id="partially-active-group" number_resources="2" managed="true" disabled="false">
+    <group id="partially-active-group" number_resources="3" managed="true" disabled="false">
       <resource id="dummy-1" resource_agent="ocf:pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="true" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="dummy-3" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
     <resource id="smart-mon" resource_agent="ocf:pacemaker:HealthSMART" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
   </resources>
@@ -3578,6 +3583,9 @@ Failed Resource Actions:
       </resource_history>
       <resource_history id="dummy-1" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="dummy-2" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="probe" rc="3" rc_text="unimplemented feature" exec-time="33ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="smart-mon" orphan="false" migration-threshold="1000000">
         <operation_history call="9" task="probe" rc="5" rc_text="not installed" exec-time="33ms" queue-time="0ms"/>
@@ -3615,6 +3623,7 @@ Failed Resource Actions:
     </node>
   </node_history>
   <failures>
+    <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="complete" last-rc-change="2020-09-02 12:17:38 -04:00" queued="0" exec="33" interval="0" task="monitor"/>
     <failure op_key="smart-mon_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="9" status="complete" last-rc-change="2021-11-09 15:38:55 -05:00" queued="0" exec="33" interval="0" task="monitor"/>
     <failure op_key="ping_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="6" status="complete" last-rc-change="2021-11-18 13:11:42 -05:00" queued="0" exec="0" interval="0" task="monitor"/>
   </failures>
@@ -3629,7 +3638,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3645,10 +3654,12 @@ Full List of Resources:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
-    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
+    * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
 
 Failed Resource Actions:
+  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
@@ -3660,7 +3671,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3676,7 +3687,7 @@ Full List of Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
-    * 1/2	(ocf:pacemaker:Dummy):	Active cluster02
+    * 2/3	(ocf:pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
@@ -3697,6 +3708,8 @@ Operations:
       * (3) monitor: interval="30000ms"
     * dummy-1: migration-threshold=1000000:
       * (2) start
+    * dummy-2: migration-threshold=1000000:
+      * (2) probe
     * smart-mon: migration-threshold=1000000:
       * (9) probe
     * ping: migration-threshold=1000000:
@@ -3722,6 +3735,7 @@ Operations:
       * (1) start
 
 Failed Resource Actions:
+  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
@@ -3733,7 +3747,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3742,6 +3756,7 @@ Node List:
 Active Resources:
   * Resource Group: partially-active-group (1 member inactive):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group
 =#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
@@ -3751,7 +3766,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3760,7 +3775,8 @@ Node List:
 Full List of Resources:
   * Resource Group: partially-active-group:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
-    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
+    * dummy-3	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group, with inactive resources
 =#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
@@ -3770,7 +3786,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3788,7 +3804,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -3796,7 +3812,10 @@ Node List:
 
 Active Resources:
   * Resource Group: partially-active-group (1 member inactive):
-    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
+
+Failed Resource Actions:
+  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
@@ -3806,7 +3825,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Node cluster01: online:
@@ -3820,7 +3839,7 @@ Node List:
     * Resources:
       * 1	(ocf:heartbeat:IPaddr2):	Active 
       * 1	(ocf:heartbeat:docker):	Active 
-      * 1	(ocf:pacemaker:Dummy):	Active 
+      * 2	(ocf:pacemaker:Dummy):	Active 
       * 1	(ocf:pacemaker:remote):	Active 
   * GuestNode httpd-bundle-0@cluster02: online:
     * Resources:
@@ -3834,7 +3853,7 @@ Inactive Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
-    * 1/2	(ocf:pacemaker:Dummy):	Active cluster02
+    * 2/3	(ocf:pacemaker:Dummy):	Active cluster02
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
 
 Node Attributes:
@@ -3856,6 +3875,8 @@ Operations:
       * (3) monitor: interval="30000ms"
     * dummy-1: migration-threshold=1000000:
       * (2) start
+    * dummy-2: migration-threshold=1000000:
+      * (2) probe
     * smart-mon: migration-threshold=1000000:
       * (9) probe
     * ping: migration-threshold=1000000:
@@ -3881,6 +3902,7 @@ Operations:
       * (1) start
 
 Failed Resource Actions:
+  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
@@ -3892,7 +3914,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 14 resource instances configured (1 DISABLED)
+  * 15 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 ]
@@ -3914,7 +3936,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
-    <resources_configured number="14" disabled="1" blocked="0"/>
+    <resources_configured number="15" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
   </summary>
   <nodes>

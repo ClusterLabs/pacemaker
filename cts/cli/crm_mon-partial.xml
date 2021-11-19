@@ -54,7 +54,8 @@
       </bundle>
       <group id="partially-active-group">
         <primitive class="ocf" id="dummy-1" provider="pacemaker" type="Dummy"/>
-        <primitive class="ocf" id="dummy-2" provider="pacemaker" type="Dummy">
+        <primitive class="ocf" id="dummy-2" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="dummy-3" provider="pacemaker" type="Dummy">
           <meta_attributes id="inactive-dummy-meta_attributes">
             <nvpair id="inactive-dummy-meta_attributes-target-role" name="target-role" value="Stopped"/>
           </meta_attributes>
@@ -103,6 +104,9 @@
           </lrm_resource>
           <lrm_resource id="dummy-1" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="dummy-1_last_0" operation_key="dummy-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.6.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1599063458" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-2_last_failure_0" operation_key="dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:3;2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="2" rc-code="3" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
           <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
