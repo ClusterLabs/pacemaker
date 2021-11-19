@@ -233,7 +233,9 @@ void do_stonith_notify(const char *type, int result, xmlNode *data);
 void fenced_send_device_notification(const char *op,
                                      const pcmk__action_result_t *result,
                                      const char *desc);
-void do_stonith_notify_level(const char *op, int rc, const char *desc);
+void fenced_send_level_notification(const char *op,
+                                    const pcmk__action_result_t *result,
+                                    const char *desc);
 
 remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
                                                 xmlNode *request,

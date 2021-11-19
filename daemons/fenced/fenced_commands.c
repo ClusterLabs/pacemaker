@@ -3216,7 +3216,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                              PCMK_EXEC_INVALID,
                              "Unprivileged users must add level via CIB");
         }
-        do_stonith_notify_level(op, pcmk_rc2legacy(stonith__result2rc(&result)), device_id);
+        fenced_send_level_notification(op, &result, device_id);
         free(device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
@@ -3229,7 +3229,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                              PCMK_EXEC_INVALID,
                              "Unprivileged users must delete level via CIB");
         }
-        do_stonith_notify_level(op, pcmk_rc2legacy(stonith__result2rc(&result)), device_id);
+        fenced_send_level_notification(op, &result, device_id);
 
     } else if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         int node_id = 0;

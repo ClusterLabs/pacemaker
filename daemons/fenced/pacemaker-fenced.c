@@ -411,10 +411,21 @@ fenced_send_device_notification(const char *op,
     do_stonith_notify_config(op, pcmk_rc2legacy(stonith__result2rc(result)), desc, g_hash_table_size(device_list));
 }
 
+/*!
+ * \internal
+ * \brief Send notifications for a topology level change to subscribed clients
+ *
+ * \param[in] op      Notification type (STONITH_OP_LEVEL_ADD or
+ *                    STONITH_OP_LEVEL_DEL)
+ * \param[in] result  Operation result
+ * \param[in] desc    String representation of level (<target>[<level_index>])
+ */
 void
-do_stonith_notify_level(const char *op, int rc, const char *desc)
+fenced_send_level_notification(const char *op,
+                               const pcmk__action_result_t *result,
+                               const char *desc)
 {
-    do_stonith_notify_config(op, rc, desc, g_hash_table_size(topology));
+    do_stonith_notify_config(op, pcmk_rc2legacy(stonith__result2rc(result)), desc, g_hash_table_size(topology));
 }
 
 static void
@@ -429,8 +440,7 @@ topology_remove_helper(const char *node, int level)
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
     fenced_unregister_level(data, &desc, &result);
-    do_stonith_notify_level(STONITH_OP_LEVEL_DEL,
-                            pcmk_rc2legacy(stonith__result2rc(&result)), desc);
+    fenced_send_level_notification(STONITH_OP_LEVEL_DEL, &result, desc);
     pcmk__reset_result(&result);
     free_xml(data);
     free(desc);
@@ -480,8 +490,7 @@ handle_topology_change(xmlNode *match, bool remove)
     }
 
     fenced_register_level(match, &desc, &result);
-    do_stonith_notify_level(STONITH_OP_LEVEL_ADD,
-                            pcmk_rc2legacy(stonith__result2rc(&result)), desc);
+    fenced_send_level_notification(STONITH_OP_LEVEL_ADD, &result, desc);
     pcmk__reset_result(&result);
     free(desc);
 }
