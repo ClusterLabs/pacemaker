@@ -356,8 +356,17 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     free_xml(notify_data);
 }
 
+/*!
+ * \internal
+ * \brief Notify relevant IPC clients of a fencing operation result
+ *
+ * \param[in] type     Notification type
+ * \param[in] result   Result of fencing operation (assume success if NULL)
+ * \param[in] data     If not NULL, add to notification as call data
+ */
 void
-do_stonith_notify(const char *type, int result, xmlNode *data)
+fenced_send_notification(const char *type, const pcmk__action_result_t *result,
+                         xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
@@ -367,7 +376,7 @@ do_stonith_notify(const char *type, int result, xmlNode *data)
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);
     crm_xml_add(update_msg, F_STONITH_OPERATION, type);
-    crm_xml_add_int(update_msg, F_STONITH_RC, result);
+    stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
         add_message_xml(update_msg, F_STONITH_CALLDATA, data);
@@ -401,7 +410,7 @@ send_config_notification(const char *op, const pcmk__action_result_t *result,
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
 
-    do_stonith_notify(op, pcmk_rc2legacy(stonith__result2rc(result)), notify_data);
+    fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);
 }
 

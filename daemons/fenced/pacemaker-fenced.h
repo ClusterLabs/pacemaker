@@ -229,7 +229,9 @@ xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-void do_stonith_notify(const char *type, int result, xmlNode *data);
+void fenced_send_notification(const char *type,
+                              const pcmk__action_result_t *result,
+                              xmlNode *data);
 void fenced_send_device_notification(const char *op,
                                      const pcmk__action_result_t *result,
                                      const char *desc);

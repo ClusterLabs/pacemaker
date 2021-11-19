@@ -2489,8 +2489,8 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         crm_xml_add(notify_data, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
 
-        do_stonith_notify(T_STONITH_NOTIFY_FENCE, pcmk_rc2legacy(stonith__result2rc(result)), notify_data);
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 

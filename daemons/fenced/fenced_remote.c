@@ -442,8 +442,8 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data,
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    do_stonith_notify(T_STONITH_NOTIFY_FENCE, pcmk_rc2legacy(stonith__result2rc(result)), notify_data);
-    do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+    fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
+    fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
 
     /* mark this op as having notify's already sent */
     op->notify_sent = TRUE;
@@ -1211,7 +1211,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     if (op->state != st_duplicate) {
         /* kick history readers */
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 
     /* safe to trim as long as that doesn't touch pending ops */

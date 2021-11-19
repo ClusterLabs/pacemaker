@@ -100,7 +100,7 @@ stonith_fence_history_cleanup(const char *target,
         g_hash_table_foreach_remove(stonith_remote_op_list,
                              stonith_remove_history_entry,
                              (gpointer) target);
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
@@ -402,7 +402,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
 
     if (updated) {
         stonith_fence_history_trim();
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 
     if (cnt == 0) {
@@ -473,7 +473,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
            is done so send a notification for anything
            that smells like history-sync
          */
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API
             *
