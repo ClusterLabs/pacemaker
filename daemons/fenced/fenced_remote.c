@@ -415,7 +415,14 @@ handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
     crm_xml_add(data, F_STONITH_TARGET, op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action);
 
-    reply = stonith_construct_reply(op->request, NULL, data, rc);
+    {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
+        pcmk__set_result(&result,
+                         ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                         stonith__legacy2status(rc), NULL);
+        reply = fenced_construct_reply(op->request, data, &result);
+    }
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */

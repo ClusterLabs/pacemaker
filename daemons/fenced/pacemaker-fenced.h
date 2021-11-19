@@ -228,8 +228,8 @@ stonith_topology_t *find_topology_for_host(const char *host);
 void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 
-xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data,
-                                        int rc);
+xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
+                                pcmk__action_result_t *result);
 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);

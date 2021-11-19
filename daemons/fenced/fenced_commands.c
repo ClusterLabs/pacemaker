@@ -2322,6 +2322,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     const char *target = NULL;
     int timeout = 0;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_NEVER);
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &timeout);
     if (dev) {
@@ -2338,7 +2339,8 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     crm_log_xml_debug(msg, "Query");
     query = calloc(1, sizeof(struct st_query_data));
 
-    query->reply = stonith_construct_reply(msg, NULL, NULL, pcmk_ok);
+    pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    query->reply = fenced_construct_reply(msg, NULL, &result);
     query->remote_peer = remote_peer ? strdup(remote_peer) : NULL;
     query->client_id = client_id ? strdup(client_id) : NULL;
     query->target = target ? strdup(target) : NULL;
@@ -2729,8 +2731,23 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Build an XML reply for a fencing operation
+ *
+ * \param[in] request  Request that reply is for
+ * \param[in] data     If not NULL, add to reply as call data
+ * \param[in] result   Full result of fencing operation
+ *
+ * \return Newly created XML reply
+ * \note The caller is responsible for freeing the result.
+ * \note This has some overlap with construct_async_reply(), but that copies
+ *       values from an async_command_t, whereas this one copies them from the
+ *       request.
+ */
 xmlNode *
-stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, int rc)
+fenced_construct_reply(xmlNode *request, xmlNode *data,
+                       pcmk__action_result_t *result)
 {
     xmlNode *reply = NULL;
 
@@ -2738,8 +2755,7 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
 
     crm_xml_add(reply, "st_origin", __func__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
-    crm_xml_add(reply, F_STONITH_OUTPUT, output);
-    crm_xml_add_int(reply, F_STONITH_RC, rc);
+    stonith__xe_set_result(reply, result);
 
     if (request == NULL) {
         /* Most likely, this is the result of a stonith operation that was
@@ -2749,12 +2765,14 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
          * @TODO Maybe synchronize this information at start-up?
          */
         crm_warn("Missing request information for client notifications for "
-                 "operation with result %d (initiated before we came up?)", rc);
+                 "operation with result '%s' (initiated before we came up?)",
+                 pcmk_exec_status_str(result->execution_status));
 
     } else {
         const char *name = NULL;
         const char *value = NULL;
 
+        // Attributes to copy from request to reply
         const char *names[] = {
             F_STONITH_OPERATION,
             F_STONITH_CALLID,
@@ -2764,8 +2782,6 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
             F_STONITH_CALLOPTS
         };
 
-        crm_trace("Creating a result reply with%s reply output (rc=%d)",
-                  (data? "" : "out"), rc);
         for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
             name = names[lpc];
             value = crm_element_value(request, name);
@@ -3236,8 +3252,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 done:
     // Reply if result is known
     if (need_reply) {
-        xmlNode *reply = stonith_construct_reply(request, result.action_stdout, data,
-                                                 pcmk_rc2legacy(stonith__result2rc(&result)));
+        xmlNode *reply = fenced_construct_reply(request, data, &result);
 
         stonith_send_reply(reply, call_options, remote_peer, client_id);
         free_xml(reply);
