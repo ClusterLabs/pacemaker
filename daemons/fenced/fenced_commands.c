@@ -3190,7 +3190,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                              PCMK_EXEC_INVALID,
                              "Unprivileged users must register device via CIB");
         }
-        do_stonith_notify_device(op, pcmk_rc2legacy(stonith__result2rc(&result)), device_id);
+        fenced_send_device_notification(op, &result, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
@@ -3204,7 +3204,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                              PCMK_EXEC_INVALID,
                              "Unprivileged users must delete device via CIB");
         }
-        do_stonith_notify_device(op, pcmk_rc2legacy(stonith__result2rc(&result)), device_id);
+        fenced_send_device_notification(op, &result, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
         char *device_id = NULL;

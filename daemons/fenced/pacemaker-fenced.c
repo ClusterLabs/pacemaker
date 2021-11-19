@@ -394,10 +394,21 @@ do_stonith_notify_config(const char *op, int rc,
     free_xml(notify_data);
 }
 
+/*!
+ * \internal
+ * \brief Send notifications for a device change to subscribed clients
+ *
+ * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD or
+ *                    STONITH_OP_DEVICE_DEL)
+ * \param[in] result  Operation result
+ * \param[in] desc    ID of device that changed
+ */
 void
-do_stonith_notify_device(const char *op, int rc, const char *desc)
+fenced_send_device_notification(const char *op,
+                                const pcmk__action_result_t *result,
+                                const char *desc)
 {
-    do_stonith_notify_config(op, rc, desc, g_hash_table_size(device_list));
+    do_stonith_notify_config(op, pcmk_rc2legacy(stonith__result2rc(result)), desc, g_hash_table_size(device_list));
 }
 
 void
