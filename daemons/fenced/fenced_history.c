@@ -374,7 +374,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 set_fencing_completed(op);
                 /* use -EHOSTUNREACH to not introduce a new return-code that might
                    trigger unexpected results at other places and to prevent
-                   remote_op_done from setting the delegate if not present
+                   finalize_op from setting the delegate if not present
                 */
                 stonith_bcast_result_to_peers(op, -EHOSTUNREACH, FALSE);
             }
