@@ -409,8 +409,17 @@ fenced_broadcast_op_result(remote_fencing_op_t *op,
     return;
 }
 
+/*!
+ * \internal
+ * \brief Reply to a local request originator and notify all subscribed clients
+ *
+ * \param[in] op         Fencer operation that completed
+ * \param[in] data       Top-level XML to add notification to
+ * \param[in] result     Full operation result
+ */
 static void
-handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
+handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data,
+                              pcmk__action_result_t *result)
 {
     xmlNode *notify_data = NULL;
     xmlNode *reply = NULL;
@@ -421,26 +430,19 @@ handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
     }
 
     /* Do notification with a clean data object */
-    notify_data = create_op_done_notify(op, rc);
+    notify_data = create_op_done_notify(op, pcmk_rc2legacy(stonith__result2rc(result)));
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET, op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action);
 
-    {
-        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-        pcmk__set_result(&result,
-                         ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
-                         stonith__legacy2status(rc), NULL);
-        reply = fenced_construct_reply(op->request, data, &result);
-    }
+    reply = fenced_construct_reply(op->request, data, result);
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    do_stonith_notify(T_STONITH_NOTIFY_FENCE, rc, notify_data);
+    do_stonith_notify(T_STONITH_NOTIFY_FENCE, pcmk_rc2legacy(stonith__result2rc(result)), notify_data);
     do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
 
     /* mark this op as having notify's already sent */
@@ -587,7 +589,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data,
                ((result->exit_reason == NULL)? "" : result->exit_reason),
                op->id);
 
-    handle_local_reply_and_notify(op, data, pcmk_rc2legacy(stonith__result2rc(result)));
+    handle_local_reply_and_notify(op, data, result);
 
     if (!dup) {
         finalize_op_duplicates(op, data, result);
