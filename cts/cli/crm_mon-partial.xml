@@ -60,6 +60,16 @@
           </meta_attributes>
         </primitive>
       </group>
+      <primitive class="ocf" id="smart-mon" provider="pacemaker" type="HealthSMART">
+        <operations>
+          <op id="smart-mon-monitor-interval-10s" interval="10s" name="monitor" start-delay="0s" timeout="10s"/>
+          <op id="smart-mon-start-interval-0s" interval="0s" name="start" timeout="10s"/>
+          <op id="smart-mon-stop-interval-0s" interval="0s" name="stop" timeout="10s"/>
+        </operations>
+        <instance_attributes id="smart-mon-instance_attributes">
+          <nvpair id="smart-mon-instance_attributes-drives" name="drives" value="/dev/nonexistent"/>
+        </instance_attributes>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
@@ -93,6 +103,9 @@
           </lrm_resource>
           <lrm_resource id="dummy-1" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="dummy-1_last_0" operation_key="dummy-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.6.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1599063458" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -135,6 +148,9 @@
             <lrm_rsc_op id="httpd-bundle-1_monitor_30000" operation_key="httpd-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="7592cb10fa1499772a031adfd385f558"/>
           </lrm_resource>
         </lrm_resources>
+        <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
+          <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
+        </lrm_resource>
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
