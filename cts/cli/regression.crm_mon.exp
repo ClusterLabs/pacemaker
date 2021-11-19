@@ -3479,7 +3479,7 @@ Node List:
 Active Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped
+    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
@@ -3663,7 +3663,7 @@ Node List:
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped
+    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
@@ -3705,7 +3705,7 @@ Full List of Resources:
   * 1/1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped
+    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
       * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster02
@@ -3886,7 +3886,7 @@ Node List:
 Inactive Resources:
   * Clone Set: ping-clone [ping]:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
-    * ping	(ocf:pacemaker:ping):	 Stopped
+    * ping	(ocf:pacemaker:ping):	 Stopped (not installed) 
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped (not installed) 

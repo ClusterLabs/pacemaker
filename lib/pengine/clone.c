@@ -963,14 +963,23 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
                     pcmk__str_in_list(node->details->uname, only_node,
                                       pcmk__str_star_matches|pcmk__str_casei)) {
+                    xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node->details->uname);
                     const char *state = "Stopped";
 
                     if (configured_role(rsc) == RSC_ROLE_STOPPED) {
                         state = "Stopped (disabled)";
                     }
 
-                    g_hash_table_insert(stopped, strdup(node->details->uname),
-                                        strdup(state));
+                    if (probe_op != NULL) {
+                        int rc;
+
+                        pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+                        g_hash_table_insert(stopped, strdup(node->details->uname),
+                                            crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
+                    } else {
+                        g_hash_table_insert(stopped, strdup(node->details->uname),
+                                            strdup(state));
+                    }
                 }
             }
             g_list_free(list);
@@ -1112,4 +1121,12 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
     }
 
     return !passes;
+}
+
+const char *
+pe__clone_child_id(pe_resource_t *rsc)
+{
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+    return ID(clone_data->xml_obj_child);
 }

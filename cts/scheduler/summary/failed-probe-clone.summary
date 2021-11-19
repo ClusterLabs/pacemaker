@@ -5,12 +5,13 @@ Current cluster status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started cluster01
     * Clone Set: ping-1-clone [ping-1]:
-      * Stopped: [ cluster01 cluster02 ]
+      * Stopped (not installed): [ cluster01 cluster02 ]
     * Clone Set: ping-2-clone [ping-2]:
-      * Stopped: [ cluster01 cluster02 ]
+      * Stopped: [ cluster02 ]
+      * Stopped (not installed): [ cluster01 ]
     * Clone Set: ping-3-clone [ping-3]:
       * ping-3	(ocf:pacemaker:ping):	 FAILED cluster01
-      * Stopped: [ cluster02 ]
+      * Stopped (not installed): [ cluster02 ]
 
 Transition Summary:
   * Start      ping-2:0     ( cluster02 )
@@ -38,9 +39,10 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started cluster01
     * Clone Set: ping-1-clone [ping-1]:
-      * Stopped: [ cluster01 cluster02 ]
+      * Stopped (not installed): [ cluster01 cluster02 ]
     * Clone Set: ping-2-clone [ping-2]:
       * Started: [ cluster02 ]
-      * Stopped: [ cluster01 ]
+      * Stopped (not installed): [ cluster01 ]
     * Clone Set: ping-3-clone [ping-3]:
-      * Stopped: [ cluster01 cluster02 ]
+      * Stopped: [ cluster01 ]
+      * Stopped (not installed): [ cluster02 ]

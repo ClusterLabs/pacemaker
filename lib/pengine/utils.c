@@ -2573,7 +2573,14 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
 xmlNode *
 pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
 {
+    pe_resource_t *parent = uber_parent(rsc);
     const char *rsc_id = rsc->id;
+
+    if (rsc->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(rsc);
+    } else if (parent->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(parent);
+    }
 
     for (xmlNode *xml_op = pcmk__xml_first_child(rsc->cluster->failed); xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {

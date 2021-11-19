@@ -576,4 +576,6 @@ gboolean pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean ch
 
 xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 
+const char *pe__clone_child_id(pe_resource_t *rsc);
+
 #endif
