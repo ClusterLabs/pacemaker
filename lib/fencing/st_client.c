@@ -1537,11 +1537,13 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_element_value_int(op_reply, F_STONITH_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
         crm_trace("Synchronous reply %d received", reply_id);
 
-        if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
-            rc = -ENOMSG;
-        }
+        stonith__xe_get_result(op_reply, &result);
+        rc = pcmk_rc2legacy(stonith__result2rc(&result));
+        pcmk__reset_result(&result);
 
         if ((call_options & st_opt_discard_reply) || output_data == NULL) {
             crm_trace("Discarding reply");
