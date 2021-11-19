@@ -107,6 +107,9 @@
           <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
           </lrm_resource>
+          <lrm_resource id="ping" class="ocf" provider="pacemaker" type="ping">
+            <lrm_rsc_op id="ping_last_failure_0" operation_key="ping_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="6" rc-code="5" op-status="0" interval="0" last-rc-change="1637259102" exec-time="0" queue-time="0"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="2">

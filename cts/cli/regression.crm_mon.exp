@@ -3488,6 +3488,7 @@ Active Resources:
 
 Failed Resource Actions:
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
+  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -3581,6 +3582,9 @@ Failed Resource Actions:
       <resource_history id="smart-mon" orphan="false" migration-threshold="1000000">
         <operation_history call="9" task="probe" rc="5" rc_text="not installed" exec-time="33ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
+        <operation_history call="6" task="probe" rc="5" rc_text="not installed" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
@@ -3612,6 +3616,7 @@ Failed Resource Actions:
   </node_history>
   <failures>
     <failure op_key="smart-mon_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="9" status="complete" last-rc-change="2021-11-09 15:38:55 -05:00" queued="0" exec="33" interval="0" task="monitor"/>
+    <failure op_key="ping_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="6" status="complete" last-rc-change="2021-11-18 13:11:42 -05:00" queued="0" exec="0" interval="0" task="monitor"/>
   </failures>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -3645,6 +3650,7 @@ Full List of Resources:
 
 Failed Resource Actions:
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
+  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
@@ -3693,6 +3699,8 @@ Operations:
       * (2) start
     * smart-mon: migration-threshold=1000000:
       * (9) probe
+    * ping: migration-threshold=1000000:
+      * (6) probe
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
@@ -3715,6 +3723,7 @@ Operations:
 
 Failed Resource Actions:
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
+  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
@@ -3849,6 +3858,8 @@ Operations:
       * (2) start
     * smart-mon: migration-threshold=1000000:
       * (9) probe
+    * ping: migration-threshold=1000000:
+      * (6) probe
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
@@ -3871,6 +3882,7 @@ Operations:
 
 Failed Resource Actions:
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
+  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
