@@ -3466,33 +3466,42 @@ Operations:
 =#=#=#= Begin test: Text output of partially active resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
+  * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
 Node List:
-  * Online: [ cluster01 cluster02 ]
+  * Online: [ cluster01 (1) cluster02 (2) ]
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
-    * Started: [ cluster01 ]
+    * ping	(ocf:pacemaker:ping):	 Started cluster01
+    * ping	(ocf:pacemaker:ping):	 Stopped
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
+    * Replica[0]
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster02
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-0
+      * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started cluster02
+      * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster02
+    * Replica[1]
+      * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started cluster01
+      * httpd	(ocf:heartbeat:apache):	 FAILED httpd-bundle-1
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster01
+      * httpd-bundle-1	(ocf:pacemaker:remote):	 Started cluster01
   * Resource Group: partially-active-group (2 members inactive):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
-  * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
-  * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
-  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
-  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=33ms
+  * dummy-4_monitor_0 on cluster02 'not installed' (5): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=0ms
+  * smart-mon_monitor_0 on cluster02 'not installed' (5): call=9, status='complete', last-rc-change='Tue Nov  9 15:38:55 2021', queued=0ms, exec=33ms
+  * ping_monitor_0 on cluster02 'not installed' (5): call=6, status='complete', last-rc-change='Thu Nov 18 13:11:42 2021', queued=0ms, exec=0ms
+  * httpd_monitor_0 on httpd-bundle-1 'invalid parameter' (2): call=1, status='complete', last-rc-change='Wed May 27 15:43:09 2020', queued=0ms, exec=0ms
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -3649,24 +3658,32 @@ Failed Resource Actions:
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
+  * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
 Node List:
-  * Online: [ cluster01 cluster02 ]
+  * Online: [ cluster01 (1) cluster02 (2) ]
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
-    * Started: [ cluster01 ]
-    * Stopped: [ cluster02 ]
+    * ping	(ocf:pacemaker:ping):	 Started cluster01
+    * ping	(ocf:pacemaker:ping):	 Stopped
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
+    * Replica[0]
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster02
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-0
+      * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started cluster02
+      * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster02
+    * Replica[1]
+      * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started cluster01
+      * httpd	(ocf:heartbeat:apache):	 FAILED httpd-bundle-1
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster01
+      * httpd-bundle-1	(ocf:pacemaker:remote):	 Started cluster01
   * Resource Group: partially-active-group:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
@@ -3675,46 +3692,54 @@ Full List of Resources:
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
 
 Failed Resource Actions:
-  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
-  * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
-  * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
-  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
-  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=33ms
+  * dummy-4_monitor_0 on cluster02 'not installed' (5): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=0ms
+  * smart-mon_monitor_0 on cluster02 'not installed' (5): call=9, status='complete', last-rc-change='Tue Nov  9 15:38:55 2021', queued=0ms, exec=33ms
+  * ping_monitor_0 on cluster02 'not installed' (5): call=6, status='complete', last-rc-change='Thu Nov 18 13:11:42 2021', queued=0ms, exec=0ms
+  * httpd_monitor_0 on httpd-bundle-1 'invalid parameter' (2): call=1, status='complete', last-rc-change='Wed May 27 15:43:09 2020', queued=0ms, exec=0ms
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
+  * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
 Node List:
-  * Online: [ cluster01 cluster02 ]
+  * Online: [ cluster01 (1) cluster02 (2) ]
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Full List of Resources:
   * 0/1	(ocf:pacemaker:HealthSMART):	Active
   * 1/1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
-    * Started: [ cluster01 ]
-    * Stopped: [ cluster02 ]
+    * ping	(ocf:pacemaker:ping):	 Started cluster01
+    * ping	(ocf:pacemaker:ping):	 Stopped
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
+    * Replica[0]
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster02
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-0
+      * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started cluster02
+      * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster02
+    * Replica[1]
+      * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started cluster01
+      * httpd	(ocf:heartbeat:apache):	 FAILED httpd-bundle-1
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster01
+      * httpd-bundle-1	(ocf:pacemaker:remote):	 Started cluster01
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
-  * Node: cluster01:
+  * Node: cluster01 (1):
     * pingd                           	: 1000      
-  * Node: cluster02:
+  * Node: cluster02 (2):
     * pingd                           	: 1000      
 
 Operations:
-  * Node: cluster02:
+  * Node: cluster02 (2):
     * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="60000ms"
@@ -3734,7 +3759,7 @@ Operations:
       * (9) probe
     * ping: migration-threshold=1000000:
       * (6) probe
-  * Node: cluster01:
+  * Node: cluster01 (1):
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
@@ -3758,11 +3783,11 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
-  * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
-  * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
-  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
-  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=33ms
+  * dummy-4_monitor_0 on cluster02 'not installed' (5): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=0ms
+  * smart-mon_monitor_0 on cluster02 'not installed' (5): call=9, status='complete', last-rc-change='Tue Nov  9 15:38:55 2021', queued=0ms, exec=33ms
+  * ping_monitor_0 on cluster02 'not installed' (5): call=6, status='complete', last-rc-change='Thu Nov 18 13:11:42 2021', queued=0ms, exec=0ms
+  * httpd_monitor_0 on httpd-bundle-1 'invalid parameter' (2): call=1, status='complete', last-rc-change='Wed May 27 15:43:09 2020', queued=0ms, exec=0ms
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
@@ -3826,14 +3851,14 @@ Active Resources:
 =#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
 Cluster Summary:
   * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
+  * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
 Node List:
-  * Online: [ cluster01 cluster02 ]
+  * Online: [ cluster01 (1) cluster02 (2) ]
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Active Resources:
@@ -3841,27 +3866,27 @@ Active Resources:
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
 
 Failed Resource Actions:
-  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=33ms
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
-  * Current DC: cluster02 (version) - partition with quorum
+  * Current DC: cluster02 (2) (version) - partition with quorum
   * Last updated:
   * Last change:
   * 4 nodes configured
   * 16 resource instances configured (1 DISABLED)
 
 Node List:
-  * Node cluster01: online:
+  * Node cluster01 (1): online:
     * Resources:
       * 1	(ocf:heartbeat:IPaddr2):	Active 
       * 1	(ocf:heartbeat:docker):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
       * 1	(ocf:pacemaker:remote):	Active 
       * 1	(stonith:fence_xvm):	Active 
-  * Node cluster02: online:
+  * Node cluster02 (2): online:
     * Resources:
       * 1	(ocf:heartbeat:IPaddr2):	Active 
       * 1	(ocf:heartbeat:docker):	Active 
@@ -3876,20 +3901,20 @@ Node List:
 
 Inactive Resources:
   * Clone Set: ping-clone [ping]:
-    * Started: [ cluster01 ]
-    * Stopped: [ cluster02 ]
+    * ping	(ocf:pacemaker:ping):	 Started cluster01
+    * ping	(ocf:pacemaker:ping):	 Stopped
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
 
 Node Attributes:
-  * Node: cluster01:
+  * Node: cluster01 (1):
     * pingd                           	: 1000      
-  * Node: cluster02:
+  * Node: cluster02 (2):
     * pingd                           	: 1000      
 
 Operations:
-  * Node: cluster02:
+  * Node: cluster02 (2):
     * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="60000ms"
@@ -3909,7 +3934,7 @@ Operations:
       * (9) probe
     * ping: migration-threshold=1000000:
       * (6) probe
-  * Node: cluster01:
+  * Node: cluster01 (1):
     * Fencing: migration-threshold=1000000:
       * (15) start
       * (20) monitor: interval="60000ms"
@@ -3933,11 +3958,11 @@ Operations:
       * (1) probe
 
 Failed Resource Actions:
-  * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
-  * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
-  * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
-  * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
-  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
+  * dummy-2_monitor_0 on cluster02 'unimplemented feature' (3): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=33ms
+  * dummy-4_monitor_0 on cluster02 'not installed' (5): call=2, status='complete', last-rc-change='Wed Sep  2 12:17:38 2020', queued=0ms, exec=0ms
+  * smart-mon_monitor_0 on cluster02 'not installed' (5): call=9, status='complete', last-rc-change='Tue Nov  9 15:38:55 2021', queued=0ms, exec=33ms
+  * ping_monitor_0 on cluster02 'not installed' (5): call=6, status='complete', last-rc-change='Thu Nov 18 13:11:42 2021', queued=0ms, exec=0ms
+  * httpd_monitor_0 on httpd-bundle-1 'invalid parameter' (2): call=1, status='complete', last-rc-change='Wed May 27 15:43:09 2020', queued=0ms, exec=0ms
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
