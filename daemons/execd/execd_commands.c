@@ -993,7 +993,6 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
         switch (execution_status) {
             case PCMK_EXEC_NOT_CONNECTED:
             case PCMK_EXEC_INVALID:
-            case PCMK_EXEC_NO_SECRETS:
                 execution_status = PCMK_EXEC_ERROR;
                 break;
 
