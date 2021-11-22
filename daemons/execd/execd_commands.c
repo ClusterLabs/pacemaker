@@ -780,23 +780,6 @@ stonith2uniform_rc(const char *action, int rc)
     return rc;
 }
 
-static int
-action_get_uniform_rc(svc_action_t *action)
-{
-    lrmd_cmd_t *cmd = action->cb_data;
-
-    if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
-                            pcmk__str_casei)) {
-        return stonith2uniform_rc(cmd->action, action->rc);
-    } else {
-        enum ocf_exitcode code = services_result2ocf(action->standard,
-                                                     cmd->action, action->rc);
-
-        // Cast variable instead of function return to keep compilers happy
-        return (int) code;
-    }
-}
-
 struct notify_new_client_data {
     xmlNode *notify;
     pcmk__client_t *new_client;
@@ -848,6 +831,7 @@ action_complete(svc_action_t * action)
 {
     lrmd_rsc_t *rsc;
     lrmd_cmd_t *cmd = action->cb_data;
+    enum ocf_exitcode code;
 
 #ifdef PCMK__TIME_USE_CGT
     const char *rclass = NULL;
@@ -867,8 +851,12 @@ action_complete(svc_action_t * action)
 #endif
 
     cmd->last_pid = action->pid;
-    pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
+
+    // Cast variable instead of function return to keep compilers happy
+    code = services_result2ocf(action->standard, cmd->action, action->rc);
+    pcmk__set_result(&(cmd->result), (int) code,
                      action->status, services__exit_reason(action));
+
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
