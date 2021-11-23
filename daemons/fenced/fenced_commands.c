@@ -2883,7 +2883,7 @@ remove_relay_op(xmlNode * request)
     }
 }
 
-static int
+static void
 handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                xmlNode *request, const char *remote_peer)
 {
@@ -3152,73 +3152,69 @@ done:
     free_xml(data);
     free_xml(reply);
 
-    return rc;
+    crm_debug("Processed %s request from %s %s: %s (rc=%d)",
+              op, ((client == NULL)? "peer" : "client"),
+              ((client == NULL)? remote_peer : pcmk__client_name(client)),
+              ((rc > 0)? "" : pcmk_strerror(rc)), rc);
 }
 
 static void
 handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
-    const char *op = crm_element_value(request, F_STONITH_OPERATION);
+    // Copy, because request might be freed before we want to log this
+    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
-    } else if (pcmk__str_eq(op, T_STONITH_NOTIFY, pcmk__str_none)) {
-        process_remote_stonith_exec(request);
-    } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
-        /* Reply to a complex fencing op */
+    } else if (pcmk__str_any_of(op, T_STONITH_NOTIFY, STONITH_OP_FENCE, NULL)) {
         process_remote_stonith_exec(request);
     } else {
-        crm_err("Unknown %s reply from %s %s", op,
-                ((client == NULL)? "peer" : "client"),
+        crm_err("Ignoring unknown %s reply from %s %s",
+                crm_str(op), ((client == NULL)? "peer" : "client"),
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
         crm_log_xml_warn(request, "UnknownOp");
+        free(op);
+        return;
     }
+    crm_debug("Processed %s reply from %s %s",
+              op, ((client == NULL)? "peer" : "client"),
+              ((client == NULL)? remote_peer : pcmk__client_name(client)));
+    free(op);
 }
 
+/*!
+ * \internal
+ * \brief Handle a message from an IPC client or CPG peer
+ *
+ * \param[in] client      If not NULL, IPC client that sent message
+ * \param[in] id          If from IPC client, IPC message ID
+ * \param[in] flags       Message flags
+ * \param[in] message     Message XML
+ * \param[in] remote_peer If not NULL, CPG peer that sent message
+ */
 void
 stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                xmlNode *request, const char *remote_peer)
+                xmlNode *message, const char *remote_peer)
 {
-    int call_options = 0;
-    int rc = 0;
-    gboolean is_reply = FALSE;
+    int call_options = st_opt_none;
+    bool is_reply = get_xpath_object("//" T_STONITH_REPLY, message,
+                                     LOG_NEVER) != NULL;
 
-    /* Copy op for reporting. The original might get freed by handle_reply()
-     * before we use it in crm_debug():
-     *     handle_reply()
-     *     |- process_remote_stonith_exec()
-     *     |-- remote_op_done()
-     *     |--- handle_local_reply_and_notify()
-     *     |---- crm_xml_add(...F_STONITH_OPERATION...)
-     *     |--- free_xml(op->request)
-     */
-    char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
-
-    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_NEVER)) {
-        is_reply = TRUE;
-    }
-
-    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_debug("Processing %s%s %u from %s %s with call options 0x%08x",
-              op, (is_reply? " reply" : ""), id,
+    crm_element_value_int(message, F_STONITH_CALLOPTS, &call_options);
+    crm_debug("Processing %ssynchronous %s %s %u from %s %s",
+              pcmk_is_set(call_options, st_opt_sync_call)? "" : "a",
+              crm_element_value(message, F_STONITH_OPERATION),
+              (is_reply? "reply" : "request"), id,
               ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)),
-              call_options);
+              ((client == NULL)? remote_peer : pcmk__client_name(client)));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);
     }
 
     if (is_reply) {
-        handle_reply(client, request, remote_peer);
+        handle_reply(client, message, remote_peer);
     } else {
-        rc = handle_request(client, id, flags, request, remote_peer);
+        handle_request(client, id, flags, message, remote_peer);
     }
-
-    crm_debug("Processed %s%s from %s %s: %s (rc=%d)",
-              op, (is_reply? " reply" : ""),
-              ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)),
-              ((rc > 0)? "" : pcmk_strerror(rc)), rc);
-    free(op);
 }
