@@ -2892,6 +2892,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     xmlNode *data = NULL;
     xmlNode *reply = NULL;
+    bool need_reply = true;
 
     char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
@@ -2921,10 +2922,12 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         pcmk__ipc_send_xml(client, id, reply, flags);
         client->request_id = 0;
         free_xml(reply);
-        return 0;
+        rc = pcmk_ok;
+        need_reply = false;
 
     } else if (pcmk__str_eq(op, STONITH_OP_EXEC, pcmk__str_none)) {
         rc = stonith_device_action(request, &output);
+        need_reply = (rc != -EINPROGRESS);
 
     } else if (pcmk__str_eq(op, STONITH_OP_TIMEOUT_UPDATE, pcmk__str_none)) {
         const char *call_id = crm_element_value(request, F_STONITH_CALLID);
@@ -2933,7 +2936,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
         crm_element_value_int(request, F_STONITH_TIMEOUT, &op_timeout);
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
-        return 0;
+        rc = pcmk_ok;
+        need_reply = false;
 
     } else if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         if (remote_peer) {
@@ -2944,7 +2948,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         remove_relay_op(request);
 
         stonith_query(request, remote_peer, client_id, call_options);
-        return 0;
+        rc = pcmk_ok;
+        need_reply = false;
 
     } else if (pcmk__str_eq(op, T_STONITH_NOTIFY, pcmk__str_none)) {
         const char *flag_name = NULL;
@@ -2965,7 +2970,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         }
 
         pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_OK);
-        return 0;
+        rc = pcmk_ok;
+        need_reply = false;
 
     } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
@@ -2977,8 +2983,11 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                    crm_element_value(dev, F_STONITH_ACTION),
                    crm_element_value(dev, F_STONITH_TARGET));
 
-        if (initiate_remote_stonith_op(NULL, request, FALSE) != NULL) {
+        if (initiate_remote_stonith_op(NULL, request, FALSE) == NULL) {
+            rc = -EPROTO;
+        } else {
             rc = -EINPROGRESS;
+            need_reply = false;
         }
 
     } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
@@ -3012,7 +3021,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
 
                 if (stonith_check_fence_tolerance(tolerance, target, action)) {
-                    rc = 0;
+                    rc = pcmk_ok;
                     goto done;
                 }
 
@@ -3047,10 +3056,13 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                                      FALSE);
                 rc = -EINPROGRESS;
 
-            } else if (initiate_remote_stonith_op(client, request, FALSE) != NULL) {
+            } else if (initiate_remote_stonith_op(client, request, FALSE) == NULL) {
+                rc = -EPROTO;
+            } else {
                 rc = -EINPROGRESS;
             }
         }
+        need_reply = (rc != -EINPROGRESS);
 
     } else if (pcmk__str_eq(op, STONITH_OP_FENCE_HISTORY, pcmk__str_none)) {
         rc = stonith_fence_history(request, &data, remote_peer, call_options);
@@ -3058,8 +3070,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             /* we don't expect answers to the broadcast
              * we might have sent out
              */
-            free_xml(data);
-            return pcmk_ok;
+            rc = pcmk_ok;
+            need_reply = false;
         }
 
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
@@ -3111,8 +3123,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         crm_element_value_int(request, XML_ATTR_ID, &node_id);
         name = crm_element_value(request, XML_ATTR_UNAME);
         reap_crm_member(node_id, name);
-
-        return pcmk_ok;
+        rc = pcmk_ok;
+        need_reply = false;
 
     } else {
         crm_err("Unknown IPC request %s from %s %s", op,
@@ -3120,20 +3132,14 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
     }
 
-  done:
-
+done:
     if (rc == -EACCES) {
         crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
                  crm_str(op), pcmk__client_name(client));
     }
 
-    /* Always reply unless the request is in process still.
-     * If in progress, a reply will happen async after the request
-     * processing is finished */
-    if (rc != -EINPROGRESS) {
-        crm_trace("Reply handling: %p %u %u %d %d %s", client, client?client->request_id:0,
-                  id, pcmk_is_set(call_options, st_opt_sync_call), call_options,
-                  crm_element_value(request, F_STONITH_CALLOPTS));
+    // Reply if result is known
+    if (need_reply) {
 
         if (pcmk_is_set(call_options, st_opt_sync_call)) {
             CRM_ASSERT(client == NULL || client->request_id == id);
