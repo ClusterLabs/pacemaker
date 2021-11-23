@@ -2677,7 +2677,7 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
 
     crm_xml_add(reply, "st_origin", __func__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
-    crm_xml_add(reply, "st_output", output);
+    crm_xml_add(reply, F_STONITH_OUTPUT, output);
     crm_xml_add_int(reply, F_STONITH_RC, rc);
 
     if (request == NULL) {
@@ -2743,7 +2743,7 @@ construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
     crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
     crm_xml_add_int(reply, F_STONITH_RC,
                     pcmk_rc2legacy(stonith__result2rc(result)));
-    crm_xml_add(reply, "st_output", result->action_stdout);
+    crm_xml_add(reply, F_STONITH_OUTPUT, result->action_stdout);
     return reply;
 }
 

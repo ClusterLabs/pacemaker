@@ -600,7 +600,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     if (output && list_info) {
         const char *list_str;
 
-        list_str = crm_element_value(output, "st_output");
+        list_str = crm_element_value(output, F_STONITH_OUTPUT);
 
         if (list_str) {
             *list_info = strdup(list_str);
