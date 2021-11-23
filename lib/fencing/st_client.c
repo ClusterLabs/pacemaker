@@ -887,19 +887,13 @@ static void
 invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
 {
     stonith_private_t *private = NULL;
-    stonith_callback_client_t *blob = NULL;
-    stonith_callback_client_t local_blob;
+    stonith_callback_client_t *cb_info = NULL;
     int rc = pcmk_ok;
 
     CRM_CHECK(stonith != NULL, return);
     CRM_CHECK(stonith->st_private != NULL, return);
 
     private = stonith->st_private;
-
-    local_blob.id = NULL;
-    local_blob.callback = NULL;
-    local_blob.user_data = NULL;
-    local_blob.only_success = FALSE;
 
     if (msg == NULL) {
         // Fencer didn't reply in time
@@ -919,26 +913,21 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
         }
     }
 
-    blob = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
-                                     call_id);
-    if (blob != NULL) {
-        local_blob = *blob;
-        blob = NULL;
-
-        stonith_api_del_callback(stonith, call_id, FALSE);
-
-    } else {
-        crm_trace("No callback found for call %d", call_id);
-        local_blob.callback = NULL;
+    if (call_id > 0) {
+        cb_info = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                            call_id);
     }
 
-    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        invoke_fence_action_callback(stonith, call_id, rc, local_blob.user_data,
-                                     local_blob.callback);
+    if ((cb_info != NULL) && (cb_info->callback != NULL)
+        && (rc == pcmk_ok || !(cb_info->only_success))) {
+        crm_trace("Invoking callback %s for call %d",
+                  crm_str(cb_info->id), call_id);
+        invoke_fence_action_callback(stonith, call_id, rc, cb_info->user_data,
+                                     cb_info->callback);
 
-    } else if (private->op_callback == NULL && rc != pcmk_ok) {
-        crm_warn("Fencing command failed: %s", pcmk_strerror(rc));
+    } else if ((private->op_callback == NULL) && (rc != pcmk_ok)) {
+        crm_warn("Fencing action without registered callback failed: %s",
+                 pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed fence update");
     }
 
@@ -947,7 +936,10 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
         invoke_fence_action_callback(stonith, call_id, rc, NULL,
                                      private->op_callback);
     }
-    crm_trace("OP callback activated.");
+
+    if (cb_info != NULL) {
+        stonith_api_del_callback(stonith, call_id, FALSE);
+    }
 }
 
 static gboolean
