@@ -205,9 +205,9 @@ for ``pacemaker-fenced``.
    | pcmk_host_map        | string  |                    | .. index::                             |
    |                      |         |                    |    single: pcmk_host_map               |
    |                      |         |                    |                                        |
-   |                      |         |                    | A mapping of host names to ports       |
-   |                      |         |                    | numbers for devices that do not        |
-   |                      |         |                    | support host names.                    |
+   |                      |         |                    | A mapping of node names to ports       |
+   |                      |         |                    | for devices that do not understand     |
+   |                      |         |                    | the node names.                        |
    |                      |         |                    |                                        |
    |                      |         |                    | Example: ``node1:1;node2:2,3`` tells   |
    |                      |         |                    | the cluster to use port 1 for          |
@@ -215,7 +215,10 @@ for ``pacemaker-fenced``.
    |                      |         |                    | ``node2``. If ``pcmk_host_check`` is   |
    |                      |         |                    | explicitly set to ``static-list``,     |
    |                      |         |                    | either this or ``pcmk_host_list`` must |
-   |                      |         |                    | be set.                                |
+   |                      |         |                    | be set. The port portion of the map    |
+   |                      |         |                    | may contain special characters such as |
+   |                      |         |                    | spaces if preceded by a backslash      |
+   |                      |         |                    | *(since 2.1.2)*.                       |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_list       | string  |                    | .. index::                             |
    |                      |         |                    |    single: pcmk_host_list              |
@@ -271,9 +274,10 @@ for ``pacemaker-fenced``.
    |                      |         |                    | overall delay introduced by pacemaker  |
    |                      |         |                    | is derived from this value plus a      |
    |                      |         |                    | random delay such that the sum is kept |
-   |                      |         |                    | below the maximum delay. Set to eg.    |
-   |                      |         |                    | node1:1s;node2:5 to set different      |
-   |                      |         |                    | value per node.                        |
+   |                      |         |                    | below the maximum delay. A single      |
+   |                      |         |                    | device can have different delays per   |
+   |                      |         |                    | node using a host map *(since 2.1.2)*, |
+   |                      |         |                    | for example ``node1:0s;node2:5s.``     |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_action_limit    | integer | 1                  | .. index::                             |
    |                      |         |                    |    single: pcmk_action_limit           |
