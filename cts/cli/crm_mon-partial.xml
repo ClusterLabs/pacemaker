@@ -178,5 +178,14 @@
         </lrm_resources>
       </lrm>
     </node_state>
+    <node_state id="httpd-bundle-1" uname="httpd-bundle-1">
+      <lrm id="httpd-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
+            <lrm_rsc_op id="httpd_last_failure_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:2;1:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="2" op-status="0" interval="0" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
   </status>
 </cib>

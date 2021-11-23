@@ -3482,7 +3482,7 @@ Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
   * Resource Group: partially-active-group (2 members inactive):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
@@ -3492,6 +3492,7 @@ Failed Resource Actions:
   * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
+  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -3509,7 +3510,7 @@ Failed Resource Actions:
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -3540,7 +3541,9 @@ Failed Resource Actions:
         <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="true" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
         <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
@@ -3626,12 +3629,18 @@ Failed Resource Actions:
         <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="probe" rc="2" rc_text="invalid parameter" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
   </node_history>
   <failures>
     <failure op_key="dummy-2_monitor_0" node="cluster02" exitstatus="unimplemented feature" exitreason="" exitcode="3" call="2" status="complete" last-rc-change="2020-09-02 12:17:38 -04:00" queued="0" exec="33" interval="0" task="monitor"/>
     <failure op_key="dummy-4_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="2" status="complete" last-rc-change="2020-09-02 12:17:38 -04:00" queued="0" exec="0" interval="0" task="monitor"/>
     <failure op_key="smart-mon_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="9" status="complete" last-rc-change="2021-11-09 15:38:55 -05:00" queued="0" exec="33" interval="0" task="monitor"/>
     <failure op_key="ping_monitor_0" node="cluster02" exitstatus="not installed" exitreason="" exitcode="5" call="6" status="complete" last-rc-change="2021-11-18 13:11:42 -05:00" queued="0" exec="0" interval="0" task="monitor"/>
+    <failure op_key="httpd_monitor_0" node="httpd-bundle-1" exitstatus="invalid parameter" exitreason="" exitcode="2" call="1" status="complete" last-rc-change="2020-05-27 15:43:09 -04:00" queued="0" exec="0" interval="0" task="monitor"/>
   </failures>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -3657,7 +3666,7 @@ Full List of Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
   * Resource Group: partially-active-group:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 FAILED cluster02
@@ -3670,6 +3679,7 @@ Failed Resource Actions:
   * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
+  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
@@ -3693,7 +3703,7 @@ Full List of Resources:
     * Stopped: [ cluster02 ]
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
 
@@ -3743,12 +3753,16 @@ Operations:
   * Node: httpd-bundle-0@cluster02:
     * httpd: migration-threshold=1000000:
       * (1) start
+  * Node: httpd-bundle-1@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) probe
 
 Failed Resource Actions:
   * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
+  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
 =#=#=#= Begin test: Text output of partially active group =#=#=#=
@@ -3856,14 +3870,14 @@ Node List:
   * GuestNode httpd-bundle-0@cluster02: online:
     * Resources:
       * 1	(ocf:heartbeat:apache):	Active 
+  * GuestNode httpd-bundle-1@cluster01: online:
+    * Resources:
+      * 1	(ocf:heartbeat:apache):	Active 
 
 Inactive Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 ]
     * Stopped: [ cluster02 ]
-  * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
     * 2/4	(ocf:pacemaker:Dummy):	Active cluster02
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
@@ -3914,12 +3928,16 @@ Operations:
   * Node: httpd-bundle-0@cluster02:
     * httpd: migration-threshold=1000000:
       * (1) start
+  * Node: httpd-bundle-1@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) probe
 
 Failed Resource Actions:
   * dummy-2 probe on cluster02 returned 'unimplemented feature' at Wed Sep  2 12:17:38 2020 after 33ms
   * dummy-4 probe on cluster02 returned 'not installed' at Wed Sep  2 12:17:38 2020
   * smart-mon probe on cluster02 returned 'not installed' at Tue Nov  9 15:38:55 2021 after 33ms
   * ping probe on cluster02 returned 'not installed' at Thu Nov 18 13:11:42 2021
+  * httpd probe on httpd-bundle-1 returned 'invalid parameter' at Wed May 27 15:43:09 2020
 =#=#=#= End test: Complete brief text output grouped by node, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node, with inactive resources
 =#=#=#= Begin test: Text output of partially active resources, with inactive resources, filtered by node =#=#=#=
@@ -3939,7 +3957,7 @@ Full List of Resources:
     * Started: [ cluster01 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 FAILED cluster01
   * smart-mon	(ocf:pacemaker:HealthSMART):	 Stopped
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
@@ -3972,7 +3990,9 @@ Full List of Resources:
         <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="true" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
         <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
