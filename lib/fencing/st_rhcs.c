@@ -148,7 +148,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
         return rc;
     }
 
-    if (result->exit_status != CRM_EX_OK) {
+    if (!pcmk__result_ok(result)) {
         crm_warn("Metadata action for %s returned error code %d",
                  agent, result->exit_status);
         rc = pcmk_rc2legacy(stonith__result2rc(result));

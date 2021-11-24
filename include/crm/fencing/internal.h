@@ -60,6 +60,9 @@ stonith_action_t *stonith_action_create(const char *agent,
 void stonith__destroy_action(stonith_action_t *action);
 pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);
+void stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result);
+void stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result);
+xmlNode *stonith__find_xe_with_result(xmlNode *xml);
 
 int
 stonith_action_execute_async(stonith_action_t * action,
@@ -102,6 +105,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define F_STONITH_REMOTE_OP_ID  "st_remote_op"
 #  define F_STONITH_REMOTE_OP_ID_RELAY  "st_remote_op_relay"
 #  define F_STONITH_RC            "st_rc"
+#  define F_STONITH_OUTPUT        "st_output"
 /*! Timeout period per a device execution */
 #  define F_STONITH_TIMEOUT       "st_timeout"
 #  define F_STONITH_TOLERANCE     "st_tolerance"
@@ -181,6 +185,8 @@ stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
 bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
 bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
 bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
+
+int stonith__legacy2status(int rc);
 
 /*!
  * \internal

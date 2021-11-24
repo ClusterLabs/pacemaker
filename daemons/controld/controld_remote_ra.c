@@ -297,7 +297,7 @@ static void
 check_remote_node_state(remote_ra_cmd_t *cmd)
 {
     /* Only successful actions can change node state */
-    if (cmd->result.exit_status != PCMK_OCF_OK) {
+    if (!pcmk__result_ok(&(cmd->result))) {
         return;
     }
 
@@ -365,7 +365,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
                      cmd->result.exit_reason);
 
-    if (cmd->reported_success && (cmd->result.exit_status != PCMK_OCF_OK)) {
+    if (cmd->reported_success && !pcmk__result_ok(&(cmd->result))) {
         op.t_rcchange = (unsigned int) time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
