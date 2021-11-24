@@ -798,9 +798,9 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 #define ACL_NS_Q_READABLE (const xmlChar *) ACL_NS_Q_PREFIX   "readable"
 #define ACL_NS_Q_DENIED   (const xmlChar *) ACL_NS_Q_PREFIX   "denied"
 
-static const xmlChar *NS_WRITABLE = (xmlChar *) ACL_NS_PREFIX "writable";
-static const xmlChar *NS_READABLE = (xmlChar *) ACL_NS_PREFIX "readable";
-static const xmlChar *NS_DENIED =   (xmlChar *) ACL_NS_PREFIX "denied";
+static const xmlChar *NS_WRITABLE = (const xmlChar *) ACL_NS_PREFIX "writable";
+static const xmlChar *NS_READABLE = (const xmlChar *) ACL_NS_PREFIX "readable";
+static const xmlChar *NS_DENIED =   (const xmlChar *) ACL_NS_PREFIX "denied";
 
 static int
 pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
