@@ -336,6 +336,7 @@ stonith__result2rc(const pcmk__action_result_t *result)
                 case CRM_EX_EXPIRED:            return EHOSTUNREACH;
                 default:                        break;
             }
+            break;
 
         default:
             break;
