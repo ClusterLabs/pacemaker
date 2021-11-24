@@ -1870,7 +1870,7 @@ for t in $tests; do
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/ last-rc-change=\"[A-Za-z0-9: ]*\"//'\
+        -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
