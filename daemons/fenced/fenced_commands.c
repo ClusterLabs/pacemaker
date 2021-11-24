@@ -3023,7 +3023,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 const char *client_id = NULL;
                 remote_fencing_op_t *op = NULL;
 
-                crm_notice("Forwarding self-fencing request to peer %s"
+                crm_notice("Forwarding self-fencing request to peer %s "
                            "due to topology", alternate_host);
 
                 if (client->id) {

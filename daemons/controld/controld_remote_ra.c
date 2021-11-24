@@ -413,7 +413,7 @@ retry_start_cmd_cb(gpointer data)
     lrm_state_t *lrm_state = data;
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     remote_ra_cmd_t *cmd = NULL;
-    int rc = pcmk_rc_error;
+    int rc = ETIME;
 
     if (!ra_data || !ra_data->cur_cmd) {
         return FALSE;
@@ -426,6 +426,10 @@ retry_start_cmd_cb(gpointer data)
 
     if (cmd->remaining_timeout > 0) {
         rc = handle_remote_ra_start(lrm_state, cmd, cmd->remaining_timeout);
+    } else {
+        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                         PCMK_EXEC_TIMEOUT,
+                         "Not enough time remains to retry remote connection");
     }
 
     if (rc != pcmk_rc_ok) {

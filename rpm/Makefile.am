@@ -114,18 +114,17 @@ distdir		= $(top_distdir)/rpm
 TARFILE		= $(abs_builddir)/../$(top_distdir).tar.gz
 
 export:
-	if [ -f "$(TARFILE)" ]; then							\
-	    echo "`date`: Using existing tarball: $(TARFILE)";				\
-	else										\
-	    cd $(abs_srcdir)/..;							\
-	    if [ -n "$(DIRTY_EXT)" ]; then 							\
-	        git commit -m "DO-NOT-PUSH" -a;						\
-	        git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-	        git reset --mixed HEAD^;						\
-	    else									\
-	        git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
-	    fi;										\
-	    echo "`date`: Rebuilt $(TARFILE)";						\
+	cd $(abs_srcdir)/..;							\
+	if [ -n "$(DIRTY_EXT)" ]; then						\
+	    git commit -m "DO-NOT-PUSH" -a;					\
+	    git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
+	    git reset --mixed HEAD^;						\
+	    echo "`date`: Rebuilt $(TARFILE)";					\
+	elif [ -f "$(TARFILE)" ]; then						\
+	    echo "`date`: Using existing tarball: $(TARFILE)";			\
+	else									\
+	    git archive --prefix=$(top_distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
+	    echo "`date`: Rebuilt $(TARFILE)";					\
 	fi
 
 # Depend on spec-clean so the spec gets rebuilt every time

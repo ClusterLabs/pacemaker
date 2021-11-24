@@ -1,16 +1,6 @@
-* Mon Nov 15 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2-rc2
-- Changesets: 3
-- Diff: 4 files changed, 4 insertions(+), 2 deletions(-)
-
-- Fixes since Pacemaker-2.1.2-rc1
-  + fencing: mark state as done if remapped "on" times out
-  + executor: avoid memory leak for failed pending op
-    (regression introduced in 2.1.2-rc1)
-  + pkg-config: return correct value for ocfdir (regression introduced in 2.1.0)
-
-* Fri Oct 29 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2-rc1
-- Changesets: 448
-- Diff: 221 files changed, 16502 insertions(+), 11737 deletions(-)
+* Tue Nov 23 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2
+- Changesets: 462
+- Diff: 223 files changed, 16518 insertions(+), 11743 deletions(-)
 
 - Features added since Pacemaker-2.1.1
   + build: when built with --with-initdir, Pacemaker uses the value to find
@@ -28,6 +18,7 @@
   + tools: crm_resource --force-* now outputs exit reasons if available
 
 - Fixes since Pacemaker-2.1.1
+  + pkg-config: return correct value for ocfdir (regression introduced in 2.1.0)
   + tools: fix crm_mon --hide-headers and related options
            (regression introduced in 2.0.4)
   + attrd: check election status upon node loss to avoid election timeout
@@ -36,6 +27,7 @@
   + pacemakerd: recover properly from Corosync crash
   + fencing: fencing results are now sorted with sub-second resolution
   + fencing: fix fence_watchdog version output, metadata output, and man page
+  + fencing: mark state as done if remapped "on" times out
   + tools: map LSB status to OCF correctly with crm_resource --force-check
 
 - Public API changes since Pacemaker-2.1.1
@@ -62,6 +54,8 @@
   + libpacemaker: add pcmk_injections_t
   + libpacemaker: add pcmk_free_injections()
   + libpacemaker: add pcmk_simulate()
+  + libstonithd: add opaque member to stonith_event_t
+  + libstonithd: add opaque member to stonith_callback_data_t
 
 * Thu Sep 09 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1
 - Changesets: 231
