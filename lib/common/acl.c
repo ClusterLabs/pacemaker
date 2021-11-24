@@ -824,11 +824,14 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
         switch (i_node->type) {
         case XML_ELEMENT_NODE:
             pcmk__set_xml_doc_flag(i_node, pcmk__xf_tracking);
-            ns = !pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)
-                 ? NS_DENIED
-                 : !pcmk__check_acl(i_node, NULL, pcmk__xf_acl_write)
-                   ? NS_READABLE
-                   : NS_WRITABLE;
+
+            if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)) {
+                ns = NS_DENIED;
+            } else if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_write)) {
+                ns = NS_READABLE;
+            } else {
+                ns = NS_WRITABLE;
+            }
             if (ns == NS_WRITABLE) {
                 if (ns_recycle_writable == NULL) {
                     ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
@@ -864,15 +867,17 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
             break;
         case XML_ATTRIBUTE_NODE:
             /* we can utilize that parent has already been assigned the ns */
-            ns = !pcmk__check_acl(i_node->parent,
+            if (!pcmk__check_acl(i_node->parent,
                                  (const char *) i_node->name,
-                                 pcmk__xf_acl_read)
-                 ? NS_DENIED
-                 : !pcmk__check_acl(i_node,
+                                 pcmk__xf_acl_read)) {
+                ns = NS_DENIED;
+            } else if (!pcmk__check_acl(i_node,
                                    (const char *) i_node->name,
-                                   pcmk__xf_acl_write)
-                   ? NS_READABLE
-                   : NS_WRITABLE;
+                                   pcmk__xf_acl_write)) {
+                ns = NS_READABLE;
+            } else {
+                ns = NS_WRITABLE;
+            }
             if (ns == NS_WRITABLE) {
                 if (ns_recycle_writable == NULL) {
                     ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
@@ -909,13 +914,17 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
                               xmlDoc **acl_evaled_doc)
 {
     int ret, version;
-    xmlNode *target, *comment;
-    char comment_buf[256] = "access as evaluated for user ";
+    xmlNode *target;
     const char *validation;
 
     CRM_CHECK(cred != NULL, return EINVAL);
     CRM_CHECK(cib_doc != NULL, return EINVAL);
     CRM_CHECK(acl_evaled_doc != NULL, return EINVAL);
+
+    /* avoid trivial accidental XML injection */
+    if (strpbrk(cred, "<>&") != NULL) {
+        return EINVAL;
+    }
 
     if (!pcmk_acl_required(cred)) {
         /* nothing to evaluate */
@@ -942,17 +951,6 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
 
     if (ret > 0) {
-        /* avoid trivial accidental XML injection */
-        if (strpbrk(cred, "<>&") == NULL) {
-            snprintf(comment_buf + strlen(comment_buf),
-                     sizeof(comment_buf) - strlen(comment_buf), "%s", cred);
-            comment = xmlNewDocComment(target->doc, (pcmkXmlStr) comment_buf);
-            if (comment == NULL) {
-                xmlFreeNode(target);
-                return EINVAL;
-            }
-            xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
-        }
         *acl_evaled_doc = target->doc;
     } else {
         xmlFreeNode(target);
@@ -1107,11 +1105,13 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
     CRM_ASSERT(xslt_ctxt != NULL);
 
-    params = (how == pcmk__acl_render_ns_simple)
-             ? params_ns_simple
-             : (how == pcmk__acl_render_text)
-             ? params_noansi
-             : parse_params(xslt_doc, params_useansi);
+    if (how == pcmk__acl_render_ns_simple) {
+        params = params_ns_simple;
+    } else if (how == pcmk__acl_render_text) {
+        params = params_noansi;
+    } else {
+        params = parse_params(xslt_doc, params_useansi);
+    }
 
     xsltQuoteUserParams(xslt_ctxt, params);
 
