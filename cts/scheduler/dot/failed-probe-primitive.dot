@@ -1,0 +1,4 @@
+ digraph "g" {
+"dummy-2_start_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"dummy-3_stop_0 cluster01" [ style=bold color="green" fontcolor="black"]
+}

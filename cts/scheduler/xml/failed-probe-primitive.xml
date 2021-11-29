@@ -1,0 +1,71 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="37" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.4-1.e97f9675f.git.el7-e97f9675f"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test-cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_xvm">
+        <instance_attributes id="Fencing-instance_attributes">
+          <nvpair id="Fencing-instance_attributes-ip_family" name="ip_family" value="ipv4"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="dummy-1" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="dummy-2" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="dummy-3" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="3:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:0;3:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster01" call-id="3" rc-code="0" op-status="0" interval="0" last-rc-change="1588951272" exec-time="36" queue-time="0" op-digest="7da16842ab2328e41f737cab5e5fc89c"/>
+            <lrm_rsc_op id="Fencing_monitor_60000" operation_key="Fencing_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="4" rc-code="0" op-status="0" interval="60000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="a88218bb6c7dc47e6586fc75fc2a8d69"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-1_last_failure_0" operation_key="dummy-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="5:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;5:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="5" rc-code="5" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-2_last_failure_0" operation_key="dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="6" rc-code="5" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-3_last_failure_0" operation_key="dummy-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="9:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:4;9:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="9" rc-code="4" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="1:0:7:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:7;1:0:7:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster02" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1588951263" exec-time="3" queue-time="0" op-digest="7da16842ab2328e41f737cab5e5fc89c"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-1_last_failure_0" operation_key="dummy-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="2" rc-code="5" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-2_last_failure_0" operation_key="dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="7:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;7:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="7" rc-code="7" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-3_last_failure_0" operation_key="dummy-3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="8:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;8:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="8" rc-code="5" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
