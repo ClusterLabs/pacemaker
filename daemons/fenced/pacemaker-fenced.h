@@ -220,8 +220,8 @@ char *stonith_level_key(xmlNode * msg, int mode);
 int stonith_level_kind(xmlNode * msg);
 void fenced_register_level(xmlNode *msg, char **desc,
                            pcmk__action_result_t *result);
-
-int stonith_level_remove(xmlNode * msg, char **desc);
+void fenced_unregister_level(xmlNode *msg, char **desc,
+                             pcmk__action_result_t *result);
 
 stonith_topology_t *find_topology_for_host(const char *host);
 

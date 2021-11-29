@@ -409,17 +409,18 @@ do_stonith_notify_level(const char *op, int rc, const char *desc)
 static void
 topology_remove_helper(const char *node, int level)
 {
-    int rc;
     char *desc = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
-    rc = stonith_level_remove(data, &desc);
-    do_stonith_notify_level(STONITH_OP_LEVEL_DEL, rc, desc);
-
+    fenced_unregister_level(data, &desc, &result);
+    do_stonith_notify_level(STONITH_OP_LEVEL_DEL,
+                            pcmk_rc2legacy(stonith__result2rc(&result)), desc);
+    pcmk__reset_result(&result);
     free_xml(data);
     free(desc);
 }

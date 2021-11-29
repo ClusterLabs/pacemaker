@@ -1693,25 +1693,54 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
-int
-stonith_level_remove(xmlNode *msg, char **desc)
+/*!
+ * \internal
+ * \brief Unregister a fencing topology level for a target
+ *
+ * Given an XML request specifying the target name and level index (or 0 for all
+ * levels), this will remove any corresponding entry for the target from the
+ * global topology table.
+ *
+ * \param[in]  msg     XML request for STONITH level registration
+ * \param[out] desc    If not NULL, set to string representation "TARGET[LEVEL]"
+ * \param[out] result  Where to set result of unregistration
+ */
+void
+fenced_unregister_level(xmlNode *msg, char **desc,
+                        pcmk__action_result_t *result)
 {
     int id = -1;
     stonith_topology_t *tp;
     char *target;
+    xmlNode *level = NULL;
 
-    /* Unlike additions, removal requests should always have one level tag */
-    xmlNode *level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_ERR);
+    CRM_CHECK(result != NULL, return);
 
-    CRM_CHECK(level != NULL, return -EPROTO);
+    if (msg == NULL) {
+        fenced_set_protocol_error(result);
+        return;
+    }
+
+    // Unlike additions, removal requests should always have one level tag
+    level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
+    if (level == NULL) {
+        fenced_set_protocol_error(result);
+        return;
+    }
 
     target = stonith_level_key(level, -1);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
-    CRM_CHECK((id >= 0) && (id < ST_LEVEL_MAX),
-              crm_log_xml_warn(msg, "invalid level");
-              free(target);
-              return -EPROTO);
+    // Ensure level ID is in allowed range
+    if ((id < 0) || (id >= ST_LEVEL_MAX)) {
+        crm_warn("Ignoring topology unregistration for %s with invalid level %d",
+                  target, id);
+        free(target);
+        crm_log_xml_warn(level, "Bad level");
+        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                         "Invalid topology level");
+        return;
+    }
 
     if (desc) {
         *desc = crm_strdup_printf("%s[%d]", target, id);
@@ -1745,7 +1774,7 @@ stonith_level_remove(xmlNode *msg, char **desc)
     }
 
     free(target);
-    return pcmk_ok;
+    pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
 static char *
@@ -3173,7 +3202,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         char *device_id = NULL;
 
         if (is_privileged(client, op)) {
-            rc = stonith_level_remove(request, &device_id);
+            fenced_unregister_level(request, &device_id, &result);
+            rc = pcmk_rc2legacy(stonith__result2rc(&result));
         } else {
             rc = -EACCES;
         }
