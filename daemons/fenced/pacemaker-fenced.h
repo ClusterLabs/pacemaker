@@ -218,7 +218,8 @@ void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(xmlNode * msg, int mode);
 int stonith_level_kind(xmlNode * msg);
-int stonith_level_register(xmlNode * msg, char **desc);
+void fenced_register_level(xmlNode *msg, char **desc,
+                           pcmk__action_result_t *result);
 
 int stonith_level_remove(xmlNode * msg, char **desc);
 

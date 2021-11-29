@@ -325,6 +325,7 @@ stonith__result2rc(const pcmk__action_result_t *result)
          */
         case PCMK_EXEC_INVALID:
             switch (result->exit_status) {
+                case CRM_EX_INVALID_PARAM:      return EINVAL;
                 case CRM_EX_INSUFFICIENT_PRIV:  return EACCES;
                 case CRM_EX_PROTOCOL:           return EPROTO;
 

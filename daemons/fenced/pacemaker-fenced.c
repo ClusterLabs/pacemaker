@@ -452,8 +452,8 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 handle_topology_change(xmlNode *match, bool remove) 
 {
-    int rc;
     char *desc = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(match != NULL, return);
     crm_trace("Updating %s", ID(match));
@@ -467,9 +467,10 @@ handle_topology_change(xmlNode *match, bool remove)
         free(key);
     }
 
-    rc = stonith_level_register(match, &desc);
-    do_stonith_notify_level(STONITH_OP_LEVEL_ADD, rc, desc);
-
+    fenced_register_level(match, &desc, &result);
+    do_stonith_notify_level(STONITH_OP_LEVEL_ADD,
+                            pcmk_rc2legacy(stonith__result2rc(&result)), desc);
+    pcmk__reset_result(&result);
     free(desc);
 }
 

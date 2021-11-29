@@ -1583,20 +1583,19 @@ parse_device_list(const char *devices)
 
 /*!
  * \internal
- * \brief Register a STONITH level for a target
+ * \brief Register a fencing topology level for a target
  *
  * Given an XML request specifying the target name, level index, and device IDs
  * for the level, this will create an entry for the target in the global topology
  * table if one does not already exist, then append the specified device IDs to
  * the entry's device list for the specified level.
  *
- * \param[in]  msg   XML request for STONITH level registration
- * \param[out] desc  If not NULL, will be set to string representation ("TARGET[LEVEL]")
- *
- * \return pcmk_ok on success, -EINVAL if XML does not specify valid level index
+ * \param[in]  msg     XML request for STONITH level registration
+ * \param[out] desc    If not NULL, set to string representation "TARGET[LEVEL]"
+ * \param[out] result  Where to set result of registration
  */
-int
-stonith_level_register(xmlNode *msg, char **desc)
+void
+fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 {
     int id = 0;
     xmlNode *level;
@@ -1607,6 +1606,13 @@ stonith_level_register(xmlNode *msg, char **desc)
     stonith_key_value_t *dIter = NULL;
     stonith_key_value_t *devices = NULL;
 
+    CRM_CHECK(result != NULL, return);
+
+    if (msg == NULL) {
+        fenced_set_protocol_error(result);
+        return;
+    }
+
     /* Allow the XML here to point to the level tag directly, or wrapped in
      * another tag. If directly, don't search by xpath, because it might give
      * multiple hits (e.g. if the XML is the CIB).
@@ -1614,11 +1620,15 @@ stonith_level_register(xmlNode *msg, char **desc)
     if (pcmk__str_eq(TYPE(msg), XML_TAG_FENCING_LEVEL, pcmk__str_casei)) {
         level = msg;
     } else {
-        level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_ERR);
+        level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
     }
-    CRM_CHECK(level != NULL, return -EINVAL);
+    if (level == NULL) {
+        fenced_set_protocol_error(result);
+        return;
+    }
 
     mode = stonith_level_kind(level);
+
     target = stonith_level_key(level, mode);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
@@ -1626,18 +1636,26 @@ stonith_level_register(xmlNode *msg, char **desc)
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
 
-    /* Sanity-check arguments */
-    if (mode >= 3 || (id <= 0) || (id >= ST_LEVEL_MAX)) {
-        crm_trace("Could not add %s[%d] (%d) to the topology (%d active entries)", target, id, mode, g_hash_table_size(topology));
+    // Ensure level ID is in allowed range
+    if ((id <= 0) || (id >= ST_LEVEL_MAX)) {
+        crm_warn("Ignoring topology registration for %s with invalid level %d",
+                  target, id);
         free(target);
-        crm_log_xml_err(level, "Bad topology");
-        return -EINVAL;
+        crm_log_xml_warn(level, "Bad level");
+        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                         "Invalid topology level");
+        return;
     }
 
     /* Find or create topology table entry */
     tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
         tp = calloc(1, sizeof(stonith_topology_t));
+        if (tp == NULL) {
+            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                             strerror(ENOMEM));
+            return;
+        }
         tp->kind = mode;
         tp->target = target;
         tp->target_value = crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_VALUE);
@@ -1671,7 +1689,8 @@ stonith_level_register(xmlNode *msg, char **desc)
         crm_info("Target %s has %d active fencing level%s",
                  tp->target, nlevels, pcmk__plural_s(nlevels));
     }
-    return pcmk_ok;
+
+    pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
 int
@@ -3142,7 +3161,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         char *device_id = NULL;
 
         if (is_privileged(client, op)) {
-            rc = stonith_level_register(request, &device_id);
+            fenced_register_level(request, &device_id, &result);
+            rc = pcmk_rc2legacy(stonith__result2rc(&result));
         } else {
             rc = -EACCES;
         }
