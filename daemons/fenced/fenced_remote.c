@@ -63,7 +63,7 @@ typedef struct device_properties_s {
     int delay_base[st_phase_max];
 } device_properties_t;
 
-typedef struct st_query_result_s {
+typedef struct {
     /* Name of peer that sent this result */
     char *host;
     /* Only try peers for non-topology based operations once */
@@ -95,13 +95,12 @@ sort_strings(gconstpointer a, gconstpointer b)
 static void
 free_remote_query(gpointer data)
 {
-    if (data) {
-        peer_device_info_t *query = data;
+    if (data != NULL) {
+        peer_device_info_t *peer = data;
 
-        crm_trace("Free'ing query result from %s", query->host);
-        g_hash_table_destroy(query->devices);
-        free(query->host);
-        free(query);
+        g_hash_table_destroy(peer->devices);
+        free(peer->host);
+        free(peer);
     }
 }
 
