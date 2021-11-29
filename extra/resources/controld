@@ -173,6 +173,12 @@ controld_start() {
         return $OCF_ERR_CONFIGURED
     fi
 
+    # If no-quorum-policy not set, or not set as freeze, give a warning
+    crm_attribute --type=crm_config --name=no-quorum-policy --query|grep value=freeze >/dev/null 2>/dev/null
+    if [ $? -ne 0 ]; then
+        ocf_log warn "The DLM cluster best practice suggests to set the cluster property \"no-quorum-policy=freeze\""
+    fi
+
     "${OCF_RESKEY_daemon}" $OCF_RESKEY_args
 
     while true
