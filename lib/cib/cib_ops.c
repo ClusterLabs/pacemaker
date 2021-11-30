@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,7 +332,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     obj_root = get_object_root(section, *result_cib);
     if (obj_root == NULL) {
         xmlNode *tmp_section = NULL;
-        const char *path = get_object_parent(section);
+        const char *path = pcmk_cib_parent_name_for(section);
 
         if (path == NULL) {
             return -EINVAL;
