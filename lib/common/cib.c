@@ -11,6 +11,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <libxml/tree.h>    // xmlNode
 
 #include <crm/msg_xml.h>
 
@@ -140,4 +141,19 @@ pcmk_cib_parent_name_for(const char *element_name)
         }
     }
     return NULL;
+}
+
+/*!
+ * \brief Find an element in the CIB
+ *
+ * \param[in] cib           Top-level CIB XML to search
+ * \param[in] element_name  Name of CIB element to search for
+ *
+ * \return XML element in \p cib corresponding to \p element_name
+ *         (or \p cib itself if element is unknown or not found)
+ */
+xmlNode *
+pcmk_find_cib_element(xmlNode *cib, const char *element_name)
+{
+    return get_xpath_object(pcmk_cib_xpath_for(element_name), cib, LOG_TRACE);
 }

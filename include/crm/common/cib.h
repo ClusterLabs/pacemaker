@@ -14,8 +14,11 @@
 extern "C" {
 #endif
 
+#include <libxml/tree.h>    // xmlNode
+
 const char *pcmk_cib_xpath_for(const char *element_name);
 const char *pcmk_cib_parent_name_for(const char *element_name);
+xmlNode *pcmk_find_cib_element(xmlNode *cib, const char *element_name);
 
 #ifdef __cplusplus
 }
