@@ -367,12 +367,19 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 {
     int max = 0;
     int lpc = 0;
+    const char *xpath_base = NULL;
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_string = crm_strdup_printf("%.128s//%s//nvpair[@name='%.128s']",
-                                     get_object_path(XML_CIB_TAG_CRMCONFIG),
-                                     XML_CIB_TAG_PROPSET, attr_name);
+    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CRMCONFIG);
+    if (xpath_base == NULL) {
+        crm_err(XML_CIB_TAG_CRMCONFIG " CIB element not known (bug?)");
+        return;
+    }
+
+    xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
+                                     xpath_base, XML_CIB_TAG_PROPSET,
+                                     attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);

@@ -188,14 +188,20 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
+    const char *xpath_base = NULL;
 
     CRM_ASSERT(ticket_cons_xml != NULL);
     *ticket_cons_xml = NULL;
 
+    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CONSTRAINTS);
+    if (xpath_base == NULL) {
+        crm_err(XML_CIB_TAG_CONSTRAINTS " CIB element not known (bug?)");
+        return -ENOMSG;
+    }
+
     xpath_string = calloc(1, XPATH_MAX);
-    offset +=
-        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s/%s",
-                 get_object_path(XML_CIB_TAG_CONSTRAINTS), XML_CONS_TAG_RSC_TICKET);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s/%s",
+                       xpath_base, XML_CONS_TAG_RSC_TICKET);
 
     if (ticket_id) {
         offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@ticket=\"%s\"]",

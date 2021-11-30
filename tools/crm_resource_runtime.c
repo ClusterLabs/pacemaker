@@ -110,6 +110,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
+    const char *xpath_base = NULL;
 
     if(value) {
         *value = NULL;
@@ -119,9 +120,15 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOTCONN;
     }
 
+    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES);
+    if (xpath_base == NULL) {
+        crm_err(XML_CIB_TAG_RESOURCES " CIB element not known (bug?)");
+        return ENOMSG;
+    }
+
     xpath_string = calloc(1, XPATH_MAX);
-    offset +=
-        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", get_object_path("resources"));
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s",
+                       xpath_base);
 
     offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
 
