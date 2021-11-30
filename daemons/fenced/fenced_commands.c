@@ -2384,35 +2384,33 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
                  int pid, bool merged)
 {
     xmlNode *reply = NULL;
-    bool bcast = false;
 
     CRM_CHECK((cmd != NULL) && (result != NULL), return);
 
-    reply = construct_async_reply(cmd, result);
+    log_async_result(cmd, result, pid, NULL, merged);
 
-    // If target was also the originator, broadcast fencing results for it
+    reply = construct_async_reply(cmd, result);
+    if (merged) {
+        pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
+    }
+
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
         && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei)) {
-
+        /* The target was also the originator, so broadcast the result on its
+         * behalf (since it will be unable to).
+         */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        bcast = true;
-    }
-
-    log_async_result(cmd, result, pid, NULL, merged);
-
-    if (merged) {
-        pcmk__xe_set_bool_attr(reply, F_STONITH_MERGED, true);
-    }
-    crm_log_xml_trace(reply, "Reply");
-
-    if (bcast) {
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
+        // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);
     }
+
+    crm_log_xml_trace(reply, "Reply");
+    free_xml(reply);
 
     if (stand_alone) {
         /* Do notification with a clean data object */
@@ -2430,8 +2428,6 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         do_stonith_notify(T_STONITH_NOTIFY_FENCE, rc, notify_data);
         do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
     }
-
-    free_xml(reply);
 }
 
 static void
