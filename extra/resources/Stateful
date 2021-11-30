@@ -57,7 +57,7 @@ Location to store the resource state in
 <content type="string" default="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="envfile" reloadable="true">
+<parameter name="envfile" reloadable="1">
 <longdesc lang="en">
 If this is set, the environment will be dumped to this file for every call.
 </longdesc>
@@ -65,7 +65,7 @@ If this is set, the environment will be dumped to this file for every call.
 <content type="string" default="" />
 </parameter>
 
-<parameter name="notify_delay" reloadable="true">
+<parameter name="notify_delay" reloadable="1">
 <longdesc lang="en">
 The notify action will sleep for this many seconds before returning,
 to simulate a long-running notify.
