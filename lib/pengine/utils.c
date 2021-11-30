@@ -23,7 +23,6 @@
 
 extern bool pcmk__is_daemon;
 
-extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 static void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,

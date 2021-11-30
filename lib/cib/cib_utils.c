@@ -141,18 +141,6 @@ get_object_parent(const char *object_type)
     return NULL;
 }
 
-xmlNode *
-get_object_root(const char *object_type, xmlNode * the_root)
-{
-    const char *xpath = get_object_path(object_type);
-
-    if (xpath == NULL) {
-        return the_root;        /* or return NULL? */
-    }
-
-    return get_xpath_object(xpath, the_root, LOG_TRACE);
-}
-
 /*!
  * \brief Create XML for a new (empty) CIB
  *
@@ -823,3 +811,17 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
         return rc;
     }
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib/util_compat.h>
+
+xmlNode *
+get_object_root(const char *object_type, xmlNode *the_root)
+{
+    return pcmk_find_cib_element(the_root, object_type);
+}
+
+// LCOV_EXCL_END
+// End deprecated API
