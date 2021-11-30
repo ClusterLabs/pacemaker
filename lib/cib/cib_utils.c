@@ -127,20 +127,6 @@ get_object_path(const char *object_type)
     return NULL;
 }
 
-const char *
-get_object_parent(const char *object_type)
-{
-    int lpc = 0;
-    int max = PCMK__NELEM(known_paths);
-
-    for (; lpc < max; lpc++) {
-        if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
-            return known_paths[lpc].parent;
-        }
-    }
-    return NULL;
-}
-
 /*!
  * \brief Create XML for a new (empty) CIB
  *
@@ -816,6 +802,12 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
 // LCOV_EXCL_START
 
 #include <crm/cib/util_compat.h>
+
+const char *
+get_object_parent(const char *object_type)
+{
+    return pcmk_cib_parent_name_for(object_type);
+}
 
 xmlNode *
 get_object_root(const char *object_type, xmlNode *the_root)
