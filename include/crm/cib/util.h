@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 /* Utility functions */
-const char *get_object_path(const char *object_type);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
 xmlNode *createEmptyCib(int cib_epoch);
