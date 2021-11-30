@@ -2202,7 +2202,8 @@ node_summary(pcmk__output_t *out, va_list args) {
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *node_state = NULL;
-    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    xmlNode *cib_status = pcmk_find_cib_element(data_set->input,
+                                                XML_CIB_TAG_STATUS);
     int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(cib_status) == 0) {

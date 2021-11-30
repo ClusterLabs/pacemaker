@@ -20,7 +20,8 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
     pcmk__output_t *out = data_set->priv;
     xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    xmlNode *cib_constraints = pcmk_find_cib_element(data_set->input,
+                                                     XML_CIB_TAG_CONSTRAINTS);
 
     for (xml_obj = pcmk__xe_first_child(cib_constraints); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {

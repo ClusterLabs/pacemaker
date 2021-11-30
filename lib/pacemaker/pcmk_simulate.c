@@ -258,7 +258,7 @@ pcmk__profile_file(const char *xml_file, long long repeat, pe_working_set_t *dat
     cib_object = filename2xml(xml_file);
     start = clock();
 
-    if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
+    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
 

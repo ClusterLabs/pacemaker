@@ -198,7 +198,7 @@ main(int argc, char **argv)
         write_xml_file(cib_object, options.cib_save, FALSE);
     }
 
-    status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
+    status = pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS);
     if (status == NULL) {
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }

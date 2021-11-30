@@ -47,7 +47,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         section = NULL;
     }
 
-    obj_root = get_object_root(section, existing_cib);
+    obj_root = pcmk_find_cib_element(existing_cib, section);
 
     if (obj_root == NULL) {
         result = -ENXIO;
@@ -265,7 +265,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         xmlNode *obj_root = NULL;
         gboolean ok = TRUE;
 
-        obj_root = get_object_root(section, *result_cib);
+        obj_root = pcmk_find_cib_element(*result_cib, section);
         ok = replace_xml_child(NULL, obj_root, input, FALSE);
         if (ok == FALSE) {
             crm_trace("No matching object to replace");
@@ -294,7 +294,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
         return -EINVAL;
     }
 
-    obj_root = get_object_root(section, *result_cib);
+    obj_root = pcmk_find_cib_element(*result_cib, section);
     if(pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *child = NULL;
         for (child = pcmk__xml_first_child(input); child;
@@ -329,7 +329,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         return -EINVAL;
     }
 
-    obj_root = get_object_root(section, *result_cib);
+    obj_root = pcmk_find_cib_element(*result_cib, section);
     if (obj_root == NULL) {
         xmlNode *tmp_section = NULL;
         const char *path = pcmk_cib_parent_name_for(section);
@@ -342,7 +342,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         cib_process_xpath(CIB_OP_CREATE, 0, path, NULL, tmp_section, NULL, result_cib, answer);
         free_xml(tmp_section);
 
-        obj_root = get_object_root(section, *result_cib);
+        obj_root = pcmk_find_cib_element(*result_cib, section);
     }
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
@@ -548,7 +548,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
 
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
-    update_section = get_object_root(section, *result_cib);
+    update_section = pcmk_find_cib_element(*result_cib, section);
     if (pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *a_child = NULL;
 

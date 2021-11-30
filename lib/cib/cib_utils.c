@@ -681,7 +681,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     g_hash_table_remove_all(options);
 
-    config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
+    config = pcmk_find_cib_element(current_cib, XML_CIB_TAG_CRMCONFIG);
     if (config) {
         pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
                           options, CIB_OPTIONS_FIRST, TRUE, now, NULL);

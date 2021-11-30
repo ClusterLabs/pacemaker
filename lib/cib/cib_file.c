@@ -852,7 +852,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
 
     /* Mirror the logic in cib_prepare_common() */
     if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
-        data = get_object_root(section, data);
+        data = pcmk_find_cib_element(data, section);
     }
 
     rc = cib_perform_op(op, call_options, fn, query,
