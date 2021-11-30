@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 const char *pcmk_cib_xpath_for(const char *element_name);
+const char *pcmk_cib_parent_name_for(const char *element_name);
 
 #ifdef __cplusplus
 }

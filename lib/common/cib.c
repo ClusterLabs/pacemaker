@@ -121,3 +121,23 @@ pcmk_cib_xpath_for(const char *element_name)
     }
     return NULL;
 }
+
+/*!
+ * \brief Get the parent element name of a given CIB element name
+ *
+ * \param[in] element_name  Name of CIB element
+ *
+ * \return Parent element of \p element_name (or NULL if unknown)
+ * \note The return value is constant and should not be freed.
+ */
+const char *
+pcmk_cib_parent_name_for(const char *element_name)
+{
+    for (int lpc = 0; lpc < PCMK__NELEM(cib_sections); lpc++) {
+        if (pcmk__str_eq(element_name, cib_sections[lpc].name,
+                         pcmk__str_none)) {
+            return cib_sections[lpc].parent;
+        }
+    }
+    return NULL;
+}
