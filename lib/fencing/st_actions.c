@@ -243,6 +243,8 @@ stonith_action_create(const char *agent,
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
+    CRM_ASSERT(action != NULL);
+
     action->args = make_args(agent, _action, victim, victim_nodeid,
                              device_args, port_map, host_arg);
     crm_debug("Preparing '%s' action for %s using agent %s",
