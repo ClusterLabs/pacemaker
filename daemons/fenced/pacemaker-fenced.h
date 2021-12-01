@@ -214,7 +214,7 @@ void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
 int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
 
-int stonith_device_remove(const char *id, gboolean from_cib);
+void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(xmlNode * msg, int mode);
 int stonith_level_kind(xmlNode * msg);
@@ -233,22 +233,22 @@ xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-void do_stonith_notify(int options, const char *type, int result, xmlNode * data);
-void do_stonith_notify_device(int options, const char *op, int rc, const char *desc);
-void do_stonith_notify_level(int options, const char *op, int rc, const char *desc);
+void do_stonith_notify(const char *type, int result, xmlNode *data);
+void do_stonith_notify_device(const char *op, int rc, const char *desc);
+void do_stonith_notify_level(const char *op, int rc, const char *desc);
 
 remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
                                                 xmlNode *request,
                                                 gboolean manual_ack);
 
-int process_remote_stonith_exec(xmlNode * msg);
+void fenced_process_fencing_reply(xmlNode *msg);
 
 int process_remote_stonith_query(xmlNode * msg);
 
 void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer);
 
-int stonith_fence_history(xmlNode *msg, xmlNode **output,
-                          const char *remote_peer, int options);
+void stonith_fence_history(xmlNode *msg, xmlNode **output,
+                           const char *remote_peer, int options);
 
 void stonith_fence_history_trim(void);
 
@@ -256,11 +256,18 @@ bool fencing_peer_active(crm_node_t *peer);
 
 void set_fencing_completed(remote_fencing_op_t * op);
 
-int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
+int fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 
 gboolean node_does_watchdog_fencing(const char *node);
+
+static inline void
+fenced_set_protocol_error(pcmk__action_result_t *result)
+{
+    pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                     "Fencer API request missing required information (bug?)");
+}
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;

@@ -100,7 +100,7 @@ stonith_fence_history_cleanup(const char *target,
         g_hash_table_foreach_remove(stonith_remote_op_list,
                              stonith_remove_history_entry,
                              (gpointer) target);
-        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
+        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
     }
 }
 
@@ -396,7 +396,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
 
     if (updated) {
         stonith_fence_history_trim();
-        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
+        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
     }
 
     if (cnt == 0) {
@@ -433,14 +433,11 @@ stonith_local_history(gboolean add_id, const char *target)
  *                      a reply from
  * \param[in] remote_peer
  * \param[in] options   call-options from the request
- *
- * \return always success as there is actully nothing that can go really wrong
  */
-int
+void
 stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
-    int rc = 0;
     const char *target = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_NEVER);
     xmlNode *out_history = NULL;
@@ -470,7 +467,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
            is done so send a notification for anything
            that smells like history-sync
          */
-        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY_SYNCED, 0, NULL);
+        do_stonith_notify(T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk_ok, NULL);
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API
             *
@@ -525,5 +522,4 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         *output = stonith_local_history(FALSE, target);
     }
     free_xml(out_history);
-    return rc;
 }

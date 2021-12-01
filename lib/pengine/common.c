@@ -28,12 +28,6 @@ check_health(const char *value)
 }
 
 static bool
-check_stonith_action(const char *value)
-{
-    return pcmk__strcase_any_of(value, "reboot", "poweroff", "off", NULL);
-}
-
-static bool
 check_placement_strategy(const char *value)
 {
     return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
@@ -114,7 +108,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
-        "reboot", check_stonith_action,
+        "reboot", pcmk__is_fencing_action,
         "Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")",
         NULL
