@@ -196,77 +196,6 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     return pcmk_rc_ok;
 }
 
-/* this is used to dynamically adapt to user-modified stylesheet */
-static const char **
-parse_params(xmlDoc *doc, const char **fallback)
-{
-    xmlXPathContext *xpath_ctxt;
-    xmlXPathObject *xpath_obj;
-    const char **ret = NULL;
-    size_t ret_cnt = 0, ret_iter = 0;
-
-    if (doc == NULL) {
-        return fallback;
-    }
-
-    xpath_ctxt = xmlXPathNewContext(doc);
-    CRM_ASSERT(xpath_ctxt != NULL);
-
-    if (xmlXPathRegisterNs(xpath_ctxt, (pcmkXmlStr) "xsl",
-                           (pcmkXmlStr) "http://www.w3.org/1999/XSL/Transform") != 0) {
-        return fallback;
-    }
-
-    while (*fallback != NULL) {
-        char xpath_query[1024];
-        const char *key = *fallback++;
-        const char *value = *fallback++;
-        CRM_ASSERT(value != NULL);
-
-        if (ret_iter + 1 >= ret_cnt) {
-            ret_cnt = ret_cnt ? ret_cnt : 1;
-            ret_cnt *= 2;
-            ret_cnt += 1;
-            ret = realloc(ret, ret_cnt * sizeof(*ret));
-            CRM_ASSERT(ret != NULL);
-        }
-
-        key = strdup(key);
-        CRM_ASSERT(key != NULL);
-        ret[ret_iter++] = key;
-
-        snprintf(xpath_query, sizeof(xpath_query),
-                 "substring("
-                   "/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select,"
-                   "2,"
-                   "string-length(/xsl:stylesheet/xsl:param[@name = '%s']/xsl:value-of/@select) - 2"
-                 ")",
-                 key, key);
-        xpath_obj = xmlXPathEvalExpression((pcmkXmlStr) xpath_query, xpath_ctxt);
-        if (xpath_obj != NULL && xpath_obj->type == XPATH_STRING
-                && *xpath_obj->stringval != '\0') {
-            /* XXX convert first! */
-            char *origval = strdup((const char *) xpath_obj->stringval);
-            size_t reminder = strlen(origval) + 1;
-            xmlXPathFreeObject(xpath_obj);
-            value = origval;
-            /* reconcile "\x1b" (3 chars) -> '\x1b' (single char) */
-            while ((origval = strstr(origval, "\\x1b")) != NULL) {
-                origval[0] = '\x1b';
-                memmove(origval + 1, origval + (sizeof("\\x1b") - 1),
-                        (reminder -= (sizeof("\\x1b") - 1)));
-            }
-        } else {
-            value = strdup(value);
-        }
-        CRM_ASSERT(value != NULL);
-        ret[ret_iter++] = value;
-    }
-    ret[ret_iter] = NULL;
-
-    return ret;
-}
-
 int
 pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
                         xmlChar **doc_txt_ptr)
@@ -348,7 +277,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     } else if (how == pcmk__acl_render_text) {
         params = params_noansi;
     } else {
-        params = parse_params(xslt_doc, params_useansi);
+        params = params_useansi;
     }
 
     xsltQuoteUserParams(xslt_ctxt, params);
