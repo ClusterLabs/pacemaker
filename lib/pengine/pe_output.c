@@ -1135,6 +1135,7 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
         task = strdup("unknown action");
         interval_ms = 0;
     }
+    CRM_ASSERT((rsc_id != NULL) && (task != NULL));
 
     str = g_string_sized_new(strlen(rsc_id) + strlen(task) + strlen(node_name)
                              + 100); // reasonable starting size
