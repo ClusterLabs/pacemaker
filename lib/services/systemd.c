@@ -206,17 +206,27 @@ systemd_unit_extension(const char *name)
 }
 
 static char *
-systemd_service_name(const char *name)
+systemd_service_name(const char *name, bool add_instance_name)
 {
-    if (name == NULL) {
+    if (pcmk__str_empty(name)) {
         return NULL;
     }
 
     if (systemd_unit_extension(name)) {
         return strdup(name);
-    }
 
-    return crm_strdup_printf("%s.service", name);
+    /* Services that end with an @ sign are systemd templates.  They expect an
+     * instance name to follow the service name.  If no instance name was
+     * provided, just add "x" to the string as the instance name.  It doesn't
+     * seem to matter for purposes of looking up whether a service exists or
+     * not.
+     */
+    } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
+        return crm_strdup_printf("%sx.service", name);
+
+    } else {
+        return crm_strdup_printf("%s.service", name);
+    }
 }
 
 static void
@@ -427,7 +437,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     CRM_ASSERT(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name);
+    name = systemd_service_name(arg_name, op == NULL || pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -944,7 +954,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent);
+        char *name = systemd_service_name(op->agent, pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
