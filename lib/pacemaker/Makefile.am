@@ -38,6 +38,7 @@ libpacemaker_la_SOURCES += pcmk_graph_producer.c
 libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES += pcmk_output_utils.c
 libpacemaker_la_SOURCES += pcmk_resource.c
+libpacemaker_la_SOURCES	+= pcmk_sched_actions.c
 libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
 libpacemaker_la_SOURCES += pcmk_sched_bundle.c
 libpacemaker_la_SOURCES += pcmk_sched_clone.c
