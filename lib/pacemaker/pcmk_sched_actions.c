@@ -69,79 +69,97 @@ action_flags_for_ordering(pe_action_t *action, pe_node_t *node)
     return flags;
 }
 
+/*!
+ * \internal
+ * \brief Get action UUID that should be used with a resource ordering
+ *
+ * When an action is ordered relative to an action for a collective resource
+ * (clone, group, or bundle), it actually needs to be ordered after all
+ * instances of the collective have completed the relevant action (for example,
+ * given "start CLONE then start RSC", RSC must wait until all instances of
+ * CLONE have started). Given the UUID and resource of the first action in an
+ * ordering, this returns the UUID of the action that should actually be used
+ * for ordering (for example, "CLONE_started_0" instead of "CLONE_start_0").
+ *
+ * \param[in] first_uuid    UUID of first action in ordering
+ * \param[in] first_rsc     Resource of first action in ordering
+ *
+ * \return Newly allocated copy of UUID to use with ordering
+ * \note It is the caller's responsibility to free the return value.
+ */
 static char *
-convert_non_atomic_uuid(char *old_uuid, pe_resource_t * rsc, gboolean allow_notify,
-                        gboolean free_original)
+action_uuid_for_ordering(const char *first_uuid, pe_resource_t *first_rsc)
 {
     guint interval_ms = 0;
     char *uuid = NULL;
     char *rid = NULL;
-    char *raw_task = NULL;
-    int task = no_action;
+    char *first_task_str = NULL;
+    enum action_tasks first_task = no_action;
+    enum action_tasks remapped_task = no_action;
 
-    CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Processing %s", old_uuid);
-    if (old_uuid == NULL) {
-        return NULL;
-
-    } else if (strstr(old_uuid, "notify") != NULL) {
-        goto done;              /* no conversion */
-
-    } else if (rsc->variant < pe_group) {
-        goto done;              /* no conversion */
+    // Only non-notify actions for collective resources need remapping
+    if ((strstr(first_uuid, "notify") != NULL)
+        || (first_rsc->variant < pe_group)) {
+        goto done;
     }
 
-    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval_ms));
+    // Only non-recurring actions need remapping
+    CRM_ASSERT(parse_op_key(first_uuid, &rid, &first_task_str, &interval_ms));
     if (interval_ms > 0) {
-        goto done;              /* no conversion */
+        goto done;
     }
 
-    task = text2task(raw_task);
-    switch (task) {
+    first_task = text2task(first_task_str);
+    switch (first_task) {
         case stop_rsc:
         case start_rsc:
         case action_notify:
         case action_promote:
         case action_demote:
+            remapped_task = first_task + 1;
             break;
         case stopped_rsc:
         case started_rsc:
         case action_notified:
         case action_promoted:
         case action_demoted:
-            task--;
+            remapped_task = first_task;
             break;
         case monitor_rsc:
         case shutdown_crm:
         case stonith_node:
-            task = no_action;
             break;
         default:
-            crm_err("Unknown action: %s", raw_task);
-            task = no_action;
+            crm_err("Unknown action '%s' in ordering", first_task_str);
             break;
     }
 
-    if (task != no_action) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
-            uuid = pcmk__notify_key(rid, "confirmed-post", task2text(task + 1));
-
+    if (remapped_task != no_action) {
+        /* If a (clone) resource has notifications enabled, we want to order
+         * relative to when all notifications have been sent for the remapped
+         * task. Only outermost resources or those in bundles have
+         * notifications.
+         */
+        if (pcmk_is_set(first_rsc->flags, pe_rsc_notify)
+            && ((first_rsc->parent == NULL)
+                || (pe_rsc_is_clone(first_rsc)
+                    && (first_rsc->parent->variant == pe_container)))) {
+            uuid = pcmk__notify_key(rid, "confirmed-post",
+                                    task2text(remapped_task));
         } else {
-            uuid = pcmk__op_key(rid, task2text(task + 1), 0);
+            uuid = pcmk__op_key(rid, task2text(remapped_task), 0);
         }
-        pe_rsc_trace(rsc, "Converted %s -> %s", old_uuid, uuid);
+        pe_rsc_trace(first_rsc,
+                     "Remapped action UUID %s to %s for ordering purposes",
+                     first_uuid, uuid);
     }
 
-  done:
+done:
     if (uuid == NULL) {
-        uuid = strdup(old_uuid);
+        uuid = strdup(first_uuid);
+        CRM_ASSERT(uuid != NULL);
     }
-
-    if (free_original) {
-        free(old_uuid);
-    }
-
-    free(raw_task);
+    free(first_task_str);
     free(rid);
     return uuid;
 }
@@ -149,7 +167,6 @@ convert_non_atomic_uuid(char *old_uuid, pe_resource_t * rsc, gboolean allow_noti
 static pe_action_t *
 rsc_expand_action(pe_action_t * action)
 {
-    gboolean notify = FALSE;
     pe_action_t *result = action;
     pe_resource_t *rsc = action->rsc;
 
@@ -157,29 +174,15 @@ rsc_expand_action(pe_action_t * action)
         return action;
     }
 
-    if ((rsc->parent == NULL)
-        || (pe_rsc_is_clone(rsc) && (rsc->parent->variant == pe_container))) {
-        /* Only outermost resources have notification actions.
-         * The exception is those in bundles.
-         */
-        notify = pcmk_is_set(rsc->flags, pe_rsc_notify);
-    }
+    if ((rsc->variant >= pe_group) && (action->uuid != NULL)) {
+        char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
-    if (rsc->variant >= pe_group) {
-        /* Expand 'start' -> 'started' */
-        char *uuid = NULL;
-
-        uuid = convert_non_atomic_uuid(action->uuid, rsc, notify, FALSE);
-        if (uuid) {
-            pe_rsc_trace(rsc, "Converting %s to %s %d", action->uuid, uuid,
-                         pcmk_is_set(rsc->flags, pe_rsc_notify));
-            result = find_first_action(rsc->actions, uuid, NULL, NULL);
-            if (result == NULL) {
-                crm_err("Couldn't expand %s to %s in %s", action->uuid, uuid, rsc->id);
-                result = action;
-            }
-            free(uuid);
+        result = find_first_action(rsc->actions, uuid, NULL, NULL);
+        if (result == NULL) {
+            crm_err("Couldn't expand %s to %s in %s", action->uuid, uuid, rsc->id);
+            result = action;
         }
+        free(uuid);
     }
     return result;
 }
