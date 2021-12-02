@@ -1312,6 +1312,23 @@ stonith_dump_pending_callbacks(stonith_t * stonith)
     return g_hash_table_foreach(private->stonith_op_callback_table, stonith_dump_pending_op, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Get the data section of a fencer notification
+ *
+ * \param[in] msg    Notification XML
+ * \param[in] ntype  Notification type
+ */
+static xmlNode *
+get_event_data_xml(xmlNode *msg, const char *ntype)
+{
+    char *data_addr = crm_strdup_printf("//%s", ntype);
+    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
+
+    free(data_addr);
+    return data;
+}
+
 /*
  <notify t="st_notify" subt="st_device_register" st_op="st_device_register" st_rc="0" >
    <st_calldata >
@@ -1336,17 +1353,18 @@ xml_to_event(xmlNode * msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
-    char *data_addr = crm_strdup_printf("//%s", ntype);
-    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
 
     crm_log_xml_trace(msg, "stonith_notify");
 
     crm_element_value_int(msg, F_STONITH_RC, &(event->result));
 
     if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
-        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
+        xmlNode *data = get_event_data_xml(msg, ntype);
 
-        if (data) {
+        if (data == NULL) {
+            crm_err("No data for %s event", ntype);
+            crm_log_xml_notice(msg, "BadEvent");
+        } else {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, F_STONITH_TARGET);
@@ -1354,14 +1372,10 @@ xml_to_event(xmlNode * msg)
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
-
-        } else {
-            crm_err("No data for %s event", ntype);
-            crm_log_xml_notice(msg, "BadEvent");
         }
+        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
     }
 
-    free(data_addr);
     return event;
 }
 
