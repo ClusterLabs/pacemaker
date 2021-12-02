@@ -164,22 +164,35 @@ done:
     return uuid;
 }
 
+/*!
+ * \internal
+ * \brief Get actual action that should be used with an ordering
+ *
+ * When an action is ordered relative to an action for a collective resource
+ * (clone, group, or bundle), it actually needs to be ordered after all
+ * instances of the collective have completed the relevant action (for example,
+ * given "start CLONE then start RSC", RSC must wait until all instances of
+ * CLONE have started). Given the first action in an ordering, this returns the
+ * the action that should actually be used for ordering (for example, the
+ * started action instead of the start action).
+ *
+ * \param[in] action  First action in an ordering
+ *
+ * \return Actual action that should be used for the ordering
+ */
 static pe_action_t *
-rsc_expand_action(pe_action_t * action)
+action_for_ordering(pe_action_t *action)
 {
     pe_action_t *result = action;
     pe_resource_t *rsc = action->rsc;
 
-    if (rsc == NULL) {
-        return action;
-    }
-
-    if ((rsc->variant >= pe_group) && (action->uuid != NULL)) {
+    if ((rsc != NULL) && (rsc->variant >= pe_group) && (action->uuid != NULL)) {
         char *uuid = action_uuid_for_ordering(action->uuid, rsc);
 
         result = find_first_action(rsc->actions, uuid, NULL, NULL);
         if (result == NULL) {
-            crm_err("Couldn't expand %s to %s in %s", action->uuid, uuid, rsc->id);
+            crm_warn("Not remapping %s to %s because %s does not have "
+                     "remapped action", action->uuid, uuid, rsc->id);
             result = action;
         }
         free(uuid);
@@ -522,7 +535,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
             && (is_parent(then->rsc, first->rsc) == FALSE)) {
-            first = rsc_expand_action(first);
+            first = action_for_ordering(first);
         }
         if (first != other->action) {
             pe_rsc_trace(then->rsc, "Ordering %s after %s instead of %s",
