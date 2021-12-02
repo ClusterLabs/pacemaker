@@ -16,37 +16,55 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
+/*!
+ * \internal
+ * \brief Get the action flags relevant to ordering constraints
+ *
+ * \param[in] action  Action to check
+ * \param[in] node    Node that *other* action in the ordering is on
+ *                    (used only for clone resource actions)
+ *
+ * \return Action flags that should be used for orderings
+ */
 static enum pe_action_flags
-get_action_flags(pe_action_t *action, pe_node_t *node)
+action_flags_for_ordering(pe_action_t *action, pe_node_t *node)
 {
-    enum pe_action_flags flags = action->flags;
+    bool runnable = false;
+    enum pe_action_flags flags;
 
-    if (action->rsc) {
-        flags = action->rsc->cmds->action_flags(action, NULL);
+    // For non-resource actions, return the action flags
+    if (action->rsc == NULL) {
+        return action->flags;
+    }
 
-        if (pe_rsc_is_clone(action->rsc) && node) {
+    /* For non-clone resources, or a clone action not assigned to a node,
+     * return the flags as determined by the resource method without a node
+     * specified.
+     */
+    flags = action->rsc->cmds->action_flags(action, NULL);
+    if ((node == NULL) || !pe_rsc_is_clone(action->rsc)) {
+        return flags;
+    }
 
-            /* We only care about activity on $node */
-            enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
+    /* Otherwise (i.e., for clone resource actions on a specific node), first
+     * remember whether the non-node-specific action is runnable.
+     */
+    runnable = pcmk_is_set(flags, pe_action_runnable);
 
-            /* Go to great lengths to ensure the correct value for pe_action_runnable...
-             *
-             * If we are a clone, then for _ordering_ constraints, it's only relevant
-             * if we are runnable _anywhere_.
-             *
-             * This only applies to _runnable_ though, and only for ordering constraints.
-             * If this function is ever used during colocation, then we'll need additional logic
-             *
-             * Not very satisfying, but it's logical and appears to work well.
-             */
-            if (!pcmk_is_set(clone_flags, pe_action_runnable)
-                && pcmk_is_set(flags, pe_action_runnable)) {
+    // Then recheck the resource method with the node
+    flags = action->rsc->cmds->action_flags(action, node);
 
-                pe__set_raw_action_flags(clone_flags, action->rsc->id,
-                                         pe_action_runnable);
-            }
-            flags = clone_flags;
-        }
+    /* For clones in ordering constraints, the node-specific "runnable" doesn't
+     * matter, just the non-node-specific setting (i.e., is the action runnable
+     * anywhere).
+     *
+     * This applies only to runnable, and only for ordering constraints. This
+     * function shouldn't be used for other types of constraints without
+     * changes. Not very satisfying, but it's logical and appears to work well.
+     */
+    if (runnable && !pcmk_is_set(flags, pe_action_runnable)) {
+        pe__set_raw_action_flags(flags, action->rsc->id,
+                                 pe_action_runnable);
     }
     return flags;
 }
@@ -508,8 +526,8 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                          then->uuid, first->uuid, other->action->uuid);
         }
 
-        first_flags = get_action_flags(first, then_node);
-        then_flags = get_action_flags(then, first_node);
+        first_flags = action_flags_for_ordering(first, then_node);
+        then_flags = action_flags_for_ordering(then, first_node);
 
         pe_rsc_trace(then->rsc,
                      "%s then %s: type=0x%.6x filter=0x%.6x "

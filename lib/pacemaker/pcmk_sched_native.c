@@ -1844,12 +1844,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     }
 }
 
+/* \param[in] flags   Flags from update_action() -> action_flags_for_ordering()
+ */
 enum pe_graph_flags
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                       enum pe_action_flags flags, enum pe_action_flags filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
-    /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
