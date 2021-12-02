@@ -1844,7 +1844,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     }
 }
 
-/* \param[in] flags   Flags from update_action() -> action_flags_for_ordering()
+/* \param[in] flags   Flags from action_flags_for_ordering()
  */
 enum pe_graph_flags
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
@@ -1971,7 +1971,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
-            update_action(then, data_set);
+            pcmk__update_action_for_orderings(then, data_set);
         }
     }
 

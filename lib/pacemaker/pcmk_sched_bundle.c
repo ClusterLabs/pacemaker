@@ -847,7 +847,9 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 if (then_child_changed & pe_graph_updated_then) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-                        update_action(next->action, data_set);
+
+                        pcmk__update_action_for_orderings(next->action,
+                                                          data_set);
                     }
                 }
             }

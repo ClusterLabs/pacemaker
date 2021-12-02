@@ -475,8 +475,15 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 #define action_node_str(a) \
     (((a)->node == NULL)? "no node" : (a)->node->details->uname)
 
-gboolean
-update_action(pe_action_t *then, pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Update an action's flags for all orderings where it is "then"
+ *
+ * \param[in] then      Action to update
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 {
     GList *lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
@@ -488,26 +495,24 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                  action_runnable_str(then->flags), action_node_str(then));
 
     if (pcmk_is_set(then->flags, pe_action_requires_any)) {
-        /* initialize current known runnable before actions to 0
-         * from here as update_action_for_ordering_flags() is called for each of
-         * then's before actions, this number will increment as
-         * runnable 'first' actions are encountered */
+        /* Initialize current known "runnable before" actions. As
+         * update_action_for_ordering_flags() is called for each of then's
+         * before actions, this number will increment as runnable 'first'
+         * actions are encountered.
+         */
         then->runnable_before = 0;
 
-        /* for backwards compatibility with previous options that use
-         * the 'requires_any' flag, initialize required to 1 if it is
-         * not set. */ 
         if (then->required_runnable_before == 0) {
+            /* @COMPAT This ordering constraint uses the deprecated
+             * "require-all=false" attribute. Treat it like "clone-min=1".
+             */
             then->required_runnable_before = 1;
         }
-        pe__clear_action_flags(then, pe_action_runnable);
-        /* We are relying on the pe_order_one_or_more clause of
-         * update_action_for_ordering_flags(), called as part of the:
-         *
-         *    'if (first == other->action)'
-         *
-         * block below, to set this back if appropriate
+
+        /* The pe_order_one_or_more clause of update_action_for_ordering_flags()
+         * (called below) will reset runnable if appropriate.
          */
+        pe__clear_action_flags(then, pe_action_runnable);
     }
 
     for (lpc = then->actions_before; lpc != NULL; lpc = lpc->next) {
@@ -517,25 +522,29 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         pe_node_t *then_node = then->node;
         pe_node_t *first_node = first->node;
 
-        enum pe_action_flags then_flags = 0;
-        enum pe_action_flags first_flags = 0;
+        if ((first->rsc != NULL)
+            && (first->rsc->variant == pe_group)
+            && pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
 
-        if (first->rsc && first->rsc->variant == pe_group && pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
-            if (first_node) {
+            if (first_node != NULL) {
                 pe_rsc_trace(first->rsc, "Found node %s for 'first' %s",
                              first_node->details->uname, first->uuid);
             }
         }
 
-        if (then->rsc && then->rsc->variant == pe_group && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
+        if ((then->rsc != NULL)
+            && (then->rsc->variant == pe_group)
+            && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
+
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
-            if (then_node) {
+            if (then_node != NULL) {
                 pe_rsc_trace(then->rsc, "Found node %s for 'then' %s",
                              then_node->details->uname, then->uuid);
             }
         }
-        /* Disable constraint if it only applies when on same node, but isn't */
+
+        // Disable constraint if it only applies when on same node, but isn't
         if (pcmk_is_set(other->type, pe_order_same_node)
             && (first_node != NULL) && (then_node != NULL)
             && (first_node->details != then_node->details)) {
@@ -550,7 +559,8 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
         pe__clear_graph_flags(changed, then, pe_graph_updated_first);
 
-        if (first->rsc && pcmk_is_set(other->type, pe_order_then_cancels_first)
+        if ((first->rsc != NULL)
+            && pcmk_is_set(other->type, pe_order_then_cancels_first)
             && !pcmk_is_set(then->flags, pe_action_optional)) {
 
             /* 'then' is required, so we must abandon 'first'
@@ -562,8 +572,8 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             }
         }
 
-        if (first->rsc && then->rsc && (first->rsc != then->rsc)
-            && (is_parent(then->rsc, first->rsc) == FALSE)) {
+        if ((first->rsc != NULL) && (then->rsc != NULL)
+            && (first->rsc != then->rsc) && !is_parent(then->rsc, first->rsc)) {
             first = action_for_ordering(first);
         }
         if (first != other->action) {
@@ -571,25 +581,21 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                          then->uuid, first->uuid, other->action->uuid);
         }
 
-        first_flags = action_flags_for_ordering(first, then_node);
-        then_flags = action_flags_for_ordering(then, first_node);
-
         pe_rsc_trace(then->rsc,
-                     "%s then %s: type=0x%.6x filter=0x%.6x "
-                     "(%s %s %s on %s 0x%.6x then 0x%.6x)",
-                     first->uuid, then->uuid, other->type, first_flags,
-                     action_optional_str(first_flags),
-                     action_runnable_str(first_flags),
-                     action_type_str(first_flags), action_node_str(first),
-                     first->flags, then->flags);
+                     "%s (0x%.6x) then %s (0x%.6x): type=0x%.6x node=%s",
+                     first->uuid, first->flags, then->uuid, then->flags,
+                     other->type, action_node_str(first));
 
         if (first == other->action) {
-            /*
-             * 'first' was not expanded (e.g. from 'start' to 'running'), which could mean it:
-             * - has no associated resource,
-             * - was a primitive,
-             * - was pre-expanded (e.g. 'running' instead of 'start')
+            /* 'first' was not remapped (e.g. from 'start' to 'running'), which
+             * could mean it is a non-resource action, a primitive resource
+             * action, or already expanded.
              */
+            enum pe_action_flags first_flags, then_flags;
+
+            first_flags = action_flags_for_ordering(first, then_node);
+            then_flags = action_flags_for_ordering(then, first_node);
+
             changed |= update_action_for_ordering_flags(first, then,
                                                         first_flags, then_flags,
                                                         other, data_set);
@@ -605,7 +611,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
                                 pe_graph_updated_then|pe_graph_disable);
         }
 
-        if (changed & pe_graph_disable) {
+        if (pcmk_is_set(changed, pe_graph_disable)) {
             pe_rsc_trace(then->rsc,
                          "Disabled ordering %s then %s in favor of %s then %s",
                          other->action->uuid, then->uuid, first->uuid,
@@ -614,42 +620,39 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             other->type = pe_order_none;
         }
 
-        if (changed & pe_graph_updated_first) {
-            GList *lpc2 = NULL;
-
-            crm_trace("Re-processing %s and its 'after' actions since it changed",
-                      first->uuid);
-            for (lpc2 = first->actions_after; lpc2 != NULL; lpc2 = lpc2->next) {
+        if (pcmk_is_set(changed, pe_graph_updated_first)) {
+            crm_trace("Re-processing %s and its 'after' actions "
+                      "because it changed", first->uuid);
+            for (GList *lpc2 = first->actions_after; lpc2 != NULL;
+                 lpc2 = lpc2->next) {
                 pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc2->data;
 
-                update_action(other->action, data_set);
+                pcmk__update_action_for_orderings(other->action, data_set);
             }
-            update_action(first, data_set);
+            pcmk__update_action_for_orderings(first, data_set);
         }
     }
 
     if (pcmk_is_set(then->flags, pe_action_requires_any)) {
-        if (last_flags != then->flags) {
-            pe__set_graph_flags(changed, then, pe_graph_updated_then);
-        } else {
+        if (last_flags == then->flags) {
             pe__clear_graph_flags(changed, then, pe_graph_updated_then);
+        } else {
+            pe__set_graph_flags(changed, then, pe_graph_updated_then);
         }
     }
 
-    if (changed & pe_graph_updated_then) {
-        crm_trace("Re-processing %s and its 'after' actions since it changed",
+    if (pcmk_is_set(changed, pe_graph_updated_then)) {
+        crm_trace("Re-processing %s and its 'after' actions because it changed",
                   then->uuid);
         if (pcmk_is_set(last_flags, pe_action_runnable)
             && !pcmk_is_set(then->flags, pe_action_runnable)) {
             pcmk__block_colocated_starts(then, data_set);
         }
-        update_action(then, data_set);
+        pcmk__update_action_for_orderings(then, data_set);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
             pe_action_wrapper_t *other = (pe_action_wrapper_t *) lpc->data;
 
-            update_action(other->action, data_set);
+            pcmk__update_action_for_orderings(other->action, data_set);
         }
     }
-
-    return FALSE;
 }

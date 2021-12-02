@@ -761,7 +761,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocated_starts(action, data_set);
-            update_action(action, data_set);
+            pcmk__update_action_for_orderings(action, data_set);
         }
     }
     free(reason_text);
