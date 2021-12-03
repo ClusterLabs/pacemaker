@@ -563,7 +563,7 @@ should_dump_action(pe_action_t *action)
         pe_err("Skipping action %s (%d) "
                "because it was not allocated to a node (bug?)",
                action->uuid, action->id);
-        log_action("Unallocated action", action, false);
+        pcmk__log_action("Unallocated action", action, false);
         return false;
 
     } else if (pcmk_is_set(action->flags, pe_action_dc)) {
@@ -581,7 +581,7 @@ should_dump_action(pe_action_t *action)
         pe_err("Skipping action %s (%d) "
                "because it was scheduled for offline node (bug?)",
                action->uuid, action->id);
-        log_action("Action for offline node", action, FALSE);
+        pcmk__log_action("Action for offline node", action, false);
         return false;
 #if 0
         /* but this would also affect resources that can be safely
@@ -591,7 +591,7 @@ should_dump_action(pe_action_t *action)
         pe_err("Skipping action %s (%d) "
                "because it was scheduled for unclean node (bug?)",
                action->uuid, action->id);
-        log_action("Action for unclean node", action, false);
+        pcmk__log_action("Action for unclean node", action, false);
         return false;
 #endif
     }

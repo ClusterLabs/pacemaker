@@ -22,6 +22,9 @@ G_GNUC_INTERNAL
 void pcmk__update_action_for_orderings(pe_action_t *action,
                                        pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
+
 
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,

@@ -657,28 +657,30 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Trace-log an action (optionally with its dependent actions)
+ *
+ * \param[in] pre_text  If not NULL, prefix the log with this plus ": "
+ * \param[in] action    Action to log
+ * \param[in] details   If true, recursively log dependent actions
+ */
 void
-log_action(const char *pre_text, pe_action_t * action, gboolean details)
+pcmk__log_action(const char *pre_text, pe_action_t *action, bool details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
     const char *desc = NULL;
 
-    if (action == NULL) {
-        crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
-        return;
-    }
+    CRM_CHECK(action != NULL, return);
 
-    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-        node_uname = NULL;
-        node_uuid = NULL;
-
-    } else if (action->node != NULL) {
-        node_uname = action->node->details->uname;
-        node_uuid = action->node->details->id;
-    } else {
-        node_uname = "<none>";
-        node_uuid = NULL;
+    if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
+        if (action->node != NULL) {
+            node_uname = action->node->details->uname;
+            node_uuid = action->node->details->id;
+        } else {
+            node_uname = "<none>";
+        }
     }
 
     switch (text2task(action->task)) {
@@ -727,30 +729,25 @@ log_action(const char *pre_text, pe_action_t * action, gboolean details)
     }
 
     if (details) {
-        GList *gIter = NULL;
+        GList *iter = NULL;
 
         crm_trace("\t\t====== Preceding Actions");
+        for (iter = action->actions_before; iter != NULL; iter = iter->next) {
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) iter->data;
 
-        gIter = action->actions_before;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
-
-            log_action("\t\t", other->action, FALSE);
+            pcmk__log_action("\t\t", other->action, false);
         }
-
         crm_trace("\t\t====== Subsequent Actions");
+        for (iter = action->actions_after; iter != NULL; iter = iter->next) {
+            pe_action_wrapper_t *other = (pe_action_wrapper_t *) iter->data;
 
-        gIter = action->actions_after;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
-
-            log_action("\t\t", other->action, FALSE);
+            pcmk__log_action("\t\t", other->action, false);
         }
-
         crm_trace("\t\t====== End");
 
     } else {
         crm_trace("\t\t(before=%d, after=%d)",
-                  g_list_length(action->actions_before), g_list_length(action->actions_after));
+                  g_list_length(action->actions_before),
+                  g_list_length(action->actions_after));
     }
 }

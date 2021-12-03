@@ -32,8 +32,6 @@ GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
 
 extern gboolean can_run_resources(const pe_node_t * node);
 
-void log_action(const char *pre_text, pe_action_t *action, gboolean details);
-
 gboolean can_run_any(GHashTable * nodes);
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
                                      pe_resource_t *rsc, enum rsc_role_e filter,
