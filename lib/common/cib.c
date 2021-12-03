@@ -26,11 +26,7 @@ static struct {
     const char *path;   // XPath to find this CIB element
 } cib_sections[] = {
     {
-        NULL,
-        NULL,
-        "//" XML_TAG_CIB
-    },
-    {
+        // This first entry is also the default if a NULL is compared
         XML_TAG_CIB,
         NULL,
         "//" XML_TAG_CIB
@@ -114,9 +110,9 @@ const char *
 pcmk_cib_xpath_for(const char *element_name)
 {
     for (int lpc = 0; lpc < PCMK__NELEM(cib_sections); lpc++) {
-        if (((element_name == NULL) && (cib_sections[lpc].name == NULL))
-            || pcmk__str_eq(element_name, cib_sections[lpc].name,
-                            pcmk__str_none)) {
+        // A NULL element_name will match the first entry
+        if (pcmk__str_eq(element_name, cib_sections[lpc].name,
+                         pcmk__str_null_matches)) {
             return cib_sections[lpc].path;
         }
     }
@@ -128,15 +124,16 @@ pcmk_cib_xpath_for(const char *element_name)
  *
  * \param[in] element_name  Name of CIB element
  *
- * \return Parent element of \p element_name (or NULL if unknown)
+ * \return Parent element of \p element_name (or NULL if none or unknown)
  * \note The return value is constant and should not be freed.
  */
 const char *
 pcmk_cib_parent_name_for(const char *element_name)
 {
     for (int lpc = 0; lpc < PCMK__NELEM(cib_sections); lpc++) {
+        // A NULL element_name will match the first entry
         if (pcmk__str_eq(element_name, cib_sections[lpc].name,
-                         pcmk__str_none)) {
+                         pcmk__str_null_matches)) {
             return cib_sections[lpc].parent;
         }
     }
