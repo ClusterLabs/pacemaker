@@ -851,13 +851,6 @@ pcmk__new_shutdown_action(pe_node_t *node, pe_working_set_t *data_set)
     return shutdown_op;
 }
 
-static char *
-generate_transition_magic(const char *transition_key, int op_status, int op_rc)
-{
-    CRM_CHECK(transition_key != NULL, return NULL);
-    return crm_strdup_printf("%d:%d;%s", op_status, op_rc, transition_key);
-}
-
 static void
 append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
               const char *magic, int level)
@@ -1000,8 +993,9 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         op->user_data = local_user_data;
     }
 
-    if(magic == NULL) {
-        magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
+    if (magic == NULL) {
+        magic = crm_strdup_printf("%d:%d;%s", op->op_status, op->rc,
+                                  (const char *) op->user_data);
     }
 
     crm_xml_add(xml_op, XML_ATTR_ID, op_id);
