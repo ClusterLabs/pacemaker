@@ -205,7 +205,7 @@ sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
 }
 
 void
-log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, gboolean details)
+log_action(const char *pre_text, pe_action_t * action, gboolean details)
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
@@ -282,7 +282,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
-            log_action(log_level + 1, "\t\t", other->action, FALSE);
+            log_action("\t\t", other->action, FALSE);
         }
 
         crm_trace("\t\t====== Subsequent Actions");
@@ -291,7 +291,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_wrapper_t *other = (pe_action_wrapper_t *) gIter->data;
 
-            log_action(log_level + 1, "\t\t", other->action, FALSE);
+            log_action("\t\t", other->action, FALSE);
         }
 
         crm_trace("\t\t====== End");
