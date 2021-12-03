@@ -821,3 +821,26 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
 
     return cancel_op;
 }
+
+/*!
+ * \internal
+ * \brief Create a shutdown op for a scheduler transition
+ *
+ * \param[in] node         Node being shut down
+ * \param[in] data_set     Working set of cluster
+ *
+ * \return Created op
+ */
+pe_action_t *
+sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
+{
+    char *shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+                                          node->details->uname);
+
+    pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
+                                             node, FALSE, TRUE, data_set);
+
+    pcmk__order_stops_before_shutdown(node, shutdown_op, data_set);
+    add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+    return shutdown_op;
+}
