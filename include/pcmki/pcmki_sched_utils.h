@@ -49,7 +49,6 @@ extern void calculate_utilization(GHashTable * current_utilization,
                                   GHashTable * utilization, gboolean plus);
 
 extern void process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set);
-pe_action_t *sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set);
 
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,

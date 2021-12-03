@@ -1427,7 +1427,7 @@ stage6(pe_working_set_t * data_set)
                  * if we can come up with a good use for this in the future, we will. */
                     pe__is_guest_or_remote_node(node) == FALSE) {
 
-            pe_action_t *down_op = sched_shutdown_op(node, data_set);
+            pe_action_t *down_op = pcmk__new_shutdown_action(node, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being shut down

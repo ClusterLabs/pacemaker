@@ -824,21 +824,26 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
 
 /*!
  * \internal
- * \brief Create a shutdown op for a scheduler transition
+ * \brief Create a new shutdown action for a node
  *
  * \param[in] node         Node being shut down
  * \param[in] data_set     Working set of cluster
  *
- * \return Created op
+ * \return Newly created shutdown action for \p node
  */
 pe_action_t *
-sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
+pcmk__new_shutdown_action(pe_node_t *node, pe_working_set_t *data_set)
 {
-    char *shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
-                                          node->details->uname);
+    char *shutdown_id = NULL;
+    pe_action_t *shutdown_op = NULL;
 
-    pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
-                                             node, FALSE, TRUE, data_set);
+    CRM_ASSERT((node != NULL) && (data_set != NULL));
+
+    shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+                                    node->details->uname);
+
+    shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN, node, FALSE,
+                                TRUE, data_set);
 
     pcmk__order_stops_before_shutdown(node, shutdown_op, data_set);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
