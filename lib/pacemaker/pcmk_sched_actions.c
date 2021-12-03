@@ -793,17 +793,20 @@ pcmk__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
  * \return Created op
  */
 pe_action_t *
-pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
-             pe_node_t *node, pe_working_set_t *data_set)
+pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
+                        pe_node_t *node)
 {
-    pe_action_t *cancel_op;
-    char *interval_ms_s = crm_strdup_printf("%u", interval_ms);
+    pe_action_t *cancel_op = NULL;
+    char *key = NULL;
+    char *interval_ms_s = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (task != NULL) && (node != NULL));
 
     // @TODO dangerous if possible to schedule another action with this key
-    char *key = pcmk__op_key(rsc->id, task, interval_ms);
+    key = pcmk__op_key(rsc->id, task, interval_ms);
 
     cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
-                              data_set);
+                              rsc->cluster);
 
     free(cancel_op->task);
     cancel_op->task = strdup(RSC_CANCEL);
@@ -811,6 +814,7 @@ pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
     free(cancel_op->cancel_task);
     cancel_op->cancel_task = strdup(task);
 
+    interval_ms_s = crm_strdup_printf("%u", interval_ms);
     add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
     add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
     free(interval_ms_s);

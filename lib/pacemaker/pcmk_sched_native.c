@@ -789,7 +789,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             // It's running, so cancel it
             log_level = LOG_INFO;
             result = "Cancelling";
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             switch (rsc->role) {
                 case RSC_ROLE_UNPROMOTED:
@@ -958,7 +958,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             g_list_free(possible_matches);
 
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             if ((rsc->next_role == RSC_ROLE_STARTED)
                 || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {

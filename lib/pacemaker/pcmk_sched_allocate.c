@@ -162,7 +162,7 @@ CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
              rsc->id, task, interval_ms,
              active_node->details->uname, (reason? reason : "unknown"));
 
-    cancel = pe_cancel_op(rsc, task, interval_ms, active_node, data_set);
+    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, active_node);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
                        pe_order_optional, data_set);
