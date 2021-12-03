@@ -751,3 +751,17 @@ pcmk__log_action(const char *pre_text, pe_action_t *action, bool details)
                   g_list_length(action->actions_after));
     }
 }
+
+pe_action_t *
+create_pseudo_resource_op(pe_resource_t *rsc, const char *task, bool optional,
+                          bool runnable, pe_working_set_t *data_set)
+{
+    pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
+                                        task, NULL, optional, TRUE, data_set);
+
+    pe__set_action_flags(action, pe_action_pseudo);
+    if(runnable) {
+        pe__set_action_flags(action, pe_action_runnable);
+    }
+    return action;
+}
