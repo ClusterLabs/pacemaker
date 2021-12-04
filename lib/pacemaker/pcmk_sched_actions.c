@@ -851,38 +851,31 @@ pcmk__new_shutdown_action(pe_node_t *node, pe_working_set_t *data_set)
     return shutdown_op;
 }
 
+/*!
+ * \internal
+ * \brief Calculate and add an operation digest to XML
+ *
+ * Calculate an operation digest, which enables us to later determine when a
+ * restart is needed due to the resource's parameters being changed, and add it
+ * to given XML.
+ *
+ * \param[in] op       Operation result from executor
+ * \param[in] update   XML to add digest to
+ */
 static void
-append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
-              const char *magic, int level)
+add_op_digest_to_xml(lrmd_event_data_t *op, xmlNode *update)
 {
-    /* this will enable us to later determine that the
-     *   resource's parameters have changed and we should force
-     *   a restart
-     */
     char *digest = NULL;
     xmlNode *args_xml = NULL;
 
     if (op->params == NULL) {
         return;
     }
-
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
-    digest = calculate_operation_digest(args_xml, version);
-
-#if 0
-    if (level < get_crm_log_level()
-        && op->interval_ms == 0 && pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
-        char *digest_source = dump_xml_unformatted(args_xml);
-
-        do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s",
-                   digest, ID(update), magic, digest_source);
-        free(digest_source);
-    }
-#endif
+    digest = calculate_operation_digest(args_xml, NULL);
     crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
-
     free_xml(args_xml);
     free(digest);
 }
@@ -1046,7 +1039,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
     }
 
-    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
+    add_op_digest_to_xml(op, xml_op);
 
     if (op_id_additional) {
         free(op_id);
