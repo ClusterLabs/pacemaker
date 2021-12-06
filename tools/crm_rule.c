@@ -113,7 +113,8 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     int max = 0;
 
     /* Rules are under the constraints node in the XML, so first find that. */
-    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    cib_constraints = pcmk_find_cib_element(data_set->input,
+                                            XML_CIB_TAG_CONSTRAINTS);
 
     /* Get all rules matching the given ID which are also simple enough for us to check.
      * For the moment, these rules must only have a single date_expression child and:

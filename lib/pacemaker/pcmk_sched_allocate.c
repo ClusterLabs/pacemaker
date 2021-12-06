@@ -506,8 +506,8 @@ check_actions(pe_working_set_t * data_set)
     const char *id = NULL;
     pe_node_t *node = NULL;
     xmlNode *lrm_rscs = NULL;
-    xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
-
+    xmlNode *status = pcmk_find_cib_element(data_set->input,
+                                            XML_CIB_TAG_STATUS);
     xmlNode *node_state = NULL;
 
     for (node_state = pcmk__xe_first_child(status); node_state != NULL;

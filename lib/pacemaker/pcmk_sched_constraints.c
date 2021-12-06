@@ -55,8 +55,8 @@ evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
 void
 pcmk__unpack_constraints(pe_working_set_t *data_set)
 {
-    xmlNode *xml_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    xmlNode *xml_constraints = pcmk_find_cib_element(data_set->input,
+                                                     XML_CIB_TAG_CONSTRAINTS);
 
     for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {

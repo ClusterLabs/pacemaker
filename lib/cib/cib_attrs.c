@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,6 +53,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     int offset = 0;
     int rc = pcmk_ok;
 
+    const char *xpath_base = NULL;
     char *xpath_string = NULL;
     xmlNode *xml_search = NULL;
     const char *set_type = NULL;
@@ -85,13 +86,18 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         return -EINVAL;
     }
 
+    xpath_base = pcmk_cib_xpath_for(section);
+    if (xpath_base == NULL) {
+        crm_warn("%s CIB section not known", section);
+        return -ENOMSG;
+    }
+
     xpath_string = calloc(1, XPATH_MAX);
     if (xpath_string == NULL) {
         crm_perror(LOG_CRIT, "Could not create xpath");
         return -ENOMEM;
     }
-
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "%.128s", get_object_path(section));
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "%s", xpath_base);
 
     if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", node_type);

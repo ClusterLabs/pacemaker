@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -714,7 +714,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
     the_cib->call_timeout = message_timeout_ms;
     if (strcasecmp(CIB_OP_REPLACE, cib_action) == 0
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
-        xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, input);
+        xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 
         if (status == NULL) {
             create_xml_node(input, XML_CIB_TAG_STATUS);

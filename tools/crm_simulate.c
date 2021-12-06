@@ -388,7 +388,7 @@ setup_input(const char *input, const char *output, GError **error)
         cib_object = filename2xml(input);
     }
 
-    if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
+    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
 

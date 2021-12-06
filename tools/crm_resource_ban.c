@@ -424,7 +424,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
     int i;
     int rc = pcmk_rc_ok;
 
-    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, root);
+    cib_constraints = pcmk_find_cib_element(root, XML_CIB_TAG_CONSTRAINTS);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
 
     for (i = 0; i < numXpathResults(xpathObj); i++) {

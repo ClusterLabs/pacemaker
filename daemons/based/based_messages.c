@@ -469,7 +469,7 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
 
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
-    update_section = get_object_root(section, *result_cib);
+    update_section = pcmk_find_cib_element(*result_cib, section);
     result = delete_cib_object(update_section, input);
     update_results(failed, input, op, result);
 

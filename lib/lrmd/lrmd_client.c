@@ -2332,7 +2332,9 @@ lrmd_api_delete(lrmd_t * lrmd)
         return;
     }
     if (lrmd->cmds != NULL) { // Never NULL, but make static analysis happy
-        lrmd->cmds->disconnect(lrmd); // No-op if already disconnected
+        if (lrmd->cmds->disconnect != NULL) { // Also never really NULL
+            lrmd->cmds->disconnect(lrmd); // No-op if already disconnected
+        }
         free(lrmd->cmds);
     }
     if (lrmd->lrmd_private != NULL) {

@@ -1135,6 +1135,7 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
         task = strdup("unknown action");
         interval_ms = 0;
     }
+    CRM_ASSERT((rsc_id != NULL) && (task != NULL));
 
     str = g_string_sized_new(strlen(rsc_id) + strlen(task) + strlen(node_name)
                              + 100); // reasonable starting size
@@ -2202,7 +2203,8 @@ node_summary(pcmk__output_t *out, va_list args) {
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *node_state = NULL;
-    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    xmlNode *cib_status = pcmk_find_cib_element(data_set->input,
+                                                XML_CIB_TAG_STATUS);
     int rc = pcmk_rc_no_output;
 
     if (xmlChildElementCount(cib_status) == 0) {
