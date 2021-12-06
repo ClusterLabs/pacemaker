@@ -3169,6 +3169,11 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
         }
     }
 
+    if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
+        *status = PCMK_EXEC_DONE;
+        *rc = PCMK_OCF_NOT_RUNNING;
+    }
+
     /* If the executor reported an operation status of anything but done or
      * error, consider that final. But for done or error, we know better whether
      * it should be treated as a failure or not, because we know the expected
@@ -3567,11 +3572,11 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
     CRM_ASSERT(rsc);
     CRM_ASSERT(xml_op);
 
-    if (rc == PCMK_OCF_NOT_RUNNING) {
-        clear_past_failure = TRUE;
-
-    } else if (rc == PCMK_OCF_NOT_INSTALLED) {
+    if (rc == PCMK_OCF_NOT_INSTALLED || (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op))) {
         rsc->role = RSC_ROLE_STOPPED;
+
+    } else if (rc == PCMK_OCF_NOT_RUNNING) {
+        clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         if (last_failure) {
@@ -3661,8 +3666,10 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     int rc = 0;
+    int old_rc = 0;
     int task_id = 0;
     int target_rc = 0;
+    int old_target_rc = 0;
     int status = PCMK_EXEC_UNKNOWN;
     guint interval_ms = 0;
     const char *task = NULL;
@@ -3671,6 +3678,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     bool expired = false;
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
+    bool maskable_probe_failure = false;
 
     CRM_CHECK(rsc && node && xml_op, return);
 
@@ -3727,10 +3735,22 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         expired = true;
     }
 
+    old_rc = rc;
+    old_target_rc = target_rc;
+
     remap_operation(xml_op, rsc, node, data_set, on_fail, target_rc,
                     &rc, &status);
 
-    if (expired && (rc != target_rc)) {
+    maskable_probe_failure = !pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op);
+
+    if (expired && maskable_probe_failure && old_rc != old_target_rc) {
+        if (rsc->role <= RSC_ROLE_STOPPED) {
+            rsc->role = RSC_ROLE_UNKNOWN;
+        }
+
+        goto done;
+
+    } else if (expired && (rc != target_rc)) {
         const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
         if (interval_ms == 0) {
@@ -3756,6 +3776,18 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             crm_xml_add(xml_op, XML_LRM_ATTR_RESTART_DIGEST, "calculated-failure-timeout");
             goto done;
         }
+    }
+
+    if (maskable_probe_failure) {
+        crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
+                   services_ocf_exitcode_str(rc), rsc->id, node->details->uname);
+        update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
+                              on_fail, data_set);
+        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+
+        record_failed_op(xml_op, node, rsc, data_set);
+        resource_location(parent, node, -INFINITY, "masked-probe-failure", data_set);
+        goto done;
     }
 
     switch (status) {
