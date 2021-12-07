@@ -466,7 +466,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
         return;
 
     } else if ((st_event->result == pcmk_ok)
-               && pcmk__str_eq(st_event->target, fsa_our_uname, pcmk__str_none)) {
+               && pcmk__str_eq(st_event->target, fsa_our_uname, pcmk__str_casei)) {
 
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
