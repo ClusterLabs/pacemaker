@@ -388,7 +388,6 @@ purge_xml_attributes(xmlNode *xml)
 }
 
 /*!
- * \internal
  * \brief Copy ACL-allowed portions of specified XML
  *
  * \param[in]  user        Username whose ACLs should be used
