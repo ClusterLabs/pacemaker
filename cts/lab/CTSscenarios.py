@@ -12,7 +12,6 @@ import time
 from cts.CTStests import CTSTest
 from cts.CTSaudits import ClusterAudit
 from cts.watcher  import LogWatcher
-from cts.remote import input_wrapper
 
 class ScenarioComponent(object):
 
@@ -181,7 +180,7 @@ A partially set up scenario is torn down if it fails during setup.
                 answer = "Y"
             else:
                 try:
-                    answer = input_wrapper('Continue? [nY]')
+                    answer = input('Continue? [nY]')
                 except EOFError as e:
                     answer = "n"
             if answer and answer == "n":
@@ -276,7 +275,7 @@ A partially set up scenario is torn down if it fails during setup.
                 answer = "Y"
             else:
                 try:
-                    answer = input_wrapper('Big problems. Continue? [nY]')
+                    answer = input('Big problems. Continue? [nY]')
                 except EOFError as e:
                     answer = "n"
             if answer and answer == "n":

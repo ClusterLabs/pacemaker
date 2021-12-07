@@ -32,11 +32,6 @@ def convert2string(lines):
         return aList
     return lines
 
-def input_wrapper(data):
-    if sys.version_info > (3,):
-        return input(data)
-    return raw_input(data)
-
 class AsyncWaitProc(Thread):
     def __init__(self, proc, node, command, completionDelegate=None):
         self.proc = proc
