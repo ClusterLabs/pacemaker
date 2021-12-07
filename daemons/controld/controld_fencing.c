@@ -448,6 +448,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     bool succeeded = true;
     const char *executioner = "the cluster";
     const char *client = "a client";
+    const char *reason = NULL;
+    int exec_status;
 
     if (te_client_id == NULL) {
         te_client_id = crm_strdup_printf("%s.%lu", crm_system_name,
@@ -466,22 +468,31 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         client = event->client_origin;
     }
 
-    if (event->result != pcmk_ok) {
+    exec_status = stonith__event_execution_status(event);
+    if ((stonith__event_exit_status(event) != CRM_EX_OK)
+        || (exec_status != PCMK_EXEC_DONE)) {
         succeeded = false;
+        if (exec_status == PCMK_EXEC_DONE) {
+            exec_status = PCMK_EXEC_ERROR;
+        }
     }
+    reason = stonith__event_exit_reason(event);
 
     crmd_alert_fencing_op(event);
 
     if (pcmk__str_eq("on", event->action, pcmk__str_none)) {
         // Unfencing doesn't need special handling, just a log message
         if (succeeded) {
-            crm_notice("%s was successfully unfenced by %s (at the request of %s)",
-                       event->target, executioner, event->origin);
+            crm_notice("%s was unfenced by %s at the request of %s@%s",
+                       event->target, executioner, client, event->origin);
                     /* TODO: Hook up event->device */
         } else {
-            crm_err("Unfencing of %s by %s failed: %s (%d)",
+            crm_err("Unfencing of %s by %s failed (%s%s%s) with exit status %d",
                     event->target, executioner,
-                    pcmk_strerror(st_event->result), st_event->result);
+                    pcmk_exec_status_str(exec_status),
+                    ((reason == NULL)? "" : ": "),
+                    ((reason == NULL)? "" : reason),
+                    stonith__event_exit_status(event));
         }
         return;
     }
@@ -522,12 +533,15 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         }
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s: %s "
-               CRM_XS " initiator=%s ref=%s",
+    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
+               "%s%s%s%s " CRM_XS " event=%s",
                event->target, (succeeded? "" : " not"),
-               event->action, executioner, client,
-               pcmk_strerror(event->result),
-               event->origin, event->id);
+               event->action, executioner, client, event->origin,
+               (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
+               ((reason == NULL)? "" : " ("),
+               ((reason == NULL)? "" : reason),
+               ((reason == NULL)? "" : ")"),
+               event->id);
 
     if (succeeded) {
         crm_node_t *peer = pcmk__search_known_node_cache(0, event->target,
