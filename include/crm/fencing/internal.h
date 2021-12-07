@@ -195,6 +195,7 @@ const char *stonith__exit_reason(stonith_callback_data_t *data);
 int stonith__event_exit_status(stonith_event_t *event);
 int stonith__event_execution_status(stonith_event_t *event);
 const char *stonith__event_exit_reason(stonith_event_t *event);
+char *stonith__event_description(stonith_event_t *event);
 
 /*!
  * \internal

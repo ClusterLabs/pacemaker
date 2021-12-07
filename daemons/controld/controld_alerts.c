@@ -12,6 +12,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#include <crm/fencing/internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/pengine/rules_internal.h>
@@ -62,12 +63,7 @@ crmd_alert_fencing_op(stonith_event_t * e)
         return;
     }
 
-    desc = crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s (ref=%s)",
-                             e->action, e->target,
-                             (e->executioner? e->executioner : "<no-one>"),
-                             e->client_origin, e->origin,
-                             pcmk_strerror(e->result), e->id);
-
+    desc = stonith__event_description(e);
     lrmd_send_fencing_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
                             e->target, e->operation, desc, e->result);
     free(desc);

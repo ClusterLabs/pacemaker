@@ -2237,9 +2237,8 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
     } else if (options.external_agent) {
-        char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
-                                    e->operation, e->origin, e->target, pcmk_strerror(e->result),
-                                    e->id);
+        char *desc = stonith__event_description(e);
+
         send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
         free(desc);
     }

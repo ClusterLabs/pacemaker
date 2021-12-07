@@ -2429,6 +2429,44 @@ stonith__event_exit_reason(stonith_event_t *event)
     return ((pcmk__action_result_t *) event->opaque)->exit_reason;
 }
 
+/*!
+ * \internal
+ * \brief Return a human-friendly description of a fencing event
+ *
+ * \param[in] event  Event to describe
+ *
+ * \return Newly allocated string with description of \p event
+ * \note The caller is responsible for freeing the return value.
+ *       This function asserts on memory errors and never returns NULL.
+ * \note This currently is useful only for events of type
+ *       T_STONITH_NOTIFY_FENCE.
+ */
+char *
+stonith__event_description(stonith_event_t *event)
+{
+    const char *reason;
+    const char *status;
+
+    if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
+        status = pcmk_exec_status_str(stonith__event_execution_status(event));
+    } else if (stonith__event_exit_status(event) != CRM_EX_OK) {
+        status = pcmk_exec_status_str(PCMK_EXEC_ERROR);
+    } else {
+        status = crm_exit_str(CRM_EX_OK);
+    }
+    reason = stonith__event_exit_reason(event);
+
+    return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
+                             event->action, event->target,
+                             (event->executioner? event->executioner : "the cluster"),
+                             (event->client_origin? event->client_origin : "a client"),
+                             event->origin, status,
+                             ((reason == NULL)? "" : " ("),
+                             ((reason == NULL)? "" : reason),
+                             ((reason == NULL)? "" : ")"),
+                             event->id);
+}
+
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
