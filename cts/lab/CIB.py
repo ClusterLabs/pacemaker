@@ -512,7 +512,7 @@ if __name__ == '__main__':
         "--stonith", "rhcs",
     ]
     env = CTS.CtsLab(args)
-    cm = CM_corosync.crm_corosync(env)
+    cm = CM_corosync.crm_corosync()
     CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-3.0")
     print(cib.contents())

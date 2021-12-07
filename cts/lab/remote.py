@@ -21,9 +21,6 @@ trace_rsh=None
 trace_lw=None
 
 def convert2string(lines):
-    if sys.version_info < (3, ):
-        return lines
-
     if isinstance(lines, bytes):
         return lines.decode("utf-8")
     elif isinstance(lines, list):

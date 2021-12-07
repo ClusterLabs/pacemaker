@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # Create the Cluster Manager object
     cm = None
     if Environment["Stack"] == "corosync 2+":
-        cm = crm_corosync(Environment)
+        cm = crm_corosync()
         
     else:
         LogFactory().log("Unknown stack: "+Environment["stack"])
