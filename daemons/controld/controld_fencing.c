@@ -435,39 +435,59 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
     }
 }
 
+/*!
+ * \internal
+ * \brief Handle an event notification from the fencing API
+ *
+ * \param[in] st     Fencing API connection
+ * \param[in] event  Fencing API event notification
+ */
 static void
-tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
+handle_fence_notification(stonith_t *st, stonith_event_t *event)
 {
+    bool succeeded = true;
+    const char *executioner = "the cluster";
+    const char *client = "a client";
+
     if (te_client_id == NULL) {
         te_client_id = crm_strdup_printf("%s.%lu", crm_system_name,
                                          (unsigned long) getpid());
     }
 
-    if (st_event == NULL) {
+    if (event == NULL) {
         crm_err("Notify data not found");
         return;
     }
 
-    crmd_alert_fencing_op(st_event);
+    if (event->executioner != NULL) {
+        executioner = event->executioner;
+    }
+    if (event->client_origin != NULL) {
+        client = event->client_origin;
+    }
 
-    if ((st_event->result == pcmk_ok) && pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
-        crm_notice("%s was successfully unfenced by %s (at the request of %s)",
-                   st_event->target,
-                   st_event->executioner? st_event->executioner : "<anyone>",
-                   st_event->origin);
-                /* TODO: Hook up st_event->device */
+    if (event->result != pcmk_ok) {
+        succeeded = false;
+    }
+
+    crmd_alert_fencing_op(event);
+
+    if (pcmk__str_eq("on", event->action, pcmk__str_none)) {
+        // Unfencing doesn't need special handling, just a log message
+        if (succeeded) {
+            crm_notice("%s was successfully unfenced by %s (at the request of %s)",
+                       event->target, executioner, event->origin);
+                    /* TODO: Hook up event->device */
+        } else {
+            crm_err("Unfencing of %s by %s failed: %s (%d)",
+                    event->target, executioner,
+                    pcmk_strerror(st_event->result), st_event->result);
+        }
         return;
+    }
 
-    } else if (pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
-        crm_err("Unfencing of %s by %s failed: %s (%d)",
-                st_event->target,
-                st_event->executioner? st_event->executioner : "<anyone>",
-                pcmk_strerror(st_event->result), st_event->result);
-        return;
-
-    } else if ((st_event->result == pcmk_ok)
-               && pcmk__str_eq(st_event->target, fsa_our_uname, pcmk__str_casei)) {
-
+    if (succeeded
+        && pcmk__str_eq(event->target, fsa_our_uname, pcmk__str_casei)) {
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
          * communication is in use.
@@ -478,44 +498,41 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
          * our subsequent election votes as "not part of our cluster".
          */
         crm_crit("We were allegedly just fenced by %s for %s!",
-                 st_event->executioner? st_event->executioner : "the cluster",
-                 st_event->origin); /* Dumps blackbox if enabled */
+                 executioner, event->origin); // Dumps blackbox if enabled
         if (fence_reaction_panic) {
             pcmk__panic(__func__);
         } else {
             crm_exit(CRM_EX_FATAL);
         }
-        return;
+        return; // Should never get here
     }
 
-    /* Update the count of stonith failures for this target, in case we become
+    /* Update the count of fencing failures for this target, in case we become
      * DC later. The current DC has already updated its fail count in
      * tengine_stonith_callback().
      */
-    if (!AM_I_DC && pcmk__str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
-        if (st_event->result == pcmk_ok) {
-            st_fail_count_reset(st_event->target);
+    if (!AM_I_DC
+        && pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
+                        pcmk__str_casei)) {
+
+        if (succeeded) {
+            st_fail_count_reset(event->target);
         } else {
-            st_fail_count_increment(st_event->target);
+            st_fail_count_increment(event->target);
         }
     }
 
     crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s: %s "
                CRM_XS " initiator=%s ref=%s",
-               st_event->target, st_event->result == pcmk_ok ? "" : " not",
-               st_event->action,
-               st_event->executioner ? st_event->executioner : "<anyone>",
-               (st_event->client_origin? st_event->client_origin : "<unknown>"),
-               pcmk_strerror(st_event->result),
-               st_event->origin, st_event->id);
+               event->target, (succeeded? "" : " not"),
+               event->action, executioner, client,
+               pcmk_strerror(event->result),
+               event->origin, event->id);
 
-    if (st_event->result == pcmk_ok) {
-        crm_node_t *peer = pcmk__search_known_node_cache(0, st_event->target,
+    if (succeeded) {
+        crm_node_t *peer = pcmk__search_known_node_cache(0, event->target,
                                                          CRM_GET_PEER_ANY);
         const char *uuid = NULL;
-        gboolean we_are_executioner = pcmk__str_eq(st_event->executioner,
-                                                   fsa_our_uname,
-                                                   pcmk__str_casei);
 
         if (peer == NULL) {
             return;
@@ -523,10 +540,9 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
 
         uuid = crm_peer_uuid(peer);
 
-        crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
-        if(AM_I_DC) {
+        if (AM_I_DC) {
             /* The DC always sends updates */
-            send_stonith_update(NULL, st_event->target, uuid);
+            send_stonith_update(NULL, event->target, uuid);
 
             /* @TODO Ideally, at this point, we'd check whether the fenced node
              * hosted any guest nodes, and call remote_node_down() for them.
@@ -536,31 +552,33 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
              * on the scheduler creating fence pseudo-events for the guests.
              */
 
-            if (st_event->client_origin
-                && !pcmk__str_eq(st_event->client_origin, te_client_id, pcmk__str_casei)) {
-
-                /* Abort the current transition graph if it wasn't us
-                 * that invoked stonith to fence someone
+            if (!pcmk__str_eq(client, te_client_id, pcmk__str_casei)) {
+                /* Abort the current transition if it wasn't the cluster that
+                 * initiated fencing.
                  */
-                crm_info("External fencing operation from %s fenced %s", st_event->client_origin, st_event->target);
-                abort_transition(INFINITY, tg_restart, "External Fencing Operation", NULL);
+                crm_info("External fencing operation from %s fenced %s",
+                         client, event->target);
+                abort_transition(INFINITY, tg_restart,
+                                 "External Fencing Operation", NULL);
             }
 
             /* Assume it was our leader if we don't currently have one */
-        } else if (pcmk__str_eq(fsa_our_dc, st_event->target, pcmk__str_null_matches | pcmk__str_casei)
+        } else if (pcmk__str_eq(fsa_our_dc, event->target,
+                                pcmk__str_null_matches|pcmk__str_casei)
                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
 
             crm_notice("Fencing target %s %s our leader",
-                       st_event->target, (fsa_our_dc? "was" : "may have been"));
+                       event->target, (fsa_our_dc? "was" : "may have been"));
 
             /* Given the CIB resyncing that occurs around elections,
              * have one node update the CIB now and, if the new DC is different,
              * have them do so too after the election
              */
-            if (we_are_executioner) {
-                send_stonith_update(NULL, st_event->target, uuid);
+            if (pcmk__str_eq(event->executioner, fsa_our_uname,
+                             pcmk__str_casei)) {
+                send_stonith_update(NULL, event->target, uuid);
             }
-            add_stonith_cleanup(st_event->target);
+            add_stonith_cleanup(event->target);
         }
 
         /* If the target is a remote node, and we host its connection,
@@ -569,7 +587,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
          * so the failure might not otherwise be detected until the next poke.
          */
         if (pcmk_is_set(peer->flags, crm_remote_node)) {
-            remote_ra_fail(st_event->target);
+            remote_ra_fail(event->target);
         }
 
         crmd_peer_down(peer, TRUE);
@@ -632,7 +650,7 @@ te_connect_stonith(gpointer user_data)
                                                  tengine_stonith_connection_destroy);
         stonith_api->cmds->register_notification(stonith_api,
                                                  T_STONITH_NOTIFY_FENCE,
-                                                 tengine_stonith_notify);
+                                                 handle_fence_notification);
         stonith_api->cmds->register_notification(stonith_api,
                                                  T_STONITH_NOTIFY_HISTORY_SYNCED,
                                                  tengine_stonith_history_synced);
@@ -837,7 +855,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         }
 
         /* Increment the fail count now, so abort_for_stonith_failure() can
-         * check it. Non-DC nodes will increment it in tengine_stonith_notify().
+         * check it. Non-DC nodes will increment it in
+         * handle_fence_notification().
          */
         st_fail_count_increment(target);
         abort_for_stonith_failure(abort_action, target, NULL);
