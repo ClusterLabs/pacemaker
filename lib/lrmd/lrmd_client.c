@@ -38,7 +38,6 @@
 #include <crm/fencing/internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
 #endif
 

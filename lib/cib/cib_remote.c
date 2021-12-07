@@ -29,7 +29,6 @@
 #include <crm/common/output_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
 gnutls_anon_client_credentials_t anon_cred_c;
 

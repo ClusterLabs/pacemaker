@@ -38,7 +38,6 @@
 /* #undef HAVE_GNUTLS_GNUTLS_H */
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
 #endif
 
