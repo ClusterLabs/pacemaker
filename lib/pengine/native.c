@@ -909,7 +909,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
-    char *priority = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
 
@@ -929,7 +928,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
             crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
-    priority = pcmk__ftoa(rsc->priority);
 
     rc = pe__name_and_nvpairs_xml(out, true, "resource", 12,
              "id", rsc_printable_id(rsc),
@@ -944,7 +942,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL));
-    free(priority);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);

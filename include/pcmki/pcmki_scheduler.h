@@ -11,7 +11,6 @@
 #  define PENGINE__H
 
 typedef struct rsc_ticket_s rsc_ticket_t;
-typedef struct lrm_agent_s lrm_agent_t;
 
 #  include <glib.h>
 #  include <crm/crm.h>
@@ -21,12 +20,6 @@ typedef struct lrm_agent_s lrm_agent_t;
 #  include <crm/pengine/status.h>
 
 #  include <crm/pengine/complex.h>
-
-enum pe_stop_fail {
-    pesf_block,
-    pesf_stonith,
-    pesf_ignore
-};
 
 enum pe_weights {
     pe_weights_none = 0x0,

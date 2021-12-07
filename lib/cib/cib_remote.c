@@ -34,11 +34,6 @@ gnutls_anon_client_credentials_t anon_cred_c;
 
 #define TLS_HANDSHAKE_TIMEOUT_MS 5000
 
-const int kx_prio[] = {
-    GNUTLS_KX_ANON_DH,
-    0
-};
-
 static gboolean remote_gnutls_credentials_init = FALSE;
 #else
 typedef void gnutls_session_t;
