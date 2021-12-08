@@ -1092,3 +1092,69 @@ pcmk__action_locks_rsc_to_node(const pe_action_t *action)
 
     return true;
 }
+
+/* lowest to highest */
+static gint
+sort_action_id(gconstpointer a, gconstpointer b)
+{
+    const pe_action_wrapper_t *action_wrapper2 = (const pe_action_wrapper_t *)a;
+    const pe_action_wrapper_t *action_wrapper1 = (const pe_action_wrapper_t *)b;
+
+    if (a == NULL) {
+        return 1;
+    }
+    if (b == NULL) {
+        return -1;
+    }
+    if (action_wrapper1->action->id < action_wrapper2->action->id) {
+        return 1;
+    }
+    if (action_wrapper1->action->id > action_wrapper2->action->id) {
+        return -1;
+    }
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Remove any duplicate action inputs, merging action flags
+ *
+ * \param[in] action  Action whose inputs should be checked
+ */
+void
+pcmk__deduplicate_action_inputs(pe_action_t *action)
+{
+    GList *item = NULL;
+    GList *next = NULL;
+    pe_action_wrapper_t *last_input = NULL;
+
+    action->actions_before = g_list_sort(action->actions_before,
+                                         sort_action_id);
+    for (item = action->actions_before; item != NULL; item = next) {
+        pe_action_wrapper_t *input = (pe_action_wrapper_t *) item->data;
+
+        next = item->next;
+        if ((last_input != NULL)
+            && (input->action->id == last_input->action->id)) {
+            crm_trace("Input %s (%d) duplicate skipped for action %s (%d)",
+                      input->action->uuid, input->action->id,
+                      action->uuid, action->id);
+
+            /* For the purposes of scheduling, the ordering flags no longer
+             * matter, but crm_simulate looks at certain ones when creating a
+             * dot graph. Combining the flags is sufficient for that purpose.
+             */
+            last_input->type |= input->type;
+            if (input->state == pe_link_dumped) {
+                last_input->state = pe_link_dumped;
+            }
+
+            free(item->data);
+            action->actions_before = g_list_delete_link(action->actions_before,
+                                                        item);
+        } else {
+            last_input = input;
+            input->state = pe_link_not_dumped;
+        }
+    }
+}

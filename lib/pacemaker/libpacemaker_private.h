@@ -40,6 +40,9 @@ pe_action_t *pcmk__new_shutdown_action(pe_node_t *node,
 G_GNUC_INTERNAL
 bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
 
+G_GNUC_INTERNAL
+void pcmk__deduplicate_action_inputs(pe_action_t *action);
+
 
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
