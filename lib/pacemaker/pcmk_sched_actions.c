@@ -1057,3 +1057,38 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     free(key);
     return xml_op;
 }
+
+/*!
+ * \internal
+ * \brief Check whether an action shutdown-locks a resource to a node
+ *
+ * If the shutdown-lock cluster property is set, resources will not be recovered
+ * on a different node if cleanly stopped, and may start only on that same node.
+ * This function checks whether that applies to a given action, so that the
+ * transition graph can be marked appropriately.
+ *
+ * \param[in] action  Action to check
+ *
+ * \return true if \p action locks its resource to the action's node,
+ *         otherwise false
+ */
+bool
+pcmk__action_locks_rsc_to_node(const pe_action_t *action)
+{
+    // Only resource actions taking place on resource's lock node are locked
+    if ((action == NULL) || (action->rsc == NULL)
+        || (action->rsc->lock_node == NULL) || (action->node == NULL)
+        || (action->node->details != action->rsc->lock_node->details)) {
+        return false;
+    }
+
+    /* During shutdown, only stops are locked (otherwise, another action such as
+     * a demote would cause the controller to clear the lock)
+     */
+    if (action->node->details->shutdown && (action->task != NULL)
+        && (strcmp(action->task, RSC_STOP) != 0)) {
+        return false;
+    }
+
+    return true;
+}

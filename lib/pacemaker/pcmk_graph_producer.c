@@ -182,26 +182,6 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
     }
 }
 
-static bool
-should_lock_action(pe_action_t *action)
-{
-    // Only actions taking place on resource's lock node are locked
-    if ((action->rsc->lock_node == NULL) || (action->node == NULL)
-        || (action->node->details != action->rsc->lock_node->details)) {
-        return false;
-    }
-
-    /* During shutdown, only stops are locked (otherwise, another action such as
-     * a demote would cause the controller to clear the lock)
-     */
-    if (action->node->details->shutdown && action->task
-        && strcmp(action->task, RSC_STOP)) {
-        return false;
-    }
-
-    return true;
-}
-
 static xmlNode *
 action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
@@ -325,7 +305,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         /* If a resource is locked to a node via shutdown-lock, mark its actions
          * so the controller can preserve the lock when the action completes.
          */
-        if (should_lock_action(action)) {
+        if (pcmk__action_locks_rsc_to_node(action)) {
             crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
                            (long long) action->rsc->lock_time);
         }
