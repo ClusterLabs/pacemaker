@@ -54,7 +54,7 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
 
     xmlNode *i_node = NULL;
     const xmlChar *ns;
-    int ret = 0;
+    int ret = EINVAL; // nodes have not been processed yet
 
     if (prev_doc == NULL || prev_doc != xml_modify->doc) {
         prev_doc = xml_modify->doc;
@@ -189,10 +189,12 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
     ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
 
     if (ret > 0) {
-        comment = xmlNewDocComment(target->doc, (pcmkXmlStr) crm_strdup_printf("%s", cred));
+        char* credentials = crm_strdup_printf("%s", cred);
+        comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
+        free(credentials);
         if (comment == NULL) {
             xmlFreeNode(target);
-            return -1;
+            return EINVAL;
         }
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         *acl_evaled_doc = target->doc;
@@ -319,6 +321,6 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xsltFreeStylesheet(xslt);
     return ret;
 #else
-    return -1;
+    return EINVAL;
 #endif
 }
