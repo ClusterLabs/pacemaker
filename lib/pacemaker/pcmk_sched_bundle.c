@@ -200,13 +200,13 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
-            create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
-            action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
+            pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
+            action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
             /* demote */
-            create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
-            action = create_pseudo_resource_op(rsc, RSC_DEMOTED, TRUE, TRUE, data_set);
+            pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
+            action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
     }
@@ -847,7 +847,9 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 if (then_child_changed & pe_graph_updated_then) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-                        update_action(next->action, data_set);
+
+                        pcmk__update_action_for_orderings(next->action,
+                                                          data_set);
                     }
                 }
             }

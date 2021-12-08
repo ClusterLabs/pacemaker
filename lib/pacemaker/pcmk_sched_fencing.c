@@ -215,8 +215,9 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
          * treat all resources on N as B would be (i.e., as a pseudo-op after
          * the fencing).
          *
-         * @TODO Maybe break the "A requires B" dependency in update_action()
-         * and use this block for healthy resources instead of the above.
+         * @TODO Maybe break the "A requires B" dependency in
+         * pcmk__update_action_for_orderings() and use this block for healthy
+         * resources instead of the above.
          */
          crm_info("Moving healthy resource %s off %s before fencing",
                   rsc->id, node->details->uname);

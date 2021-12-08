@@ -1534,7 +1534,8 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
     pcmk__order_probes(data_set);
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    g_list_foreach(data_set->actions, (GFunc) update_action, data_set);
+    g_list_foreach(data_set->actions,
+                   (GFunc) pcmk__update_action_for_orderings, data_set);
 
     pcmk__disable_invalid_orderings(data_set);
 }

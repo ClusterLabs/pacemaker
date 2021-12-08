@@ -16,6 +16,20 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
+// Actions
+
+G_GNUC_INTERNAL
+void pcmk__update_action_for_orderings(pe_action_t *action,
+                                       pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
+
+G_GNUC_INTERNAL
+pe_action_t *pcmk__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
+                                         bool optional, bool runnable);
+
+
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                           pe_action_wrapper_t *input);

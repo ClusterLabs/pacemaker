@@ -845,8 +845,10 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* promote */
-    action = create_pseudo_resource_op(rsc, RSC_PROMOTE, !any_promoting, TRUE, data_set);
-    action_complete = create_pseudo_resource_op(rsc, RSC_PROMOTED, !any_promoting, TRUE, data_set);
+    action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting,
+                                         true);
+    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
+                                                  !any_promoting, true);
     action_complete->priority = INFINITY;
 
     child_promoting_constraints(clone_data, pe_order_optional,
@@ -858,8 +860,9 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* demote */
-    action = create_pseudo_resource_op(rsc, RSC_DEMOTE, !any_demoting, TRUE, data_set);
-    action_complete = create_pseudo_resource_op(rsc, RSC_DEMOTED, !any_demoting, TRUE, data_set);
+    action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
+    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED,
+                                                  !any_demoting, true);
     action_complete->priority = INFINITY;
 
     child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);

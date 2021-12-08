@@ -150,7 +150,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                     pe_action_optional
                                     |pe_action_runnable
                                     |pe_action_pseudo)) {
-                log_action(LOG_TRACE, "\t", action, TRUE);
+                pcmk__log_action("\t", action, true);
             }
         }
     }
