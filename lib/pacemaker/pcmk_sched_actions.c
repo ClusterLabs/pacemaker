@@ -1158,3 +1158,44 @@ pcmk__deduplicate_action_inputs(pe_action_t *action)
         }
     }
 }
+
+void
+LogNodeActions(pe_working_set_t *data_set)
+{
+    pcmk__output_t *out = data_set->priv;
+
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        char *node_name = NULL;
+        char *task = NULL;
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        if (action->rsc != NULL) {
+            continue;
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+            continue;
+        }
+
+        if (pe__is_guest_node(action->node)) {
+            node_name = crm_strdup_printf("%s (resource: %s)",
+                                          action->node->details->uname,
+                                          action->node->details->remote_rsc->container->id);
+        } else if (action->node != NULL) {
+            node_name = crm_strdup_printf("%s", action->node->details->uname);
+        }
+
+
+        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+            task = strdup("Shutdown");
+
+        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+            const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+
+            task = crm_strdup_printf("Fence (%s)", op);
+        }
+
+        out->message(out, "node-action", task, node_name, action->reason);
+
+        free(node_name);
+        free(task);
+    }
+}
