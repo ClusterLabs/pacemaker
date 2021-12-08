@@ -31,7 +31,7 @@
 #include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
 
-#include <pcmki/pcmki_acl.h>
+#include <pacemaker-internal.h>
 
 #define ACL_NS_PREFIX "http://clusterlabs.org/ns/pacemaker/access/"
 #define ACL_NS_Q_PREFIX  "pcmk-access-"
