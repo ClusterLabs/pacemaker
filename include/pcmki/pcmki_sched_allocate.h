@@ -158,8 +158,6 @@ void promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
 
-void LogNodeActions(pe_working_set_t * data_set);
-
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
                                           pe_node_t *node,
                                           enum pe_action_flags flags,

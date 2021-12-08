@@ -68,14 +68,7 @@ log_all_actions(pe_working_set_t *data_set)
     data_set->priv = out;
 
     out->begin_list(out, NULL, NULL, "Actions");
-    LogNodeActions(data_set);
-
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) iter->data;
-
-        rsc->cmds->output_actions(rsc);
-    }
-
+    pcmk__output_actions(data_set);
     out->end_list(out);
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);

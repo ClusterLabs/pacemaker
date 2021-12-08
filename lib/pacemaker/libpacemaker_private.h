@@ -43,6 +43,9 @@ bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
 G_GNUC_INTERNAL
 void pcmk__deduplicate_action_inputs(pe_action_t *action);
 
+G_GNUC_INTERNAL
+void pcmk__output_actions(pe_working_set_t *data_set);
+
 
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
