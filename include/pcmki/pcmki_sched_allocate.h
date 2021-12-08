@@ -58,6 +58,7 @@ struct resource_alloc_functions_s {
                                            enum pe_action_flags,
                                            enum pe_ordering,
                                            pe_working_set_t *data_set);
+    void (*output_actions)(pe_resource_t *rsc);
 
     void (*expand) (pe_resource_t *, pe_working_set_t *);
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
@@ -158,8 +159,6 @@ void promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 extern resource_alloc_functions_t resource_class_alloc_functions[];
 
 void LogNodeActions(pe_working_set_t * data_set);
-void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set);
-void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
                                           pe_node_t *node,

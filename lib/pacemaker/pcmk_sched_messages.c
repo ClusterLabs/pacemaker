@@ -70,7 +70,11 @@ log_all_actions(pe_working_set_t *data_set)
     out->begin_list(out, NULL, NULL, "Actions");
     LogNodeActions(data_set);
 
-    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->output_actions(rsc);
+    }
 
     out->end_list(out);
     out->finish(out, CRM_EX_OK, true, NULL);

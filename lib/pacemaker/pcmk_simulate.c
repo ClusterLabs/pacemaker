@@ -126,7 +126,11 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "Transition Summary");
     LogNodeActions(data_set);
-    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->output_actions(rsc);
+    }
     out->end_list(out);
 }
 

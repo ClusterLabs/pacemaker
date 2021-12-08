@@ -78,22 +78,21 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 }
 
 void
-LogActions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__output_resource_actions(pe_resource_t *rsc)
 {
-    pcmk__output_t *out = data_set->priv;
+    pcmk__output_t *out = rsc->cluster->priv;
 
     pe_node_t *next = NULL;
     pe_node_t *current = NULL;
 
     gboolean moving = FALSE;
 
-    if(rsc->variant == pe_container) {
-        pcmk__bundle_log_actions(rsc, data_set);
-        return;
-    }
+    if (rsc->children != NULL) {
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
 
-    if (rsc->children) {
-        g_list_foreach(rsc->children, (GFunc) LogActions, data_set);
+            child->cmds->output_actions(child);
+        }
         return;
     }
 

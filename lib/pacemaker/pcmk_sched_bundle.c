@@ -1065,7 +1065,7 @@ pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 }
 
 void
-pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1077,17 +1077,17 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->ip) {
-            LogActions(replica->ip, data_set);
+        if (replica->ip != NULL) {
+            replica->ip->cmds->output_actions(replica->ip);
         }
-        if (replica->container) {
-            LogActions(replica->container, data_set);
+        if (replica->container != NULL) {
+            replica->container->cmds->output_actions(replica->container);
         }
-        if (replica->remote) {
-            LogActions(replica->remote, data_set);
+        if (replica->remote != NULL) {
+            replica->remote->cmds->output_actions(replica->remote);
         }
-        if (replica->child) {
-            LogActions(replica->child, data_set);
+        if (replica->child != NULL) {
+            replica->child->cmds->output_actions(replica->child);
         }
     }
 }
