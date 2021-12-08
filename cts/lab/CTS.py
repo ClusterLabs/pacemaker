@@ -9,7 +9,7 @@ import time
 import traceback
 
 from cts.logging     import LogFactory
-from cts.remote      import RemoteFactory, input_wrapper
+from cts.remote      import RemoteFactory
 from cts.environment import EnvFactory
 
 class CtsLab(object):
@@ -141,7 +141,7 @@ class NodeStatus(object):
             answer = "Y"
         else:
             try:
-                answer = input_wrapper('Continue? [nY]')
+                answer = input('Continue? [nY]')
             except EOFError as e:
                 answer = "n"
         if answer and answer == "n":

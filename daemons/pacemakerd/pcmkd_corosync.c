@@ -86,7 +86,7 @@ cluster_reconnect_cb(gpointer data)
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
-        crm_info("Cluster reconnect failed"
+        crm_info("Cluster reconnect failed "
                  "(connection will be reattempted once per second)");
     }
     /*

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,6 @@
 #include <crm/cib/internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
 #endif
 

@@ -21,9 +21,6 @@ trace_rsh=None
 trace_lw=None
 
 def convert2string(lines):
-    if sys.version_info < (3, ):
-        return lines
-
     if isinstance(lines, bytes):
         return lines.decode("utf-8")
     elif isinstance(lines, list):
@@ -34,11 +31,6 @@ def convert2string(lines):
             aList.append(line)
         return aList
     return lines
-
-def input_wrapper(data):
-    if sys.version_info > (3,):
-        return input(data)
-    return raw_input(data)
 
 class AsyncWaitProc(Thread):
     def __init__(self, proc, node, command, completionDelegate=None):

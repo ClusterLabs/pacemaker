@@ -125,7 +125,7 @@ class ClusterManager(UserDict):
             if self[key] == None:
                 raise ValueError("Improper derivation: self[" + key +   "] must be overridden by subclass.")
 
-    def __init__(self, Environment, randseed=None):
+    def __init__(self):
         self.Env = EnvFactory().getInstance()
         self.templates = PatternSelector(self.Env["Name"])
         self.__InitialConditions()

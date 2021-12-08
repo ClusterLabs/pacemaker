@@ -484,8 +484,6 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                    !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
             xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
                                                 msg, LOG_NEVER);
-            GHashTable *received_history =
-                history?stonith_xml_history_to_list(history):NULL;
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing
@@ -497,6 +495,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * marking as differential and merge in afterwards
             */
             if (!history || !pcmk__xe_attr_is_true(history, F_STONITH_DIFFERENTIAL)) {
+                GHashTable *received_history = NULL;
+
+                if (history != NULL) {
+                    received_history = stonith_xml_history_to_list(history);
+                }
                 out_history =
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {

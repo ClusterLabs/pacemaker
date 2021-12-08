@@ -13,9 +13,9 @@ class crm_corosync(ClusterManager):
     '''
     Corosync version 2 cluster manager class
     '''
-    def __init__(self, Environment, randseed=None, name=None):
+    def __init__(self, name=None):
         if not name: name="crm-corosync"
-        ClusterManager.__init__(self, Environment, randseed=randseed)
+        ClusterManager.__init__(self)
 
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)

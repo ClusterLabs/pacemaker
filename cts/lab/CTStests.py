@@ -28,7 +28,7 @@ from cts.CTSaudits import *
 from cts.CTSvars   import *
 from cts.patterns  import PatternSelector
 from cts.logging   import LogFactory
-from cts.remote    import RemoteFactory, input_wrapper
+from cts.remote    import RemoteFactory
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
 
@@ -1601,7 +1601,7 @@ class SplitBrainTest(CTSTest):
                 answer = "Y"
             else:
                 try:
-                    answer = input_wrapper('Continue? [nY]')
+                    answer = input('Continue? [nY]')
                 except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":

@@ -16,7 +16,6 @@
 #  include <crm/stonith-ng.h>
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
-#    undef KEYFILE
 #    include <gnutls/gnutls.h>
 #  endif
 
