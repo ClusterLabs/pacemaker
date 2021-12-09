@@ -182,20 +182,32 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
     }
 }
 
+/*!
+ * \internal
+ * \brief Create the transition graph XML for a scheduled action
+ *
+ * \param[in] action        Scheduled action
+ * \param[in] skip_details  If false, add action details as sub-elements
+ * \param[in] data_set      Cluster working set
+ *
+ * \return Transition graph XML for scheduled action
+ */
 static xmlNode *
-action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
+action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
 {
-    gboolean needs_node_info = TRUE;
-    gboolean needs_maintenance_info = FALSE;
+    bool needs_node_info = true;
+    bool needs_maintenance_info = false;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
 
-    if (action == NULL) {
+    if ((action == NULL) || (data_set == NULL)) {
         return NULL;
     }
+
+    // Create the top-level element based on task
 
     if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         /* All fences need node info; guest node fences are pseudo-events */
@@ -204,33 +216,32 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
                                      XML_GRAPH_TAG_PSEUDO_EVENT :
                                      XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    } else if (pcmk__str_any_of(action->task,
+                                CRM_OP_SHUTDOWN,
+                                CRM_OP_CLEAR_FAILCOUNT,
+                                CRM_OP_LRM_REFRESH, NULL)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
-
-    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
-
-    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
-/* 	} else if(pcmk__str_eq(action->task, RSC_PROBED, pcmk__str_casei)) { */
-/* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
+#if 0
+    } else if (pcmk__str_eq(action->task, RSC_PROBED, pcmk__str_none)) {
+        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+#endif
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-        if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES, pcmk__str_casei)) {
-            needs_maintenance_info = TRUE;
+        if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES,
+                         pcmk__str_none)) {
+            needs_maintenance_info = true;
         }
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
-        needs_node_info = FALSE;
+        needs_node_info = false;
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
-
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
 #endif
@@ -238,63 +249,64 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
-    if (action->rsc != NULL && action->rsc->clone_name != NULL) {
+
+    if ((action->rsc != NULL) && (action->rsc->clone_name != NULL)) {
         char *clone_key = NULL;
         guint interval_ms;
 
-        if (pcmk__guint_from_hash(action->meta,
-                                  XML_LRM_ATTR_INTERVAL_MS, 0,
+        if (pcmk__guint_from_hash(action->meta, XML_LRM_ATTR_INTERVAL_MS, 0,
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
-
-        if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_casei)) {
+        if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
-            const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+            const char *n_task = g_hash_table_lookup(action->meta,
+                                                     "notify_operation");
 
-            CRM_CHECK(n_type != NULL, crm_err("No notify type value found for %s", action->uuid));
-            CRM_CHECK(n_task != NULL,
-                      crm_err("No notify operation value found for %s", action->uuid));
+            CRM_LOG_ASSERT((n_type != NULL) && (n_task != NULL));
             clone_key = pcmk__notify_key(action->rsc->clone_name,
                                          n_type, n_task);
 
-        } else if(action->cancel_task) {
+        } else if (action->cancel_task != NULL) {
             clone_key = pcmk__op_key(action->rsc->clone_name,
                                      action->cancel_task, interval_ms);
         } else {
             clone_key = pcmk__op_key(action->rsc->clone_name,
                                      action->task, interval_ms);
         }
-
-        CRM_CHECK(clone_key != NULL, crm_err("Could not generate a key for %s", action->uuid));
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
         crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY, action->uuid);
         free(clone_key);
-
     } else {
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, action->uuid);
     }
 
-    if (needs_node_info && action->node != NULL) {
+    if (needs_node_info && (action->node != NULL)) {
         pe_node_t *router_node = pcmk__connection_host_for_action(action);
 
-        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
-        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
-        if (router_node) {
-            crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
+                    action->node->details->uname);
+        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID,
+                    action->node->details->id);
+        if (router_node != NULL) {
+            crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE,
+                        router_node->details->uname);
         }
-
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET), strdup(action->node->details->uname));
-        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID), strdup(action->node->details->id));
+        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET),
+                            strdup(action->node->details->uname));
+        g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID),
+                            strdup(action->node->details->id));
     }
 
-    /* No details if this action is only being listed in the inputs section */
-    if (as_input) {
+    if (skip_details) {
         return action_xml;
     }
 
-    if (action->rsc && !pcmk_is_set(action->flags, pe_action_pseudo)) {
-        int lpc = 0;
+    if ((action->rsc != NULL)
+        && !pcmk_is_set(action->flags, pe_action_pseudo)) {
+
+        // This is a real resource action, so add resource details
+
         xmlNode *rsc_xml = NULL;
         const char *attr_list[] = {
             XML_AGENT_ATTR_CLASS,
@@ -315,28 +327,25 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         rsc_xml = create_xml_node(action_xml,
                                   crm_element_name(action->rsc->xml));
         if (pcmk_is_set(action->rsc->flags, pe_rsc_orphan)
-            && action->rsc->clone_name) {
-            /* Do not use the 'instance free' name here as that
-             * might interfere with the instance we plan to keep.
-             * Ie. if there are more than two named /anonymous/
-             * instances on a given node, we need to make sure the
-             * command goes to the right one.
+            && (action->rsc->clone_name != NULL)) {
+            /* Use the numbered instance name here, because if there is more
+             * than one instance on a node, we need to make sure the command
+             * goes to the right one.
              *
-             * Keep this block, even when everyone is using
-             * 'instance free' anonymous clone names - it means
-             * we'll do the right thing if anyone toggles the
-             * unique flag to 'off'
+             * This is important even for anonymous clones, because the clone's
+             * unique meta-attribute might have just been toggled from on to
+             * off.
              */
-            crm_debug("Using orphan clone name %s instead of %s", action->rsc->id,
-                      action->rsc->clone_name);
+            crm_debug("Using orphan clone name %s instead of %s",
+                      action->rsc->id, action->rsc->clone_name);
             crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
             crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
 
         } else if (!pcmk_is_set(action->rsc->flags, pe_rsc_unique)) {
             const char *xml_id = ID(action->rsc->xml);
 
-            crm_debug("Using anonymous clone name %s for %s (aka. %s)", xml_id, action->rsc->id,
-                      action->rsc->clone_name);
+            crm_debug("Using anonymous clone name %s for %s (aka %s)",
+                      xml_id, action->rsc->id, action->rsc->clone_name);
 
             /* ID is what we'd like client to use
              * ID_LONG is what they might know it as instead
@@ -352,7 +361,9 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
              * and fall into the clause above instead
              */
             crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-            if (action->rsc->clone_name && !pcmk__str_eq(xml_id, action->rsc->clone_name, pcmk__str_casei)) {
+            if ((action->rsc->clone_name != NULL)
+                && !pcmk__str_eq(xml_id, action->rsc->clone_name,
+                                 pcmk__str_none)) {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
             } else {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
@@ -363,7 +374,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
         }
 
-        for (lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
+        for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
             crm_xml_add(rsc_xml, attr_list[lpc],
                         g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
         }
@@ -372,9 +383,8 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
     /* List any attributes in effect */
     args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
     crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-
     g_hash_table_foreach(action->extra, hash2field, args_xml);
-    if (action->rsc != NULL && action->node) {
+    if ((action->rsc != NULL) && (action->node != NULL)) {
         // Get the resource instance attributes, evaluated properly for node
         GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
 
@@ -395,7 +405,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         }
 #endif
 
-    } else if(action->rsc && action->rsc->variant <= pe_native) {
+    } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
         GHashTable *params = pe_rsc_params(action->rsc, NULL, data_set);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
@@ -408,11 +418,10 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
     }
 
 #if ENABLE_VERSIONED_ATTRS
-    if (rsc_details) {
+    if (rsc_details != NULL) {
         if (xml_has_children(rsc_details->versioned_parameters)) {
             add_node_copy(action_xml, rsc_details->versioned_parameters);
         }
-
         if (xml_has_children(rsc_details->versioned_meta)) {
             add_node_copy(action_xml, rsc_details->versioned_meta);
         }
@@ -421,7 +430,8 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
-        const char *value = g_hash_table_lookup(action->rsc->meta, "external-ip");
+        const char *value = g_hash_table_lookup(action->rsc->meta,
+                                                "external-ip");
         pe_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
@@ -429,13 +439,15 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             parent = parent->parent;
         }
 
-        if(value) {
-            hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
+        if (value != NULL) {
+            hash2smartfield((gpointer) "pcmk_external_ip", (gpointer) value,
+                            (gpointer) args_xml);
         }
 
         pcmk__add_bundle_meta_to_xml(args_xml, action);
 
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei) && action->node) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)
+               && (action->node != NULL)) {
         /* Pass the node's attributes as meta-attributes.
          *
          * @TODO: Determine whether it is still necessary to do this. It was
@@ -457,7 +469,6 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         add_maintenance_nodes(action_xml, data_set);
     }
 
-    crm_log_xml_trace(action_xml, "dumped action");
     return action_xml;
 }
 
@@ -890,7 +901,7 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
         crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
     }
 
-    xml_action = action2xml(action, FALSE, data_set);
+    xml_action = action2xml(action, false, data_set);
     add_node_nocopy(set, crm_element_name(xml_action), xml_action);
 
     for (lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
@@ -899,7 +910,7 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
             xmlNode *input_xml = create_xml_node(in, "trigger");
 
             input->state = pe_link_dumped;
-            xml_action = action2xml(input->action, TRUE, data_set);
+            xml_action = action2xml(input->action, true, data_set);
             add_node_nocopy(input_xml, crm_element_name(xml_action), xml_action);
         }
     }
