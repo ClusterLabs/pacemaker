@@ -184,6 +184,34 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
 
 /*!
  * \internal
+ * \brief Create a transition graph operation key for a clone action
+ *
+ * \param[in] action       Clone action
+ * \param[in] interval_ms  Action interval in milliseconds
+ *
+ * \return Newly allocated string with transition graph operation key
+ */
+static char *
+clone_op_key(pe_action_t *action, guint interval_ms)
+{
+    if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
+        const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
+        const char *n_task = g_hash_table_lookup(action->meta,
+                                                 "notify_operation");
+
+        CRM_LOG_ASSERT((n_type != NULL) && (n_task != NULL));
+        return pcmk__notify_key(action->rsc->clone_name, n_type, n_task);
+
+    } else if (action->cancel_task != NULL) {
+        return pcmk__op_key(action->rsc->clone_name, action->cancel_task,
+                            interval_ms);
+    } else {
+        return pcmk__op_key(action->rsc->clone_name, action->task, interval_ms);
+    }
+}
+
+/*!
+ * \internal
  * \brief Create the transition graph XML for a scheduled action
  *
  * \param[in] action        Scheduled action
@@ -258,22 +286,7 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
                                   &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
-        if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_none)) {
-            const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
-            const char *n_task = g_hash_table_lookup(action->meta,
-                                                     "notify_operation");
-
-            CRM_LOG_ASSERT((n_type != NULL) && (n_task != NULL));
-            clone_key = pcmk__notify_key(action->rsc->clone_name,
-                                         n_type, n_task);
-
-        } else if (action->cancel_task != NULL) {
-            clone_key = pcmk__op_key(action->rsc->clone_name,
-                                     action->cancel_task, interval_ms);
-        } else {
-            clone_key = pcmk__op_key(action->rsc->clone_name,
-                                     action->task, interval_ms);
-        }
+        clone_key = clone_op_key(action, interval_ms);
         crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
         crm_xml_add(action_xml, "internal_" XML_LRM_ATTR_TASK_KEY, action->uuid);
         free(clone_key);
