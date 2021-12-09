@@ -231,6 +231,188 @@ add_node_details(pe_action_t *action, xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Add resource details to transition graph action XML
+ *
+ * \param[in] action      Scheduled action
+ * \param[in] action_xml  Transition graph action XML for \p action
+ */
+static void
+add_resource_details(pe_action_t *action, xmlNode *action_xml)
+{
+    xmlNode *rsc_xml = NULL;
+    const char *attr_list[] = {
+        XML_AGENT_ATTR_CLASS,
+        XML_AGENT_ATTR_PROVIDER,
+        XML_ATTR_TYPE
+    };
+
+    /* If a resource is locked to a node via shutdown-lock, mark its actions
+     * so the controller can preserve the lock when the action completes.
+     */
+    if (pcmk__action_locks_rsc_to_node(action)) {
+        crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
+                       (long long) action->rsc->lock_time);
+    }
+
+    // List affected resource
+
+    rsc_xml = create_xml_node(action_xml, crm_element_name(action->rsc->xml));
+    if (pcmk_is_set(action->rsc->flags, pe_rsc_orphan)
+        && (action->rsc->clone_name != NULL)) {
+        /* Use the numbered instance name here, because if there is more
+         * than one instance on a node, we need to make sure the command
+         * goes to the right one.
+         *
+         * This is important even for anonymous clones, because the clone's
+         * unique meta-attribute might have just been toggled from on to
+         * off.
+         */
+        crm_debug("Using orphan clone name %s instead of %s",
+                  action->rsc->id, action->rsc->clone_name);
+        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
+        crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+
+    } else if (!pcmk_is_set(action->rsc->flags, pe_rsc_unique)) {
+        const char *xml_id = ID(action->rsc->xml);
+
+        crm_debug("Using anonymous clone name %s for %s (aka %s)",
+                  xml_id, action->rsc->id, action->rsc->clone_name);
+
+        /* ID is what we'd like client to use
+         * ID_LONG is what they might know it as instead
+         *
+         * ID_LONG is only strictly needed /here/ during the
+         * transition period until all nodes in the cluster
+         * are running the new software /and/ have rebooted
+         * once (meaning that they've only ever spoken to a DC
+         * supporting this feature).
+         *
+         * If anyone toggles the unique flag to 'on', the
+         * 'instance free' name will correspond to an orphan
+         * and fall into the clause above instead
+         */
+        crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
+        if ((action->rsc->clone_name != NULL)
+            && !pcmk__str_eq(xml_id, action->rsc->clone_name,
+                             pcmk__str_none)) {
+            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
+        } else {
+            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
+        }
+
+    } else {
+        CRM_ASSERT(action->rsc->clone_name == NULL);
+        crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
+    }
+
+    for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
+        crm_xml_add(rsc_xml, attr_list[lpc],
+                    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add action attributes to transition graph action XML
+ *
+ * \param[in] action  Scheduled action
+ * \param[in] action_xml  Transition graph action XML for \p action
+ */
+static void
+add_action_attributes(pe_action_t *action, xmlNode *action_xml)
+{
+    xmlNode *args_xml = NULL;
+
+    /* We create free-standing XML to start, so we can sort the attributes
+     * before adding it to action_xml, which keeps the scheduler regression
+     * test graphs comparable.
+     */
+    args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
+
+    crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+    g_hash_table_foreach(action->extra, hash2field, args_xml);
+
+    if ((action->rsc != NULL) && (action->node != NULL)) {
+        // Get the resource instance attributes, evaluated properly for node
+        GHashTable *params = pe_rsc_params(action->rsc, action->node,
+                                           action->rsc->cluster);
+
+        pcmk__substitute_remote_addr(action->rsc, params, action->rsc->cluster);
+
+        g_hash_table_foreach(params, hash2smartfield, args_xml);
+
+#if ENABLE_VERSIONED_ATTRS
+        {
+            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+
+            pe_get_versioned_attributes(versioned_parameters, action->rsc,
+                                        action->node, action->rsc->cluster);
+            if (xml_has_children(versioned_parameters)) {
+                add_node_copy(action_xml, versioned_parameters);
+            }
+            free_xml(versioned_parameters);
+        }
+#endif
+
+    } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
+        GHashTable *params = pe_rsc_params(action->rsc, NULL,
+                                           action->rsc->cluster);
+
+        g_hash_table_foreach(params, hash2smartfield, args_xml);
+
+#if ENABLE_VERSIONED_ATTRS
+        if (xml_has_children(action->rsc->versioned_parameters)) {
+            add_node_copy(action_xml, action->rsc->versioned_parameters);
+        }
+#endif
+    }
+
+#if ENABLE_VERSIONED_ATTRS
+    if (rsc_details != NULL) {
+        if (xml_has_children(rsc_details->versioned_parameters)) {
+            add_node_copy(action_xml, rsc_details->versioned_parameters);
+        }
+        if (xml_has_children(rsc_details->versioned_meta)) {
+            add_node_copy(action_xml, rsc_details->versioned_meta);
+        }
+    }
+#endif
+
+    g_hash_table_foreach(action->meta, hash2metafield, args_xml);
+    if (action->rsc != NULL) {
+        const char *value = g_hash_table_lookup(action->rsc->meta,
+                                                "external-ip");
+        pe_resource_t *parent = action->rsc;
+
+        while (parent != NULL) {
+            parent->cmds->append_meta(parent, args_xml);
+            parent = parent->parent;
+        }
+
+        if (value != NULL) {
+            hash2smartfield((gpointer) "pcmk_external_ip", (gpointer) value,
+                            (gpointer) args_xml);
+        }
+
+        pcmk__add_bundle_meta_to_xml(args_xml, action);
+
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_none)
+               && (action->node != NULL)) {
+        /* Pass the node's attributes as meta-attributes.
+         *
+         * @TODO: Determine whether it is still necessary to do this. It was
+         * added in 33d99707, probably for the libfence-based implementation in
+         * c9a90bd, which is no longer used.
+         */
+        g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
+    }
+
+    sorted_xml(args_xml, action_xml, FALSE);
+    free_xml(args_xml);
+}
+
+/*!
+ * \internal
  * \brief Create the transition graph XML for a scheduled action
  *
  * \param[in] action        Scheduled action
@@ -245,7 +427,6 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
     xmlNode *action_xml = NULL;
-    xmlNode *args_xml = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -329,159 +510,11 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
         && !pcmk_is_set(action->flags, pe_action_pseudo)) {
 
         // This is a real resource action, so add resource details
-
-        xmlNode *rsc_xml = NULL;
-        const char *attr_list[] = {
-            XML_AGENT_ATTR_CLASS,
-            XML_AGENT_ATTR_PROVIDER,
-            XML_ATTR_TYPE
-        };
-
-        /* If a resource is locked to a node via shutdown-lock, mark its actions
-         * so the controller can preserve the lock when the action completes.
-         */
-        if (pcmk__action_locks_rsc_to_node(action)) {
-            crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
-                           (long long) action->rsc->lock_time);
-        }
-
-        // List affected resource
-
-        rsc_xml = create_xml_node(action_xml,
-                                  crm_element_name(action->rsc->xml));
-        if (pcmk_is_set(action->rsc->flags, pe_rsc_orphan)
-            && (action->rsc->clone_name != NULL)) {
-            /* Use the numbered instance name here, because if there is more
-             * than one instance on a node, we need to make sure the command
-             * goes to the right one.
-             *
-             * This is important even for anonymous clones, because the clone's
-             * unique meta-attribute might have just been toggled from on to
-             * off.
-             */
-            crm_debug("Using orphan clone name %s instead of %s",
-                      action->rsc->id, action->rsc->clone_name);
-            crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->clone_name);
-            crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
-
-        } else if (!pcmk_is_set(action->rsc->flags, pe_rsc_unique)) {
-            const char *xml_id = ID(action->rsc->xml);
-
-            crm_debug("Using anonymous clone name %s for %s (aka %s)",
-                      xml_id, action->rsc->id, action->rsc->clone_name);
-
-            /* ID is what we'd like client to use
-             * ID_LONG is what they might know it as instead
-             *
-             * ID_LONG is only strictly needed /here/ during the
-             * transition period until all nodes in the cluster
-             * are running the new software /and/ have rebooted
-             * once (meaning that they've only ever spoken to a DC
-             * supporting this feature).
-             *
-             * If anyone toggles the unique flag to 'on', the
-             * 'instance free' name will correspond to an orphan
-             * and fall into the clause above instead
-             */
-            crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-            if ((action->rsc->clone_name != NULL)
-                && !pcmk__str_eq(xml_id, action->rsc->clone_name,
-                                 pcmk__str_none)) {
-                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
-            } else {
-                crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
-            }
-
-        } else {
-            CRM_ASSERT(action->rsc->clone_name == NULL);
-            crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
-        }
-
-        for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
-            crm_xml_add(rsc_xml, attr_list[lpc],
-                        g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
-        }
+        add_resource_details(action, action_xml);
     }
 
     /* List any attributes in effect */
-    args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
-    crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-    g_hash_table_foreach(action->extra, hash2field, args_xml);
-    if ((action->rsc != NULL) && (action->node != NULL)) {
-        // Get the resource instance attributes, evaluated properly for node
-        GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
-
-        pcmk__substitute_remote_addr(action->rsc, params, data_set);
-
-        g_hash_table_foreach(params, hash2smartfield, args_xml);
-
-#if ENABLE_VERSIONED_ATTRS
-        {
-            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-
-            pe_get_versioned_attributes(versioned_parameters, action->rsc,
-                                        action->node, data_set);
-            if (xml_has_children(versioned_parameters)) {
-                add_node_copy(action_xml, versioned_parameters);
-            }
-            free_xml(versioned_parameters);
-        }
-#endif
-
-    } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
-        GHashTable *params = pe_rsc_params(action->rsc, NULL, data_set);
-
-        g_hash_table_foreach(params, hash2smartfield, args_xml);
-
-#if ENABLE_VERSIONED_ATTRS
-        if (xml_has_children(action->rsc->versioned_parameters)) {
-            add_node_copy(action_xml, action->rsc->versioned_parameters);
-        }
-#endif
-    }
-
-#if ENABLE_VERSIONED_ATTRS
-    if (rsc_details != NULL) {
-        if (xml_has_children(rsc_details->versioned_parameters)) {
-            add_node_copy(action_xml, rsc_details->versioned_parameters);
-        }
-        if (xml_has_children(rsc_details->versioned_meta)) {
-            add_node_copy(action_xml, rsc_details->versioned_meta);
-        }
-    }
-#endif
-
-    g_hash_table_foreach(action->meta, hash2metafield, args_xml);
-    if (action->rsc != NULL) {
-        const char *value = g_hash_table_lookup(action->rsc->meta,
-                                                "external-ip");
-        pe_resource_t *parent = action->rsc;
-
-        while (parent != NULL) {
-            parent->cmds->append_meta(parent, args_xml);
-            parent = parent->parent;
-        }
-
-        if (value != NULL) {
-            hash2smartfield((gpointer) "pcmk_external_ip", (gpointer) value,
-                            (gpointer) args_xml);
-        }
-
-        pcmk__add_bundle_meta_to_xml(args_xml, action);
-
-    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)
-               && (action->node != NULL)) {
-        /* Pass the node's attributes as meta-attributes.
-         *
-         * @TODO: Determine whether it is still necessary to do this. It was
-         * added in 33d99707, probably for the libfence-based implementation in
-         * c9a90bd, which is no longer used.
-         */
-        g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
-    }
-
-    sorted_xml(args_xml, action_xml, FALSE);
-    free_xml(args_xml);
+    add_action_attributes(action, action_xml);
 
     /* List any nodes this action is expected to make down */
     if (needs_node_info && (action->node != NULL)) {
