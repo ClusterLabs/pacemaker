@@ -1309,6 +1309,9 @@ PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
+dnl libqb libqb-2.0.3 + ipc-connect-async-API (2022-01)
+AC_CHECK_FUNCS([qb_ipcc_connect_async])
+
 dnl libqb 2.0.2+ (2020-10)
 AC_CHECK_FUNCS(qb_ipcc_auth_get,
                AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
