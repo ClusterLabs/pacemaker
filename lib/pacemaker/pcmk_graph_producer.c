@@ -846,7 +846,7 @@ done:
  *       on those type flags. (For example, some code looks for type equal to
  *       some flag rather than whether the flag is set, and some code looks for
  *       particular combinations of flags -- such code must be done before
- *       stage8().)
+ *       pcmk__create_graph().)
  */
 void
 graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
@@ -940,18 +940,21 @@ pcmk__log_transition_summary(const char *filename)
     }
 }
 
-/*
- * Create a dependency graph to send to the transitioner (via the controller)
+/*!
+ * \internal
+ * \brief Create a transition graph with all cluster actions needed
+ *
+ * \param[in] data_set  Cluster working set
  */
-gboolean
-stage8(pe_working_set_t * data_set)
+void
+pcmk__create_graph(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     const char *value = NULL;
     long long limit = 0LL;
 
     transition_id++;
-    crm_trace("Creating transition graph %d.", transition_id);
+    crm_trace("Creating transition graph %d", transition_id);
 
     data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
 
@@ -993,42 +996,36 @@ stage8(pe_working_set_t * data_set)
      * values.
      */
 
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+    // Add resource actions to graph
+    for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-        pe_rsc_trace(rsc, "processing actions for rsc=%s", rsc->id);
+        pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
         rsc->cmds->expand(rsc, data_set);
     }
 
-    crm_log_xml_trace(data_set->graph, "created resource-driven action list");
-
-    /* pseudo action to distribute list of nodes with maintenance state update */
+    // Add pseudo-action for list of nodes with maintenance state update
     add_maintenance_update(data_set);
 
-    /* catch any non-resource specific actions */
-    crm_trace("processing non-resource actions");
+    // Add non-resource (node) actions
+    for (iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
 
-    gIter = data_set->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (action->rsc
-            && action->node
+        if ((action->rsc != NULL)
+            && (action->node != NULL)
             && action->node->details->shutdown
             && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
             && !pcmk_any_flags_set(action->flags,
                                    pe_action_optional|pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)
-            ) {
-            /* Eventually we should just ignore the 'fence' case
-             * But for now it's the best way to detect (in CTS) when
-             * CIB resource updates are being lost
+            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)) {
+            /* Eventually we should just ignore the 'fence' case, but for now
+             * it's the best way to detect (in CTS) when CIB resource updates
+             * are being lost.
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-                || data_set->no_quorum_policy == no_quorum_ignore) {
+                || (data_set->no_quorum_policy == no_quorum_ignore)) {
                 crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
-                         action->node->details->unclean ? "fence" : "shut down",
+                         action->node->details->unclean? "fence" : "shut down",
                          action->node->details->uname, action->rsc->id,
                          pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
                          pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
@@ -1039,8 +1036,5 @@ stage8(pe_working_set_t * data_set)
         graph_element_from_action(action, data_set);
     }
 
-    crm_log_xml_trace(data_set->graph, "created generic action list");
-    crm_trace("Created transition graph %d.", transition_id);
-
-    return TRUE;
+    crm_log_xml_trace(data_set->graph, "graph");
 }

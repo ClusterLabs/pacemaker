@@ -652,8 +652,8 @@ pcmk__connection_host_for_action(pe_action_t *action)
  *
  * REMOTE_CONTAINER_HACK: If a given resource is a remote connection resource
  * with its "addr" parameter set to "#uname", pull the actual value from the
- * parameters evaluated without a node (which was put there earlier in stage8()
- * when the bundle's expand() method was called).
+ * parameters evaluated without a node (which was put there earlier in
+ * pcmk__create_graph() when the bundle's expand() method was called).
  *
  * \param[in] rsc       Resource to check
  * \param[in] params    Resource parameters evaluated per node
