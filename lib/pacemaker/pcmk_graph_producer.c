@@ -212,6 +212,25 @@ clone_op_key(pe_action_t *action, guint interval_ms)
 
 /*!
  * \internal
+ * \brief Add node details to transition graph action XML
+ *
+ * \param[in] action  Scheduled action
+ * \param[in] xml     Transition graph action XML for \p action
+ */
+static void
+add_node_details(pe_action_t *action, xmlNode *xml)
+{
+    pe_node_t *router_node = pcmk__connection_host_for_action(action);
+
+    crm_xml_add(xml, XML_LRM_ATTR_TARGET, action->node->details->uname);
+    crm_xml_add(xml, XML_LRM_ATTR_TARGET_UUID, action->node->details->id);
+    if (router_node != NULL) {
+        crm_xml_add(xml, XML_LRM_ATTR_ROUTER_NODE, router_node->details->uname);
+    }
+}
+
+/*!
+ * \internal
  * \brief Create the transition graph XML for a scheduled action
  *
  * \param[in] action        Scheduled action
@@ -295,16 +314,7 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
     }
 
     if (needs_node_info && (action->node != NULL)) {
-        pe_node_t *router_node = pcmk__connection_host_for_action(action);
-
-        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET,
-                    action->node->details->uname);
-        crm_xml_add(action_xml, XML_LRM_ATTR_TARGET_UUID,
-                    action->node->details->id);
-        if (router_node != NULL) {
-            crm_xml_add(action_xml, XML_LRM_ATTR_ROUTER_NODE,
-                        router_node->details->uname);
-        }
+        add_node_details(action, action_xml);
         g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET),
                             strdup(action->node->details->uname));
         g_hash_table_insert(action->meta, strdup(XML_LRM_ATTR_TARGET_UUID),
