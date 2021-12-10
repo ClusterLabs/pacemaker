@@ -528,11 +528,17 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
     return action_xml;
 }
 
+/*!
+ * \internal
+ * \brief Check whether an action should be added to the transition graph
+ *
+ * \param[in] action  Action to check
+ *
+ * \return true if action should be added to graph, otherwise false
+ */
 static bool
-should_dump_action(pe_action_t *action)
+should_add_action_to_graph(pe_action_t *action)
 {
-    CRM_CHECK(action != NULL, return false);
-
     if (pcmk_is_set(action->flags, pe_action_dumped)) {
         crm_trace("Action %s (%d) already dumped", action->uuid, action->id);
         return false;
@@ -575,21 +581,30 @@ should_dump_action(pe_action_t *action)
         crm_trace("Ignoring action %s (%d): unrunnable",
                   action->uuid, action->id);
         return false;
+    }
 
-    } else if (pcmk_is_set(action->flags, pe_action_optional)
-               && !pcmk_is_set(action->flags, pe_action_print_always)) {
+    if (pcmk_is_set(action->flags, pe_action_optional)
+        && !pcmk_is_set(action->flags, pe_action_print_always)) {
         crm_trace("Ignoring action %s (%d): optional",
                   action->uuid, action->id);
         return false;
+    }
 
-    // Monitors should be dumped even for unmanaged resources
-    } else if (action->rsc && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-               && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)) {
+    /* Actions for unmanaged resources should be excluded from the graph,
+     * with the exception of monitors and cancellation of recurring monitors.
+     */
+    if ((action->rsc != NULL)
+        && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_none)) {
+        const char *interval_ms_s;
 
-        const char *interval_ms_s = g_hash_table_lookup(action->meta,
-                                                        XML_LRM_ATTR_INTERVAL_MS);
-
-        // Cancellation of recurring monitors should still be dumped
+        /* A cancellation of a recurring monitor will get here because the task
+         * is cancel rather than monitor, but the interval can still be used to
+         * recognize it. The interval has been normalized to milliseconds by
+         * this point, so a string comparison is sufficient.
+         */
+        interval_ms_s = g_hash_table_lookup(action->meta,
+                                            XML_LRM_ATTR_INTERVAL_MS);
         if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)) {
             crm_trace("Ignoring action %s (%d): for unmanaged resource (%s)",
                       action->uuid, action->id, action->rsc->id);
@@ -597,9 +612,12 @@ should_dump_action(pe_action_t *action)
         }
     }
 
-    if (pcmk_is_set(action->flags, pe_action_pseudo) ||
-        pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN, NULL)) {
-        /* skip the next checks */
+    /* Always add pseudo-actions, fence actions, and shutdown actions (already
+     * determined to be required and runnable by this point)
+     */
+    if (pcmk_is_set(action->flags, pe_action_pseudo)
+        || pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN,
+                                NULL)) {
         return true;
     }
 
@@ -607,10 +625,11 @@ should_dump_action(pe_action_t *action)
         pe_err("Skipping action %s (%d) "
                "because it was not allocated to a node (bug?)",
                action->uuid, action->id);
-        pcmk__log_action("Unallocated action", action, false);
+        pcmk__log_action("Unallocated", action, false);
         return false;
+    }
 
-    } else if (pcmk_is_set(action->flags, pe_action_dc)) {
+    if (pcmk_is_set(action->flags, pe_action_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
                   action->uuid, action->id, action->node->details->uname);
@@ -621,21 +640,21 @@ should_dump_action(pe_action_t *action)
                   "assuming will be runnable on guest node %s",
                   action->uuid, action->id, action->node->details->uname);
 
-    } else if (action->node->details->online == false) {
+    } else if (!action->node->details->online) {
         pe_err("Skipping action %s (%d) "
                "because it was scheduled for offline node (bug?)",
                action->uuid, action->id);
-        pcmk__log_action("Action for offline node", action, false);
+        pcmk__log_action("Offline node", action, false);
         return false;
 #if 0
-        /* but this would also affect resources that can be safely
-         *  migrated before a fencing op
-         */
-    } else if (action->node->details->unclean == false) {
+    /* @TODO This might be worthwhile, but it might incorrectly affect resources
+     * that can be safely migrated before fencing.
+     */
+    } else if (action->node->details->unclean) {
         pe_err("Skipping action %s (%d) "
                "because it was scheduled for unclean node (bug?)",
                action->uuid, action->id);
-        pcmk__log_action("Action for unclean node", action, false);
+        pcmk__log_action("Unclean node", action, false);
         return false;
 #endif
     }
@@ -811,7 +830,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
     } else if (pcmk_is_set(input->action->flags, pe_action_optional)
                && !pcmk_any_flags_set(input->action->flags,
                                       pe_action_print_always|pe_action_dumped)
-               && !should_dump_action(input->action)) {
+               && !should_add_action_to_graph(input->action)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "input optional",
                   action->uuid, action->id,
@@ -931,7 +950,7 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
         pe__set_action_flags(action, pe_action_dedup);
     }
 
-    if (should_dump_action(action) == FALSE) {
+    if (!should_add_action_to_graph(action)) {
         return;
     }
 
