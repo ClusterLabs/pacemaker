@@ -104,10 +104,9 @@ async_fence_helper(gpointer user_data)
     int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to fencer: %s\n", pcmk_strerror(rc));
         g_main_loop_quit(mainloop);
         pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR,
-                         PCMK_EXEC_NOT_CONNECTED, NULL);
+                         PCMK_EXEC_NOT_CONNECTED, pcmk_strerror(rc));
         return TRUE;
     }
 
