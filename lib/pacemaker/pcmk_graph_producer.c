@@ -680,7 +680,7 @@ ordering_can_change_actions(pe_action_wrapper_t *ordering)
  *       circumstances (load or anti-colocation orderings that are not needed).
  */
 static bool
-check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
+should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
 {
     if (input->state == pe_link_dumped) {
         return true;
@@ -695,7 +695,8 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
                && !ordering_can_change_actions(input)
-               && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED, pcmk__str_casei)) {
+               && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED,
+                                pcmk__str_none)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
                   action->uuid, action->id,
@@ -847,7 +848,7 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     }
 
     // Don't need to check inputs that won't be used
-    if (!check_dump_input(action, input)) {
+    if (!should_add_input_to_graph(action, input)) {
         return false;
     }
 
@@ -962,7 +963,7 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
 
     for (lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
         input = (pe_action_wrapper_t *) lpc->data;
-        if (check_dump_input(action, input)) {
+        if (should_add_input_to_graph(action, input)) {
             xmlNode *input_xml = create_xml_node(in, "trigger");
 
             input->state = pe_link_dumped;
