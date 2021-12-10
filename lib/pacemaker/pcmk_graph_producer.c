@@ -912,6 +912,36 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
 
 /*!
  * \internal
+ * \brief Create a synapse XML element for a transition graph
+ *
+ * \param[in] action    Action that synapse is for
+ * \param[in] data_set  Cluster working set containing graph
+ *
+ * \return Newly added XML element for new graph synapse
+ */
+static xmlNode *
+create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
+{
+    int synapse_priority = 0;
+    xmlNode *syn = create_xml_node(data_set->graph, "synapse");
+
+    crm_xml_add_int(syn, XML_ATTR_ID, data_set->num_synapse);
+    data_set->num_synapse++;
+
+    if (action->rsc != NULL) {
+        synapse_priority = action->rsc->priority;
+    }
+    if (action->priority > synapse_priority) {
+        synapse_priority = action->priority;
+    }
+    if (synapse_priority > 0) {
+        crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
+    }
+    return syn;
+}
+
+/*!
+ * \internal
  * \brief Add an action to the transition graph XML if appropriate
  *
  * \param[in] action    Action to possibly add
@@ -929,7 +959,6 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
 void
 pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
 {
-    int synapse_priority = 0;
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
@@ -950,22 +979,9 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
     }
     pe__set_action_flags(action, pe_action_dumped);
 
-    syn = create_xml_node(data_set->graph, "synapse");
+    syn = create_graph_synapse(action, data_set);
     set = create_xml_node(syn, "action_set");
     in = create_xml_node(syn, "inputs");
-
-    crm_xml_add_int(syn, XML_ATTR_ID, data_set->num_synapse);
-    data_set->num_synapse++;
-
-    if (action->rsc != NULL) {
-        synapse_priority = action->rsc->priority;
-    }
-    if (action->priority > synapse_priority) {
-        synapse_priority = action->priority;
-    }
-    if (synapse_priority > 0) {
-        crm_xml_add_int(syn, XML_CIB_ATTR_PRIORITY, synapse_priority);
-    }
 
     xml_action = action2xml(action, false, data_set);
     add_node_nocopy(set, crm_element_name(xml_action), xml_action);
