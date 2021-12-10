@@ -333,13 +333,33 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 
 // \return Standard Pacemaker return code
 static int
-request_fencing(stonith_t *st, const char *target, const char *command)
+request_fencing(stonith_t *st, const char *target, const char *command,
+                GError **error)
 {
+    char *reason = NULL;
     int rc = pcmk__request_fencing(st, target, command, crm_system_name,
                                        options.timeout * 1000,
                                        options.tolerance * 1000,
-                                       options.delay, NULL);
+                                       options.delay, &reason);
 
+    if (rc != pcmk_rc_ok) {
+        const char *rc_str = pcmk_rc_str(rc);
+
+        // If reason is identical to return code string, don't display it twice
+        if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
+            free(reason);
+            reason = NULL;
+        }
+
+        g_set_error(error, PCMK__RC_ERROR, rc,
+                    "Couldn't %sfence %s: %s%s%s%s",
+                    ((strcmp(command, "on") == 0)? "un" : ""),
+                    target, pcmk_rc_str(rc),
+                    ((reason == NULL)? "" : " ("),
+                    ((reason == NULL)? "" : reason),
+                    ((reason == NULL)? "" : ")"));
+    }
+    free(reason);
     return rc;
 }
 
@@ -580,15 +600,15 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = request_fencing(st, target, "reboot");
+            rc = request_fencing(st, target, "reboot", &error);
             break;
 
         case 'F':
-            rc = request_fencing(st, target, "off");
+            rc = request_fencing(st, target, "off", &error);
             break;
 
         case 'U':
-            rc = request_fencing(st, target, "on");
+            rc = request_fencing(st, target, "on", &error);
             break;
 
         case 'h':
