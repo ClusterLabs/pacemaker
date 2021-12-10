@@ -414,7 +414,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
                                       pcmk_is_set(flags, pe_weights_positive));
     }
 
-    if (can_run_any(work)) {
+    if (pcmk__any_node_available(work)) {
         GList *gIter = NULL;
         int multiplier = (factor < 0)? -1 : 1;
 
@@ -532,7 +532,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      constraint->score, role2text(constraint->dependent_role));
         primary->cmds->allocate(primary, NULL, data_set);
         rsc->cmds->rsc_colocation_lh(rsc, primary, constraint, data_set);
-        if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
+        if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
                         rsc->id, primary->id);
             g_hash_table_destroy(rsc->allowed_nodes);

@@ -993,8 +993,8 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
         }
     }
 
-    if (can_run_any(work) || (constraint->score <= -INFINITY)
-        || (constraint->score >= INFINITY)) {
+    if ((constraint->score <= -INFINITY) || (constraint->score >= INFINITY)
+        || pcmk__any_node_available(work)) {
 
         g_hash_table_destroy(dependent->allowed_nodes);
         dependent->allowed_nodes = work;

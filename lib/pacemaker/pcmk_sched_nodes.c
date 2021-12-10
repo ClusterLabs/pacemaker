@@ -227,22 +227,29 @@ pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
     return g_list_sort_with_data(nodes, compare_nodes, &nw);
 }
 
-gboolean
-can_run_any(GHashTable * nodes)
+/*!
+ * \internal
+ * \brief Check whether any node is available to run resources
+ *
+ * \param[in] nodes  Nodes to check
+ *
+ * \return true if any node in \p nodes is available to run resources,
+ *         otherwise false
+ */
+bool
+pcmk__any_node_available(GHashTable *nodes)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
     if (nodes == NULL) {
-        return FALSE;
+        return false;
     }
-
     g_hash_table_iter_init(&iter, nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (pcmk__node_available(node) && (node->weight >= 0)) {
-            return TRUE;
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        if ((node->weight >= 0) && pcmk__node_available(node)) {
+            return true;
         }
     }
-
-    return FALSE;
+    return false;
 }
