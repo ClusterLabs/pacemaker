@@ -539,11 +539,6 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
 static bool
 should_add_action_to_graph(pe_action_t *action)
 {
-    if (pcmk_is_set(action->flags, pe_action_dumped)) {
-        crm_trace("Action %s (%d) already dumped", action->uuid, action->id);
-        return false;
-    }
-
 #if 0
     /* NOTE: The scheduler no longer schedules probe_complete actions. However,
      * getting rid of it created some corner cases, so this code is kept around
@@ -946,7 +941,8 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
         pe__set_action_flags(action, pe_action_dedup);
     }
 
-    if (!should_add_action_to_graph(action)) {
+    if (pcmk_is_set(action->flags, pe_action_dumped)
+        || !should_add_action_to_graph(action)) {
         return;
     }
 
