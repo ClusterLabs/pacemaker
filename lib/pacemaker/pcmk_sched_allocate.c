@@ -529,7 +529,7 @@ check_actions(pe_working_set_t * data_set)
                 continue;
 
             /* Still need to check actions for a maintenance node to cancel existing monitor operations */
-            } else if (can_run_resources(node) == FALSE && node->details->maintenance == FALSE) {
+            } else if (!pcmk__node_available(node) && !node->details->maintenance) {
                 crm_trace("Skipping param check for %s: can't run resources",
                           node->details->uname);
                 continue;

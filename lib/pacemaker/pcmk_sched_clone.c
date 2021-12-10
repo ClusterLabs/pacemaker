@@ -353,8 +353,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     /* Instance whose current node can run resources sorts first */
-    can1 = can_run_resources(node1);
-    can2 = can_run_resources(node2);
+    can1 = pcmk__node_available(node1);
+    can2 = pcmk__node_available(node2);
     if (can1 && !can2) {
         crm_trace("%s < %s: can", resource1->id, resource2->id);
         return -1;
@@ -434,7 +434,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         /* make clang analyzer happy */
         goto bail;
 
-    } else if (can_run_resources(node) == FALSE) {
+    } else if (!pcmk__node_available(node)) {
         goto bail;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -585,7 +585,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_node_t *node = nIter->data;
 
         node->count = 0;
-        if (can_run_resources(node)) {
+        if (pcmk__node_available(node)) {
             available_nodes++;
         }
     }
@@ -623,7 +623,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                      child->id, child_node->details->uname, max - allocated,
                      max);
 
-        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
+        if (!pcmk__node_available(child_node) || (child_node->weight < 0)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
                          child_node->details->uname, child->id);
             continue;

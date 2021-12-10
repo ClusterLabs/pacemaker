@@ -15,27 +15,22 @@
 #include <pacemaker.h>
 #include "libpacemaker_private.h"
 
-gboolean
-can_run_resources(const pe_node_t * node)
+/*!
+ * \internal
+ * \brief Check whether a node is available to run resources
+ *
+ * \param[in] node  Node to check
+ *
+ * \return true if node is online and not shutting down, unclean, or in standby
+ *         or maintenance mode, otherwise false
+ */
+bool
+pcmk__node_available(const pe_node_t *node)
 {
-    if (node == NULL) {
-        return FALSE;
-    }
-#if 0
-    if (node->weight < 0) {
-        return FALSE;
-    }
-#endif
-
-    if (node->details->online == FALSE
-        || node->details->shutdown || node->details->unclean
-        || node->details->standby || node->details->maintenance) {
-        crm_trace("%s: online=%d, unclean=%d, standby=%d, maintenance=%d",
-                  node->details->uname, node->details->online,
-                  node->details->unclean, node->details->standby, node->details->maintenance);
-        return FALSE;
-    }
-    return TRUE;
+    // @TODO Should we add (node->weight >= 0)?
+    return (node != NULL) && (node->details != NULL) && node->details->online
+            && !node->details->shutdown && !node->details->unclean
+            && !node->details->standby && !node->details->maintenance;
 }
 
 /*!
@@ -125,10 +120,10 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     node1_weight = node1->weight;
     node2_weight = node2->weight;
 
-    if (can_run_resources(node1) == FALSE) {
+    if (!pcmk__node_available(node1)) {
         node1_weight = -INFINITY;
     }
-    if (can_run_resources(node2) == FALSE) {
+    if (!pcmk__node_available(node2)) {
         node2_weight = -INFINITY;
     }
 
@@ -215,7 +210,7 @@ can_run_any(GHashTable * nodes)
 
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (can_run_resources(node) && node->weight >= 0) {
+        if (pcmk__node_available(node) && (node->weight >= 0)) {
             return TRUE;
         }
     }

@@ -30,7 +30,7 @@ GList *pcmk__copy_node_list(const GList *list, bool reset);
 GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
                             pe_working_set_t *data_set);
 
-extern gboolean can_run_resources(const pe_node_t * node);
+bool pcmk__node_available(const pe_node_t *node);
 
 gboolean can_run_any(GHashTable * nodes);
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,

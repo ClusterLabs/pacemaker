@@ -131,7 +131,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                          chosen->details->uname, rsc->id);
             chosen = NULL;
 
-        } else if (!can_run_resources(chosen)) {
+        } else if (!pcmk__node_available(chosen)) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
                          chosen->details->uname, rsc->id);
             chosen = NULL;
@@ -153,7 +153,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                      chosen ? chosen->details->uname : "<none>", rsc->id, length);
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
-            && chosen && (chosen->weight > 0) && can_run_resources(chosen)) {
+            && chosen && (chosen->weight > 0) && pcmk__node_available(chosen)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
@@ -165,7 +165,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
              */
             pe_node_t *running = pe__current_node(rsc);
 
-            if (running && (can_run_resources(running) == FALSE)) {
+            if ((running != NULL) && !pcmk__node_available(running)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
             } else if (running) {
@@ -222,7 +222,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score) && can_run_resources(node)
+        if ((node->weight > best_score) && pcmk__node_available(node)
             && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;
