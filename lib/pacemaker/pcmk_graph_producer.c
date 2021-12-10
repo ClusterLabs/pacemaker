@@ -831,6 +831,18 @@ should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Check whether an ordering creates an ordering loop
+ *
+ * \param[in] init_action  "First" action in ordering
+ * \param[in] action       Callers should always set this the same as
+ *                         \p init_action (this function may use a different
+ *                         value for recursive calls)
+ * \param[in] input        Action wrapper for "then" action in ordering
+ *
+ * \return true if the ordering creates a loop, otherwise false
+ */
 bool
 pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                      pe_action_wrapper_t *input)
@@ -881,11 +893,10 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                                  (pe_action_wrapper_t *) iter->data)) {
             // Recursive call already logged a debug message
             has_loop = true;
-            goto done;
+            break;
         }
     }
 
-done:
     pe__clear_action_flags(input->action, pe_action_tracking);
 
     if (!has_loop) {
