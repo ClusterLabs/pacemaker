@@ -646,17 +646,13 @@ should_add_action_to_graph(pe_action_t *action)
                action->uuid, action->id);
         pcmk__log_action("Offline node", action, false);
         return false;
-#if 0
-    /* @TODO This might be worthwhile, but it might incorrectly affect resources
-     * that can be safely migrated before fencing.
-     */
+
     } else if (action->node->details->unclean) {
         pe_err("Skipping action %s (%d) "
                "because it was scheduled for unclean node (bug?)",
                action->uuid, action->id);
         pcmk__log_action("Unclean node", action, false);
         return false;
-#endif
     }
     return true;
 }
