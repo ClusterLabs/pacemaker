@@ -415,14 +415,14 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
  * \internal
  * \brief Create the transition graph XML for a scheduled action
  *
+ * \param[in] parent        Parent XML element to add action to
  * \param[in] action        Scheduled action
  * \param[in] skip_details  If false, add action details as sub-elements
  * \param[in] data_set      Cluster working set
- *
- * \return Transition graph XML for scheduled action
  */
-static xmlNode *
-action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
+static void
+create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
+                    pe_working_set_t *data_set)
 {
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
@@ -432,14 +432,14 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
 #endif
 
     if ((action == NULL) || (data_set == NULL)) {
-        return NULL;
+        return;
     }
 
     // Create the top-level element based on task
 
     if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         /* All fences need node info; guest node fences are pseudo-events */
-        action_xml = create_xml_node(NULL,
+        action_xml = create_xml_node(parent,
                                      pcmk_is_set(action->flags, pe_action_pseudo)?
                                      XML_GRAPH_TAG_PSEUDO_EVENT :
                                      XML_GRAPH_TAG_CRM_EVENT);
@@ -448,16 +448,16 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
                                 CRM_OP_SHUTDOWN,
                                 CRM_OP_CLEAR_FAILCOUNT,
                                 CRM_OP_LRM_REFRESH, NULL)) {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
         // CIB-only clean-up for shutdown locks
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
 #if 0
     } else if (pcmk__str_eq(action->task, RSC_PROBED, pcmk__str_none)) {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 #endif
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
@@ -465,11 +465,11 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
                          pcmk__str_none)) {
             needs_maintenance_info = true;
         }
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
+        action_xml = create_xml_node(parent, XML_GRAPH_TAG_PSEUDO_EVENT);
         needs_node_info = false;
 
     } else {
-        action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+        action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
 #endif
@@ -503,7 +503,7 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
     }
 
     if (skip_details) {
-        return action_xml;
+        return;
     }
 
     if ((action->rsc != NULL)
@@ -524,8 +524,6 @@ action2xml(pe_action_t *action, bool skip_details, pe_working_set_t *data_set)
     if (needs_maintenance_info) {
         add_maintenance_nodes(action_xml, data_set);
     }
-
-    return action_xml;
 }
 
 /*!
@@ -962,7 +960,6 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
-    xmlNode *xml_action = NULL;
 
     /* If we haven't already, de-duplicate inputs (even if we won't be adding
      * the action to the graph, so that crm_simulate's dot graphs don't have
@@ -983,8 +980,7 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
     set = create_xml_node(syn, "action_set");
     in = create_xml_node(syn, "inputs");
 
-    xml_action = action2xml(action, false, data_set);
-    add_node_nocopy(set, crm_element_name(xml_action), xml_action);
+    create_graph_action(set, action, false, data_set);
 
     for (GList *lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
         pe_action_wrapper_t *input = (pe_action_wrapper_t *) lpc->data;
@@ -993,9 +989,7 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
             xmlNode *input_xml = create_xml_node(in, "trigger");
 
             input->state = pe_link_dumped;
-            xml_action = action2xml(input->action, true, data_set);
-            add_node_nocopy(input_xml, crm_element_name(xml_action),
-                            xml_action);
+            create_graph_action(input_xml, input->action, true, data_set);
         }
     }
 }
