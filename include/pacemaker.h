@@ -189,12 +189,15 @@ int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
  *                      again.
  * \param[in] delay     Apply a fencing delay. Value -1 means disable also any
  *                      static/random fencing delays from pcmk_delay_base/max.
+ * \param[out] reason   If not NULL, where to put descriptive failure reason
  *
  * \return Standard Pacemaker return code
+ * \note If \p reason is not NULL, the caller is responsible for freeing its
+ *       returned value.
  */
 int pcmk_fence_action(stonith_t *st, const char *target, const char *action,
                       const char *name, unsigned int timeout, unsigned int tolerance,
-                      int delay);
+                      int delay, char **reason);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.

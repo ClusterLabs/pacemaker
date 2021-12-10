@@ -139,7 +139,7 @@ async_fence_helper(gpointer user_data)
 int
 pcmk__fence_action(stonith_t *st, const char *target, const char *action,
                    const char *name, unsigned int timeout, unsigned int tolerance,
-                   int delay)
+                   int delay, char **reason)
 {
     crm_trigger_t *trig;
 
@@ -161,6 +161,9 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 
     free(async_fence_data.name);
 
+    if ((reason != NULL) && (async_fence_data.result.exit_reason != NULL)) {
+        *reason = strdup(async_fence_data.result.exit_reason);
+    }
     return stonith__result2rc(&async_fence_data.result);
 }
 
@@ -168,9 +171,10 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 int
 pcmk_fence_action(stonith_t *st, const char *target, const char *action,
                   const char *name, unsigned int timeout, unsigned int tolerance,
-                  int delay)
+                  int delay, char **reason)
 {
-    return pcmk__fence_action(st, target, action, name, timeout, tolerance, delay);
+    return pcmk__fence_action(st, target, action, name, timeout, tolerance,
+                              delay, reason);
 }
 #endif
 
