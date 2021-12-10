@@ -54,6 +54,9 @@ bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
+void pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 void pcmk__create_graph(pe_working_set_t *data_set);
 
 

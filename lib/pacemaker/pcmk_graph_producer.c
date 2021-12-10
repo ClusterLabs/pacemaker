@@ -927,29 +927,27 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
  *       pcmk__create_graph().)
  */
 void
-graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
+pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
 {
-    GList *lpc = NULL;
     int synapse_priority = 0;
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
     xmlNode *xml_action = NULL;
-    pe_action_wrapper_t *input = NULL;
 
-    /* If we haven't already, de-duplicate inputs -- even if we won't be dumping
-     * the action, so that crm_simulate dot graphs don't have duplicates.
+    /* If we haven't already, de-duplicate inputs (even if we won't be adding
+     * the action to the graph, so that crm_simulate's dot graphs don't have
+     * duplicates).
      */
     if (!pcmk_is_set(action->flags, pe_action_dedup)) {
         pcmk__deduplicate_action_inputs(action);
         pe__set_action_flags(action, pe_action_dedup);
     }
 
-    if (pcmk_is_set(action->flags, pe_action_dumped)
-        || !should_add_action_to_graph(action)) {
+    if (pcmk_is_set(action->flags, pe_action_dumped)    // Already added, or
+        || !should_add_action_to_graph(action)) {       // shouldn't be added
         return;
     }
-
     pe__set_action_flags(action, pe_action_dumped);
 
     syn = create_xml_node(data_set->graph, "synapse");
@@ -972,14 +970,16 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
     xml_action = action2xml(action, false, data_set);
     add_node_nocopy(set, crm_element_name(xml_action), xml_action);
 
-    for (lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
-        input = (pe_action_wrapper_t *) lpc->data;
+    for (GList *lpc = action->actions_before; lpc != NULL; lpc = lpc->next) {
+        pe_action_wrapper_t *input = (pe_action_wrapper_t *) lpc->data;
+
         if (should_add_input_to_graph(action, input)) {
             xmlNode *input_xml = create_xml_node(in, "trigger");
 
             input->state = pe_link_dumped;
             xml_action = action2xml(input->action, true, data_set);
-            add_node_nocopy(input_xml, crm_element_name(xml_action), xml_action);
+            add_node_nocopy(input_xml, crm_element_name(xml_action),
+                            xml_action);
         }
     }
 }
@@ -1112,7 +1112,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             }
         }
 
-        graph_element_from_action(action, data_set);
+        pcmk__add_action_to_graph(action, data_set);
     }
 
     crm_log_xml_trace(data_set->graph, "graph");
