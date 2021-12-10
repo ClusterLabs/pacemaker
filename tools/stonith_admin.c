@@ -360,8 +360,6 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("stonith_admin", args->verbosity);
 
-    name = strdup(crm_system_name);
-
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
@@ -496,7 +494,7 @@ main(int argc, char **argv)
     if (st == NULL) {
         rc = -ENOMEM;
     } else if (!no_connect) {
-        rc = st->cmds->connect(st, name, NULL);
+        rc = st->cmds->connect(st, crm_system_name, NULL);
     }
     if (rc < 0) {
         out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
@@ -570,21 +568,21 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = pcmk__request_fencing(st, target, "reboot", name,
+            rc = pcmk__request_fencing(st, target, "reboot", crm_system_name,
                                        options.timeout * 1000,
                                        options.tolerance * 1000,
                                        options.delay, NULL);
             break;
 
         case 'F':
-            rc = pcmk__request_fencing(st, target, "off", name,
+            rc = pcmk__request_fencing(st, target, "off", crm_system_name,
                                        options.timeout * 1000,
                                        options.tolerance * 1000,
                                        options.delay, NULL);
             break;
 
         case 'U':
-            rc = pcmk__request_fencing(st, target, "on", name,
+            rc = pcmk__request_fencing(st, target, "on", crm_system_name,
                                        options.timeout * 1000,
                                        options.tolerance * 1000,
                                        options.delay, NULL);
@@ -619,7 +617,6 @@ main(int argc, char **argv)
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
-    free(name);
     stonith_key_value_freeall(options.params, 1, 1);
 
     if (st != NULL) {
