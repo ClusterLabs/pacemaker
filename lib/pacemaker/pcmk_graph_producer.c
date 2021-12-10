@@ -536,43 +536,40 @@ should_dump_action(pe_action_t *action)
     if (pcmk_is_set(action->flags, pe_action_dumped)) {
         crm_trace("Action %s (%d) already dumped", action->uuid, action->id);
         return false;
+    }
 
-    } else if (pcmk_is_set(action->flags, pe_action_pseudo)
-               && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_casei)) {
-        GList *lpc = NULL;
-
-        /* This is a horrible but convenient hack
+#if 0
+    /* NOTE: The scheduler no longer schedules probe_complete actions. However,
+     * getting rid of it created some corner cases, so this code is kept around
+     * in case we need to restore it.
+     */
+    if (pcmk_is_set(action->flags, pe_action_pseudo)
+        && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_none)) {
+        /* Always add a probe_complete action to the graph if it is the "before"
+         * action for a runnable start action that will be in the graph.
          *
-         * It mimimizes the number of actions with unsatisfied inputs
-         * (i.e. not included in the graph)
-         *
-         * This in turn, means we can be more concise when printing
-         * aborted/incomplete graphs.
-         *
-         * It also makes it obvious which node is preventing
-         * probe_complete from running (presumably because it is only
-         * partially up)
-         *
-         * For these reasons we tolerate such perversions
+         * This is a questionable but convenient hack that allows us to be more
+         * concise when printing aborted or incomplete graphs, and makes it
+         * obvious which node is preventing probe_complete from running
+         * (presumably because it is only partially up).
          */
 
-        for (lpc = action->actions_after; lpc != NULL; lpc = lpc->next) {
-            pe_action_wrapper_t *wrapper = (pe_action_wrapper_t *) lpc->data;
+        for (GList *lpc = action->actions_after; lpc != NULL; lpc = lpc->next) {
+            pe_action_wrapper_t *then = (pe_action_wrapper_t *) lpc->data;
 
-            if (!pcmk_is_set(wrapper->action->flags, pe_action_runnable)) {
-                /* Only interested in runnable operations */
-            } else if (!pcmk__str_eq(wrapper->action->task, RSC_START, pcmk__str_casei)) {
-                /* Only interested in start operations */
-            } else if (pcmk_is_set(wrapper->action->flags, pe_action_dumped)
-                       || should_dump_action(wrapper->action)) {
+            if (pcmk_is_set(then->action->flags, pe_action_runnable)
+                && pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)
+                && (pcmk_is_set(then->action->flags, pe_action_dumped)
+                    || should_add_action_to_graph(then->action))) {
                 crm_trace("Action %s (%d) should be dumped: "
                           "dependency of %s (%d)",
                           action->uuid, action->id,
-                          wrapper->action->uuid, wrapper->action->id);
+                          then->action->uuid, then->action->id);
                 return true;
             }
         }
     }
+#endif
 
     if (!pcmk_is_set(action->flags, pe_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
