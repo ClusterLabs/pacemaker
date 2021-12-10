@@ -505,7 +505,7 @@ enum pe_ordering {
                                                  */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
+    pe_order_stonith_stop          = 0x2000,    //<! \deprecated Will be removed in future release
     pe_order_serialize_only        = 0x4000,    /* serialize */
     pe_order_same_node             = 0x8000,    /* applies only if 'first' and 'then' are on same node */
 

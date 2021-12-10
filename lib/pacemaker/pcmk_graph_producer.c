@@ -710,14 +710,6 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
                   input->action->uuid, input->action->id);
         return false;
 
-    } else if (pcmk_is_set(action->flags, pe_action_pseudo)
-               && pcmk_is_set(input->type, pe_order_stonith_stop)) {
-        crm_trace("Ignoring %s (%d) input %s (%d): "
-                  "stonith stop but action is pseudo",
-                  action->uuid, action->id,
-                  input->action->uuid, input->action->id);
-        return false;
-
     } else if (pcmk_is_set(input->type, pe_order_implies_first_migratable)
                && !pcmk_is_set(input->action->flags, pe_action_runnable)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
