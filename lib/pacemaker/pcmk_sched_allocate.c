@@ -1223,7 +1223,7 @@ stage5(pe_working_set_t * data_set)
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GList *nodes = g_list_copy(data_set->nodes);
 
-        nodes = sort_nodes_by_weight(nodes, NULL, data_set);
+        nodes = pcmk__sort_nodes(nodes, NULL, data_set);
         data_set->resources =
             g_list_sort_with_data(data_set->resources, sort_rsc_process_order, nodes);
 

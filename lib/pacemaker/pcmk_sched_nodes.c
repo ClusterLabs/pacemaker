@@ -208,9 +208,19 @@ equal:
     return strcmp(node1->details->uname, node2->details->uname);
 }
 
+/*!
+ * \internal
+ * \brief Sort a list of nodes by allocation desirability
+ *
+ * \param[in] nodes        Node list to sort
+ * \param[in] active_node  If not NULL, node currently running resource
+ * \param[in] data_set     Cluster working set
+ *
+ * \return New head of sorted list
+ */
 GList *
-sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
-                     pe_working_set_t *data_set)
+pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
+                 pe_working_set_t *data_set)
 {
     struct node_weight_s nw = { active_node, data_set };
 

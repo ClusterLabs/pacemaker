@@ -207,8 +207,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     list1 = g_hash_table_get_values(hash1);
     list2 = g_hash_table_get_values(hash2);
 
-    list1 = sort_nodes_by_weight(list1, current_node1, data_set);
-    list2 = sort_nodes_by_weight(list2, current_node2, data_set);
+    list1 = pcmk__sort_nodes(list1, current_node1, data_set);
+    list2 = pcmk__sort_nodes(list2, current_node2, data_set);
 
     for (GList *gIter1 = list1, *gIter2 = list2;
          (gIter1 != NULL) && (gIter2 != NULL);
@@ -727,7 +727,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                           rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
     rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
@@ -1049,7 +1049,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {
