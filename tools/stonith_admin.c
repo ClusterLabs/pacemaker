@@ -331,6 +331,18 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+// \return Standard Pacemaker return code
+static int
+request_fencing(stonith_t *st, const char *target, const char *command)
+{
+    int rc = pcmk__request_fencing(st, target, command, crm_system_name,
+                                       options.timeout * 1000,
+                                       options.tolerance * 1000,
+                                       options.delay, NULL);
+
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -568,24 +580,15 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = pcmk__request_fencing(st, target, "reboot", crm_system_name,
-                                       options.timeout * 1000,
-                                       options.tolerance * 1000,
-                                       options.delay, NULL);
+            rc = request_fencing(st, target, "reboot");
             break;
 
         case 'F':
-            rc = pcmk__request_fencing(st, target, "off", crm_system_name,
-                                       options.timeout * 1000,
-                                       options.tolerance * 1000,
-                                       options.delay, NULL);
+            rc = request_fencing(st, target, "off");
             break;
 
         case 'U':
-            rc = pcmk__request_fencing(st, target, "on", crm_system_name,
-                                       options.timeout * 1000,
-                                       options.tolerance * 1000,
-                                       options.delay, NULL);
+            rc = request_fencing(st, target, "on");
             break;
 
         case 'h':
