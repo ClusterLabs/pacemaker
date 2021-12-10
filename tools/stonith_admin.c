@@ -570,18 +570,24 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = pcmk__fence_action(st, target, "reboot", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay, NULL);
+            rc = pcmk__request_fencing(st, target, "reboot", name,
+                                       options.timeout * 1000,
+                                       options.tolerance * 1000,
+                                       options.delay, NULL);
             break;
 
         case 'F':
-            rc = pcmk__fence_action(st, target, "off", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay, NULL);
+            rc = pcmk__request_fencing(st, target, "off", name,
+                                       options.timeout * 1000,
+                                       options.tolerance * 1000,
+                                       options.delay, NULL);
             break;
 
         case 'U':
-            rc = pcmk__fence_action(st, target, "on", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay, NULL);
+            rc = pcmk__request_fencing(st, target, "on", name,
+                                       options.timeout * 1000,
+                                       options.tolerance * 1000,
+                                       options.delay, NULL);
             break;
 
         case 'h':

@@ -137,9 +137,9 @@ async_fence_helper(gpointer user_data)
 }
 
 int
-pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                   const char *name, unsigned int timeout, unsigned int tolerance,
-                   int delay, char **reason)
+pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
+                      const char *name, unsigned int timeout,
+                      unsigned int tolerance, int delay, char **reason)
 {
     crm_trigger_t *trig;
 
@@ -169,12 +169,12 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                  const char *name, unsigned int timeout, unsigned int tolerance,
-                  int delay, char **reason)
+pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
+                     const char *name, unsigned int timeout,
+                     unsigned int tolerance, int delay, char **reason)
 {
-    return pcmk__fence_action(st, target, action, name, timeout, tolerance,
-                              delay, reason);
+    return pcmk__request_fencing(st, target, action, name, timeout, tolerance,
+                                 delay, reason);
 }
 #endif
 

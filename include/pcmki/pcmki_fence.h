@@ -13,14 +13,14 @@
 #  include <crm/common/output_internal.h>
 
 /*!
- * \brief Perform a STONITH action.
+ * \brief Ask the cluster to perform fencing
  *
- * \note This is the internal version of pcmk_fence_action().  External users
+ * \note This is the internal version of pcmk_request_fencing(). External users
  *       of the pacemaker API should use that function instead.
  *
- * \param[in] st        A connection to the STONITH API.
- * \param[in] target    The node receiving the action.
- * \param[in] action    The action to perform.
+ * \param[in] st        A connection to the fencer API
+ * \param[in] target    The node that should be fenced
+ * \param[in] action    The fencing action (on, off, reboot) to perform
  * \param[in] name      Who requested the fence action?
  * \param[in] timeout   How long to wait for the operation to complete (in ms).
  * \param[in] tolerance If a successful action for \p target happened within
@@ -34,9 +34,9 @@
  * \note If \p reason is not NULL, the caller is responsible for freeing its
  *       returned value.
  */
-int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                       const char *name, unsigned int timeout, unsigned int tolerance,
-                       int delay, char **reason);
+int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
+                          const char *name, unsigned int timeout,
+                          unsigned int tolerance, int delay, char **reason);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.
