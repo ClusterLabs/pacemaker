@@ -16,31 +16,38 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-static gboolean
-order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
+/*!
+ * \internal
+ * \brief Check whether a probe should be ordered before another action
+ *
+ * \param[in] probe  Probe action to check
+ * \param[in] then   Other action to check
+ *
+ * \return true if \p probe should be ordered before \p then, otherwise false
+ */
+static bool
+probe_needed_before_action(pe_action_t *probe, pe_action_t *then)
 {
-    /* No need to probe the resource on the node that is being
-     * unfenced. Otherwise it might introduce transition loop
-     * since probe will be performed after the node is
-     * unfenced.
-     */
-    if (pcmk__str_eq(rh_action->task, CRM_OP_FENCE, pcmk__str_casei)
-         && probe->node && rh_action->node
-         && probe->node->details == rh_action->node->details) {
-        const char *op = g_hash_table_lookup(rh_action->meta, "stonith_action");
+    // Probes on a node are performed after unfencing it, not before
+    if (pcmk__str_eq(then->task, CRM_OP_FENCE, pcmk__str_casei)
+         && (probe->node != NULL) && (then->node != NULL)
+         && (probe->node->details == then->node->details)) {
+        const char *op = g_hash_table_lookup(then->meta, "stonith_action");
 
         if (pcmk__str_eq(op, "on", pcmk__str_casei)) {
-            return TRUE;
+            return false;
         }
     }
 
-    // Shutdown waits for probe to complete only if it's on the same node
-    if ((pcmk__str_eq(rh_action->task, CRM_OP_SHUTDOWN, pcmk__str_casei))
-        && probe->node && rh_action->node
-        && probe->node->details != rh_action->node->details) {
-        return TRUE;
+    // Probes should be done on a node before shutting it down
+    if (pcmk__str_eq(then->task, CRM_OP_SHUTDOWN, pcmk__str_none)
+        && (probe->node != NULL) && (then->node != NULL)
+        && (probe->node->details != then->node->details)) {
+        return false;
     }
-    return FALSE;
+
+    // Otherwise probes should always be done before any other action
+    return true;
 }
 
 static void
@@ -156,10 +163,9 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
             for (rIter = rh_actions; rIter != NULL; rIter = rIter->next) {
                 pe_action_t *rh_action_iter = (pe_action_t *) rIter->data;
 
-                if (order_first_probe_unneeded(probe, rh_action_iter)) {
-                    continue;
+                if (probe_needed_before_action(probe, rh_action_iter)) {
+                    order_actions(probe, rh_action_iter, order_type);
                 }
-                order_actions(probe, rh_action_iter, order_type);
             }
         }
 
