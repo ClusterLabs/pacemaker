@@ -50,126 +50,130 @@ probe_needed_before_action(pe_action_t *probe, pe_action_t *then)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Add implicit "probe then X" orderings for "stop then X" orderings
+ *
+ * If the state of a resource is not known yet, a probe will be scheduled,
+ * expecting a "not running" result. If the probe fails, a stop will not be
+ * scheduled until the next transition. Thus, if there are ordering constraints
+ * like "stop this resource then do something else that's not for the same
+ * resource", add implicit "probe this resource then do something" equivalents
+ * so the relation is upheld until we know whether a stop is needed.
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-order_first_probes_imply_stops(pe_working_set_t * data_set)
+add_probe_orderings_for_stops(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    for (GList *iter = data_set->ordering_constraints; iter != NULL;
+         iter = iter->next) {
 
-    for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
-        pe__ordering_t *order = gIter->data;
+        pe__ordering_t *order = iter->data;
         enum pe_ordering order_type = pe_order_optional;
-
-        pe_resource_t *lh_rsc = order->lh_rsc;
-        pe_resource_t *rh_rsc = order->rh_rsc;
-        pe_action_t *lh_action = order->lh_action;
-        pe_action_t *rh_action = order->rh_action;
-        const char *lh_action_task = order->lh_action_task;
-        const char *rh_action_task = order->rh_action_task;
-
         GList *probes = NULL;
-        GList *rh_actions = NULL;
+        GList *then_actions = NULL;
 
-        GList *pIter = NULL;
-
-        if (lh_rsc == NULL) {
-            continue;
-
-        } else if (rh_rsc && lh_rsc == rh_rsc) {
-            continue;
-        }
-
-        if (lh_action == NULL && lh_action_task == NULL) {
-            continue;
-        }
-
-        if (rh_action == NULL && rh_action_task == NULL) {
-            continue;
-        }
-
-        /* Technically probe is expected to return "not running", which could be
-         * the alternative of stop action if the status of the resource is
-         * unknown yet.
-         */
-        if (lh_action && !pcmk__str_eq(lh_action->task, RSC_STOP, pcmk__str_casei)) {
-            continue;
-
-        } else if (lh_action == NULL
-                   && lh_action_task
-                   && !pcmk__ends_with(lh_action_task, "_" RSC_STOP "_0")) {
-            continue;
-        }
-
-        /* Do not probe the resource inside of a stopping container. Otherwise
-         * it might introduce transition loop since probe will be performed
-         * after the container starts again.
-         */
-        if (rh_rsc && lh_rsc->container == rh_rsc) {
-            if (rh_action && pcmk__str_eq(rh_action->task, RSC_STOP, pcmk__str_casei)) {
-                continue;
-
-            } else if (rh_action == NULL && rh_action_task
-                       && pcmk__ends_with(rh_action_task,"_" RSC_STOP "_0")) {
-                continue;
-            }
-        }
-
+        // Skip disabled orderings
         if (order->type == pe_order_none) {
             continue;
         }
 
-        // Preserve the order options for future filtering
+        // Skip non-resource orderings, and orderings for the same resource
+        if ((order->lh_rsc == NULL) || (order->lh_rsc == order->rh_rsc)) {
+            continue;
+        }
+
+        // Skip invalid orderings (shouldn't be possible)
+        if (((order->lh_action == NULL) && (order->lh_action_task == NULL)) ||
+            ((order->rh_action == NULL) && (order->rh_action_task == NULL))) {
+            continue;
+        }
+
+        // Skip orderings for first actions other than stop
+        if ((order->lh_action != NULL)
+            && !pcmk__str_eq(order->lh_action->task, RSC_STOP, pcmk__str_none)) {
+            continue;
+        } else if ((order->lh_action == NULL)
+                   && !pcmk__ends_with(order->lh_action_task, "_" RSC_STOP "_0")) {
+            continue;
+        }
+
+        /* Do not imply a probe ordering for a resource inside of a stopping
+         * container. Otherwise, it might introduce a transition loop, since a
+         * probe could be scheduled after the container starts again.
+         */
+        if ((order->rh_rsc != NULL)
+            && (order->lh_rsc->container == order->rh_rsc)) {
+
+            if ((order->rh_action != NULL)
+                && pcmk__str_eq(order->rh_action->task, RSC_STOP,
+                                pcmk__str_none)) {
+                continue;
+            } else if ((order->rh_action == NULL)
+                       && pcmk__ends_with(order->rh_action_task,
+                                          "_" RSC_STOP "_0")) {
+                continue;
+            }
+        }
+
+        // Preserve certain order options for future filtering
         if (pcmk_is_set(order->type, pe_order_apply_first_non_migratable)) {
             pe__set_order_flags(order_type,
                                 pe_order_apply_first_non_migratable);
         }
-
         if (pcmk_is_set(order->type, pe_order_same_node)) {
             pe__set_order_flags(order_type, pe_order_same_node);
         }
 
-        // Keep the order types for future filtering
-        if (order->type == pe_order_anti_colocation
-                   || order->type == pe_order_load) {
+        // Preserve certain order types for future filtering
+        if ((order->type == pe_order_anti_colocation)
+            || (order->type == pe_order_load)) {
             order_type = order->type;
         }
 
-        probes = pe__resource_actions(lh_rsc, NULL, RSC_STATUS, FALSE);
-        if (probes == NULL) {
+        // List all scheduled probes for the first resource
+        probes = pe__resource_actions(order->lh_rsc, NULL, RSC_STATUS, FALSE);
+        if (probes == NULL) { // There aren't any
             continue;
         }
 
-        if (rh_action) {
-            rh_actions = g_list_prepend(rh_actions, rh_action);
+        // List all relevant "then" actions
+        if (order->rh_action != NULL) {
+            then_actions = g_list_prepend(NULL, order->rh_action);
 
-        } else if (rh_rsc && rh_action_task) {
-            rh_actions = find_actions(rh_rsc->actions, rh_action_task, NULL);
+        } else if (order->rh_rsc != NULL) {
+            then_actions = find_actions(order->rh_rsc->actions,
+                                        order->rh_action_task, NULL);
+            if (then_actions == NULL) { // There aren't any
+                g_list_free(probes);
+                continue;
+            }
         }
 
-        if (rh_actions == NULL) {
-            g_list_free(probes);
-            continue;
-        }
-
-        crm_trace("Processing for LH probe based on ordering constraint %s -> %s"
-                  " (id=%d, type=%.6x)",
-                  lh_action ? lh_action->uuid : lh_action_task,
-                  rh_action ? rh_action->uuid : rh_action_task,
+        crm_trace("Implying 'probe then' orderings for '%s then %s' "
+                  "(id=%d, type=%.6x)",
+                  order->lh_action? order->lh_action->uuid : order->lh_action_task,
+                  order->rh_action? order->rh_action->uuid : order->rh_action_task,
                   order->id, order->type);
 
-        for (pIter = probes; pIter != NULL; pIter = pIter->next) {
-            pe_action_t *probe = (pe_action_t *) pIter->data;
-            GList *rIter = NULL;
+        for (GList *probe_iter = probes; probe_iter != NULL;
+             probe_iter = probe_iter->next) {
 
-            for (rIter = rh_actions; rIter != NULL; rIter = rIter->next) {
-                pe_action_t *rh_action_iter = (pe_action_t *) rIter->data;
+            pe_action_t *probe = (pe_action_t *) probe_iter->data;
 
-                if (probe_needed_before_action(probe, rh_action_iter)) {
-                    order_actions(probe, rh_action_iter, order_type);
+            for (GList *then_iter = then_actions; then_iter != NULL;
+                 then_iter = then_iter->next) {
+
+                pe_action_t *then = (pe_action_t *) then_iter->data;
+
+                if (probe_needed_before_action(probe, then)) {
+                    order_actions(probe, then, order_type);
                 }
             }
         }
 
-        g_list_free(rh_actions);
+        g_list_free(then_actions);
         g_list_free(probes);
     }
 }
@@ -359,7 +363,7 @@ order_first_probes(pe_working_set_t * data_set)
         order_first_rsc_probes(rsc, data_set);
     }
 
-    order_first_probes_imply_stops(data_set);
+    add_probe_orderings_for_stops(data_set);
 }
 
 static void
