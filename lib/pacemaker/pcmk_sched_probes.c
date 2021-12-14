@@ -335,29 +335,38 @@ clear_actions_tracking_flag(pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add restart orderings for any scheduled probes for a given resource
+ *
+ * \param[in] rsc       Resource whose probes should be ordered
+ * \param[in] data_set  Cluster working set
+ */
 static void
-order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
+add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
     GList *probes = NULL;
 
-    g_list_foreach(rsc->children, (GFunc) order_first_rsc_probes, data_set);
-
+    // For collective resources, order each instance recursively
     if (rsc->variant != pe_native) {
+        g_list_foreach(rsc->children, (GFunc) add_restart_orderings_for_rsc,
+                       data_set);
         return;
     }
 
+    // Find all probes for given resource
     probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
-    for (gIter = probes; gIter != NULL; gIter= gIter->next) {
-        pe_action_t *probe = (pe_action_t *) gIter->data;
-        GList *aIter = NULL;
+    // Add probe restart orderings for each probe found
+    for (GList *iter = probes; iter != NULL; iter= iter->next) {
+        pe_action_t *probe = (pe_action_t *) iter->data;
 
-        for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
-            pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
+        for (GList *then_iter = probe->actions_after; then_iter != NULL;
+             then_iter = then_iter->next) {
 
-            add_restart_orderings_for_probe(probe, after_wrapper->action,
-                                            data_set);
+            pe_action_wrapper_t *then = (pe_action_wrapper_t *) then_iter->data;
+
+            add_restart_orderings_for_probe(probe, then->action, data_set);
             clear_actions_tracking_flag(data_set);
         }
     }
@@ -373,7 +382,7 @@ order_first_probes(pe_working_set_t * data_set)
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        order_first_rsc_probes(rsc, data_set);
+        add_restart_orderings_for_rsc(rsc, data_set);
     }
 
     add_probe_orderings_for_stops(data_set);
