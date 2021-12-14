@@ -44,6 +44,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      native_rsc_location,
      native_action_flags,
      native_update_actions,
+     pcmk__output_resource_actions,
      native_expand,
      native_append_meta,
      },
@@ -59,6 +60,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      group_rsc_location,
      group_action_flags,
      group_update_actions,
+     pcmk__output_resource_actions,
      group_expand,
      group_append_meta,
      },
@@ -74,6 +76,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_rsc_location,
      clone_action_flags,
      pcmk__multi_update_actions,
+     pcmk__output_resource_actions,
      clone_expand,
      clone_append_meta,
      },
@@ -89,6 +92,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__bundle_rsc_location,
      pcmk__bundle_action_flags,
      pcmk__multi_update_actions,
+     pcmk__output_bundle_actions,
      pcmk__bundle_expand,
      pcmk__bundle_append_meta,
      }
@@ -162,7 +166,7 @@ CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
              rsc->id, task, interval_ms,
              active_node->details->uname, (reason? reason : "unknown"));
 
-    cancel = pe_cancel_op(rsc, task, interval_ms, active_node, data_set);
+    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, active_node);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
                        pe_order_optional, data_set);
@@ -1427,7 +1431,7 @@ stage6(pe_working_set_t * data_set)
                  * if we can come up with a good use for this in the future, we will. */
                     pe__is_guest_or_remote_node(node) == FALSE) {
 
-            pe_action_t *down_op = sched_shutdown_op(node, data_set);
+            pe_action_t *down_op = pcmk__new_shutdown_action(node, data_set);
 
             if (node->details->is_dc) {
                 // Remember if the DC is being shut down
@@ -2102,42 +2106,4 @@ stage8(pe_working_set_t * data_set)
     crm_trace("Created transition graph %d.", transition_id);
 
     return TRUE;
-}
-
-void
-LogNodeActions(pe_working_set_t * data_set)
-{
-    pcmk__output_t *out = data_set->priv;
-    GList *gIter = NULL;
-
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        char *node_name = NULL;
-        char *task = NULL;
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (action->rsc != NULL) {
-            continue;
-        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
-            continue;
-        }
-
-        if (pe__is_guest_node(action->node)) {
-            node_name = crm_strdup_printf("%s (resource: %s)", action->node->details->uname, action->node->details->remote_rsc->container->id);
-        } else if(action->node) {
-            node_name = crm_strdup_printf("%s", action->node->details->uname);
-        }
-
-
-        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
-            task = strdup("Shutdown");
-        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
-            const char *op = g_hash_table_lookup(action->meta, "stonith_action");
-            task = crm_strdup_printf("Fence (%s)", op);
-        }
-
-        out->message(out, "node-action", task, node_name, action->reason);
-
-        free(node_name);
-        free(task);
-    }
 }

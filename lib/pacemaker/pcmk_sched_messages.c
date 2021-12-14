@@ -68,10 +68,7 @@ log_all_actions(pe_working_set_t *data_set)
     data_set->priv = out;
 
     out->begin_list(out, NULL, NULL, "Actions");
-    LogNodeActions(data_set);
-
-    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
-
+    pcmk__output_actions(data_set);
     out->end_list(out);
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);

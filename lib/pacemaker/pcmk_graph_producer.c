@@ -182,26 +182,6 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
     }
 }
 
-static bool
-should_lock_action(pe_action_t *action)
-{
-    // Only actions taking place on resource's lock node are locked
-    if ((action->rsc->lock_node == NULL) || (action->node == NULL)
-        || (action->node->details != action->rsc->lock_node->details)) {
-        return false;
-    }
-
-    /* During shutdown, only stops are locked (otherwise, another action such as
-     * a demote would cause the controller to clear the lock)
-     */
-    if (action->node->details->shutdown && action->task
-        && strcmp(action->task, RSC_STOP)) {
-        return false;
-    }
-
-    return true;
-}
-
 static xmlNode *
 action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 {
@@ -325,7 +305,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         /* If a resource is locked to a node via shutdown-lock, mark its actions
          * so the controller can preserve the lock when the action completes.
          */
-        if (should_lock_action(action)) {
+        if (pcmk__action_locks_rsc_to_node(action)) {
             crm_xml_add_ll(action_xml, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
                            (long long) action->rsc->lock_time);
         }
@@ -598,30 +578,6 @@ should_dump_action(pe_action_t *action)
     return true;
 }
 
-/* lowest to highest */
-static gint
-sort_action_id(gconstpointer a, gconstpointer b)
-{
-    const pe_action_wrapper_t *action_wrapper2 = (const pe_action_wrapper_t *)a;
-    const pe_action_wrapper_t *action_wrapper1 = (const pe_action_wrapper_t *)b;
-
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    if (action_wrapper1->action->id > action_wrapper2->action->id) {
-        return -1;
-    }
-
-    if (action_wrapper1->action->id < action_wrapper2->action->id) {
-        return 1;
-    }
-    return 0;
-}
-
 /*!
  * \internal
  * \brief Check whether an ordering's flags can change an action
@@ -876,44 +832,6 @@ done:
     return has_loop;
 }
 
-// Remove duplicate inputs (regardless of flags)
-static void
-deduplicate_inputs(pe_action_t *action)
-{
-    GList *item = NULL;
-    GList *next = NULL;
-    pe_action_wrapper_t *last_input = NULL;
-
-    action->actions_before = g_list_sort(action->actions_before,
-                                         sort_action_id);
-    for (item = action->actions_before; item != NULL; item = next) {
-        pe_action_wrapper_t *input = (pe_action_wrapper_t *) item->data;
-
-        next = item->next;
-        if (last_input && (input->action->id == last_input->action->id)) {
-            crm_trace("Input %s (%d) duplicate skipped for action %s (%d)",
-                      input->action->uuid, input->action->id,
-                      action->uuid, action->id);
-
-            /* For the purposes of scheduling, the ordering flags no longer
-             * matter, but crm_simulate looks at certain ones when creating a
-             * dot graph. Combining the flags is sufficient for that purpose.
-             */
-            last_input->type |= input->type;
-            if (input->state == pe_link_dumped) {
-                last_input->state = pe_link_dumped;
-            }
-
-            free(item->data);
-            action->actions_before = g_list_delete_link(action->actions_before,
-                                                        item);
-        } else {
-            last_input = input;
-            input->state = pe_link_not_dumped;
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Add an action to the transition graph XML if appropriate
@@ -945,7 +863,7 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
      * the action, so that crm_simulate dot graphs don't have duplicates.
      */
     if (!pcmk_is_set(action->flags, pe_action_dedup)) {
-        deduplicate_inputs(action);
+        pcmk__deduplicate_action_inputs(action);
         pe__set_action_flags(action, pe_action_dedup);
     }
 

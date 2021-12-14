@@ -77,6 +77,45 @@ pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
     return colocated_rscs;
 }
 
+void
+pcmk__output_resource_actions(pe_resource_t *rsc)
+{
+    pcmk__output_t *out = rsc->cluster->priv;
+
+    pe_node_t *next = NULL;
+    pe_node_t *current = NULL;
+
+    gboolean moving = FALSE;
+
+    if (rsc->children != NULL) {
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
+
+            child->cmds->output_actions(child);
+        }
+        return;
+    }
+
+    next = rsc->allocated_to;
+    if (rsc->running_on) {
+        current = pe__current_node(rsc);
+        if (rsc->role == RSC_ROLE_STOPPED) {
+            /*
+             * This can occur when resources are being recovered
+             * We fiddle with the current role in native_create_actions()
+             */
+            rsc->role = RSC_ROLE_STARTED;
+        }
+    }
+
+    if ((current == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        /* Don't log stopped orphans */
+        return;
+    }
+
+    out->message(out, "rsc-action", rsc, current, next, moving);
+}
+
 /*!
  * \internal
  * \brief Assign a specified primitive resource to a node

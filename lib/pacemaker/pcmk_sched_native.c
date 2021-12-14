@@ -789,7 +789,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             // It's running, so cancel it
             log_level = LOG_INFO;
             result = "Cancelling";
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             switch (rsc->role) {
                 case RSC_ROLE_UNPROMOTED:
@@ -958,7 +958,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             g_list_free(possible_matches);
 
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             if ((rsc->next_role == RSC_ROLE_STARTED)
                 || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
@@ -2014,60 +2014,6 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         child_rsc->cmds->expand(child_rsc, data_set);
     }
-}
-
-#define STOP_SANITY_ASSERT(lineno) do {                                 \
-        if(current && current->details->unclean) {                      \
-            /* It will be a pseudo op */                                \
-        } else if(stop == NULL) {                                       \
-            crm_err("%s:%d: No stop action exists for %s",              \
-                    __func__, lineno, rsc->id);                         \
-            CRM_ASSERT(stop != NULL);                                   \
-        } else if (pcmk_is_set(stop->flags, pe_action_optional)) {      \
-            crm_err("%s:%d: Action %s is still optional",               \
-                    __func__, lineno, stop->uuid);                      \
-            CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional));  \
-        }                                                               \
-    } while(0)
-
-void
-LogActions(pe_resource_t * rsc, pe_working_set_t * data_set)
-{
-    pcmk__output_t *out = data_set->priv;
-
-    pe_node_t *next = NULL;
-    pe_node_t *current = NULL;
-
-    gboolean moving = FALSE;
-
-    if(rsc->variant == pe_container) {
-        pcmk__bundle_log_actions(rsc, data_set);
-        return;
-    }
-
-    if (rsc->children) {
-        g_list_foreach(rsc->children, (GFunc) LogActions, data_set);
-        return;
-    }
-
-    next = rsc->allocated_to;
-    if (rsc->running_on) {
-        current = pe__current_node(rsc);
-        if (rsc->role == RSC_ROLE_STOPPED) {
-            /*
-             * This can occur when resources are being recovered
-             * We fiddle with the current role in native_create_actions()
-             */
-            rsc->role = RSC_ROLE_STARTED;
-        }
-    }
-
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        /* Don't log stopped orphans */
-        return;
-    }
-
-    out->message(out, "rsc-action", rsc, current, next, moving);
 }
 
 gboolean

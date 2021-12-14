@@ -13,6 +13,7 @@
 #include <sys/param.h>
 #include <glib.h>
 
+#include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
@@ -778,4 +779,443 @@ pcmk__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
         pe__set_action_flags(action, pe_action_runnable);
     }
     return action;
+}
+
+/*!
+ * \internal
+ * \brief Create an executor cancel action
+ *
+ * \param[in] rsc          Resource of action to cancel
+ * \param[in] task         Name of action to cancel
+ * \param[in] interval_ms  Interval of action to cancel
+ * \param[in] node         Node of action to cancel
+ * \param[in] data_set     Working set of cluster
+ *
+ * \return Created op
+ */
+pe_action_t *
+pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
+                        pe_node_t *node)
+{
+    pe_action_t *cancel_op = NULL;
+    char *key = NULL;
+    char *interval_ms_s = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (task != NULL) && (node != NULL));
+
+    // @TODO dangerous if possible to schedule another action with this key
+    key = pcmk__op_key(rsc->id, task, interval_ms);
+
+    cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
+                              rsc->cluster);
+
+    free(cancel_op->task);
+    cancel_op->task = strdup(RSC_CANCEL);
+
+    free(cancel_op->cancel_task);
+    cancel_op->cancel_task = strdup(task);
+
+    interval_ms_s = crm_strdup_printf("%u", interval_ms);
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
+    free(interval_ms_s);
+
+    return cancel_op;
+}
+
+/*!
+ * \internal
+ * \brief Create a new shutdown action for a node
+ *
+ * \param[in] node         Node being shut down
+ * \param[in] data_set     Working set of cluster
+ *
+ * \return Newly created shutdown action for \p node
+ */
+pe_action_t *
+pcmk__new_shutdown_action(pe_node_t *node, pe_working_set_t *data_set)
+{
+    char *shutdown_id = NULL;
+    pe_action_t *shutdown_op = NULL;
+
+    CRM_ASSERT((node != NULL) && (data_set != NULL));
+
+    shutdown_id = crm_strdup_printf("%s-%s", CRM_OP_SHUTDOWN,
+                                    node->details->uname);
+
+    shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN, node, FALSE,
+                                TRUE, data_set);
+
+    pcmk__order_stops_before_shutdown(node, shutdown_op, data_set);
+    add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+    return shutdown_op;
+}
+
+/*!
+ * \internal
+ * \brief Calculate and add an operation digest to XML
+ *
+ * Calculate an operation digest, which enables us to later determine when a
+ * restart is needed due to the resource's parameters being changed, and add it
+ * to given XML.
+ *
+ * \param[in] op       Operation result from executor
+ * \param[in] update   XML to add digest to
+ */
+static void
+add_op_digest_to_xml(lrmd_event_data_t *op, xmlNode *update)
+{
+    char *digest = NULL;
+    xmlNode *args_xml = NULL;
+
+    if (op->params == NULL) {
+        return;
+    }
+    args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
+    g_hash_table_foreach(op->params, hash2field, args_xml);
+    pcmk__filter_op_for_digest(args_xml);
+    digest = calculate_operation_digest(args_xml, NULL);
+    crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
+    free_xml(args_xml);
+    free(digest);
+}
+
+#define FAKE_TE_ID     "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+/*!
+ * \internal
+ * \brief Create XML for resource operation history update
+ *
+ * \param[in,out] parent          Parent XML node to add to
+ * \param[in,out] op              Operation event data
+ * \param[in]     caller_version  DC feature set
+ * \param[in]     target_rc       Expected result of operation
+ * \param[in]     node            Name of node on which operation was performed
+ * \param[in]     origin          Arbitrary description of update source
+ * \param[in]     level           A log message will be logged at this level
+ *
+ * \return Newly created XML node for history update
+ */
+xmlNode *
+pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
+                         const char *caller_version, int target_rc,
+                         const char *node, const char *origin, int level)
+{
+    char *key = NULL;
+    char *magic = NULL;
+    char *op_id = NULL;
+    char *op_id_additional = NULL;
+    char *local_user_data = NULL;
+    const char *exit_reason = NULL;
+
+    xmlNode *xml_op = NULL;
+    const char *task = NULL;
+
+    CRM_CHECK(op != NULL, return NULL);
+    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%u)",
+               origin, op->rsc_id, op->op_type,
+               pcmk_exec_status_str(op->op_status), op->interval_ms);
+
+    crm_trace("DC version: %s", caller_version);
+
+    task = op->op_type;
+
+    /* Record a successful agent reload as a start, and a failed one as a
+     * monitor, to make life easier for the scheduler when determining the
+     * current state.
+     *
+     * @COMPAT We should check "reload" here only if the operation was for a
+     * pre-OCF-1.1 resource agent, but we don't know that here, and we should
+     * only ever get results for actions scheduled by us, so we can reasonably
+     * assume any "reload" is actually a pre-1.1 agent reload.
+     */
+    if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+                         NULL)) {
+        if (op->op_status == PCMK_EXEC_DONE) {
+            task = CRMD_ACTION_START;
+        } else {
+            task = CRMD_ACTION_STATUS;
+        }
+    }
+
+    key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
+    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
+        const char *n_type = crm_meta_value(op->params, "notify_type");
+        const char *n_task = crm_meta_value(op->params, "notify_operation");
+
+        CRM_LOG_ASSERT(n_type != NULL);
+        CRM_LOG_ASSERT(n_task != NULL);
+        op_id = pcmk__notify_key(op->rsc_id, n_type, n_task);
+
+        if (op->op_status != PCMK_EXEC_PENDING) {
+            /* Ignore notify errors.
+             *
+             * @TODO It might be better to keep the correct result here, and
+             * ignore it in process_graph_event().
+             */
+            lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
+        }
+
+    } else if (did_rsc_op_fail(op, target_rc)) {
+        op_id = pcmk__op_key(op->rsc_id, "last_failure", 0);
+        if (op->interval_ms == 0) {
+            // Ensure 'last' gets updated, in case record-pending is true
+            op_id_additional = pcmk__op_key(op->rsc_id, "last", 0);
+        }
+        exit_reason = op->exit_reason;
+
+    } else if (op->interval_ms > 0) {
+        op_id = strdup(key);
+
+    } else {
+        op_id = pcmk__op_key(op->rsc_id, "last", 0);
+    }
+
+  again:
+    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, XML_ATTR_ID, op_id);
+    if (xml_op == NULL) {
+        xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
+    }
+
+    if (op->user_data == NULL) {
+        crm_debug("Generating fake transition key for: " PCMK__OP_FMT
+                  " %d from %s", op->rsc_id, op->op_type, op->interval_ms,
+                  op->call_id, origin);
+        local_user_data = pcmk__transition_key(-1, op->call_id, target_rc,
+                                               FAKE_TE_ID);
+        op->user_data = local_user_data;
+    }
+
+    if (magic == NULL) {
+        magic = crm_strdup_printf("%d:%d;%s", op->op_status, op->rc,
+                                  (const char *) op->user_data);
+    }
+
+    crm_xml_add(xml_op, XML_ATTR_ID, op_id);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
+    crm_xml_add(xml_op, XML_ATTR_ORIGIN, origin);
+    crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
+    crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
+    crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
+    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason == NULL ? "" : exit_reason);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); /* For context during triage */
+
+    crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
+    crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
+    crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
+    crm_xml_add_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, op->interval_ms);
+
+    if (compare_version("2.1", caller_version) <= 0) {
+        if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
+            crm_trace("Timing data (" PCMK__OP_FMT
+                      "): last=%u change=%u exec=%u queue=%u",
+                      op->rsc_id, op->op_type, op->interval_ms,
+                      op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
+
+            if ((op->interval_ms != 0) && (op->t_rcchange != 0)) {
+                // Recurring ops may have changed rc after initial run
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
+                               (long long) op->t_rcchange);
+            } else {
+                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
+                               (long long) op->t_run);
+            }
+
+            crm_xml_add_int(xml_op, XML_RSC_OP_T_EXEC, op->exec_time);
+            crm_xml_add_int(xml_op, XML_RSC_OP_T_QUEUE, op->queue_time);
+        }
+    }
+
+    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
+        /*
+         * Record migrate_source and migrate_target always for migrate ops.
+         */
+        const char *name = XML_LRM_ATTR_MIGRATE_SOURCE;
+
+        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+
+        name = XML_LRM_ATTR_MIGRATE_TARGET;
+        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+    }
+
+    add_op_digest_to_xml(op, xml_op);
+
+    if (op_id_additional) {
+        free(op_id);
+        op_id = op_id_additional;
+        op_id_additional = NULL;
+        goto again;
+    }
+
+    if (local_user_data) {
+        free(local_user_data);
+        op->user_data = NULL;
+    }
+    free(magic);
+    free(op_id);
+    free(key);
+    return xml_op;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an action shutdown-locks a resource to a node
+ *
+ * If the shutdown-lock cluster property is set, resources will not be recovered
+ * on a different node if cleanly stopped, and may start only on that same node.
+ * This function checks whether that applies to a given action, so that the
+ * transition graph can be marked appropriately.
+ *
+ * \param[in] action  Action to check
+ *
+ * \return true if \p action locks its resource to the action's node,
+ *         otherwise false
+ */
+bool
+pcmk__action_locks_rsc_to_node(const pe_action_t *action)
+{
+    // Only resource actions taking place on resource's lock node are locked
+    if ((action == NULL) || (action->rsc == NULL)
+        || (action->rsc->lock_node == NULL) || (action->node == NULL)
+        || (action->node->details != action->rsc->lock_node->details)) {
+        return false;
+    }
+
+    /* During shutdown, only stops are locked (otherwise, another action such as
+     * a demote would cause the controller to clear the lock)
+     */
+    if (action->node->details->shutdown && (action->task != NULL)
+        && (strcmp(action->task, RSC_STOP) != 0)) {
+        return false;
+    }
+
+    return true;
+}
+
+/* lowest to highest */
+static gint
+sort_action_id(gconstpointer a, gconstpointer b)
+{
+    const pe_action_wrapper_t *action_wrapper2 = (const pe_action_wrapper_t *)a;
+    const pe_action_wrapper_t *action_wrapper1 = (const pe_action_wrapper_t *)b;
+
+    if (a == NULL) {
+        return 1;
+    }
+    if (b == NULL) {
+        return -1;
+    }
+    if (action_wrapper1->action->id < action_wrapper2->action->id) {
+        return 1;
+    }
+    if (action_wrapper1->action->id > action_wrapper2->action->id) {
+        return -1;
+    }
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Remove any duplicate action inputs, merging action flags
+ *
+ * \param[in] action  Action whose inputs should be checked
+ */
+void
+pcmk__deduplicate_action_inputs(pe_action_t *action)
+{
+    GList *item = NULL;
+    GList *next = NULL;
+    pe_action_wrapper_t *last_input = NULL;
+
+    action->actions_before = g_list_sort(action->actions_before,
+                                         sort_action_id);
+    for (item = action->actions_before; item != NULL; item = next) {
+        pe_action_wrapper_t *input = (pe_action_wrapper_t *) item->data;
+
+        next = item->next;
+        if ((last_input != NULL)
+            && (input->action->id == last_input->action->id)) {
+            crm_trace("Input %s (%d) duplicate skipped for action %s (%d)",
+                      input->action->uuid, input->action->id,
+                      action->uuid, action->id);
+
+            /* For the purposes of scheduling, the ordering flags no longer
+             * matter, but crm_simulate looks at certain ones when creating a
+             * dot graph. Combining the flags is sufficient for that purpose.
+             */
+            last_input->type |= input->type;
+            if (input->state == pe_link_dumped) {
+                last_input->state = pe_link_dumped;
+            }
+
+            free(item->data);
+            action->actions_before = g_list_delete_link(action->actions_before,
+                                                        item);
+        } else {
+            last_input = input;
+            input->state = pe_link_not_dumped;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Output all scheduled actions
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__output_actions(pe_working_set_t *data_set)
+{
+    pcmk__output_t *out = data_set->priv;
+
+    // Output node (non-resource) actions
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        char *node_name = NULL;
+        char *task = NULL;
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        if (action->rsc != NULL) {
+            continue; // Resource actions will be output later
+
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+            continue; // This action was not scheduled
+        }
+
+        if (pe__is_guest_node(action->node)) {
+            node_name = crm_strdup_printf("%s (resource: %s)",
+                                          action->node->details->uname,
+                                          action->node->details->remote_rsc->container->id);
+        } else if (action->node != NULL) {
+            node_name = crm_strdup_printf("%s", action->node->details->uname);
+        }
+
+        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+            task = strdup("Shutdown");
+
+        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
+            const char *op = g_hash_table_lookup(action->meta, "stonith_action");
+
+            task = crm_strdup_printf("Fence (%s)", op);
+
+        } else {
+            crm_debug("Unexpected node action '%s' (bug?)",
+                      crm_str(action->task));
+            free(node_name);
+            continue;
+        }
+
+        out->message(out, "node-action", task, node_name, action->reason);
+
+        free(node_name);
+        free(task);
+    }
+
+    // Output resource actions
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->output_actions(rsc);
+    }
 }

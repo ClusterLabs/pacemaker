@@ -29,6 +29,23 @@ G_GNUC_INTERNAL
 pe_action_t *pcmk__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
                                          bool optional, bool runnable);
 
+G_GNUC_INTERNAL
+pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
+                                     guint interval_ms, pe_node_t *node);
+
+G_GNUC_INTERNAL
+pe_action_t *pcmk__new_shutdown_action(pe_node_t *node,
+                                       pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
+
+G_GNUC_INTERNAL
+void pcmk__deduplicate_action_inputs(pe_action_t *action);
+
+G_GNUC_INTERNAL
+void pcmk__output_actions(pe_working_set_t *data_set);
+
 
 G_GNUC_INTERNAL
 bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
@@ -206,11 +223,20 @@ GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
                                        GList *colocated_rscs);
 
 
+// Bundles (pcmk_sched_bundle.c)
+
+G_GNUC_INTERNAL
+void pcmk__output_bundle_actions(pe_resource_t *rsc);
+
+
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
+
+G_GNUC_INTERNAL
+void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 bool pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force);
