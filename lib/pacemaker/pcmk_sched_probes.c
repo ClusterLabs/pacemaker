@@ -375,20 +375,6 @@ add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 static void
-order_first_probes(pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        add_restart_orderings_for_rsc(rsc, data_set);
-    }
-
-    add_probe_orderings_for_stops(data_set);
-}
-
-static void
 order_then_probes(pe_working_set_t * data_set)
 {
 #if 0
@@ -508,6 +494,11 @@ order_then_probes(pe_working_set_t * data_set)
 void
 pcmk__order_probes(pe_working_set_t *data_set)
 {
-    order_first_probes(data_set);
+    // Add orderings for "probe then X"
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        add_restart_orderings_for_rsc((pe_resource_t *) iter->data, data_set);
+    }
+    add_probe_orderings_for_stops(data_set);
+
     order_then_probes(data_set);
 }
