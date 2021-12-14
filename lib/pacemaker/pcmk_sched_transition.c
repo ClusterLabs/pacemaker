@@ -42,7 +42,8 @@ gboolean bringing_nodes_online = FALSE;
 
 
 static void
-inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
+inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
+                      const char *name, const char *value)
 {
     xmlNode *attrs = NULL;
     xmlNode *instance_attrs = NULL;
@@ -66,8 +67,8 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 }
 
 static void
-update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
-                  guint interval_ms, int rc)
+update_failcounts(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
+                  const char *task, guint interval_ms, int rc)
 {
     if (rc == 0) {
         return;
@@ -80,11 +81,11 @@ update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
         char *now = pcmk__ttoa(time(NULL));
 
         name = pcmk__failcount_name(resource, task, interval_ms);
-        inject_transient_attr(cib_node, name, "value++");
+        inject_transient_attr(out, cib_node, name, "value++");
         free(name);
 
         name = pcmk__lastfailure_name(resource, task, interval_ms);
-        inject_transient_attr(cib_node, name, now);
+        inject_transient_attr(out, cib_node, name, now);
         free(name);
         free(now);
     }
@@ -236,8 +237,9 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
 
 
 static xmlNode *
-inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
-                const char *rclass, const char *rtype, const char *rprovider)
+inject_resource(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
+                const char *lrm_name, const char *rclass, const char *rtype,
+                const char *rprovider)
 {
     xmlNode *lrm = NULL;
     xmlNode *container = NULL;
@@ -311,7 +313,8 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
 #define XPATH_MAX 1024
 
 static int
-find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
+find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
+                  xmlNode **ticket_state_xml)
 {
     int offset = 0;
     int rc = pcmk_ok;
@@ -353,14 +356,15 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
 }
 
 static int
-set_ticket_state_attr(const char *ticket_id, const char *attr_name,
-                      const char *attr_value, cib_t * cib, int cib_options)
+set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
+                      const char *attr_name, const char *attr_value,
+                      cib_t *cib, int cib_options)
 {
     int rc = pcmk_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
 
-    rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
+    rc = find_ticket_state(out, cib, ticket_id, &ticket_state_xml);
     if (rc == pcmk_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
@@ -400,7 +404,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
     lrmd_event_data_t *op = NULL;
 
-    out = data_set->priv;
+    pcmk__output_t *out = data_set->priv;
 
     out->message(out, "inject-modify-config", injections->quorum, injections->watchdog);
 
@@ -481,7 +485,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
-        rc = set_ticket_state_attr(ticket_id, "granted", "true",
+        rc = set_ticket_state_attr(out, ticket_id, "granted", "true",
                                    cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
@@ -492,7 +496,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
 
-        rc = set_ticket_state_attr(ticket_id, "granted", "false",
+        rc = set_ticket_state_attr(out, ticket_id, "granted", "false",
                                    cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
@@ -503,7 +507,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
-        rc = set_ticket_state_attr(ticket_id, "standby", "true",
+        rc = set_ticket_state_attr(out, ticket_id, "standby", "true",
                                    cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
@@ -514,7 +518,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
-        rc = set_ticket_state_attr(ticket_id, "standby", "false",
+        rc = set_ticket_state_attr(out, ticket_id, "standby", "false",
                                    cib, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
@@ -563,9 +567,9 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
             cib_node = inject_node_state(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
-            update_failcounts(cib_node, resource, task, interval_ms, outcome);
+            update_failcounts(out, cib_node, resource, task, interval_ms, outcome);
 
-            cib_resource = inject_resource(cib_node, resource, resource,
+            cib_resource = inject_resource(out, cib_node, resource, resource,
                                            rclass, rtype, rprovider);
             CRM_ASSERT(cib_resource != NULL);
 
@@ -670,7 +674,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     cib_node = inject_node_state(fake_cib, node, (router_node? node : uuid));
     CRM_ASSERT(cib_node != NULL);
 
-    cib_resource = inject_resource(cib_node, resource, lrm_name,
+    cib_resource = inject_resource(out, cib_node, resource, lrm_name,
                                    rclass, rtype, rprovider);
     if (cib_resource == NULL) {
         crm_err("invalid resource in transition");
@@ -720,7 +724,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             graph->abort_priority = INFINITY;
             out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
-            update_failcounts(cib_node, match_name, op->op_type,
+            update_failcounts(out, cib_node, match_name, op->op_type,
                               op->interval_ms, op->rc);
             break;
         }
