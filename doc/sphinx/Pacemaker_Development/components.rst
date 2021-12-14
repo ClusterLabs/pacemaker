@@ -106,7 +106,7 @@ or messaging layer callback, which calls:
       the number of active peers), and if this is the last expected reply,
       calls
 
-      * ``call_remote_stonith()``, which calculates the timeout and sends
+      * ``request_peer_fencing()``, which calculates the timeout and sends
         ``STONITH_OP_FENCE`` request(s) to carry out the fencing. If the target
 	node has a fencing "topology" (which allows specifications such as
 	"this node can be fenced either with device A, or devices B and C in
@@ -156,7 +156,7 @@ returns, and calls
   * done callback (``st_child_done()``), which calls ``schedule_stonith_command()``
     for a new device if there are further required actions to execute or if the
     original action failed, then builds and sends an XML reply to the original
-    fencer (via ``stonith_send_async_reply()``), then checks whether any
+    fencer (via ``send_async_reply()``), then checks whether any
     pending actions are the same as the one just executed and merges them if so.
 
 Fencing replies
@@ -169,18 +169,18 @@ messaging layer callback, which calls:
 
   * ``handle_reply()``, which calls
 
-    * ``process_remote_stonith_exec()``, which calls either
-      ``call_remote_stonith()`` (to retry a failed operation, or try the next
-       device in a topology is appropriate, which issues a new
+    * ``fenced_process_fencing_reply()``, which calls either
+      ``request_peer_fencing()`` (to retry a failed operation, or try the next
+      device in a topology is appropriate, which issues a new
       ``STONITH_OP_FENCE`` request, proceeding as before) or
-      ``remote_op_done()`` (if the operation is definitively failed or
+      ``finalize_op()`` (if the operation is definitively failed or
       successful).
 
-      * remote_op_done() broadcasts the result to all peers.
+      * ``finalize_op()`` broadcasts the result to all peers.
 
 Finally, all peers receive the broadcast result and call
 
-* ``remote_op_done()``, which sends the result to all local clients.
+* ``finalize_op()``, which sends the result to all local clients.
 
 
 .. index::
