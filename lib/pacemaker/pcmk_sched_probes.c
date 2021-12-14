@@ -178,81 +178,84 @@ add_probe_orderings_for_stops(pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Order probes before restarts and re-promotes
+ *
+ * If a given ordering is a "probe then start" or "probe then promote" ordering,
+ * add an implicit "probe then stop/demote" ordering in case the action is part
+ * of a restart/re-promote, and do the same recursively for all actions ordered
+ * after the "then" action.
+ *
+ * \param[in] probe     Probe as 'first' action in an ordering
+ * \param[in] after     'then' action in the ordering
+ * \param[in] data_set  Cluster working set
+ */
 static void
-order_first_probe_then_restart_repromote(pe_action_t * probe,
-                                         pe_action_t * after,
-                                         pe_working_set_t * data_set)
+add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
+                                pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-    bool interleave = FALSE;
+    GList *iter = NULL;
+    bool interleave = false;
     pe_resource_t *compatible_rsc = NULL;
 
-    if (probe == NULL
-        || probe->rsc == NULL
-        || probe->rsc->variant != pe_native) {
+    // Validate that this is a resource probe followed by some action
+    if ((after == NULL) || (probe == NULL) || (probe->rsc == NULL)
+        || (probe->rsc->variant != pe_native)
+        || !pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_casei)) {
         return;
     }
 
-    if (after == NULL
-        // Avoid running into any possible loop
-        || pcmk_is_set(after->flags, pe_action_tracking)) {
+    // Avoid running into any possible loop
+    if (pcmk_is_set(after->flags, pe_action_tracking)) {
         return;
     }
-
-    if (!pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_casei)) {
-        return;
-    }
-
     pe__set_action_flags(after, pe_action_tracking);
 
-    crm_trace("Processing based on %s %s -> %s %s",
+    crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
               probe->uuid,
-              probe->node ? probe->node->details->uname: "",
+              ((probe->node == NULL)? "" : probe->node->details->uname),
               after->uuid,
-              after->node ? after->node->details->uname : "");
+              ((after->node == NULL)? "" : after->node->details->uname));
 
-    if (after->rsc
-        /* Better not build a dependency directly with a clone/group.
-         * We are going to proceed through the ordering chain and build
-         * dependencies with its children.
-         */
-        && after->rsc->variant == pe_native
-        && probe->rsc != after->rsc) {
+    /* Add restart orderings if "then" is for a different primitive.
+     * Orderings for collective resources will be added later.
+     */
+    if ((after->rsc != NULL) && (after->rsc->variant == pe_native)
+        && (probe->rsc != after->rsc)) {
 
             GList *then_actions = NULL;
-            enum pe_ordering probe_order_type = pe_order_optional;
 
             if (pcmk__str_eq(after->task, RSC_START, pcmk__str_casei)) {
-                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP, FALSE);
+                then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP,
+                                                    FALSE);
 
             } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_casei)) {
-                then_actions = pe__resource_actions(after->rsc, NULL, RSC_DEMOTE, FALSE);
+                then_actions = pe__resource_actions(after->rsc, NULL,
+                                                    RSC_DEMOTE, FALSE);
             }
 
-            for (gIter = then_actions; gIter != NULL; gIter = gIter->next) {
-                pe_action_t *then = (pe_action_t *) gIter->data;
+            for (iter = then_actions; iter != NULL; iter = iter->next) {
+                pe_action_t *then = (pe_action_t *) iter->data;
 
-                // Skip any pseudo action which for example is implied by fencing
-                if (pcmk_is_set(then->flags, pe_action_pseudo)) {
-                    continue;
+                // Skip pseudo-actions (for example, those implied by fencing)
+                if (!pcmk_is_set(then->flags, pe_action_pseudo)) {
+                    order_actions(probe, then, pe_order_optional);
                 }
-
-                order_actions(probe, then, probe_order_type);
             }
             g_list_free(then_actions);
     }
 
-    if (after->rsc
-        && after->rsc->variant > pe_group) {
+    /* Detect whether "then" is an interleaved clone action. For these, we want
+     * to add orderings only for the relevant instance.
+     */
+    if ((after->rsc != NULL)
+        && (after->rsc->variant > pe_group)) {
         const char *interleave_s = g_hash_table_lookup(after->rsc->meta,
                                                        XML_RSC_ATTR_INTERLEAVE);
 
         interleave = crm_is_true(interleave_s);
-
         if (interleave) {
-            /* For an interleaved clone, we should build a dependency only
-             * with the relevant clone child.
-             */
             compatible_rsc = find_compatible_child(probe->rsc,
                                                    after->rsc,
                                                    RSC_ROLE_UNKNOWN,
@@ -260,8 +263,13 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         }
     }
 
-    for (gIter = after->actions_after; gIter != NULL; gIter = gIter->next) {
-        pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) gIter->data;
+    /* Now recursively do the same for all actions ordered after "then". This
+     * also handles collective resources since the collective action will be
+     * ordered before its individual instances' actions.
+     */
+    for (iter = after->actions_after; iter != NULL; iter = iter->next) {
+        pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) iter->data;
+
         /* pe_order_implies_then is the reason why a required A.start
          * implies/enforces B.start to be required too, which is the cause of
          * B.restart/re-promote.
@@ -270,7 +278,6 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
          * used for unfencing case, which tends to introduce transition
          * loops...
          */
-
         if (!pcmk_is_set(after_wrapper->type, pe_order_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
@@ -279,34 +286,34 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
              * Proceed through the ordering chain and build dependencies with
              * its children.
              */
-            if (after->rsc == NULL
-                || after->rsc->variant < pe_group
-                || probe->rsc->parent == after->rsc
-                || after_wrapper->action->rsc == NULL
-                || after_wrapper->action->rsc->variant > pe_group
-                || after->rsc != after_wrapper->action->rsc->parent) {
+            if ((after->rsc == NULL)
+                || (after->rsc->variant < pe_group)
+                || (probe->rsc->parent == after->rsc)
+                || (after_wrapper->action->rsc == NULL)
+                || (after_wrapper->action->rsc->variant > pe_group)
+                || (after->rsc != after_wrapper->action->rsc->parent)) {
                 continue;
             }
 
             /* Proceed to the children of a group or a non-interleaved clone.
              * For an interleaved clone, proceed only to the relevant child.
              */
-            if (after->rsc->variant > pe_group
-                && interleave == TRUE
-                && (compatible_rsc == NULL
-                    || compatible_rsc != after_wrapper->action->rsc)) {
+            if ((after->rsc->variant > pe_group) && interleave
+                && ((compatible_rsc == NULL)
+                    || (compatible_rsc != after_wrapper->action->rsc))) {
                 continue;
             }
         }
 
-        crm_trace("Proceeding through %s %s -> %s %s (type=%#.6x)",
+        crm_trace("Recursively adding probe restart orderings for "
+                  "'%s@%s then %s@%s' (type=%#.6x)",
                   after->uuid,
-                  after->node ? after->node->details->uname: "",
+                  ((after->node == NULL)? "" : after->node->details->uname),
                   after_wrapper->action->uuid,
-                  after_wrapper->action->node ? after_wrapper->action->node->details->uname : "",
+                  ((after_wrapper->action->node == NULL)? "" : after_wrapper->action->node->details->uname),
                   after_wrapper->type);
 
-        order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+        add_restart_orderings_for_probe(probe, after_wrapper->action, data_set);
     }
 }
 
@@ -344,7 +351,8 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
         for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
             pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
 
-            order_first_probe_then_restart_repromote(probe, after_wrapper->action, data_set);
+            add_restart_orderings_for_probe(probe, after_wrapper->action,
+                                            data_set);
             clear_actions_tracking_flag(data_set);
         }
     }
