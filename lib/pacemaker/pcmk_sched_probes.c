@@ -374,57 +374,50 @@ add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
     g_list_free(probes);
 }
 
+/*!
+ * \internal
+ * \brief Add "A then probe B" orderings for "A then B" orderings
+ *
+ * \param[in] data_set  Cluster working set
+ *
+ * \note This function is currently disabled (see next comment).
+ */
 static void
-order_then_probes(pe_working_set_t * data_set)
+order_then_probes(pe_working_set_t *data_set)
 {
 #if 0
-    GList *gIter = NULL;
+    /* Given an ordering "A then B", we would prefer to wait for A to be started
+     * before probing B.
+     *
+     * For example, if A is a filesystem which B can't even run without, it
+     * would be helpful if the author of B's agent could assume that A is
+     * running before B.monitor will be called.
+     *
+     * However, we can't _only_ probe after A is running, otherwise we wouldn't
+     * detect the state of B if A could not be started. We can't even do an
+     * opportunistic version of this, because B may be moving:
+     *
+     *   A.stop -> A.start -> B.probe -> B.stop -> B.start
+     *
+     * and if we add B.stop -> A.stop here, we get a loop:
+     *
+     *   A.stop -> A.start -> B.probe -> B.stop -> A.stop
+     *
+     * We could kill the "B.probe -> B.stop" dependency, but that could mean
+     * stopping B "too" soon, because B.start must wait for the probe, and
+     * we don't want to stop B if we can't start it.
+     *
+     * We could add the ordering only if A is an anonymous clone with
+     * clone-max == node-max (since we'll never be moving it). However, we could
+     * still be stopping one instance at the same time as starting another.
+     *
+     * The complexity of checking for allowed conditions combined with the ever
+     * narrowing use case suggests that this code should remain disabled until
+     * someone gets smarter.
+     */
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        /* Given "A then B", we would prefer to wait for A to be
-         * started before probing B.
-         *
-         * If A was a filesystem on which the binaries and data for B
-         * lived, it would have been useful if the author of B's agent
-         * could assume that A is running before B.monitor will be
-         * called.
-         *
-         * However we can't _only_ probe once A is running, otherwise
-         * we'd not detect the state of B if A could not be started
-         * for some reason.
-         *
-         * In practice however, we cannot even do an opportunistic
-         * version of this because B may be moving:
-         *
-         *   B.probe -> B.start
-         *   B.probe -> B.stop
-         *   B.stop -> B.start
-         *   A.stop -> A.start
-         *   A.start -> B.probe
-         *
-         * So far so good, but if we add the result of this code:
-         *
-         *   B.stop -> A.stop
-         *
-         * Then we get a loop:
-         *
-         *   B.probe -> B.stop -> A.stop -> A.start -> B.probe
-         *
-         * We could kill the 'B.probe -> B.stop' dependency, but that
-         * could mean stopping B "too" soon, because B.start must wait
-         * for the probes to complete.
-         *
-         * Another option is to allow it only if A is a non-unique
-         * clone with clone-max == node-max (since we'll never be
-         * moving it).  However, we could still be stopping one
-         * instance at the same time as starting another.
-
-         * The complexity of checking for allowed conditions combined
-         * with the ever narrowing usecase suggests that this code
-         * should remain disabled until someone gets smarter.
-         */
         pe_action_t *start = NULL;
         GList *actions = NULL;
         GList *probes = NULL;
@@ -436,52 +429,59 @@ order_then_probes(pe_working_set_t * data_set)
             g_list_free(actions);
         }
 
-        if(start == NULL) {
+        if (start == NULL) {
             crm_err("No start action for %s", rsc->id);
             continue;
         }
 
         probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
-        for (actions = start->actions_before; actions != NULL; actions = actions->next) {
+        for (actions = start->actions_before; actions != NULL;
+             actions = actions->next) {
+
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
-            GList *pIter = NULL;
             pe_action_t *first = before->action;
             pe_resource_t *first_rsc = first->rsc;
 
-            if(first->required_runnable_before) {
-                GList *clone_actions = NULL;
-                for (clone_actions = first->actions_before; clone_actions != NULL; clone_actions = clone_actions->next) {
+            if (first->required_runnable_before) {
+                for (GList *clone_actions = first->actions_before;
+                     clone_actions != NULL;
+                     clone_actions = clone_actions->next) {
+
                     before = (pe_action_wrapper_t *) clone_actions->data;
 
-                    crm_trace("Testing %s -> %s (%p) for %s", first->uuid, before->action->uuid, before->action->rsc, start->uuid);
+                    crm_trace("Testing '%s then %s' for %s",
+                              first->uuid, before->action->uuid, start->uuid);
 
-                    CRM_ASSERT(before->action->rsc);
+                    CRM_ASSERT(before->action->rsc != NULL);
                     first_rsc = before->action->rsc;
                     break;
                 }
 
-            } else if(!pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
+            } else if (!pcmk__str_eq(first->task, RSC_START, pcmk__str_none)) {
                 crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
             }
 
-            if(first_rsc == NULL) {
+            if (first_rsc == NULL) {
                 continue;
 
-            } else if(uber_parent(first_rsc) == uber_parent(start->rsc)) {
+            } else if (uber_parent(first_rsc) == uber_parent(start->rsc)) {
                 crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
                 continue;
 
-            } else if(FALSE && pe_rsc_is_clone(uber_parent(first_rsc)) == FALSE) {
+            } else if (!pe_rsc_is_clone(uber_parent(first_rsc))) {
                 crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
                 continue;
             }
 
-            crm_err("Applying %s before %s %d", first->uuid, start->uuid, uber_parent(first_rsc)->variant);
+            crm_err("Applying %s before %s %d", first->uuid, start->uuid,
+                    uber_parent(first_rsc)->variant);
 
-            for (pIter = probes; pIter != NULL; pIter = pIter->next) {
-                pe_action_t *probe = (pe_action_t *) pIter->data;
+            for (GList *probe_iter = probes; probe_iter != NULL;
+                 probe_iter = probe_iter->next) {
+
+                pe_action_t *probe = (pe_action_t *) probe_iter->data;
 
                 crm_err("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pe_order_optional);
