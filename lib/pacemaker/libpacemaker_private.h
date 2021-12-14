@@ -80,6 +80,15 @@ G_GNUC_INTERNAL
 bool pcmk__is_unfence_device(const pe_resource_t *rsc,
                              const pe_working_set_t *data_set);
 
+
+// Injected scheduler inputs (pcmk_sched_injections.c)
+
+void pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
+                                  pcmk_injections_t *injections);
+
+
+// Constraints of any type (pcmk_sched_constraints.c)
+
 G_GNUC_INTERNAL
 pe_resource_t *pcmk__find_constraint_resource(GList *rsc_list, const char *id);
 

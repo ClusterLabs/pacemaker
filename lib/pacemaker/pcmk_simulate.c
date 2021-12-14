@@ -821,7 +821,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         || (injections->watchdog != NULL)) {
 
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        modify_configuration(data_set, cib, injections);
+        pcmk__inject_scheduler_input(data_set, cib, injections);
         printed = pcmk_rc_ok;
 
         rc = cib->cmds->query(cib, NULL, &input, cib_sync_call);
