@@ -28,6 +28,9 @@ static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
 static GList *fake_op_fail_list = NULL;
 
+static void set_effective_date(pe_working_set_t *data_set, bool print_original,
+                               char *use_date);
+
 static char *
 create_action_name(pe_action_t *action, bool verbose)
 {
@@ -144,7 +147,7 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
 {
     data_set->input = input;
     data_set->priv = out;
-    pcmk__set_effective_date(data_set, true, use_date);
+    set_effective_date(data_set, true, use_date);
     if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
@@ -156,9 +159,22 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
     }
 }
 
-int
-pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
-                        bool all_actions, bool verbose)
+/*!
+ * \brief Write out a file in dot(1) format describing the actions that will
+ *        be taken by the scheduler in response to an input CIB file.
+ *
+ * \param[in] data_set     Working set for the cluster
+ * \param[in] dot_file     The filename to write
+ * \param[in] all_actions  Write all actions, even those that are optional or
+ *                         are on unmanaged resources
+ * \param[in] verbose      Add extra information, such as action IDs, to the
+ *                         output
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
+                  bool all_actions, bool verbose)
 {
     GList *gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
@@ -250,8 +266,21 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
     return pcmk_rc_ok;
 }
 
-void
-pcmk__profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set, char *use_date)
+/*!
+ * \brief Profile the configuration updates and scheduler actions in a single
+ *        CIB file, printing the profiling timings.
+ *
+ * \note \p data_set->priv must have been set to a valid \p pcmk__output_t
+ *       object before this function is called.
+ *
+ * \param[in] xml_file  The CIB file to profile
+ * \param[in] repeat    Number of times to run
+ * \param[in] data_set  Working set for the cluster
+ * \param[in] use_date  The date to set the cluster's time to (may be NULL)
+ */
+static void
+profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
+             char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
     xmlNode *cib_object = NULL;
@@ -281,7 +310,7 @@ pcmk__profile_file(const char *xml_file, long long repeat, pe_working_set_t *dat
         xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
 
         data_set->input = input;
-        pcmk__set_effective_date(data_set, false, use_date);
+        set_effective_date(data_set, false, use_date);
         pcmk__schedule_actions(data_set, input, NULL);
         pe_reset_working_set(data_set);
     }
@@ -318,7 +347,7 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
             }
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                pcmk__profile_file(buffer, repeat, data_set, use_date);
+                profile_file(buffer, repeat, data_set, use_date);
             }
             free(namelist[file_num]);
         }
@@ -328,8 +357,22 @@ pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data_set,
     }
 }
 
-void
-pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, char *use_date)
+/*!
+ * \brief Set the date of the cluster, either to the value given by
+ *        \p use_date, or to the "execution-date" value in the CIB.
+ *
+ * \note \p data_set->priv must have been set to a valid \p pcmk__output_t
+ *       object before this function is called.
+ *
+ * \param[in,out] data_set        Working set for the cluster
+ * \param[in]     print_original  If \p true, the "execution-date" should
+ *                                also be printed
+ * \param[in]     use_date        The date to set the cluster's time to
+ *                                (may be NULL)
+ */
+static void
+set_effective_date(pe_working_set_t *data_set, bool print_original,
+                   char *use_date)
 {
     pcmk__output_t *out = data_set->priv;
     time_t original_date = 0;
@@ -738,9 +781,9 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         }
 
         if (dot_file != NULL) {
-            rc = pcmk__write_sim_dotfile(data_set, dot_file,
-                                         pcmk_is_set(flags, pcmk_sim_all_actions),
-                                         pcmk_is_set(flags, pcmk_sim_verbose));
+            rc = write_sim_dotfile(data_set, dot_file,
+                                   pcmk_is_set(flags, pcmk_sim_all_actions),
+                                   pcmk_is_set(flags, pcmk_sim_verbose));
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_dot_error;
                 goto simulate_done;
@@ -761,7 +804,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         }
 
         if (!out->is_quiet(out)) {
-            pcmk__set_effective_date(data_set, true, use_date);
+            set_effective_date(data_set, true, use_date);
 
             if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);
