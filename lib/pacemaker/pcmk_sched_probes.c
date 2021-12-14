@@ -317,16 +317,21 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
     }
 }
 
-static void clear_actions_tracking_flag(pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Clear the tracking flag on all scheduled actions
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+clear_actions_tracking_flag(pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (pcmk_is_set(action->flags, pe_action_tracking)) {
-            pe__clear_action_flags(action, pe_action_tracking);
-        }
+        pe__clear_action_flags(action, pe_action_tracking);
     }
 }
 
