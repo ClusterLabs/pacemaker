@@ -1636,6 +1636,16 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         *desc = crm_strdup_printf("%s[%d]", target, id);
     }
 
+    // Ensure a valid target was specified
+    if ((mode < 0) || (mode > 2)) {
+        crm_warn("Ignoring topology level registration without valid target");
+        free(target);
+        crm_log_xml_warn(level, "Bad level");
+        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                         "Invalid topology level target");
+        return;
+    }
+
     // Ensure level ID is in allowed range
     if ((id <= 0) || (id >= ST_LEVEL_MAX)) {
         crm_warn("Ignoring topology registration for %s with invalid level %d",
@@ -1643,7 +1653,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         free(target);
         crm_log_xml_warn(level, "Bad level");
         pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level");
+                         "Invalid topology level number");
         return;
     }
 
