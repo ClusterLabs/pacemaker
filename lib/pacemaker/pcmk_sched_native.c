@@ -1963,8 +1963,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (then_flags != then->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_then);
         pe_rsc_trace(then->rsc,
-                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
-                     "because of 'first' %s (0x%.6x)",
+                     "%s on %s: flags are now %#.6x (was %#.6x) "
+                     "because of 'first' %s (%#.6x)",
                      then->uuid,
                      then->node? then->node->details->uname : "no node",
                      then->flags, then_flags, first->uuid, first->flags);
@@ -1978,8 +1978,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (first_flags != first->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_first);
         pe_rsc_trace(first->rsc,
-                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
-                     "because of 'then' %s (0x%.6x)",
+                     "%s on %s: flags are now %#.6x (was %#.6x) "
+                     "because of 'then' %s (%#.6x)",
                      first->uuid,
                      first->node? first->node->details->uname : "no node",
                      first->flags, first_flags, then->uuid, then->flags);

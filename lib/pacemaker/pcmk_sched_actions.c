@@ -583,7 +583,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         pe_rsc_trace(then->rsc,
-                     "%s (0x%.6x) then %s (0x%.6x): type=0x%.6x node=%s",
+                     "%s (%#.6x) then %s (%#.6x): type=%#.6x node=%s",
                      first->uuid, first->flags, then->uuid, then->flags,
                      other->type, action_node_str(first));
 

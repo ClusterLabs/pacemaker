@@ -277,7 +277,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
 
         if (old > new) {
-            crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+            crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                     XML_ATTR_GENERATION_ADMIN, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
@@ -287,7 +287,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
             crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
             if (old > new) {
-                crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+                crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         XML_ATTR_GENERATION, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");

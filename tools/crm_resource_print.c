@@ -72,7 +72,7 @@ cli_resource_print_cts(pe_resource_t * rsc, pcmk__output_t *out)
         host = node->details->uname;
     }
 
-    out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld 0x%.16llx",
+    out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld %#.16llx",
               crm_element_name(rsc->xml), rsc->id,
               rsc->clone_name ? rsc->clone_name : rsc->id, rsc->parent ? rsc->parent->id : "NA",
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,

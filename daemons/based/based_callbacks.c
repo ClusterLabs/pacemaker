@@ -430,7 +430,7 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             break;
         default:
             crm_err("Unknown transport for client %s "
-                    CRM_XS " flags=0x%016" PRIx64,
+                    CRM_XS " flags=%#016" PRIx64,
                     pcmk__client_name(client_obj), client_obj->flags);
     }
 }
