@@ -1535,7 +1535,7 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation (0x%p) still in progress for unregistered resource %s",
+        crm_trace("Operation (%p) still in progress for unregistered resource %s",
                   rsc->active, rsc_id);
         rc = -EINPROGRESS;
     }

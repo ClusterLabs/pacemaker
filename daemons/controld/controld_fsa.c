@@ -249,7 +249,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
     if ((fsa_message_queue != NULL) || (fsa_actions != A_NOTHING)
         || do_fsa_stall) {
-        crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
+        crm_debug("Exiting the FSA: queue=%d, fsa_actions=%#llx, stalled=%s",
                   g_list_length(fsa_message_queue),
                   (unsigned long long) fsa_actions, pcmk__btoa(do_fsa_stall));
     } else {
@@ -436,7 +436,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s not supported "CRM_XS" 0x%llx",
+            crm_err("Action %s not supported "CRM_XS" %#llx",
                     fsa_action2string(fsa_actions),
                     (unsigned long long) fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,

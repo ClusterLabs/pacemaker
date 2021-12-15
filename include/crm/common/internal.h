@@ -247,7 +247,7 @@ pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags 0x%.8llx (%s) for %s set by %s:%d",
+                            "%s flags %#.8llx (%s) for %s set by %s:%d",
                             ((flag_type == NULL)? "Group of" : flag_type),
                             (unsigned long long) flags,
                             ((flags_str == NULL)? "flags" : flags_str),
@@ -281,7 +281,7 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags 0x%.8llx (%s) for %s cleared by %s:%d",
+                            "%s flags %#.8llx (%s) for %s cleared by %s:%d",
                             ((flag_type == NULL)? "Group of" : flag_type),
                             (unsigned long long) flags,
                             ((flags_str == NULL)? "flags" : flags_str),

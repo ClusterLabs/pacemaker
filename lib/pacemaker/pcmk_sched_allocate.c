@@ -1777,7 +1777,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
             }
         }
 
-        crm_trace("Proceeding through %s %s -> %s %s (type=0x%.6x)",
+        crm_trace("Proceeding through %s %s -> %s %s (type=%#.6x)",
                   after->uuid,
                   after->node ? after->node->details->uname: "",
                   after_wrapper->action->uuid,

@@ -755,7 +755,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
         return false;
     }
 
-    crm_trace("%s (%d) input %s %s (%d) on %s should be dumped: %s %s 0x%.6x",
+    crm_trace("%s (%d) input %s %s (%d) on %s should be dumped: %s %s %#.6x",
               action->uuid, action->id, action_type_str(input->action->flags),
               input->action->uuid, input->action->id,
               action_node_str(input->action),
@@ -771,7 +771,7 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     bool has_loop = false;
 
     if (pcmk_is_set(input->action->flags, pe_action_tracking)) {
-        crm_trace("Breaking tracking loop: %s@%s -> %s@%s (0x%.6x)",
+        crm_trace("Breaking tracking loop: %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
                   input->action->node? input->action->node->details->uname : "",
                   action->uuid,
@@ -796,7 +796,7 @@ pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
 
     pe__set_action_flags(input->action, pe_action_tracking);
 
-    crm_trace("Checking inputs of action %s@%s input %s@%s (0x%.6x)"
+    crm_trace("Checking inputs of action %s@%s input %s@%s (%#.6x)"
               "for graph loop with %s@%s ",
               action->uuid,
               action->node? action->node->details->uname : "",
@@ -822,7 +822,7 @@ done:
     pe__clear_action_flags(input->action, pe_action_tracking);
 
     if (!has_loop) {
-        crm_trace("No input loop found in %s@%s -> %s@%s (0x%.6x)",
+        crm_trace("No input loop found in %s@%s -> %s@%s (%#.6x)",
                   input->action->uuid,
                   input->action->node? input->action->node->details->uname : "",
                   action->uuid,

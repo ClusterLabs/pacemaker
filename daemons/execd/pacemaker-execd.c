@@ -214,7 +214,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 #endif
         default:
             crm_err("Could not send reply: unknown type for client %s "
-                    CRM_XS " flags=0x%llx",
+                    CRM_XS " flags=%#llx",
                     pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
@@ -243,7 +243,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 #endif
         default:
             crm_err("Could not notify client %s with unknown transport "
-                    CRM_XS " flags=0x%llx",
+                    CRM_XS " flags=%#llx",
                     pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;

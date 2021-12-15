@@ -1570,7 +1570,7 @@ actions_are_pending(GList *actions)
     for (action = actions; action != NULL; action = action->next) {
         pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
-            crm_notice("Waiting for %s (flags=0x%.8x)", a->uuid, a->flags);
+            crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
             return TRUE;
         }
     }

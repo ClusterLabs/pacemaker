@@ -129,7 +129,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_trace("Flags 0x%08" PRIx32 "/0x%08x for command %" PRIu32
+    crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
               " from client %s", flags, call_options, id, pcmk__client_name(c));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {

@@ -105,7 +105,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                 break;
             default:
                 crm_err("Unknown transport for client %s "
-                        CRM_XS " flags=0x%016" PRIx64,
+                        CRM_XS " flags=%#016" PRIx64,
                         pcmk__client_name(client), client->flags);
         }
     }

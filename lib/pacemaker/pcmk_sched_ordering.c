@@ -1404,9 +1404,9 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 
         } else if (type & pe_order_implies_then) {
             pe__clear_action_flags(rh_action_iter, pe_action_runnable);
-            crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
+            crm_warn("Unrunnable %s %#.6x", rh_action_iter->uuid, type);
         } else {
-            crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
+            crm_warn("neither %s %#.6x", rh_action_iter->uuid, type);
         }
     }
 

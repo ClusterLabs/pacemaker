@@ -387,7 +387,7 @@ cib_remote_connection_destroy(gpointer user_data)
 #endif
         default:
             crm_warn("Unknown transport for client %s "
-                     CRM_XS " flags=0x%016" PRIx64,
+                     CRM_XS " flags=%#016" PRIx64,
                      pcmk__client_name(client), client->flags);
     }
 
