@@ -186,6 +186,8 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
         return EINVAL;
     }
 
+    pcmk__enable_acl(target, target, cred);
+
     ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
 
     if (ret > 0) {

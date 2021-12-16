@@ -51,12 +51,10 @@ pcmk__is_privileged(const char *user)
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 
-void pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user);
+void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 
 bool pcmk__check_acl(xmlNode *xml, const char *name,
                      enum xml_private_flags mode);
-
-void pcmk__apply_acl(xmlNode *xml);
 
 #if SUPPORT_CIBSECRETS
 /* internal CIB utilities (from cib_secrets.c) */
