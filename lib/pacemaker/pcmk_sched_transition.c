@@ -28,6 +28,8 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 static pcmk__output_t *out = NULL;
 static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
@@ -152,8 +154,21 @@ inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
                                     LOG_TRACE);
 }
 
-static xmlNode *
-inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
+/*!
+ * \internal
+ * \brief Inject a fictitious node into a scheduler input
+ *
+ * \param[in] cib_conn  Scheduler input CIB to inject node into
+ * \param[in] node      Name of node to inject
+ * \param[in] uuid      UUID of node to inject
+ *
+ * \return XML of node_state entry for new node
+ * \note If the global bringing_nodes_online has been set to true, a node entry
+ *       in the configuration section will be added, as well as a node state
+ *       entry in the status section.
+ */
+xmlNode *
+pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
@@ -166,8 +181,9 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
-    if (cib_object && ID(cib_object) == NULL) {
-        crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
+    if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
+        crm_err("Detected multiple node_state entries for xpath=%s, bailing",
+                xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
         free(xpath);
         crm_exit(CRM_EX_SOFTWARE);
@@ -193,7 +209,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath | cib_sync_call | cib_scope_local);
-        crm_trace("injecting node state for %s. rc is %d", node, rc);
+        crm_trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
     free(xpath);
@@ -204,7 +220,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 static xmlNode *
 modify_node(cib_t * cib_conn, char *node, gboolean up)
 {
-    xmlNode *cib_node = inject_node_state(cib_conn, node, NULL);
+    xmlNode *cib_node = pcmk__inject_node(cib_conn, node, NULL);
 
     if (up) {
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES);
@@ -564,7 +580,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
             rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
             rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 
-            cib_node = inject_node_state(cib, node, NULL);
+            cib_node = pcmk__inject_node(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
             update_failcounts(out, cib_node, resource, task, interval_ms, outcome);
@@ -671,7 +687,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
                pcmk_ok);
 
-    cib_node = inject_node_state(fake_cib, node, (router_node? node : uuid));
+    cib_node = pcmk__inject_node(fake_cib, node,
+                                 ((router_node == NULL)? uuid: node));
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(out, cib_node, resource, lrm_name,

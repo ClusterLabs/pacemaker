@@ -237,6 +237,12 @@ G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
 
 
+// Injections (pcmk_sched_transition.c)
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid);
+
+
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
