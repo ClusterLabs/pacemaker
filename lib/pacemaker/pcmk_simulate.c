@@ -21,6 +21,13 @@
 
 #include "libpacemaker_private.h"
 
+#define STATUS_PATH_MAX 512
+
+static pcmk__output_t *out = NULL;
+static cib_t *fake_cib = NULL;
+static GList *fake_resource_list = NULL;
+static GList *fake_op_fail_list = NULL;
+
 static char *
 create_action_name(pe_action_t *action, bool verbose)
 {
@@ -350,6 +357,268 @@ pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, char *
             free(when);
         }
     }
+}
+
+static gboolean
+exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
+{
+    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    out->message(out, "inject-pseudo-action", node, task);
+
+    pcmk__update_graph(graph, action);
+    return TRUE;
+}
+
+static gboolean
+exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
+{
+    int rc = 0;
+    GList *gIter = NULL;
+    lrmd_event_data_t *op = NULL;
+    int target_outcome = PCMK_OCF_OK;
+
+    const char *rtype = NULL;
+    const char *rclass = NULL;
+    const char *resource = NULL;
+    const char *rprovider = NULL;
+    const char *lrm_name = NULL;
+    const char *operation = crm_element_value(action->xml, "operation");
+    const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
+
+    xmlNode *cib_node = NULL;
+    xmlNode *cib_resource = NULL;
+    xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+
+    char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+    char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
+    const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+
+    if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
+        crm_info("Skipping %s op for %s", operation, node);
+        goto done;
+    }
+
+    if (action_rsc == NULL) {
+        crm_log_xml_err(action->xml, "Bad");
+        free(node); free(uuid);
+        return FALSE;
+    }
+
+    /* Look for the preferred name
+     * If not found, try the expected 'local' name
+     * If not found use the preferred name anyway
+     */
+    resource = crm_element_value(action_rsc, XML_ATTR_ID);
+    CRM_ASSERT(resource != NULL); // makes static analysis happy
+    lrm_name = resource; // Preferred name when writing history
+    if (pe_find_resource(fake_resource_list, resource) == NULL) {
+        const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
+
+        if (longname && pe_find_resource(fake_resource_list, longname)) {
+            resource = longname;
+        }
+    }
+
+    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
+        out->message(out, "inject-rsc-action", resource, operation, node, (guint) 0);
+        goto done;
+    }
+
+    rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
+    rtype = crm_element_value(action_rsc, XML_ATTR_TYPE);
+    rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
+
+    pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
+
+    CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
+               pcmk_ok);
+
+    cib_node = pcmk__inject_node(fake_cib, node,
+                                 ((router_node == NULL)? uuid: node));
+    CRM_ASSERT(cib_node != NULL);
+
+    cib_resource = pcmk__inject_resource_history(out, cib_node, resource,
+                                                 lrm_name, rclass, rtype,
+                                                 rprovider);
+    if (cib_resource == NULL) {
+        crm_err("invalid resource in transition");
+        free(node); free(uuid);
+        free_xml(cib_node);
+        return FALSE;
+    }
+
+    op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
+                                       target_outcome, "User-injected result");
+
+    out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
+
+    for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
+        char *spec = (char *)gIter->data;
+        char *key = NULL;
+        const char *match_name = NULL;
+
+        // Allow user to specify anonymous clone with or without instance number
+        key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
+                                op->interval_ms, node);
+        if (strncasecmp(key, spec, strlen(key)) == 0) {
+            match_name = resource;
+        }
+        free(key);
+
+        if ((match_name == NULL) && strcmp(resource, lrm_name)) {
+            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", lrm_name, op->op_type,
+                                    op->interval_ms, node);
+            if (strncasecmp(key, spec, strlen(key)) == 0) {
+                match_name = lrm_name;
+            }
+            free(key);
+        }
+
+        if (match_name != NULL) {
+
+            rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
+            // ${match_name}_${task}_${interval_in_ms}@${node}=${rc}
+
+            if (rc != 1) {
+                out->err(out,
+                         "Invalid failed operation spec: %s. Result code must be integer",
+                         spec);
+                continue;
+            }
+            crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+            graph->abort_priority = INFINITY;
+            out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
+            pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
+                                   op->interval_ms, op->rc);
+            break;
+        }
+    }
+
+    pcmk__inject_action_result(cib_resource, op, target_outcome);
+    lrmd_free_event(op);
+
+    rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+                                  cib_sync_call | cib_scope_local);
+    CRM_ASSERT(rc == pcmk_ok);
+
+  done:
+    free(node); free(uuid);
+    free_xml(cib_node);
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__update_graph(graph, action);
+    return TRUE;
+}
+
+static gboolean
+exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
+{
+    const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    out->message(out, "inject-cluster-action", node, task, rsc);
+    pcmk__update_graph(graph, action);
+    return TRUE;
+}
+
+static gboolean
+exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
+{
+    const char *op = crm_meta_value(action->params, "stonith_action");
+    char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
+
+    out->message(out, "inject-fencing-action", target, op);
+
+    if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
+        int rc = 0;
+        char xpath[STATUS_PATH_MAX];
+        xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
+                                                           false);
+
+        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
+        CRM_ASSERT(cib_node != NULL);
+
+        rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
+                                   cib_sync_call | cib_scope_local);
+        CRM_ASSERT(rc == pcmk_ok);
+
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
+        fake_cib->cmds->remove(fake_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
+
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
+                 XML_TAG_TRANSIENT_NODEATTRS);
+        fake_cib->cmds->remove(fake_cib, xpath, NULL,
+                                      cib_xpath | cib_sync_call | cib_scope_local);
+
+        free_xml(cib_node);
+    }
+
+    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__update_graph(graph, action);
+    free(target);
+    return TRUE;
+}
+
+enum transition_status
+run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
+{
+    crm_graph_t *transition = NULL;
+    enum transition_status graph_rc;
+
+    crm_graph_functions_t exec_fns = {
+        exec_pseudo_action,
+        exec_rsc_action,
+        exec_crmd_action,
+        exec_stonith_action,
+    };
+
+    out = data_set->priv;
+
+    fake_cib = cib;
+    fake_op_fail_list = op_fail_list;
+
+    if (!out->is_quiet(out)) {
+        out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
+    }
+
+    pcmk__set_graph_functions(&exec_fns);
+    transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
+    pcmk__log_graph(LOG_DEBUG, transition);
+
+    fake_resource_list = data_set->resources;
+    do {
+        graph_rc = pcmk__execute_graph(transition);
+
+    } while (graph_rc == transition_active);
+    fake_resource_list = NULL;
+
+    if (graph_rc != transition_complete) {
+        out->err(out, "Transition failed: %s",
+                 pcmk__graph_status2text(graph_rc));
+        pcmk__log_graph(LOG_ERR, transition);
+    }
+    pcmk__free_graph(transition);
+    if (graph_rc != transition_complete) {
+        out->err(out, "An invalid transition was produced");
+    }
+
+    if (!out->is_quiet(out)) {
+        xmlNode *cib_object = NULL;
+        int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
+
+        CRM_ASSERT(rc == pcmk_ok);
+        pe_reset_working_set(data_set);
+        data_set->input = cib_object;
+
+        out->end_list(out);
+    }
+
+    return graph_rc;
 }
 
 int
