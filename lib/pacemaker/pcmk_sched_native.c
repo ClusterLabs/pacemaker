@@ -981,7 +981,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         gboolean stop_is_optional = TRUE;
         pe_action_t *stopped_mon = NULL;
         char *rc_inactive = NULL;
-        GList *probe_complete_ops = NULL;
         GList *stop_ops = NULL;
         GList *local_gIter = NULL;
 
@@ -1024,10 +1023,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             g_list_free(probes);
-        }
-
-        if (probe_complete_ops) {
-            g_list_free(probe_complete_ops);
         }
 
         stop_ops = pe__resource_actions(rsc, stop_node, RSC_STOP, TRUE);
@@ -2407,18 +2402,6 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
                        pe_order_optional, data_set);
 
-#if 0
-    // complete is always null currently
-    if (!pcmk__is_unfence_device(rsc, data_set)) {
-        /* Normally rsc.start depends on probe complete which depends
-         * on rsc.probe. But this can't be the case for fence devices
-         * with unfencing, as it would create graph loops.
-         *
-         * So instead we explicitly order 'rsc.probe then rsc.start'
-         */
-        order_actions(probe, complete, pe_order_implies_then);
-    }
-#endif
     return TRUE;
 }
 

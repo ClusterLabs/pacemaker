@@ -455,11 +455,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
-#if 0
-    } else if (pcmk__str_eq(action->task, RSC_PROBED, pcmk__str_none)) {
-        action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
-#endif
-
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
         if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES,
                          pcmk__str_none)) {
@@ -537,39 +532,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 static bool
 should_add_action_to_graph(pe_action_t *action)
 {
-#if 0
-    /* NOTE: The scheduler no longer schedules probe_complete actions. However,
-     * getting rid of it created some corner cases, so this code is kept around
-     * in case we need to restore it.
-     */
-    if (pcmk_is_set(action->flags, pe_action_pseudo)
-        && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_none)) {
-        /* Always add a probe_complete action to the graph if it is the "before"
-         * action for a runnable start action that will be in the graph.
-         *
-         * This is a questionable but convenient hack that allows us to be more
-         * concise when printing aborted or incomplete graphs, and makes it
-         * obvious which node is preventing probe_complete from running
-         * (presumably because it is only partially up).
-         */
-
-        for (GList *lpc = action->actions_after; lpc != NULL; lpc = lpc->next) {
-            pe_action_wrapper_t *then = (pe_action_wrapper_t *) lpc->data;
-
-            if (pcmk_is_set(then->action->flags, pe_action_runnable)
-                && pcmk__str_eq(then->action->task, RSC_START, pcmk__str_none)
-                && (pcmk_is_set(then->action->flags, pe_action_dumped)
-                    || should_add_action_to_graph(then->action))) {
-                crm_trace("Action %s (%d) should be dumped: "
-                          "dependency of %s (%d)",
-                          action->uuid, action->id,
-                          then->action->uuid, then->action->id);
-                return true;
-            }
-        }
-    }
-#endif
-
     if (!pcmk_is_set(action->flags, pe_action_runnable)) {
         crm_trace("Ignoring action %s (%d): unrunnable",
                   action->uuid, action->id);
@@ -692,9 +654,7 @@ should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
-               && !ordering_can_change_actions(input)
-               && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED,
-                                pcmk__str_none)) {
+               && !ordering_can_change_actions(input)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
                   action->uuid, action->id,

@@ -195,7 +195,12 @@ remote_node_up(const char *node_name)
 
     controld_delete_node_state(node_name, section, call_opt);
 
-    /* Clear node's probed attribute */
+    /* Delete node's probe_complete attribute. This serves two purposes:
+     *
+     * - @COMPAT DCs < 1.1.14 in a rolling upgrade might use it
+     * - deleting it (or any attribute for that matter) here ensures the
+     *   attribute manager learns the node is remote
+     */
     update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
 
     /* Ensure node is in the remote peer cache with member status */

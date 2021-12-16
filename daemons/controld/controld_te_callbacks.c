@@ -79,27 +79,6 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     }
     freeXpathObject(xpathObj);
 
-    /* Transient Attributes - Added/Updated */
-    xpathObj =
-        xpath_search(diff,
-                     "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//"
-                     XML_TAG_TRANSIENT_NODEATTRS "//" XML_CIB_TAG_NVPAIR);
-    max = numXpathResults(xpathObj);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        xmlNode *attr = getXpathResult(xpathObj, lpc);
-        const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
-
-        if (pcmk__str_eq(CRM_OP_PROBED, name, pcmk__str_casei) &&
-            !pcmk__xe_attr_is_true(attr, XML_NVPAIR_ATTR_VALUE)) {
-            abort_transition(INFINITY, tg_restart, "Transient attribute: update", attr);
-            crm_log_xml_trace(attr, "Abort");
-            goto bail;
-        }
-    }
-
-    freeXpathObject(xpathObj);
-
     /* Transient Attributes - Removed */
     xpathObj =
         xpath_search(diff,
