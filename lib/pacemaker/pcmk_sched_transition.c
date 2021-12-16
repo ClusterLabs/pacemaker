@@ -160,8 +160,19 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     return op;
 }
 
-static xmlNode *
-inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
+/*!
+ * \internal
+ * \brief Inject a fictitious resource history entry into a scheduler input
+ *
+ * \param[in] cib_resource  Resource history XML to inject entry into
+ * \param[in] op            Action result to inject
+ * \param[in] target_rc     Expected result for action to inject
+ *
+ * \return XML of injected resource history entry
+ */
+xmlNode *
+pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
+                           int target_rc)
 {
     return pcmk__create_history_xml(cib_resource, op, CRM_FEATURE_SET,
                                     target_rc, NULL, crm_system_name,
@@ -627,7 +638,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
             op = create_op(cib_resource, task, interval_ms, outcome);
             CRM_ASSERT(op != NULL);
 
-            cib_op = inject_op(cib_resource, op, 0);
+            cib_op = pcmk__inject_action_result(cib_resource, op, 0);
             CRM_ASSERT(cib_op != NULL);
             lrmd_free_event(op);
 
@@ -783,7 +794,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    inject_op(cib_resource, op, target_outcome);
+    pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
 
     rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,

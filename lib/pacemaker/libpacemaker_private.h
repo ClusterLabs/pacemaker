@@ -255,6 +255,10 @@ void pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
                             const char *resource, const char *task,
                             guint interval_ms, int rc);
 
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
+                                    lrmd_event_data_t *op, int target_rc);
+
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
