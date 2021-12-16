@@ -381,8 +381,6 @@ text2task(const char *task)
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         return no_action;
-    } else if (pcmk__str_eq(task, CRM_OP_PROBED, pcmk__str_casei)) {
-        return no_action;
     } else if (pcmk__str_eq(task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {

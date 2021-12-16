@@ -209,18 +209,19 @@ needing to be active.
 
 The main entry point for the scheduler code is
 ``lib/pacemaker/pcmk_sched_messages.c:pcmk__schedule_actions()``. It sets
-defaults and calls a bunch of "stage *N*" functions. Yes, there is a stage 0
-and no stage 1. :) The code has evolved over time to where splitting the stages
-up differently and renumbering them would make sense.
+defaults and calls a series of functions for each "stage" of the scheduling.
+(Some of the functions are named like ``stageN()`` but the code has evolved
+over time to where the numbers no longer make sense. A project is in progress
+to reorganize and rename them.)
 
 * ``stage0()`` "unpacks" most of the CIB XML into data structures, and
   determines the current cluster status. It also creates implicit location
   constraints for the node health feature.
 * ``stage2()`` applies factors that make resources prefer certain nodes (such
   as shutdown locks, location constraints, and stickiness).
-* ``stage3()`` creates internal constraints (such as the implicit ordering for
-  group members, or start actions being implicitly ordered before promote
-  actions).
+* ``pcmk__create_internal_constraints()`` creates internal constraints (such as
+  the implicit ordering for group members, or start actions being implicitly
+  ordered before promote actions).
 * ``stage4()`` "checks actions", which means processing resource history
   entries in the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
@@ -231,7 +232,7 @@ up differently and renumbering them would make sense.
   across remote connections, and schedules fencing actions and shutdowns.
 * ``stage7()`` "updates actions", which means applying ordering constraints in
   order to modify action attributes such as optional or required.
-* ``stage8()`` creates the transition graph.
+* ``pcmk__create_graph()`` creates the transition graph.
 
 Challenges
 __________
@@ -250,8 +251,8 @@ Working with the scheduler is difficult. Challenges include:
   different points in the scheduling process, so you have to keep in mind
   whether information you're using at one point of the code can possibly change
   later. For example, data unpacked from the CIB can safely be used anytime
-  after stage0(), but actions may become optional or required anytime before
-  stage8(). There's no easy way to deal with this.
+  after ``stage0(),`` but actions may become optional or required anytime
+  before ``pcmk__create_graph()``. There's no easy way to deal with this.
 * Many names of struct members, functions, etc., are suboptimal, but are part
   of the public API and cannot be changed until an API backward compatibility
   break.

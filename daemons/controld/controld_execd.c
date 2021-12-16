@@ -1423,9 +1423,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
                                cib_scope_local);
 
-    /* Finally, _delete_ the value in pacemaker-attrd -- setting it to FALSE
-     * would result in the scheduler sending us back here again
-     */
+    // @COMPAT DCs < 1.1.14 need this deleted (in case it was explicitly false)
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
@@ -1798,6 +1796,7 @@ do_lrm_invoke(long long action,
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_casei)) {
         handle_query_op(input->msg, lrm_state);
 
+    // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_casei)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);

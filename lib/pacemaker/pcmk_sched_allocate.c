@@ -805,11 +805,9 @@ stage0(pe_working_set_t * data_set)
 gboolean
 probe_resources(pe_working_set_t * data_set)
 {
-    pe_action_t *probe_node_complete = NULL;
-
     for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
-        const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
+        const char *probed = NULL;
 
         if (node->details->online == FALSE) {
 
@@ -826,6 +824,12 @@ probe_resources(pe_working_set_t * data_set)
             continue;
         }
 
+        /* This is no longer needed for live clusters, since the probe_complete
+         * node attribute will never be in the CIB. However this is still useful
+         * for processing old saved CIBs (< 1.1.14), including the
+         * reprobe-target_rc regression test.
+         */
+        probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
         if (probed != NULL && crm_is_true(probed) == FALSE) {
             pe_action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
                                                   CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
@@ -837,7 +841,7 @@ probe_resources(pe_working_set_t * data_set)
         for (GList *gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
-            rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
+            rsc->cmds->create_probe(rsc, node, NULL, FALSE, data_set);
         }
     }
     return TRUE;
@@ -1966,144 +1970,4 @@ pcmk__order_probes(pe_working_set_t *data_set)
 {
     order_first_probes(data_set);
     order_then_probes(data_set);
-}
-
-static int transition_id = -1;
-
-/*!
- * \internal
- * \brief Log a message after calculating a transition
- *
- * \param[in] filename  Where transition input is stored
- */
-void
-pcmk__log_transition_summary(const char *filename)
-{
-    if (was_processing_error) {
-        crm_err("Calculated transition %d (with errors)%s%s",
-                transition_id,
-                (filename == NULL)? "" : ", saving inputs in ",
-                (filename == NULL)? "" : filename);
-
-    } else if (was_processing_warning) {
-        crm_warn("Calculated transition %d (with warnings)%s%s",
-                 transition_id,
-                 (filename == NULL)? "" : ", saving inputs in ",
-                 (filename == NULL)? "" : filename);
-
-    } else {
-        crm_notice("Calculated transition %d%s%s",
-                   transition_id,
-                   (filename == NULL)? "" : ", saving inputs in ",
-                   (filename == NULL)? "" : filename);
-    }
-    if (crm_config_error) {
-        crm_notice("Configuration errors found during scheduler processing,"
-                   "  please run \"crm_verify -L\" to identify issues");
-    }
-}
-
-/*
- * Create a dependency graph to send to the transitioner (via the controller)
- */
-gboolean
-stage8(pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    const char *value = NULL;
-    long long limit = 0LL;
-
-    transition_id++;
-    crm_trace("Creating transition graph %d.", transition_id);
-
-    data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-
-    value = pe_pref(data_set->config_hash, "cluster-delay");
-    crm_xml_add(data_set->graph, "cluster-delay", value);
-
-    value = pe_pref(data_set->config_hash, "stonith-timeout");
-    crm_xml_add(data_set->graph, "stonith-timeout", value);
-
-    crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
-
-    if (pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)) {
-        crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
-    } else {
-        crm_xml_add(data_set->graph, "failed-start-offset", "1");
-    }
-
-    value = pe_pref(data_set->config_hash, "batch-limit");
-    crm_xml_add(data_set->graph, "batch-limit", value);
-
-    crm_xml_add_int(data_set->graph, "transition_id", transition_id);
-
-    value = pe_pref(data_set->config_hash, "migration-limit");
-    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
-        crm_xml_add(data_set->graph, "migration-limit", value);
-    }
-
-    if (data_set->recheck_by > 0) {
-        char *recheck_epoch = NULL;
-
-        recheck_epoch = crm_strdup_printf("%llu",
-                                          (long long) data_set->recheck_by);
-        crm_xml_add(data_set->graph, "recheck-by", recheck_epoch);
-        free(recheck_epoch);
-    }
-
-    /* The following code will de-duplicate action inputs, so nothing past this
-     * should rely on the action input type flags retaining their original
-     * values.
-     */
-
-    gIter = data_set->resources;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "processing actions for rsc=%s", rsc->id);
-        rsc->cmds->expand(rsc, data_set);
-    }
-
-    crm_log_xml_trace(data_set->graph, "created resource-driven action list");
-
-    /* pseudo action to distribute list of nodes with maintenance state update */
-    add_maintenance_update(data_set);
-
-    /* catch any non-resource specific actions */
-    crm_trace("processing non-resource actions");
-
-    gIter = data_set->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (action->rsc
-            && action->node
-            && action->node->details->shutdown
-            && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
-            && !pcmk_any_flags_set(action->flags,
-                                   pe_action_optional|pe_action_runnable)
-            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)
-            ) {
-            /* Eventually we should just ignore the 'fence' case
-             * But for now it's the best way to detect (in CTS) when
-             * CIB resource updates are being lost
-             */
-            if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-                || data_set->no_quorum_policy == no_quorum_ignore) {
-                crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
-                         action->node->details->unclean ? "fence" : "shut down",
-                         action->node->details->uname, action->rsc->id,
-                         pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
-                         pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
-                         action->uuid);
-            }
-        }
-
-        graph_element_from_action(action, data_set);
-    }
-
-    crm_log_xml_trace(data_set->graph, "created generic action list");
-    crm_trace("Created transition graph %d.", transition_id);
-
-    return TRUE;
 }

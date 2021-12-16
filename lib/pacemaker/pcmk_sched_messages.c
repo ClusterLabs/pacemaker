@@ -134,7 +134,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     log_all_actions(data_set);
 
     crm_trace("Create transition graph");
-    stage8(data_set);
+    pcmk__create_graph(data_set);
 
     crm_trace("=#=#=#=#= Summary =#=#=#=#=");
     crm_trace("\t========= Set %d (Un-runnable) =========", -1);

@@ -218,9 +218,6 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             if (before->state == pe_link_dumped) {
                 optional = false;
                 style = "bold";
-            } else if (pcmk_is_set(action->flags, pe_action_pseudo)
-                       && (before->type & pe_order_stonith_stop)) {
-                continue;
             } else if (before->type == pe_order_none) {
                 continue;
             } else if (pcmk_is_set(before->action->flags, pe_action_dumped)
