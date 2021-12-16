@@ -68,9 +68,22 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
     crm_create_nvpair_xml(instance_attrs, NULL, name, value);
 }
 
-static void
-update_failcounts(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
-                  const char *task, guint interval_ms, int rc)
+/*!
+ * \internal
+ * \brief Inject a fictitious fail count into a scheduler input
+ *
+ * \param[in] out          Output object for displaying error messages
+ * \param[in] cib_node     Node state XML to inject into
+ * \param[in] resource     ID of resource for fail count to inject
+ * \param[in] task         Action name for fail count to inject
+ * \param[in] interval_ms  Action interval (in milliseconds) for fail count
+ * \param[in] rc           Action result for fail count to inject (if 0, or 7
+ *                         when interval_ms is 0, nothing will be injected)
+ */
+void
+pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
+                       const char *resource, const char *task,
+                       guint interval_ms, int rc)
 {
     if (rc == 0) {
         return;
@@ -89,6 +102,7 @@ update_failcounts(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
         name = pcmk__lastfailure_name(resource, task, interval_ms);
         inject_transient_attr(out, cib_node, name, now);
         free(name);
+
         free(now);
     }
 }
@@ -601,7 +615,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
             cib_node = pcmk__inject_node(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
-            update_failcounts(out, cib_node, resource, task, interval_ms, outcome);
+            pcmk__inject_failcount(out, cib_node, resource, task, interval_ms,
+                                   outcome);
 
             cib_resource = pcmk__inject_resource_history(out, cib_node,
                                                          resource, resource,
@@ -762,8 +777,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             graph->abort_priority = INFINITY;
             out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
-            update_failcounts(out, cib_node, match_name, op->op_type,
-                              op->interval_ms, op->rc);
+            pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
+                                   op->interval_ms, op->rc);
             break;
         }
     }

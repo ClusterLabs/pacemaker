@@ -250,6 +250,12 @@ xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
                                        const char *rtype,
                                        const char *rprovider);
 
+G_GNUC_INTERNAL
+void pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
+                            const char *resource, const char *task,
+                            guint interval_ms, int rc);
+
+
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
