@@ -31,6 +31,16 @@ static GList *fake_op_fail_list = NULL;
 static void set_effective_date(pe_working_set_t *data_set, bool print_original,
                                char *use_date);
 
+/*!
+ * \internal
+ * \brief Create an action name for use in a dot graph
+ *
+ * \param[in] action   Action to create name for
+ * \param[in] verbose  If true, add action ID to name
+ *
+ * \return Newly allocated string with action name
+ * \note It is the caller's responsibility to free the result.
+ */
 static char *
 create_action_name(pe_action_t *action, bool verbose)
 {
@@ -40,22 +50,22 @@ create_action_name(pe_action_t *action, bool verbose)
     const char *clone_name = NULL;
     const char *task = action->task;
 
-    if (action->node) {
+    if (action->node != NULL) {
         action_host = action->node->details->uname;
     } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
         action_host = "<none>";
     }
 
-    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_casei)) {
+    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_none)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }
 
-    if (action->rsc && action->rsc->clone_name) {
+    if (action->rsc != NULL) {
         clone_name = action->rsc->clone_name;
     }
 
-    if (clone_name) {
+    if (clone_name != NULL) {
         char *key = NULL;
         guint interval_ms = 0;
 
@@ -65,20 +75,23 @@ create_action_name(pe_action_t *action, bool verbose)
             interval_ms = 0;
         }
 
-        if (pcmk__strcase_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED, NULL)) {
-            const char *n_type = g_hash_table_lookup(action->meta, "notify_key_type");
-            const char *n_task = g_hash_table_lookup(action->meta, "notify_key_operation");
+        if (pcmk__strcase_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED,
+                                 NULL)) {
+            const char *n_type = g_hash_table_lookup(action->meta,
+                                                     "notify_key_type");
+            const char *n_task = g_hash_table_lookup(action->meta,
+                                                     "notify_key_operation");
 
             CRM_ASSERT(n_type != NULL);
             CRM_ASSERT(n_task != NULL);
             key = pcmk__notify_key(clone_name, n_type, n_task);
-
         } else {
             key = pcmk__op_key(clone_name, task, interval_ms);
         }
 
-        if (action_host) {
-            action_name = crm_strdup_printf("%s%s %s", prefix, key, action_host);
+        if (action_host != NULL) {
+            action_name = crm_strdup_printf("%s%s %s",
+                                            prefix, key, action_host);
         } else {
             action_name = crm_strdup_printf("%s%s", prefix, key);
         }
@@ -87,13 +100,16 @@ create_action_name(pe_action_t *action, bool verbose)
     } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
-        action_name = crm_strdup_printf("%s%s '%s' %s", prefix, action->task, op, action_host);
+        action_name = crm_strdup_printf("%s%s '%s' %s",
+                                        prefix, action->task, op, action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix, action->uuid, action_host);
+        action_name = crm_strdup_printf("%s%s %s",
+                                        prefix, action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = crm_strdup_printf("%s%s %s", prefix, action->task, action_host);
+        action_name = crm_strdup_printf("%s%s %s",
+                                        prefix, action->task, action_host);
 
     } else {
         action_name = crm_strdup_printf("%s", action->uuid);
