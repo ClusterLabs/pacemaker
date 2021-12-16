@@ -243,6 +243,10 @@ G_GNUC_INTERNAL
 xmlNode *pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid);
 
 G_GNUC_INTERNAL
+xmlNode *pcmk__inject_node_state_change(cib_t *cib_conn, const char *node,
+                                        bool up);
+
+G_GNUC_INTERNAL
 xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
                                        const char *resource,
                                        const char *lrm_name,

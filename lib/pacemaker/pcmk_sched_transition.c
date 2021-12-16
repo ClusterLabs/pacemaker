@@ -242,24 +242,36 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     return cib_object;
 }
 
-static xmlNode *
-modify_node(cib_t * cib_conn, char *node, gboolean up)
+/*!
+ * \internal
+ * \brief Inject a fictitious node state change into a scheduler input
+ *
+ * \param[in] cib_conn  Scheduler input CIB to inject into
+ * \param[in] node      Name of node to inject change for
+ * \param[in] up        If true, change state to online, otherwise offline
+ *
+ * \return XML of changed (or added) node state entry
+ */
+xmlNode *
+pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 {
     xmlNode *cib_node = pcmk__inject_node(cib_conn, node, NULL);
 
     if (up) {
-        crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES);
-        crm_xml_add(cib_node, XML_NODE_IS_PEER, ONLINESTATUS);
-        crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-        crm_xml_add(cib_node, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
-
+        pcmk__xe_set_props(cib_node,
+                           XML_NODE_IN_CLUSTER, XML_BOOLEAN_YES,
+                           XML_NODE_IS_PEER, ONLINESTATUS,
+                           XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER,
+                           XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER,
+                           NULL);
     } else {
-        crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
-        crm_xml_add(cib_node, XML_NODE_IS_PEER, OFFLINESTATUS);
-        crm_xml_add(cib_node, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN);
-        crm_xml_add(cib_node, XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN);
+        pcmk__xe_set_props(cib_node,
+                           XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO,
+                           XML_NODE_IS_PEER, OFFLINESTATUS,
+                           XML_NODE_JOIN_STATE, CRMD_JOINSTATE_DOWN,
+                           XML_NODE_EXPECTED, CRMD_JOINSTATE_DOWN,
+                           NULL);
     }
-
     crm_xml_add(cib_node, XML_ATTR_ORIGIN, crm_system_name);
     return cib_node;
 }
@@ -490,7 +502,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-node", "Online", node);
 
-        cib_node = modify_node(cib, node, TRUE);
+        cib_node = pcmk__inject_node_state_change(cib, node, true);
         CRM_ASSERT(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
@@ -505,7 +517,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-node", "Offline", node);
 
-        cib_node = modify_node(cib, node, FALSE);
+        cib_node = pcmk__inject_node_state_change(cib, node, false);
         CRM_ASSERT(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
@@ -529,7 +541,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
         out->message(out, "inject-modify-node", "Failing", node);
 
-        cib_node = modify_node(cib, node, TRUE);
+        cib_node = pcmk__inject_node_state_change(cib, node, true);
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
         CRM_ASSERT(cib_node != NULL);
 
@@ -833,7 +845,8 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
         int rc = 0;
         char xpath[STATUS_PATH_MAX];
-        xmlNode *cib_node = modify_node(fake_cib, target, FALSE);
+        xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
+                                                           false);
 
         crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
         CRM_ASSERT(cib_node != NULL);
