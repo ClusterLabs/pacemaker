@@ -251,16 +251,31 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
     return match;
 }
 
-
-static xmlNode *
-inject_resource(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
-                const char *lrm_name, const char *rclass, const char *rtype,
-                const char *rprovider)
+/*!
+ * \internal
+ * \brief Inject a resource history element into a scheduler input
+ *
+ * \param[in] out       Output object for displaying error messages
+ * \param[in] cib_node  Node state XML to inject resource history entry into
+ * \param[in] resource  ID (in configuration) of resource to inject
+ * \param[in] lrm_name  ID of resource as used in history (e.g. clone instance)
+ * \param[in] rclass    Resource agent class of resource to inject
+ * \param[in] rtype     Resource agent type of resource to inject
+ * \param[in] rprovider Resource agent provider of resource to inject
+ *
+ * \return XML of injected resource history element
+ * \note If a history element already exists under either \p resource or
+ *       \p lrm_name, this will return it rather than injecting a new one.
+ */
+xmlNode *
+pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
+                              const char *resource, const char *lrm_name,
+                              const char *rclass, const char *rtype,
+                              const char *rprovider)
 {
     xmlNode *lrm = NULL;
     xmlNode *container = NULL;
     xmlNode *cib_resource = NULL;
-    char *xpath = NULL;
 
     cib_resource = find_resource_xml(cib_node, resource);
     if (cib_resource != NULL) {
@@ -271,35 +286,38 @@ inject_resource(pcmk__output_t *out, xmlNode *cib_node, const char *resource,
     }
 
     // Check for history entry under preferred name
-    if (strcmp(resource, lrm_name)) {
+    if (strcmp(resource, lrm_name) != 0) {
         cib_resource = find_resource_xml(cib_node, lrm_name);
         if (cib_resource != NULL) {
             return cib_resource;
         }
     }
 
-    /* One day, add query for class, provider, type */
-
-    if (rclass == NULL || rtype == NULL) {
+    if ((rclass == NULL) || (rtype == NULL)) {
+        // @TODO query configuration for class, provider, type
         out->err(out, "Resource %s not found in the status section of %s."
                  "  Please supply the class and type to continue", resource, ID(cib_node));
         return NULL;
 
-    } else if (!pcmk__strcase_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
-                                     PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
-                                     PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
+    } else if (!pcmk__strcase_any_of(rclass,
+                                     PCMK_RESOURCE_CLASS_OCF,
+                                     PCMK_RESOURCE_CLASS_STONITH,
+                                     PCMK_RESOURCE_CLASS_SERVICE,
+                                     PCMK_RESOURCE_CLASS_UPSTART,
+                                     PCMK_RESOURCE_CLASS_SYSTEMD,
+                                     PCMK_RESOURCE_CLASS_LSB, NULL)) {
         out->err(out, "Invalid class for %s: %s", resource, rclass);
         return NULL;
 
     } else if (pcmk_is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
-                && (rprovider == NULL)) {
+               && (rprovider == NULL)) {
+        // @TODO query configuration for provider
         out->err(out, "Please specify the provider for resource %s", resource);
         return NULL;
     }
 
-    xpath = (char *)xmlGetNodePath(cib_node);
-    crm_info("Injecting new resource %s into %s '%s'", lrm_name, xpath, ID(cib_node));
-    free(xpath);
+    crm_info("Injecting new resource %s into node state '%s'",
+             lrm_name, ID(cib_node));
 
     lrm = first_named_child(cib_node, XML_CIB_TAG_LRM);
     if (lrm == NULL) {
@@ -585,8 +603,10 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
 
             update_failcounts(out, cib_node, resource, task, interval_ms, outcome);
 
-            cib_resource = inject_resource(out, cib_node, resource, resource,
-                                           rclass, rtype, rprovider);
+            cib_resource = pcmk__inject_resource_history(out, cib_node,
+                                                         resource, resource,
+                                                         rclass, rtype,
+                                                         rprovider);
             CRM_ASSERT(cib_resource != NULL);
 
             op = create_op(cib_resource, task, interval_ms, outcome);
@@ -691,8 +711,9 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
                                  ((router_node == NULL)? uuid: node));
     CRM_ASSERT(cib_node != NULL);
 
-    cib_resource = inject_resource(out, cib_node, resource, lrm_name,
-                                   rclass, rtype, rprovider);
+    cib_resource = pcmk__inject_resource_history(out, cib_node, resource,
+                                                 lrm_name, rclass, rtype,
+                                                 rprovider);
     if (cib_resource == NULL) {
         crm_err("invalid resource in transition");
         free(node); free(uuid);

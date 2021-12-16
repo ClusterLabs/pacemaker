@@ -242,6 +242,13 @@ void pcmk__output_bundle_actions(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid);
 
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
+                                       const char *resource,
+                                       const char *lrm_name,
+                                       const char *rclass,
+                                       const char *rtype,
+                                       const char *rprovider);
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
