@@ -468,11 +468,19 @@ simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Simulate executing a resource action in a graph
+ *
+ * \param[in] graph   Graph to update with resource action result
+ * \param[in] action  Resource action to simulate executing
+ *
+ * \return TRUE if action is validly specified, otherwise FALSE
+ */
 static gboolean
-exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
+simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
 {
-    int rc = 0;
-    GList *gIter = NULL;
+    int rc;
     lrmd_event_data_t *op = NULL;
     int target_outcome = PCMK_OCF_OK;
 
@@ -480,47 +488,58 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     const char *rclass = NULL;
     const char *resource = NULL;
     const char *rprovider = NULL;
-    const char *lrm_name = NULL;
+    const char *resource_config_name = NULL;
     const char *operation = crm_element_value(action->xml, "operation");
-    const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
+    const char *target_rc_s = crm_meta_value(action->params,
+                                             XML_ATTR_TE_TARGET_RC);
 
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
-    char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
-    const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    char *uuid = NULL;
+    const char *router_node = crm_element_value(action->xml,
+                                                XML_LRM_ATTR_ROUTER_NODE);
 
+    // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
-        crm_info("Skipping %s op for %s", operation, node);
-        goto done;
+        crm_debug("No history injection for %s op on %s", operation, node);
+        goto done; // Confirm action and update graph
     }
 
-    if (action_rsc == NULL) {
+    if (action_rsc == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "Bad");
-        free(node); free(uuid);
+        free(node);
         return FALSE;
     }
 
-    /* Look for the preferred name
-     * If not found, try the expected 'local' name
-     * If not found use the preferred name anyway
+    /* A resource might be known by different names in the configuration and in
+     * the action (for example, a clone instance). Grab the configuration name
+     * (which is preferred when writing history), and if necessary, the instance
+     * name.
      */
-    resource = crm_element_value(action_rsc, XML_ATTR_ID);
-    CRM_ASSERT(resource != NULL); // makes static analysis happy
-    lrm_name = resource; // Preferred name when writing history
+    resource_config_name = crm_element_value(action_rsc, XML_ATTR_ID);
+    if (resource_config_name == NULL) { // Shouldn't be possible
+        crm_log_xml_err(action->xml, "No ID");
+        free(node);
+        return FALSE;
+    }
+    resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
 
-        if (longname && pe_find_resource(fake_resource_list, longname)) {
+        if ((longname != NULL)
+            && (pe_find_resource(fake_resource_list, longname) != NULL)) {
             resource = longname;
         }
     }
 
+    // Certain actions need to be displayed but don't need history entries
     if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
-        out->message(out, "inject-rsc-action", resource, operation, node, (guint) 0);
-        goto done;
+        out->message(out, "inject-rsc-action", resource, operation, node,
+                     (guint) 0);
+        goto done; // Confirm action and update graph
     }
 
     rclass = crm_element_value(action_rsc, XML_AGENT_ATTR_CLASS);
@@ -529,30 +548,37 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
-    CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
-               pcmk_ok);
+    CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL,
+                                     cib_sync_call|cib_scope_local) == pcmk_ok);
 
+    // Ensure the action node is in the CIB
+    uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
+    free(uuid);
     CRM_ASSERT(cib_node != NULL);
 
+    // Add a history entry for the action
     cib_resource = pcmk__inject_resource_history(out, cib_node, resource,
-                                                 lrm_name, rclass, rtype,
-                                                 rprovider);
+                                                 resource_config_name,
+                                                 rclass, rtype, rprovider);
     if (cib_resource == NULL) {
-        crm_err("invalid resource in transition");
-        free(node); free(uuid);
+        crm_err("Could not simulate action %d history for resource %s",
+                action->id, resource);
+        free(node);
         free_xml(cib_node);
         return FALSE;
     }
 
+    // Simulate and display an executor event for the action result
     op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
                                        target_outcome, "User-injected result");
+    out->message(out, "inject-rsc-action", resource, op->op_type, node,
+                 op->interval_ms);
 
-    out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
-
-    for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
-        char *spec = (char *)gIter->data;
+    // Check whether action is in a list of desired simulated failures
+    for (GList *iter = fake_op_fail_list; iter != NULL; iter = iter->next) {
+        char *spec = (char *) iter->data;
         char *key = NULL;
         const char *match_name = NULL;
 
@@ -564,44 +590,47 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         }
         free(key);
 
-        if ((match_name == NULL) && strcmp(resource, lrm_name)) {
-            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", lrm_name, op->op_type,
-                                    op->interval_ms, node);
+        // If not found, try the resource's name in the configuration
+        if ((match_name == NULL)
+            && (strcmp(resource, resource_config_name) != 0)) {
+
+            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource_config_name,
+                                    op->op_type, op->interval_ms, node);
             if (strncasecmp(key, spec, strlen(key)) == 0) {
-                match_name = lrm_name;
+                match_name = resource_config_name;
             }
             free(key);
         }
 
-        if (match_name != NULL) {
-
-            rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
-            // ${match_name}_${task}_${interval_in_ms}@${node}=${rc}
-
-            if (rc != 1) {
-                out->err(out,
-                         "Invalid failed operation spec: %s. Result code must be integer",
-                         spec);
-                continue;
-            }
-            crm__set_graph_action_flags(action, pcmk__graph_action_failed);
-            graph->abort_priority = INFINITY;
-            out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
-            pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
-                                   op->interval_ms, op->rc);
-            break;
+        if (match_name == NULL) {
+            continue; // This failed action entry doesn't match
         }
+
+        // ${match_name}_${task}_${interval_in_ms}@${node}=${rc}
+        rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
+        if (rc != 1) {
+            out->err(out, "Invalid failed operation '%s' "
+                          "(result code must be integer)", spec);
+            continue; // Keep checking other list entries
+        }
+
+        out->info(out, "Pretending action %d failed with rc=%d",
+                  action->id, op->rc);
+        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+        graph->abort_priority = INFINITY;
+        pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
+                               op->interval_ms, op->rc);
+        break;
     }
 
     pcmk__inject_action_result(cib_resource, op, target_outcome);
     lrmd_free_event(op);
-
     rc = fake_cib->cmds->modify(fake_cib, XML_CIB_TAG_STATUS, cib_node,
-                                  cib_sync_call | cib_scope_local);
+                                cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
   done:
-    free(node); free(uuid);
+    free(node);
     free_xml(cib_node);
     crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
@@ -668,7 +697,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 
     crm_graph_functions_t exec_fns = {
         simulate_pseudo_action,
-        exec_rsc_action,
+        simulate_resource_action,
         exec_crmd_action,
         exec_stonith_action,
     };
