@@ -32,8 +32,6 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define STATUS_PATH_MAX 512
-
 #define NEW_NODE_TEMPLATE "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define NODE_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']"
 #define RSC_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
@@ -517,8 +515,8 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->node_down; iter != NULL; iter = iter->next) {
-        char xpath[STATUS_PATH_MAX];
         char *node = (char *) iter->data;
+        char *xpath = NULL;
 
         out->message(out, "inject-modify-node", "Offline", node);
 
@@ -530,15 +528,17 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
 
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node,
-                 XML_CIB_TAG_LRM);
+        xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
+                                  node, XML_CIB_TAG_LRM);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath | cib_sync_call | cib_scope_local);
+        free(xpath);
 
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node,
-                 XML_TAG_TRANSIENT_NODEATTRS);
+        xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
+                                  node, XML_TAG_TRANSIENT_NODEATTRS);
         cib->cmds->remove(cib, xpath, NULL,
                           cib_xpath | cib_sync_call | cib_scope_local);
+        free(xpath);
     }
 
     for (iter = injections->node_fail; iter != NULL; iter = iter->next) {
