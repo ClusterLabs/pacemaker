@@ -220,11 +220,11 @@ node_to_be_promoted_on(pe_resource_t *rsc)
                      rsc->id, rsc->priority);
         return NULL;
 
-    } else if (can_run_resources(node) == FALSE) {
+    } else if (!pcmk__node_available(node)) {
         crm_trace("Node can't run any resources: %s", node->details->uname);
         return NULL;
 
-    /* @TODO It's possible this check should be done in can_run_resources()
+    /* @TODO It's possible this check should be done in pcmk__node_available()
      * instead. We should investigate all its callers to figure out whether that
      * would be a good idea.
      */
@@ -596,7 +596,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if (can_run_resources(node) == FALSE) {
+            if (!pcmk__node_available(node)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
                  */

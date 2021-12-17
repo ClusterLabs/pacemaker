@@ -292,7 +292,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
 
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                if (can_run_resources(node) == FALSE || node->weight < 0) {
+                if (!pcmk__node_available(node) || (node->weight < 0)) {
                     continue;
                 }
 
@@ -310,7 +310,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
             if (any_capable) {
                 g_hash_table_iter_init(&iter, rsc->allowed_nodes);
                 while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                    if (can_run_resources(node) == FALSE || node->weight < 0) {
+                    if (!pcmk__node_available(node) || (node->weight < 0)) {
                         continue;
                     }
 
@@ -338,7 +338,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
         if (any_capable == FALSE) {
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                if (can_run_resources(node) == FALSE || node->weight < 0) {
+                if (!pcmk__node_available(node) || (node->weight < 0)) {
                     continue;
                 }
 

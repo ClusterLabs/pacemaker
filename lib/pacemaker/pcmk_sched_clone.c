@@ -207,8 +207,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     list1 = g_hash_table_get_values(hash1);
     list2 = g_hash_table_get_values(hash2);
 
-    list1 = sort_nodes_by_weight(list1, current_node1, data_set);
-    list2 = sort_nodes_by_weight(list2, current_node2, data_set);
+    list1 = pcmk__sort_nodes(list1, current_node1, data_set);
+    list2 = pcmk__sort_nodes(list2, current_node2, data_set);
 
     for (GList *gIter1 = list1, *gIter2 = list2;
          (gIter1 != NULL) && (gIter2 != NULL);
@@ -353,8 +353,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     /* Instance whose current node can run resources sorts first */
-    can1 = can_run_resources(node1);
-    can2 = can_run_resources(node2);
+    can1 = pcmk__node_available(node1);
+    can2 = pcmk__node_available(node2);
     if (can1 && !can2) {
         crm_trace("%s < %s: can", resource1->id, resource2->id);
         return -1;
@@ -434,7 +434,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         /* make clang analyzer happy */
         goto bail;
 
-    } else if (can_run_resources(node) == FALSE) {
+    } else if (!pcmk__node_available(node)) {
         goto bail;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -585,7 +585,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_node_t *node = nIter->data;
 
         node->count = 0;
-        if (can_run_resources(node)) {
+        if (pcmk__node_available(node)) {
             available_nodes++;
         }
     }
@@ -623,7 +623,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                      child->id, child_node->details->uname, max - allocated,
                      max);
 
-        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
+        if (!pcmk__node_available(child_node) || (child_node->weight < 0)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
                          child_node->details->uname, child->id);
             continue;
@@ -727,7 +727,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                           rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
     rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
@@ -1049,7 +1049,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {

@@ -27,12 +27,12 @@ pe__location_t *copy_constraint(pe__location_t *constraint);
 
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);
-GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
-                            pe_working_set_t *data_set);
+GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
+                        pe_working_set_t *data_set);
 
-extern gboolean can_run_resources(const pe_node_t * node);
+bool pcmk__node_available(const pe_node_t *node);
+bool pcmk__any_node_available(GHashTable *nodes);
 
-gboolean can_run_any(GHashTable * nodes);
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
                                      pe_resource_t *rsc, enum rsc_role_e filter,
                                      gboolean current,
