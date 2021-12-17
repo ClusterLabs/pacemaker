@@ -711,12 +711,13 @@ simulate_fencing_action(crm_graph_t *graph, crm_action_t *action)
 }
 
 enum transition_status
-run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
+pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
+                          GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
     enum transition_status graph_rc;
 
-    crm_graph_functions_t exec_fns = {
+    crm_graph_functions_t simulation_fns = {
         simulate_pseudo_action,
         simulate_resource_action,
         simulate_cluster_action,
@@ -732,14 +733,13 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
     }
 
-    pcmk__set_graph_functions(&exec_fns);
+    pcmk__set_graph_functions(&simulation_fns);
     transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
     pcmk__log_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;
     do {
         graph_rc = pcmk__execute_graph(transition);
-
     } while (graph_rc == transition_active);
     fake_resource_list = NULL;
 
@@ -747,23 +747,21 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->err(out, "Transition failed: %s",
                  pcmk__graph_status2text(graph_rc));
         pcmk__log_graph(LOG_ERR, transition);
-    }
-    pcmk__free_graph(transition);
-    if (graph_rc != transition_complete) {
         out->err(out, "An invalid transition was produced");
     }
+    pcmk__free_graph(transition);
 
     if (!out->is_quiet(out)) {
+        // If not quiet, we'll need the resulting CIB for later display
         xmlNode *cib_object = NULL;
-        int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
+        int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object,
+                                       cib_sync_call|cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
         pe_reset_working_set(data_set);
         data_set->input = cib_object;
-
         out->end_list(out);
     }
-
     return graph_rc;
 }
 
@@ -902,7 +900,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
 
     if (pcmk_is_set(flags, pcmk_sim_simulate)) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        if (run_simulation(data_set, cib, injections->op_fail) != transition_complete) {
+        if (pcmk__simulate_transition(data_set, cib, injections->op_fail) != transition_complete) {
             rc = pcmk_rc_invalid_transition;
         }
 

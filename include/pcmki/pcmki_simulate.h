@@ -33,6 +33,20 @@ void pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data
                        char *use_date);
 
 /**
+ * \internal
+ * \brief Simulate executing a transition
+ *
+ * \param[in] data_set      Cluster working set
+ * \param[in] cib           CIB object for scheduler input
+ * \param[in] op_fail_list  List of actions to simulate as failing
+ *
+ * \return Transition status after simulated execution
+ */
+enum transition_status pcmk__simulate_transition(pe_working_set_t *data_set,
+                                                 cib_t *cib,
+                                                 GList *op_fail_list);
+
+/**
  * \brief Simulate a cluster's response to events.
  *
  * This high-level function essentially implements crm_simulate(8).  It operates
