@@ -461,40 +461,57 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Inject a ticket attribute into ticket state
+ *
+ * \param[in] out          Output object for displaying error messages
+ * \param[in] ticket_id    Ticket whose state should be changed
+ * \param[in] attr_name    Ticket attribute name to inject
+ * \param[in] attr_value   Ticket attribute value to inject
+ * \param[in] cib          CIB object to use
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
 set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
-                      const char *attr_name, const char *attr_value,
-                      cib_t *cib, int cib_options)
+                      const char *attr_name, const char *attr_value, cib_t *cib)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
 
+    // Check for an existing ticket state entry
     rc = find_ticket_state(out, cib, ticket_id, &ticket_state_xml);
-    if (rc == pcmk_ok) {
-        crm_debug("Found a match state for ticket: id=%s", ticket_id);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc == pcmk_rc_ok) { // Ticket state found, use it
+        crm_debug("Injecting attribute into existing ticket state %s",
+                  ticket_id);
         xml_top = ticket_state_xml;
 
-    } else if (rc != -ENXIO) {
-        return rc;
-
-    } else {
+    } else if (rc == ENXIO) { // No ticket state, create it
         xmlNode *xml_obj = NULL;
 
         xml_top = create_xml_node(NULL, XML_CIB_TAG_STATUS);
         xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
         ticket_state_xml = create_xml_node(xml_obj, XML_CIB_TAG_TICKET_STATE);
         crm_xml_add(ticket_state_xml, XML_ATTR_ID, ticket_id);
+
+    } else { // Error
+        return rc;
     }
 
+    // Add the attribute to the ticket state
     crm_xml_add(ticket_state_xml, attr_name, attr_value);
-
     crm_log_xml_debug(xml_top, "Update");
 
-    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top, cib_options);
+    // Commit the change to the CIB
+    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top,
+                           cib_sync_call|cib_scope_local);
+    rc = pcmk_legacy2rc(rc);
 
     free_xml(xml_top);
-
     return rc;
 }
 
@@ -602,9 +619,8 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "granted", "true",
-                                   cib, cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        rc = set_ticket_state_attr(out, ticket_id, "granted", "true", cib);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_revoke; iter != NULL; iter = iter->next) {
@@ -612,9 +628,8 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "granted", "false",
-                                   cib, cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        rc = set_ticket_state_attr(out, ticket_id, "granted", "false", cib);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_standby; iter != NULL; iter = iter->next) {
@@ -622,9 +637,8 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", "true",
-                                   cib, cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        rc = set_ticket_state_attr(out, ticket_id, "standby", "true", cib);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->ticket_activate; iter != NULL; iter = iter->next) {
@@ -632,9 +646,8 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", "false",
-                                   cib, cib_sync_call | cib_scope_local);
-        CRM_ASSERT(rc == pcmk_ok);
+        rc = set_ticket_state_attr(out, ticket_id, "standby", "false", cib);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->op_inject; iter != NULL; iter = iter->next) {
