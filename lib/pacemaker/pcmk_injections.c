@@ -517,6 +517,88 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
 
 /*!
  * \internal
+ * \brief Inject a fictitious action into the cluster
+ *
+ * \param[in] out       Output object for displaying error messages
+ * \param[in] spec      Action specification to inject
+ * \param[in] cib       CIB object for scheduler input
+ * \param[in] data_set  Cluster working set
+ */
+static void
+inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
+              pe_working_set_t *data_set)
+{
+    int rc;
+    int outcome = PCMK_OCF_OK;
+    guint interval_ms = 0;
+
+    char *key = NULL;
+    char *node = NULL;
+    char *task = NULL;
+    char *resource = NULL;
+
+    const char *rtype = NULL;
+    const char *rclass = NULL;
+    const char *rprovider = NULL;
+
+    xmlNode *cib_op = NULL;
+    xmlNode *cib_node = NULL;
+    xmlNode *cib_resource = NULL;
+    pe_resource_t *rsc = NULL;
+    lrmd_event_data_t *op = NULL;
+
+    out->message(out, "inject-spec", spec);
+
+    key = calloc(1, strlen(spec) + 1);
+    node = calloc(1, strlen(spec) + 1);
+    rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
+    if (rc != 3) {
+        out->err(out, "Invalid operation spec: %s.  Only found %d fields",
+                 spec, rc);
+        goto done;
+    }
+
+    parse_op_key(key, &resource, &task, &interval_ms);
+
+    rsc = pe_find_resource(data_set->resources, resource);
+    if (rsc == NULL) {
+        out->err(out, "Invalid resource name: %s", resource);
+        goto done;
+    }
+
+    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+    rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+
+    cib_node = pcmk__inject_node(cib, node, NULL);
+    CRM_ASSERT(cib_node != NULL);
+
+    pcmk__inject_failcount(out, cib_node, resource, task, interval_ms, outcome);
+
+    cib_resource = pcmk__inject_resource_history(out, cib_node,
+                                                 resource, resource,
+                                                 rclass, rtype, rprovider);
+    CRM_ASSERT(cib_resource != NULL);
+
+    op = create_op(cib_resource, task, interval_ms, outcome);
+    CRM_ASSERT(op != NULL);
+
+    cib_op = pcmk__inject_action_result(cib_resource, op, 0);
+    CRM_ASSERT(cib_op != NULL);
+    lrmd_free_event(op);
+
+    rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
+                           cib_sync_call|cib_scope_local);
+    CRM_ASSERT(rc == pcmk_ok);
+
+done:
+    free(task);
+    free(node);
+    free(key);
+}
+
+/*!
+ * \internal
  * \brief Inject fictitious scheduler inputs
  *
  * \param[in] data_set    Cluster working set
@@ -529,13 +611,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 {
     int rc = pcmk_ok;
     GList *iter = NULL;
-
-    xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
-    xmlNode *cib_resource = NULL;
-
-    lrmd_event_data_t *op = NULL;
-
     pcmk__output_t *out = data_set->priv;
 
     out->message(out, "inject-modify-config", injections->quorum,
@@ -651,71 +727,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     for (iter = injections->op_inject; iter != NULL; iter = iter->next) {
-        char *spec = (char *) iter->data;
-
-        int rc = 0;
-        int outcome = PCMK_OCF_OK;
-        guint interval_ms = 0;
-
-        char *key = NULL;
-        char *node = NULL;
-        char *task = NULL;
-        char *resource = NULL;
-
-        const char *rtype = NULL;
-        const char *rclass = NULL;
-        const char *rprovider = NULL;
-
-        pe_resource_t *rsc = NULL;
-
-        out->message(out, "inject-spec", spec);
-
-        key = calloc(1, strlen(spec) + 1);
-        node = calloc(1, strlen(spec) + 1);
-        rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
-        if (rc != 3) {
-            out->err(out, "Invalid operation spec: %s.  Only found %d fields", spec, rc);
-            free(key);
-            free(node);
-            continue;
-        }
-
-        parse_op_key(key, &resource, &task, &interval_ms);
-
-        rsc = pe_find_resource(data_set->resources, resource);
-        if (rsc == NULL) {
-            out->err(out, "Invalid resource name: %s", resource);
-        } else {
-            rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-            rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-            rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-
-            cib_node = pcmk__inject_node(cib, node, NULL);
-            CRM_ASSERT(cib_node != NULL);
-
-            pcmk__inject_failcount(out, cib_node, resource, task, interval_ms,
-                                   outcome);
-
-            cib_resource = pcmk__inject_resource_history(out, cib_node,
-                                                         resource, resource,
-                                                         rclass, rtype,
-                                                         rprovider);
-            CRM_ASSERT(cib_resource != NULL);
-
-            op = create_op(cib_resource, task, interval_ms, outcome);
-            CRM_ASSERT(op != NULL);
-
-            cib_op = pcmk__inject_action_result(cib_resource, op, 0);
-            CRM_ASSERT(cib_op != NULL);
-            lrmd_free_event(op);
-
-            rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
-                                   cib_sync_call | cib_scope_local);
-            CRM_ASSERT(rc == pcmk_ok);
-        }
-        free(task);
-        free(node);
-        free(key);
+        inject_action(out, (char *) iter->data, cib, data_set);
     }
 
     if (!out->is_quiet(out)) {
