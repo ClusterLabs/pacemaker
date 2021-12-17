@@ -204,9 +204,6 @@ G_GNUC_INTERNAL
 void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_probes(pe_working_set_t *data_set);
-
-G_GNUC_INTERNAL
 bool pcmk__is_failed_remote_node(pe_node_t *node);
 
 G_GNUC_INTERNAL
@@ -262,5 +259,15 @@ G_GNUC_INTERNAL
 bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
                              pe_working_set_t *data_set,
                              pe_resource_t **failed);
+
+
+// Functions related to probes (pcmk_sched_probes.c)
+
+G_GNUC_INTERNAL
+void pcmk__order_probes(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__schedule_probes(pe_working_set_t *data_set);
+
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

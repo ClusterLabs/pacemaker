@@ -503,28 +503,37 @@ pcmk__order_probes(pe_working_set_t *data_set)
     order_then_probes(data_set);
 }
 
-/*
- * Check nodes for resources started outside of the LRM
+/*!
+ * \internal
+ * \brief Schedule any probes needed
+ *
+ * \param[in] data_set  Cluster working set
+ *
+ * \note This may also schedule fencing of failed remote nodes.
+ * \todo This could benefit from optimization. A test in 2010 using 100 nodes
+ *       and 100 clones completed scheduling in 4 seconds without probes, and
+ *       42 seconds with probes. The test should be repeated and profiled.
  */
-gboolean
-probe_resources(pe_working_set_t * data_set)
+void
+pcmk__schedule_probes(pe_working_set_t *data_set)
 {
-    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    // Schedule probes on each node in the cluster as needed
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
         const char *probed = NULL;
 
-        if (node->details->online == FALSE) {
-
+        if (!node->details->online) { // Don't probe offline nodes
             if (pcmk__is_failed_remote_node(node)) {
-                pe_fence_node(data_set, node, "the connection is unrecoverable", FALSE);
+                pe_fence_node(data_set, node,
+                              "the connection is unrecoverable", FALSE);
             }
             continue;
 
-        } else if (node->details->unclean) {
+        } else if (node->details->unclean) { // ... or nodes that need fencing
             continue;
 
-        } else if (node->details->rsc_discovery_enabled == FALSE) {
-            /* resource discovery is disabled for this node */
+        } else if (!node->details->rsc_discovery_enabled) {
+            // The user requested that probes not be done on this node
             continue;
         }
 
@@ -535,19 +544,24 @@ probe_resources(pe_working_set_t * data_set)
          */
         probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
         if (probed != NULL && crm_is_true(probed) == FALSE) {
-            pe_action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
-                                                  CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
+            pe_action_t *probe_op = NULL;
 
-            add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            probe_op = custom_action(NULL,
+                                     crm_strdup_printf("%s-%s", CRM_OP_REPROBE,
+                                                       node->details->uname),
+                                     CRM_OP_REPROBE, node, FALSE, TRUE,
+                                     data_set);
+            add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT,
+                           XML_BOOLEAN_TRUE);
             continue;
         }
 
-        for (GList *gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
+        // Probe each resource in the cluster on this node, as needed
+        for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
+             rsc_iter = rsc_iter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
             rsc->cmds->create_probe(rsc, node, NULL, FALSE, data_set);
         }
     }
-    return TRUE;
 }
-
