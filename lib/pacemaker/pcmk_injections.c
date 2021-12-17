@@ -30,7 +30,7 @@
 
 #include "libpacemaker_private.h"
 
-gboolean bringing_nodes_online = FALSE;
+bool pcmk__simulate_node_config = false;
 
 #define STATUS_PATH_MAX 512
 
@@ -184,9 +184,9 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
  * \param[in] uuid      UUID of node to inject
  *
  * \return XML of node_state entry for new node
- * \note If the global bringing_nodes_online has been set to true, a node entry
- *       in the configuration section will be added, as well as a node state
- *       entry in the status section.
+ * \note If the global pcmk__simulate_node_config has been set to true, a
+ *       node entry in the configuration section will be added, as well as a
+ *       node state entry in the status section.
  */
 xmlNode *
 pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
@@ -195,7 +195,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     xmlNode *cib_object = NULL;
     char *xpath = crm_strdup_printf(NODE_TEMPLATE, node);
 
-    if (bringing_nodes_online) {
+    if (pcmk__simulate_node_config) {
         create_node_entry(cib_conn, node);
     }
 
