@@ -32,9 +32,10 @@
 
 bool pcmk__simulate_node_config = false;
 
-#define NEW_NODE_TEMPLATE "//"XML_CIB_TAG_NODE"[@uname='%s']"
-#define NODE_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']"
-#define RSC_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
+#define XPATH_NODE_CONFIG   "//" XML_CIB_TAG_NODE "[@uname='%s']"
+#define XPATH_NODE_STATE    "//" XML_CIB_TAG_STATE "[@uname='%s']"
+#define XPATH_RSC_HISTORY   XPATH_NODE_STATE "//" \
+                            XML_LRM_TAG_RESOURCE "[@id='%s']"
 
 
 static void
@@ -105,7 +106,7 @@ static void
 create_node_entry(cib_t * cib_conn, const char *node)
 {
     int rc = pcmk_ok;
-    char *xpath = crm_strdup_printf(NEW_NODE_TEMPLATE, node);
+    char *xpath = crm_strdup_printf(XPATH_NODE_CONFIG, node);
 
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
@@ -191,7 +192,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
-    char *xpath = crm_strdup_printf(NODE_TEMPLATE, node);
+    char *xpath = crm_strdup_printf(XPATH_NODE_STATE, node);
 
     if (pcmk__simulate_node_config) {
         create_node_entry(cib_conn, node);
@@ -275,7 +276,7 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
 {
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    char *xpath = crm_strdup_printf(RSC_TEMPLATE, node, resource);
+    char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
 
     match = get_xpath_object(xpath, cib_node, LOG_TRACE);
     free(xpath);
