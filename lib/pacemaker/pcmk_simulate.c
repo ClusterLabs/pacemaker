@@ -659,35 +659,47 @@ simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Simulate successfully executing a fencing action
+ *
+ * \param[in] graph   Graph to update with action result
+ * \param[in] action  Fencing action to simulate
+ *
+ * \return TRUE
+ */
 static gboolean
-exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
+simulate_fencing_action(crm_graph_t *graph, crm_action_t *action)
 {
     const char *op = crm_meta_value(action->params, "stonith_action");
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
     out->message(out, "inject-fencing-action", target, op);
 
-    if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
-        int rc = 0;
+    if (!pcmk__str_eq(op, "on", pcmk__str_casei)) {
+        int rc = pcmk_ok;
         char xpath[STATUS_PATH_MAX];
+
+        // Set node state to offline
         xmlNode *cib_node = pcmk__inject_node_state_change(fake_cib, target,
                                                            false);
 
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
         CRM_ASSERT(cib_node != NULL);
-
+        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,
-                                   cib_sync_call | cib_scope_local);
+                                     cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
 
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
+        // Simulate controller clearing node's resource history and attributes
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s",
+                 target, XML_CIB_TAG_LRM);
         fake_cib->cmds->remove(fake_cib, xpath, NULL,
-                                      cib_xpath | cib_sync_call | cib_scope_local);
+                               cib_xpath|cib_sync_call|cib_scope_local);
 
-        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
-                 XML_TAG_TRANSIENT_NODEATTRS);
+        snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s",
+                 target, XML_TAG_TRANSIENT_NODEATTRS);
         fake_cib->cmds->remove(fake_cib, xpath, NULL,
-                                      cib_xpath | cib_sync_call | cib_scope_local);
+                               cib_xpath|cib_sync_call|cib_scope_local);
 
         free_xml(cib_node);
     }
@@ -708,7 +720,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         simulate_pseudo_action,
         simulate_resource_action,
         simulate_cluster_action,
-        exec_stonith_action,
+        simulate_fencing_action,
     };
 
     out = data_set->priv;
