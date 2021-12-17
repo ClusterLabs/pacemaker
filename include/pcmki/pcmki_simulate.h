@@ -16,6 +16,7 @@
 #include <stdbool.h>
 
 /**
+ * \internal
  * \brief Profile the configuration updates and scheduler actions in every
  *        CIB file in a given directory, printing the profiling timings for
  *        each.
@@ -47,6 +48,7 @@ enum transition_status pcmk__simulate_transition(pe_working_set_t *data_set,
                                                  GList *op_fail_list);
 
 /**
+ * \internal
  * \brief Simulate a cluster's response to events.
  *
  * This high-level function essentially implements crm_simulate(8).  It operates
