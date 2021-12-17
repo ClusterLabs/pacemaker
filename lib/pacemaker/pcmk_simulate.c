@@ -446,8 +446,17 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
     }
 }
 
+/*!
+ * \internal
+ * \brief Simulate successfully executing a pseudo-action in a graph
+ *
+ * \param[in] graph   Graph to update with pseudo-action result
+ * \param[in] action  Pseudo-action to simulate executing
+ *
+ * \return TRUE
+ */
 static gboolean
-exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
+simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
@@ -658,7 +667,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
     enum transition_status graph_rc;
 
     crm_graph_functions_t exec_fns = {
-        exec_pseudo_action,
+        simulate_pseudo_action,
         exec_rsc_action,
         exec_crmd_action,
         exec_stonith_action,
