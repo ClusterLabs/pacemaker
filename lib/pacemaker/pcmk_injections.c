@@ -38,6 +38,15 @@ bool pcmk__simulate_node_config = false;
                             XML_LRM_TAG_RESOURCE "[@id='%s']"
 
 
+/*!
+ * \internal
+ * \brief Inject a fictitious transient node attribute into scheduler input
+ *
+ * \param[in] out       Output object for displaying error messages
+ * \param[in] cib_node  node_state XML to inject attribute into
+ * \param[in] name      Transient node attribute name to inject
+ * \param[in] value     Transient node attribute value to inject
+ */
 static void
 inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
                       const char *name, const char *value)
@@ -102,15 +111,23 @@ pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a CIB configuration entry for a fictitious node
+ *
+ * \param[in] cib_conn  CIB object to use
+ * \param[in] node      Node name to use
+ */
 static void
-create_node_entry(cib_t * cib_conn, const char *node)
+create_node_entry(cib_t *cib_conn, const char *node)
 {
     int rc = pcmk_ok;
     char *xpath = crm_strdup_printf(XPATH_NODE_CONFIG, node);
 
-    rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
+    rc = cib_conn->cmds->query(cib_conn, xpath, NULL,
+                               cib_xpath|cib_sync_call|cib_scope_local);
 
-    if (rc == -ENXIO) {
+    if (rc == -ENXIO) { // Only add if not already existing
         xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
         crm_xml_add(cib_object, XML_ATTR_ID, node); // Use node name as ID
@@ -126,6 +143,19 @@ create_node_entry(cib_t * cib_conn, const char *node)
     free(xpath);
 }
 
+/*!
+ * \internal
+ * \brief Synthesize a fake executor event for an action
+ *
+ * \param[in] cib_resource  XML for any existing resource action history
+ * \param[in] task          Name of action to synthesize
+ * \param[in] interval_ms   Interval of action to synthesize
+ * \param[in] outcome       Result of action to synthesize
+ *
+ * \return Newly allocated executor event
+ * \note It is the caller's responsibility to free the result with
+ *       lrmd_free_event().
+ */
 static lrmd_event_data_t *
 create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
           int outcome)
@@ -135,10 +165,11 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
     lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
-    op->params = NULL;          /* TODO: Fill me in */
+    op->params = NULL; // Not needed for simulation purposes
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;
 
+    // Use a call ID higher than any existing history entries
     op->call_id = 0;
     for (xop = pcmk__xe_first_child(cib_resource); xop != NULL;
          xop = pcmk__xe_next(xop)) {
@@ -271,14 +302,23 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
     return cib_node;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node has history for a given resource
+ *
+ * \param[in] cib_node  Node state XML to check
+ * \param[in] resource  Resource name to check for
+ *
+ * \return Resource's lrm_resource XML entry beneath \p cib_node if found,
+ *         otherwise NULL
+ */
 static xmlNode *
-find_resource_xml(xmlNode * cib_node, const char *resource)
+find_resource_xml(xmlNode *cib_node, const char *resource)
 {
-    xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
+    xmlNode *match = get_xpath_object(xpath, cib_node, LOG_TRACE);
 
-    match = get_xpath_object(xpath, cib_node, LOG_TRACE);
     free(xpath);
     return match;
 }
