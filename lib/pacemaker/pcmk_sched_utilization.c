@@ -22,18 +22,26 @@ struct compare_data {
     int result;
 };
 
+/*!
+ * \internal
+ * \brief Get integer utilization from a string
+ *
+ * \param[in] s  String representation of a node utilization value
+ *
+ * \return Integer equivalent of \p s
+ * \todo It would make sense to restrict utilization values to nonnegative
+ *       integers, but the documentation just says "integers" and we didn't
+ *       restrict them initially, so for backward compatibility, allow any
+ *       integer.
+ */
 static int
 utilization_value(const char *s)
 {
     int value = 0;
 
-    /* @TODO It would make sense to restrict utilization values to nonnegative
-     * integers, but the documentation just says "integers" and we didn't
-     * restrict them initially, so for backward compatibility, allow any
-     * integer.
-     */
-    if (s != NULL) {
-        pcmk__scan_min_int(s, &value, INT_MIN);
+    if ((s != NULL) && (pcmk__scan_min_int(s, &value, INT_MIN) == EINVAL)) {
+        pe_warn("Using 0 for utilization instead of invalid value '%s'", value);
+        value = 0;
     }
     return value;
 }
