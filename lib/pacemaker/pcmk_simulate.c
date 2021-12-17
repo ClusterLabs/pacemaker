@@ -637,8 +637,17 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Simulate successfully executing a cluster action
+ *
+ * \param[in] graph   Graph to update with action result
+ * \param[in] action  Cluster action to simulate
+ *
+ * \return TRUE
+ */
 static gboolean
-exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
+simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -698,7 +707,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
     crm_graph_functions_t exec_fns = {
         simulate_pseudo_action,
         simulate_resource_action,
-        exec_crmd_action,
+        simulate_cluster_action,
         exec_stonith_action,
     };
 
