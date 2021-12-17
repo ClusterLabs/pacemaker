@@ -502,3 +502,52 @@ pcmk__order_probes(pe_working_set_t *data_set)
 
     order_then_probes(data_set);
 }
+
+/*
+ * Check nodes for resources started outside of the LRM
+ */
+gboolean
+probe_resources(pe_working_set_t * data_set)
+{
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = (pe_node_t *) gIter->data;
+        const char *probed = NULL;
+
+        if (node->details->online == FALSE) {
+
+            if (pcmk__is_failed_remote_node(node)) {
+                pe_fence_node(data_set, node, "the connection is unrecoverable", FALSE);
+            }
+            continue;
+
+        } else if (node->details->unclean) {
+            continue;
+
+        } else if (node->details->rsc_discovery_enabled == FALSE) {
+            /* resource discovery is disabled for this node */
+            continue;
+        }
+
+        /* This is no longer needed for live clusters, since the probe_complete
+         * node attribute will never be in the CIB. However this is still useful
+         * for processing old saved CIBs (< 1.1.14), including the
+         * reprobe-target_rc regression test.
+         */
+        probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
+        if (probed != NULL && crm_is_true(probed) == FALSE) {
+            pe_action_t *probe_op = custom_action(NULL, crm_strdup_printf("%s-%s", CRM_OP_REPROBE, node->details->uname),
+                                                  CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
+
+            add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+            continue;
+        }
+
+        for (GList *gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
+            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
+
+            rsc->cmds->create_probe(rsc, node, NULL, FALSE, data_set);
+        }
+    }
+    return TRUE;
+}
+
