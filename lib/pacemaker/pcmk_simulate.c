@@ -124,9 +124,20 @@ create_action_name(pe_action_t *action, bool verbose)
     return action_name;
 }
 
+/*!
+ * \internal
+ * \brief Display the status of a cluster
+ *
+ * \param[in] data_set      Cluster working set
+ * \param[in] show_opts     How to modify display (as pcmk_show_opt_e flags)
+ * \param[in] section_opts  Sections to display (as pcmk_section_e flags)
+ * \param[in] title         What to use as list title
+ * \param[in] print_spacer  Whether to display a spacer first
+ */
 static void
-print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts,
-                     unsigned int section_opts, const char *title, bool print_spacer)
+print_cluster_status(pe_working_set_t *data_set, unsigned int show_opts,
+                     unsigned int section_opts, const char *title,
+                     bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
@@ -146,6 +157,13 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts,
     g_list_free(all);
 }
 
+/*!
+ * \internal
+ * \brief Display a summary of all actions scheduled in a transition
+ *
+ * \param[in] data_set      Cluster working set (fully scheduled)
+ * \param[in] print_spacer  Whether to display a spacer first
+ */
 static void
 print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
 {
@@ -157,6 +175,16 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
     out->end_list(out);
 }
 
+/*!
+ * \internal
+ * \brief Reset a cluster working set's input, output, date, and flags
+ *
+ * \param[in] data_set  Cluster working set
+ * \param[in] input     What to set as cluster input
+ * \param[in] out       What to set as cluster output object
+ * \param[in] use_date  What to set as cluster's current timestamp
+ * \param[in] flags     Cluster flags to add (pe_flag_*)
+ */
 static void
 reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
       char *use_date, unsigned int flags)
