@@ -44,7 +44,6 @@ enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children,
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
-extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,
                                   GHashTable * utilization, gboolean plus);
 

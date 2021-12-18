@@ -159,7 +159,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     if (pcmk__str_eq(nw->data_set->placement_strategy, "balanced",
                      pcmk__str_casei)) {
-        result = compare_capacity(node1, node2);
+        result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
             crm_trace("%s > %s : capacity (%d)",
                       node1->details->uname, node2->details->uname, result);

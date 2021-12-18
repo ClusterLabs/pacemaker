@@ -306,4 +306,11 @@ G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);
 
 
+// Functions related to node utilization (pcmk_sched_utilization.c)
+
+G_GNUC_INTERNAL
+int pcmk__compare_node_capacities(const pe_node_t *node1,
+                                  const pe_node_t *node2);
+
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

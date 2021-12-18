@@ -16,12 +16,6 @@
 static void group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
                                               GList *all_rscs);
 
-struct compare_data {
-    const pe_node_t *node1;
-    const pe_node_t *node2;
-    int result;
-};
-
 /*!
  * \internal
  * \brief Get integer utilization from a string
@@ -46,15 +40,48 @@ utilization_value(const char *s)
     return value;
 }
 
+
+/*
+ * Functions for comparing node capacities
+ */
+
+struct compare_data {
+    const pe_node_t *node1;
+    const pe_node_t *node2;
+    bool node2_only;
+    int result;
+};
+
+/*!
+ * \internal
+ * \brief Compare a single utilization attribute for two nodes
+ *
+ * Compare one utilization attribute for two nodes, incrementing the result if
+ * the first node has greater capacity, and decrementing it if the second node
+ * has greater capacity.
+ *
+ * \param[in] key        Utilization attribute name to compare
+ * \param[in] value      Utilization attribute value to compare
+ * \param[in] user_data  Comparison data (as struct compare_data*)
+ */
 static void
-do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
+compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
 {
     int node1_capacity = 0;
     int node2_capacity = 0;
     struct compare_data *data = user_data;
+    const char *node2_value = NULL;
 
-    node1_capacity = utilization_value(value);
-    node2_capacity = utilization_value(g_hash_table_lookup(data->node2->details->utilization, key));
+    if (data->node2_only) {
+        if (g_hash_table_lookup(data->node1->details->utilization, key)) {
+            return; // We've already compared this attribute
+        }
+    } else {
+        node1_capacity = utilization_value((const char *) value);
+    }
+
+    node2_value = g_hash_table_lookup(data->node2->details->utilization, key);
+    node2_capacity = utilization_value(node2_value);
 
     if (node1_capacity > node2_capacity) {
         data->result--;
@@ -63,44 +90,39 @@ do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-static void
-do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
-{
-    int node1_capacity = 0;
-    int node2_capacity = 0;
-    struct compare_data *data = user_data;
-
-    if (g_hash_table_lookup_extended(data->node1->details->utilization, key, NULL, NULL)) {
-        return;
-    }
-
-    node1_capacity = 0;
-    node2_capacity = utilization_value(value);
-
-    if (node1_capacity > node2_capacity) {
-        data->result--;
-    } else if (node1_capacity < node2_capacity) {
-        data->result++;
-    }
-}
-
-/* rc < 0 if 'node1' has more capacity remaining
- * rc > 0 if 'node1' has less capacity remaining
+/*!
+ * \internal
+ * \brief Compare utilization capacities of two nodes
+ *
+ * \param[in] node1  First node to compare
+ * \param[in] node2  Second node to compare
+ *
+ * \return Negative integer if node1 has more free capacity,
+ *         0 if the capacities are equal, or a positive integer
+ *         if node2 has more free capacity
  */
 int
-compare_capacity(const pe_node_t * node1, const pe_node_t * node2)
+pcmk__compare_node_capacities(const pe_node_t *node1, const pe_node_t *node2)
 {
-    struct compare_data data;
+    struct compare_data data = {
+        .node1      = node1,
+        .node2      = node2,
+        .node2_only = false,
+        .result     = 0,
+    };
 
-    data.node1 = node1;
-    data.node2 = node2;
-    data.result = 0;
+    // Compare utilization values that node1 and maybe node2 have
+    g_hash_table_foreach(node1->details->utilization, compare_utilization_value,
+                         &data);
 
-    g_hash_table_foreach(node1->details->utilization, do_compare_capacity1, &data);
-    g_hash_table_foreach(node2->details->utilization, do_compare_capacity2, &data);
+    // Compare utilization values that only node2 has
+    data.node2_only = true;
+    g_hash_table_foreach(node2->details->utilization, compare_utilization_value,
+                         &data);
 
     return data.result;
 }
+
 
 struct calculate_data {
     GHashTable *current_utilization;
@@ -309,7 +331,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                 }
 
                 if (most_capable_node == NULL ||
-                    compare_capacity(node, most_capable_node) < 0) {
+                    pcmk__compare_node_capacities(node, most_capable_node) < 0) {
                     /* < 0 means 'node' is more capable */
                     most_capable_node = node;
                 }
