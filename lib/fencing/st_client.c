@@ -187,7 +187,12 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  * we drop in here - so as not to make remote nodes
                  * panic on that answer
                  */
-                crm_warn("watchdog-fencing-query failed");
+                if (rc == -ENODEV) {
+                    crm_notice("Cluster does not have watchdog fencing device");
+                } else {
+                    crm_warn("Could not check for watchdog fencing device: %s",
+                             pcmk_strerror(rc));
+                }
             } else if (list[0] == '\0') {
                 rv = TRUE;
             } else {
