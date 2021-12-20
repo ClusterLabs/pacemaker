@@ -131,10 +131,6 @@ typedef union
 #    define EREMOTEIO 193
 #  endif
 
-#  ifndef EUNATCH
-#    define EUNATCH   194
-#  endif
-
 #  ifndef ENOKEY
 #    define ENOKEY    195
 #  endif
@@ -145,14 +141,6 @@ typedef union
 
 #  ifndef ETIME
 #    define ETIME     197
-#  endif
-
-#  ifndef ENOSR
-#    define ENOSR     198
-#  endif
-
-#  ifndef ENOSTR
-#    define ENOSTR    199
 #  endif
 
 #  ifndef EKEYREJECTED

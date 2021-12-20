@@ -118,9 +118,6 @@ pcmk_strerror(int rc)
         case EREMOTEIO:
             return "Remote I/O error";
             /* coverity[dead_error_condition] False positive on non-Linux */
-        case EUNATCH:
-            return "Protocol driver not attached";
-            /* coverity[dead_error_condition] False positive on non-Linux */
         case ENOKEY:
             return "Required key not available";
     }
@@ -342,8 +339,12 @@ pcmk_rc_name(int rc)
         case ENOMSG:            return "ENOMSG";
         case ENOPROTOOPT:       return "ENOPROTOOPT";
         case ENOSPC:            return "ENOSPC";
+#ifdef ENOSR
         case ENOSR:             return "ENOSR";
+#endif
+#ifdef ENOSTR
         case ENOSTR:            return "ENOSTR";
+#endif
         case ENOSYS:            return "ENOSYS";
         case ENOTBLK:           return "ENOTBLK";
         case ENOTCONN:          return "ENOTCONN";
@@ -376,7 +377,9 @@ pcmk_rc_name(int rc)
         case ETIME:             return "ETIME";
         case ETIMEDOUT:         return "ETIMEDOUT";
         case ETXTBSY:           return "ETXTBSY";
+#ifdef EUNATCH
         case EUNATCH:           return "EUNATCH";
+#endif
         case EUSERS:            return "EUSERS";
         /* case EWOULDBLOCK:    return "EWOULDBLOCK"; */
         case EXDEV:             return "EXDEV";
