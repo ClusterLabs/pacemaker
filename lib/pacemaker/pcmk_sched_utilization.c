@@ -124,42 +124,74 @@ pcmk__compare_node_capacities(const pe_node_t *node1, const pe_node_t *node2)
 }
 
 
+/*
+ * Functions for updating node capacities
+ */
+
 struct calculate_data {
     GHashTable *current_utilization;
-    gboolean plus;
+    bool plus;
 };
 
+/*!
+ * \internal
+ * \brief Update a single utilization attribute with a new value
+ *
+ * \param[in] key        Name of utilization attribute to update
+ * \param[in] value      Value to add or substract
+ * \param[in] user_data  Calculation data (as struct calculate_data *)
+ */
 static void
-do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
+update_utilization_value(gpointer key, gpointer value, gpointer user_data)
 {
+    int result = 0;
     const char *current = NULL;
-    char *result = NULL;
     struct calculate_data *data = user_data;
 
     current = g_hash_table_lookup(data->current_utilization, key);
     if (data->plus) {
-        result = pcmk__itoa(utilization_value(current) + utilization_value(value));
-        g_hash_table_replace(data->current_utilization, strdup(key), result);
-
+        result = utilization_value(current) + utilization_value(value);
     } else if (current) {
-        result = pcmk__itoa(utilization_value(current) - utilization_value(value));
-        g_hash_table_replace(data->current_utilization, strdup(key), result);
+        result = utilization_value(current) - utilization_value(value);
     }
+    g_hash_table_replace(data->current_utilization,
+                         strdup(key), pcmk__itoa(result));
 }
 
-/* Specify 'plus' to FALSE when allocating
- * Otherwise to TRUE when deallocating
+/*!
+ * \internal
+ * \brief Subtract a resource's utilization from node capacity
+ *
+ * \param[in] current_utilization  Current node utilization attributes
+ * \param[in] rsc                  Resource with utilization to subtract
  */
 void
-calculate_utilization(GHashTable * current_utilization,
-                      GHashTable * utilization, gboolean plus)
+pcmk__consume_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
 {
-    struct calculate_data data;
+    struct calculate_data data = {
+        .current_utilization = current_utilization,
+        .plus = false,
+    };
 
-    data.current_utilization = current_utilization;
-    data.plus = plus;
+    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
+}
 
-    g_hash_table_foreach(utilization, do_calculate_utilization, &data);
+/*!
+ * \internal
+ * \brief Add a resource's utilization to node capacity
+ *
+ * \param[in] current_utilization  Current node utilization attributes
+ * \param[in] rsc                  Resource with utilization to add
+ */
+void
+pcmk__release_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
+{
+    struct calculate_data data = {
+        .current_utilization = current_utilization,
+        .plus = true,
+    };
+
+    g_hash_table_foreach(rsc->utilization, update_utilization_value, &data);
 }
 
 
@@ -207,11 +239,9 @@ have_enough_capacity(pe_node_t * node, const char * rsc_id, GHashTable * utiliza
 static void
 native_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return;
+    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        pcmk__release_node_capacity(all_utilization, rsc);
     }
-
-    calculate_utilization(all_utilization, rsc->utilization, TRUE);
 }
 
 static void

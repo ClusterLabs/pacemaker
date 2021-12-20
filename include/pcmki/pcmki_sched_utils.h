@@ -44,9 +44,6 @@ enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children,
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
-extern void calculate_utilization(GHashTable * current_utilization,
-                                  GHashTable * utilization, gboolean plus);
-
 extern void process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set);
 
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,

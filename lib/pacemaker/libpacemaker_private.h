@@ -312,5 +312,12 @@ G_GNUC_INTERNAL
 int pcmk__compare_node_capacities(const pe_node_t *node1,
                                   const pe_node_t *node2);
 
+G_GNUC_INTERNAL
+void pcmk__consume_node_capacity(GHashTable *current_utilization,
+                                 pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__release_node_capacity(GHashTable *current_utilization,
+                                 pe_resource_t *rsc);
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H
