@@ -57,72 +57,7 @@ pcmk_errorname(int rc)
 const char *
 pcmk_strerror(int rc)
 {
-    if (rc == 0) {
-        return "OK";
-    }
-
-    rc = abs(rc);
-
-    // Of course rc > 0 ... unless someone passed INT_MIN as rc
-    if ((rc > 0) && (rc < PCMK_ERROR_OFFSET)) {
-        return strerror(rc);
-    }
-
-    switch (rc) {
-        case pcmk_err_generic:
-            return "Generic Pacemaker error";
-        case pcmk_err_no_quorum:
-            return "Operation requires quorum";
-        case pcmk_err_schema_validation:
-            return "Update does not conform to the configured schema";
-        case pcmk_err_transform_failed:
-            return "Schema transform failed";
-        case pcmk_err_old_data:
-            return "Update was older than existing configuration";
-        case pcmk_err_diff_failed:
-            return "Application of an update diff failed";
-        case pcmk_err_diff_resync:
-            return "Application of an update diff failed, requesting a full refresh";
-        case pcmk_err_cib_modified:
-            return "The on-disk configuration was manually modified";
-        case pcmk_err_cib_backup:
-            return "Could not archive the previous configuration";
-        case pcmk_err_cib_save:
-            return "Could not save the new configuration to disk";
-        case pcmk_err_cib_corrupt:
-            return "Could not parse on-disk configuration";
-        case pcmk_err_multiple:
-            return "Resource active on multiple nodes";
-        case pcmk_err_node_unknown:
-            return "Node not found";
-        case pcmk_err_already:
-            return "Situation already as requested";
-        case pcmk_err_bad_nvpair:
-            return "Bad name/value pair given";
-        case pcmk_err_schema_unchanged:
-            return "Schema is already the latest available";
-        case pcmk_err_unknown_format:
-            return "Unknown output format";
-
-            /* The following cases will only be hit on systems for which they are non-standard */
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOTUNIQ:
-            return "Name not unique on network";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ECOMM:
-            return "Communication error on send";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ELIBACC:
-            return "Can not access a needed shared library";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case EREMOTEIO:
-            return "Remote I/O error";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOKEY:
-            return "Required key not available";
-    }
-    crm_err("Unknown error code: %d", rc);
-    return "Unknown error";
+    return pcmk_rc_str(pcmk_legacy2rc(rc));
 }
 
 // Standard Pacemaker API return codes
