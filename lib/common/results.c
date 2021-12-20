@@ -376,7 +376,7 @@ pcmk_rc_str(int rc)
         return pcmk__rcs[pcmk_rc_error - rc].desc;
     }
     if (rc < 0) {
-        return "Unknown error";
+        return "Error";
     }
 
     // Handle values that could be defined by system or by portability.h
@@ -768,7 +768,7 @@ bz2_strerror(int rc)
         case BZ_OUTBUFF_FULL:
             return "output data will not fit into the buffer provided";
     }
-    return "Unknown error";
+    return "Data compression error";
 }
 
 crm_exit_t
