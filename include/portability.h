@@ -116,34 +116,42 @@ typedef union
 #  include <errno.h>
 
 #  ifndef ENOTUNIQ
+#    define PCMK__ENOTUNIQ
 #    define ENOTUNIQ  190
 #  endif
 
 #  ifndef ECOMM
+#    define PCMK__ECOMM
 #    define ECOMM     191
 #  endif
 
 #  ifndef ELIBACC
+#    define PCMK__ELIBACC
 #    define ELIBACC   192
 #  endif
 
 #  ifndef EREMOTEIO
+#    define PCMK__EREMOTIO
 #    define EREMOTEIO 193
 #  endif
 
 #  ifndef ENOKEY
+#    define PCMK__ENOKEY
 #    define ENOKEY    195
 #  endif
 
 #  ifndef ENODATA
+#    define PCMK__ENODATA
 #    define ENODATA   196
 #  endif
 
 #  ifndef ETIME
+#    define PCMK__ETIME
 #    define ETIME     197
 #  endif
 
 #  ifndef EKEYREJECTED
+#    define PCMK__EKEYREJECTED
 #    define EKEYREJECTED 200
 #  endif
 

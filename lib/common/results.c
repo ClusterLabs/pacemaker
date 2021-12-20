@@ -395,9 +395,9 @@ pcmk_rc_name(int rc)
 #ifdef EISNAM // Not available on OS X, Illumos, Solaris
         case EISNAM:            return "EISNAM";
         case EKEYEXPIRED:       return "EKEYEXPIRED";
-        case EKEYREJECTED:      return "EKEYREJECTED";
         case EKEYREVOKED:       return "EKEYREVOKED";
 #endif
+        case EKEYREJECTED:      return "EKEYREJECTED";
         case EL2HLT:            return "EL2HLT";
         case EL2NSYNC:          return "EL2NSYNC";
         case EL3HLT:            return "EL3HLT";
@@ -443,7 +443,35 @@ pcmk_rc_str(int rc)
     if (rc < 0) {
         return "Unknown error";
     }
-    return strerror(rc);
+
+    // Handle values that could be defined by system or by portability.h
+    switch (rc) {
+#ifdef PCMK__ENOTUNIQ
+        case ENOTUNIQ:      return "Name not unique on network";
+#endif
+#ifdef PCMK__ECOMM
+        case ECOMM:         return "Communication error on send";
+#endif
+#ifdef PCMK__ELIBACC
+        case ELIBACC:       return "Can not access a needed shared library";
+#endif
+#ifdef PCMK__EREMOTEIO
+        case EREMOTEIO:     return "Remote I/O error";
+#endif
+#ifdef PCMK__ENOKEY
+        case ENOKEY:        return "Required key not available";
+#endif
+#ifdef PCMK__ENODATA
+        case ENODATA:       return "No data available";
+#endif
+#ifdef PCMK__ETIME
+        case ETIME:         return "Timer expired";
+#endif
+#ifdef PCMK__EKEYREJECTED
+        case EKEYREJECTED:  return "Key was rejected by service";
+#endif
+        default:            return strerror(rc);
+    }
 }
 
 // This returns negative values for errors
