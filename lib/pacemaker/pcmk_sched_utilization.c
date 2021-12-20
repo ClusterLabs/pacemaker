@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -195,43 +195,67 @@ pcmk__release_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
 }
 
 
+/*
+ * Functions for checking for sufficient node capacity
+ */
+
 struct capacity_data {
     pe_node_t *node;
     const char *rsc_id;
-    gboolean is_enough;
+    bool is_enough;
 };
 
+/*!
+ * \internal
+ * \brief Check whether a single utilization attribute has sufficient capacity
+ *
+ * \param[in] key        Name of utilization attribute to check
+ * \param[in] value      Amount of utilization required
+ * \param[in] user_data  Capacity data (as struct capacity_data *)
+ */
 static void
 check_capacity(gpointer key, gpointer value, gpointer user_data)
 {
     int required = 0;
     int remaining = 0;
+    const char *node_value_s = NULL;
     struct capacity_data *data = user_data;
 
+    node_value_s = g_hash_table_lookup(data->node->details->utilization, key);
+
     required = utilization_value(value);
-    remaining = utilization_value(g_hash_table_lookup(data->node->details->utilization, key));
+    remaining = utilization_value(node_value_s);
 
     if (required > remaining) {
-        CRM_ASSERT(data->rsc_id);
-        CRM_ASSERT(data->node);
-
-        crm_debug("Node %s does not have enough %s for %s: required=%d remaining=%d",
-                  data->node->details->uname, (char *)key, data->rsc_id, required, remaining);
-        data->is_enough = FALSE;
+        crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
+                  "for resource %s usage (%d)",
+                  (const char *) key, data->node->details->uname, remaining,
+                  data->rsc_id, required);
+        data->is_enough = false;
     }
 }
 
-static gboolean
-have_enough_capacity(pe_node_t * node, const char * rsc_id, GHashTable * utilization)
+/*!
+ * \internal
+ * \brief Check whether a node has sufficient capacity for a resource
+ *
+ * \param[in] node         Node to check
+ * \param[in] rsc_id       ID of resource to check (for debug logs only)
+ * \param[in] utilization  Required utilization amounts
+ *
+ * \return true if node has sufficient capacity for resource, otherwise false
+ */
+static bool
+have_enough_capacity(pe_node_t *node, const char *rsc_id,
+                     GHashTable *utilization)
 {
-    struct capacity_data data;
-
-    data.node = node;
-    data.rsc_id = rsc_id;
-    data.is_enough = TRUE;
+    struct capacity_data data = {
+        .node = node,
+        .rsc_id = rsc_id,
+        .is_enough = true,
+    };
 
     g_hash_table_foreach(utilization, check_capacity, &data);
-
     return data.is_enough;
 }
 
@@ -374,7 +398,8 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                         continue;
                     }
 
-                    if (have_enough_capacity(node, rscs_id, unallocated_utilization) == FALSE) {
+                    if (!have_enough_capacity(node, rscs_id,
+                                              unallocated_utilization)) {
                         pe_rsc_debug(rsc,
                                      "Resource %s and its colocated resources"
                                      " cannot be allocated to node %s: not enough capacity",
@@ -402,7 +427,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                     continue;
                 }
 
-                if (have_enough_capacity(node, rsc->id, rsc->utilization) == FALSE) {
+                if (!have_enough_capacity(node, rsc->id, rsc->utilization)) {
                     pe_rsc_debug(rsc,
                                  "Resource %s cannot be allocated to node %s:"
                                  " not enough capacity",
