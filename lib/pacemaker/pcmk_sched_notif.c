@@ -236,10 +236,28 @@ notify_entries_to_strings(GList *list, char **rsc_names, char **node_names)
     return list;
 }
 
+/*!
+ * \internal
+ * \brief Copy a meta-attribute into a notify action
+ *
+ * \param[in] key        Name of meta-attribute to copy
+ * \param[in] value      Value of meta-attribute to copy
+ * \param[in] user_data  Notify action to copy into
+ */
 static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
+copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
 {
-    add_hash_param(user_data, key, value);
+    pe_action_t *notify = (pe_action_t *) user_data;
+
+    /* Any existing meta-attributes (for example, the action timeout) are for
+     * the notify action itself, so don't override those.
+     */
+    if (g_hash_table_lookup(notify->meta, (const char *) key) != NULL) {
+        return;
+    }
+
+    g_hash_table_insert(notify->meta, strdup((const char *) key),
+                        strdup((const char *) value));
 }
 
 static void
@@ -286,7 +304,7 @@ pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t *
     trigger = custom_action(rsc, key, op->task, node,
                             pcmk_is_set(op->flags, pe_action_optional),
                             TRUE, data_set);
-    g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
+    g_hash_table_foreach(op->meta, copy_meta_to_notify, trigger);
     add_notify_data_to_action_meta(n_data, trigger);
 
     /* pseudo_notify before notify */
