@@ -256,34 +256,28 @@ have_enough_capacity(pe_node_t *node, const char *rsc_id,
     return data.is_enough;
 }
 
-
+/*!
+ * \internal
+ * \brief Sum the utilization requirements of a list of resources
+ *
+ * \param[in] orig_rsc  Resource being allocated (for logging purposes)
+ * \param[in] rscs      Resources whose utilization should be summed
+ *
+ * \return Newly allocated hash table with sum of all utilization values
+ * \note It is the caller's responsibility to free the return value using
+ *       g_hash_table_destroy().
+ */
 static GHashTable *
-sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
+sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
 {
-    GList *gIter = NULL;
-    GList *all_rscs = NULL;
-    GHashTable *all_utilization = pcmk__strkey_table(free, free);
+    GHashTable *utilization = pcmk__strkey_table(free, free);
 
-    all_rscs = g_list_copy(colocated_rscs);
-    if (g_list_find(all_rscs, rsc) == FALSE) {
-        all_rscs = g_list_append(all_rscs, rsc);
+    for (GList *iter = rscs; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        rsc->cmds->add_utilization(rsc, orig_rsc, rscs, utilization);
     }
-
-    for (gIter = all_rscs; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *listed_rsc = (pe_resource_t *) gIter->data;
-
-        if (!pcmk_is_set(listed_rsc->flags, pe_rsc_provisional)) {
-            continue;
-        }
-
-        pe_rsc_trace(rsc, "%s: Processing unallocated colocated %s", rsc->id, listed_rsc->id);
-        listed_rsc->cmds->add_utilization(listed_rsc, rsc, all_rscs,
-                                          all_utilization);
-    }
-
-    g_list_free(all_rscs);
-
-    return all_utilization;
+    return utilization;
 }
 
 void
@@ -303,7 +297,12 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                                               rsc->id);
             pe_node_t *most_capable_node = NULL;
 
-            unallocated_utilization = sum_unallocated_utilization(rsc, colocated_rscs);
+            // If rsc isn't in the list, add it so we include its utilization
+            if (g_list_find(colocated_rscs, rsc) == NULL) {
+                colocated_rscs = g_list_append(colocated_rscs, rsc);
+            }
+
+            unallocated_utilization = sum_resource_utilization(rsc, colocated_rscs);
 
             g_hash_table_iter_init(&iter, rsc->allowed_nodes);
             while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
