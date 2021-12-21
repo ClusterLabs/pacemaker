@@ -270,50 +270,68 @@ add_notify_data_to_action_meta(notify_data_t *n_data, pe_action_t *action)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a new notify action for a clone instance
+ *
+ * \param[in] rsc           Clone instance that notification is for
+ * \param[in] node          Node that notification is for
+ * \param[in] op            Action that notification is for
+ * \param[in] notify_done   Parent pseudo-action for notifications complete
+ * \param[in] n_data        Notification values to add to action meta-data
+ * \param[in] data_set      Cluster working set
+ *
+ * \return Newly created notify action
+ */
 static pe_action_t *
-pe_notify(pe_resource_t * rsc, pe_node_t * node, pe_action_t * op, pe_action_t * confirm,
-          notify_data_t * n_data, pe_working_set_t * data_set)
+new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
+                  pe_action_t *notify_done, notify_data_t *n_data,
+                  pe_working_set_t *data_set)
 {
     char *key = NULL;
-    pe_action_t *trigger = NULL;
+    pe_action_t *notify_action = NULL;
     const char *value = NULL;
     const char *task = NULL;
+    const char *skip_reason = NULL;
 
-    if (op == NULL || confirm == NULL) {
-        pe_rsc_trace(rsc, "Op=%p confirm=%p", op, confirm);
-        return NULL;
-    }
+    CRM_CHECK((rsc != NULL) && (node != NULL), return NULL);
 
-    CRM_CHECK(rsc != NULL, return NULL);
-    CRM_CHECK(node != NULL, return NULL);
-
-    if (node->details->online == FALSE) {
-        pe_rsc_trace(rsc, "Skipping notification for %s: node offline", rsc->id);
-        return NULL;
+    // Ensure we have all the info we need
+    if (op == NULL) {
+        skip_reason = "no action";
+    } else if (notify_done == NULL) {
+        skip_reason = "no parent notification";
+    } else if (!node->details->online) {
+        skip_reason = "node offline";
     } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
-        pe_rsc_trace(rsc, "Skipping notification for %s: not runnable", op->uuid);
+        skip_reason = "original action not runnable";
+    }
+    if (skip_reason != NULL) {
+        pe_rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
+                     rsc->id, node->details->uname, skip_reason);
         return NULL;
     }
 
-    value = g_hash_table_lookup(op->meta, "notify_type");
-    task = g_hash_table_lookup(op->meta, "notify_operation");
+    value = g_hash_table_lookup(op->meta, "notify_type");     // "pre" or "post"
+    task = g_hash_table_lookup(op->meta, "notify_operation"); // original action
 
-    pe_rsc_trace(rsc, "Creating notify actions for %s: %s (%s-%s)", op->uuid, rsc->id, value, task);
+    pe_rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
+                 rsc->id, node->details->uname, value, task);
 
+    // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
-    trigger = custom_action(rsc, key, op->task, node,
-                            pcmk_is_set(op->flags, pe_action_optional),
-                            TRUE, data_set);
-    g_hash_table_foreach(op->meta, copy_meta_to_notify, trigger);
-    add_notify_data_to_action_meta(n_data, trigger);
+    notify_action = custom_action(rsc, key, op->task, node,
+                                  pcmk_is_set(op->flags, pe_action_optional),
+                                  TRUE, data_set);
 
-    /* pseudo_notify before notify */
-    pe_rsc_trace(rsc, "Ordering %s before %s (%d->%d)", op->uuid, trigger->uuid, trigger->id,
-                 op->id);
+    // Add meta-data to notify action
+    g_hash_table_foreach(op->meta, copy_meta_to_notify, notify_action);
+    add_notify_data_to_action_meta(n_data, notify_action);
 
-    order_actions(op, trigger, pe_order_optional);
-    order_actions(trigger, confirm, pe_order_optional);
-    return trigger;
+    // Order notify after original action and before parent notification
+    order_actions(op, notify_action, pe_order_optional);
+    order_actions(notify_action, notify_done, pe_order_optional);
+    return notify_action;
 }
 
 static void
@@ -327,7 +345,8 @@ pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe
         return;                 /* Nothing to do */
     }
 
-    notify = pe_notify(rsc, node, n_data->post, n_data->post_done, n_data, data_set);
+    notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
+                               n_data, data_set);
 
     if (notify != NULL) {
         notify->priority = INFINITY;
@@ -801,7 +820,8 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                     continue;
                 }
 
-                pe_notify(rsc, current_node, n_data->pre, n_data->pre_done, n_data, data_set);
+                new_notify_action(rsc, current_node, n_data->pre,
+                                  n_data->pre_done, n_data, data_set);
                 if (task == action_demote || stop == NULL
                     || pcmk_is_set(stop->flags, pe_action_optional)) {
                     pe_post_notify(rsc, current_node, n_data, data_set);
@@ -834,7 +854,8 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
             if ((task != start_rsc) || (start == NULL)
                 || pcmk_is_set(start->flags, pe_action_optional)) {
 
-                pe_notify(rsc, rsc->allocated_to, n_data->pre, n_data->pre_done, n_data, data_set);
+                new_notify_action(rsc, rsc->allocated_to, n_data->pre,
+                                  n_data->pre_done, n_data, data_set);
             }
             pe_post_notify(rsc, rsc->allocated_to, n_data, data_set);
         }
