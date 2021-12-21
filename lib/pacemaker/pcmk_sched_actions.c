@@ -892,14 +892,13 @@ add_op_digest_to_xml(lrmd_event_data_t *op, xmlNode *update)
  * \param[in]     target_rc       Expected result of operation
  * \param[in]     node            Name of node on which operation was performed
  * \param[in]     origin          Arbitrary description of update source
- * \param[in]     level           A log message will be logged at this level
  *
  * \return Newly created XML node for history update
  */
 xmlNode *
 pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                          const char *caller_version, int target_rc,
-                         const char *node, const char *origin, int level)
+                         const char *node, const char *origin)
 {
     char *key = NULL;
     char *magic = NULL;
@@ -912,11 +911,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     const char *task = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%u)",
-               origin, op->rsc_id, op->op_type,
-               pcmk_exec_status_str(op->op_status), op->interval_ms);
-
-    crm_trace("DC version: %s", caller_version);
+    crm_trace("Creating history XML for %s-interval %s action for %s on %s "
+              "(DC version: %s, origin: %s)",
+              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
+              ((node == NULL)? "no node" : node), caller_version, origin);
 
     task = op->op_type;
 

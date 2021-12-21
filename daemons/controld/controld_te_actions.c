@@ -181,7 +181,6 @@ controld_record_action_timeout(crm_action_t *action)
     lrmd_event_data_t *op = NULL;
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
-    xmlNode *xml_op = NULL;
     xmlNode *action_rsc = NULL;
 
     int rc = pcmk_ok;
@@ -245,11 +244,9 @@ controld_record_action_timeout(crm_action_t *action)
     op->user_data = pcmk__transition_key(transition_graph->id, action->id,
                                          target_rc, te_uuid);
 
-    xml_op = pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc,
-                                      target, __func__, LOG_INFO);
+    pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
+                             __func__);
     lrmd_free_event(op);
-
-    crm_log_xml_trace(xml_op, "Action timeout");
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
