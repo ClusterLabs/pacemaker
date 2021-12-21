@@ -380,3 +380,64 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
     pe__show_node_weights(true, rsc, "Post-utilization",
                           rsc->allowed_nodes, data_set);
 }
+
+/*!
+ * \internal
+ * \brief Create a new load_stopped pseudo-op for a node
+ *
+ * \param[in] node      Node to create op for
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Newly created load_stopped op
+ */
+static pe_action_t *
+new_load_stopped_op(const pe_node_t *node, pe_working_set_t *data_set)
+{
+    char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
+                                                node->details->uname);
+    pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
+
+    if (load_stopped->node == NULL) {
+        load_stopped->node = pe__copy_node(node);
+        pe__clear_action_flags(load_stopped, pe_action_optional);
+    }
+    free(load_stopped_task);
+    return load_stopped;
+}
+
+/*!
+ * \internal
+ * \brief Create utilization-related internal constraints for a resource
+ *
+ * \param[in] rsc            Resource to create constraints for
+ * \param[in] allowed_nodes  List of allowed next nodes for \p rsc
+ */
+void
+pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
+{
+    GList *iter = NULL;
+    pe_node_t *node = NULL;
+    pe_action_t *load_stopped = NULL;
+
+    pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
+                 rsc->id, rsc->cluster->placement_strategy);
+
+    // "stop rsc then load_stopped" constraints for current nodes
+    for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        node = (pe_node_t *) iter->data;
+        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL, NULL, load_stopped,
+                           pe_order_load, rsc->cluster);
+    }
+
+    // "load_stopped then start/migrate_to rsc" constraints for allowed nodes
+    for (GList *iter = allowed_nodes; iter; iter = iter->next) {
+        node = (pe_node_t *) iter->data;
+        load_stopped = new_load_stopped_op(node, rsc->cluster);
+        pcmk__new_ordering(NULL, NULL, load_stopped, rsc, start_key(rsc), NULL,
+                           pe_order_load, rsc->cluster);
+        pcmk__new_ordering(NULL, NULL, load_stopped,
+                           rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
+                           pe_order_load, rsc->cluster);
+    }
+}

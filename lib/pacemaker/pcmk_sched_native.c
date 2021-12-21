@@ -1469,7 +1469,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
     bool check_unfencing = FALSE;
-    bool check_utilization = FALSE;
+    bool check_utilization = false;
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
@@ -1487,8 +1487,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                        && !pcmk__str_eq(data_set->placement_strategy,
-                                         "default", pcmk__str_casei);
+                         && !pcmk__str_eq(data_set->placement_strategy,
+                                          "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1557,49 +1557,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (check_utilization) {
-        GList *gIter = NULL;
-
-        pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
-                     rsc->id, data_set->placement_strategy);
-
-        for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *current = (pe_node_t *) gIter->data;
-
-            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
-                                                        current->details->uname);
-            pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-
-            if (load_stopped->node == NULL) {
-                load_stopped->node = pe__copy_node(current);
-                pe__clear_action_flags(load_stopped, pe_action_optional);
-            }
-
-            pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
-                               load_stopped_task, load_stopped, pe_order_load,
-                               data_set);
-        }
-
-        for (GList *item = allowed_nodes; item; item = item->next) {
-            pe_node_t *next = item->data;
-            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
-                                                        next->details->uname);
-            pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-
-            if (load_stopped->node == NULL) {
-                load_stopped->node = pe__copy_node(next);
-                pe__clear_action_flags(load_stopped, pe_action_optional);
-            }
-
-            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
-                               rsc, start_key(rsc), NULL, pe_order_load,
-                               data_set);
-
-            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                               NULL, pe_order_load, data_set);
-
-            free(load_stopped_task);
-        }
+        pcmk__create_utilization_constraints(rsc, allowed_nodes);
     }
 
     if (rsc->container) {
