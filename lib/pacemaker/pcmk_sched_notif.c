@@ -162,36 +162,30 @@ get_node_names(GList *list, char **all_node_names, char **host_node_names)
 
 /*!
  * \internal
- * \brief Separate a list of notification entries into resource and node strings
+ * \brief Create strings of instance and node names from notification entries
  *
- * \param[in,out] list       List of notify_entry_t* (will be sorted here)
- * \param[out]    rsc_list   String list of clone instances from \p list
- * \param[out]    node_list  String list of nodes from \p list
+ * \param[in,out] list        List of notification entries (will be sorted here)
+ * \param[out]    rsc_names   If not NULL, will be set to space-separated list
+ *                            of clone instances from \p list
+ * \param[out]    node_names  If not NULL, will be set to space-separated list
+ *                            of node names from \p list
  *
- * \return (Possibly new head of) sorted \p list
+ * \return (Possibly new) head of sorted \p list
+ * \note The caller is responsible for freeing the output argument values.
  */
 static GList *
-expand_list(GList *list, char **rsc_list, char **node_list)
+notify_entries_to_strings(GList *list, char **rsc_names, char **node_names)
 {
     const char *last_rsc_id = NULL;
-    size_t rsc_list_len = 0;
-    size_t node_list_len = 0;
-
-    CRM_CHECK(rsc_list != NULL, return list);
-
-    // If there are no entries, return "empty" lists
-    if (list == NULL) {
-        *rsc_list = strdup(" ");
-        if (node_list) {
-            *node_list = strdup(" ");
-        }
-        return list;
-    }
+    size_t rsc_names_len = 0;
+    size_t node_names_len = 0;
 
     // Initialize output lists to NULL
-    *rsc_list = NULL;
-    if (node_list) {
-        *node_list = NULL;
+    if (rsc_names != NULL) {
+        *rsc_names = NULL;
+    }
+    if (node_names != NULL) {
+        *node_names = NULL;
     }
 
     // Sort input list for user-friendliness (and ease of filtering duplicates)
@@ -209,8 +203,8 @@ expand_list(GList *list, char **rsc_list, char **node_list)
         }
 
         // Entry must have a node unless listing inactive resources
-        CRM_LOG_ASSERT((node_list == NULL) || (entry->node != NULL));
-        if ((node_list != NULL) && (entry->node == NULL)) {
+        CRM_LOG_ASSERT((node_names == NULL) || (entry->node != NULL));
+        if ((node_names != NULL) && (entry->node == NULL)) {
             continue;
         }
 
@@ -219,12 +213,26 @@ expand_list(GList *list, char **rsc_list, char **node_list)
             continue;
         }
         last_rsc_id = entry->rsc->id;
-        pcmk__add_word(rsc_list, &rsc_list_len, entry->rsc->id);
-        if ((node_list != NULL) && (entry->node->details->uname != NULL)) {
-            pcmk__add_word(node_list, &node_list_len,
+
+        if (rsc_names != NULL) {
+            pcmk__add_word(rsc_names, &rsc_names_len, entry->rsc->id);
+        }
+        if ((node_names != NULL) && (entry->node->details->uname != NULL)) {
+            pcmk__add_word(node_names, &node_names_len,
                            entry->node->details->uname);
         }
     }
+
+    // If there are no entries, return "empty" lists
+    if ((rsc_names != NULL) && (*rsc_names == NULL)) {
+        *rsc_names = strdup(" ");
+        CRM_ASSERT(*rsc_names != NULL);
+    }
+    if ((node_names != NULL) && (*node_names == NULL)) {
+        *node_names = strdup(" ");
+        CRM_ASSERT(*node_names != NULL);
+    }
+
     return list;
 }
 
@@ -566,7 +574,8 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     const char *source = NULL;
     GList *nodes = NULL;
 
-    n_data->stop = expand_list(n_data->stop, &rsc_list, &node_list);
+    n_data->stop = notify_entries_to_strings(n_data->stop,
+                                             &rsc_list, &node_list);
     if (!pcmk__str_eq(" ", rsc_list, pcmk__str_null_matches)
         && pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_casei)) {
         required = true;
@@ -578,7 +587,8 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
         && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
         required = true;
     }
-    n_data->start = expand_list(n_data->start, &rsc_list, &node_list);
+    n_data->start = notify_entries_to_strings(n_data->start,
+                                              &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_start_resource", rsc_list);
     add_notify_env_free(n_data, "notify_start_uname", node_list);
 
@@ -586,7 +596,8 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
         && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_casei)) {
         required = true;
     }
-    n_data->demote = expand_list(n_data->demote, &rsc_list, &node_list);
+    n_data->demote = notify_entries_to_strings(n_data->demote,
+                                               &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_demote_resource", rsc_list);
     add_notify_env_free(n_data, "notify_demote_uname", node_list);
 
@@ -594,15 +605,18 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
         && pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_casei)) {
         required = true;
     }
-    n_data->promote = expand_list(n_data->promote, &rsc_list, &node_list);
+    n_data->promote = notify_entries_to_strings(n_data->promote,
+                                                &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_promote_resource", rsc_list);
     add_notify_env_free(n_data, "notify_promote_uname", node_list);
 
-    n_data->active = expand_list(n_data->active, &rsc_list, &node_list);
+    n_data->active = notify_entries_to_strings(n_data->active,
+                                               &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_active_resource", rsc_list);
     add_notify_env_free(n_data, "notify_active_uname", node_list);
 
-    n_data->unpromoted = expand_list(n_data->unpromoted, &rsc_list, &node_list);
+    n_data->unpromoted = notify_entries_to_strings(n_data->unpromoted,
+                                                   &rsc_list, &node_list);
     add_notify_env(n_data, "notify_unpromoted_resource", rsc_list);
     add_notify_env(n_data, "notify_unpromoted_uname", node_list);
 
@@ -610,7 +624,8 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
     add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
-    n_data->promoted = expand_list(n_data->promoted, &rsc_list, &node_list);
+    n_data->promoted = notify_entries_to_strings(n_data->promoted,
+                                                 &rsc_list, &node_list);
     add_notify_env(n_data, "notify_promoted_resource", rsc_list);
     add_notify_env(n_data, "notify_promoted_uname", node_list);
 
@@ -618,7 +633,8 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_master_resource", rsc_list);
     add_notify_env_free(n_data, "notify_master_uname", node_list);
 
-    n_data->inactive = expand_list(n_data->inactive, &rsc_list, NULL);
+    n_data->inactive = notify_entries_to_strings(n_data->inactive,
+                                                 &rsc_list, NULL);
     add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
