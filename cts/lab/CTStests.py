@@ -3055,7 +3055,7 @@ class RemoteStonithd(RemoteDriver):
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
-            r"error: Result of monitor operation for .* on remote-.*: No executor connection",
+            r"error: Result of monitor operation for .* on remote-.*: Internal communication failure",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))
