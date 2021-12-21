@@ -320,4 +320,8 @@ G_GNUC_INTERNAL
 void pcmk__release_node_capacity(GHashTable *current_utilization,
                                  pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
+                                     pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

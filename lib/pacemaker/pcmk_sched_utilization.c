@@ -280,92 +280,103 @@ sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
     return utilization;
 }
 
+/*!
+ * \internal
+ * \brief Ban resource from nodes with insufficient utilization capacity
+ *
+ * \param[in]     rsc       Resource to check
+ * \param[in,out] prefer    Resource's preferred node (might be updated)
+ * \param[in]     data_set  Cluster working set
+ */
 void
-process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set)
+pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
+                                pe_working_set_t *data_set)
 {
-    CRM_CHECK(rsc && prefer && data_set, return);
-    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        GHashTableIter iter;
-        GList *colocated_rscs = NULL;
-        gboolean any_capable = FALSE;
-        pe_node_t *node = NULL;
+    bool any_capable = false;
+    char *rscs_id = NULL;
+    pe_node_t *node = NULL;
+    pe_node_t *most_capable_node = NULL;
+    GList *colocated_rscs = NULL;
+    GHashTable *unallocated_utilization = NULL;
+    GHashTableIter iter;
 
-        colocated_rscs = rsc->cmds->colocated_resources(rsc, NULL, NULL);
-        if (colocated_rscs) {
-            GHashTable *unallocated_utilization = NULL;
-            char *rscs_id = crm_strdup_printf("%s and its colocated resources",
-                                              rsc->id);
-            pe_node_t *most_capable_node = NULL;
+    CRM_CHECK((rsc != NULL) && (prefer != NULL) && (data_set != NULL), return);
 
-            // If rsc isn't in the list, add it so we include its utilization
-            if (g_list_find(colocated_rscs, rsc) == NULL) {
-                colocated_rscs = g_list_append(colocated_rscs, rsc);
-            }
-
-            unallocated_utilization = sum_resource_utilization(rsc, colocated_rscs);
-
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                if (!pcmk__node_available(node) || (node->weight < 0)) {
-                    continue;
-                }
-
-                if (have_enough_capacity(node, rscs_id, unallocated_utilization)) {
-                    any_capable = TRUE;
-                }
-
-                if (most_capable_node == NULL ||
-                    pcmk__compare_node_capacities(node, most_capable_node) < 0) {
-                    /* < 0 means 'node' is more capable */
-                    most_capable_node = node;
-                }
-            }
-
-            if (any_capable) {
-                g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-                while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                    if (!pcmk__node_available(node) || (node->weight < 0)) {
-                        continue;
-                    }
-
-                    if (!have_enough_capacity(node, rscs_id,
-                                              unallocated_utilization)) {
-                        pe_rsc_debug(rsc,
-                                     "Resource %s and its colocated resources"
-                                     " cannot be allocated to node %s: not enough capacity",
-                                     rsc->id, node->details->uname);
-                        resource_location(rsc, node, -INFINITY, "__limit_utilization__", data_set);
-                    }
-                }
-
-            } else if (*prefer == NULL) {
-                *prefer = most_capable_node;
-            }
-
-            if (unallocated_utilization) {
-                g_hash_table_destroy(unallocated_utilization);
-            }
-
-            g_list_free(colocated_rscs);
-            free(rscs_id);
-        }
-
-        if (any_capable == FALSE) {
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-                if (!pcmk__node_available(node) || (node->weight < 0)) {
-                    continue;
-                }
-
-                if (!have_enough_capacity(node, rsc->id, rsc->utilization)) {
-                    pe_rsc_debug(rsc,
-                                 "Resource %s cannot be allocated to node %s:"
-                                 " not enough capacity",
-                                 rsc->id, node->details->uname);
-                    resource_location(rsc, node, -INFINITY, "__limit_utilization__", data_set);
-                }
-            }
-        }
-        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes, data_set);
+    // The default placement strategy ignores utilization
+    if (pcmk__str_eq(data_set->placement_strategy, "default",
+                     pcmk__str_casei)) {
+        return;
     }
+
+    // Check whether any resources are colocated with this one
+    colocated_rscs = rsc->cmds->colocated_resources(rsc, NULL, NULL);
+    if (colocated_rscs == NULL) {
+        return;
+    }
+
+    rscs_id = crm_strdup_printf("%s and its colocated resources", rsc->id);
+
+    // If rsc isn't in the list, add it so we include its utilization
+    if (g_list_find(colocated_rscs, rsc) == NULL) {
+        colocated_rscs = g_list_append(colocated_rscs, rsc);
+    }
+
+    // Sum utilization of colocated resources that haven't been allocated yet
+    unallocated_utilization = sum_resource_utilization(rsc, colocated_rscs);
+
+    // Check whether any node has enough capacity for all the resources
+    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        if (!pcmk__node_available(node) || (node->weight < 0)) {
+            continue;
+        }
+
+        if (have_enough_capacity(node, rscs_id, unallocated_utilization)) {
+            any_capable = true;
+        }
+
+        // Keep track of node with most free capacity
+        if ((most_capable_node == NULL)
+            || (pcmk__compare_node_capacities(node, most_capable_node) < 0)) {
+            most_capable_node = node;
+        }
+    }
+
+    if (any_capable) {
+        // If so, ban resource from any node with insufficient capacity
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            if ((node->weight >= 0) && pcmk__node_available(node)
+                && !have_enough_capacity(node, rscs_id,
+                                         unallocated_utilization)) {
+                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
+                             node->details->uname, rscs_id);
+                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
+                                  data_set);
+            }
+        }
+
+    } else {
+        // Otherwise, ban from nodes with insufficient capacity for rsc alone
+        if (*prefer == NULL) {
+            *prefer = most_capable_node;
+        }
+        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            if ((node->weight >= 0) && pcmk__node_available(node)
+                && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
+                pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
+                             node->details->uname, rsc->id);
+                resource_location(rsc, node, -INFINITY, "__limit_utilization__",
+                                  data_set);
+            }
+        }
+    }
+
+    g_hash_table_destroy(unallocated_utilization);
+    g_list_free(colocated_rscs);
+    free(rscs_id);
+
+    pe__show_node_weights(true, rsc, "Post-utilization",
+                          rsc->allowed_nodes, data_set);
 }
