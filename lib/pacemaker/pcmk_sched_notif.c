@@ -11,21 +11,33 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
-extern bool pcmk__is_daemon;
-
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
     pe_node_t *node;
 } notify_entry_t;
 
+/*!
+ * \internal
+ * \brief Compare two notification entries
+ *
+ * Compare two notification entries, where the one with the alphabetically first
+ * resource name (or if equal, node name) sorts as first, with NULL sorting as
+ * less than non-NULL.
+ *
+ * \param[in] a  First notification entry to compare
+ * \param[in] b  Second notification entry to compare
+ *
+ * \return -1 if \p a sorts before \p b, 0 if they are equal, otherwise 1
+ */
 static gint
-sort_notify_entries(gconstpointer a, gconstpointer b)
+compare_notify_entries(gconstpointer a, gconstpointer b)
 {
     int tmp;
     const notify_entry_t *entry_a = a;
     const notify_entry_t *entry_b = b;
 
-    if (entry_a == NULL && entry_b == NULL) {
+    // NULL a or b is not actually possible
+    if ((entry_a == NULL) && (entry_b == NULL)) {
         return 0;
     }
     if (entry_a == NULL) {
@@ -35,7 +47,8 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
         return -1;
     }
 
-    if (entry_a->rsc == NULL && entry_b->rsc == NULL) {
+    // NULL resources sort first
+    if ((entry_a->rsc == NULL) && (entry_b->rsc == NULL)) {
         return 0;
     }
     if (entry_a->rsc == NULL) {
@@ -45,12 +58,14 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
         return -1;
     }
 
+    // Compare resource names
     tmp = strcmp(entry_a->rsc->id, entry_b->rsc->id);
     if (tmp != 0) {
         return tmp;
     }
 
-    if (entry_a->node == NULL && entry_b->node == NULL) {
+    // Otherwise NULL nodes sort first
+    if ((entry_a->node == NULL) && (entry_b->node == NULL)) {
         return 0;
     }
     if (entry_a->node == NULL) {
@@ -60,6 +75,7 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
         return -1;
     }
 
+    // Finally, compare node names
     return strcmp(entry_a->node->details->id, entry_b->node->details->id);
 }
 
@@ -153,7 +169,7 @@ expand_list(GList *list, char **rsc_list, char **node_list)
     }
 
     // Sort input list for user-friendliness (and ease of filtering duplicates)
-    list = g_list_sort(list, sort_notify_entries);
+    list = g_list_sort(list, compare_notify_entries);
 
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         notify_entry_t *entry = (notify_entry_t *) gIter->data;
