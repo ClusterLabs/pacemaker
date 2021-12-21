@@ -99,48 +99,64 @@ dup_notify_entry(notify_entry_t *entry)
     return dup;
 }
 
+/*!
+ * \internal
+ * \brief Given a list of nodes, create strings with node names
+ *
+ * \param[in]  list             List of nodes (as pe_node_t *)
+ * \param[out] all_node_names   If not NULL, will be set to space-separated list
+ *                              of the names of all nodes in \p list
+ * \param[out] host_node_names  Same as \p all_node_names, except active
+ *                              guest nodes will list the name of their host
+ *
+ * \note The caller is responsible for freeing the output arguments.
+ */
 static void
-expand_node_list(GList *list, char **uname, char **metal)
+get_node_names(GList *list, char **all_node_names, char **host_node_names)
 {
-    GList *gIter = NULL;
-    char *node_list = NULL;
-    char *metal_list = NULL;
-    size_t node_list_len = 0;
-    size_t metal_list_len = 0;
+    size_t all_len = 0;
+    size_t host_len = 0;
 
-    CRM_ASSERT(uname != NULL);
-    if (list == NULL) {
-        *uname = strdup(" ");
-        if(metal) {
-            *metal = strdup(" ");
-        }
-        return;
+    if (all_node_names != NULL) {
+        *all_node_names = NULL;
+    }
+    if (host_node_names != NULL) {
+        *host_node_names = NULL;
     }
 
-    for (gIter = list; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (GList *iter = list; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
         if (node->details->uname == NULL) {
             continue;
         }
-        pcmk__add_word(&node_list, &node_list_len, node->details->uname);
-        if(metal) {
-            if(node->details->remote_rsc
-               && node->details->remote_rsc->container
-               && node->details->remote_rsc->container->running_on) {
-                node = pe__current_node(node->details->remote_rsc->container);
-            }
 
-            if (node->details->uname == NULL) {
-                continue;
+        // Always add to list of all node names
+        if (all_node_names != NULL) {
+            pcmk__add_word(all_node_names, &all_len, node->details->uname);
+        }
+
+        // Add to host node name list if appropriate
+        if (host_node_names != NULL) {
+            if (pe__is_guest_node(node)
+                && (node->details->remote_rsc->container->running_on != NULL)) {
+                node = pe__current_node(node->details->remote_rsc->container);
+                if (node->details->uname == NULL) {
+                    continue;
+                }
             }
-            pcmk__add_word(&metal_list, &metal_list_len, node->details->uname);
+            pcmk__add_word(host_node_names, &host_len,
+                           node->details->uname);
         }
     }
 
-    *uname = node_list;
-    if(metal) {
-        *metal = metal_list;
+    if ((all_node_names != NULL) && (*all_node_names == NULL)) {
+        *all_node_names = strdup(" ");
+        CRM_ASSERT(*all_node_names != NULL);
+    }
+    if ((host_node_names != NULL) && (*host_node_names == NULL)) {
+        *host_node_names = strdup(" ");
+        CRM_ASSERT(*host_node_names != NULL);
     }
 }
 
@@ -613,16 +629,16 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
          */
         nodes = g_list_sort(nodes, sort_node_uname);
     }
-    expand_node_list(nodes, &node_list, NULL);
+    get_node_names(nodes, &node_list, NULL);
     add_notify_env_free(n_data, "notify_available_uname", node_list);
     g_list_free(nodes);
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
     if (pcmk__str_eq("host", source, pcmk__str_casei)) {
-        expand_node_list(data_set->nodes, &node_list, &metal_list);
+        get_node_names(data_set->nodes, &node_list, &metal_list);
         add_notify_env_free(n_data, "notify_all_hosts", metal_list);
     } else {
-        expand_node_list(data_set->nodes, &node_list, NULL);
+        get_node_names(data_set->nodes, &node_list, NULL);
     }
     add_notify_env_free(n_data, "notify_all_uname", node_list);
 
