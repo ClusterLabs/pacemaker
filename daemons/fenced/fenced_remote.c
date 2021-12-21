@@ -2241,14 +2241,14 @@ fenced_process_fencing_reply(xmlNode *msg)
         /* Could be for an event that began before we started */
         /* TODO: Record the op for later querying */
         crm_info("Received peer result of unknown or expired operation %s", id);
-        return;
+        goto done;
     }
 
     if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
         crm_err("Received outdated reply for device %s (instead of %s) to "
                 "fence (%s) %s. Operation already timed out at peer level.",
                 device, (const char *) op->devices->data, op->action, op->target);
-        return;
+        goto done;
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
@@ -2265,14 +2265,15 @@ fenced_process_fencing_reply(xmlNode *msg)
             op->state = st_failed;
         }
         finalize_op(op, msg, &result, false);
-        return;
+        goto done;
+
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
         crm_err("Received non-broadcast fencing result for operation %.8s "
                 "we do not own (device %s targeting %s)",
                 op->id, device, op->target);
-        return;
+        goto done;
     }
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
@@ -2290,7 +2291,7 @@ fenced_process_fencing_reply(xmlNode *msg)
          * and notify our local clients. */
         if (op->state == st_done) {
             finalize_op(op, msg, &result, false);
-            return;
+            goto done;
         }
 
         if ((op->phase == 2) && !pcmk__result_ok(&result)) {
@@ -2310,27 +2311,30 @@ fenced_process_fencing_reply(xmlNode *msg)
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
             advance_topology_device_in_level(op, device, msg);
-            return;
+            goto done;
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
             if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
                 finalize_op(op, msg, &result, false);
-                return;
+                goto done;
             }
         }
+
     } else if (pcmk__result_ok(&result) && (op->devices == NULL)) {
         crm_trace("All done for %s", op->target);
         op->state = st_done;
         finalize_op(op, msg, &result, false);
-        return;
+        goto done;
+
     } else if ((result.execution_status == PCMK_EXEC_TIMEOUT)
                && (op->devices == NULL)) {
         /* If the operation timed out don't bother retrying other peers. */
         op->state = st_failed;
         finalize_op(op, msg, &result, false);
-        return;
+        goto done;
+
     } else {
         /* fall-through and attempt other fencing action using another peer */
     }
@@ -2340,6 +2344,8 @@ fenced_process_fencing_reply(xmlNode *msg)
               op->target, op->originator, op->client_name,
               pcmk_exec_status_str(result.execution_status));
     request_peer_fencing(op, NULL, &result);
+done:
+    pcmk__reset_result(&result);
 }
 
 gboolean
