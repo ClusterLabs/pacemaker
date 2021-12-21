@@ -62,6 +62,24 @@ struct resource_alloc_functions_s {
 
     void (*expand) (pe_resource_t *, pe_working_set_t *);
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
+
+    /*!
+     * \internal
+     * \brief Add a resource's utilization to a table of utilization values
+     *
+     * This function is used when summing the utilization of a resource and all
+     * resources colocated with it, to determine whether a node has sufficient
+     * capacity. Given a resource and a table of utilization values, it will add
+     * the resource's utilization to the existing values, if the resource has
+     * not yet been allocated to a node.
+     *
+     * \param[in] rsc          Resource with utilization to add
+     * \param[in] orig_rsc     Resource being allocated (for logging only)
+     * \param[in] all_rscs     List of all resources that will be summed
+     * \param[in] utilization  Table of utilization values to add to
+     */
+    void (*add_utilization)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization);
 };
 
 GHashTable *pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
@@ -89,6 +107,9 @@ extern void native_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern gboolean native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
                                     gboolean force, pe_working_set_t * data_set);
 extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
+void pcmk__primitive_add_utilization(pe_resource_t *rsc,
+                                     pe_resource_t *orig_rsc, GList *all_rscs,
+                                     GHashTable *utilization);
 
 pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
@@ -104,6 +125,8 @@ extern enum pe_action_flags group_action_flags(pe_action_t * action, pe_node_t *
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(pe_resource_t * rsc, xmlNode * xml);
+void pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                 GList *all_rscs, GHashTable *utilization);
 
 pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                  pe_working_set_t *data_set);
@@ -127,6 +150,8 @@ enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
                                                pe_node_t *node);
 void pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t *data_set);
 void pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml);
+void pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                  GList *all_rscs, GHashTable *utilization);
 
 pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
@@ -144,6 +169,8 @@ extern void clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern gboolean clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
+void pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                 GList *all_rscs, GHashTable *utilization);
 
 void pcmk__add_promotion_scores(pe_resource_t *rsc);
 pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,

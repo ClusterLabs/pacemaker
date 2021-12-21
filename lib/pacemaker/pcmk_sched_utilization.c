@@ -13,9 +13,6 @@
 
 #include "libpacemaker_private.h"
 
-static void group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                              GList *all_rscs);
-
 /*!
  * \internal
  * \brief Get integer utilization from a string
@@ -260,73 +257,6 @@ have_enough_capacity(pe_node_t *node, const char *rsc_id,
 }
 
 
-static void
-native_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc)
-{
-    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        pcmk__release_node_capacity(all_utilization, rsc);
-    }
-}
-
-static void
-add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                    GList *all_rscs, pe_resource_t * orig_rsc)
-{
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return;
-    }
-
-    if (rsc->variant == pe_native) {
-        pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",
-                     orig_rsc->id, rsc->id);
-        native_add_unallocated_utilization(all_utilization, rsc);
-
-    } else if (rsc->variant == pe_group) {
-        pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",
-                     orig_rsc->id, rsc->id);
-        group_add_unallocated_utilization(all_utilization, rsc, all_rscs);
-
-    } else if (pe_rsc_is_clone(rsc)) {
-        GList *gIter1 = NULL;
-        gboolean existing = FALSE;
-
-        /* Check if there's any child already existing in the list */
-        gIter1 = rsc->children;
-        for (; gIter1 != NULL; gIter1 = gIter1->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter1->data;
-            GList *gIter2 = NULL;
-
-            if (g_list_find(all_rscs, child)) {
-                existing = TRUE;
-
-            } else {
-                /* Check if there's any child of another cloned group already existing in the list */
-                gIter2 = child->children;
-                for (; gIter2 != NULL; gIter2 = gIter2->next) {
-                    pe_resource_t *grandchild = (pe_resource_t *) gIter2->data;
-
-                    if (g_list_find(all_rscs, grandchild)) {
-                        pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",
-                                     orig_rsc->id, child->id);
-                        add_unallocated_utilization(all_utilization, child, all_rscs, orig_rsc);
-                        existing = TRUE;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // rsc->children is always non-NULL but this makes static analysis happy
-        if (!existing && (rsc->children != NULL)) {
-            pe_resource_t *first_child = (pe_resource_t *) rsc->children->data;
-
-            pe_rsc_trace(orig_rsc, "%s: Adding %s as colocated utilization",
-                         orig_rsc->id, ID(first_child->xml));
-            add_unallocated_utilization(all_utilization, first_child, all_rscs, orig_rsc);
-        }
-    }
-}
-
 static GHashTable *
 sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
 {
@@ -347,7 +277,8 @@ sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
         }
 
         pe_rsc_trace(rsc, "%s: Processing unallocated colocated %s", rsc->id, listed_rsc->id);
-        add_unallocated_utilization(all_utilization, listed_rsc, all_rscs, rsc);
+        listed_rsc->cmds->add_utilization(listed_rsc, rsc, all_rscs,
+                                          all_utilization);
     }
 
     g_list_free(all_rscs);
@@ -439,36 +370,3 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
         pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes, data_set);
     }
 }
-
-#define VARIANT_GROUP 1
-#include <lib/pengine/variant.h>
-
-static void
-group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                  GList *all_rscs)
-{
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, rsc);
-    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            if (pcmk_is_set(child_rsc->flags, pe_rsc_provisional) &&
-                g_list_find(all_rscs, child_rsc) == FALSE) {
-                native_add_unallocated_utilization(all_utilization, child_rsc);
-            }
-        }
-
-    } else {
-        if (group_data->first_child &&
-            pcmk_is_set(group_data->first_child->flags, pe_rsc_provisional) &&
-            g_list_find(all_rscs, group_data->first_child) == FALSE) {
-            native_add_unallocated_utilization(all_utilization, group_data->first_child);
-        }
-    }
-}
-
-

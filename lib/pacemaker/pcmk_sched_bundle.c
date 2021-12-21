@@ -1091,3 +1091,14 @@ pcmk__output_bundle_actions(pe_resource_t *rsc)
         }
     }
 }
+
+// Bundle implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                             GList *all_rscs, GHashTable *utilization)
+{
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+    // @TODO
+}
