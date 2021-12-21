@@ -79,9 +79,19 @@ compare_notify_entries(gconstpointer a, gconstpointer b)
     return strcmp(entry_a->node->details->id, entry_b->node->details->id);
 }
 
-static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
+/*!
+ * \internal
+ * \brief Duplicate a notification entry
+ *
+ * \param[in] entry  Entry to duplicate
+ *
+ * \return Newly allocated duplicate of \p entry
+ * \note It is the caller's responsibility to free the return value.
+ */
+static notify_entry_t *
+dup_notify_entry(notify_entry_t *entry)
 {
-    notify_entry_t *dup = malloc(sizeof(notify_entry_t));
+    notify_entry_t *dup = calloc(1, sizeof(notify_entry_t));
 
     CRM_ASSERT(dup != NULL);
     dup->rsc = entry->rsc;
