@@ -327,6 +327,22 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
     }
 }
 
+/*!
+ * \internal
+ * \brief Copy source to target and set xf_acl_enabled flag in target
+ *
+ * \param[in]     acl_source    XML with ACL definitions
+ * \param[in,out] target        XML that ACLs will be applied to
+ * \param[in]     user          Username whose ACLs need to be set
+ */
+void
+pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
+{
+    pcmk__unpack_acl(acl_source, target, user);
+    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
+    pcmk__apply_acl(target);
+}
+
 static inline bool
 test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
 {
@@ -419,9 +435,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
-    pcmk__apply_acl(target);
+    pcmk__enable_acl(acl_source, target, user);
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {

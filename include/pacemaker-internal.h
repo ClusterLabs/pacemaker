@@ -10,6 +10,7 @@
 #ifndef PACEMAKER_INTERNAL__H
 #  define PACEMAKER_INTERNAL__H
 
+#  include <pcmki/pcmki_acl.h>
 #  include <pcmki/pcmki_error.h>
 #  include <pcmki/pcmki_cluster_queries.h>
 #  include <pcmki/pcmki_fence.h>

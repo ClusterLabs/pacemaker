@@ -9,7 +9,8 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_HEADERS		= pcmki_error.h \
+noinst_HEADERS		= pcmki_acl.h \
+			  pcmki_error.h \
 			  pcmki_cluster_queries.h \
 			  pcmki_fence.h \
 			  pcmki_output.h \

@@ -24,32 +24,6 @@
 // Decent chunk size for processing large amounts of data
 #define PCMK__BUFFER_SIZE 4096
 
-/*
- * XML and ACLs
- */
-
-enum xml_private_flags {
-     pcmk__xf_none        = 0x0000,
-     pcmk__xf_dirty       = 0x0001,
-     pcmk__xf_deleted     = 0x0002,
-     pcmk__xf_created     = 0x0004,
-     pcmk__xf_modified    = 0x0008,
-
-     pcmk__xf_tracking    = 0x0010,
-     pcmk__xf_processed   = 0x0020,
-     pcmk__xf_skip        = 0x0040,
-     pcmk__xf_moved       = 0x0080,
-
-     pcmk__xf_acl_enabled = 0x0100,
-     pcmk__xf_acl_read    = 0x0200,
-     pcmk__xf_acl_write   = 0x0400,
-     pcmk__xf_acl_deny    = 0x0800,
-
-     pcmk__xf_acl_create  = 0x1000,
-     pcmk__xf_acl_denied  = 0x2000,
-     pcmk__xf_lazy        = 0x4000,
-};
-
 /* When deleting portions of an XML tree, we keep a record so we can know later
  * (e.g. when checking differences) that something was deleted.
  */
@@ -84,9 +58,6 @@ void pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
 
 G_GNUC_INTERNAL
 void pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c);
-
-G_GNUC_INTERNAL
-void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
@@ -124,10 +95,6 @@ void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user);
-
-G_GNUC_INTERNAL
-bool pcmk__check_acl(xmlNode *xml, const char *name,
-                     enum xml_private_flags mode);
 
 G_GNUC_INTERNAL
 void pcmk__apply_acl(xmlNode *xml);
