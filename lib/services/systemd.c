@@ -995,7 +995,7 @@ systemd_timeout_callback(gpointer p)
     crm_info("%s action for systemd unit %s named '%s' timed out",
              op->action, op->agent, op->rsc);
     services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Systemd action did not complete within specified timeout");
+                         "Systemd unit action did not complete in time");
     services__finalize_async_op(op);
     return FALSE;
 }
