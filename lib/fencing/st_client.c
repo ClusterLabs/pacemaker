@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -735,6 +735,7 @@ void stonith_history_free(stonith_history_t *history)
         free(hp->origin);
         free(hp->delegate);
         free(hp->client);
+        free(hp->exit_reason);
     }
 }
 
