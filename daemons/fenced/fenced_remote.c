@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -715,8 +715,10 @@ remote_op_timeout(gpointer userdata)
                   CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->id);
     } else {
-        finalize_timed_out_op(userdata, "Fencing could not be completed "
-                                        "within overall timeout");
+        finalize_timed_out_op(userdata, "Fencing did not complete within a "
+                                        "total timeout based on the "
+                                        "configured timeout and retries for "
+                                        "any devices attempted");
     }
     return G_SOURCE_REMOVE;
 }

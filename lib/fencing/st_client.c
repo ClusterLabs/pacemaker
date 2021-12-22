@@ -906,7 +906,7 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     if (msg == NULL) {
         // Fencer didn't reply in time
         pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Timeout waiting for reply from fencer");
+                         "Fencer accepted request but did not reply in time");
         CRM_LOG_ASSERT(call_id > 0);
 
     } else {
