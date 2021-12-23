@@ -924,7 +924,8 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                     started, data_set);
     }
 
     /* stop */
@@ -937,7 +938,8 @@ clone_create_pseudo_actions(
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
+                                                    stopped, data_set);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,11 +11,6 @@
 
 #  include <crm/common/xml_internal.h>
 #  include <crm/pengine/internal.h>
-
-notify_data_t * create_notification_boundaries(pe_resource_t *rsc,
-                                               const char *action,
-                                               pe_action_t *start, pe_action_t *end,
-                                               pe_working_set_t *data_set);
 
 void collect_notification_data(pe_resource_t *rsc, gboolean state,
                                gboolean activity, notify_data_t *n_data);

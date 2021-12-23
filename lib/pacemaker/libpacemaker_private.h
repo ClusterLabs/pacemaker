@@ -278,6 +278,13 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 G_GNUC_INTERNAL
 void pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
 
+G_GNUC_INTERNAL
+notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
+                                            const char *task,
+                                            pe_action_t *action,
+                                            pe_action_t *complete,
+                                            pe_working_set_t *data_set);
+
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 

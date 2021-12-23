@@ -375,19 +375,43 @@ new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Create and order notification pseudo-actions for a clone action
+ *
+ * In addition to the actual notify actions needed for each clone instance,
+ * clone notifications also require pseudo-actions to provide ordering points
+ * in the notification process. This creates the notification data, along with
+ * appropriate pseudo-actions and their orderings.
+ *
+ * For example, the ordering sequence for starting a clone is:
+ *
+ *     "pre-" notify pseudo-action for clone
+ *     -> "pre-" notify actions for each clone instance
+ *     -> "pre-" notifications complete pseudo-action for clone
+ *     -> start actions for each clone instance
+ *     -> "started" pseudo-action for clone
+ *     -> "post-" notify pseudo-action for clone
+ *     -> "post-" notify actions for each clone instance
+ *     -> "post-" notifications complete pseudo-action for clone
+ *
+ * \param[in] rsc       Clone that notifications are for
+ * \param[in] task      Name of action that notifications are for
+ * \param[in] action    If not NULL, create a "pre-" pseudo-action ordered
+ *                      before a "pre-" complete pseudo-action, ordered before
+ *                      this action
+ * \param[in] complete  If not NULL, create a "post-" pseudo-action ordered
+ *                      after this action, and a "post-" complete pseudo-action
+ *                      ordered after that
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Newly created notification data
+ */
 notify_data_t *
-create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_action_t * start,
-                               pe_action_t * end, pe_working_set_t * data_set)
+pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                             pe_action_t *action, pe_action_t *complete,
+                             pe_working_set_t *data_set)
 {
-    /* Create the pseudo ops that precede and follow the actual notifications */
-
-    /*
-     * Creates two sequences (conditional on start and end being supplied):
-     *   pre_notify -> pre_notify_complete -> start, and
-     *   end -> post_notify -> post_notify_complete
-     *
-     * 'start' and 'end' may be the same event or ${X} and ${X}ed as per clones
-     */
     char *key = NULL;
     notify_data_t *n_data = NULL;
 
@@ -396,87 +420,90 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
     }
 
     n_data = calloc(1, sizeof(notify_data_t));
-    n_data->action = action;
+    CRM_ASSERT(n_data != NULL);
 
-    if (start) {
-        /* create pre-event notification wrappers */
-        key = pcmk__notify_key(rsc->id, "pre", start->task);
-        n_data->pre =
-            custom_action(rsc, key, RSC_NOTIFY, NULL,
-                          pcmk_is_set(start->flags, pe_action_optional),
-                          TRUE, data_set);
+    n_data->action = task;
+
+    if (action != NULL) { // Need "pre-" pseudo-actions
+
+        // Create "pre-" notify pseudo-action for clone
+        key = pcmk__notify_key(rsc->id, "pre", action->task);
+        n_data->pre = custom_action(rsc, key, RSC_NOTIFY, NULL,
+                                    pcmk_is_set(action->flags, pe_action_optional),
+                                    TRUE, data_set);
         pe__set_action_flags(n_data->pre, pe_action_pseudo|pe_action_runnable);
-
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
-
         add_hash_param(n_data->pre->meta, "notify_key_type", "pre");
-        add_hash_param(n_data->pre->meta, "notify_key_operation", start->task);
+        add_hash_param(n_data->pre->meta, "notify_key_operation", action->task);
 
-        /* create pre_notify_complete */
-        key = pcmk__notify_key(rsc->id, "confirmed-pre", start->task);
+        // Create "pre-" notifications complete pseudo-action for clone
+        key = pcmk__notify_key(rsc->id, "confirmed-pre", action->task);
         n_data->pre_done = custom_action(rsc, key, RSC_NOTIFIED, NULL,
-                                         pcmk_is_set(start->flags, pe_action_optional),
+                                         pcmk_is_set(action->flags, pe_action_optional),
                                          TRUE, data_set);
         pe__set_action_flags(n_data->pre_done,
                              pe_action_pseudo|pe_action_runnable);
-
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
-        add_hash_param(n_data->pre_done->meta, "notify_operation", n_data->action);
+        add_hash_param(n_data->pre_done->meta,
+                       "notify_operation", n_data->action);
+        add_hash_param(n_data->pre_done->meta,
+                       "notify_key_type", "confirmed-pre");
+        add_hash_param(n_data->pre_done->meta,
+                       "notify_key_operation", action->task);
 
-        add_hash_param(n_data->pre_done->meta, "notify_key_type", "confirmed-pre");
-        add_hash_param(n_data->pre_done->meta, "notify_key_operation", start->task);
-
-        order_actions(n_data->pre_done, start, pe_order_optional);
+        // Order "pre-" -> "pre-" complete -> original action
         order_actions(n_data->pre, n_data->pre_done, pe_order_optional);
+        order_actions(n_data->pre_done, action, pe_order_optional);
     }
 
-    if (end) {
-        /* create post-event notification wrappers */
-        key = pcmk__notify_key(rsc->id, "post", end->task);
-        n_data->post = custom_action(rsc, key, RSC_NOTIFY, NULL,
-                                     pcmk_is_set(end->flags, pe_action_optional),
-                                     TRUE, data_set);
+    if (complete != NULL) { // Need "post-" pseudo-actions
 
+        // Create "post-" notify pseudo-action for clone
+        key = pcmk__notify_key(rsc->id, "post", complete->task);
+        n_data->post = custom_action(rsc, key, RSC_NOTIFY, NULL,
+                                     pcmk_is_set(complete->flags, pe_action_optional),
+                                     TRUE, data_set);
         n_data->post->priority = INFINITY;
         pe__set_action_flags(n_data->post, pe_action_pseudo);
-        if (pcmk_is_set(end->flags, pe_action_runnable)) {
+        if (pcmk_is_set(complete->flags, pe_action_runnable)) {
             pe__set_action_flags(n_data->post, pe_action_runnable);
         } else {
             pe__clear_action_flags(n_data->post, pe_action_runnable);
         }
-
         add_hash_param(n_data->post->meta, "notify_type", "post");
         add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
-
         add_hash_param(n_data->post->meta, "notify_key_type", "post");
-        add_hash_param(n_data->post->meta, "notify_key_operation", end->task);
+        add_hash_param(n_data->post->meta,
+                       "notify_key_operation", complete->task);
 
-        /* create post_notify_complete */
-        key = pcmk__notify_key(rsc->id, "confirmed-post", end->task);
+        // Create "post-" notifications complete pseudo-action for clone
+        key = pcmk__notify_key(rsc->id, "confirmed-post", complete->task);
         n_data->post_done = custom_action(rsc, key, RSC_NOTIFIED, NULL,
-                                          pcmk_is_set(end->flags, pe_action_optional),
+                                          pcmk_is_set(complete->flags, pe_action_optional),
                                           TRUE, data_set);
-
         n_data->post_done->priority = INFINITY;
         pe__set_action_flags(n_data->post_done, pe_action_pseudo);
-        if (pcmk_is_set(end->flags, pe_action_runnable)) {
+        if (pcmk_is_set(complete->flags, pe_action_runnable)) {
             pe__set_action_flags(n_data->post_done, pe_action_runnable);
         } else {
             pe__clear_action_flags(n_data->post_done, pe_action_runnable);
         }
-
         add_hash_param(n_data->post_done->meta, "notify_type", "post");
-        add_hash_param(n_data->post_done->meta, "notify_operation", n_data->action);
+        add_hash_param(n_data->post_done->meta,
+                       "notify_operation", n_data->action);
+        add_hash_param(n_data->post_done->meta,
+                       "notify_key_type", "confirmed-post");
+        add_hash_param(n_data->post_done->meta,
+                       "notify_key_operation", complete->task);
 
-        add_hash_param(n_data->post_done->meta, "notify_key_type", "confirmed-post");
-        add_hash_param(n_data->post_done->meta, "notify_key_operation", end->task);
-
-        order_actions(end, n_data->post, pe_order_implies_then);
+        // Order original action complete -> "post-" -> "post-" complete
+        order_actions(complete, n_data->post, pe_order_implies_then);
         order_actions(n_data->post, n_data->post_done, pe_order_implies_then);
     }
 
-    if (start && end) {
+    // If we created both, order "pre-" complete -> "post-"
+    if ((action != NULL) && (complete != NULL)) {
         order_actions(n_data->pre_done, n_data->post, pe_order_optional);
     }
     return n_data;
@@ -908,8 +935,8 @@ create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
     notify_data_t *n_data;
 
     crm_info("Creating secondary notification for %s", action->uuid);
-    n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, stonith_op,
-                                            data_set);
+    n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op,
+                                          data_set);
     collect_notification_data(rsc, TRUE, FALSE, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
