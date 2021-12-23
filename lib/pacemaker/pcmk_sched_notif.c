@@ -530,100 +530,108 @@ new_notify_entry(pe_resource_t *rsc, pe_node_t *node)
     return entry;
 }
 
-void
-collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity,
-                          notify_data_t * n_data)
+/*!
+ * \internal
+ * \brief Add notification data for resource state and optionally actions
+ *
+ * \param[in] rsc        Clone or clone instance being notified
+ * \param[in] activity   Whether to add notification entries for actions
+ * \param[in] n_data     Notification data for clone
+ */
+static void
+collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
 {
+    GList *iter = NULL;
+    notify_entry_t *entry = NULL;
     pe_node_t *node = NULL;
 
-    if(n_data->allowed_nodes == NULL) {
+    if (n_data->allowed_nodes == NULL) {
         n_data->allowed_nodes = rsc->allowed_nodes;
     }
 
-    if (rsc->children) {
-        GList *gIter = rsc->children;
+    // If this is a clone, call recursively for each instance
+    if (rsc->children != NULL) {
+        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            collect_notification_data(child, state, activity, n_data);
+            collect_resource_data(child, activity, n_data);
         }
         return;
     }
 
-    if (state) {
-        notify_entry_t *entry = NULL;
+    // This is a notification for a single clone instance
 
-        if (rsc->running_on != NULL) {
-            node = rsc->running_on->data; // First is sufficient
-        }
-        entry = new_notify_entry(rsc, node);
+    if (rsc->running_on != NULL) {
+        node = rsc->running_on->data; // First is sufficient
+    }
+    entry = new_notify_entry(rsc, node);
 
-        pe_rsc_trace(rsc, "%s state: %s", rsc->id, role2text(rsc->role));
+    // Add notification indicating the resource state
+    switch (rsc->role) {
+        case RSC_ROLE_STOPPED:
+            n_data->inactive = g_list_prepend(n_data->inactive, entry);
+            break;
 
-        switch (rsc->role) {
-            case RSC_ROLE_STOPPED:
-                n_data->inactive = g_list_prepend(n_data->inactive, entry);
-                break;
-            case RSC_ROLE_STARTED:
-                n_data->active = g_list_prepend(n_data->active, entry);
-                break;
-            case RSC_ROLE_UNPROMOTED:
-                n_data->unpromoted = g_list_prepend(n_data->unpromoted, entry);
-                n_data->active = g_list_prepend(n_data->active,
-                                                dup_notify_entry(entry));
-                break;
-            case RSC_ROLE_PROMOTED:
-                n_data->promoted = g_list_prepend(n_data->promoted, entry);
-                n_data->active = g_list_prepend(n_data->active,
-                                                dup_notify_entry(entry));
-                break;
-            default:
-                crm_err("Unsupported notify role");
-                free(entry);
-                break;
-        }
+        case RSC_ROLE_STARTED:
+            n_data->active = g_list_prepend(n_data->active, entry);
+            break;
+
+        case RSC_ROLE_UNPROMOTED:
+            n_data->unpromoted = g_list_prepend(n_data->unpromoted, entry);
+            n_data->active = g_list_prepend(n_data->active,
+                                            dup_notify_entry(entry));
+            break;
+
+        case RSC_ROLE_PROMOTED:
+            n_data->promoted = g_list_prepend(n_data->promoted, entry);
+            n_data->active = g_list_prepend(n_data->active,
+                                            dup_notify_entry(entry));
+            break;
+
+        default:
+            crm_err("Resource %s role on %s (%s) is not supported for "
+                    "notifications (bug?)",
+                    rsc->id, ((node == NULL)? "no node" : node->details->uname),
+                    role2text(rsc->role));
+            free(entry);
+            break;
     }
 
-    if (activity) {
-        notify_entry_t *entry = NULL;
-        enum action_tasks task;
+    if (!activity) {
+        return;
+    }
 
-        GList *gIter = rsc->actions;
+    // Add notification entries for each of the resource's actions
+    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *op = (pe_action_t *) iter->data;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *op = (pe_action_t *) gIter->data;
+        if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
+            enum action_tasks task = text2task(op->task);
 
-            if (!pcmk_is_set(op->flags, pe_action_optional)
-                && (op->node != NULL)) {
+            if ((task == stop_rsc) && op->node->details->unclean) {
+                // Create anyway (additional noise if node can't be fenced)
+            } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
+                continue;
+            }
 
-                task = text2task(op->task);
+            entry = new_notify_entry(rsc, op->node);
 
-                if(task == stop_rsc && op->node->details->unclean) {
-                    // Create anyway (additional noise if node can't be fenced)
-                } else if (!pcmk_is_set(op->flags, pe_action_runnable)) {
-                    continue;
-                }
-
-                entry = new_notify_entry(rsc, op->node);
-
-                switch (task) {
-                    case start_rsc:
-                        n_data->start = g_list_prepend(n_data->start, entry);
-                        break;
-                    case stop_rsc:
-                        n_data->stop = g_list_prepend(n_data->stop, entry);
-                        break;
-                    case action_promote:
-                        n_data->promote = g_list_prepend(n_data->promote, entry);
-                        break;
-                    case action_demote:
-                        n_data->demote = g_list_prepend(n_data->demote, entry);
-                        break;
-                    default:
-                        free(entry);
-                        break;
-                }
+            switch (task) {
+                case start_rsc:
+                    n_data->start = g_list_prepend(n_data->start, entry);
+                    break;
+                case stop_rsc:
+                    n_data->stop = g_list_prepend(n_data->stop, entry);
+                    break;
+                case action_promote:
+                    n_data->promote = g_list_prepend(n_data->promote, entry);
+                    break;
+                case action_demote:
+                    n_data->demote = g_list_prepend(n_data->demote, entry);
+                    break;
+                default:
+                    free(entry);
+                    break;
             }
         }
     }
@@ -920,7 +928,7 @@ void
 pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
     if (n_data != NULL) {
-        collect_notification_data(rsc, TRUE, TRUE, n_data);
+        collect_resource_data(rsc, true, n_data);
         pcmk__create_notification_keys(rsc, n_data, rsc->cluster);
         create_notifications(rsc, n_data, rsc->cluster);
     }
@@ -955,7 +963,7 @@ create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
     crm_info("Creating secondary notification for %s", action->uuid);
     n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op,
                                           data_set);
-    collect_notification_data(rsc, TRUE, FALSE, n_data);
+    collect_resource_data(rsc, false, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
     create_notifications(uber_parent(rsc), n_data, data_set);
