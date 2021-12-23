@@ -356,8 +356,17 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     free_xml(notify_data);
 }
 
+/*!
+ * \internal
+ * \brief Notify relevant IPC clients of a fencing operation result
+ *
+ * \param[in] type     Notification type
+ * \param[in] result   Result of fencing operation (assume success if NULL)
+ * \param[in] data     If not NULL, add to notification as call data
+ */
 void
-do_stonith_notify(const char *type, int result, xmlNode *data)
+fenced_send_notification(const char *type, const pcmk__action_result_t *result,
+                         xmlNode *data)
 {
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
@@ -367,7 +376,7 @@ do_stonith_notify(const char *type, int result, xmlNode *data)
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);
     crm_xml_add(update_msg, F_STONITH_OPERATION, type);
-    crm_xml_add_int(update_msg, F_STONITH_RC, result);
+    stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
         add_message_xml(update_msg, F_STONITH_CALLDATA, data);
@@ -379,8 +388,19 @@ do_stonith_notify(const char *type, int result, xmlNode *data)
     crm_trace("Notify complete");
 }
 
+/*!
+ * \internal
+ * \brief Send notifications for a configuration change to subscribed clients
+ *
+ * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD,
+ *                    STONITH_OP_DEVICE_DEL, STONITH_OP_LEVEL_ADD, or
+ *                    STONITH_OP_LEVEL_DEL)
+ * \param[in] result  Operation result
+ * \param[in] desc    Description of what changed
+ * \param[in] active  Current number of devices or topologies in use
+ */
 static void
-do_stonith_notify_config(const char *op, int rc,
+send_config_notification(const char *op, const pcmk__action_result_t *result,
                          const char *desc, int active)
 {
     xmlNode *notify_data = create_xml_node(NULL, op);
@@ -390,36 +410,58 @@ do_stonith_notify_config(const char *op, int rc,
     crm_xml_add(notify_data, F_STONITH_DEVICE, desc);
     crm_xml_add_int(notify_data, F_STONITH_ACTIVE, active);
 
-    do_stonith_notify(op, rc, notify_data);
+    fenced_send_notification(op, result, notify_data);
     free_xml(notify_data);
 }
 
+/*!
+ * \internal
+ * \brief Send notifications for a device change to subscribed clients
+ *
+ * \param[in] op      Notification type (STONITH_OP_DEVICE_ADD or
+ *                    STONITH_OP_DEVICE_DEL)
+ * \param[in] result  Operation result
+ * \param[in] desc    ID of device that changed
+ */
 void
-do_stonith_notify_device(const char *op, int rc, const char *desc)
+fenced_send_device_notification(const char *op,
+                                const pcmk__action_result_t *result,
+                                const char *desc)
 {
-    do_stonith_notify_config(op, rc, desc, g_hash_table_size(device_list));
+    send_config_notification(op, result, desc, g_hash_table_size(device_list));
 }
 
+/*!
+ * \internal
+ * \brief Send notifications for a topology level change to subscribed clients
+ *
+ * \param[in] op      Notification type (STONITH_OP_LEVEL_ADD or
+ *                    STONITH_OP_LEVEL_DEL)
+ * \param[in] result  Operation result
+ * \param[in] desc    String representation of level (<target>[<level_index>])
+ */
 void
-do_stonith_notify_level(const char *op, int rc, const char *desc)
+fenced_send_level_notification(const char *op,
+                               const pcmk__action_result_t *result,
+                               const char *desc)
 {
-    do_stonith_notify_config(op, rc, desc, g_hash_table_size(topology));
+    send_config_notification(op, result, desc, g_hash_table_size(topology));
 }
 
 static void
 topology_remove_helper(const char *node, int level)
 {
-    int rc;
     char *desc = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
-    rc = stonith_level_remove(data, &desc);
-    do_stonith_notify_level(STONITH_OP_LEVEL_DEL, rc, desc);
-
+    fenced_unregister_level(data, &desc, &result);
+    fenced_send_level_notification(STONITH_OP_LEVEL_DEL, &result, desc);
+    pcmk__reset_result(&result);
     free_xml(data);
     free(desc);
 }
@@ -452,8 +494,8 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 static void
 handle_topology_change(xmlNode *match, bool remove) 
 {
-    int rc;
     char *desc = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(match != NULL, return);
     crm_trace("Updating %s", ID(match));
@@ -467,9 +509,9 @@ handle_topology_change(xmlNode *match, bool remove)
         free(key);
     }
 
-    rc = stonith_level_register(match, &desc);
-    do_stonith_notify_level(STONITH_OP_LEVEL_ADD, rc, desc);
-
+    fenced_register_level(match, &desc, &result);
+    fenced_send_level_notification(STONITH_OP_LEVEL_ADD, &result, desc);
+    pcmk__reset_result(&result);
     free(desc);
 }
 

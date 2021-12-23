@@ -153,13 +153,8 @@ typedef struct remote_fencing_op_s {
 
 } remote_fencing_op_t;
 
-/*!
- * \internal
- * \brief Broadcast the result of an operation to the peers.
- * \param op, Operation whose result should be broadcast
- * \param rc, Result of the operation
- */
-void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged);
+void fenced_broadcast_op_result(remote_fencing_op_t *op,
+                                pcmk__action_result_t *result, bool op_merged);
 
 // Fencer-specific client flags
 enum st_client_flags {
@@ -218,24 +213,31 @@ void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(xmlNode * msg, int mode);
 int stonith_level_kind(xmlNode * msg);
-int stonith_level_register(xmlNode * msg, char **desc);
-
-int stonith_level_remove(xmlNode * msg, char **desc);
+void fenced_register_level(xmlNode *msg, char **desc,
+                           pcmk__action_result_t *result);
+void fenced_unregister_level(xmlNode *msg, char **desc,
+                             pcmk__action_result_t *result);
 
 stonith_topology_t *find_topology_for_host(const char *host);
 
 void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
                            gboolean from_peer);
 
-xmlNode *stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data,
-                                        int rc);
+xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
+                                pcmk__action_result_t *result);
 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
-void do_stonith_notify(const char *type, int result, xmlNode *data);
-void do_stonith_notify_device(const char *op, int rc, const char *desc);
-void do_stonith_notify_level(const char *op, int rc, const char *desc);
+void fenced_send_notification(const char *type,
+                              const pcmk__action_result_t *result,
+                              xmlNode *data);
+void fenced_send_device_notification(const char *op,
+                                     const pcmk__action_result_t *result,
+                                     const char *desc);
+void fenced_send_level_notification(const char *op,
+                                    const pcmk__action_result_t *result,
+                                    const char *desc);
 
 remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
                                                 xmlNode *request,

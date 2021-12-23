@@ -100,7 +100,7 @@ stonith_fence_history_cleanup(const char *target,
         g_hash_table_foreach_remove(stonith_remote_op_list,
                              stonith_remove_history_entry,
                              (gpointer) target);
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 }
 
@@ -359,24 +359,29 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     }
 
     if (remote_history) {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
         init_stonith_remote_op_hash_table(&stonith_remote_op_list);
 
         updated |= g_hash_table_size(remote_history);
 
         g_hash_table_iter_init(&iter, remote_history);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
-
             if (stonith__op_state_pending(op->state) &&
                 pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+
                 crm_warn("Failing pending operation %.8s originated by us but "
                          "known only from peer history", op->id);
                 op->state = st_failed;
                 set_fencing_completed(op);
-                /* use -EHOSTUNREACH to not introduce a new return-code that might
-                   trigger unexpected results at other places and to prevent
-                   remote_op_done from setting the delegate if not present
-                */
-                stonith_bcast_result_to_peers(op, -EHOSTUNREACH, FALSE);
+
+                /* CRM_EX_EXPIRED + PCMK_EXEC_INVALID prevents finalize_op()
+                 * from setting a delegate
+                 */
+                pcmk__set_result(&result, CRM_EX_EXPIRED, PCMK_EXEC_INVALID,
+                                 "Initiated by earlier fencer "
+                                 "process and presumed failed");
+                fenced_broadcast_op_result(op, &result, false);
             }
 
             g_hash_table_iter_steal(&iter);
@@ -391,12 +396,13 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
              */
         }
 
+        pcmk__reset_result(&result);
         g_hash_table_destroy(remote_history); /* remove what is left */
     }
 
     if (updated) {
         stonith_fence_history_trim();
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
     }
 
     if (cnt == 0) {
@@ -467,7 +473,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
            is done so send a notification for anything
            that smells like history-sync
          */
-        do_stonith_notify(T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk_ok, NULL);
+        fenced_send_notification(T_STONITH_NOTIFY_HISTORY_SYNCED, NULL, NULL);
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API
             *
