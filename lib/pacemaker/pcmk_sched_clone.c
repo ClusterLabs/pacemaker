@@ -1308,29 +1308,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    if (clone_data->start_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
-        pcmk__create_notification_keys(rsc, clone_data->start_notify, data_set);
-        create_notifications(rsc, clone_data->start_notify, data_set);
-    }
-
-    if (clone_data->stop_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
-        pcmk__create_notification_keys(rsc, clone_data->stop_notify, data_set);
-        create_notifications(rsc, clone_data->stop_notify, data_set);
-    }
-
-    if (clone_data->promote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->promote_notify, data_set);
-        create_notifications(rsc, clone_data->promote_notify, data_set);
-    }
-
-    if (clone_data->demote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->demote_notify, data_set);
-        create_notifications(rsc, clone_data->demote_notify, data_set);
-    }
+    pcmk__create_notifications(rsc, clone_data->start_notify);
+    pcmk__create_notifications(rsc, clone_data->stop_notify);
+    pcmk__create_notifications(rsc, clone_data->promote_notify);
+    pcmk__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 

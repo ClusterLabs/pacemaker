@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
+#include "libpacemaker_private.h"
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
@@ -860,6 +861,23 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
             }
             new_post_notify_action(rsc, rsc->allocated_to, n_data, data_set);
         }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create notification data and actions for a clone
+ *
+ * \param[in] rsc     Clone resource that notification is for
+ * \param[in] n_data  Clone notification data for some action
+ */
+void
+pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
+{
+    if (n_data != NULL) {
+        collect_notification_data(rsc, TRUE, TRUE, n_data);
+        pcmk__create_notification_keys(rsc, n_data, rsc->cluster);
+        create_notifications(rsc, n_data, rsc->cluster);
     }
 }
 

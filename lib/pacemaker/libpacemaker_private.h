@@ -273,6 +273,12 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
                                     lrmd_event_data_t *op, int target_rc);
 
 
+// Clone notifictions (pcmk_sched_notif.c)
+
+G_GNUC_INTERNAL
+void pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+
+
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
