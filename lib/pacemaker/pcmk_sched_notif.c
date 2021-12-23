@@ -764,17 +764,17 @@ add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data,
  * \internal
  * \brief Find any remote connection start relevant to an action
  *
- * \param[in] action  Action to chek
+ * \param[in] action  Action to check
  *
  * \return If action is behind a remote connection, connection's start
  */
 static pe_action_t *
 find_remote_start(pe_action_t *action)
 {
-    if (action && action->node) {
+    if ((action != NULL) && (action->node != NULL)) {
         pe_resource_t *remote_rsc = action->node->details->remote_rsc;
 
-        if (remote_rsc) {
+        if (remote_rsc != NULL) {
             return find_first_action(remote_rsc->actions, NULL, RSC_START,
                                      NULL);
         }
