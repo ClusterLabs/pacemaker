@@ -12,9 +12,6 @@
 #  include <crm/common/xml_internal.h>
 #  include <crm/pengine/internal.h>
 
-void pcmk__create_notification_keys(pe_resource_t *rsc, notify_data_t *n_data,
-                                    pe_working_set_t *data_set);
-
 void create_notifications(pe_resource_t *rsc, notify_data_t *n_data,
                           pe_working_set_t *data_set);
 

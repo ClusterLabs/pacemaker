@@ -648,16 +648,15 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
 
 /*!
  * \internal
- * \brief Create notification name/value pairs from raw data
+ * \brief Create notification name/value pairs from structured data
  *
  * \param[in]     rsc       Resource that notification is for
  * \param[in,out] n_data    Notification data
  * \param[in]     data_set  Cluster working set
  */
-void
-pcmk__create_notification_keys(pe_resource_t *rsc,
-                               notify_data_t *n_data,
-                               pe_working_set_t *data_set)
+static void
+add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data,
+               pe_working_set_t *data_set)
 {
     bool required = false; // Whether to make notify actions required
     char *rsc_list = NULL;
@@ -676,7 +675,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_stop_uname", node_list);
 
     if ((n_data->start != NULL)
-        && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
+        && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_none)) {
         required = true;
     }
     n_data->start = notify_entries_to_strings(n_data->start,
@@ -685,7 +684,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_start_uname", node_list);
 
     if ((n_data->demote != NULL)
-        && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_casei)) {
+        && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_none)) {
         required = true;
     }
     n_data->demote = notify_entries_to_strings(n_data->demote,
@@ -694,7 +693,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_demote_uname", node_list);
 
     if ((n_data->promote != NULL)
-        && pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_casei)) {
+        && pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_none)) {
         required = true;
     }
     n_data->promote = notify_entries_to_strings(n_data->promote,
@@ -731,7 +730,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
     if (!pcmk__is_daemon) {
-        /* If printing to stdout, sort the node list, for consistent
+        /* For display purposes, sort the node list, for consistent
          * regression test output (while avoiding the performance hit
          * for the live cluster).
          */
@@ -742,7 +741,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     g_list_free(nodes);
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if (pcmk__str_eq("host", source, pcmk__str_casei)) {
+    if (pcmk__str_eq("host", source, pcmk__str_none)) {
         get_node_names(data_set->nodes, &node_list, &metal_list);
         add_notify_env_free(n_data, "notify_all_hosts", metal_list);
     } else {
@@ -750,12 +749,12 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     }
     add_notify_env_free(n_data, "notify_all_uname", node_list);
 
-    if (required && n_data->pre) {
+    if (required && (n_data->pre != NULL)) {
         pe__clear_action_flags(n_data->pre, pe_action_optional);
         pe__clear_action_flags(n_data->pre_done, pe_action_optional);
     }
 
-    if (required && n_data->post) {
+    if (required && (n_data->post != NULL)) {
         pe__clear_action_flags(n_data->post, pe_action_optional);
         pe__clear_action_flags(n_data->post_done, pe_action_optional);
     }
@@ -929,7 +928,7 @@ pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
     if (n_data != NULL) {
         collect_resource_data(rsc, true, n_data);
-        pcmk__create_notification_keys(rsc, n_data, rsc->cluster);
+        add_notif_keys(rsc, n_data, rsc->cluster);
         create_notifications(rsc, n_data, rsc->cluster);
     }
 }
