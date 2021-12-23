@@ -509,10 +509,32 @@ pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
     return n_data;
 }
 
+/*!
+ * \internal
+ * \brief Create a new notification entry
+ *
+ * \param[in] rsc   Resource for notification
+ * \param[in] node  Node for notification
+ *
+ * \return Newly allocated notification entry
+ * \note The caller is responsible for freeing the return value.
+ */
+static notify_entry_t *
+new_notify_entry(pe_resource_t *rsc, pe_node_t *node)
+{
+    notify_entry_t *entry = calloc(1, sizeof(notify_entry_t));
+
+    CRM_ASSERT(entry != NULL);
+    entry->rsc = rsc;
+    entry->node = node;
+    return entry;
+}
+
 void
 collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity,
                           notify_data_t * n_data)
 {
+    pe_node_t *node = NULL;
 
     if(n_data->allowed_nodes == NULL) {
         n_data->allowed_nodes = rsc->allowed_nodes;
@@ -532,12 +554,10 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
     if (state) {
         notify_entry_t *entry = NULL;
 
-        entry = calloc(1, sizeof(notify_entry_t));
-        entry->rsc = rsc;
-        if (rsc->running_on) {
-            /* we only take the first one */
-            entry->node = rsc->running_on->data;
+        if (rsc->running_on != NULL) {
+            node = rsc->running_on->data; // First is sufficient
         }
+        entry = new_notify_entry(rsc, node);
 
         pe_rsc_trace(rsc, "%s state: %s", rsc->id, role2text(rsc->role));
 
@@ -585,9 +605,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
                     continue;
                 }
 
-                entry = calloc(1, sizeof(notify_entry_t));
-                entry->node = op->node;
-                entry->rsc = rsc;
+                entry = new_notify_entry(rsc, op->node);
 
                 switch (task) {
                     case start_rsc:
