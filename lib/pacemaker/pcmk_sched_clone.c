@@ -1327,13 +1327,13 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    free_notification_data(clone_data->demote_notify);
+    pcmk__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    free_notification_data(clone_data->stop_notify);
+    pcmk__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    free_notification_data(clone_data->start_notify);
+    pcmk__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    free_notification_data(clone_data->promote_notify);
+    pcmk__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 

@@ -285,6 +285,9 @@ notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
                                             pe_action_t *complete,
                                             pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__free_notification_data(notify_data_t *n_data);
+
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 

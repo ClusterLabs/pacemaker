@@ -12,8 +12,6 @@
 #  include <crm/common/xml_internal.h>
 #  include <crm/pengine/internal.h>
 
-void free_notification_data(notify_data_t *n_data);
-
 void create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
                                    pe_action_t *stonith_op,
                                    pe_working_set_t *data_set);

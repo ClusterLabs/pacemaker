@@ -939,13 +939,18 @@ pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Free notification data
+ *
+ * \param[in] n_data  Notification data to free
+ */
 void
-free_notification_data(notify_data_t * n_data)
+pcmk__free_notification_data(notify_data_t *n_data)
 {
     if (n_data == NULL) {
         return;
     }
-
     g_list_free_full(n_data->stop, free);
     g_list_free_full(n_data->start, free);
     g_list_free_full(n_data->demote, free);
@@ -972,5 +977,5 @@ create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
     create_notify_actions(uber_parent(rsc), n_data, data_set);
-    free_notification_data(n_data);
+    pcmk__free_notification_data(n_data);
 }
