@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -287,6 +287,11 @@ notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__free_notification_data(notify_data_t *n_data);
+
+G_GNUC_INTERNAL
+void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
+                                      pe_action_t *stonith_op,
+                                      pe_working_set_t *data_set);
 
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)

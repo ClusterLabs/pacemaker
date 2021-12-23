@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -966,19 +966,34 @@ pcmk__free_notification_data(notify_data_t *n_data)
     free(n_data);
 }
 
+/*!
+ * \internal
+ * \brief Order clone "notifications complete" pseudo-action after fencing
+ *
+ * If a stop action is implied by fencing, the usual notification pseudo-actions
+ * will not be sufficient to order things properly, or even create all needed
+ * notifications if the clone is also stopping on another node, and another
+ * clone is ordered after it. This function creates new notification
+ * pseudo-actions relative to the fencing to ensure everything works properly.
+ *
+ * \param[in] stop        Stop action implied by fencing
+ * \param[in] rsc         Clone resource that notification is for
+ * \param[in] stonith_op  Fencing action that implies \p stop
+ * \param[in] data_set    Cluster working set
+ */
 void
-create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
-                              pe_action_t *stonith_op,
-                              pe_working_set_t *data_set)
+pcmk__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
+                                 pe_action_t *stonith_op,
+                                 pe_working_set_t *data_set)
 {
     notify_data_t *n_data;
 
-    crm_info("Creating secondary notification for %s", action->uuid);
+    crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
     n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op,
                                           data_set);
     collect_resource_data(rsc, false, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
-    add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
+    add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
     create_notify_actions(uber_parent(rsc), n_data, data_set);
     pcmk__free_notification_data(n_data);
 }
