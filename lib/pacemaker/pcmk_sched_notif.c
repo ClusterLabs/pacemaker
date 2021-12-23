@@ -334,42 +334,43 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
     return notify_action;
 }
 
+/*!
+ * \internal
+ * \brief Create a new "post-" notify action for a clone instance
+ *
+ * \param[in] rsc           Clone instance that notification is for
+ * \param[in] node          Node that notification is for
+ * \param[in] n_data        Notification values to add to action meta-data
+ * \param[in] data_set      Cluster working set
+ */
 static void
-pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe_working_set_t * data_set)
+new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
+                       notify_data_t *n_data, pe_working_set_t *data_set)
 {
     pe_action_t *notify = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
-
-    if (n_data->post == NULL) {
-        return;                 /* Nothing to do */
-    }
-
+    // Create the "post-" notify action for specified instance
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
                                n_data, data_set);
-
     if (notify != NULL) {
         notify->priority = INFINITY;
     }
 
-    if (n_data->post_done) {
-        GList *gIter = rsc->actions;
+    // Order recurring monitors after all "post-" notifications complete
+    if (n_data->post_done == NULL) {
+        return;
+    }
+    for (GList *iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *mon = (pe_action_t *) iter->data;
+        const char *interval_ms_s = NULL;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *mon = (pe_action_t *) gIter->data;
-            const char *interval_ms_s = g_hash_table_lookup(mon->meta,
-                                                            XML_LRM_ATTR_INTERVAL_MS);
-
-            if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
-                pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
-                continue;
-            } else if (pcmk__str_eq(mon->task, RSC_CANCEL, pcmk__str_casei)) {
-                pe_rsc_trace(rsc, "Skipping %s: cancel", mon->uuid);
-                continue;
-            }
-
-            order_actions(n_data->post_done, mon, pe_order_optional);
+        interval_ms_s = g_hash_table_lookup(mon->meta,
+                                            XML_LRM_ATTR_INTERVAL_MS);
+        if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)
+            || pcmk__str_eq(mon->task, RSC_CANCEL, pcmk__str_none)) {
+            continue; // Not a recurring monitor
         }
+        order_actions(n_data->post_done, mon, pe_order_optional);
     }
 }
 
@@ -824,7 +825,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                                   n_data->pre_done, n_data, data_set);
                 if (task == action_demote || stop == NULL
                     || pcmk_is_set(stop->flags, pe_action_optional)) {
-                    pe_post_notify(rsc, current_node, n_data, data_set);
+                    new_post_notify_action(rsc, current_node, n_data, data_set);
                 }
             }
         }
@@ -857,7 +858,7 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
                 new_notify_action(rsc, rsc->allocated_to, n_data->pre,
                                   n_data->pre_done, n_data, data_set);
             }
-            pe_post_notify(rsc, rsc->allocated_to, n_data, data_set);
+            new_post_notify_action(rsc, rsc->allocated_to, n_data, data_set);
         }
     }
 }
