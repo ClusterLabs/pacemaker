@@ -782,35 +782,39 @@ find_remote_start(pe_action_t *action)
     return NULL;
 }
 
-void
-create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Create notify actions, and add notify data to original actions
+ *
+ * \param[in] rsc       Clone or clone instance that notification is for
+ * \param[in] n_data    Clone notification data for some action
+ * \param[in] data_set  Cluster working set
+ */
+static void
+create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
+                      pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
     pe_action_t *stop = NULL;
     pe_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
 
-    if (rsc->children) {
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
+    // If this is a clone, call recursively for each instance
+    if (rsc->children != NULL) {
+        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
 
-            create_notifications(child, n_data, data_set);
+            create_notify_actions(child, n_data, data_set);
         }
         return;
     }
 
-    /* Copy notification details into standard ops */
+    // Add notification meta-attributes to original actions
+    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *op = (pe_action_t *) iter->data;
 
-    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *op = (pe_action_t *) gIter->data;
-
-        if (!pcmk_is_set(op->flags, pe_action_optional)
-            && (op->node != NULL)) {
-
-            enum action_tasks t = text2task(op->task);
-
-            switch (t) {
+        if (!pcmk_is_set(op->flags, pe_action_optional) && (op->node != NULL)) {
+            switch (text2task(op->task)) {
                 case start_rsc:
                 case stop_rsc:
                 case action_promote:
@@ -823,96 +827,98 @@ create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set
         }
     }
 
+    // Skip notify action itself if original action was not needed
     switch (task) {
         case start_rsc:
             if (n_data->start == NULL) {
-                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
-                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                pe_rsc_trace(rsc, "No notify action needed for %s %s",
+                             rsc->id, n_data->action);
                 return;
             }
             break;
+
         case action_promote:
             if (n_data->promote == NULL) {
-                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
-                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                pe_rsc_trace(rsc, "No notify action needed for %s %s",
+                             rsc->id, n_data->action);
                 return;
             }
             break;
+
         case action_demote:
             if (n_data->demote == NULL) {
-                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
-                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                pe_rsc_trace(rsc, "No notify action needed for %s %s",
+                             rsc->id, n_data->action);
                 return;
             }
             break;
+
         default:
-            /* We cannot do the same for stop_rsc/n_data->stop at it
-             * might be implied by fencing
-             */
+            // We cannot do same for stop because it might be implied by fencing
             break;
     }
 
-    pe_rsc_trace(rsc, "Creating notifications for: %s.%s (%s->%s)",
-                 n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+    pe_rsc_trace(rsc, "Creating notify actions for %s %s",
+                 rsc->id, n_data->action);
 
-    stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
-    start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
+    // Create notify actions for stop or demote
+    if ((rsc->role != RSC_ROLE_STOPPED)
+        && ((task == stop_rsc) || (task == action_demote))) {
 
-    /* stop / demote */
-    if (rsc->role != RSC_ROLE_STOPPED) {
-        if (task == stop_rsc || task == action_demote) {
-            gIter = rsc->running_on;
-            for (; gIter != NULL; gIter = gIter->next) {
-                pe_node_t *current_node = (pe_node_t *) gIter->data;
+        stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
 
-                /* if this stop action is a pseudo action as a result of the current
-                 * node being fenced, this stop action is implied by the fencing 
-                 * action. There's no reason to send the fenced node a stop notification */ 
-                if (stop && pcmk_is_set(stop->flags, pe_action_pseudo) &&
-                    (current_node->details->unclean || current_node->details->remote_requires_reset) ) {
+        for (iter = rsc->running_on; iter != NULL; iter = iter->next) {
+            pe_node_t *current_node = (pe_node_t *) iter->data;
 
-                    continue;
-                }
+            /* If a stop is a pseudo-action implied by fencing, don't try to
+             * notify the node getting fenced.
+             */
+            if ((stop != NULL) && pcmk_is_set(stop->flags, pe_action_pseudo)
+                && (current_node->details->unclean
+                    || current_node->details->remote_requires_reset)) {
+                continue;
+            }
 
-                new_notify_action(rsc, current_node, n_data->pre,
-                                  n_data->pre_done, n_data, data_set);
-                if (task == action_demote || stop == NULL
-                    || pcmk_is_set(stop->flags, pe_action_optional)) {
-                    new_post_notify_action(rsc, current_node, n_data, data_set);
-                }
+            new_notify_action(rsc, current_node, n_data->pre,
+                              n_data->pre_done, n_data, data_set);
+
+            if ((task == action_demote) || (stop == NULL)
+                || pcmk_is_set(stop->flags, pe_action_optional)) {
+                new_post_notify_action(rsc, current_node, n_data, data_set);
             }
         }
     }
 
-    /* start / promote */
-    if (rsc->next_role != RSC_ROLE_STOPPED) {
-        if (rsc->allocated_to == NULL) {
-            pe_proc_err("Next role '%s' but %s is not allocated", role2text(rsc->next_role),
-                        rsc->id);
+    // Create notify actions for start or promote
+    if ((rsc->next_role != RSC_ROLE_STOPPED)
+        && ((task == start_rsc) || (task == action_promote))) {
 
-        } else if (task == start_rsc || task == action_promote) {
+        start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
+        if (start != NULL) {
+            pe_action_t *remote_start = find_remote_start(start);
 
-            if (start) {
-                pe_action_t *remote_start = find_remote_start(start);
-
-                if (remote_start
-                    && !pcmk_is_set(remote_start->flags, pe_action_runnable)) {
-                    /* Start and promote actions for a clone instance behind
-                     * a Pacemaker Remote connection happen after the
-                     * connection starts. If the connection start is blocked, do
-                     * not schedule notifications for these actions.
-                     */
-                    return;
-                }
+            if ((remote_start != NULL)
+                && !pcmk_is_set(remote_start->flags, pe_action_runnable)) {
+                /* Start and promote actions for a clone instance behind
+                 * a Pacemaker Remote connection happen after the
+                 * connection starts. If the connection start is blocked, do
+                 * not schedule notifications for these actions.
+                 */
+                return;
             }
-            if ((task != start_rsc) || (start == NULL)
-                || pcmk_is_set(start->flags, pe_action_optional)) {
-
-                new_notify_action(rsc, rsc->allocated_to, n_data->pre,
-                                  n_data->pre_done, n_data, data_set);
-            }
-            new_post_notify_action(rsc, rsc->allocated_to, n_data, data_set);
         }
+        if (rsc->allocated_to == NULL) {
+            pe_proc_err("Next role '%s' but %s is not allocated",
+                        role2text(rsc->next_role), rsc->id);
+            return;
+        }
+        if ((task != start_rsc) || (start == NULL)
+            || pcmk_is_set(start->flags, pe_action_optional)) {
+
+            new_notify_action(rsc, rsc->allocated_to, n_data->pre,
+                              n_data->pre_done, n_data, data_set);
+        }
+        new_post_notify_action(rsc, rsc->allocated_to, n_data, data_set);
     }
 }
 
@@ -929,7 +935,7 @@ pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
     if (n_data != NULL) {
         collect_resource_data(rsc, true, n_data);
         add_notif_keys(rsc, n_data, rsc->cluster);
-        create_notifications(rsc, n_data, rsc->cluster);
+        create_notify_actions(rsc, n_data, rsc->cluster);
     }
 }
 
@@ -965,6 +971,6 @@ create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
     collect_resource_data(rsc, false, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", action->node->details->uname);
-    create_notifications(uber_parent(rsc), n_data, data_set);
+    create_notify_actions(uber_parent(rsc), n_data, data_set);
     free_notification_data(n_data);
 }
