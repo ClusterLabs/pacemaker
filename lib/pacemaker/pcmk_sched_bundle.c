@@ -1097,8 +1097,25 @@ void
 pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                              GList *all_rscs, GHashTable *utilization)
 {
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    pe__bundle_replica_t *replica = NULL;
+
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }
-    // @TODO
+
+    get_bundle_variant_data(bundle_data, rsc);
+    if (bundle_data->replicas == NULL) {
+        return;
+    }
+
+    /* All bundle replicas are identical, so using the utilization of the first
+     * is sufficient for any. Only the implicit container resource can have
+     * utilization values.
+     */
+    replica = (pe__bundle_replica_t *) bundle_data->replicas->data;
+    if (replica->container != NULL) {
+        replica->container->cmds->add_utilization(replica->container, orig_rsc,
+                                                  all_rscs, utilization);
+    }
 }
