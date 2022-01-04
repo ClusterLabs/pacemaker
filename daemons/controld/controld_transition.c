@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -180,11 +180,8 @@ do_te_invoke(long long action,
 
         pcmk__free_graph(transition_graph);
         transition_graph = pcmk__unpack_graph(graph_data, graph_input);
-        if (transition_graph == NULL) {
-            CRM_CHECK(transition_graph != NULL,);
-            transition_graph = create_blank_graph();
-            return;
-        }
+        CRM_CHECK(transition_graph != NULL,
+                  transition_graph = create_blank_graph(); return);
         crm_info("Processing graph %d (ref=%s) derived from %s", transition_graph->id, ref,
                  graph_input);
 

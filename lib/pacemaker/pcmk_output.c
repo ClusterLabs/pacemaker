@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -935,14 +935,14 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (rsc->role == rsc->next_role) {
         pe_action_t *migrate_op = NULL;
 
+        CRM_CHECK(next != NULL, return rc);
+
         possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }
 
-        CRM_CHECK(next != NULL,);
-        if (next == NULL) {
-        } else if ((migrate_op != NULL) && (current != NULL)
+        if ((migrate_op != NULL) && (current != NULL)
                    && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -496,10 +496,12 @@ sync_our_cib(xmlNode * request, gboolean all)
     const char *host = crm_element_value(request, F_ORIG);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
 
-    xmlNode *replace_request = cib_msg_copy(request, FALSE);
+    xmlNode *replace_request = NULL;
 
-    CRM_CHECK(the_cib != NULL,;);
-    CRM_CHECK(replace_request != NULL,;);
+    CRM_CHECK(the_cib != NULL, return -EINVAL);
+
+    replace_request = cib_msg_copy(request, FALSE);
+    CRM_CHECK(replace_request != NULL, return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
     if (all == FALSE && host == NULL) {
