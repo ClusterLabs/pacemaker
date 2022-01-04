@@ -1,0 +1,26 @@
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy-1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy-2	(ocf:pacemaker:Dummy):	 Started cluster02
+
+Transition Summary:
+  * Start      dummy-1     ( cluster02 )
+
+Executing Cluster Transition:
+  * Resource action: dummy-1         monitor on cluster02
+  * Resource action: dummy-1         monitor on cluster01
+  * Resource action: dummy-2         monitor on cluster01
+  * Resource action: dummy-1         start on cluster02
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf:pacemaker:Dummy):	 Started cluster02

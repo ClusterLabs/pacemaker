@@ -1,0 +1,7 @@
+
+pcmk__native_allocate: Fencing allocation score on cluster01: 0
+pcmk__native_allocate: Fencing allocation score on cluster02: 0
+pcmk__native_allocate: dummy-1 allocation score on cluster01: 0
+pcmk__native_allocate: dummy-1 allocation score on cluster02: 0
+pcmk__native_allocate: dummy-2 allocation score on cluster01: 0
+pcmk__native_allocate: dummy-2 allocation score on cluster02: 0

@@ -1,0 +1,8 @@
+ digraph "g" {
+"dummy-1_monitor_0 cluster01" -> "dummy-1_start_0 cluster02" [ style = bold]
+"dummy-1_monitor_0 cluster01" [ style=bold color="green" fontcolor="black"]
+"dummy-1_monitor_0 cluster02" -> "dummy-1_start_0 cluster02" [ style = bold]
+"dummy-1_monitor_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"dummy-1_start_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"dummy-2_monitor_0 cluster01" [ style=bold color="green" fontcolor="black"]
+}

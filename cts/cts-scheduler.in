@@ -115,6 +115,7 @@ TESTS = [
         [ "probe-pending-node", "Probe (pending node + unmanaged resource)" ],
         [ "failed-probe-primitive", "Maskable vs. unmaskable probe failures on primitive resources" ],
         [ "failed-probe-clone", "Maskable vs. unmaskable probe failures on cloned resources" ],
+        [ "expired-failed-probe-primitive", "Maskable, expired probe failure on primitive resources" ],
         [ "standby", "Standby" ],
         [ "comments", "Comments" ],
     ],
