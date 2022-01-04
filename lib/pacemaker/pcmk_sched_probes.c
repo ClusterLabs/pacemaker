@@ -358,7 +358,7 @@ add_restart_orderings_for_rsc(pe_resource_t *rsc, pe_working_set_t *data_set)
     probes = pe__resource_actions(rsc, NULL, RSC_STATUS, FALSE);
 
     // Add probe restart orderings for each probe found
-    for (GList *iter = probes; iter != NULL; iter= iter->next) {
+    for (GList *iter = probes; iter != NULL; iter = iter->next) {
         pe_action_t *probe = (pe_action_t *) iter->data;
 
         for (GList *then_iter = probe->actions_after; then_iter != NULL;
@@ -495,9 +495,8 @@ void
 pcmk__order_probes(pe_working_set_t *data_set)
 {
     // Add orderings for "probe then X"
-    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        add_restart_orderings_for_rsc((pe_resource_t *) iter->data, data_set);
-    }
+    g_list_foreach(data_set->resources, (GFunc) add_restart_orderings_for_rsc,
+                   data_set);
     add_probe_orderings_for_stops(data_set);
 
     order_then_probes(data_set);
