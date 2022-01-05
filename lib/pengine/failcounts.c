@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2021 the Pacemaker project contributors
+ * Copyright 2008-2022 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -333,19 +333,21 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
         if (failcount > 0) {
             char *score = score2char(failcount);
 
-            crm_info("Container %s and the resources within it have failed %s times on %s",
-                     rsc->id, score, node->details->uname);
+            crm_info("Container %s and the resources within it "
+                     "have failed %s time%s on %s",
+                     rsc->id, score, pcmk__plural_s(failcount),
+                     node->details->uname);
             free(score);
         }
 
     } else if (failcount > 0) {
         char *score = score2char(failcount);
 
-        crm_info("%s has failed %s times on %s",
-                 rsc->id, score, node->details->uname);
+        crm_info("%s has failed %s time%s on %s",
+                 rsc->id, score, pcmk__plural_s(failcount),
+                 node->details->uname);
         free(score);
     }
-
 
     return failcount;
 }
