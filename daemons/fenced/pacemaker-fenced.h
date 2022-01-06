@@ -155,8 +155,7 @@ typedef struct remote_fencing_op_s {
     pcmk__action_result_t result;
 } remote_fencing_op_t;
 
-void fenced_broadcast_op_result(remote_fencing_op_t *op,
-                                pcmk__action_result_t *result, bool op_merged);
+void fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged);
 
 // Fencer-specific client flags
 enum st_client_flags {

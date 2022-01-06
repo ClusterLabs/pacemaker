@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -359,8 +359,6 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
     }
 
     if (remote_history) {
-        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
         init_stonith_remote_op_hash_table(&stonith_remote_op_list);
 
         updated |= g_hash_table_size(remote_history);
@@ -378,10 +376,10 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 /* CRM_EX_EXPIRED + PCMK_EXEC_INVALID prevents finalize_op()
                  * from setting a delegate
                  */
-                pcmk__set_result(&result, CRM_EX_EXPIRED, PCMK_EXEC_INVALID,
+                pcmk__set_result(&op->result, CRM_EX_EXPIRED, PCMK_EXEC_INVALID,
                                  "Initiated by earlier fencer "
                                  "process and presumed failed");
-                fenced_broadcast_op_result(op, &result, false);
+                fenced_broadcast_op_result(op, false);
             }
 
             g_hash_table_iter_steal(&iter);
@@ -396,7 +394,6 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
              */
         }
 
-        pcmk__reset_result(&result);
         g_hash_table_destroy(remote_history); /* remove what is left */
     }
 

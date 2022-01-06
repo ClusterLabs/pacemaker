@@ -390,16 +390,14 @@ fencing_result2xml(remote_fencing_op_t *op, pcmk__action_result_t *result)
  * \brief Broadcast a fence result notification to all CPG peers
  *
  * \param[in] op         Fencer operation that completed
- * \param[in] result     Full operation result
  * \param[in] op_merged  Whether this operation is a duplicate of another
  */
 void
-fenced_broadcast_op_result(remote_fencing_op_t *op,
-                           pcmk__action_result_t *result, bool op_merged)
+fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
-    xmlNode *notify_data = fencing_result2xml(op, result);
+    xmlNode *notify_data = fencing_result2xml(op, &op->result);
 
     count++;
     crm_trace("Broadcasting result to peers");
@@ -581,7 +579,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     subt = crm_element_value(data, F_SUBTYPE);
     if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
         /* Defer notification until the bcast message arrives */
-        fenced_broadcast_op_result(op, &op->result, op_merged);
+        fenced_broadcast_op_result(op, op_merged);
         free_xml(local_data);
         return;
     }
