@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,10 +215,8 @@ attrd_cib_disconnect()
 {
     CRM_CHECK(the_cib != NULL, return);
     the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb); 
-    the_cib->cmds->signoff(the_cib);
-    cib_delete(the_cib);
-    the_cib = NULL;
+    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    cib__clean_up_connection(&the_cib);
 }
 
 void

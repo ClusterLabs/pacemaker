@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/attrd_internal.h>
 
@@ -363,8 +364,7 @@ cib_remove_node(long id, const char *name)
                 name, id, pcmk_strerror(rc));
     }
 
-    cib->cmds->signoff(cib);
-    cib_delete(cib);
+    cib__clean_up_connection(&cib);
     return rc;
 }
 

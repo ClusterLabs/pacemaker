@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -194,9 +194,7 @@ attrd_cib_connect(int max_retry)
     return pcmk_ok;
 
   cleanup:
-    the_cib->cmds->signoff(the_cib);
-    cib_delete(the_cib);
-    the_cib = NULL;
+    cib__clean_up_connection(&the_cib);
     return -ENOTCONN;
 }
 

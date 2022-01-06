@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,8 +206,7 @@ bye(crm_exit_t ec)
         cib_t *save_cib_conn = cib_conn;
 
         cib_conn = NULL; // Ensure we can't free this twice
-        save_cib_conn->cmds->signoff(save_cib_conn);
-        cib_delete(save_cib_conn);
+        cib__clean_up_connection(&save_cib_conn);
     }
     if (controld_api != NULL) {
         pcmk_ipc_api_t *save_controld_api = controld_api;

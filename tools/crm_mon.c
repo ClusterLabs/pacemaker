@@ -132,7 +132,6 @@ struct {
     .reconnect_ms = RECONNECT_MSECS
 };
 
-static void clean_up_cib_connection(void);
 static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
@@ -846,7 +845,7 @@ cib_connect(gboolean full)
 
         if (rc != pcmk_rc_ok) {
             out->err(out, "Notification setup failed, could not monitor CIB actions");
-            clean_up_cib_connection();
+            cib__clean_up_connection(&cib);
             clean_up_fencing_connection();
         }
     }
@@ -2146,7 +2145,7 @@ mon_refresh_display(gpointer user_data)
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
-        clean_up_cib_connection();
+        cib__clean_up_connection(&cib);
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         clean_up(CRM_EX_CONFIG);
         return 0;
@@ -2310,18 +2309,6 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 }
 
 static void
-clean_up_cib_connection(void)
-{
-    if (cib == NULL) {
-        return;
-    }
-
-    cib->cmds->signoff(cib);
-    cib_delete(cib);
-    cib = NULL;
-}
-
-static void
 clean_up_fencing_connection(void)
 {
     if (st == NULL) {
@@ -2353,7 +2340,7 @@ clean_up(crm_exit_t exit_code)
     /* Quitting crm_mon is much more complicated than it ought to be. */
 
     /* (1) Close connections, free things, etc. */
-    clean_up_cib_connection();
+    cib__clean_up_connection(&cib);
     clean_up_fencing_connection();
     free(options.neg_location_prefix);
     free(options.only_node);
