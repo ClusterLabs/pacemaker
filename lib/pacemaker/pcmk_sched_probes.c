@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -509,9 +509,6 @@ pcmk__order_probes(pe_working_set_t *data_set)
  * \param[in] data_set  Cluster working set
  *
  * \note This may also schedule fencing of failed remote nodes.
- * \todo This could benefit from optimization. A test in 2010 using 100 nodes
- *       and 100 clones completed scheduling in 4 seconds without probes, and
- *       42 seconds with probes. The test should be repeated and profiled.
  */
 void
 pcmk__schedule_probes(pe_working_set_t *data_set)
