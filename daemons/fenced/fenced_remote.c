@@ -82,8 +82,7 @@ extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op
 static void request_peer_fencing(remote_fencing_op_t *op,
                                 peer_device_info_t *peer,
                                 pcmk__action_result_t *result);
-static void finalize_op(remote_fencing_op_t *op, xmlNode *data,
-                        pcmk__action_result_t *result, bool dup);
+static void finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup);
 static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(const remote_fencing_op_t *op,
                                 const peer_device_info_t *chosen_peer);
@@ -485,7 +484,9 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data,
                       other->client_name, other->originator,
                       pcmk_exec_status_str(result->execution_status),
                       other->id);
-            finalize_op(other, data, result, true);
+            pcmk__set_result(&other->result, result->exit_status,
+                             result->execution_status, result->exit_reason);
+            finalize_op(other, data, true);
 
         } else {
             // Possible if (for example) it timed out already
@@ -520,20 +521,20 @@ delegate_from_xml(xmlNode *xml)
  *
  * \param[in] op      Fencer operation that completed
  * \param[in] data    If not NULL, XML reply of last delegated fencing operation
- * \param[in] result  Full operation result
  * \param[in] dup     Whether this operation is a duplicate of another
  *                    (in which case, do not broadcast the result)
+ *
+ *  \note The operation result should be set before calling this function.
  */
 static void
-finalize_op(remote_fencing_op_t *op, xmlNode *data,
-            pcmk__action_result_t *result, bool dup)
+finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
 {
     int level = LOG_ERR;
     const char *subt = NULL;
     xmlNode *local_data = NULL;
     gboolean op_merged = FALSE;
 
-    CRM_CHECK((op != NULL) && (result != NULL), return);
+    CRM_CHECK((op != NULL), return);
 
     if (op->notify_sent) {
         // Most likely, this is a timed-out action that eventually completed
@@ -557,11 +558,11 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data,
         local_data = data;
 
     } else if (op->delegate == NULL) {
-        switch (result->execution_status) {
+        switch (op->result.execution_status) {
             case PCMK_EXEC_NO_FENCE_DEVICE:
                 break;
             case PCMK_EXEC_INVALID:
-                if (result->exit_status == CRM_EX_EXPIRED) {
+                if (op->result.exit_status == CRM_EX_EXPIRED) {
                     break;
                 }
                 // else fall through
@@ -581,12 +582,12 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data,
     subt = crm_element_value(data, F_SUBTYPE);
     if (!dup && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
         /* Defer notification until the bcast message arrives */
-        fenced_broadcast_op_result(op, result, op_merged);
+        fenced_broadcast_op_result(op, &op->result, op_merged);
         free_xml(local_data);
         return;
     }
 
-    if (pcmk__result_ok(result) || dup
+    if (pcmk__result_ok(&op->result) || dup
         || !pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         level = LOG_NOTICE;
     }
@@ -595,16 +596,17 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data,
                (op->target? op->target : ""),
                (op->delegate? op->delegate : "unknown node"),
                op->client_name, op->originator,
-               (op_merged? " (merged)" : ""), crm_exit_str(result->exit_status),
-               pcmk_exec_status_str(result->execution_status),
-               ((result->exit_reason == NULL)? "" : ": "),
-               ((result->exit_reason == NULL)? "" : result->exit_reason),
+               (op_merged? " (merged)" : ""),
+               crm_exit_str(op->result.exit_status),
+               pcmk_exec_status_str(op->result.execution_status),
+               ((op->result.exit_reason == NULL)? "" : ": "),
+               ((op->result.exit_reason == NULL)? "" : op->result.exit_reason),
                op->id);
 
-    handle_local_reply_and_notify(op, data, result);
+    handle_local_reply_and_notify(op, data, &op->result);
 
     if (!dup) {
-        finalize_op_duplicates(op, data, result);
+        finalize_op_duplicates(op, data, &op->result);
     }
 
     /* Free non-essential parts of the record
@@ -634,7 +636,6 @@ static gboolean
 remote_op_watchdog_done(gpointer userdata)
 {
     remote_fencing_op_t *op = userdata;
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     op->op_timer_one = 0;
 
@@ -642,8 +643,8 @@ remote_op_watchdog_done(gpointer userdata)
                CRM_XS " id=%.8s",
                op->action, op->target, op->client_name, op->id);
     op->state = st_done;
-    pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    finalize_op(op, NULL, &result, false);
+    pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    finalize_op(op, NULL, false);
     return G_SOURCE_REMOVE;
 }
 
@@ -676,8 +677,6 @@ remote_op_timeout_one(gpointer userdata)
 static void
 finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
 {
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
     op->op_timer_total = 0;
 
     crm_debug("Action '%s' targeting %s for client %s timed out "
@@ -690,13 +689,12 @@ finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
          * devices, and return success.
          */
         op->state = st_done;
-        pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     } else {
         op->state = st_failed;
-        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT, reason);
+        pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT, reason);
     }
-    finalize_op(op, NULL, &result, false);
-    pcmk__reset_result(&result);
+    finalize_op(op, NULL, false);
 }
 
 /*!
@@ -1094,13 +1092,9 @@ fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
     set_fencing_completed(op);
     op->delegate = strdup("a human");
 
-    {
-        // For the fencer's purposes, the fencing operation is done
-        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-        pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        finalize_op(op, msg, &result, false);
-    }
+    // For the fencer's purposes, the fencing operation is done
+    pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    finalize_op(op, msg, false);
 
     /* For the requester's purposes, the operation is still pending. The
      * actual result will be sent asynchronously via the operation's done_cb().
@@ -1279,16 +1273,11 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
     switch (op->state) {
         case st_failed:
             // advance_topology_level() exhausted levels
-            {
-                pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-                pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
-                                 "All topology levels failed");
-                crm_warn("Could not request peer fencing (%s) targeting %s "
-                         CRM_XS " id=%.8s", op->action, op->target, op->id);
-                finalize_op(op, NULL, &result, false);
-                pcmk__reset_result(&result);
-            }
+            pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                             "All topology levels failed");
+            crm_warn("Could not request peer fencing (%s) targeting %s "
+                     CRM_XS " id=%.8s", op->action, op->target, op->id);
+            finalize_op(op, NULL, false);
             return op;
 
         case st_duplicate:
@@ -1613,10 +1602,6 @@ static void
 advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
                                  xmlNode *msg)
 {
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-    pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-
     /* Advance to the next device at this topology level, if any */
     if (op->devices) {
         op->devices = op->devices->next;
@@ -1644,6 +1629,10 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
     }
 
     if (op->devices) {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
+        pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next targeting %s on behalf of %s@%s",
                   op->target, op->client_name, op->originator);
@@ -1659,7 +1648,8 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
         crm_trace("Marking complex fencing op targeting %s as complete",
                   op->target);
         op->state = st_done;
-        finalize_op(op, msg, &result, false);
+        pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        finalize_op(op, msg, false);
     }
 }
 
@@ -1868,7 +1858,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer,
         }
 
         op->state = st_failed;
-        finalize_op(op, NULL, result, false);
+        pcmk__set_result(&op->result, result->exit_status,
+                         result->execution_status, result->exit_reason);
+        finalize_op(op, NULL, false);
 
     } else {
         crm_info("Waiting for additional peers capable of fencing (%s) %s%s%s "
@@ -2245,31 +2237,34 @@ fenced_process_fencing_reply(xmlNode *msg)
         /* Could be for an event that began before we started */
         /* TODO: Record the op for later querying */
         crm_info("Received peer result of unknown or expired operation %s", id);
-        goto done;
+        pcmk__reset_result(&result);
+        return;
     }
+
+    op->result = result; // The operation takes ownership of the result
 
     if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
         crm_err("Received outdated reply for device %s (instead of %s) to "
                 "fence (%s) %s. Operation already timed out at peer level.",
                 device, (const char *) op->devices->data, op->action, op->target);
-        goto done;
+        return;
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
         crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s%s%s%s "
                   CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->originator,
-                  pcmk_exec_status_str(result.execution_status),
-                  (result.exit_reason == NULL)? "" : " (",
-                  (result.exit_reason == NULL)? "" : result.exit_reason,
-                  (result.exit_reason == NULL)? "" : ")", op->id);
-        if (pcmk__result_ok(&result)) {
+                  pcmk_exec_status_str(op->result.execution_status),
+                  (op->result.exit_reason == NULL)? "" : " (",
+                  (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
+                  (op->result.exit_reason == NULL)? "" : ")", op->id);
+        if (pcmk__result_ok(&op->result)) {
             op->state = st_done;
         } else {
             op->state = st_failed;
         }
-        finalize_op(op, msg, &result, false);
-        goto done;
+        finalize_op(op, msg, false);
+        return;
 
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
@@ -2277,7 +2272,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         crm_err("Received non-broadcast fencing result for operation %.8s "
                 "we do not own (device %s targeting %s)",
                 op->id, device, op->target);
-        goto done;
+        return;
     }
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
@@ -2286,58 +2281,58 @@ fenced_process_fencing_reply(xmlNode *msg)
         crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: %s%s%s%s",
                    op->action, op->target, device, op->client_name,
                    op->originator,
-                   pcmk_exec_status_str(result.execution_status),
-                  (result.exit_reason == NULL)? "" : " (",
-                  (result.exit_reason == NULL)? "" : result.exit_reason,
-                  (result.exit_reason == NULL)? "" : ")");
+                   pcmk_exec_status_str(op->result.execution_status),
+                  (op->result.exit_reason == NULL)? "" : " (",
+                  (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
+                  (op->result.exit_reason == NULL)? "" : ")");
 
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
         if (op->state == st_done) {
-            finalize_op(op, msg, &result, false);
-            goto done;
+            finalize_op(op, msg, false);
+            return;
         }
 
-        if ((op->phase == 2) && !pcmk__result_ok(&result)) {
+        if ((op->phase == 2) && !pcmk__result_ok(&op->result)) {
             /* A remapped "on" failed, but the node was already turned off
              * successfully, so ignore the error and continue.
              */
             crm_warn("Ignoring %s 'on' failure (%s%s%s) targeting %s "
                      "after successful 'off'",
-                     device, pcmk_exec_status_str(result.execution_status),
-                     (result.exit_reason == NULL)? "" : ": ",
-                     (result.exit_reason == NULL)? "" : result.exit_reason,
+                     device, pcmk_exec_status_str(op->result.execution_status),
+                     (op->result.exit_reason == NULL)? "" : ": ",
+                     (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
                      op->target);
-            pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+            pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
-        if (pcmk__result_ok(&result)) {
+        if (pcmk__result_ok(&op->result)) {
             /* An operation completed successfully. Try another device if
              * necessary, otherwise mark the operation as done. */
             advance_topology_device_in_level(op, device, msg);
-            goto done;
+            return;
         } else {
             /* This device failed, time to try another topology level. If no other
              * levels are available, mark this operation as failed and report results. */
             if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
-                finalize_op(op, msg, &result, false);
-                goto done;
+                finalize_op(op, msg, false);
+                return;
             }
         }
 
-    } else if (pcmk__result_ok(&result) && (op->devices == NULL)) {
+    } else if (pcmk__result_ok(&op->result) && (op->devices == NULL)) {
         crm_trace("All done for %s", op->target);
         op->state = st_done;
-        finalize_op(op, msg, &result, false);
-        goto done;
+        finalize_op(op, msg, false);
+        return;
 
-    } else if ((result.execution_status == PCMK_EXEC_TIMEOUT)
+    } else if ((op->result.execution_status == PCMK_EXEC_TIMEOUT)
                && (op->devices == NULL)) {
         /* If the operation timed out don't bother retrying other peers. */
         op->state = st_failed;
-        finalize_op(op, msg, &result, false);
-        goto done;
+        finalize_op(op, msg, false);
+        return;
 
     } else {
         /* fall-through and attempt other fencing action using another peer */
@@ -2346,10 +2341,8 @@ fenced_process_fencing_reply(xmlNode *msg)
     /* Retry on failure */
     crm_trace("Next for %s on behalf of %s@%s (result was: %s)",
               op->target, op->originator, op->client_name,
-              pcmk_exec_status_str(result.execution_status));
-    request_peer_fencing(op, NULL, &result);
-done:
-    pcmk__reset_result(&result);
+              pcmk_exec_status_str(op->result.execution_status));
+    request_peer_fencing(op, NULL, &op->result);
 }
 
 gboolean
