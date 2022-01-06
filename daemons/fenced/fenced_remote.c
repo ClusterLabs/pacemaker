@@ -362,13 +362,12 @@ undo_op_remap(remote_fencing_op_t *op)
  * \brief Create notification data XML for a fencing operation result
  *
  * \param[in] op      Fencer operation that completed
- * \param[in] result  Full operation result
  *
  * \return Newly created XML to add as notification data
  * \note The caller is responsible for freeing the result.
  */
 static xmlNode *
-fencing_result2xml(remote_fencing_op_t *op, pcmk__action_result_t *result)
+fencing_result2xml(remote_fencing_op_t *op)
 {
     xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
 
@@ -381,7 +380,7 @@ fencing_result2xml(remote_fencing_op_t *op, pcmk__action_result_t *result)
     crm_xml_add(notify_data, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME, op->client_name);
 
-    stonith__xe_set_result(notify_data, result);
+    stonith__xe_set_result(notify_data, &op->result);
     return notify_data;
 }
 
@@ -397,7 +396,7 @@ fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
-    xmlNode *notify_data = fencing_result2xml(op, &op->result);
+    xmlNode *notify_data = fencing_result2xml(op);
 
     count++;
     crm_trace("Broadcasting result to peers");
@@ -448,7 +447,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    notify_data = fencing_result2xml(op, &op->result);
+    notify_data = fencing_result2xml(op);
     fenced_send_notification(T_STONITH_NOTIFY_FENCE, &op->result, notify_data);
     free_xml(notify_data);
     fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
