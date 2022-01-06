@@ -257,6 +257,7 @@ stonith_xml_history_to_list(xmlNode *history)
         op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
+        stonith__xe_get_result(xml_op, &op->result);
 
         g_hash_table_replace(rv, id, op);
         CRM_LOG_ASSERT(g_hash_table_lookup(rv, id) != NULL);
@@ -355,6 +356,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
                 crm_xml_add_ll(entry, F_STONITH_DATE_NSEC, op->completed_nsec);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
+                stonith__xe_set_result(entry, &op->result);
             }
     }
 
