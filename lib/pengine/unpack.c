@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -710,7 +710,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
     }
 
     remote_node = pe_find_node(data_set->nodes, new_rsc->id);
-    CRM_CHECK(remote_node != NULL, return;);
+    CRM_CHECK(remote_node != NULL, return);
 
     pe_rsc_trace(new_rsc, "Linking remote connection resource %s to node %s",
                  new_rsc->id, remote_node->details->uname);

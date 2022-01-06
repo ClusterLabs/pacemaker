@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,7 +332,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-    CRM_CHECK(user_data == fsa_cib_conn,;);
+    CRM_LOG_ASSERT(user_data == fsa_cib_conn);
 
     crm_trace("Invoked");
     trigger_fsa();

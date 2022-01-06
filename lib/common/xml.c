@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -975,6 +975,7 @@ decompress_file(const char *filename)
         crm_err("Could not prepare to read compressed %s: %s "
                 CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         BZ2_bzReadClose(&rc, bz_file);
+        fclose(input);
         return NULL;
     }
 

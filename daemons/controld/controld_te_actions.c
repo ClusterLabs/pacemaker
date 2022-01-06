@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -580,10 +580,7 @@ notify_crmd(crm_graph_t * graph)
 
     crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
 
-    if (graph->complete == FALSE) {
-        CRM_CHECK(graph->complete,);
-        graph->complete = TRUE;
-    }
+    CRM_CHECK(graph->complete, graph->complete = TRUE);
 
     switch (graph->completion_action) {
         case tg_stop:

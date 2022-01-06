@@ -1183,14 +1183,6 @@ pcmk__output_actions(pe_working_set_t *data_set)
             continue; // This action was not scheduled
         }
 
-        if (pe__is_guest_node(action->node)) {
-            node_name = crm_strdup_printf("%s (resource: %s)",
-                                          action->node->details->uname,
-                                          action->node->details->remote_rsc->container->id);
-        } else if (action->node != NULL) {
-            node_name = crm_strdup_printf("%s", action->node->details->uname);
-        }
-
         if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
             task = strdup("Shutdown");
 
@@ -1200,10 +1192,15 @@ pcmk__output_actions(pe_working_set_t *data_set)
             task = crm_strdup_printf("Fence (%s)", op);
 
         } else {
-            crm_debug("Unexpected node action '%s' (bug?)",
-                      crm_str(action->task));
-            free(node_name);
-            continue;
+            continue; // Don't display other node action types
+        }
+
+        if (pe__is_guest_node(action->node)) {
+            node_name = crm_strdup_printf("%s (resource: %s)",
+                                          action->node->details->uname,
+                                          action->node->details->remote_rsc->container->id);
+        } else if (action->node != NULL) {
+            node_name = crm_strdup_printf("%s", action->node->details->uname);
         }
 
         out->message(out, "node-action", task, node_name, action->reason);

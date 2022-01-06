@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -371,7 +371,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
 
-    CRM_CHECK(type != NULL,;);
+    CRM_LOG_ASSERT(type != NULL);
 
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -192,7 +192,7 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_CHECK(!pcmk_is_set(action->flags, pe_action_runnable), ;);
+            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pe_action_runnable));
         }
 
         pe__set_action_flags(action, pe_action_dumped);
