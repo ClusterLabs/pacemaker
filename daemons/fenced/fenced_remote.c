@@ -424,11 +424,9 @@ fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
  *
  * \param[in] op         Fencer operation that completed
  * \param[in] data       Top-level XML to add notification to
- * \param[in] result     Full operation result
  */
 static void
-handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data,
-                              pcmk__action_result_t *result)
+handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
 {
     xmlNode *notify_data = NULL;
     xmlNode *reply = NULL;
@@ -443,15 +441,15 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data,
     crm_xml_add(data, F_STONITH_TARGET, op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action);
 
-    reply = fenced_construct_reply(op->request, data, result);
+    reply = fenced_construct_reply(op->request, data, &op->result);
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
     do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
 
     /* bcast to all local clients that the fencing operation happend */
-    notify_data = fencing_result2xml(op, result);
-    fenced_send_notification(T_STONITH_NOTIFY_FENCE, result, notify_data);
+    notify_data = fencing_result2xml(op, &op->result);
+    fenced_send_notification(T_STONITH_NOTIFY_FENCE, &op->result, notify_data);
     free_xml(notify_data);
     fenced_send_notification(T_STONITH_NOTIFY_HISTORY, NULL, NULL);
 
@@ -600,7 +598,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
                ((op->result.exit_reason == NULL)? "" : op->result.exit_reason),
                op->id);
 
-    handle_local_reply_and_notify(op, data, &op->result);
+    handle_local_reply_and_notify(op, data);
 
     if (!dup) {
         finalize_op_duplicates(op, data);
