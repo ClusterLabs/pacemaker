@@ -260,6 +260,8 @@ free_remote_op(gpointer data)
     }
     g_list_free_full(op->automatic_list, free);
     g_list_free(op->duplicates);
+
+    pcmk__reset_result(&op->result);
     free(op);
 }
 

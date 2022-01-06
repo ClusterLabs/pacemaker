@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -151,6 +151,8 @@ typedef struct remote_fencing_op_s {
     /*! The point at which the remote operation completed(nsec) */
     long long completed_nsec;
 
+    /*! The (potentially intermediate) result of the operation */
+    pcmk__action_result_t result;
 } remote_fencing_op_t;
 
 void fenced_broadcast_op_result(remote_fencing_op_t *op,
