@@ -553,7 +553,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "load-threshold", NULL, "percentage", NULL,
-        "80%", pcmk__valid_utilization,
+        "80%", pcmk__valid_percentage,
         "Maximum amount of system load that should be used by cluster nodes",
         "The cluster will slow down its recovery process when the amount of "
             "system resources used (currently CPU) approaches this limit",
