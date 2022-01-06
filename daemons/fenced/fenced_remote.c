@@ -468,11 +468,9 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data,
  *
  * \param[in] op         Fencer operation that completed
  * \param[in] data       Top-level XML to add notification to
- * \param[in] result     Full operation result
  */
 static void
-finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data,
-                       pcmk__action_result_t *result)
+finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 {
     for (GList *iter = op->duplicates; iter != NULL; iter = iter->next) {
         remote_fencing_op_t *other = iter->data;
@@ -482,10 +480,11 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data,
             crm_debug("Performing duplicate notification for %s@%s: %s "
                       CRM_XS " id=%.8s",
                       other->client_name, other->originator,
-                      pcmk_exec_status_str(result->execution_status),
+                      pcmk_exec_status_str(op->result.execution_status),
                       other->id);
-            pcmk__set_result(&other->result, result->exit_status,
-                             result->execution_status, result->exit_reason);
+            pcmk__set_result(&other->result, op->result.exit_status,
+                             op->result.execution_status,
+                             op->result.exit_reason);
             finalize_op(other, data, true);
 
         } else {
@@ -606,7 +605,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     handle_local_reply_and_notify(op, data, &op->result);
 
     if (!dup) {
-        finalize_op_duplicates(op, data, &op->result);
+        finalize_op_duplicates(op, data);
     }
 
     /* Free non-essential parts of the record
