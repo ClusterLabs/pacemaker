@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #include <stdarg.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -263,8 +264,12 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
             char *failed_s = time_t_string(event->completed);
 
             out->list_item(out, "failed-stonith-event",
-                           "%s of %s failed : delegate=%s, client=%s, origin=%s, %s='%s' %s",
+                           "%s of %s failed%s%s%s: "
+                           "delegate=%s, client=%s, origin=%s, %s='%s' %s",
                            stonith_action_str(event->action), event->target,
+                           (event->exit_reason == NULL)? "" : " (",
+                           (event->exit_reason == NULL)? "" : event->exit_reason,
+                           (event->exit_reason == NULL)? "" : ")",
                            event->delegate ? event->delegate : "",
                            event->client, event->origin,
                            full_history ? "completed" : "last-failed",
@@ -296,8 +301,13 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            pcmk__indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
+            pcmk__indented_printf(out,
+                                  "%s of %s failed%s%s%s: "
+                                  "delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
                                   stonith_action_str(event->action), event->target,
+                                  (event->exit_reason == NULL)? "" : " (",
+                                  (event->exit_reason == NULL)? "" : event->exit_reason,
+                                  (event->exit_reason == NULL)? "" : ")",
                                   event->delegate ? event->delegate : "",
                                   event->client, event->origin,
                                   full_history ? "completed" : "last-failed", buf,
@@ -341,7 +351,9 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            crm_xml_add(node, "status", "failed");
+            pcmk__xe_set_props(node, "status", "failed",
+                               XML_LRM_ATTR_EXIT_REASON, event->exit_reason,
+                               NULL);
             break;
 
         case st_done:

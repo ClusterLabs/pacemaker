@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -463,8 +463,13 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s'%s\n",
+            curses_indented_printf(out,
+                                   "%s of %s failed%s%s%s: "
+                                   "delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
                                    stonith_action_str(event->action), event->target,
+                                   (event->exit_reason == NULL)? "" : " (",
+                                   (event->exit_reason == NULL)? "" : event->exit_reason,
+                                   (event->exit_reason == NULL)? "" : ")",
                                    event->delegate ? event->delegate : "",
                                    event->client, event->origin,
                                    full_history ? "completed" : "last-failed", buf,
