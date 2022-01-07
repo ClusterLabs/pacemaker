@@ -85,51 +85,52 @@ static resource_alloc_functions_t allocation_methods[] = {
     }
 };
 
-gboolean
-check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
-                     gboolean active_here, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Check whether a resource's agent standard, provider, or type changed
+ *
+ * \param[in] rsc             Resource to check
+ * \param[in] node            Node needing unfencing/restart if agent changed
+ * \param[in] rsc_entry       XML with previously known agent information
+ * \param[in] active_on_node  Whether \p rsc is active on \p node
+ * \param[in] data_set
+ *
+ * \return true if agent for \p rsc changed, otherwise false
+ */
+bool
+pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+                        const xmlNode *rsc_entry, bool active_on_node,
+                        pe_working_set_t *data_set)
 {
-    int attr_lpc = 0;
-    gboolean force_restart = FALSE;
-    gboolean delete_resource = FALSE;
-    gboolean changed = FALSE;
-
-    const char *value = NULL;
-    const char *old_value = NULL;
-
+    bool changed = false;
     const char *attr_list[] = {
         XML_ATTR_TYPE,
         XML_AGENT_ATTR_CLASS,
         XML_AGENT_ATTR_PROVIDER
     };
 
-    for (; attr_lpc < PCMK__NELEM(attr_list); attr_lpc++) {
-        value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
-        old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
-        if (value == old_value  /* i.e. NULL */
-            || pcmk__str_eq(value, old_value, pcmk__str_none)) {
-            continue;
-        }
+    for (int i = 0; i < PCMK__NELEM(attr_list); i++) {
+        const char *value = crm_element_value(rsc->xml, attr_list[i]);
+        const char *old_value = crm_element_value(rsc_entry, attr_list[i]);
 
-        changed = TRUE;
-        trigger_unfencing(rsc, node, "Device definition changed", NULL, data_set);
-        if (active_here) {
-            force_restart = TRUE;
-            crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
-                       rsc->id, node->details->uname, attr_list[attr_lpc],
-                       crm_str(old_value), crm_str(value));
+        if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {
+            changed = true;
+            trigger_unfencing(rsc, node, "Device definition changed", NULL,
+                              data_set);
+            if (active_on_node) {
+                crm_notice("Forcing restart of %s on %s "
+                           "because %s changed from '%s' to '%s'",
+                           rsc->id, node->details->uname, attr_list[i],
+                           crm_str(old_value), crm_str(value));
+            }
         }
     }
-    if (force_restart) {
-        /* make sure the restart happens */
+    if (changed && active_on_node) {
+        // Make sure the resource is restarted
         stop_action(rsc, node, FALSE);
         pe__set_resource_flags(rsc, pe_rsc_start_pending);
-        delete_resource = TRUE;
-
-    } else if (changed) {
-        delete_resource = TRUE;
     }
-    return delete_resource;
+    return changed;
 }
 
 GList *

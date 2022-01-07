@@ -255,7 +255,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
-        if (check_rsc_parameters(rsc, node, rsc_entry, FALSE, data_set)) {
+        if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false, data_set)) {
             DeleteRsc(rsc, node, FALSE, data_set);
         }
         pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
@@ -265,7 +265,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
 
     pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
 
-    if (check_rsc_parameters(rsc, node, rsc_entry, TRUE, data_set)) {
+    if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true, data_set)) {
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 

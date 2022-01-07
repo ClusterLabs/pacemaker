@@ -298,9 +298,9 @@ G_GNUC_INTERNAL
 void pcmk__set_allocation_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-gboolean check_rsc_parameters(pe_resource_t *rsc, pe_node_t *node,
-                              xmlNode *rsc_entry, gboolean active_here,
-                              pe_working_set_t *data_set);
+bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+                             const xmlNode *rsc_entry, bool active_on_node,
+                             pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 GList *find_rsc_list(GList *result, pe_resource_t *rsc, const char *id,
