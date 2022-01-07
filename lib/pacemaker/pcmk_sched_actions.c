@@ -1484,6 +1484,30 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Create a list of resource's action history entries, sorted by call ID
+ *
+ * \param[in]  rsc          Resource whose history should be checked
+ * \param[in]  rsc_entry    Resource's <lrm_rsc_op> status XML
+ * \param[out] start_index  Where to store index of start-like action, if any
+ * \param[out] stop_index   Where to store index of stop action, if any
+ */
+static GList *
+rsc_history_as_list(pe_resource_t *rsc, xmlNode *rsc_entry,
+                    int *start_index, int *stop_index)
+{
+    GList *ops = NULL;
+
+    for (xmlNode *rsc_op = first_named_child(rsc_entry, XML_LRM_TAG_RSC_OP);
+         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+        ops = g_list_prepend(ops, rsc_op);
+    }
+    ops = g_list_sort(ops, sort_op_by_callid);
+    calculate_active_ops(ops, start_index, stop_index);
+    return ops;
+}
+
 static void
 check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
@@ -1494,8 +1518,6 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
 
     const char *task = NULL;
 
-    xmlNode *rsc_op = NULL;
-    GList *op_list = NULL;
     GList *sorted_op_list = NULL;
 
     CRM_CHECK(node != NULL, return);
@@ -1527,28 +1549,18 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
-         rsc_op = pcmk__xe_next(rsc_op)) {
-
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
-            op_list = g_list_prepend(op_list, rsc_op);
-        }
+    sorted_op_list = rsc_history_as_list(rsc, rsc_entry, &start_index,
+                                         &stop_index);
+    if (start_index < stop_index) {
+        return; // Resource is stopped
     }
-
-    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-    calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 
     for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
         guint interval_ms = 0;
 
-        offset++;
-
-        if (start_index < stop_index) {
-            /* stopped */
-            continue;
-        } else if (offset < start_index) {
-            /* action occurred prior to a start */
+        if (++offset < start_index) {
+            // Skip actions that happened before a start
             continue;
         }
 
