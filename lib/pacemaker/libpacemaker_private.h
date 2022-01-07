@@ -16,7 +16,7 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
-// Actions
+// Actions (pcmk_sched_actions.c)
 
 G_GNUC_INTERNAL
 void pcmk__update_action_for_orderings(pe_action_t *action,
@@ -45,6 +45,10 @@ void pcmk__deduplicate_action_inputs(pe_action_t *action);
 
 G_GNUC_INTERNAL
 void pcmk__output_actions(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+gboolean check_action_definition(pe_resource_t *rsc, pe_node_t *active_node,
+                                 xmlNode *xml_op, pe_working_set_t *data_set);
 
 
 // Producing transition graphs (pcmk_graph_producer.c)
