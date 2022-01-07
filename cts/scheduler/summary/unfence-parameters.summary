@@ -15,7 +15,7 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) virt-4 'node is unclean'
   * Fence (on) virt-3 'required by fencing monitor'
-  * Fence (on) virt-1 'Device parameters changed (reload)'
+  * Fence (on) virt-1 'Device parameters changed'
   * Restart    fencing     ( virt-1 )  due to resource definition change
   * Restart    dlm:0       ( virt-1 )  due to required stonith
   * Start      dlm:2       ( virt-3 )
