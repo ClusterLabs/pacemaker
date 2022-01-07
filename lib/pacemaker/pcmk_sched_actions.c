@@ -1353,6 +1353,28 @@ force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
                       rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Reschedule a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Name of action being rescheduled
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] node         Node where action should be rescheduled
+ */
+static void
+reschedule_recurring(pe_resource_t *rsc, const char *task, guint interval_ms,
+                     pe_node_t *node)
+{
+    pe_action_t *op = NULL;
+
+    trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
+                      NULL, rsc->cluster);
+    op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
+                       task, node, TRUE, TRUE, rsc->cluster);
+    pe__set_action_flags(op, pe_action_reschedule);
+}
+
 gboolean
 check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
@@ -1413,15 +1435,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
              * re-scheduled so the next run uses the new parameters.
              * The old instance will be cancelled automatically.
              */
-            pe_action_t *op = NULL;
-
-            trigger_unfencing(rsc, active_node,
-                              "Device parameters changed (reschedule)", NULL,
-                              data_set);
             crm_log_xml_debug(digest_data->params_all, "params:reschedule");
-            op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
-                               task, active_node, TRUE, TRUE, data_set);
-            pe__set_action_flags(op, pe_action_reschedule);
+            reschedule_recurring(rsc, task, interval_ms, active_node);
 
         } else if (crm_element_value(xml_op,
                                      XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
