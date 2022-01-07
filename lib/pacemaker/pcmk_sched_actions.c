@@ -1375,88 +1375,113 @@ reschedule_recurring(pe_resource_t *rsc, const char *task, guint interval_ms,
     pe__set_action_flags(op, pe_action_reschedule);
 }
 
-gboolean
-check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
-                        pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Handle any configuration change for an action
+ *
+ * Given an action from resource history, if the resource's configuration
+ * changed since the action was done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, etc.).
+ *
+ * \param[in] rsc     Resource that action is for
+ * \param[in] node    Node that action was on
+ * \param[in] xml_op  Action XML from resource history
+ *
+ * \return true if action configuration changed, otherwise false
+ */
+bool
+pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
 {
     guint interval_ms = 0;
+    const char *task = NULL;
     const op_digest_cache_t *digest_data = NULL;
 
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    CRM_CHECK((rsc != NULL) && (node != NULL) && (xml_op != NULL),
+              return false);
 
-    CRM_CHECK(active_node != NULL, return FALSE);
+    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    CRM_CHECK(task != NULL, return false);
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
+    // If this is a recurring action, check whether it has been orphaned
     if (interval_ms > 0) {
         if (action_in_config(rsc, task, interval_ms)) {
             pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
-                         active_node->details->uname);
-        } else if (pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
+                         node->details->uname);
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pe_flag_stop_action_orphans)) {
             schedule_cancel(rsc,
                             crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                            task, interval_ms, active_node, "orphan");
-            return TRUE;
+                            task, interval_ms, node, "orphan");
+            return true;
         } else {
             pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
-                         active_node->details->uname);
-            return TRUE;
+                         node->details->uname);
+            return true;
         }
     }
 
-    crm_trace("Testing " PCMK__OP_FMT " on %s",
-              rsc->id, task, interval_ms, active_node->details->uname);
+    crm_trace("Checking %s-interval %s for %s on %s for configuration changes",
+              pcmk__readable_interval(interval_ms), task, rsc->id,
+              node->details->uname);
     task = task_for_digest(task, interval_ms);
-    digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
 
-    if (only_sanitized_changed(xml_op, digest_data, data_set)) {
-        if (!pcmk__is_daemon && data_set->priv != NULL) {
-            pcmk__output_t *out = data_set->priv;
-            out->info(out, "Only 'private' parameters to "
-                      PCMK__OP_FMT " on %s changed: %s", rsc->id, task,
-                      interval_ms, active_node->details->uname,
+    if (only_sanitized_changed(xml_op, digest_data, rsc->cluster)) {
+        if (!pcmk__is_daemon && (rsc->cluster->priv != NULL)) {
+            pcmk__output_t *out = rsc->cluster->priv;
+
+            out->info(out,
+                      "Only 'private' parameters to %s-interval %s for %s "
+                      "on %s changed: %s",
+                      pcmk__readable_interval(interval_ms), task, rsc->id,
+                      node->details->uname,
                       crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
-        return FALSE;
+        return false;
     }
 
-    if (digest_data->rc == RSC_DIGEST_RESTART) {
-        force_restart(rsc, task, interval_ms, active_node, digest_data);
-        return TRUE;
+    switch (digest_data->rc) {
+        case RSC_DIGEST_RESTART:
+            force_restart(rsc, task, interval_ms, node, digest_data);
+            return true;
+
+        case RSC_DIGEST_ALL:
+        case RSC_DIGEST_UNKNOWN:
+            // Changes that can potentially be handled by an agent reload
+
+            if (interval_ms > 0) {
+                /* Recurring actions aren't reloaded per se, they are just
+                 * re-scheduled so the next run uses the new parameters.
+                 * The old instance will be cancelled automatically.
+                 */
+                crm_log_xml_debug(digest_data->params_all, "params:reschedule");
+                reschedule_recurring(rsc, task, interval_ms, node);
+
+            } else if (crm_element_value(xml_op,
+                                         XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+                // Agent supports reload, so use it
+                trigger_unfencing(rsc, node,
+                                  "Device parameters changed (reload)", NULL,
+                                  rsc->cluster);
+                crm_log_xml_debug(digest_data->params_all, "params:reload");
+                ReloadRsc(rsc, node, rsc->cluster);
+
+            } else {
+                pe_rsc_trace(rsc,
+                             "Restarting %s because agent doesn't support reload",
+                             rsc->id);
+                force_restart(rsc, task, interval_ms, node, digest_data);
+            }
+            return true;
+
+        default:
+            break;
     }
-
-    if ((digest_data->rc == RSC_DIGEST_ALL)
-        || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
-        // Changes that can potentially be handled by an agent reload
-
-        if (interval_ms > 0) {
-            /* Recurring actions aren't reloaded per se, they are just
-             * re-scheduled so the next run uses the new parameters.
-             * The old instance will be cancelled automatically.
-             */
-            crm_log_xml_debug(digest_data->params_all, "params:reschedule");
-            reschedule_recurring(rsc, task, interval_ms, active_node);
-
-        } else if (crm_element_value(xml_op,
-                                     XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
-            // Agent supports reload, so use it
-            trigger_unfencing(rsc, active_node,
-                              "Device parameters changed (reload)", NULL,
-                              data_set);
-            crm_log_xml_debug(digest_data->params_all, "params:reload");
-            ReloadRsc(rsc, active_node, data_set);
-
-        } else {
-            pe_rsc_trace(rsc,
-                         "Restarting %s because agent doesn't support reload",
-                         rsc->id);
-            force_restart(rsc, task, interval_ms, active_node, digest_data);
-        }
-        return TRUE;
-    }
-
-    return FALSE;
+    return false;
 }
 
 static void
@@ -1554,7 +1579,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
                 pe__add_param_check(rsc_op, rsc, node, pe_check_active,
                                     data_set);
 
-            } else if (check_action_definition(rsc, node, rsc_op, data_set)
+            } else if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
                 pe__clear_failcount(rsc, node, "action definition changed",

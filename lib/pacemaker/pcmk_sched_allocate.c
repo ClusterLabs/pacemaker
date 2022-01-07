@@ -40,7 +40,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 
     switch (check) {
         case pe_check_active:
-            if (check_action_definition(rsc, node, rsc_op, data_set)
+            if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2158,7 +2158,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
             /* Extra work to detect device changes on remotes
              *
              * We may do this for all nodes in the future, but for now
-             * the check_action_definition() based stuff works fine.
+             * the pcmk__check_action_config() based stuff works fine.
              */
             long max = 1024;
             long digests_all_offset = 0;

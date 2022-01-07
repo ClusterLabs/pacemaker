@@ -47,8 +47,8 @@ G_GNUC_INTERNAL
 void pcmk__output_actions(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-gboolean check_action_definition(pe_resource_t *rsc, pe_node_t *active_node,
-                                 xmlNode *xml_op, pe_working_set_t *data_set);
+bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
+                               xmlNode *xml_op);
 
 
 // Producing transition graphs (pcmk_graph_producer.c)

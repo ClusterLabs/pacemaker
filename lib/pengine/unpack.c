@@ -3762,7 +3762,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         } else if(node->details->online && node->details->unclean == FALSE) {
             /* Reschedule the recurring monitor. schedule_cancel() won't work at
              * this stage, so as a hacky workaround, forcibly change the restart
-             * digest so check_action_definition() does what we want later.
+             * digest so pcmk__check_action_config() does what we want later.
              *
              * @TODO We should skip this if there is a newer successful monitor.
              *       Also, this causes rescheduling only if the history entry
