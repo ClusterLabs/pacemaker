@@ -13,7 +13,8 @@
 
 #include "libpacemaker_private.h"
 
-static resource_alloc_functions_t resource_class_alloc_functions[] = {
+// Resource allocation methods that vary by resource variant
+static resource_alloc_functions_t allocation_methods[] = {
     {
         pcmk__native_merge_weights,
         pcmk__native_allocate,
@@ -188,17 +189,18 @@ find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renam
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Set the variant-appropriate allocation methods for a resource
+ *
+ * \param[in] rsc  Resource to set allocation methods for
+ */
 static void
-complex_set_cmds(pe_resource_t * rsc)
+set_allocation_methods_for_rsc(pe_resource_t *rsc)
 {
-    GList *gIter = rsc->children;
-
-    rsc->cmds = &resource_class_alloc_functions[rsc->variant];
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        complex_set_cmds(child_rsc);
+    rsc->cmds = &allocation_methods[rsc->variant];
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        set_allocation_methods_for_rsc((pe_resource_t *) iter->data);
     }
 }
 
@@ -212,7 +214,7 @@ void
 pcmk__set_allocation_methods(pe_working_set_t *data_set)
 {
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        complex_set_cmds((pe_resource_t *) iter->data);
+        set_allocation_methods_for_rsc((pe_resource_t *) iter->data);
     }
 }
 
