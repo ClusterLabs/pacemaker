@@ -134,8 +134,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
 }
 
 static GList *
-find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
-              gboolean partial, pe_working_set_t * data_set)
+find_rsc_list(GList *result, pe_resource_t *rsc, const char *id)
 {
     GList *gIter = NULL;
     gboolean match = FALSE;
@@ -144,21 +143,11 @@ find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renam
         return NULL;
     }
 
-    if (partial) {
-        if (strstr(rsc->id, id)) {
-            match = TRUE;
+    if (strcmp(rsc->id, id) == 0) {
+        match = TRUE;
 
-        } else if (renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
-            match = TRUE;
-        }
-
-    } else {
-        if (strcmp(rsc->id, id) == 0) {
-            match = TRUE;
-
-        } else if (renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-            match = TRUE;
-        }
+    } else if (rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+        match = TRUE;
     }
 
     if (match) {
@@ -170,7 +159,7 @@ find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renam
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-            result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
+            result = find_rsc_list(result, child, id);
         }
     }
     return result;
@@ -194,8 +183,7 @@ pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
 
     CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        result = find_rsc_list(result, (pe_resource_t *) iter->data, id,
-                               TRUE, FALSE, NULL);
+        result = find_rsc_list(result, (pe_resource_t *) iter->data, id);
     }
     return result;
 }
