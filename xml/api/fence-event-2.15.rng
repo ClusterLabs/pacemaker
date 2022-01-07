@@ -19,6 +19,9 @@
                 <attribute name="extended-status"> <text /> </attribute>
             </optional>
             <optional>
+                <attribute name="exit-reason"> <text /> </attribute>
+            </optional>
+            <optional>
                 <attribute name="delegate"> <text /> </attribute>
             </optional>
             <attribute name="action"> <text /> </attribute>
