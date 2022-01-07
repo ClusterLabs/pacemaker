@@ -1272,6 +1272,28 @@ action_in_config(pe_resource_t *rsc, const char *task, guint interval_ms)
     return config;
 }
 
+/*!
+ * \internal
+ * \brief Get action name needed to compare digest for configuration changes
+ *
+ * \param[in] task         Action name from history
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ *
+ * \return Action name whose digest should be compared
+ */
+static const char *
+task_for_digest(const char *task, guint interval_ms)
+{
+    /* Certain actions need to be compared against the parameters used to start
+     * the resource.
+     */
+    if ((interval_ms == 0)
+        && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED, RSC_PROMOTE, NULL)) {
+        task = RSC_START;
+    }
+    return task;
+}
+
 gboolean
 check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
@@ -1307,20 +1329,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
     crm_trace("Testing " PCMK__OP_FMT " on %s",
               rsc->id, task, interval_ms, active_node->details->uname);
-    if ((interval_ms == 0) && pcmk__str_eq(task, RSC_STATUS, pcmk__str_casei)) {
-        /* Reload based on the start action not a probe */
-        task = RSC_START;
-
-    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_MIGRATED, pcmk__str_casei)) {
-        /* Reload based on the start action not a migrate */
-        task = RSC_START;
-    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_PROMOTE, pcmk__str_casei)) {
-        /* Reload based on the start action not a promote */
-        task = RSC_START;
-    }
-
+    task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
-
     if (pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
         digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
     }
