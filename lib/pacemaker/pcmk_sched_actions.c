@@ -1294,6 +1294,41 @@ task_for_digest(const char *task, guint interval_ms)
     return task;
 }
 
+/*!
+ * \internal
+ * \brief Check whether only sanitized parameters to an action changed
+ *
+ * When collecting CIB files for troubleshooting, crm_report will mask
+ * sensitive resource parameters. If simulations were run using that, affected
+ * resources would appear to need a restart, which would complicate
+ * troubleshooting. To avoid that, we save a "secure digest" of non-sensitive
+ * parameters. This function used that digest to check whether only masked
+ * parameters are different.
+ *
+ * \param[in] xml_op       Resource history entry with secure digest
+ * \param[in] digest_data  Operation digest information being compared
+ * \param[in] data_set     Cluster working set
+ *
+ * \return true if only sanitized parameters changed, otherwise false
+ */
+static bool
+only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
+                       pe_working_set_t *data_set)
+{
+    const char *digest_secure = NULL;
+
+    if (!pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
+        // The scheduler is not being run as a simulation
+        return false;
+    }
+
+    digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
+
+    return (digest_data->rc != RSC_DIGEST_MATCH) && (digest_secure != NULL)
+           && (digest_data->digest_secure_calc != NULL)
+           && (strcmp(digest_data->digest_secure_calc, digest_secure) == 0);
+}
+
 gboolean
 check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
@@ -1304,7 +1339,6 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
     gboolean did_change = FALSE;
 
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *digest_secure = NULL;
 
     CRM_CHECK(active_node != NULL, return FALSE);
 
@@ -1331,14 +1365,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
               rsc->id, task, interval_ms, active_node->details->uname);
     task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
-        digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
-    }
 
-    if(digest_data->rc != RSC_DIGEST_MATCH
-       && digest_secure
-       && digest_data->digest_secure_calc
-       && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
+    if (only_sanitized_changed(xml_op, digest_data, data_set)) {
         if (!pcmk__is_daemon && data_set->priv != NULL) {
             pcmk__output_t *out = data_set->priv;
             out->info(out, "Only 'private' parameters to "
@@ -1346,8 +1374,10 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
                       interval_ms, active_node->details->uname,
                       crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
+        return FALSE;
+    }
 
-    } else if (digest_data->rc == RSC_DIGEST_RESTART) {
+    if (digest_data->rc == RSC_DIGEST_RESTART) {
         /* Changes that force a restart */
         pe_action_t *required = NULL;
 
