@@ -1329,14 +1329,36 @@ only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
            && (strcmp(digest_data->digest_secure_calc, digest_secure) == 0);
 }
 
+/*!
+ * \internal
+ * \brief Force a restart due to a configuration change
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Name of action whose configuration changed
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] node         Node where resource should be restarted
+ * \param[in] digest_data  Operation digest information being compared
+ */
+static void
+force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
+              pe_node_t *node, const op_digest_cache_t *digest_data)
+{
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
+    pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
+                                          rsc->cluster);
+
+    crm_log_xml_debug(digest_data->params_restart, "params:restart");
+    pe_action_set_reason(required, "resource definition change", true);
+    trigger_unfencing(rsc, node, "Device parameters changed", NULL,
+                      rsc->cluster);
+}
+
 gboolean
 check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
 {
-    char *key = NULL;
     guint interval_ms = 0;
     const op_digest_cache_t *digest_data = NULL;
-    gboolean did_change = FALSE;
 
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
 
@@ -1378,59 +1400,48 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
     }
 
     if (digest_data->rc == RSC_DIGEST_RESTART) {
-        /* Changes that force a restart */
-        pe_action_t *required = NULL;
-
-        did_change = TRUE;
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-        crm_log_xml_info(digest_data->params_restart, "params:restart");
-        required = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-        pe_action_set_reason(required, "resource definition change", true);
-        trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
-
-    } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
-        // Changes that can potentially be handled by an agent reload
-        const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
-
-        did_change = TRUE;
-        trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
-        crm_log_xml_info(digest_data->params_all, "params:reload");
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-
-        if (interval_ms > 0) {
-            pe_action_t *op = NULL;
-
-#if 0
-            /* Always reload/restart the entire resource */
-            ReloadRsc(rsc, active_node, data_set);
-#else
-            /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
-            op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
-            pe__set_action_flags(op, pe_action_reschedule);
-#endif
-
-        } else if (digest_restart) {
-            pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
-
-            /* Reload this resource */
-            ReloadRsc(rsc, active_node, data_set);
-            free(key);
-
-        } else {
-            pe_action_t *required = NULL;
-            pe_rsc_trace(rsc, "Resource %s doesn't support agent reloads",
-                         rsc->id);
-
-            /* Re-send the start/demote/promote op
-             * Recurring ops will be detected independently
-             */
-            required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
-                                     data_set);
-            pe_action_set_reason(required, "resource definition change", true);
-        }
+        force_restart(rsc, task, interval_ms, active_node, digest_data);
+        return TRUE;
     }
 
-    return did_change;
+    if ((digest_data->rc == RSC_DIGEST_ALL)
+        || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
+        // Changes that can potentially be handled by an agent reload
+
+        if (interval_ms > 0) {
+            /* Recurring actions aren't reloaded per se, they are just
+             * re-scheduled so the next run uses the new parameters.
+             * The old instance will be cancelled automatically.
+             */
+            pe_action_t *op = NULL;
+
+            trigger_unfencing(rsc, active_node,
+                              "Device parameters changed (reschedule)", NULL,
+                              data_set);
+            crm_log_xml_debug(digest_data->params_all, "params:reschedule");
+            op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
+                               task, active_node, TRUE, TRUE, data_set);
+            pe__set_action_flags(op, pe_action_reschedule);
+
+        } else if (crm_element_value(xml_op,
+                                     XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+            // Agent supports reload, so use it
+            trigger_unfencing(rsc, active_node,
+                              "Device parameters changed (reload)", NULL,
+                              data_set);
+            crm_log_xml_debug(digest_data->params_all, "params:reload");
+            ReloadRsc(rsc, active_node, data_set);
+
+        } else {
+            pe_rsc_trace(rsc,
+                         "Restarting %s because agent doesn't support reload",
+                         rsc->id);
+            force_restart(rsc, task, interval_ms, active_node, digest_data);
+        }
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 static void
