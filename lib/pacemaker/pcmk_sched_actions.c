@@ -1220,31 +1220,36 @@ pcmk__output_actions(pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Schedule cancellation of a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] call_id      Action's call ID from history
+ * \param[in] task         Action name
+ * \param[in] interval_ms  Action interval
+ * \param[in] node         Node that history entry is for
+ * \param[in] reason       Short description of why action is being cancelled
+ */
 static void
-CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
-            const char *reason, pe_working_set_t * data_set)
+schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
+                guint interval_ms, pe_node_t *node, const char *reason)
 {
-    guint interval_ms = 0;
     pe_action_t *cancel = NULL;
 
-    const char *task = NULL;
-    const char *call_id = NULL;
+    CRM_CHECK((rsc != NULL) && (task != NULL)
+              && (node != NULL) && (reason != NULL),
+              return);
 
-    CRM_CHECK(xml_op != NULL, return);
-    CRM_CHECK(active_node != NULL, return);
-
-    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-
-    crm_info("Action " PCMK__OP_FMT " on %s will be stopped: %s",
-             rsc->id, task, interval_ms,
-             active_node->details->uname, (reason? reason : "unknown"));
-
-    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, active_node);
+    crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
+             pcmk__readable_interval(interval_ms), task, rsc->id,
+             crm_str(node->details->uname), reason);
+    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
+
+    // Cancellations happen after stops
     pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pe_order_optional, data_set);
+                       pe_order_optional, rsc->cluster);
 }
 
 gboolean
@@ -1273,7 +1278,9 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
         if ((op_match == NULL)
             && pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
-            CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
+            schedule_cancel(rsc,
+                            crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                            task, interval_ms, active_node, "orphan");
             free(key);
             return TRUE;
 
@@ -1448,7 +1455,9 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         if ((interval_ms > 0) &&
             (pcmk_is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
-            CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
+            schedule_cancel(rsc,
+                            crm_element_value(rsc_op, XML_LRM_ATTR_CALLID),
+                            task, interval_ms, node, "maintenance mode");
 
         } else if ((interval_ms > 0) || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
                                                              RSC_PROMOTE, RSC_MIGRATED, NULL)) {

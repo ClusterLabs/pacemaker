@@ -3760,7 +3760,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             goto done;
 
         } else if(node->details->online && node->details->unclean == FALSE) {
-            /* Reschedule the recurring monitor. CancelXmlOp() won't work at
+            /* Reschedule the recurring monitor. schedule_cancel() won't work at
              * this stage, so as a hacky workaround, forcibly change the restart
              * digest so check_action_definition() does what we want later.
              *
