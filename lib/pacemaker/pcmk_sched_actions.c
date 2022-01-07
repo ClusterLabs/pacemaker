@@ -1508,45 +1508,59 @@ rsc_history_as_list(pe_resource_t *rsc, xmlNode *rsc_entry,
     return ops;
 }
 
+/*!
+ * \internal
+ * \brief Process a resource's action history from the CIB status
+ *
+ * Given a resource's action history, if the resource's configuration
+ * changed since the actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] rsc_entry  Resource's <lrm_rsc_op> status XML
+ * \param[in] rsc        Resource whose history is being processed
+ * \param[in] node       Node whose history is being processed
+ */
 static void
-check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
+process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
 {
-    GList *gIter = NULL;
     int offset = -1;
     int stop_index = 0;
     int start_index = 0;
-
-    const char *task = NULL;
-
     GList *sorted_op_list = NULL;
 
-    CRM_CHECK(node != NULL, return);
-
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        pe_resource_t *parent = uber_parent(rsc);
-        if(parent == NULL
-           || pe_rsc_is_clone(parent) == FALSE
-           || pcmk_is_set(parent->flags, pe_rsc_unique)) {
-            pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
-            DeleteRsc(rsc, node, FALSE, data_set);
+        if (pe_rsc_is_anon_clone(uber_parent(rsc))) {
+            pe_rsc_trace(rsc,
+                         "Skipping configuration check "
+                         "for orphaned clone instance %s",
+                         rsc->id);
         } else {
-            pe_rsc_trace(rsc, "Skipping param check for %s (orphan clone)", rsc->id);
+            pe_rsc_trace(rsc,
+                         "Skipping configuration check and scheduling clean-up "
+                         "for orphaned resource %s", rsc->id);
+            DeleteRsc(rsc, node, FALSE, rsc->cluster);
         }
         return;
+    }
 
-    } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+    if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
-            DeleteRsc(rsc, node, FALSE, data_set);
+            DeleteRsc(rsc, node, FALSE, rsc->cluster);
         }
-        pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
+        pe_rsc_trace(rsc,
+                     "Skipping configuration check for %s "
+                     "because no longer active on %s",
                      rsc->id, node->details->uname);
         return;
     }
 
-    pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
+    pe_rsc_trace(rsc, "Checking for configuration changes for %s on %s",
+                 rsc->id, node->details->uname);
 
     if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
-        DeleteRsc(rsc, node, FALSE, data_set);
+        DeleteRsc(rsc, node, FALSE, rsc->cluster);
     }
 
     sorted_op_list = rsc_history_as_list(rsc, rsc_entry, &start_index,
@@ -1555,8 +1569,9 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         return; // Resource is stopped
     }
 
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        xmlNode *rsc_op = (xmlNode *) iter->data;
+        const char *task = NULL;
         guint interval_ms = 0;
 
         if (++offset < start_index) {
@@ -1567,20 +1582,22 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
-        if ((interval_ms > 0) &&
-            (pcmk_is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
+        if ((interval_ms > 0)
+            && (pcmk_is_set(rsc->flags, pe_rsc_maintenance)
+                || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             schedule_cancel(rsc,
                             crm_element_value(rsc_op, XML_LRM_ATTR_CALLID),
                             task, interval_ms, node, "maintenance mode");
 
-        } else if ((interval_ms > 0) || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
-                                                             RSC_PROMOTE, RSC_MIGRATED, NULL)) {
+        } else if ((interval_ms > 0)
+                   || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
+                                           RSC_PROMOTE, RSC_MIGRATED, NULL)) {
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */
 
-            if (pe__bundle_needs_remote_name(rsc, data_set)) {
+            if (pe__bundle_needs_remote_name(rsc, rsc->cluster)) {
                 /* We haven't allocated resources to nodes yet, so if the
                  * REMOTE_CONTAINER_HACK is used, we may calculate the digest
                  * based on the literal "#uname" value rather than the properly
@@ -1589,13 +1606,13 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
                  * later in this case.
                  */
                 pe__add_param_check(rsc_op, rsc, node, pe_check_active,
-                                    data_set);
+                                    rsc->cluster);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
-                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                                    data_set)) {
+                       && (pe_get_failcount(node, rsc, NULL, pe_fc_effective,
+                                            NULL, rsc->cluster) != 0)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
-                                    data_set);
+                                    rsc->cluster);
             }
         }
     }
@@ -1656,7 +1673,7 @@ check_actions(pe_working_set_t * data_set)
                                 if (rsc->variant != pe_native) {
                                     continue;
                                 }
-                                check_actions_for(rsc_entry, rsc, node, data_set);
+                                process_rsc_history(rsc_entry, rsc, node);
                             }
                             g_list_free(result);
                         }

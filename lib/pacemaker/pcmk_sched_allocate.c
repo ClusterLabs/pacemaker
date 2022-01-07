@@ -130,7 +130,7 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
      * node if the failcount is being reset anyway.
      *
      * @TODO A clear_failcount operation can be scheduled in stage4() via
-     * check_actions_for(), or in stage5() via check_params(). This runs in
+     * process_rsc_history(), or in stage5() via check_params(). This runs in
      * stage2(), so it cannot detect those, meaning we might check the migration
      * threshold when we shouldn't -- worst case, we stop or move the resource,
      * then move it back next transition.
