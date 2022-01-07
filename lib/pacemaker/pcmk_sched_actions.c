@@ -1252,6 +1252,26 @@ schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
                        pe_order_optional, rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Check whether action from resource history is still in configuration
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Action's name
+ * \param[in] interval_ms  Action's interval (in milliseconds)
+ *
+ * \return true if action is still in resource configuration, otherwise false
+ */
+static bool
+action_in_config(pe_resource_t *rsc, const char *task, guint interval_ms)
+{
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
+    bool config = (find_rsc_op_entry(rsc, key) != NULL);
+
+    free(key);
+    return config;
+}
+
 gboolean
 check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
                         pe_working_set_t * data_set)
@@ -1268,29 +1288,21 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if (interval_ms > 0) {
-        xmlNode *op_match = NULL;
-
-        /* we need to reconstruct the key because of the way we used to construct resource IDs */
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-
-        pe_rsc_trace(rsc, "Checking parameters for %s", key);
-        op_match = find_rsc_op_entry(rsc, key);
-
-        if ((op_match == NULL)
-            && pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
+        if (action_in_config(rsc, task, interval_ms)) {
+            pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
+                         pcmk__readable_interval(interval_ms), task, rsc->id,
+                         active_node->details->uname);
+        } else if (pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
             schedule_cancel(rsc,
                             crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                             task, interval_ms, active_node, "orphan");
-            free(key);
             return TRUE;
-
-        } else if (op_match == NULL) {
-            pe_rsc_debug(rsc, "Orphan action detected: %s on %s", key, active_node->details->uname);
-            free(key);
+        } else {
+            pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
+                         pcmk__readable_interval(interval_ms), task, rsc->id,
+                         active_node->details->uname);
             return TRUE;
         }
-        free(key);
-        key = NULL;
     }
 
     crm_trace("Testing " PCMK__OP_FMT " on %s",
