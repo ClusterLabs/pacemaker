@@ -133,34 +133,27 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
     return changed;
 }
 
+/*!
+ * \internal
+ * \brief Add resource (and any matching children) to list if it matches ID
+ *
+ * \param[in] result  List to add resource to
+ * \param[in] rsc     Resource to check
+ * \param[in] id      ID to match
+ *
+ * \return (Possibly new) head of list
+ */
 static GList *
-find_rsc_list(GList *result, pe_resource_t *rsc, const char *id)
+add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
 {
-    GList *gIter = NULL;
-    gboolean match = FALSE;
-
-    if ((id == NULL) || (rsc == NULL)) {
-        return NULL;
-    }
-
-    if (strcmp(rsc->id, id) == 0) {
-        match = TRUE;
-
-    } else if (rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-        match = TRUE;
-    }
-
-    if (match) {
+    if ((strcmp(rsc->id, id) == 0)
+        || ((rsc->clone_name != NULL) && (strcmp(rsc->clone_name, id) == 0))) {
         result = g_list_prepend(result, rsc);
     }
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
 
-    if (rsc->children) {
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id);
-        }
+        result = add_rsc_if_matching(result, child, id);
     }
     return result;
 }
@@ -183,7 +176,7 @@ pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
 
     CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
-        result = find_rsc_list(result, (pe_resource_t *) iter->data, id);
+        result = add_rsc_if_matching(result, (pe_resource_t *) iter->data, id);
     }
     return result;
 }
