@@ -295,7 +295,7 @@ void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
-void set_alloc_actions(pe_working_set_t *data_set);
+void pcmk__set_allocation_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 gboolean check_rsc_parameters(pe_resource_t *rsc, pe_node_t *node,

@@ -202,16 +202,17 @@ complex_set_cmds(pe_resource_t * rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set the variant-appropriate allocation methods for all resources
+ *
+ * \param[in] data_set  Cluster working set
+ */
 void
-set_alloc_actions(pe_working_set_t * data_set)
+pcmk__set_allocation_methods(pe_working_set_t *data_set)
 {
-
-    GList *gIter = data_set->resources;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        complex_set_cmds(rsc);
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        complex_set_cmds((pe_resource_t *) iter->data);
     }
 }
 
