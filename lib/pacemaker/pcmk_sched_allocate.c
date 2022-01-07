@@ -375,11 +375,9 @@ check_actions(pe_working_set_t * data_set)
                         if (xml_has_children(rsc_entry)) {
                             GList *gIter = NULL;
                             GList *result = NULL;
-                            const char *rsc_id = ID(rsc_entry);
 
-                            CRM_CHECK(rsc_id != NULL, return);
-
-                            result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
+                            result = pcmk__rscs_matching_id(ID(rsc_entry),
+                                                            data_set);
                             for (gIter = result; gIter != NULL; gIter = gIter->next) {
                                 pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 

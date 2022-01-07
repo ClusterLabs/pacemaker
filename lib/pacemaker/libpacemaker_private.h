@@ -303,9 +303,7 @@ bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
                              pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-GList *find_rsc_list(GList *result, pe_resource_t *rsc, const char *id,
-                     gboolean renamed_clones, gboolean partial,
-                     pe_working_set_t *data_set);
+GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,

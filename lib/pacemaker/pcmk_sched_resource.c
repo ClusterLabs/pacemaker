@@ -133,28 +133,15 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
     return changed;
 }
 
-GList *
+static GList *
 find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
               gboolean partial, pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
     gboolean match = FALSE;
 
-    if (id == NULL) {
+    if ((id == NULL) || (rsc == NULL)) {
         return NULL;
-    }
-
-    if (rsc == NULL) {
-        if (data_set == NULL) {
-            return NULL;
-        }
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id, renamed_clones, partial,
-                                   NULL);
-        }
-        return result;
     }
 
     if (partial) {
@@ -186,7 +173,30 @@ find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renam
             result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
         }
     }
+    return result;
+}
 
+/*!
+ * \internal
+ * \brief Find all resources matching a given ID by either ID or clone name
+ *
+ * \param[in] id        Resource ID to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return List of all resources that match \p id
+ * \note The caller is responsible for freeing the return value with
+ *       g_list_free().
+ */
+GList *
+pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
+{
+    GList *result = NULL;
+
+    CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        result = find_rsc_list(result, (pe_resource_t *) iter->data, id,
+                               TRUE, FALSE, NULL);
+    }
     return result;
 }
 
