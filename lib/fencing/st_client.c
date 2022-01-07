@@ -698,6 +698,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;
+            pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -710,6 +711,11 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+
+            stonith__xe_get_result(op, &result);
+            kvp->exit_reason = result.exit_reason;
+            result.exit_reason = NULL;
+            pcmk__reset_result(&result);
 
             if (last) {
                 last->next = kvp;
