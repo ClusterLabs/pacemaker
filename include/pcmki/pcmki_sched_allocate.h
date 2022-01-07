@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -184,9 +184,6 @@ void promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                               pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 
-/* extern resource_object_functions_t resource_variants[]; */
-extern resource_alloc_functions_t resource_class_alloc_functions[];
-
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
                                           pe_node_t *node,
                                           enum pe_action_flags flags,
@@ -207,7 +204,6 @@ enum pe_graph_flags pcmk__multi_update_actions(pe_action_t *first,
                                                enum pe_ordering type,
                                                pe_working_set_t *data_set);
 
-void complex_set_cmds(pe_resource_t * rsc);
 void pcmk__log_transition_summary(const char *filename);
 void clone_create_pseudo_actions(
     pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);

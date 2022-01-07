@@ -295,6 +295,19 @@ void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL
+void set_alloc_actions(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+gboolean check_rsc_parameters(pe_resource_t *rsc, pe_node_t *node,
+                              xmlNode *rsc_entry, gboolean active_here,
+                              pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+GList *find_rsc_list(GList *result, pe_resource_t *rsc, const char *id,
+                     gboolean renamed_clones, gboolean partial,
+                     pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
@@ -314,6 +327,9 @@ G_GNUC_INTERNAL
 bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
                              pe_working_set_t *data_set,
                              pe_resource_t **failed);
+
+G_GNUC_INTERNAL
+void sort_resources(pe_working_set_t *data_set);
 
 
 // Functions related to probes (pcmk_sched_probes.c)
