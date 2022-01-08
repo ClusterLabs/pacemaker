@@ -1619,6 +1619,41 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
     g_list_free(sorted_op_list);
 }
 
+/*!
+ * \internal
+ * \brief Process a node's action history from the CIB status
+ *
+ * Given a node's resource history, if the resource's configuration changed
+ * since the actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] node      Node whose history is being processed
+ * \param[in] lrm_rscs  Node's <lrm_resources> from CIB status XML
+ * \param[in] data_set  Cluster working set
+ */
+static void
+process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_set)
+{
+    for (xmlNode *rsc_entry = first_named_child(lrm_rscs, XML_LRM_TAG_RESOURCE);
+         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+
+        if (xml_has_children(rsc_entry)) {
+            GList *result = pcmk__rscs_matching_id(ID(rsc_entry), data_set);
+
+            for (GList *iter = result; iter != NULL; iter = iter->next) {
+                pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+                if (rsc->variant == pe_native) {
+                    process_rsc_history(rsc_entry, rsc, node);
+                }
+            }
+            g_list_free(result);
+        }
+    }
+}
+
 static void
 check_actions(pe_working_set_t * data_set)
 {
@@ -1653,32 +1688,7 @@ check_actions(pe_working_set_t * data_set)
             crm_trace("Processing node %s", node->details->uname);
             if (node->details->online
                 || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-                xmlNode *rsc_entry = NULL;
-
-                for (rsc_entry = pcmk__xe_first_child(lrm_rscs);
-                     rsc_entry != NULL;
-                     rsc_entry = pcmk__xe_next(rsc_entry)) {
-
-                    if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-
-                        if (xml_has_children(rsc_entry)) {
-                            GList *gIter = NULL;
-                            GList *result = NULL;
-
-                            result = pcmk__rscs_matching_id(ID(rsc_entry),
-                                                            data_set);
-                            for (gIter = result; gIter != NULL; gIter = gIter->next) {
-                                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-                                if (rsc->variant != pe_native) {
-                                    continue;
-                                }
-                                process_rsc_history(rsc_entry, rsc, node);
-                            }
-                            g_list_free(result);
-                        }
-                    }
-                }
+                process_node_history(node, lrm_rscs, data_set);
             }
         }
     }
