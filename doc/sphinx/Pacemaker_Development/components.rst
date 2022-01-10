@@ -171,7 +171,7 @@ messaging layer callback, which calls:
 
     * ``fenced_process_fencing_reply()``, which calls either
       ``request_peer_fencing()`` (to retry a failed operation, or try the next
-      device in a topology is appropriate, which issues a new
+      device in a topology if appropriate, which issues a new
       ``STONITH_OP_FENCE`` request, proceeding as before) or
       ``finalize_op()`` (if the operation is definitively failed or
       successful).
