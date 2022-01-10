@@ -1636,6 +1636,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
 static void
 process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_set)
 {
+    crm_trace("Processing history for node %s", node->details->uname);
     for (xmlNode *rsc_entry = first_named_child(lrm_rscs, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
@@ -1654,42 +1655,47 @@ process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_
     }
 }
 
+/*!
+ * \internal
+ * \brief Process any resource configuration changes in the CIB status
+ *
+ * Go through all nodes' resource history, and if a resource's configuration
+ * changed since its actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-check_actions(pe_working_set_t * data_set)
+check_actions(pe_working_set_t *data_set)
 {
-    const char *id = NULL;
-    pe_node_t *node = NULL;
-    xmlNode *lrm_rscs = NULL;
     xmlNode *status = pcmk_find_cib_element(data_set->input,
                                             XML_CIB_TAG_STATUS);
-    xmlNode *node_state = NULL;
 
-    for (node_state = pcmk__xe_first_child(status); node_state != NULL;
-         node_state = pcmk__xe_next(node_state)) {
+    for (xmlNode *node_state = first_named_child(status, XML_CIB_TAG_STATE);
+         node_state != NULL; node_state = crm_next_same_xml(node_state)) {
 
-        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE,
-                         pcmk__str_none)) {
-            id = crm_element_value(node_state, XML_ATTR_ID);
-            lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
+        pe_node_t *node = NULL;
+        xmlNode *lrm_rscs = NULL;
 
-            node = pe_find_node_id(data_set->nodes, id);
+        lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+        lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
+        if (lrm_rscs == NULL) {
+            continue;
+        }
 
-            if (node == NULL) {
-                continue;
+        node = pe_find_node_id(data_set->nodes, ID(node_state));
+        if (node == NULL) {
+            continue; // Orphaned node
+        }
 
-            /* Still need to check actions for a maintenance node to cancel existing monitor operations */
-            } else if (!pcmk__node_available(node) && !node->details->maintenance) {
-                crm_trace("Skipping param check for %s: can't run resources",
-                          node->details->uname);
-                continue;
-            }
-
-            crm_trace("Processing node %s", node->details->uname);
-            if (node->details->online
-                || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-                process_node_history(node, lrm_rscs, data_set);
-            }
+        /* Don't bother checking actions for a node that can't run actions ...
+         * unless it's in maintenance mode, in which case we still need to
+         * cancel any existing recurring monitors.
+         */
+        if (node->details->maintenance || pcmk__node_available(node)) {
+            process_node_history(node, lrm_rscs, data_set);
         }
     }
 }
