@@ -926,9 +926,11 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
                                      cb_info->user_data, cb_info->callback);
 
     } else if ((private->op_callback == NULL) && !pcmk__result_ok(&result)) {
-        crm_warn("Fencing action without registered callback failed: %d (%s)",
+        crm_warn("Fencing action without registered callback failed: %d (%s%s%s)",
                  result.exit_status,
-                 pcmk_exec_status_str(result.execution_status));
+                 pcmk_exec_status_str(result.execution_status),
+                 ((result.exit_reason == NULL)? "" : ": "),
+                 ((result.exit_reason == NULL)? "" : result.exit_reason));
         crm_log_xml_debug(msg, "Failed fence update");
     }
 
