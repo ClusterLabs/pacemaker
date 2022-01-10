@@ -184,6 +184,21 @@ Finally, all peers receive the broadcast result and call
 
 
 .. index::
+   single: fence history
+
+Fencing History
+_______________
+
+The fencer keeps a running history of all fencing operations. The bulk of the
+relevant code is in `fenced_history.c` and ensures the history is synchronized
+across all nodes even if a node leaves and rejoins the cluster.
+
+In libstonithd, this information is represented by `stonith_history_t` and is
+queryable by the `stonith_api_operations_t:history()` method. `crm_mon` and
+`stonith_admin` use this API to display the history.
+
+
+.. index::
    single: scheduler
    single: pacemaker-schedulerd
    single: libpe_status
