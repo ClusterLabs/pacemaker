@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,7 +60,6 @@ struct rsc_ticket_s {
 
 extern gboolean stage0(pe_working_set_t * data_set);
 extern gboolean stage2(pe_working_set_t * data_set);
-extern gboolean stage4(pe_working_set_t * data_set);
 extern gboolean stage5(pe_working_set_t * data_set);
 extern gboolean stage6(pe_working_set_t * data_set);
 

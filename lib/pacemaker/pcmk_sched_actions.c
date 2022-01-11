@@ -1667,12 +1667,13 @@ process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_
  *
  * \param[in] data_set  Cluster working set
  */
-static void
-check_actions(pe_working_set_t *data_set)
+void
+pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
 {
     xmlNode *status = pcmk_find_cib_element(data_set->input,
                                             XML_CIB_TAG_STATUS);
 
+    crm_trace("Check resource and action configuration for changes");
     for (xmlNode *node_state = first_named_child(status, XML_CIB_TAG_STATE);
          node_state != NULL; node_state = crm_next_same_xml(node_state)) {
 
@@ -1698,14 +1699,4 @@ check_actions(pe_working_set_t *data_set)
             process_node_history(node, lrm_rscs, data_set);
         }
     }
-}
-
-/*
- * Check for orphaned or redefined actions
- */
-gboolean
-stage4(pe_working_set_t * data_set)
-{
-    check_actions(data_set);
-    return TRUE;
 }
