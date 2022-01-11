@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -557,15 +557,18 @@ pcmk__print_option_metadata(const char *name, const char *desc_short,
                             const char *desc_long,
                             pcmk__cluster_option_t *option_list, int len)
 {
+    /* big enough to hold "pacemaker-schedulerd metadata" output */
+    GString *s = g_string_sized_new(13000);
     int lpc = 0;
 
-    fprintf(stdout, "<?xml version=\"1.0\"?>"
-            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-            "<resource-agent name=\"%s\">\n"
-            "  <version>%s</version>\n"
-            "  <longdesc lang=\"en\">%s</longdesc>\n"
-            "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-            "  <parameters>\n", name, PCMK_OCF_VERSION, desc_long, desc_short);
+    g_string_append_printf(s, "<?xml version=\"1.0\"?>"
+                              "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
+                              "<resource-agent name=\"%s\">\n"
+                              "  <version>%s</version>\n"
+                              "  <longdesc lang=\"en\">%s</longdesc>\n"
+                              "  <shortdesc lang=\"en\">%s</shortdesc>\n"
+                              "  <parameters>\n",
+                              name, PCMK_OCF_VERSION, desc_long, desc_short);
 
     for (lpc = 0; lpc < len; lpc++) {
         if ((option_list[lpc].description_long == NULL)
@@ -573,45 +576,47 @@ pcmk__print_option_metadata(const char *name, const char *desc_short,
             continue;
         }
 
-        fprintf(stdout, "    <parameter name=\"%s\">\n"
-                "      <shortdesc lang=\"en\">%s</shortdesc>\n"
-                "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
-                option_list[lpc].name,
-                option_list[lpc].description_short,
-                option_list[lpc].description_long?
-                    option_list[lpc].description_long :
-                    option_list[lpc].description_short,
-                (option_list[lpc].values? "  Allowed values: " : ""),
-                (option_list[lpc].values? option_list[lpc].values : ""));
+        g_string_append_printf(s, "    <parameter name=\"%s\">\n"
+                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n"
+                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
+                                  option_list[lpc].name,
+                                  option_list[lpc].description_short,
+                                  option_list[lpc].description_long?
+                                     option_list[lpc].description_long :
+                                      option_list[lpc].description_short,
+                                  (option_list[lpc].values? "  Allowed values: " : ""),
+                                  (option_list[lpc].values? option_list[lpc].values : ""));
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);
             char delim[] = ", ";
             char *ptr = strtok(str, delim);
 
-            fprintf(stdout, "      <content type=\"%s\" default=\"%s\">\n",
-                option_list[lpc].type,
-                option_list[lpc].default_value
-            );
+            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\">\n",
+                                   option_list[lpc].type,
+                                   option_list[lpc].default_value);
 
             while (ptr != NULL) {
-                fprintf(stdout, "        <option value=\"%s\" />\n", ptr);
+                g_string_append_printf(s, "        <option value=\"%s\" />\n", ptr);
                 ptr = strtok(NULL, delim);
             }
 
-            fprintf(stdout, "      </content>\n");
+            g_string_append_printf(s, "      </content>\n");
             free(str);
 
         } else {
-            fprintf(stdout, "      <content type=\"%s\" default=\"%s\"/>\n",
-                option_list[lpc].type,
-                option_list[lpc].default_value
+            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\"/>\n",
+                                   option_list[lpc].type,
+                                   option_list[lpc].default_value
             );
         }
 
-        fprintf(stdout, "    </parameter>\n");
+        g_string_append_printf(s, "    </parameter>\n");
     }
-    fprintf(stdout, "  </parameters>\n</resource-agent>\n");
+    g_string_append_printf(s, "  </parameters>\n</resource-agent>\n");
+
+    fprintf(stdout, "%s", s->str);
+    g_string_free(s, TRUE);
 }
 
 void
