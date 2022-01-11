@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -89,7 +89,7 @@ mainloop_test_done(const char *origin, bool pass)
         crm_info("SUCCESS - %s", origin);
         mainloop_iter++;
         mainloop_set_trigger(trig);
-        result.execution_status = PCMK_EXEC_UNKNOWN;
+        result.execution_status = PCMK_EXEC_DONE;
         result.exit_status = CRM_EX_OK;
     } else {
         crm_err("FAILURE - %s (%d: %s)", origin, result.exit_status,
