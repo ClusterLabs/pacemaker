@@ -283,14 +283,14 @@ static pcmk__cluster_option_t pe_opts[] = {
 };
 
 void
-pe_metadata(void)
+pe_metadata(pcmk__output_t *out)
 {
     char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
                                            "Pacemaker scheduler options",
                                            "Cluster options used by Pacemaker's scheduler"
                                                " (formerly called pengine)",
                                            pe_opts, PCMK__NELEM(pe_opts));
-    printf("%s", s);
+    out->output_xml(out, "metadata", s);
     free(s);
 }
 
