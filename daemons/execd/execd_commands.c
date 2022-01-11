@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1297,7 +1297,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     stonith_action_complete(cmd,
                             ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
                             stonith__legacy2status(rc),
-                            rc == -pcmk_err_generic? NULL : pcmk_strerror(rc));
+                            ((rc == -pcmk_err_generic)? NULL : pcmk_strerror(rc)));
 }
 
 static int
