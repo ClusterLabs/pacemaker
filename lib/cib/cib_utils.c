@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2021 the Pacemaker project contributors
+ * Later changes copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -571,11 +571,13 @@ static pcmk__cluster_option_t cib_opts[] = {
 void
 cib_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-based",
-                                "Cluster Information Base manager options",
-                                "Cluster options used by Pacemaker's "
-                                    "Cluster Information Base manager",
-                                cib_opts, PCMK__NELEM(cib_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-based",
+                                           "Cluster Information Base manager options",
+                                           "Cluster options used by Pacemaker's "
+                                               "Cluster Information Base manager",
+                                           cib_opts, PCMK__NELEM(cib_opts));
+    printf("%s", s);
+    free(s);
 }
 
 void

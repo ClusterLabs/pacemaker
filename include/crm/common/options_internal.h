@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2021 the Pacemaker project contributors
+ * Copyright 2006-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,9 +97,9 @@ const char *pcmk__cluster_option(GHashTable *options,
                                  pcmk__cluster_option_t *option_list, int len,
                                  const char *name);
 
-void pcmk__print_option_metadata(const char *name, const char *desc_short,
-                                 const char *desc_long,
-                                 pcmk__cluster_option_t *option_list, int len);
+char *pcmk__format_option_metadata(const char *name, const char *desc_short,
+                                   const char *desc_long,
+                                   pcmk__cluster_option_t *option_list, int len);
 
 void pcmk__validate_cluster_options(GHashTable *options,
                                     pcmk__cluster_option_t *option_list,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -285,11 +285,13 @@ static pcmk__cluster_option_t pe_opts[] = {
 void
 pe_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-schedulerd",
-                                "Pacemaker scheduler options",
-                                "Cluster options used by Pacemaker's scheduler"
-                                    " (formerly called pengine)",
-                                pe_opts, PCMK__NELEM(pe_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
+                                           "Pacemaker scheduler options",
+                                           "Cluster options used by Pacemaker's scheduler"
+                                               " (formerly called pengine)",
+                                           pe_opts, PCMK__NELEM(pe_opts));
+    printf("%s", s);
+    free(s);
 }
 
 void

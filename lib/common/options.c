@@ -552,11 +552,12 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
     return NULL;
 }
 
-void
-pcmk__print_option_metadata(const char *name, const char *desc_short,
-                            const char *desc_long,
-                            pcmk__cluster_option_t *option_list, int len)
+char *
+pcmk__format_option_metadata(const char *name, const char *desc_short,
+                             const char *desc_long,
+                             pcmk__cluster_option_t *option_list, int len)
 {
+    char *retval;
     /* big enough to hold "pacemaker-schedulerd metadata" output */
     GString *s = g_string_sized_new(13000);
     int lpc = 0;
@@ -615,8 +616,9 @@ pcmk__print_option_metadata(const char *name, const char *desc_short,
     }
     g_string_append_printf(s, "  </parameters>\n</resource-agent>\n");
 
-    fprintf(stdout, "%s", s->str);
-    g_string_free(s, TRUE);
+    retval = s->str;
+    g_string_free(s, FALSE);
+    return retval;
 }
 
 void
