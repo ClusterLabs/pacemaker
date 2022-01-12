@@ -658,7 +658,7 @@ crmd_metadata(void)
     char *s = pcmk__format_option_metadata("pacemaker-controld",
                                            "Pacemaker controller options",
                                            "Cluster options used by Pacemaker's "
-                                               "controller (formerly called crmd)",
+                                               "controller",
                                            crmd_opts, PCMK__NELEM(crmd_opts));
     printf("%s", s);
     free(s);

@@ -287,8 +287,7 @@ pe_metadata(pcmk__output_t *out)
 {
     char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
                                            "Pacemaker scheduler options",
-                                           "Cluster options used by Pacemaker's scheduler"
-                                               " (formerly called pengine)",
+                                           "Cluster options used by Pacemaker's scheduler",
                                            pe_opts, PCMK__NELEM(pe_opts));
     out->output_xml(out, "metadata", s);
     free(s);
