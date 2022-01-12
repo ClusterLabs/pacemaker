@@ -41,7 +41,14 @@ typedef struct lrmd_rsc_s {
      * that have been handed off from the pending ops list. */
     GList *recurring_ops;
 
-    int st_probe_rc; // What value should be returned for a probe if stonith
+    /* If this resource is a fence device, probes are handled internally by the
+     * executor, and this value indicates the result that should currently be
+     * returned for probes. It should be one of:
+     * PCMK_EXEC_DONE (to indicate "running"),
+     * PCMK_EXEC_NO_FENCE_DEVICE ("not running"), or
+     * PCMK_EXEC_NOT_CONNECTED ("unknown because fencer connection was lost").
+     */
+    enum pcmk_exec_status fence_probe_result;
 
     crm_trigger_t *work;
 } lrmd_rsc_t;

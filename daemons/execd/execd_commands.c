@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/fencing/internal.h>
 
 #include <glib.h>
 
@@ -284,7 +285,9 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
-    rsc->st_probe_rc = -ENODEV; // if stonith, initialize to "not running"
+
+    // Initialize fence device probes (to return "not running")
+    rsc->fence_probe_result = PCMK_EXEC_NO_FENCE_DEVICE;
     return rsc;
 }
 
@@ -748,55 +751,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 }
 
-static int
-stonith2uniform_rc(const char *action, int rc)
-{
-    switch (rc) {
-        case pcmk_ok:
-            rc = PCMK_OCF_OK;
-            break;
-
-        case -ENODEV:
-            /* This should be possible only for probes in practice, but
-             * interpret for all actions to be safe.
-             */
-            if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
-                rc = PCMK_OCF_NOT_RUNNING;
-            } else if (pcmk__str_eq(action, "stop", pcmk__str_casei)) {
-                rc = PCMK_OCF_OK;
-            } else {
-                rc = PCMK_OCF_NOT_INSTALLED;
-            }
-            break;
-
-        case -EOPNOTSUPP:
-            rc = PCMK_OCF_UNIMPLEMENT_FEATURE;
-            break;
-
-        default:
-            rc = PCMK_OCF_UNKNOWN_ERROR;
-            break;
-    }
-    return rc;
-}
-
-static int
-action_get_uniform_rc(svc_action_t *action)
-{
-    lrmd_cmd_t *cmd = action->cb_data;
-
-    if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
-                            pcmk__str_casei)) {
-        return stonith2uniform_rc(cmd->action, action->rc);
-    } else {
-        enum ocf_exitcode code = services_result2ocf(action->standard,
-                                                     cmd->action, action->rc);
-
-        // Cast variable instead of function return to keep compilers happy
-        return (int) code;
-    }
-}
-
 struct notify_new_client_data {
     xmlNode *notify;
     pcmk__client_t *new_client;
@@ -848,6 +802,7 @@ action_complete(svc_action_t * action)
 {
     lrmd_rsc_t *rsc;
     lrmd_cmd_t *cmd = action->cb_data;
+    enum ocf_exitcode code;
 
 #ifdef PCMK__TIME_USE_CGT
     const char *rclass = NULL;
@@ -867,8 +822,12 @@ action_complete(svc_action_t * action)
 #endif
 
     cmd->last_pid = action->pid;
-    pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
+
+    // Cast variable instead of function return to keep compilers happy
+    code = services_result2ocf(action->standard, cmd->action, action->rc);
+    pcmk__set_result(&(cmd->result), (int) code,
                      action->status, services__exit_reason(action));
+
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
@@ -1000,46 +959,83 @@ action_complete(svc_action_t * action)
     cmd_finalize(cmd, rsc);
 }
 
+/*!
+ * \internal
+ * \brief Process the result of a fence device action (start, stop, or monitor)
+ *
+ * \param[in] cmd               Fence device action that completed
+ * \param[in] exit_status       Fencer API exit status for action
+ * \param[in] execution_status  Fencer API execution status for action
+ * \param[in] exit_reason       Human-friendly detail, if action failed
+ */
 static void
-stonith_action_complete(lrmd_cmd_t * cmd, int rc)
+stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
+                        enum pcmk_exec_status execution_status,
+                        const char *exit_reason)
 {
     // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
-    cmd->result.exit_status = stonith2uniform_rc(cmd->action, rc);
+    // Simplify fencer exit status to uniform exit status
+    if (exit_status != CRM_EX_OK) {
+        exit_status = PCMK_OCF_UNKNOWN_ERROR;
+    }
 
-    /* This function may be called with status already set to cancelled, if a
-     * pending action was aborted. Otherwise, we need to determine status from
-     * the fencer return code.
-     */
-    if (cmd->result.execution_status != PCMK_EXEC_CANCELLED) {
-        cmd->result.execution_status = stonith__legacy2status(rc);
+    if (cmd->result.execution_status == PCMK_EXEC_CANCELLED) {
+        /* An in-flight fence action was cancelled. The execution status is
+         * already correct, so don't overwrite it.
+         */
+        execution_status = PCMK_EXEC_CANCELLED;
 
-        // Simplify status codes from fencer
-        switch (cmd->result.execution_status) {
+    } else {
+        /* Some execution status codes have specific meanings for the fencer
+         * that executor clients may not expect, so map them to a simple error
+         * status.
+         */
+        switch (execution_status) {
             case PCMK_EXEC_NOT_CONNECTED:
             case PCMK_EXEC_INVALID:
-            case PCMK_EXEC_NO_FENCE_DEVICE:
-            case PCMK_EXEC_NO_SECRETS:
-                cmd->result.execution_status = PCMK_EXEC_ERROR;
+                execution_status = PCMK_EXEC_ERROR;
                 break;
+
+            case PCMK_EXEC_NO_FENCE_DEVICE:
+                /* This should be possible only for probes in practice, but
+                 * interpret for all actions to be safe.
+                 */
+                if (pcmk__str_eq(cmd->action, CRMD_ACTION_STATUS,
+                                 pcmk__str_none)) {
+                    exit_status = PCMK_OCF_NOT_RUNNING;
+
+                } else if (pcmk__str_eq(cmd->action, CRMD_ACTION_STOP,
+                                        pcmk__str_none)) {
+                    exit_status = PCMK_OCF_OK;
+
+                } else {
+                    exit_status = PCMK_OCF_NOT_INSTALLED;
+                }
+                execution_status = PCMK_EXEC_ERROR;
+                break;
+
+            case PCMK_EXEC_NOT_SUPPORTED:
+                exit_status = PCMK_OCF_UNIMPLEMENT_FEATURE;
+                break;
+
             default:
                 break;
         }
-
-        // Certain successful actions change the known state of the resource
-        if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
-            if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
-                rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
-            } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
-                rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
-            }
-        }
     }
 
-    // Give the user more detail than an OCF code
-    if (rc != -pcmk_err_generic) {
-        cmd->result.exit_reason = strdup(pcmk_strerror(rc));
+    pcmk__set_result(&cmd->result, exit_status, execution_status, exit_reason);
+
+    // Certain successful actions change the known state of the resource
+    if ((rsc != NULL) && pcmk__result_ok(&(cmd->result))) {
+
+        if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
+            rsc->fence_probe_result = PCMK_EXEC_DONE; // "running"
+
+        } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
+            rsc->fence_probe_result = PCMK_EXEC_NO_FENCE_DEVICE; // "not running"
+        }
     }
 
     /* The recurring timer should not be running at this point in any case, but
@@ -1062,7 +1058,15 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 static void
 lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    stonith_action_complete(data->userdata, data->rc);
+    if ((data == NULL) || (data->userdata == NULL)) {
+        crm_err("Ignoring fence action result: "
+                "Invalid callback arguments (bug?)");
+    } else {
+        stonith_action_complete((lrmd_cmd_t *) data->userdata,
+                                stonith__exit_status(data),
+                                stonith__execution_status(data),
+                                stonith__exit_reason(data));
+    }
 }
 
 void
@@ -1079,14 +1083,13 @@ stonith_connection_failed(void)
         if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             /* If we registered this fence device, we don't know whether the
              * fencer still has the registration or not. Cause future probes to
-             * return PCMK_OCF_UNKNOWN_ERROR until the resource is stopped or
-             * started successfully. This is especially important if the
-             * controller also went away (possibly due to a cluster layer
-             * restart) and won't receive our client notification of any
-             * monitors finalized below.
+             * return an error until the resource is stopped or started
+             * successfully. This is especially important if the controller also
+             * went away (possibly due to a cluster layer restart) and won't
+             * receive our client notification of any monitors finalized below.
              */
-            if (rsc->st_probe_rc == pcmk_ok) {
-                rsc->st_probe_rc = pcmk_err_generic;
+            if (rsc->fence_probe_result == PCMK_EXEC_DONE) {
+                rsc->fence_probe_result = PCMK_EXEC_NOT_CONNECTED;
             }
 
             if (rsc->active) {
@@ -1109,7 +1112,9 @@ stonith_connection_failed(void)
     crm_err("Connection to fencer failed, finalizing %d pending operations",
             g_list_length(cmd_list));
     for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
-        stonith_action_complete(cmd_iter->data, -ENOTCONN);
+        stonith_action_complete((lrmd_cmd_t *) cmd_iter->data,
+                                CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                "Lost connection to fencer");
     }
     g_list_free(cmd_list);
 }
@@ -1209,6 +1214,39 @@ execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief  Finalize the result of a fence device probe
+ *
+ * \param[in] cmd           Probe action
+ * \param[in] probe_result  Probe result
+ */
+static void
+finalize_fence_device_probe(lrmd_cmd_t *cmd, enum pcmk_exec_status probe_result)
+{
+    int exit_status = CRM_EX_ERROR;
+    const char *reason = NULL;
+
+    switch (probe_result) {
+        case PCMK_EXEC_DONE: // Device is "running"
+            exit_status = CRM_EX_OK;
+            break;
+
+        case PCMK_EXEC_NO_FENCE_DEVICE: // Device is "not running"
+            break;
+
+        case PCMK_EXEC_NOT_CONNECTED: // stonith_connection_failed()
+            reason = "Lost connection to fencer";
+            break;
+
+        default: // Shouldn't be possible
+            probe_result = PCMK_EXEC_ERROR;
+            reason = "Invalid fence device probe result (bug?)";
+            break;
+    }
+    stonith_action_complete(cmd, exit_status, probe_result, reason);
+}
+
 static void
 lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
@@ -1217,12 +1255,21 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     stonith_t *stonith_api = get_stonith_connection();
 
-    if (!stonith_api) {
-        rc = -ENOTCONN;
+    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)
+        && (cmd->interval_ms == 0)) {
+        // Probes don't require a fencer connection
+        finalize_fence_device_probe(cmd, rsc->fence_probe_result);
+        return;
+
+    } else if (stonith_api == NULL) {
+        stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
+                                PCMK_EXEC_NOT_CONNECTED,
+                                "No connection to fencer");
+        return;
 
     } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
-        if (rc == 0) {
+        if (rc == pcmk_ok) {
             do_monitor = TRUE;
         }
 
@@ -1230,11 +1277,13 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         rc = execd_stonith_stop(stonith_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
-        if (cmd->interval_ms > 0) {
-            do_monitor = TRUE;
-        } else {
-            rc = rsc->st_probe_rc;
-        }
+        do_monitor = TRUE;
+
+    } else {
+        stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                PCMK_EXEC_ERROR,
+                                "Invalid fence device action (bug?)");
+        return;
     }
 
     if (do_monitor) {
@@ -1245,7 +1294,10 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         }
     }
 
-    stonith_action_complete(cmd, rc);
+    stonith_action_complete(cmd,
+                            ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                            stonith__legacy2status(rc),
+                            ((rc == -pcmk_err_generic)? NULL : pcmk_strerror(rc)));
 }
 
 static int

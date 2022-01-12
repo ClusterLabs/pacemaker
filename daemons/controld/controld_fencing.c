@@ -714,45 +714,64 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     int stonith_id = -1;
     int transition_id = -1;
     crm_action_t *action = NULL;
-    int call_id = data->call_id;
-    int rc = data->rc;
-    char *userdata = data->userdata;
+    const char *target = NULL;
 
-    CRM_CHECK(userdata != NULL, return);
-    crm_notice("Stonith operation %d/%s: %s (%d)", call_id, (char *)userdata,
-               pcmk_strerror(rc), rc);
-
-    if (AM_I_DC == FALSE) {
+    if ((data == NULL) || (data->userdata == NULL)) {
+        crm_err("Ignoring fence operation %d result: "
+                "No transition key given (bug?)",
+                ((data == NULL)? -1 : data->call_id));
         return;
     }
 
-    /* crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s", */
-    /*       op->call_id, op->optype, op->node_name, op->op_result, */
-    /*       (char *)op->node_list, op->private_data); */
+    if (!AM_I_DC) {
+        const char *reason = stonith__exit_reason(data);
 
-    /* filter out old STONITH actions */
-    CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, NULL),
+        if (reason == NULL) {
+           reason = pcmk_exec_status_str(stonith__execution_status(data));
+        }
+        crm_notice("Result of fence operation %d: %d (%s) " CRM_XS " key=%s",
+                   data->call_id, stonith__exit_status(data), reason,
+                   (const char *) data->userdata);
+        return;
+    }
+
+    CRM_CHECK(decode_transition_key(data->userdata, &uuid, &transition_id,
+                                    &stonith_id, NULL),
               goto bail);
 
-    if (transition_graph->complete || stonith_id < 0 || !pcmk__str_eq(uuid, te_uuid, pcmk__str_casei)
-        || transition_graph->id != transition_id) {
-        crm_info("Ignoring STONITH action initiated outside of the current transition");
+    if (transition_graph->complete || (stonith_id < 0)
+        || !pcmk__str_eq(uuid, te_uuid, pcmk__str_none)
+        || (transition_graph->id != transition_id)) {
+        crm_info("Ignoring fence operation %d result: "
+                 "Not from current transition " CRM_XS
+                 " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
+                 data->call_id, pcmk__btoa(transition_graph->complete),
+                 stonith_id, uuid, te_uuid, transition_id, transition_graph->id);
         goto bail;
     }
 
     action = controld_get_action(stonith_id);
     if (action == NULL) {
-        crm_err("Stonith action not matched");
+        crm_err("Ignoring fence operation %d result: "
+                "Action %d not found in transition graph (bug?) "
+                CRM_XS " uuid=%s transition=%d",
+                data->call_id, stonith_id, uuid, transition_id);
+        goto bail;
+    }
+
+    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    if (target == NULL) {
+        crm_err("Ignoring fence operation %d result: No target given (bug?)",
+                data->call_id);
         goto bail;
     }
 
     stop_te_timer(action->timer);
-    if (rc == pcmk_ok) {
-        const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    if (stonith__exit_status(data) == CRM_EX_OK) {
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action");
 
-        crm_info("Stonith operation %d for %s passed", call_id, target);
+        crm_notice("Fence operation %d for %s passed", data->call_id, target);
         if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
@@ -791,20 +810,30 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         st_fail_count_reset(target);
 
     } else {
-        const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         enum transition_action abort_action = tg_restart;
+        int status = stonith__execution_status(data);
+        const char *reason = stonith__exit_reason(data);
 
+        if (reason == NULL) {
+            if (status == PCMK_EXEC_DONE) {
+                reason = "Agent returned error";
+            } else {
+                reason = pcmk_exec_status_str(status);
+            }
+        }
         crm__set_graph_action_flags(action, pcmk__graph_action_failed);
-        crm_notice("Stonith operation %d for %s failed (%s): aborting transition.",
-                   call_id, target, pcmk_strerror(rc));
 
         /* If no fence devices were available, there's no use in immediately
          * checking again, so don't start a new transition in that case.
          */
-        if (rc == -ENODEV) {
-            crm_warn("No devices found in cluster to fence %s, giving up",
-                     target);
+        if (status == PCMK_EXEC_NO_FENCE_DEVICE) {
+            crm_warn("Fence operation %d for %s failed: %s "
+                     "(aborting transition and giving up for now)",
+                     data->call_id, target, reason);
             abort_action = tg_stop;
+        } else {
+            crm_notice("Fence operation %d for %s failed: %s "
+                       "(aborting transition)", data->call_id, target, reason);
         }
 
         /* Increment the fail count now, so abort_for_stonith_failure() can
@@ -818,7 +847,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     trigger_graph();
 
   bail:
-    free(userdata);
+    free(data->userdata);
     free(uuid);
     return;
 }
