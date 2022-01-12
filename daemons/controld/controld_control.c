@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -655,11 +655,13 @@ static pcmk__cluster_option_t crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-controld",
-                                "Pacemaker controller options",
-                                "Cluster options used by Pacemaker's "
-                                    "controller (formerly called crmd)",
-                                crmd_opts, PCMK__NELEM(crmd_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-controld",
+                                           "Pacemaker controller options",
+                                           "Cluster options used by Pacemaker's "
+                                               "controller",
+                                           crmd_opts, PCMK__NELEM(crmd_opts));
+    printf("%s", s);
+    free(s);
 }
 
 static void

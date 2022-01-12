@@ -98,7 +98,7 @@ main(int argc, char **argv)
     if (options.remainder) {
         if (g_strv_length(options.remainder) == 1 &&
             pcmk__str_eq("metadata", options.remainder[0], pcmk__str_casei)) {
-            pe_metadata();
+            pe_metadata(out);
             goto done;
         } else {
             exit_code = CRM_EX_USAGE;

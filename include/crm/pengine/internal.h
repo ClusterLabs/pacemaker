@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -219,7 +219,7 @@ char *native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, c
                        pe_working_set_t * data_set);
 pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 
-void pe_metadata(void);
+void pe_metadata(pcmk__output_t *out);
 void verify_pe_options(GHashTable * options);
 
 void common_update_score(pe_resource_t * rsc, const char *id, int score);

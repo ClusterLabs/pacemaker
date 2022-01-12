@@ -1406,6 +1406,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
 
         if (metadata) {
             out->output_xml(out, "metadata", metadata);
+            free(metadata);
         } else {
             /* We were given a validly formatted spec, but it doesn't necessarily
              * match up with anything that exists.  Use ENXIO as the return code
