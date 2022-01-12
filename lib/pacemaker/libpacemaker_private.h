@@ -237,6 +237,33 @@ G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
 
 
+// Injections (pcmk_sched_transition.c)
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_node_state_change(cib_t *cib_conn, const char *node,
+                                        bool up);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
+                                       const char *resource,
+                                       const char *lrm_name,
+                                       const char *rclass,
+                                       const char *rtype,
+                                       const char *rprovider);
+
+G_GNUC_INTERNAL
+void pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
+                            const char *resource, const char *task,
+                            guint interval_ms, int rc);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
+                                    lrmd_event_data_t *op, int target_rc);
+
+
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL

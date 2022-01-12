@@ -60,6 +60,4 @@ xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
 void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
                           pcmk_injections_t *injections);
 
-enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
-
 #endif

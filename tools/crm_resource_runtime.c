@@ -1172,7 +1172,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
-        run_simulation(data_set, shadow_cib, NULL);
+        pcmk__simulate_transition(data_set, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
         rc = update_dataset(shadow_cib, data_set, FALSE);
