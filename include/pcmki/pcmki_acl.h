@@ -52,23 +52,14 @@ enum pcmk__acl_render_how {
  * \note Only supported schemas are those following acls-2.0.rng, that is,
  *       those validated with pacemaker-2.0.rng and newer.
  */
-int pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
+int pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
                                   xmlDoc **acl_evaled_doc);
 
 /*!
  * \internal
- * \brief Serialize-render already pcmk__acl_evaled_as_namespaces annotated XML
+ * \brief Serialize-render already pcmk__acl_annotate_permissions annotated XML
  *
- * This function is vitally coupled with externalized material:
- * - access-render-2.xsl
- *
- * In fact, it's just a wrapper for a graceful conducting of such
- * transformation, in particular, it cares about converting values of some
- * configuration parameters directly in said stylesheet since the desired
- * ANSI colors at the output are not expressible directly (alternative approach
- * to this preprocessing: eventual postprocessing, which is less handy here).
- *
- * \param[in] annotated_doc pcmk__acl_evaled_as_namespaces annotated XML
+ * \param[in] annotated_doc pcmk__acl_annotate_permissions annotated XML
  * \param[in] how           render kind, see #pcmk__acl_render_how enumeration
  * \param[out] doc_txt_ptr  where to put the final outcome string
  * \return A standard Pacemaker return code

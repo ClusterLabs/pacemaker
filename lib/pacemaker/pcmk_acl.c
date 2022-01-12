@@ -41,8 +41,68 @@ static const xmlChar *NS_WRITABLE = (const xmlChar *) ACL_NS_PREFIX "writable";
 static const xmlChar *NS_READABLE = (const xmlChar *) ACL_NS_PREFIX "readable";
 static const xmlChar *NS_DENIED =   (const xmlChar *) ACL_NS_PREFIX "denied";
 
+/*!
+ * \brief This function takes a node and marks it with the namespace
+ *        given in the ns parameter.
+ *
+ * \param[in,out] i_node
+ * \param[in] ns
+ * \param[in,out] ret
+ * \param[in,out] ns_recycle_writable
+ * \param[in,out] ns_recycle_readable
+ * \param[in,out] ns_recycle_denied
+ */
+static void
+pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret, xmlNs **ns_recycle_writable, xmlNs **ns_recycle_readable, xmlNs **ns_recycle_denied)
+{
+    if (ns == NS_WRITABLE)
+    {
+        if (*ns_recycle_writable == NULL)
+        {
+            *ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                           NS_WRITABLE, ACL_NS_Q_WRITABLE);
+        }
+        xmlSetNs(i_node, *ns_recycle_writable);
+        *ret = pcmk_rc_ok;
+    }
+    else if (ns == NS_READABLE)
+    {
+        if (*ns_recycle_readable == NULL)
+        {
+            *ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                           NS_READABLE, ACL_NS_Q_READABLE);
+        }
+        xmlSetNs(i_node, *ns_recycle_readable);
+        *ret = pcmk_rc_ok;
+    }
+    else if (ns == NS_DENIED)
+    {
+        if (*ns_recycle_denied == NULL)
+        {
+            *ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
+                                         NS_DENIED, ACL_NS_Q_DENIED);
+        };
+        xmlSetNs(i_node, *ns_recycle_denied);
+        *ret = pcmk_rc_ok;
+    }
+}
+
+/*!
+ * \brief This function takes some XML, and annotates it with XML
+ *        namespaces to indicate the ACL permissions.
+ *
+ * \param[in,out] xml_modify  
+ *
+ * \return  A standard Pacemaker return code
+ *          Namely:
+ *          - pcmk_rc_ok upon success,
+ *          - pcmk_rc_already if ACLs were not applicable,
+ *          - pcmk_rc_schema_validation if the validation schema version
+ *              is unsupported (see note), or
+ *          - EINVAL or ENOMEM as appropriate;
+ */
 static int
-pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
+pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)
 {
 
     static xmlNs *ns_recycle_writable = NULL,
@@ -71,37 +131,16 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
             } else {
                 ns = NS_WRITABLE;
             }
-            if (ns == NS_WRITABLE) {
-                if (ns_recycle_writable == NULL) {
-                    ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                   NS_WRITABLE, ACL_NS_Q_WRITABLE);
-                }
-                xmlSetNs(i_node, ns_recycle_writable);
-                ret = pcmk_rc_ok;
-            } else if (ns == NS_READABLE) {
-                if (ns_recycle_readable == NULL) {
-                    ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                   NS_READABLE, ACL_NS_Q_READABLE);
-                }
-                xmlSetNs(i_node, ns_recycle_readable);
-                ret = pcmk_rc_ok;
-            } else if (ns == NS_DENIED) {
-                if (ns_recycle_denied == NULL) {
-                    ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                 NS_DENIED, ACL_NS_Q_DENIED);
-                };
-                xmlSetNs(i_node, ns_recycle_denied);
-                ret = pcmk_rc_ok;
-            }
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
             /* XXX recursion can be turned into plain iteration to save stack */
             if (i_node->properties != NULL) {
                 /* this is not entirely clear, but relies on the very same
                    class-hierarchy emulation that libxml2 has firmly baked in
                    its API/ABI */
-                ret |= pcmk__eval_acl_as_namespaces_2((xmlNodePtr) i_node->properties);
+                ret |= pcmk__acl_annotate_permissions_recursive((xmlNodePtr) i_node->properties);
             }
             if (i_node->children != NULL) {
-                ret |= pcmk__eval_acl_as_namespaces_2(i_node->children);
+                ret |= pcmk__acl_annotate_permissions_recursive(i_node->children);
             }
             break;
         case XML_ATTRIBUTE_NODE:
@@ -117,28 +156,23 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
             } else {
                 ns = NS_WRITABLE;
             }
-            if (ns == NS_WRITABLE) {
-                if (ns_recycle_writable == NULL) {
-                    ns_recycle_writable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                   NS_WRITABLE, ACL_NS_Q_WRITABLE);
-                }
-                xmlSetNs(i_node, ns_recycle_writable);
-                ret = pcmk_rc_ok;
-            } else if (ns == NS_READABLE) {
-                if (ns_recycle_readable == NULL) {
-                    ns_recycle_readable = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                   NS_READABLE, ACL_NS_Q_READABLE);
-                }
-                xmlSetNs(i_node, ns_recycle_readable);
-                ret = pcmk_rc_ok;
-            } else if (ns == NS_DENIED) {
-                if (ns_recycle_denied == NULL) {
-                    ns_recycle_denied = xmlNewNs(xmlDocGetRootElement(i_node->doc),
-                                                 NS_DENIED, ACL_NS_Q_DENIED);
-                }
-                xmlSetNs(i_node, ns_recycle_denied);
-                ret = pcmk_rc_ok;
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
+            break;
+        case XML_COMMENT_NODE:
+            /* we can utilize that parent has already been assigned the ns */
+            if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name, pcmk__xf_acl_read))
+            {
+                ns = NS_DENIED;
             }
+            else if (!pcmk__check_acl(i_node->parent, (const char *) i_node->name, pcmk__xf_acl_write))
+            {
+                ns = NS_READABLE;
+            }
+            else
+            {
+                ns = NS_WRITABLE;
+            }
+            pcmk__acl_mark_node_with_namespace(i_node, ns, &ret, &ns_recycle_writable, &ns_recycle_readable, &ns_recycle_denied);
             break;
         default:
             break;
@@ -149,7 +183,7 @@ pcmk__eval_acl_as_namespaces_2(xmlNode *xml_modify)
 }
 
 int
-pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
+pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
                               xmlDoc **acl_evaled_doc)
 {
     int ret, version;
@@ -170,8 +204,6 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    /* XXX see the comment for this function, pacemaker-4.0 may need
-           updating respectively in the future */
     validation = crm_element_value(xmlDocGetRootElement(cib_doc),
                                    XML_ATTR_VALIDATION);
     version = get_schema_version(validation);
@@ -186,9 +218,9 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
 
     pcmk__enable_acl(target, target, cred);
 
-    ret = pcmk__eval_acl_as_namespaces_2(target);  /* XXX may need "switch" */
+    ret = pcmk__acl_annotate_permissions_recursive(target);
 
-    if (ret > 0) {
+    if (ret == pcmk_rc_ok) {
         char* credentials = crm_strdup_printf("%s", cred);
         comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
         free(credentials);
@@ -198,10 +230,11 @@ pcmk__acl_evaled_as_namespaces(const char *cred, xmlDoc *cib_doc,
         }
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
         *acl_evaled_doc = target->doc;
+        return pcmk_rc_ok;
     } else {
         xmlFreeNode(target);
+        return ret; //for now, it should be some kind of error
     }
-    return pcmk_rc_ok;
 }
 
 int
@@ -250,6 +283,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
        only to subsequently reparse it -- this time with blanks honoured */
     xmlChar *annotated_dump;
     int dump_size;
+
     xmlDocDumpFormatMemory(annotated_doc, &annotated_dump, &dump_size, 1);
     res = xmlReadDoc(annotated_dump, "on-the-fly-access-render", NULL,
                      XML_PARSE_NONET);

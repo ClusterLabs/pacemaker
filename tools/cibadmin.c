@@ -15,9 +15,7 @@
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
-#define local_barf(...) \
-  do { (void)(fprintf(stderr, __VA_ARGS__) > 0 && fflush(stderr)); } while (0)
-#define local_const_barf(_s) local_barf("%s\n", _s);
+#include <pacemaker-internal.h>
 
 static int message_timeout_ms = 30;
 static int command_options = 0;
@@ -124,11 +122,10 @@ static pcmk__cli_option_t long_options[] = {
         "md5-sum-versioned", no_argument, NULL, '6',
         "Calculate an on-the-wire versioned CIB digest", pcmk__option_default
     },
-#if ENABLE_ACL
     {
-        "access-render", optional_argument, NULL, 'S',
-        "Like -Q + evaluate access for --user specified "
-            "user, presented in particular way",
+        "show-access", optional_argument, NULL, 'S',
+        "Whether to use syntax highlighting for ACLs "
+            "(with -Q/--query and -U/--user)",
         pcmk__option_default
     },
     {
@@ -138,15 +135,6 @@ static pcmk__cli_option_t long_options[] = {
             " (per former defaults).",
         pcmk__option_default
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\n\tParticular appearance for \"color\" can be administratively modified in"
-            " /etc/pacemaker/access-render.cfg.xsl file (or equivalent), which can also"
-            " be overridden per user in $XDG_CONFIG_HOME/pacemaker/access-render.cfg.xsl,"
-            " where $XDG_CONFIG_HOME is to be understood as ~/.config by default.\n",
-        pcmk__option_default
-    },
-#endif
     {
         "blank", no_argument, NULL, '-',
         NULL, pcmk__option_hidden
@@ -360,18 +348,16 @@ static pcmk__cli_option_t long_options[] = {
         "-spacer-", no_argument, NULL, '-',
         " cibadmin --replace --xml-file $HOME/local.xml", pcmk__option_example
     },
-#if ENABLE_ACL
     {
         "-spacer-", no_argument, NULL, '-',
-        "Render configuration in color (assuming terminal) visualizing access as evaluated for user tony:",
-        pcmk_option_paragraph
+        "Assuming terminal, render configuration in color (green for writable, blue for readable, red for denied) to visualize permissions for user tony:",
+        pcmk__option_paragraph
     },
     {
         "-spacer-", no_argument, NULL, '-',
-        " cibadmin --access-render --user tony",
-        pcmk_option_example
+        " cibadmin --show-access=color --query --user tony | less -r",
+        pcmk__option_example
     },
-#endif
     {
         "-spacer-", no_argument, NULL, '-',
         "SEE ALSO:", pcmk__option_default
@@ -443,7 +429,6 @@ main(int argc, char **argv)
     gboolean admin_input_stdin = FALSE;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
-#if ENABLE_ACL
     char *username = NULL;
     const char *acl_cred = NULL;
     enum acl_eval_how {
@@ -454,7 +439,6 @@ main(int argc, char **argv)
         acl_eval_text,
         acl_eval_color,
     } acl_eval_how = acl_eval_unused;
-#endif
 
     int option_index = 0;
 
@@ -496,7 +480,6 @@ main(int argc, char **argv)
                 cib_action = CIB_OP_ERASE;
                 dangerous_cmd = TRUE;
                 break;
-#if ENABLE_ACL
             case 'S':
                 if (optarg != NULL) {
                     if (!strcmp(optarg, "auto")) {
@@ -510,7 +493,7 @@ main(int argc, char **argv)
                     } else if (!strcmp(optarg, "color")) {
                         acl_eval_how = acl_eval_color;
                     } else {
-                        printf("Unrecognized option for --access-render: \"%s\"\n",
+                        fprintf(stderr, "Unrecognized value for --show-access: \"%s\"\n",
                                optarg);
                         ++argerr;
                     }
@@ -522,8 +505,7 @@ main(int argc, char **argv)
                        only in sync path now, but does it matter at all for
                        query-like request wrt. what blackbox users observe? */
                 command_options |= cib_sync_call;
-                /* fall-through */
-#endif
+                break;
             case 'Q':
                 cib_action = CIB_OP_QUERY;
                 break;
@@ -677,24 +659,23 @@ main(int argc, char **argv)
         source = "STDIN";
         input = stdin2xml();
 
-#if ENABLE_ACL
     } else if (acl_eval_how != acl_eval_unused) {
-        username = uid2username(geteuid());
+        username = pcmk__uid2username(geteuid());
         if (pcmk_acl_required(username)) {
-            if (force_flag == TRUE) {
-                local_const_barf("The supplied command can provide skewed"
+            if (force_flag) {
+                fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
                                  " gets guarded per ACLs on their own right."
                                  " Continuing since --force flag was"
-                                 " provided.");
+                                 " provided.\n");
 
             } else {
-                local_const_barf("The supplied command can provide skewed"
+                fprintf(stderr, "The supplied command can provide skewed"
                                  " result since it is run under user that also"
                                  " gets guarded per ACLs in their own right."
                                  " To accept the risk of such a possible"
                                  " distortion (without even knowing it at this"
-                                 " time), use the --force flag.");
+                                 " time), use the --force flag.\n");
                 crm_exit(CRM_EX_UNSAFE);
             }
 
@@ -703,15 +684,13 @@ main(int argc, char **argv)
         username = NULL;
 
         if (cib_user == NULL) {
-            local_const_barf("The supplied command requires -U user specified.");
+            fprintf(stderr, "The supplied command requires -U user specified.\n");
             crm_exit(CRM_EX_USAGE);
         }
 
         /* we already stopped/warned ACL-controlled users about consequences */
         acl_cred = cib_user;
-        cib_user = NULL;  /* XXX CRM_DAEMON_USER as it's IPC guarded anyway? */
-        /* XXX should likely differenciate per admin_input_* */
-#endif
+        cib_user = NULL;
     }
 
     if (input != NULL) {
@@ -805,46 +784,50 @@ main(int argc, char **argv)
         exit_code = crm_errno2exit(rc);
     }
 
-#if ENABLE_ACL
     if (output != NULL && acl_eval_how != acl_eval_unused) {
         xmlDoc *acl_evaled_doc;
-        rc = pcmk_acl_evaled_as_namespaces(PCMK_ACL_CRED_USER, acl_cred,
-                                           output->doc, &acl_evaled_doc);
-        if (rc > 0) {
+        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
+        if (rc == pcmk_rc_ok) {
             free_xml(output);
             if (acl_eval_how != acl_eval_ns_full) {
                 xmlChar *rendered = NULL;
-                int rendered_len = 0;
-                enum pcmk__acl_render_how how = (acl_eval_how == acl_eval_ns_simple)
-                                                ? pcmk__acl_render_ns_simple
-                                                : (acl_eval_how == acl_eval_text)
-                                                ? pcmk__acl_render_text
-                                                : (acl_eval_how == acl_eval_color)
-                                                ? pcmk__acl_render_color
-                                                : /*acl_eval_auto*/ isatty(STDOUT_FILENO)
-                                                ? pcmk__acl_render_color
-                                                : pcmk__acl_render_text;
+                enum pcmk__acl_render_how how;
+                switch(acl_eval_how) {
+                    case acl_eval_ns_simple:
+                        how = pcmk__acl_render_ns_simple;
+                        break;
+                    case acl_eval_text:
+                        how = pcmk__acl_render_text;
+                        break;
+                    case acl_eval_color:
+                        how = pcmk__acl_render_color;
+                        break;
+                    default:
+                        if (/*acl_eval_auto*/ isatty(STDOUT_FILENO)) {
+                            how = pcmk__acl_render_color;
+                        } else {
+                            how = pcmk__acl_render_text;
+                        }
+                        break;
+                }
+
                 if (!pcmk__acl_evaled_render(acl_evaled_doc, how,
-                                             &rendered, &rendered_len)) {
+                                             &rendered)) {
                     printf("%s\n", (char *) rendered);
                     free(rendered);
                 } else {
-                    local_const_barf("Could not render evaluated access");
+                    fprintf(stderr, "Could not render evaluated access\n");
                     crm_exit(CRM_EX_CONFIG);
                 }
                 output = NULL;
             } else {
                 output = xmlDocGetRootElement(acl_evaled_doc);
             }
-        } else if (rc == 0) {
-
-        } else if (rc < 0) {
-            local_barf("Could not evaluate access per request (%s, rc=%d)\n",
-                       acl_cred, rc);
+        } else {
+            fprintf(stderr, "Could not evaluate access per request (%s, error: %s)\n", acl_cred, pcmk_rc_str(rc));
             crm_exit(CRM_EX_CONFIG);
         }
     }
-#endif
 
     if (output != NULL) {
         print_xml_output(output);
