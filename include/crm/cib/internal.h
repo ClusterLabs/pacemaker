@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -238,5 +238,7 @@ cib_callback_client_t* cib__lookup_id (int call_id);
  * \return A standard Pacemaker return code
  */
 int cib__signon_query(cib_t **cib, xmlNode **cib_object);
+
+int cib__clean_up_connection(cib_t **cib);
 
 #endif

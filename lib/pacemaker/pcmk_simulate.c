@@ -938,10 +938,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                          true);
 
 simulate_done:
-    if (cib) {
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-    }
+    cib__clean_up_connection(&cib);
     return rc;
 }
 

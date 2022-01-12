@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2021 the Pacemaker project contributors
+ * Later changes copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -736,9 +736,7 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     }
 
     if (cib == NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-        cib_conn = NULL;
+        cib__clean_up_connection(&cib_conn);
     }
 
     if (cib_object == NULL) {
@@ -746,6 +744,21 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     } else {
         return rc;
     }
+}
+
+int
+cib__clean_up_connection(cib_t **cib)
+{
+    int rc;
+
+    if (*cib == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    rc = (*cib)->cmds->signoff(*cib);
+    cib_delete(*cib);
+    *cib = NULL;
+    return pcmk_legacy2rc(rc);
 }
 
 // Deprecated functions kept only for backward API compatibility

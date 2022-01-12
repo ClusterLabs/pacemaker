@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,6 +27,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
@@ -1066,10 +1067,7 @@ main(int argc, char **argv)
     pe_free_working_set(data_set);
     data_set = NULL;
 
-    if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
+    cib__clean_up_connection(&cib_conn);
 
     if (rc == -pcmk_err_no_quorum) {
         CMD_ERR("Use --force to ignore quorum");

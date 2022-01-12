@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -698,11 +698,10 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
-    rc = the_cib->cmds->signoff(the_cib);
+    rc = cib__clean_up_connection(&the_cib);
     if (exit_code == CRM_EX_OK) {
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
     }
-    cib_delete(the_cib);
 
     crm_exit(exit_code);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -515,10 +515,7 @@ done:
     free(options.set_type);
     g_free(options.type);
 
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-    }
+    cib__clean_up_connection(&the_cib);
 
     pcmk__output_and_clear_error(error, NULL);
     return crm_exit(exit_code);
