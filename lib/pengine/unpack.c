@@ -83,7 +83,6 @@ is_dangling_guest_node(pe_node_t *node)
     return FALSE;
 }
 
-
 /*!
  * \brief Schedule a fence action for a node
  *
@@ -2984,7 +2983,6 @@ static void
 unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
-    guint interval_ms = 0;
     bool is_probe = false;
     pe_action_t *action = NULL;
 
@@ -2998,10 +2996,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
     *last_failure = xml_op;
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    if ((interval_ms == 0) && !strcmp(task, CRMD_ACTION_STATUS)) {
-        is_probe = true;
-    }
+    is_probe = pcmk_xe_is_probe(xml_op);
 
     if (exit_reason == NULL) {
         exit_reason = "";
@@ -3126,45 +3121,81 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
 /*!
  * \internal
- * \brief Remap operation status based on action result
+ * \brief Remap informational monitor results and operation status
  *
- * Given an action result, determine an appropriate operation status for the
- * purposes of responding to the action (the status provided by the executor is
- * not directly usable since the executor does not know what was expected).
+ * For the monitor results, certain OCF codes are for providing extended information
+ * to the user about services that aren't yet failed but not entirely healthy either.
+ * These must be treated as the "normal" result by Pacemaker.
  *
- * \param[in,out] rsc        Resource that operation history entry is for
- * \param[in]     rc         Actual return code of operation
- * \param[in]     target_rc  Expected return code of operation
- * \param[in]     node       Node where operation was executed
+ * For operation status, the action result can be used to determine an appropriate
+ * status for the purposes of responding to the action.  The status provided by the
+ * executor is not directly usable since the executor does not know what was expected.
+ *
  * \param[in]     xml_op     Operation history entry XML from CIB status
- * \param[in,out] on_fail    What should be done about the result
+ * \param[in,out] rsc        Resource that operation history entry is for
+ * \param[in]     node       Node where operation was executed
  * \param[in]     data_set   Current cluster working set
+ * \param[in,out] on_fail    What should be done about the result
+ * \param[in]     target_rc  Expected return code of operation
+ * \param[in,out] rc         Actual return code of operation
+ * \param[in,out] status     Operation execution status
  *
- * \return Operation status based on return code and action info
+ * \note If the result is remapped and the node is not shutting down or failed,
+ *       the operation will be recorded in the data set's list of failed operations
+ *       to highlight it for the user.
+ *
  * \note This may update the resource's current and next role.
  */
-static int
-determine_op_status(
-    pe_resource_t *rsc, int rc, int target_rc, pe_node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
-{
-    guint interval_ms = 0;
+static void
+remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
+                pe_working_set_t *data_set, enum action_fail_response *on_fail,
+                int target_rc, int *rc, int *status) {
     bool is_probe = false;
-    int result = PCMK_EXEC_DONE;
-    const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *key = get_op_key(xml_op);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
 
+    if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none)) {
+        int remapped_rc = pcmk__effective_rc(*rc);
+
+        if (*rc != remapped_rc) {
+            crm_trace("Remapping monitor result %d to %d", *rc, remapped_rc);
+            if (!node->details->shutdown || node->details->online) {
+                record_failed_op(xml_op, node, rsc, data_set);
+            }
+
+            *rc = remapped_rc;
+        }
+    }
+
+    if (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op)) {
+        *status = PCMK_EXEC_DONE;
+        *rc = PCMK_OCF_NOT_RUNNING;
+    }
+
+    /* If the executor reported an operation status of anything but done or
+     * error, consider that final. But for done or error, we know better whether
+     * it should be treated as a failure or not, because we know the expected
+     * result.
+     */
+    if (*status != PCMK_EXEC_DONE && *status != PCMK_EXEC_ERROR) {
+        return;
+    }
+
     CRM_ASSERT(rsc);
-    CRM_CHECK(task != NULL, return PCMK_EXEC_ERROR);
+    CRM_CHECK(task != NULL,
+              *status = PCMK_EXEC_ERROR; return);
+
+    *status = PCMK_EXEC_DONE;
 
     if (exit_reason == NULL) {
         exit_reason = "";
     }
 
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    if ((interval_ms == 0) && !strcmp(task, CRMD_ACTION_STATUS)) {
-        is_probe = true;
+    is_probe = pcmk_xe_is_probe(xml_op);
+
+    if (is_probe) {
         task = "probe";
     }
 
@@ -3177,23 +3208,23 @@ determine_op_status(
          * those versions or processing of saved CIB files from those versions,
          * so we do not need to care much about this case.
          */
-        result = PCMK_EXEC_ERROR;
+        *status = PCMK_EXEC_ERROR;
         crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
                  key, node->details->uname);
 
-    } else if (target_rc != rc) {
-        result = PCMK_EXEC_ERROR;
+    } else if (target_rc != *rc) {
+        *status = PCMK_EXEC_ERROR;
         pe_rsc_debug(rsc, "%s on %s: expected %d (%s), got %d (%s%s%s)",
                      key, node->details->uname,
                      target_rc, services_ocf_exitcode_str(target_rc),
-                     rc, services_ocf_exitcode_str(rc),
+                     *rc, services_ocf_exitcode_str(*rc),
                      (*exit_reason? ": " : ""), exit_reason);
     }
 
-    switch (rc) {
+    switch (*rc) {
         case PCMK_OCF_OK:
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
-                result = PCMK_EXEC_DONE;
+                *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
                             rsc->id, node->details->uname,
                             last_change_str(xml_op));
@@ -3201,10 +3232,10 @@ determine_op_status(
             break;
 
         case PCMK_OCF_NOT_RUNNING:
-            if (is_probe || (target_rc == rc)
+            if (is_probe || (target_rc == *rc)
                 || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
 
-                result = PCMK_EXEC_DONE;
+                *status = PCMK_EXEC_DONE;
                 rsc->role = RSC_ROLE_STOPPED;
 
                 /* clear any previous failure actions */
@@ -3214,8 +3245,8 @@ determine_op_status(
             break;
 
         case PCMK_OCF_RUNNING_PROMOTED:
-            if (is_probe && (rc != target_rc)) {
-                result = PCMK_EXEC_DONE;
+            if (is_probe && (*rc != target_rc)) {
+                *status = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc,
                             "Probe found %s active and promoted on %s at %s",
                             rsc->id, node->details->uname,
@@ -3227,19 +3258,24 @@ determine_op_status(
         case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_PROMOTED:
             rsc->role = RSC_ROLE_PROMOTED;
-            result = PCMK_EXEC_ERROR;
+            *status = PCMK_EXEC_ERROR;
             break;
 
         case PCMK_OCF_NOT_CONFIGURED:
-            result = PCMK_EXEC_ERROR_FATAL;
+            *status = PCMK_EXEC_ERROR_FATAL;
             break;
 
-        case PCMK_OCF_UNIMPLEMENT_FEATURE:
+        case PCMK_OCF_UNIMPLEMENT_FEATURE: {
+            guint interval_ms = 0;
+            crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
             if (interval_ms > 0) {
-                result = PCMK_EXEC_NOT_SUPPORTED;
+                *status = PCMK_EXEC_NOT_SUPPORTED;
                 break;
             }
             // fall through
+        }
+
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
@@ -3249,26 +3285,27 @@ determine_op_status(
                 pe_proc_err("No further recovery can be attempted for %s "
                             "because %s on %s failed (%s%s%s) at %s "
                             CRM_XS " rc=%d id=%s", rsc->id, task,
-                            node->details->uname, services_ocf_exitcode_str(rc),
+                            node->details->uname, services_ocf_exitcode_str(*rc),
                             (*exit_reason? ": " : ""), exit_reason,
-                            last_change_str(xml_op), rc, ID(xml_op));
+                            last_change_str(xml_op), *rc, ID(xml_op));
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
             }
-            result = PCMK_EXEC_ERROR_HARD;
+            *status = PCMK_EXEC_ERROR_HARD;
             break;
 
         default:
-            if (result == PCMK_EXEC_DONE) {
+            if (*status == PCMK_EXEC_DONE) {
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
-                         rc, task, rsc->id, node->details->uname,
+                         *rc, task, rsc->id, node->details->uname,
                          last_change_str(xml_op));
-                result = PCMK_EXEC_ERROR;
+                *status = PCMK_EXEC_ERROR;
             }
             break;
     }
-    return result;
+
+    pe_rsc_trace(rsc, "Remapped %s status to %d", key, *status);
 }
 
 // return TRUE if start or monitor last failure but parameters changed
@@ -3535,11 +3572,11 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
     CRM_ASSERT(rsc);
     CRM_ASSERT(xml_op);
 
-    if (rc == PCMK_OCF_NOT_RUNNING) {
-        clear_past_failure = TRUE;
-
-    } else if (rc == PCMK_OCF_NOT_INSTALLED) {
+    if (rc == PCMK_OCF_NOT_INSTALLED || (!pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op))) {
         rsc->role = RSC_ROLE_STOPPED;
+
+    } else if (rc == PCMK_OCF_NOT_RUNNING) {
+        clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         if (last_failure) {
@@ -3623,57 +3660,25 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
     }
 }
 
-/*!
- * \internal
- * \brief Remap informational monitor results to usual values
- *
- * Certain OCF result codes are for providing extended information to the
- * user about services that aren't yet failed but not entirely healthy either.
- * These must be treated as the "normal" result by Pacemaker.
- *
- * \param[in] rc        Actual result of a monitor action
- * \param[in] xml_op    Operation history XML
- * \param[in] node      Node that operation happened on
- * \param[in] rsc       Resource that operation happened to
- * \param[in] data_set  Cluster working set
- *
- * \return Result code that pacemaker should use
- *
- * \note If the result is remapped, and the node is not shutting down or failed,
- *       the operation will be recorded in the data set's list of failed
- *       operations, to highlight it for the user.
- */
-static int
-remap_monitor_rc(int rc, xmlNode *xml_op, const pe_node_t *node,
-                 const pe_resource_t *rsc, pe_working_set_t *data_set)
-{
-    int remapped_rc = pcmk__effective_rc(rc);
-
-    if (rc != remapped_rc) {
-        crm_trace("Remapping monitor result %d to %d", rc, remapped_rc);
-        if (!node->details->shutdown || node->details->online) {
-            record_failed_op(xml_op, node, rsc, data_set);
-        }
-    }
-    return remapped_rc;
-}
-
 static void
 unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
               xmlNode **last_failure, enum action_fail_response *on_fail,
               pe_working_set_t *data_set)
 {
     int rc = 0;
+    int old_rc = 0;
     int task_id = 0;
     int target_rc = 0;
+    int old_target_rc = 0;
     int status = PCMK_EXEC_UNKNOWN;
     guint interval_ms = 0;
     const char *task = NULL;
     const char *task_key = NULL;
     const char *exit_reason = NULL;
-    bool expired = FALSE;
+    bool expired = false;
     pe_resource_t *parent = rsc;
     enum action_fail_response failure_strategy = action_fail_recover;
+    bool maskable_probe_failure = false;
 
     CRM_CHECK(rsc && node && xml_op, return);
 
@@ -3713,7 +3718,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                      node->details->uname, rsc->id);
     }
 
-    /* It should be possible to call remap_monitor_rc() first then call
+    /* It should be possible to call remap_operation() first then call
      * check_operation_expiry() only if rc != target_rc, because there should
      * never be a fail count without at least one unexpected result in the
      * resource history. That would be more efficient by avoiding having to call
@@ -3727,14 +3732,25 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     if ((status != PCMK_EXEC_NOT_INSTALLED)
         && check_operation_expiry(rsc, node, rc, xml_op, data_set)) {
-        expired = TRUE;
+        expired = true;
     }
 
-    if (!strcmp(task, CRMD_ACTION_STATUS)) {
-        rc = remap_monitor_rc(rc, xml_op, node, rsc, data_set);
-    }
+    old_rc = rc;
+    old_target_rc = target_rc;
 
-    if (expired && (rc != target_rc)) {
+    remap_operation(xml_op, rsc, node, data_set, on_fail, target_rc,
+                    &rc, &status);
+
+    maskable_probe_failure = !pe_rsc_is_bundled(rsc) && pcmk_xe_mask_probe_failure(xml_op);
+
+    if (expired && maskable_probe_failure && old_rc != old_target_rc) {
+        if (rsc->role <= RSC_ROLE_STOPPED) {
+            rsc->role = RSC_ROLE_UNKNOWN;
+        }
+
+        goto done;
+
+    } else if (expired && (rc != target_rc)) {
         const char *magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 
         if (interval_ms == 0) {
@@ -3762,14 +3778,16 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         }
     }
 
-    /* If the executor reported an operation status of anything but done or
-     * error, consider that final. But for done or error, we know better whether
-     * it should be treated as a failure or not, because we know the expected
-     * result.
-     */
-    if(status == PCMK_EXEC_DONE || status == PCMK_EXEC_ERROR) {
-        status = determine_op_status(rsc, rc, target_rc, node, xml_op, on_fail, data_set);
-        pe_rsc_trace(rsc, "Remapped %s status to %d", task_key, status);
+    if (maskable_probe_failure) {
+        crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
+                   services_ocf_exitcode_str(rc), rsc->id, node->details->uname);
+        update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
+                              on_fail, data_set);
+        crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+
+        record_failed_op(xml_op, node, rsc, data_set);
+        resource_location(parent, node, -INFINITY, "masked-probe-failure", data_set);
+        goto done;
     }
 
     switch (status) {

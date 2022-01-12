@@ -420,7 +420,7 @@ function test_crm_mon() {
     export CIB_file="$test_home/cli/crm_mon-partial.xml"
 
     desc="Text output of partially active resources"
-    cmd="crm_mon -1"
+    cmd="crm_mon -1 --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="XML output of partially active resources"
@@ -428,13 +428,13 @@ function test_crm_mon() {
     test_assert_validate $CRM_EX_OK 0
 
     desc="Text output of partially active resources, with inactive resources"
-    cmd="crm_mon -1 -r"
+    cmd="crm_mon -1 -r --show-detail"
     test_assert $CRM_EX_OK 0
 
     # XML already includes inactive resources
 
     desc="Complete brief text output, with inactive resources"
-    cmd="crm_mon -1 -r --include=all --brief"
+    cmd="crm_mon -1 -r --include=all --brief --show-detail"
     test_assert $CRM_EX_OK 0
 
     # XML does not have a brief output option
@@ -452,11 +452,11 @@ function test_crm_mon() {
     test_assert $CRM_EX_OK 0
 
     desc="Text output of inactive member of partially active group"
-    cmd="crm_mon -1 --resource=dummy-2"
+    cmd="crm_mon -1 --resource=dummy-2 --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="Complete brief text output grouped by node, with inactive resources"
-    cmd="crm_mon -1 -r --include=all --group-by-node --brief"
+    cmd="crm_mon -1 -r --include=all --group-by-node --brief --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="Text output of partially active resources, with inactive resources, filtered by node"
@@ -1870,7 +1870,7 @@ for t in $tests; do
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/ last-rc-change=\"[A-Za-z0-9: ]*\"//'\
+        -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \

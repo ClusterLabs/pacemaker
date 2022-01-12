@@ -599,6 +599,17 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         g_string_append_printf(outstr, " %s", node->details->uname);
     }
 
+    // Failed probe operation
+    if (native_displayable_role(rsc) == RSC_ROLE_STOPPED) {
+        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
+        if (probe_op != NULL) {
+            int rc;
+
+            pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+            g_string_append_printf(outstr, " (%s) ", services_ocf_exitcode_str(rc));
+        }
+    }
+
     // Flags, as: (<flag> [...])
     if (node && !(node->details->online) && node->details->unclean) {
         have_flags = add_output_flag(outstr, "UNCLEAN", have_flags);

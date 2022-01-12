@@ -1066,8 +1066,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 {
     int timeout_ms = 0;
     const char *value = NULL;
-    bool is_probe = pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
-                    && (interval_ms == 0);
+    bool is_probe = false;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -1093,6 +1092,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     };
 
     CRM_CHECK(action && action->rsc, return);
+
+    is_probe = pcmk_is_probe(action->task, interval_ms);
 
     // Cluster-wide <op_defaults> <meta_attributes>
     pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,
@@ -2567,4 +2568,53 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
     }
 
     return resources;
+}
+
+xmlNode *
+pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
+{
+    pe_resource_t *parent = uber_parent(rsc);
+    const char *rsc_id = rsc->id;
+
+    if (rsc->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(rsc);
+    } else if (parent->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(parent);
+    }
+
+    for (xmlNode *xml_op = pcmk__xml_first_child(rsc->cluster->failed); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
+        const char *value = NULL;
+        char *op_id = NULL;
+
+        /* This resource operation is not a failed probe. */
+        if (!pcmk_xe_mask_probe_failure(xml_op)) {
+            continue;
+        }
+
+        /* This resource operation was not run on the given node.  Note that if name is
+         * NULL, this will always succeed.
+         */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+        if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
+            continue;
+        }
+
+        /* This resource operation has no operation_key. */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (!parse_op_key(value ? value : ID(xml_op), &op_id, NULL, NULL)) {
+            continue;
+        }
+
+        /* This resource operation's ID does not match the rsc_id we are looking for. */
+        if (!pcmk__str_eq(op_id, rsc_id, pcmk__str_none)) {
+            free(op_id);
+            continue;
+        }
+
+        free(op_id);
+        return xml_op;
+    }
+
+    return NULL;
 }

@@ -537,3 +537,41 @@ pcmk__is_fencing_action(const char *action)
 {
     return pcmk__str_any_of(action, "off", "reboot", "poweroff", NULL);
 }
+
+bool
+pcmk_is_probe(const char *task, guint interval)
+{
+    if (task == NULL) {
+        return false;
+    }
+
+    return (interval == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none);
+}
+
+bool
+pcmk_xe_is_probe(xmlNode *xml_op)
+{
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+    int interval_ms;
+
+    pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);
+    return pcmk_is_probe(task, interval_ms);
+}
+
+bool
+pcmk_xe_mask_probe_failure(xmlNode *xml_op)
+{
+    int status = PCMK_EXEC_UNKNOWN;
+    int rc = PCMK_OCF_OK;
+
+    if (!pcmk_xe_is_probe(xml_op)) {
+        return false;
+    }
+
+    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
+
+    return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
+           status == PCMK_EXEC_NOT_INSTALLED;
+}
