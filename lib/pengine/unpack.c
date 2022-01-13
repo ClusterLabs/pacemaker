@@ -3780,7 +3780,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     if (maskable_probe_failure) {
         crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
-                   services_ocf_exitcode_str(rc), rsc->id, node->details->uname);
+                   services_ocf_exitcode_str(old_rc), rsc->id, node->details->uname);
         update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure,
                               on_fail, data_set);
         crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
