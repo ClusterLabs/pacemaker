@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #  include <pcmki/pcmki_sched_utils.h>
 #  include <pcmki/pcmki_scheduler.h>
 #  include <pcmki/pcmki_simulate.h>
+#  include <pcmki/pcmki_status.h>
 #  include <pcmki/pcmki_transition.h>
 
 #endif

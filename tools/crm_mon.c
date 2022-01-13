@@ -1695,93 +1695,6 @@ main(int argc, char **argv)
     return clean_up(CRM_EX_OK);
 }
 
-/*!
- * \internal
- * \brief Print one-line status suitable for use with monitoring software
- *
- * \param[in] data_set  Working set of CIB state
- *
- * \return Standard Pacemaker return code
- *
- * \note This function's output (and the return code when the program exits)
- *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
- */
-static int
-print_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
-{
-    int nodes_online = 0;
-    int nodes_standby = 0;
-    int nodes_maintenance = 0;
-    char *offline_nodes = NULL;
-    size_t offline_nodes_len = 0;
-    bool no_dc = false;
-    bool offline = false;
-    bool has_warnings = false;
-
-    if (data_set->dc_node == NULL) {
-        has_warnings = true;
-        no_dc = true;
-    }
-
-    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-        pe_node_t *node = (pe_node_t *) iter->data;
-
-        if (node->details->standby && node->details->online) {
-            nodes_standby++;
-        } else if (node->details->maintenance && node->details->online) {
-            nodes_maintenance++;
-        } else if (node->details->online) {
-            nodes_online++;
-        } else {
-            char *s = crm_strdup_printf("offline node: %s", node->details->uname);
-            /* coverity[leaked_storage] False positive */
-            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
-            free(s);
-            has_warnings = true;
-            offline = true;
-        }
-    }
-
-    if (has_warnings) {
-        out->info(out, "CLUSTER WARN: %s%s%s",
-                  no_dc ? "No DC" : "",
-                  no_dc && offline ? ", " : "",
-                  (offline? offline_nodes : ""));
-        free(offline_nodes);
-    } else {
-        char *nodes_standby_s = NULL;
-        char *nodes_maint_s = NULL;
-
-        if (nodes_standby > 0) {
-            nodes_standby_s = crm_strdup_printf(", %d standby node%s", nodes_standby,
-                                                pcmk__plural_s(nodes_standby));
-        }
-
-        if (nodes_maintenance > 0) {
-            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              nodes_maintenance,
-                                              pcmk__plural_s(nodes_maintenance));
-        }
-
-        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
-                       "%d resource instance%s configured",
-                  nodes_online, pcmk__plural_s(nodes_online),
-                  nodes_standby_s != NULL ? nodes_standby_s : "",
-                  nodes_maint_s != NULL ? nodes_maint_s : "",
-                  data_set->ninstances, pcmk__plural_s(data_set->ninstances));
-
-        free(nodes_standby_s);
-        free(nodes_maint_s);
-    }
-
-    if (has_warnings) {
-        return pcmk_rc_error;
-    } else {
-        return pcmk_rc_ok;
-    }
-    /* coverity[leaked_storage] False positive */
-}
-
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
                  int status, const char *desc)
@@ -2180,7 +2093,7 @@ mon_refresh_display(gpointer user_data)
     }
 
     if (output_format == mon_output_monitor) {
-        if (print_simple_status(out, mon_data_set) != pcmk_rc_ok) {
+        if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
             clean_up(MON_STATUS_WARN);
             return FALSE;
         }
