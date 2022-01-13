@@ -87,7 +87,7 @@ request via IPC or messaging layer callback, which calls:
 
     * ``stonith_query()``, which calls
 
-      * ``get_capable_devices()`` with ``stonith_query_capable_device_db()`` to add
+      * ``get_capable_devices()`` with ``stonith_query_capable_device_cb()`` to add
         device information to an XML reply and send it. (A message is
         considered a reply if it contains ``T_STONITH_REPLY``, which is only
         set by fencer peers, not clients.)
