@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1033,8 +1033,8 @@ systemd_timeout_callback(gpointer p)
  * \retval EBUSY          Recurring operation could not be initiated
  * \retval pcmk_rc_error  Synchronous action failed
  * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
- *                        should not be freed (because it already was or is
- *                        pending)
+ *                        should not be freed (because it's pending or because
+ *                        it failed to execute and was already freed)
  *
  * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
  *       caller is responsible for freeing the action.

@@ -454,7 +454,9 @@ services_action_user(svc_action_t *op, const char *user)
  * \return TRUE if the library will free action, FALSE otherwise
  *
  * \note If this function returns FALSE, it is the caller's responsibility to
- *       free the action with services_action_free().
+ *       free the action with services_action_free(). However, unless someone
+ *       intentionally creates a recurring alert action, this will never return
+ *       FALSE.
  */
 gboolean
 services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
