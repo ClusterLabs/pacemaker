@@ -305,9 +305,10 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.user_data = crm_element_value(msg, F_LRMD_RSC_USERDATA_STR);
         event.type = lrmd_event_exec_complete;
 
-        // No need to duplicate the memory, so don't use setter functions
-        event.output = crm_element_value(msg, F_LRMD_RSC_OUTPUT);
-        event.exit_reason = crm_element_value(msg, F_LRMD_RSC_EXIT_REASON);
+        /* output and exit_reason may be freed by a callback */
+        event.output = crm_element_value_copy(msg, F_LRMD_RSC_OUTPUT);
+        lrmd__set_result(&event, event.rc, event.op_status,
+                         crm_element_value(msg, F_LRMD_RSC_EXIT_REASON));
 
         event.params = xml2list(msg);
     } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
@@ -324,6 +325,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     if (event.params) {
         g_hash_table_destroy(event.params);
     }
+    lrmd__reset_result(&event);
 }
 
 // \return Always 0, to indicate that IPC mainloop source should be kept
