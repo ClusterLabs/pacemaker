@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -863,17 +863,19 @@ services_action_async_fork_notify(svc_action_t * op,
                                   void (*action_callback) (svc_action_t *),
                                   void (*action_fork_callback) (svc_action_t *))
 {
+    CRM_CHECK(op != NULL, return TRUE);
+
     op->synchronous = false;
-    if (action_callback) {
+    if (action_callback != NULL) {
         op->opaque->callback = action_callback;
     }
-    if (action_fork_callback) {
+    if (action_fork_callback != NULL) {
         op->opaque->fork_callback = action_fork_callback;
     }
 
     if (op->interval_ms > 0) {
         init_recurring_actions();
-        if (handle_duplicate_recurring(op) == TRUE) {
+        if (handle_duplicate_recurring(op)) {
             /* entry rescheduled, dup freed */
             /* exit early */
             return TRUE;
