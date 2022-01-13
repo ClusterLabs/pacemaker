@@ -2158,6 +2158,10 @@ mon_refresh_display(gpointer user_data)
         return 0;
     }
 
+    if (output_format == mon_output_none || output_format == mon_output_unset) {
+        return 0;
+    }
+
     /* get the stonith-history if there is evidence we need it */
     history_rc = get_fencing_history(&stonith_history);
 
@@ -2190,35 +2194,16 @@ mon_refresh_display(gpointer user_data)
         show |= pcmk_section_dc;
     }
 
-    switch (output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            if (out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, fence_history, show, show_opts,
-                             options.neg_location_prefix, unames, resources) != 0) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
-                clean_up(CRM_EX_CANTCREAT);
-                return 0;
-            }
-            break;
-
-        case mon_output_monitor:
-            print_simple_status(out, mon_data_set);
-            if (has_warnings) {
-                clean_up(MON_STATUS_WARN);
-                return FALSE;
-            }
-            break;
-
-        case mon_output_unset:
-        case mon_output_none:
-            break;
-
-        default:
-            out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                         stonith_history, fence_history, show, show_opts,
-                         options.neg_location_prefix, unames, resources);
-            break;
+    if (output_format == mon_output_monitor) {
+        print_simple_status(out, mon_data_set);
+        if (has_warnings) {
+            clean_up(MON_STATUS_WARN);
+            return FALSE;
+        }
+    } else {
+        out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+                     stonith_history, fence_history, show, show_opts,
+                     options.neg_location_prefix, unames, resources);
     }
 
     if (options.daemonize) {
