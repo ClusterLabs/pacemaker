@@ -1548,13 +1548,17 @@ main(int argc, char **argv)
                PCMK_STONITH_DELAY_BASE);
         printf("    <shortdesc lang=\"en\">Enable a base delay for "
                "fencing actions and specify base delay value.</shortdesc>\n");
-        printf("    <longdesc lang=\"en\">This prevents double fencing when "
-               "different delays are configured on the nodes.\nUse this to "
-               "enable a static delay for fencing actions.\nThe overall delay "
-               "is derived from a random delay value adding this static delay "
-               "so that the sum is kept below the maximum delay.\nSet to eg. "
-               "node1:1s;node2:5 to set different value per node.</longdesc>\n");
-        printf("    <content type=\"time\" default=\"0s\"/>\n");
+        printf("    <longdesc lang=\"en\">This enables a static delay for "
+               "fencing actions, which can help avoid \"death matches\" where "
+               "two nodes try to fence each other at the same time. If "
+               PCMK_STONITH_DELAY_MAX " is also used, a random delay will be "
+               "added such that the total delay is kept below that value.\n"
+               "This can be set to a single time value to apply to any node "
+               "targeted by this device (useful if a separate device is "
+               "configured for each target), or to a node map (for example, "
+               "\"node1:1s;node2:5\") to set a different value per target.\n"
+               "    </longdesc>\n");
+        printf("    <content type=\"string\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
