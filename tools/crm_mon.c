@@ -85,7 +85,6 @@ static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
 static gboolean fence_history = FALSE;
-static gboolean has_warnings = FALSE;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
 
@@ -1702,28 +1701,30 @@ main(int argc, char **argv)
  *
  * \param[in] data_set  Working set of CIB state
  *
+ * \return Standard Pacemaker return code
+ *
  * \note This function's output (and the return code when the program exits)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
-static void
-print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
+static int
+print_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
     int nodes_maintenance = 0;
     char *offline_nodes = NULL;
     size_t offline_nodes_len = 0;
-    gboolean no_dc = FALSE;
-    gboolean offline = FALSE;
+    bool no_dc = false;
+    bool offline = false;
+    bool has_warnings = false;
 
     if (data_set->dc_node == NULL) {
-        has_warnings = TRUE;
-        no_dc = TRUE;
+        has_warnings = true;
+        no_dc = true;
     }
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
         if (node->details->standby && node->details->online) {
             nodes_standby++;
@@ -1736,8 +1737,8 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
             /* coverity[leaked_storage] False positive */
             pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);
-            has_warnings = TRUE;
-            offline = TRUE;
+            has_warnings = true;
+            offline = true;
         }
     }
 
@@ -1771,6 +1772,12 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
 
         free(nodes_standby_s);
         free(nodes_maint_s);
+    }
+
+    if (has_warnings) {
+        return pcmk_rc_error;
+    } else {
+        return pcmk_rc_ok;
     }
     /* coverity[leaked_storage] False positive */
 }
@@ -2173,8 +2180,7 @@ mon_refresh_display(gpointer user_data)
     }
 
     if (output_format == mon_output_monitor) {
-        print_simple_status(out, mon_data_set);
-        if (has_warnings) {
+        if (print_simple_status(out, mon_data_set) != pcmk_rc_ok) {
             clean_up(MON_STATUS_WARN);
             return FALSE;
         }
