@@ -2113,26 +2113,23 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
-get_fencing_history(stonith_history_t **stonith_history)
+get_fencing_history(stonith_t *st, stonith_history_t **stonith_history, bool reduce)
 {
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
-    while (fence_history) {
-        if (st != NULL) {
-            rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
+    if (st == NULL) {
+        rc = ENOTCONN;
+    } else {
+        rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
 
-            if (rc == 0) {
-                *stonith_history = stonith__sort_history(*stonith_history);
-                if (!pcmk_all_flags_set(show, pcmk_section_fencing_all)
-                    && (output_format != mon_output_xml)) {
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
 
-                    *stonith_history = pcmk__reduce_fence_history(*stonith_history);
-                }
-                break; /* all other cases are errors */
-            }
-        } else {
-            rc = ENOTCONN;
-            break;
+        *stonith_history = stonith__sort_history(*stonith_history);
+        if (reduce) {
+            *stonith_history = pcmk__reduce_fence_history(*stonith_history);
         }
     }
 
@@ -2144,7 +2141,8 @@ mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
-    int history_rc = 0;
+    bool reduce = false;
+    int history_rc = pcmk_rc_ok;
     GList *unames = NULL;
     GList *resources = NULL;
 
@@ -2163,7 +2161,11 @@ mon_refresh_display(gpointer user_data)
     }
 
     /* get the stonith-history if there is evidence we need it */
-    history_rc = get_fencing_history(&stonith_history);
+    if (fence_history) {
+        reduce = !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
+                 (output_format != mon_output_xml);
+        history_rc = get_fencing_history(st, &stonith_history, reduce);
+    }
 
     if (mon_data_set == NULL) {
         mon_data_set = pe_new_working_set();
@@ -2201,7 +2203,7 @@ mon_refresh_display(gpointer user_data)
             return FALSE;
         }
     } else {
-        out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+        out->message(out, "cluster-status", mon_data_set, pcmk_rc2exitc(history_rc),
                      stonith_history, fence_history, show, show_opts,
                      options.neg_location_prefix, unames, resources);
     }
