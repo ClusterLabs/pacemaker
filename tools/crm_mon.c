@@ -2048,11 +2048,11 @@ mon_refresh_display(gpointer user_data)
         out->err(out, "Upgrade failed: %s",
                  pcmk_rc_str(pcmk_rc_schema_validation));
         clean_up(CRM_EX_CONFIG);
-        return 0;
+        return G_SOURCE_REMOVE;
     }
 
     if (output_format == mon_output_none || output_format == mon_output_unset) {
-        return 0;
+        return G_SOURCE_REMOVE;
     }
 
     /* get the stonith-history if there is evidence we need it */
@@ -2097,7 +2097,7 @@ mon_refresh_display(gpointer user_data)
     if (output_format == mon_output_monitor) {
         if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
             clean_up(MON_STATUS_WARN);
-            return FALSE;
+            return G_SOURCE_REMOVE;
         }
     } else {
         out->message(out, "cluster-status", mon_data_set, pcmk_rc2exitc(history_rc),
@@ -2115,7 +2115,7 @@ mon_refresh_display(gpointer user_data)
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(mon_data_set);
-    return 1;
+    return G_SOURCE_CONTINUE;
 }
 
 /* This function is called for fencing events (see fencing_connect for which ones) when
