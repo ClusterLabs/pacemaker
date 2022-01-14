@@ -812,12 +812,10 @@ cib_connect(gboolean full)
         return rc;
     }
 
-#if CURSES_ENABLED
     /* just show this if refresh is gonna remove all traces */
     if (output_format == mon_output_console) {
         out->info(out,"Waiting for CIB ...");
     }
-#endif
 
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
@@ -1018,13 +1016,11 @@ pacemakerd_status(void)
         case EREMOTEIO:
             rc = pcmk_rc_ok;
             on_remote_node = TRUE;
-#if CURSES_ENABLED
             /* just show this if refresh is gonna remove all traces */
             if (output_format == mon_output_console) {
                 out->info(out,
                     "Running on remote-node waiting to be connected by cluster ...");
             }
-#endif
             break;
         default:
             break;
