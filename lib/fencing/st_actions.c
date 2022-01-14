@@ -550,6 +550,9 @@ stonith_action_async_forked(svc_action_t *svc_action)
         (action->fork_cb) (svc_action->pid, action->userdata);
     }
 
+    pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING,
+                     NULL);
+
     crm_trace("Child process %d performing action '%s' successfully forked",
               action->pid, action->action);
 }
@@ -619,8 +622,6 @@ internal_stonith_action_execute(stonith_action_t * action)
         if (services_action_async_fork_notify(svc_action,
                                               &stonith_action_async_done,
                                               &stonith_action_async_forked)) {
-            pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN,
-                             PCMK_EXEC_PENDING, NULL);
             return pcmk_ok;
         }
 
