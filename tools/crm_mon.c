@@ -69,7 +69,6 @@ static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
 static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
-static pe_working_set_t *mon_data_set = NULL;
 
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
@@ -2035,6 +2034,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 static int
 mon_refresh_display(gpointer user_data)
 {
+    pe_working_set_t *mon_data_set = NULL;
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = pcmk_rc_ok;
@@ -2065,12 +2065,10 @@ mon_refresh_display(gpointer user_data)
         history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
     }
 
-    if (mon_data_set == NULL) {
-        mon_data_set = pe_new_working_set();
-        CRM_ASSERT(mon_data_set != NULL);
-    }
-    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
+    mon_data_set = pe_new_working_set();
+    CRM_ASSERT(mon_data_set != NULL);
 
+    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
     mon_data_set->input = cib_copy;
     mon_data_set->priv = out;
     cluster_status(mon_data_set);
@@ -2096,6 +2094,7 @@ mon_refresh_display(gpointer user_data)
 
     if (output_format == mon_output_monitor) {
         if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
+            pe_free_working_set(mon_data_set);
             clean_up(MON_STATUS_WARN);
             return G_SOURCE_REMOVE;
         }
@@ -2114,7 +2113,7 @@ mon_refresh_display(gpointer user_data)
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_reset_working_set(mon_data_set);
+    pe_free_working_set(mon_data_set);
     return G_SOURCE_CONTINUE;
 }
 
@@ -2235,9 +2234,6 @@ clean_up(crm_exit_t exit_code)
     free(options.only_rsc);
     free(options.pid_file);
     g_slist_free_full(options.includes_excludes, free);
-
-    pe_free_working_set(mon_data_set);
-    mon_data_set = NULL;
 
     g_strfreev(processed_args);
 
