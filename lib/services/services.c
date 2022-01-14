@@ -800,8 +800,8 @@ handle_duplicate_recurring(svc_action_t * op)
  * \retval EBUSY          Recurring operation could not be initiated
  * \retval pcmk_rc_error  Synchronous action failed
  * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
- *                        should not be freed (because it already was or is
- *                        pending)
+ *                        should not be freed (because it's pending or because
+ *                        it failed to execute and was already freed)
  *
  * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
  *       caller is responsible for freeing the action.
