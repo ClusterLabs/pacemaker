@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -524,7 +524,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
      */
     if (!AM_I_DC
         && pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
-                        pcmk__str_casei)) {
+                        pcmk__str_none)) {
 
         if (succeeded) {
             st_fail_count_reset(event->target);
