@@ -187,9 +187,15 @@ bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
 bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
 int stonith__legacy2status(int rc);
+
 int stonith__exit_status(stonith_callback_data_t *data);
 int stonith__execution_status(stonith_callback_data_t *data);
 const char *stonith__exit_reason(stonith_callback_data_t *data);
+
+int stonith__event_exit_status(stonith_event_t *event);
+int stonith__event_execution_status(stonith_event_t *event);
+const char *stonith__event_exit_reason(stonith_event_t *event);
+char *stonith__event_description(stonith_event_t *event);
 
 /*!
  * \internal
