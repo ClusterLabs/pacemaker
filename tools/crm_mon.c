@@ -137,7 +137,7 @@ static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static void handle_connection_failures(int rc);
 static int mon_refresh_display(gpointer user_data);
-static int cib_connect(gboolean full);
+static int cib_connect(void);
 static int fencing_connect(void);
 static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
@@ -678,7 +678,7 @@ reconnect_after_timeout(gpointer data)
     out->info(out, "Reconnecting...");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
-        if (cib_connect(TRUE) == pcmk_rc_ok) {
+        if (cib_connect() == pcmk_rc_ok) {
             /* trigger redrawing the screen (needs reconnect_timer == 0) */
             reconnect_timer = 0;
             refresh_after_event(FALSE, TRUE);
@@ -793,7 +793,7 @@ fencing_connect(void)
 }
 
 static int
-cib_connect(gboolean full)
+cib_connect(void)
 {
     int rc = pcmk_rc_ok;
 
@@ -821,7 +821,7 @@ cib_connect(gboolean full)
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
 
-    if (rc == pcmk_rc_ok && full) {
+    if (rc == pcmk_rc_ok) {
         rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
@@ -1631,7 +1631,7 @@ main(int argc, char **argv)
         rc = pacemakerd_status();
         if (rc == pcmk_rc_ok) {
             fencing_connect();
-            rc = cib_connect(TRUE);
+            rc = cib_connect();
         }
 
         if (rc != pcmk_rc_ok) {
