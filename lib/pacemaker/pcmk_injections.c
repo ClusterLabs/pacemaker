@@ -468,14 +468,14 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
  * \param[in] out          Output object for displaying error messages
  * \param[in] ticket_id    Ticket whose state should be changed
  * \param[in] attr_name    Ticket attribute name to inject
- * \param[in] attr_value   Ticket attribute value to inject
+ * \param[in] attr_value   Boolean value of ticket attribute to inject
  * \param[in] cib          CIB object to use
  *
  * \return Standard Pacemaker return code
  */
 static int
 set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
-                      const char *attr_name, const char *attr_value, cib_t *cib)
+                      const char *attr_name, bool attr_value, cib_t *cib)
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
@@ -503,7 +503,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     }
 
     // Add the attribute to the ticket state
-    crm_xml_add(ticket_state_xml, attr_name, attr_value);
+    pcmk__xe_set_bool_attr(ticket_state_xml, attr_name, attr_value);
     crm_log_xml_debug(xml_top, "Update");
 
     // Commit the change to the CIB
@@ -695,7 +695,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "granted", "true", cib);
+        rc = set_ticket_state_attr(out, ticket_id, "granted", true, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
@@ -704,7 +704,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "granted", "false", cib);
+        rc = set_ticket_state_attr(out, ticket_id, "granted", false, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
@@ -713,7 +713,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", "true", cib);
+        rc = set_ticket_state_attr(out, ticket_id, "standby", true, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
@@ -722,7 +722,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
-        rc = set_ticket_state_attr(out, ticket_id, "standby", "false", cib);
+        rc = set_ticket_state_attr(out, ticket_id, "standby", false, cib);
         CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
