@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,7 +77,7 @@ static void
 notify_callback(stonith_t * st, stonith_event_t * e)
 {
     if (pcmk__str_eq(async_fence_data.target, e->target, pcmk__str_casei)
-        && pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_casei)) {
+        && pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_none)) {
 
         pcmk__set_result(&async_fence_data.result,
                          stonith__event_exit_status(e),
@@ -549,7 +549,7 @@ pcmk__reduce_fence_history(stonith_history_t *history)
             if ((hp->state == st_done) || (hp->state == st_failed)) {
                 /* action not in progress */
                 if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                    pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
+                    pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
                     (hp->state == np->state) &&
                     ((hp->state == st_done) ||
                      pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
