@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,8 +32,8 @@ static struct {
     unsigned int timeout;
     unsigned int tolerance;
     int delay;
-    int rc;
-} async_fence_data;
+    pcmk__action_result_t result;
+} async_fence_data = { NULL, };
 
 static int
 handle_level(stonith_t *st, char *target, int fence_level,
@@ -76,14 +76,13 @@ handle_level(stonith_t *st, char *target, int fence_level,
 static void
 notify_callback(stonith_t * st, stonith_event_t * e)
 {
-    if (e->result != pcmk_ok) {
-        return;
-    }
+    if (pcmk__str_eq(async_fence_data.target, e->target, pcmk__str_casei)
+        && pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_none)) {
 
-    if (pcmk__str_eq(async_fence_data.target, e->target, pcmk__str_casei) &&
-        pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_casei)) {
-
-        async_fence_data.rc = e->result;
+        pcmk__set_result(&async_fence_data.result,
+                         stonith__event_exit_status(e),
+                         stonith__event_execution_status(e),
+                         stonith__event_exit_reason(e));
         g_main_loop_quit(mainloop);
     }
 }
@@ -91,8 +90,9 @@ notify_callback(stonith_t * st, stonith_event_t * e)
 static void
 fence_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    async_fence_data.rc = data->rc;
-
+    pcmk__set_result(&async_fence_data.result, stonith__exit_status(data),
+                     stonith__execution_status(data),
+                     stonith__exit_reason(data));
     g_main_loop_quit(mainloop);
 }
 
@@ -104,8 +104,9 @@ async_fence_helper(gpointer user_data)
     int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to fencer: %s\n", pcmk_strerror(rc));
         g_main_loop_quit(mainloop);
+        pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR,
+                         PCMK_EXEC_NOT_CONNECTED, pcmk_strerror(rc));
         return TRUE;
     }
 
@@ -121,6 +122,8 @@ async_fence_helper(gpointer user_data)
 
     if (call_id < 0) {
         g_main_loop_quit(mainloop);
+        pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR,
+                         PCMK_EXEC_ERROR, pcmk_strerror(call_id));
         return TRUE;
     }
 
@@ -133,11 +136,12 @@ async_fence_helper(gpointer user_data)
 }
 
 int
-pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                   const char *name, unsigned int timeout, unsigned int tolerance,
-                   int delay)
+pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
+                      const char *name, unsigned int timeout,
+                      unsigned int tolerance, int delay, char **reason)
 {
     crm_trigger_t *trig;
+    int rc = pcmk_rc_ok;
 
     async_fence_data.st = st;
     async_fence_data.name = strdup(name);
@@ -146,7 +150,8 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
     async_fence_data.timeout = timeout;
     async_fence_data.tolerance = tolerance;
     async_fence_data.delay = delay;
-    async_fence_data.rc = pcmk_err_generic;
+    pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR, PCMK_EXEC_UNKNOWN,
+                     NULL);
 
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
     mainloop_set_trigger(trig);
@@ -156,16 +161,24 @@ pcmk__fence_action(stonith_t *st, const char *target, const char *action,
 
     free(async_fence_data.name);
 
-    return pcmk_legacy2rc(async_fence_data.rc);
+    if (reason != NULL) {
+        // Give the caller ownership of the exit reason
+        *reason = async_fence_data.result.exit_reason;
+        async_fence_data.result.exit_reason = NULL;
+    }
+    rc = stonith__result2rc(&async_fence_data.result);
+    pcmk__reset_result(&async_fence_data.result);
+    return rc;
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                  const char *name, unsigned int timeout, unsigned int tolerance,
-                  int delay)
+pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
+                     const char *name, unsigned int timeout,
+                     unsigned int tolerance, int delay, char **reason)
 {
-    return pcmk__fence_action(st, target, action, name, timeout, tolerance, delay);
+    return pcmk__request_fencing(st, target, action, name, timeout, tolerance,
+                                 delay, reason);
 }
 #endif
 
@@ -541,7 +554,7 @@ pcmk__reduce_fence_history(stonith_history_t *history)
             if ((hp->state == st_done) || (hp->state == st_failed)) {
                 /* action not in progress */
                 if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                    pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
+                    pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
                     (hp->state == np->state) &&
                     ((hp->state == st_done) ||
                      pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {

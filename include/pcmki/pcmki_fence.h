@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,27 +13,33 @@
 #  include <crm/common/output_internal.h>
 
 /*!
- * \brief Perform a STONITH action.
+ * \brief Ask the cluster to perform fencing
  *
- * \note This is the internal version of pcmk_fence_action().  External users
+ * \note This is the internal version of pcmk_request_fencing(). External users
  *       of the pacemaker API should use that function instead.
  *
- * \param[in] st        A connection to the STONITH API.
- * \param[in] target    The node receiving the action.
- * \param[in] action    The action to perform.
+ * \param[in] st        A connection to the fencer API
+ * \param[in] target    The node that should be fenced
+ * \param[in] action    The fencing action (on, off, reboot) to perform
  * \param[in] name      Who requested the fence action?
- * \param[in] timeout   How long to wait for the operation to complete (in ms).
+ * \param[in] timeout   How long to wait for the operation to complete (in ms)
  * \param[in] tolerance If a successful action for \p target happened within
- *                      this many ms, return 0 without performing the action
- *                      again.
- * \param[in] delay     Apply a fencing delay. Value -1 means disable also any
- *                      static/random fencing delays from pcmk_delay_base/max
+ *                      this many milliseconds, return success without
+ *                      performing the action again
+ * \param[in] delay     Apply this delay (in milliseconds) before initiating the
+ *                      fencing action (a value of -1 applies no delay and also
+ *                      disables any fencing delay from pcmk_delay_base and
+ *                      pcmk_delay_max)
+ * \param[out] reason   If not NULL, where to put descriptive failure reason
  *
  * \return Standard Pacemaker return code
+ * \note If \p reason is not NULL, the caller is responsible for freeing its
+ *       returned value.
+ * \todo delay is eventually used with g_timeout_add() and should be guint
  */
-int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
-                       const char *name, unsigned int timeout, unsigned int tolerance,
-                       int delay);
+int pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
+                          const char *name, unsigned int timeout,
+                          unsigned int tolerance, int delay, char **reason);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.
