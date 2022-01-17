@@ -292,8 +292,10 @@ gboolean services_action_kick(const char *name, const char *action,
  * \param[in] action_callback       Function to call when the action completes
  * \param[in] action_fork_callback  Function to call after action process forks
  *
- * \return TRUE if execution was successfully initiated, FALSE otherwise (in
- *              which case the callback will not be called)
+ * \return TRUE if the action should not be freed by the caller (e.g., if
+ *         execution was initiated successfully, if execution failed to initiate
+ *         and the action has already been freed, or if the action is blocked);
+ *         FALSE otherwise
  */
     gboolean services_action_async_fork_notify(svc_action_t * op,
         void (*action_callback) (svc_action_t *),
