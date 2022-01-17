@@ -1493,30 +1493,9 @@ main(int argc, char **argv)
             }
 
         } else if (options.daemonize) {
-            if ((output_format == mon_output_console) || (args->output_dest == NULL)) {
-                output_format = mon_output_none;
-            }
-            crm_enable_stderr(FALSE);
-
             if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches | pcmk__str_casei) && !options.external_agent) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
-            }
-
-            if (cib) {
-                /* to be on the safe side don't have cib-object around
-                 * when we are forking
-                 */
-                cib_delete(cib);
-                cib = NULL;
-                pcmk__daemonize(crm_system_name, options.pid_file);
-                cib = cib_new();
-                if (cib == NULL) {
-                    exit_on_invalid_cib();
-                }
-                /* otherwise assume we've got the same cib-object we've just destroyed
-                 * in our parent
-                 */
             }
 
         } else if (output_format == mon_output_console) {
@@ -1534,6 +1513,8 @@ main(int argc, char **argv)
     reconcile_output_format(args);
     add_output_args();
 
+    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
+
     if (args->version && output_format == mon_output_console) {
         /* Use the text output format here if we are in curses mode but were given
          * --version.  Displaying version information uses printf, and then we
@@ -1550,7 +1531,33 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_ERROR);
     }
 
-    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
+    if (options.daemonize) {
+        if (!options.external_agent && (output_format == mon_output_console ||
+                                        output_format == mon_output_unset ||
+                                        output_format == mon_output_none)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--daemonize requires --output-as=[html|text|xml]");
+            return clean_up(CRM_EX_USAGE);
+        }
+
+        crm_enable_stderr(FALSE);
+
+        if (cib) {
+            /* to be on the safe side don't have cib-object around
+             * when we are forking
+             */
+            cib_delete(cib);
+            cib = NULL;
+            pcmk__daemonize(crm_system_name, options.pid_file);
+            cib = cib_new();
+            if (cib == NULL) {
+                exit_on_invalid_cib();
+            }
+            /* otherwise assume we've got the same cib-object we've just destroyed
+             * in our parent
+             */
+        }
+    }
 
     show = default_includes(output_format);
 
