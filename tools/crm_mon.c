@@ -1385,10 +1385,18 @@ one_shot(void)
     clean_up(CRM_EX_OK);
 }
 
+static void
+exit_on_invalid_cib(void)
+{
+    // Shouldn't really be possible
+    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
+    clean_up(CRM_EX_ERROR);
+}
+
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GOptionGroup *output_group = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
@@ -1445,7 +1453,7 @@ main(int argc, char **argv)
         cib = cib_new();
 
         if (cib == NULL) {
-            rc = -EINVAL;
+            exit_on_invalid_cib();
         } else {
             switch (cib->variant) {
 
@@ -1474,7 +1482,7 @@ main(int argc, char **argv)
                 case cib_database:
                 default:
                     /* something is odd */
-                    rc = -EINVAL;
+                    exit_on_invalid_cib();
                     break;
             }
         }
@@ -1504,13 +1512,12 @@ main(int argc, char **argv)
                 pcmk__daemonize(crm_system_name, options.pid_file);
                 cib = cib_new();
                 if (cib == NULL) {
-                    rc = -EINVAL;
+                    exit_on_invalid_cib();
                 }
                 /* otherwise assume we've got the same cib-object we've just destroyed
                  * in our parent
                  */
             }
-
 
         } else if (output_format == mon_output_console) {
 #if CURSES_ENABLED
@@ -1522,12 +1529,6 @@ main(int argc, char **argv)
             printf("You need to have curses available at compile time to enable console mode\n");
 #endif
         }
-    }
-
-    if (rc != pcmk_ok) {
-        // Shouldn't really be possible
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
-        return clean_up(CRM_EX_ERROR);
     }
 
     reconcile_output_format(args);
