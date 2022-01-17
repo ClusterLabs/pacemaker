@@ -1542,20 +1542,12 @@ main(int argc, char **argv)
 
         crm_enable_stderr(FALSE);
 
-        if (cib) {
-            /* to be on the safe side don't have cib-object around
-             * when we are forking
-             */
-            cib_delete(cib);
-            cib = NULL;
-            pcmk__daemonize(crm_system_name, options.pid_file);
-            cib = cib_new();
-            if (cib == NULL) {
-                exit_on_invalid_cib();
-            }
-            /* otherwise assume we've got the same cib-object we've just destroyed
-             * in our parent
-             */
+        cib_delete(cib);
+        cib = NULL;
+        pcmk__daemonize(crm_system_name, options.pid_file);
+        cib = cib_new();
+        if (cib == NULL) {
+            exit_on_invalid_cib();
         }
     }
 
