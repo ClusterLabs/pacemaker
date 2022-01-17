@@ -141,6 +141,7 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
                       unsigned int tolerance, int delay, char **reason)
 {
     crm_trigger_t *trig;
+    int rc = pcmk_rc_ok;
 
     async_fence_data.st = st;
     async_fence_data.name = strdup(name);
@@ -160,10 +161,14 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 
     free(async_fence_data.name);
 
-    if ((reason != NULL) && (async_fence_data.result.exit_reason != NULL)) {
-        *reason = strdup(async_fence_data.result.exit_reason);
+    if (reason != NULL) {
+        // Give the caller ownership of the exit reason
+        *reason = async_fence_data.result.exit_reason;
+        async_fence_data.result.exit_reason = NULL;
     }
-    return stonith__result2rc(&async_fence_data.result);
+    rc = stonith__result2rc(&async_fence_data.result);
+    pcmk__reset_result(&async_fence_data.result);
+    return rc;
 }
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
