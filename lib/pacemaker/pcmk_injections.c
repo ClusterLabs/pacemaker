@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,7 +133,7 @@ create_node_entry(cib_t *cib_conn, const char *node)
         crm_xml_add(cib_object, XML_ATTR_ID, node); // Use node name as ID
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
-                               cib_sync_call | cib_scope_local);
+                               cib_sync_call|cib_scope_local);
         /* Not bothering with subsequent query to see if it exists,
            we'll bomb out later in the call to query_node_uuid()... */
 
@@ -230,7 +230,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
     }
 
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
-                               cib_xpath | cib_sync_call | cib_scope_local);
+                               cib_xpath|cib_sync_call|cib_scope_local);
 
     if ((cib_object != NULL) && (ID(cib_object) == NULL)) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing",
@@ -254,12 +254,12 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
         crm_xml_add(cib_object, XML_ATTR_UUID, found_uuid);
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object,
-                               cib_sync_call | cib_scope_local);
+                               cib_sync_call|cib_scope_local);
         free_xml(cib_object);
         free(found_uuid);
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
-                                   cib_xpath | cib_sync_call | cib_scope_local);
+                                   cib_xpath|cib_sync_call|cib_scope_local);
         crm_trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
@@ -440,7 +440,7 @@ find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
     }
     CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
-                              cib_sync_call | cib_scope_local | cib_xpath);
+                              cib_sync_call|cib_scope_local|cib_xpath);
 
     if (rc != pcmk_ok) {
         goto bail;
@@ -622,12 +622,12 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
         /* crm_xml_add(top, XML_ATTR_DC_UUID, dc_uuid);      */
         crm_xml_add(top, XML_ATTR_HAVE_QUORUM, injections->quorum);
 
-        rc = cib->cmds->modify(cib, NULL, top, cib_sync_call | cib_scope_local);
+        rc = cib->cmds->modify(cib, NULL, top, cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
     }
 
     if (injections->watchdog != NULL) {
-        rc = update_attr_delegate(cib, cib_sync_call | cib_scope_local,
+        rc = update_attr_delegate(cib, cib_sync_call|cib_scope_local,
                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                                   XML_ATTR_HAVE_WATCHDOG, injections->watchdog,
                                   FALSE, NULL, NULL);
@@ -658,20 +658,20 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
         CRM_ASSERT(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
-                               cib_sync_call | cib_scope_local);
+                               cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
 
         xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
                                   node, XML_CIB_TAG_LRM);
         cib->cmds->remove(cib, xpath, NULL,
-                          cib_xpath | cib_sync_call | cib_scope_local);
+                          cib_xpath|cib_sync_call|cib_scope_local);
         free(xpath);
 
         xpath = crm_strdup_printf("//node_state[@uname='%s']/%s",
                                   node, XML_TAG_TRANSIENT_NODEATTRS);
         cib->cmds->remove(cib, xpath, NULL,
-                          cib_xpath | cib_sync_call | cib_scope_local);
+                          cib_xpath|cib_sync_call|cib_scope_local);
         free(xpath);
     }
 
@@ -685,7 +685,7 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
         CRM_ASSERT(cib_node != NULL);
 
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, cib_node,
-                               cib_sync_call | cib_scope_local);
+                               cib_sync_call|cib_scope_local);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(cib_node);
     }
