@@ -187,8 +187,10 @@ int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
  * \param[in] tolerance If a successful action for \p target happened within
  *                      this many ms, return 0 without performing the action
  *                      again
- * \param[in] delay     Apply a fencing delay. Value -1 means disable also any
- *                      static/random fencing delays from pcmk_delay_base/max
+ * \param[in] delay     Apply this delay (in milliseconds) before initiating the
+ *                      fencing action (a value of -1 applies no delay and also
+ *                      disables any fencing delay from pcmk_delay_base and
+ *                      pcmk_delay_max)
  * \param[out] reason   If not NULL, where to put descriptive failure reason
  *
  * \return Standard Pacemaker return code
