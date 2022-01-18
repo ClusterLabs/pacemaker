@@ -186,7 +186,8 @@ cluster_connect_cfg(void)
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
 
 #ifdef HAVE_COROSYNC_CFG_TRACKSTART
-    rc = corosync_cfg_trackstart(cfg_handle, 0);
+    retries = 0;
+    cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
         crm_crit("Could not enable Corosync CFG shutdown tracker: %s " CRM_XS " rc=%d",
                  cs_strerror(rc), rc);
