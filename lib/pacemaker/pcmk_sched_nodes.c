@@ -274,87 +274,79 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-gboolean
-apply_system_health(pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Apply node health values for all nodes in cluster
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__apply_node_health(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-    const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
+    const char *health_strategy = pe_pref(data_set->config_hash,
+                                          "node-health-strategy");
     int base_health = 0;
 
-    if (pcmk__str_eq(health_strategy, "none", pcmk__str_null_matches | pcmk__str_casei)) {
-        /* Prevent any accidental health -> score translation */
+    // Define red/yellow/green scores based on configured health strategy
+
+    if (pcmk__str_eq(health_strategy, "none",
+                     pcmk__str_null_matches|pcmk__str_casei)) {
         pcmk__score_red = 0;
         pcmk__score_yellow = 0;
         pcmk__score_green = 0;
-        return TRUE;
+        return;
 
-    } else if (pcmk__str_eq(health_strategy, "migrate-on-red", pcmk__str_casei)) {
-
-        /* Resources on nodes which have health values of red are
-         * weighted away from that node.
-         */
+    } else if (pcmk__str_eq(health_strategy, "migrate-on-red",
+                            pcmk__str_casei)) {
         pcmk__score_red = -INFINITY;
         pcmk__score_yellow = 0;
         pcmk__score_green = 0;
 
     } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
-
-        /* Resources on nodes which have health values of red or yellow
-         * are forced away from that node.
-         */
         pcmk__score_red = -INFINITY;
         pcmk__score_yellow = -INFINITY;
         pcmk__score_green = 0;
 
     } else if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
-        /* Same as the above, but use the r/y/g scores provided by the user
-         * Defaults are provided by the pe_prefs table
-         * Also, custom health "base score" can be used
+        /* The user configured red/yellow/green values which were set when the
+         * configuration was unpacked (defaults are provided by pe_prefs). A
+         * custom base score can also be used.
          */
         base_health = char2score(pe_pref(data_set->config_hash,
                                          "node-health-base"));
 
     } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
-
         /* Requires the admin to configure the rsc_location constaints for
          * processing the stored health scores
          */
-        /* TODO: Check for the existence of appropriate node health constraints */
-        return TRUE;
+        return;
 
     } else {
         crm_err("Unknown node health strategy: %s", health_strategy);
-        return FALSE;
+        return;
     }
 
-    crm_info("Applying automated node health strategy: %s", health_strategy);
+    crm_info("Applying node health strategy '%s'", health_strategy);
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        int system_health = base_health;
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        int health = base_health;
 
-        /* Search through the node hash table for system health entries. */
+        // Calculate overall node health score as sum of all health values
         g_hash_table_foreach(node->details->attrs, add_node_health_value,
-                             &system_health);
+                             &health);
 
-        crm_info(" Node %s has an combined system health of %d",
-                 node->details->uname, system_health);
+        // A health score of 0 has no effect
+        if (health == 0) {
+            continue;
+        }
+        crm_info("Node %s overall system health is %d",
+                 node->details->uname, health);
 
-        /* If the health is non-zero, then create a new location constraint so
-         * that the weight will be added later on.
-         */
-        if (system_health != 0) {
-
-            GList *gIter2 = data_set->resources;
-
-            for (; gIter2 != NULL; gIter2 = gIter2->next) {
-                pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
-
-                pcmk__new_location(health_strategy, rsc, system_health, NULL,
-                                   node, data_set);
-            }
+        // Use node health as a location score for each resource on the node
+        for (GList *rsc = data_set->resources; rsc != NULL; rsc = rsc->next) {
+            pcmk__new_location(health_strategy, (pe_resource_t *) rsc->data,
+                               health, NULL, node, data_set);
         }
     }
-
-    return TRUE;
 }

@@ -295,7 +295,7 @@ GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
                         pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-gboolean apply_system_health(pe_working_set_t *data_set);
+void pcmk__apply_node_health(pe_working_set_t *data_set);
 
 
 // Clone notifictions (pcmk_sched_notif.c)

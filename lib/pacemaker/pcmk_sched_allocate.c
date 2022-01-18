@@ -159,7 +159,7 @@ stage0(pe_working_set_t * data_set)
     }
 
     pcmk__set_allocation_methods(data_set);
-    apply_system_health(data_set);
+    pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
 
     return TRUE;
