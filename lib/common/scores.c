@@ -97,14 +97,34 @@ score2char_stack(int score, char *buf, size_t len)
     return buf;
 }
 
+/*!
+ * \brief Return the string equivalent of an integer score
+ *
+ * Return the string equivalent of a given integer score, using "INFINITY" and
+ * "-INFINITY" when appropriate.
+ *
+ * \param[in]  score  Integer score to convert
+ *
+ * \return Newly allocated string equivalent of \p score
+ * \note The caller is responsible for freeing the return value. This function
+ *       asserts on memory errors, so the return value can be assumed to be
+ *       non-NULL.
+ */
 char *
 score2char(int score)
 {
+    char *result = NULL;
+
     if (score >= CRM_SCORE_INFINITY) {
-        return strdup(CRM_INFINITY_S);
+        result = strdup(CRM_INFINITY_S);
+        CRM_ASSERT(result != NULL);
 
     } else if (score <= -CRM_SCORE_INFINITY) {
-        return strdup(CRM_MINUS_INFINITY_S);
+        result = strdup(CRM_MINUS_INFINITY_S);
+        CRM_ASSERT(result != NULL);
+
+    } else {
+        result = pcmk__itoa(score);
     }
-    return pcmk__itoa(score);
+    return result;
 }
