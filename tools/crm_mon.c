@@ -1155,7 +1155,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
+#ifdef PCMK__COMPAT_2_0
+        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details & ~pcmk_show_failed_detail));
+#else
         print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
+#endif
         print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
         print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
