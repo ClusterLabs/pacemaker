@@ -1494,8 +1494,10 @@ main(int argc, char **argv)
             }
 
         } else if (options.daemonize) {
-            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches | pcmk__str_casei) && !options.external_agent) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches|pcmk__str_casei) &&
+                !options.external_agent) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
 
