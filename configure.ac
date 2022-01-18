@@ -286,11 +286,13 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
-dnl --disable-nls option 
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
-# Check for disable_nls
+AC_ARG_ENABLE(nls,
+    [  --enable-nls            enable Native Language Support],
+    USE_NLS=$enableval, USE_NLS=no)
+
 AS_IF([test "x${USE_NLS}" = "xyes"],
       [
           AC_DEFINE([PCMK__SUPPORT_NLS],[1],[Define to 1 if USE_NLS should be enabled])
