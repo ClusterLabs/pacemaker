@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2021 the Pacemaker project contributors
+dnl Copyright 2009-2022 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1338,7 +1338,8 @@ AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for th
 AC_SUBST(CRM_SCHEMA_DIRECTORY)
 
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
 if test x"${CRM_DAEMON_USER}" = x""; then
