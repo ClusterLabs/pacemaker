@@ -254,25 +254,23 @@ pcmk__any_node_available(GHashTable *nodes)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Add node attribute value to an integer, if it is a health attribute
+ *
+ * \param[in] key        Name of node attribute
+ * \param[in] value      String value of node attribute
+ * \param[in] user_data  Address of integer to which \p value should be added
+ *                       if \p key is a node health attribute
+ */
 static void
-calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
+add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 {
-    const char *key = (const char *)gKey;
-    const char *value = (const char *)gValue;
-    int *system_health = (int *)user_data;
+    if (pcmk__starts_with((const char *) key, "#health")) {
+        int score = char2score((const char *) value);
+        int *health = (int *) user_data;
 
-    if (!gKey || !gValue || !user_data) {
-        return;
-    }
-
-    if (pcmk__starts_with(key, "#health")) {
-        int score;
-
-        /* Convert the value into an integer */
-        score = char2score(value);
-
-        /* Add it to the running total */
-        *system_health = pe__add_scores(score, *system_health);
+        *health = pe__add_scores(score, *health);
     }
 }
 
@@ -336,7 +334,8 @@ apply_system_health(pe_working_set_t * data_set)
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         /* Search through the node hash table for system health entries. */
-        g_hash_table_foreach(node->details->attrs, calculate_system_health, &system_health);
+        g_hash_table_foreach(node->details->attrs, add_node_health_value,
+                             &system_health);
 
         crm_info(" Node %s has an combined system health of %d",
                  node->details->uname, system_health);
