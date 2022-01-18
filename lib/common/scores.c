@@ -21,44 +21,52 @@ int pcmk__score_red = 0;
 int pcmk__score_green = 0;
 int pcmk__score_yellow = 0;
 
+/*!
+ * \brief Get the integer value of a score string
+ *
+ * Given a string representation of a score, return the integer equivalent.
+ * This accepts infinity strings as well as red, yellow, and green, and
+ * bounds the result to +/-INFINITY.
+ *
+ * \param[in] score  Score as string
+ *
+ * \return Integer value corresponding to \p score
+ */
 int
 char2score(const char *score)
 {
-    int score_f = 0;
-
     if (score == NULL) {
+        return 0;
 
     } else if (pcmk_str_is_minus_infinity(score)) {
-        score_f = -CRM_SCORE_INFINITY;
+        return -CRM_SCORE_INFINITY;
 
     } else if (pcmk_str_is_infinity(score)) {
-        score_f = CRM_SCORE_INFINITY;
+        return CRM_SCORE_INFINITY;
 
     } else if (pcmk__str_eq(score, "red", pcmk__str_casei)) {
-        score_f = pcmk__score_red;
+        return pcmk__score_red;
 
     } else if (pcmk__str_eq(score, "yellow", pcmk__str_casei)) {
-        score_f = pcmk__score_yellow;
+        return pcmk__score_yellow;
 
     } else if (pcmk__str_eq(score, "green", pcmk__str_casei)) {
-        score_f = pcmk__score_green;
+        return pcmk__score_green;
 
     } else {
         long long score_ll;
 
         pcmk__scan_ll(score, &score_ll, 0LL);
         if (score_ll > CRM_SCORE_INFINITY) {
-            score_f = CRM_SCORE_INFINITY;
+            return CRM_SCORE_INFINITY;
 
         } else if (score_ll < -CRM_SCORE_INFINITY) {
-            score_f = -CRM_SCORE_INFINITY;
+            return -CRM_SCORE_INFINITY;
 
         } else {
-            score_f = (int) score_ll;
+            return (int) score_ll;
         }
     }
-
-    return score_f;
 }
 
 char *
