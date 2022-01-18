@@ -279,6 +279,12 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
                                     lrmd_event_data_t *op, int target_rc);
 
 
+// Nodes (pcmk_sched_nodes.c)
+
+G_GNUC_INTERNAL
+gboolean apply_system_health(pe_working_set_t *data_set);
+
+
 // Clone notifictions (pcmk_sched_notif.c)
 
 G_GNUC_INTERNAL
