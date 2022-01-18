@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,13 +26,7 @@ pcmk__colocation_t *invert_constraint(pcmk__colocation_t *constraint);
 
 pe__location_t *copy_constraint(pe__location_t *constraint);
 
-GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);
-GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
-                        pe_working_set_t *data_set);
-
-bool pcmk__node_available(const pe_node_t *node);
-bool pcmk__any_node_available(GHashTable *nodes);
 
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
                                      pe_resource_t *rsc, enum rsc_role_e filter,
