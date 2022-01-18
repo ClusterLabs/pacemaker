@@ -270,7 +270,7 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
         int score = char2score((const char *) value);
         int *health = (int *) user_data;
 
-        *health = pe__add_scores(score, *health);
+        *health = pcmk__add_scores(score, *health);
     }
 }
 

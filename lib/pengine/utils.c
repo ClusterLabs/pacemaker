@@ -173,7 +173,7 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
         if (other_node == NULL) {
             node->weight = -INFINITY;
         } else if (merge_scores) {
-            node->weight = pe__add_scores(node->weight, other_node->weight);
+            node->weight = pcmk__add_scores(node->weight, other_node->weight);
         }
     }
 
@@ -1685,7 +1685,7 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
-    match->weight = pe__add_scores(match->weight, score);
+    match->weight = pcmk__add_scores(match->weight, score);
 }
 
 void

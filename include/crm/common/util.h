@@ -49,6 +49,7 @@ int crm_default_remote_port(void);
 int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
+int pcmk__add_scores(int score1, int score2);
 
 /* public string functions (from strings.c) */
 gboolean crm_is_true(const char *s);

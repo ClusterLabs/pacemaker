@@ -154,8 +154,8 @@ apply_promoted_location(pe_resource_t *child, GList *location_constraints,
             cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
         }
         if (cons_node != NULL) {
-            int new_priority = pe__add_scores(child->priority,
-                                              cons_node->weight);
+            int new_priority = pcmk__add_scores(child->priority,
+                                                cons_node->weight);
 
             pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)",
                          child->id, cons_node->details->uname, child->priority,
@@ -329,7 +329,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
-        node->weight = pe__add_scores(child->sort_index, node->weight);
+        node->weight = pcmk__add_scores(child->sort_index, node->weight);
     }
 
     pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
@@ -605,7 +605,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
             score = promotion_score(child_rsc, node, 0);
             if (score > 0) {
-                new_score = pe__add_scores(node->weight, score);
+                new_score = pcmk__add_scores(node->weight, score);
                 if (new_score != node->weight) {
                     pe_rsc_trace(rsc, "\t%s: Updating preference for %s (%d->%d)",
                                  child_rsc->id, node->details->uname, node->weight, new_score);
@@ -984,7 +984,7 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
 
         if (pcmk__str_eq(value, tmp, pcmk__str_casei)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
-            node->weight = pe__add_scores(node->weight, score);
+            node->weight = pcmk__add_scores(node->weight, score);
         }
     }
 }
@@ -1042,8 +1042,8 @@ promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
             dependent->priority = -INFINITY;
 
         } else if (primary_instance != NULL) {
-            int new_priority = pe__add_scores(dependent->priority,
-                                              constraint->score);
+            int new_priority = pcmk__add_scores(dependent->priority,
+                                                constraint->score);
 
             pe_rsc_debug(dependent, "Applying %s to %s",
                          constraint->id, dependent->id);

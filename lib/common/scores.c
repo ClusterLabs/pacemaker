@@ -128,3 +128,73 @@ score2char(int score)
     }
     return result;
 }
+
+/*!
+ * \internal
+ * \brief Add two scores, bounding to +/-INFINITY
+ *
+ * \param[in] score1  First score to add
+ * \param[in] score2  Second score to add
+ */
+int
+pcmk__add_scores(int score1, int score2)
+{
+    int result = score1 + score2;
+
+    // First handle the cases where one or both is infinite
+
+    if (score1 <= -CRM_SCORE_INFINITY) {
+
+        if (score2 <= -CRM_SCORE_INFINITY) {
+            crm_trace("-INFINITY + -INFINITY = -INFINITY");
+        } else if (score2 >= CRM_SCORE_INFINITY) {
+            crm_trace("-INFINITY + +INFINITY = -INFINITY");
+        } else {
+            crm_trace("-INFINITY + %d = -INFINITY", score2);
+        }
+
+        return -CRM_SCORE_INFINITY;
+
+    } else if (score2 <= -CRM_SCORE_INFINITY) {
+
+        if (score1 >= CRM_SCORE_INFINITY) {
+            crm_trace("+INFINITY + -INFINITY = -INFINITY");
+        } else {
+            crm_trace("%d + -INFINITY = -INFINITY", score1);
+        }
+
+        return -CRM_SCORE_INFINITY;
+
+    } else if (score1 >= CRM_SCORE_INFINITY) {
+
+        if (score2 >= CRM_SCORE_INFINITY) {
+            crm_trace("+INFINITY + +INFINITY = +INFINITY");
+        } else {
+            crm_trace("+INFINITY + %d = +INFINITY", score2);
+        }
+
+        return CRM_SCORE_INFINITY;
+
+    } else if (score2 >= CRM_SCORE_INFINITY) {
+        crm_trace("%d + +INFINITY = +INFINITY", score1);
+        return CRM_SCORE_INFINITY;
+    }
+
+    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
+     * we can ignore the possibility of integer overflow
+     */
+
+    // Bound result to infinity
+
+    if (result >= CRM_SCORE_INFINITY) {
+        crm_trace("%d + %d = +INFINITY", score1, score2);
+        return CRM_SCORE_INFINITY;
+
+    } else if (result <= -CRM_SCORE_INFINITY) {
+        crm_trace("%d + %d = -INFINITY", score1, score2);
+        return -CRM_SCORE_INFINITY;
+    }
+
+    crm_trace("%d + %d = %d", score1, score2, result);
+    return result;
+}

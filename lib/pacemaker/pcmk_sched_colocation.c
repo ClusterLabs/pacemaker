@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -974,7 +974,7 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s inactive)",
                          constraint->id, dependent->id, node->details->uname,
                          constraint->score, primary->id);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
+            node->weight = pcmk__add_scores(-constraint->score, node->weight);
 
         } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
                                 pcmk__str_casei)) {
@@ -982,14 +982,15 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
                 pe_rsc_trace(dependent, "%s: %s@%s += %d",
                              constraint->id, dependent->id,
                              node->details->uname, constraint->score);
-                node->weight = pe__add_scores(constraint->score, node->weight);
+                node->weight = pcmk__add_scores(constraint->score,
+                                                node->weight);
             }
 
         } else if (constraint->score >= CRM_SCORE_INFINITY) {
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s mismatch)",
                          constraint->id, dependent->id, node->details->uname,
                          constraint->score, attribute);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
+            node->weight = pcmk__add_scores(-constraint->score, node->weight);
         }
     }
 
@@ -1059,6 +1060,6 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
         score_multiplier = -1;
     }
 
-    dependent->priority = pe__add_scores(score_multiplier * constraint->score,
-                                         dependent->priority);
+    dependent->priority = pcmk__add_scores(score_multiplier * constraint->score,
+                                           dependent->priority);
 }
