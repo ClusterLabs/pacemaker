@@ -1388,6 +1388,10 @@ one_shot(void)
 static void
 exit_on_invalid_cib(void)
 {
+    if (cib != NULL) {
+        return;
+    }
+
     // Shouldn't really be possible
     g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
     clean_up(CRM_EX_ERROR);
@@ -1452,39 +1456,36 @@ main(int argc, char **argv)
          */
         cib = cib_new();
 
-        if (cib == NULL) {
-            exit_on_invalid_cib();
-        } else {
-            switch (cib->variant) {
+        exit_on_invalid_cib();
 
-                case cib_native:
-                    /* cib & fencing - everything available */
-                    use_cib_native = TRUE;
-                    break;
+        switch (cib->variant) {
+            case cib_native:
+                /* cib & fencing - everything available */
+                use_cib_native = TRUE;
+                break;
 
-                case cib_file:
-                    /* Don't try to connect to fencing as we
-                     * either don't have a running cluster or
-                     * the fencing-information would possibly
-                     * not match the cib data from a file.
-                     * As we don't expect cib-updates coming
-                     * in enforce one-shot. */
-                    fence_history_cb("--fence-history", "0", NULL, NULL);
-                    options.one_shot = TRUE;
-                    break;
+            case cib_file:
+                /* Don't try to connect to fencing as we
+                 * either don't have a running cluster or
+                 * the fencing-information would possibly
+                 * not match the cib data from a file.
+                 * As we don't expect cib-updates coming
+                 * in enforce one-shot. */
+                fence_history_cb("--fence-history", "0", NULL, NULL);
+                options.one_shot = TRUE;
+                break;
 
-                case cib_remote:
-                    /* updates coming in but no fencing */
-                    fence_history_cb("--fence-history", "0", NULL, NULL);
-                    break;
+            case cib_remote:
+                /* updates coming in but no fencing */
+                fence_history_cb("--fence-history", "0", NULL, NULL);
+                break;
 
-                case cib_undefined:
-                case cib_database:
-                default:
-                    /* something is odd */
-                    exit_on_invalid_cib();
-                    break;
-            }
+            case cib_undefined:
+            case cib_database:
+            default:
+                /* something is odd */
+                exit_on_invalid_cib();
+                break;
         }
 
         if (options.one_shot) {
@@ -1546,9 +1547,7 @@ main(int argc, char **argv)
         cib = NULL;
         pcmk__daemonize(crm_system_name, options.pid_file);
         cib = cib_new();
-        if (cib == NULL) {
-            exit_on_invalid_cib();
-        }
+        exit_on_invalid_cib();
     }
 
     show = default_includes(output_format);
