@@ -821,7 +821,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         || (injections->watchdog != NULL)) {
 
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        modify_configuration(data_set, cib, injections);
+        pcmk__inject_scheduler_input(data_set, cib, injections);
         printed = pcmk_rc_ok;
 
         rc = cib->cmds->query(cib, NULL, &input, cib_sync_call);
@@ -963,26 +963,4 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
                         use_date, input_file, graph_file, dot_file);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
-}
-
-void
-pcmk_free_injections(pcmk_injections_t *injections)
-{
-    if (injections == NULL) {
-        return;
-    }
-
-    g_list_free_full(injections->node_up, g_free);
-    g_list_free_full(injections->node_down, g_free);
-    g_list_free_full(injections->node_fail, g_free);
-    g_list_free_full(injections->op_fail, g_free);
-    g_list_free_full(injections->op_inject, g_free);
-    g_list_free_full(injections->ticket_grant, g_free);
-    g_list_free_full(injections->ticket_revoke, g_free);
-    g_list_free_full(injections->ticket_standby, g_free);
-    g_list_free_full(injections->ticket_activate, g_free);
-    free(injections->quorum);
-    free(injections->watchdog);
-
-    free(injections);
 }

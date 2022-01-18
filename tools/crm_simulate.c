@@ -52,7 +52,6 @@ struct {
 
 unsigned int section_opts = 0;
 char *temp_shadow = NULL;
-extern gboolean bringing_nodes_online;
 crm_exit_t exit_code = CRM_EX_OK;
 
 #define INDENT "                                   "
@@ -114,7 +113,7 @@ node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    bringing_nodes_online = TRUE;
+    pcmk__simulate_node_config = true;
     options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
 }

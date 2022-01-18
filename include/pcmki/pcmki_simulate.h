@@ -83,4 +83,12 @@ int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                    unsigned int section_opts, char *use_date, char *input_file,
                    char *graph_file, char *dot_file);
 
+/*!
+ * \internal
+ *
+ * If this global is set to true, simulations will add nodes to the
+ * CIB configuration section, as well as the status section.
+ */
+extern bool pcmk__simulate_node_config;
+
 #endif
