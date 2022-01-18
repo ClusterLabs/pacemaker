@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,6 +45,11 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
 
+/* public score-related functions (from scores.c) */
+int char2score(const char *score);
+char *score2char(int score);
+char *score2char_stack(int score, char *buf, size_t len);
+
 /* public string functions (from strings.c) */
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
@@ -53,9 +58,6 @@ char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 guint crm_parse_interval_spec(const char *input);
-int char2score(const char *score);
-char *score2char(int score);
-char *score2char_stack(int score, char *buf, size_t len);
 
 /* public operation functions (from operations.c) */
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
