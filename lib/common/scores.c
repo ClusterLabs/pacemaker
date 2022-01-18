@@ -14,7 +14,7 @@
 #endif
 
 #include <stdio.h>      // snprintf(), NULL
-#include <string.h>     // strncpy(), strdup()
+#include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
 
 int pcmk__score_red = 0;
@@ -69,6 +69,18 @@ char2score(const char *score)
     }
 }
 
+/*!
+ * \brief Convert an integer score to a string, using a provided buffer
+ *
+ * Store the string equivalent of a given integer score in a given string
+ * buffer, using "INFINITY" and "-INFINITY" when appropriate.
+ *
+ * \param[in]  score  Integer score to convert
+ * \param[out] buf    Where to store string representation of \p score
+ * \param[in]  len    Size of \p buf (in bytes)
+ *
+ * \return \p buf (or NULL if \p len is too small)
+ */
 char *
 score2char_stack(int score, char *buf, size_t len)
 {
@@ -76,9 +88,9 @@ score2char_stack(int score, char *buf, size_t len)
               return NULL);
 
     if (score >= CRM_SCORE_INFINITY) {
-        strncpy(buf, CRM_INFINITY_S, 9);
+        strcpy(buf, CRM_INFINITY_S);
     } else if (score <= -CRM_SCORE_INFINITY) {
-        strncpy(buf, CRM_MINUS_INFINITY_S , 10);
+        strcpy(buf, CRM_MINUS_INFINITY_S);
     } else {
         snprintf(buf, len, "%d", score);
     }
