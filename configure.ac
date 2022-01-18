@@ -286,6 +286,16 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
+dnl --disable-nls option 
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.18])
+
+# Check for disable_nls
+AS_IF([test "x${USE_NLS}" = "xyes"],
+      [
+          AC_DEFINE([PCMK__SUPPORT_NLS],[1],[Define to 1 if USE_NLS should be enabled])
+])
+
 dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
@@ -655,6 +665,9 @@ expand_path_option mandir
 
 dnl Home-grown variables
 
+expand_path_option localedir "${datadir}/locale"
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
+
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
 AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
@@ -702,7 +715,7 @@ AC_SUBST(BUG_URL)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir CONFIGDIR
+    mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
     if
@@ -2146,6 +2159,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
                 xml/pacemaker-schemas.pc                            \
+                po/Makefile.in                                      \
 )
 
 dnl Now process the entire list of files added by previous

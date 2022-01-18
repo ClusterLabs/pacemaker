@@ -581,10 +581,10 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                                   "      <shortdesc lang=\"en\">%s</shortdesc>\n"
                                   "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
                                   option_list[lpc].name,
-                                  option_list[lpc].description_short,
+                                  _(option_list[lpc].description_short),
                                   option_list[lpc].description_long?
-                                     option_list[lpc].description_long :
-                                      option_list[lpc].description_short,
+                                     _(option_list[lpc].description_long) :
+                                     _(option_list[lpc].description_short),
                                   (option_list[lpc].values? "  Allowed values: " : ""),
                                   (option_list[lpc].values? option_list[lpc].values : ""));
 

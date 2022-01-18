@@ -1415,13 +1415,13 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
              */
             rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Metadata query for %s failed: %s",
+                        _("Metadata query for %s failed: %s"),
                         agent_spec, pcmk_rc_str(rc));
         }
     } else {
         rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "'%s' is not a valid agent specification", agent_spec);
+                    _("'%s' is not a valid agent specification"), agent_spec);
     }
 
     lrmd_api_delete(lrmd_conn);

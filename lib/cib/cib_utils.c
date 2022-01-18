@@ -555,16 +555,16 @@ static pcmk__cluster_option_t cib_opts[] = {
     {
         "enable-acl", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Enable Access Control Lists (ACLs) for the CIB",
+        N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL
     },
     {
         "cluster-ipc-limit", NULL, "integer", NULL,
         "500", pcmk__valid_positive_number,
-        "Maximum IPC message backlog before disconnecting a cluster daemon",
-        "Raise this if log has \"Evicting client\" messages for cluster daemon"
+        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
+        N_("Raise this if log has \"Evicting client\" messages for cluster daemon"
             " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes)."
+            " multiplied by the number of nodes).")
     },
 };
 
