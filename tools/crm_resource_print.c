@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
@@ -111,7 +113,7 @@ int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     pcmk__output_t *out = data_set->priv;
-    unsigned int show_opts = pcmk_show_pending;
+    uint32_t show_opts = pcmk_show_pending;
     GList *all = NULL;
 
     all = g_list_prepend(all, (gpointer) "*");

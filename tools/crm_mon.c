@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,8 +55,8 @@
  * Definitions indicating which items to print
  */
 
-static unsigned int show;
-static unsigned int show_opts = pcmk_show_pending;
+static uint32_t show;
+static uint32_t show_opts = pcmk_show_pending;
 
 /*
  * Definitions indicating how to output
@@ -144,7 +145,7 @@ static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
-static unsigned int
+static uint32_t
 all_includes(mon_output_format_t fmt) {
     if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
         return ~pcmk_section_options;
@@ -153,7 +154,7 @@ all_includes(mon_output_format_t fmt) {
     }
 }
 
-static unsigned int
+static uint32_t
 default_includes(mon_output_format_t fmt) {
     switch (fmt) {
         case mon_output_monitor:
@@ -178,7 +179,7 @@ default_includes(mon_output_format_t fmt) {
 
 struct {
     const char *name;
-    unsigned int bit;
+    uint32_t bit;
 } sections[] = {
     { "attributes", pcmk_section_attributes },
     { "bans", pcmk_section_bans },
@@ -202,7 +203,7 @@ struct {
     { NULL }
 };
 
-static unsigned int
+static uint32_t
 find_section_bit(const char *name) {
     for (int i = 0; sections[i].name != NULL; i++) {
         if (pcmk__str_eq(sections[i].name, name, pcmk__str_casei)) {
@@ -220,7 +221,7 @@ apply_exclude(const gchar *excludes, GError **error) {
 
     parts = g_strsplit(excludes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
-        unsigned int bit = find_section_bit(*s);
+        uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
@@ -250,7 +251,7 @@ apply_include(const gchar *includes, GError **error) {
 
     parts = g_strsplit(includes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
-        unsigned int bit = find_section_bit(*s);
+        uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);

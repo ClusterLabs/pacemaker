@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <crm/pengine/pe_types.h>
 #include <pacemaker.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * \internal
@@ -80,7 +81,7 @@ enum transition_status pcmk__simulate_transition(pe_working_set_t *data_set,
  */
 int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                    pcmk_injections_t *injections, unsigned int flags,
-                   unsigned int section_opts, char *use_date, char *input_file,
+                   uint32_t section_opts, char *use_date, char *input_file,
                    char *graph_file, char *dot_file);
 
 /*!

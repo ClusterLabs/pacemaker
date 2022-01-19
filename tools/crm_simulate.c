@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -50,7 +51,7 @@ struct {
     .repeat = 1
 };
 
-unsigned int section_opts = 0;
+uint32_t section_opts = 0;
 char *temp_shadow = NULL;
 crm_exit_t exit_code = CRM_EX_OK;
 
