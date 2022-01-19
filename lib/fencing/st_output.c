@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/common/iso8601.h>
@@ -31,13 +32,13 @@ time_t_string(time_t when) {
     return buf;
 }
 
-PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *",
-                  "unsigned int", "gboolean")
+PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *", "uint32_t",
+                  "gboolean")
 int
 stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
-    unsigned int section_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
@@ -61,12 +62,12 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("fencing-list", "stonith_history_t *", "GList *", "unsigned int", "gboolean")
+PCMK__OUTPUT_ARGS("fencing-list", "stonith_history_t *", "GList *", "uint32_t", "gboolean")
 int
 stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
-    unsigned int section_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
@@ -89,13 +90,13 @@ stonith__history(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *", "GList *",
-                  "unsigned int", "gboolean")
+                  "uint32_t", "gboolean")
 int
 stonith__full_history(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
-    unsigned int section_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
@@ -116,13 +117,13 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *", "GList *",
-                  "unsigned int", "gboolean")
+                  "uint32_t", "gboolean")
 static int
 full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
-    unsigned int section_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
     gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
@@ -206,13 +207,13 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("pending-fencing-list", "stonith_history_t *", "GList *",
-                  "unsigned int", "gboolean")
+PCMK__OUTPUT_ARGS("pending-fencing-list", "stonith_history_t *", "GList *", "uint32_t",
+                  "gboolean")
 int
 stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
-    unsigned int section_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
     gboolean print_spacer = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;

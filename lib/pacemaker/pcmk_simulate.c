@@ -15,6 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -135,9 +136,8 @@ create_action_name(pe_action_t *action, bool verbose)
  * \param[in] print_spacer  Whether to display a spacer first
  */
 static void
-print_cluster_status(pe_working_set_t *data_set, unsigned int show_opts,
-                     unsigned int section_opts, const char *title,
-                     bool print_spacer)
+print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
+                     uint32_t section_opts, const char *title, bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
@@ -148,8 +148,7 @@ print_cluster_status(pe_working_set_t *data_set, unsigned int show_opts,
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, 0, NULL, FALSE,
-                 section_opts,
+    out->message(out, "cluster-status", data_set, 0, NULL, FALSE, section_opts,
                  show_opts | pcmk_show_inactive_rscs | pcmk_show_failed_detail,
                  NULL, all, all);
     out->end_list(out);
@@ -768,7 +767,7 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
 int
 pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                pcmk_injections_t *injections, unsigned int flags,
-               unsigned int section_opts, char *use_date, char *input_file,
+               uint32_t section_opts, char *use_date, char *input_file,
                char *graph_file, char *dot_file)
 {
     int printed = pcmk_rc_no_output;

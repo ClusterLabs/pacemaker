@@ -9,6 +9,7 @@
 
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
+#  include <stdint.h>
 #  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
@@ -245,7 +246,7 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
 gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                                   unsigned long show_opts, const char *target_role, bool show_nodes);
+                                   uint32_t show_opts, const char *target_role, bool show_nodes);
 
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
