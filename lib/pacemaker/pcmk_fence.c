@@ -17,8 +17,7 @@
 #include <glib.h>
 #include <libxml/tree.h>
 #include <pacemaker.h>
-#include <pcmki/pcmki_output.h>
-#include <pcmki/pcmki_fence.h>
+#include <pacemaker-internal.h>
 
 static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 

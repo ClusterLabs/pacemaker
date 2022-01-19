@@ -15,7 +15,7 @@
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #include "crm_mon.h"
 
