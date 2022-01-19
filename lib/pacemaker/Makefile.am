@@ -52,7 +52,6 @@ libpacemaker_la_SOURCES += pcmk_sched_constraints.c
 libpacemaker_la_SOURCES += pcmk_sched_fencing.c
 libpacemaker_la_SOURCES += pcmk_sched_group.c
 libpacemaker_la_SOURCES += pcmk_sched_location.c
-libpacemaker_la_SOURCES += pcmk_sched_messages.c
 libpacemaker_la_SOURCES += pcmk_sched_native.c
 libpacemaker_la_SOURCES += pcmk_sched_nodes.c
 libpacemaker_la_SOURCES += pcmk_sched_notif.c
