@@ -2219,6 +2219,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         return;
     }
 
+    pcmk__reset_result(&op->result);
     op->result = result; // The operation takes ownership of the result
 
     if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
