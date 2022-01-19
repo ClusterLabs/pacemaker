@@ -76,17 +76,26 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
     }
 }
 
-static gboolean
-failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
+/*!
+ * \internal
+ * \brief Check whether a resource has failcount clearing scheduled on a node
+ *
+ * \param[in] node  Node to check
+ * \param[in] rsc   Resource to check
+ *
+ * \return true if \p rsc has failcount clearing scheduled on \p node,
+ *         otherwise false
+ */
+static bool
+failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
 {
-    gboolean rc = FALSE;
     GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
 
-    if (list) {
-        rc = TRUE;
+    if (list != NULL) {
+        g_list_free(list);
+        return true;
     }
-    g_list_free(list);
-    return rc;
+    return false;
 }
 
 static void
@@ -143,7 +152,7 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
      * -- worst case, we stop or move the resource, then move it back next
      *  transition.
      */
-    if (failcount_clear_action_exists(node, rsc) == FALSE) {
+    if (!failcount_clear_action_exists(node, rsc)) {
         pe_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
