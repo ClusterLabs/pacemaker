@@ -287,46 +287,17 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                                           "node-health-strategy");
     int base_health = 0;
 
-    // Define red/yellow/green scores based on configured health strategy
-
     if (pcmk__str_eq(health_strategy, "none",
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        pcmk__score_red = 0;
-        pcmk__score_yellow = 0;
-        pcmk__score_green = 0;
-        return;
-
-    } else if (pcmk__str_eq(health_strategy, "migrate-on-red",
-                            pcmk__str_casei)) {
-        pcmk__score_red = -INFINITY;
-        pcmk__score_yellow = 0;
-        pcmk__score_green = 0;
-
-    } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
-        pcmk__score_red = -INFINITY;
-        pcmk__score_yellow = -INFINITY;
-        pcmk__score_green = 0;
-
-    } else if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
-        /* The user configured red/yellow/green values which were set when the
-         * configuration was unpacked (defaults are provided by pe_prefs). A
-         * custom base score can also be used.
-         */
-        base_health = char2score(pe_pref(data_set->config_hash,
-                                         "node-health-base"));
-
-    } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
-        /* Requires the admin to configure the rsc_location constaints for
-         * processing the stored health scores
-         */
-        return;
-
-    } else {
-        crm_err("Unknown node health strategy: %s", health_strategy);
         return;
     }
-
     crm_info("Applying node health strategy '%s'", health_strategy);
+
+    // The progressive strategy can use a base health score
+    if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
+        base_health = char2score(pe_pref(data_set->config_hash,
+                                         "node-health-base"));
+    }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
         pe_node_t *node = (pe_node_t *) iter->data;
