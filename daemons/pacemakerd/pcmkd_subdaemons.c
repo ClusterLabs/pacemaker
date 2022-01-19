@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -462,7 +462,8 @@ start_child(pcmk_child_t * child)
              * the user, plus haclient (so we can access IPC).
              */
             if (initgroups(child->uid, gid) < 0) {
-                crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
+                crm_err("Cannot initialize groups for %s: %s (%d)",
+                        child->uid, pcmk_rc_str(errno), errno);
             }
         }
 

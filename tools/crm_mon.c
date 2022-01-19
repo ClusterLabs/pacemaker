@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1181,13 +1181,13 @@ avoid_zombies(void)
 
     memset(&sa, 0, sizeof(struct sigaction));
     if (sigemptyset(&sa.sa_mask) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
         return;
     }
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
     if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
     }
 }
 
@@ -1892,7 +1892,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     }
 
     /* look up where we expected it to be? */
-    desc = pcmk_strerror(pcmk_ok);
+    desc = pcmk_rc_str(pcmk_rc_ok);
     if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
@@ -2151,7 +2151,8 @@ mon_refresh_display(gpointer user_data)
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
         cib__clean_up_connection(&cib);
-        out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
+        out->err(out, "Upgrade failed: %s",
+                 pcmk_rc_str(pcmk_rc_schema_validation));
         clean_up(CRM_EX_CONFIG);
         return 0;
     }
