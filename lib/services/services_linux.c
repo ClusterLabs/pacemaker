@@ -677,9 +677,19 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
+        const char *reason = NULL;
+
+        if (op->rsc != NULL) {
+            reason = "Resource agent did not complete in time";
+        } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH,
+                                pcmk__str_none)) {
+            reason = "Fence agent did not complete in time";
+        } else {
+            reason = "Process did not complete in time";
+        }
         crm_info("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
         services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
-                             "Process did not exit within specified timeout");
+                             reason);
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was

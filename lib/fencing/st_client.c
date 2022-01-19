@@ -187,7 +187,12 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  * we drop in here - so as not to make remote nodes
                  * panic on that answer
                  */
-                crm_warn("watchdog-fencing-query failed");
+                if (rc == -ENODEV) {
+                    crm_notice("Cluster does not have watchdog fencing device");
+                } else {
+                    crm_warn("Could not check for watchdog fencing device: %s",
+                             pcmk_strerror(rc));
+                }
             } else if (list[0] == '\0') {
                 rv = TRUE;
             } else {
@@ -901,7 +906,7 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     if (msg == NULL) {
         // Fencer didn't reply in time
         pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Timeout waiting for reply from fencer");
+                         "Fencer accepted request but did not reply in time");
         CRM_LOG_ASSERT(call_id > 0);
 
     } else {

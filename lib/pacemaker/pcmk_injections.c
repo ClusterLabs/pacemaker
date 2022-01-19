@@ -201,8 +201,7 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
                            int target_rc)
 {
     return pcmk__create_history_xml(cib_resource, op, CRM_FEATURE_SET,
-                                    target_rc, NULL, crm_system_name,
-                                    LOG_TRACE);
+                                    target_rc, NULL, crm_system_name);
 }
 
 /*!

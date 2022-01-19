@@ -30,7 +30,7 @@ static void
 test_for_pcmk_rc_str(void **state) {
     assert_string_equal(pcmk_rc_str(pcmk_rc_error-1), "Unknown output format");
     assert_string_equal(pcmk_rc_str(pcmk_rc_ok), "OK");
-    assert_string_equal(pcmk_rc_str(-1), "Unknown error");
+    assert_string_equal(pcmk_rc_str(-1), "Error");
 }
 
 static void

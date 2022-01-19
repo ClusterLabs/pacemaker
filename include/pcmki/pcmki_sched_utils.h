@@ -52,8 +52,7 @@ extern void process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_wor
 
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,
-                                 const char *node, const char *origin,
-                                 int level);
+                                 const char *node, const char *origin);
 
 #  define LOAD_STOPPED "load_stopped"
 

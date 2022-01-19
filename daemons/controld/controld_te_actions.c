@@ -175,13 +175,59 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Synthesize an executor event for a resource action timeout
+ *
+ * \param[in] action     Resource action that timed out
+ * \param[in] target_rc  Expected result of action that timed out
+ *
+ * Synthesize an executor event for a resource action timeout. (If the executor
+ * gets a timeout while waiting for a resource action to complete, that will be
+ * reported via the usual callback. This timeout means we didn't hear from the
+ * executor itself or the controller that relayed the action to the executor.)
+ *
+ * \return Newly created executor event for result of \p action
+ * \note The caller is responsible for freeing the return value using
+ *       lrmd_free_event().
+ */
+static lrmd_event_data_t *
+synthesize_timeout_event(crm_action_t *action, int target_rc)
+{
+    lrmd_event_data_t *op = NULL;
+    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *reason = NULL;
+    char *dynamic_reason = NULL;
+
+    if (pcmk__str_eq(target, get_local_node_name(), pcmk__str_casei)) {
+        reason = "Local executor did not return result in time";
+    } else {
+        const char *router_node = NULL;
+
+        router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+        if (router_node == NULL) {
+            router_node = target;
+        }
+        dynamic_reason = crm_strdup_printf("Controller on %s did not return "
+                                           "result in time", router_node);
+        reason = dynamic_reason;
+    }
+
+    op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
+                                       PCMK_OCF_UNKNOWN_ERROR, reason);
+    op->call_id = -1;
+    op->user_data = pcmk__transition_key(transition_graph->id, action->id,
+                                         target_rc, te_uuid);
+    free(dynamic_reason);
+    return op;
+}
+
 void
 controld_record_action_timeout(crm_action_t *action)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
-    xmlNode *xml_op = NULL;
     xmlNode *action_rsc = NULL;
 
     int rc = pcmk_ok;
@@ -232,24 +278,10 @@ controld_record_action_timeout(crm_action_t *action)
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
 
-    /* If the executor gets a timeout while waiting for the action to complete,
-     * that will be reported via the usual callback. This timeout means that we
-     * didn't hear from the executor or the controller that relayed the action
-     * to the executor.
-     */
-    op = pcmk__event_from_graph_action(NULL, action, PCMK_EXEC_TIMEOUT,
-                                       PCMK_OCF_UNKNOWN_ERROR,
-                                       "Cluster communication timeout "
-                                       "(no response from executor)");
-    op->call_id = -1;
-    op->user_data = pcmk__transition_key(transition_graph->id, action->id,
-                                         target_rc, te_uuid);
-
-    xml_op = pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc,
-                                      target, __func__, LOG_INFO);
+    op = synthesize_timeout_event(action, target_rc);
+    pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
+                             __func__);
     lrmd_free_event(op);
-
-    crm_log_xml_trace(xml_op, "Action timeout");
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);

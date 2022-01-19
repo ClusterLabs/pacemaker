@@ -349,7 +349,7 @@ pcmk_exec_status_str(enum pcmk_exec_status status)
         case PCMK_EXEC_ERROR_HARD:      return "Hard error";
         case PCMK_EXEC_ERROR_FATAL:     return "Fatal error";
         case PCMK_EXEC_NOT_INSTALLED:   return "Not installed";
-        case PCMK_EXEC_NOT_CONNECTED:   return "No executor connection";
+        case PCMK_EXEC_NOT_CONNECTED:   return "Internal communication failure";
         case PCMK_EXEC_INVALID:         return "Cannot execute now";
         case PCMK_EXEC_NO_FENCE_DEVICE: return "No fence device";
         case PCMK_EXEC_NO_SECRETS:      return "CIB secrets unavailable";
