@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -312,7 +312,7 @@ crm_signal_handler(int sig, sighandler_t dispatch)
 
     if (sigemptyset(&mask) < 0) {
         crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_strerror(errno));
+                sig, pcmk_rc_str(errno));
         return SIG_ERR;
     }
 
@@ -323,7 +323,7 @@ crm_signal_handler(int sig, sighandler_t dispatch)
 
     if (sigaction(sig, &sa, &old) < 0) {
         crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_strerror(errno));
+                sig, pcmk_rc_str(errno));
         return SIG_ERR;
     }
     return old.sa_handler;
@@ -1150,7 +1150,7 @@ child_waitpid(mainloop_child_t *child, int flags)
         signo = SIGCHLD;
         exitcode = 1;
         crm_notice("Wait for child process %d (%s) interrupted: %s",
-                   child->pid, child->desc, pcmk_strerror(errno));
+                   child->pid, child->desc, pcmk_rc_str(errno));
 
     } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);

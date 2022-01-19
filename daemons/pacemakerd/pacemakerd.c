@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,7 +133,7 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
 
     if (rc < 0) {
         crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
+                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
     }
 }
 

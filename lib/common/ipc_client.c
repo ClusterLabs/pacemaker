@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -802,7 +802,7 @@ crm_ipc_connect(crm_ipc_t * client)
 
     if (client->ipc == NULL) {
         crm_debug("Could not establish %s IPC connection: %s (%d)",
-                  client->server_name, pcmk_strerror(errno), errno);
+                  client->server_name, pcmk_rc_str(errno), errno);
         return FALSE;
     }
 

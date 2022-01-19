@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,7 +65,7 @@ sigchld_setup(struct sigchld_data_s *data)
     // Block SIGCHLD (saving previous set of blocked signals to restore later)
     if (sigprocmask(SIG_BLOCK, &(data->mask), &(data->old_mask)) < 0) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=sigprocmask", pcmk_strerror(errno));
+                 CRM_XS " source=sigprocmask", pcmk_rc_str(errno));
         return false;
     }
     return true;
@@ -82,7 +82,7 @@ sigchld_open(struct sigchld_data_s *data)
     fd = signalfd(-1, &(data->mask), SFD_NONBLOCK);
     if (fd < 0) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=signalfd", pcmk_strerror(errno));
+                 CRM_XS " source=signalfd", pcmk_rc_str(errno));
     }
     return fd;
 }
@@ -109,7 +109,7 @@ sigchld_received(int fd)
     s = read(fd, &fdsi, sizeof(struct signalfd_siginfo));
     if (s != sizeof(struct signalfd_siginfo)) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=read", pcmk_strerror(errno));
+                 CRM_XS " source=read", pcmk_rc_str(errno));
 
     } else if (fdsi.ssi_signo == SIGCHLD) {
         return true;
@@ -125,7 +125,7 @@ sigchld_cleanup(struct sigchld_data_s *data)
     if ((sigismember(&(data->old_mask), SIGCHLD) == 0)
         && (sigprocmask(SIG_UNBLOCK, &(data->mask), NULL) < 0)) {
         crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_strerror(errno));
+                 pcmk_rc_str(errno));
     }
 }
 
@@ -150,7 +150,7 @@ sigchld_handler()
         && (last_sigchld_data->pipe_fd[1] >= 0)
         && (write(last_sigchld_data->pipe_fd[1], "", 1) == -1)) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=write", pcmk_strerror(errno));
+                 CRM_XS " source=write", pcmk_rc_str(errno));
     }
 }
 
@@ -163,7 +163,7 @@ sigchld_setup(struct sigchld_data_s *data)
 
     if (pipe(data->pipe_fd) == -1) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=pipe", pcmk_strerror(errno));
+                 CRM_XS " source=pipe", pcmk_rc_str(errno));
         return false;
     }
 
@@ -184,7 +184,7 @@ sigchld_setup(struct sigchld_data_s *data)
     sigemptyset(&(data->sa.sa_mask));
     if (sigaction(SIGCHLD, &(data->sa), &(data->old_sa)) < 0) {
         crm_info("Wait for child process completion failed: %s "
-                 CRM_XS " source=sigaction", pcmk_strerror(errno));
+                 CRM_XS " source=sigaction", pcmk_rc_str(errno));
     }
 
     // Remember data for use in signal handler
@@ -226,7 +226,7 @@ sigchld_cleanup(struct sigchld_data_s *data)
     // Restore the previous SIGCHLD handler
     if (sigaction(SIGCHLD, &(data->old_sa), NULL) < 0) {
         crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_strerror(errno));
+                 pcmk_rc_str(errno));
     }
 
     close_pipe(data->pipe_fd);
@@ -1105,7 +1105,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
                 crm_warn("Could not kill rogue child %s[%d]: %s",
-                         op->id, op->pid, pcmk_strerror(errno));
+                         op->id, op->pid, pcmk_rc_str(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
             while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
@@ -1245,7 +1245,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
                     crm_warn("Can't redirect output from '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdout_fd[1]);
             }
@@ -1253,7 +1253,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stderr_fd[1], STDERR_FILENO) != STDERR_FILENO) {
                     crm_warn("Can't redirect error output from '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stderr_fd[1]);
             }
@@ -1262,7 +1262,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stdin_fd[0], STDIN_FILENO) != STDIN_FILENO) {
                     crm_warn("Can't redirect input to '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdin_fd[0]);
             }

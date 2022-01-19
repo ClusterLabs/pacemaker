@@ -922,7 +922,6 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     if (pcmk__is_daemon) {
         int user = getuid();
-        const char *base = CRM_CORE_DIR;
         struct passwd *pwent = getpwuid(user);
 
         if (pwent == NULL) {
@@ -931,21 +930,11 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
-        } else if (chdir(base) < 0) {
-            crm_perror(LOG_INFO, "Cannot change active directory to %s", base);
+        } else if (chdir(CRM_CORE_DIR) < 0) {
+            crm_perror(LOG_INFO, "Cannot change active directory to " CRM_CORE_DIR);
 
         } else {
-            crm_info("Changed active directory to %s", base);
-#if 0
-            {
-                char path[512];
-
-                snprintf(path, 512, "%s-%lu", crm_system_name, (unsigned long) getpid());
-                mkdir(path, 0750);
-                chdir(path);
-                crm_info("Changed active directory to %s/%s/%s", base, pwent->pw_name, path);
-            }
-#endif
+            crm_info("Changed active directory to " CRM_CORE_DIR);
         }
 
         /* Original meanings from signal(7)

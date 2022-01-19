@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -272,7 +272,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 #endif
     if (res == EOF) {
         crm_err("Could not decode transition information '%s': %s",
-                magic, pcmk_strerror(errno));
+                magic, pcmk_rc_str(errno));
         result = FALSE;
     } else if (res < 3) {
         crm_warn("Transition information '%s' incomplete (%d of 3 expected items)",
