@@ -175,6 +175,9 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
     data_set->priv = out;
     cluster_status(data_set);
 
+    /* Unpack constraints if any section will need them
+     * (tickets may be referenced in constraints but not granted yet,
+     * and bans need negative location constraints) */
     if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
         pcmk__unpack_constraints(data_set);
     }
