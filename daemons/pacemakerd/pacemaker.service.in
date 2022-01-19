@@ -31,6 +31,9 @@ After=rsyslog.service
 After=corosync.service
 Requires=corosync.service
 
+# If Pacemaker respawns repeatedly, give up after this many tries in this time
+StartLimitBurst=5
+StartLimitIntervalSec=25s
 
 [Install]
 WantedBy=multi-user.target
@@ -56,6 +59,9 @@ TasksMax=infinity
 # If pacemakerd doesn't stop, it's probably waiting on a cluster
 # resource.  Sending -KILL will just get the node fenced
 SendSIGKILL=no
+
+# Systemd's default of respawning a failed service after 100ms is too aggressive
+RestartSec=1s
 
 # If we ever hit the StartLimitInterval/StartLimitBurst limit, and the
 # admin wants to stop the cluster while pacemakerd is not running, it
