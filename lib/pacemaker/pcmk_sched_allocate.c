@@ -23,12 +23,20 @@
 
 CRM_TRACE_INIT_DATA(pacemaker);
 
-extern bool pcmk__is_daemon;
-
 /*!
  * \internal
  * \brief Do deferred action checks after allocation
  *
+ * When unpacking the resource history, the scheduler checks for resource
+ * configurations that have changed since an action was run. However, at that
+ * time, bundles using the REMOTE_CONTAINER_HACK don't have their final
+ * parameter information, so instead they add a deferred check to a list. This
+ * function processes one entry in that list.
+ *
+ * \param[in] rsc       Resource that action history is for
+ * \param[in] node      Node that action history is for
+ * \param[in] rsc_op    Action history entry
+ * \param[in] check     Type of deferred check to do
  * \param[in] data_set  Working set for cluster
  */
 static void
@@ -43,7 +51,6 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
-
                 reason = "action definition changed";
             }
             break;
@@ -52,7 +59,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node, data_set);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
-                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                    crm_trace("Resource %s history entry %s on %s has "
+                              "no digest to compare",
                               rsc->id, ID(rsc_op), node->details->id);
                     break;
                 case RSC_DIGEST_MATCH:
@@ -63,8 +71,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             }
             break;
     }
-
-    if (reason) {
+    if (reason != NULL) {
         pe__clear_failcount(rsc, node, reason, data_set);
     }
 }
