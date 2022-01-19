@@ -1223,11 +1223,39 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
-    stonith_private_t *private = NULL;
+    stonith_private_t *private = stonith->st_private;
+
+    if (event == NULL) {
+        while (true) {
+            stonith_notify_client_t *list_client;
+
+            list_item = private->notify_list;
+
+            if (list_item == NULL) {
+                break;
+            }
+
+            list_client = (stonith_notify_client_t *) list_item->data;
+
+            crm_debug("Removing callback for %s events", list_client->event);
+            stonith_set_notification(stonith, list_client->event, 0);
+
+            if (private->notify_refcnt) {
+                list_client->delete = TRUE;
+                private->notify_deletes = TRUE;
+            } else {
+                private->notify_list = g_list_remove(private->notify_list, list_client);
+                free(list_client);
+            }
+
+            crm_trace("Removed callback");
+        }
+
+        return pcmk_ok;
+    }
 
     crm_debug("Removing callback for %s events", event);
 
-    private = stonith->st_private;
     new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
