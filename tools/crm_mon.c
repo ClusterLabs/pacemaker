@@ -1366,22 +1366,16 @@ handle_connection_failures(int rc)
 static void
 one_shot(void)
 {
-    int rc;
+    int rc = pcmk__status(out, cib, fence_history, show, show_opts,
+                          options.only_node, options.only_rsc,
+                          options.neg_location_prefix,
+                          output_format == mon_output_monitor);
 
-    rc = pacemakerd_status();
-
-    if (rc == pcmk_rc_ok) {
-        fencing_connect();
-        rc = cib_connect(FALSE);
-    }
-
-    if (rc == pcmk_rc_ok) {
-        mon_refresh_display(NULL);
-    } else {
+    if (rc != pcmk_rc_ok) {
         handle_connection_failures(rc);
     }
 
-    clean_up(CRM_EX_OK);
+    clean_up(pcmk_rc2exitc(rc));
 }
 
 static void

@@ -9,8 +9,13 @@
 #ifndef PCMK__PCMKI_PCMKI_STATUS__H
 #define PCMK__PCMKI_PCMKI_STATUS__H
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <crm/cib/cib_types.h>
 #include <crm/pengine/pe_types.h>
 #include <crm/common/output_internal.h>
+#include <pcmki/pcmki_fence.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +37,16 @@ extern "C" {
  *       callers should be added.
  */
 int pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set);
+
+int pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
+                                xmlNode *current_cib, enum pcmk__fence_history fence_history,
+                                uint32_t show, uint32_t show_opts, char *only_node,
+                                char *only_rsc, char *neg_location_prefix,
+                                bool simple_output);
+
+int pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
+                 uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
+                 char *neg_location_prefix, bool simple_output);
 
 #ifdef __cplusplus
 }
