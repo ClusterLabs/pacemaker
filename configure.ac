@@ -1313,9 +1313,7 @@ dnl libqb libqb-2.0.3 + ipc-connect-async-API (2022-01)
 AC_CHECK_FUNCS([qb_ipcc_connect_async])
 
 dnl libqb 2.0.2+ (2020-10)
-AC_CHECK_FUNCS(qb_ipcc_auth_get,
-               AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
-                         [Have qb_ipcc_auth_get function]))
+AC_CHECK_FUNCS([qb_ipcc_auth_get])
 
 dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
@@ -1588,9 +1586,7 @@ AS_IF([test $with_corosync -ne $DISABLED],
           dnl Shutdown tracking added (back) to corosync Jan 2021
           saved_LIBS="$LIBS"
           LIBS="$LIBS $COROSYNC_LIBS"
-          AC_CHECK_FUNCS(corosync_cfg_trackstart,
-          AC_DEFINE(HAVE_COROSYNC_CFG_TRACKSTART, 1,
-                         [Have corosync_cfg_trackstart function]))
+          AC_CHECK_FUNCS([corosync_cfg_trackstart])
           LIBS="$saved_LIBS"
       ]
 )
