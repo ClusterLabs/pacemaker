@@ -16,6 +16,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/fencing/internal.h>
 #include <crm/stonith-ng.h>
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
@@ -204,6 +205,39 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(data_set);
+    return rc;
+}
+
+int
+pcmk_status(xmlNodePtr *xml)
+{
+    cib_t *cib = NULL;
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    uint32_t show_opts = pcmk_show_pending | pcmk_show_inactive_rscs | pcmk_show_timing;
+
+    cib = cib_new();
+
+    if (cib == NULL) {
+        return pcmk_rc_cib_corrupt;
+    }
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        cib_delete(cib);
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+    pe__register_messages(out);
+    stonith__register_messages(out);
+
+    rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
+                      show_opts, NULL, NULL, NULL, false);
+    pcmk__out_epilogue(out, xml, rc);
+
+    cib_delete(cib);
     return rc;
 }
 
