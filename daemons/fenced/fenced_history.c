@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -257,6 +257,7 @@ stonith_xml_history_to_list(xmlNode *history)
         op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
+        stonith__xe_get_result(xml_op, &op->result);
 
         g_hash_table_replace(rv, id, op);
         CRM_LOG_ASSERT(g_hash_table_lookup(rv, id) != NULL);
@@ -355,12 +356,11 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 crm_xml_add_ll(entry, F_STONITH_DATE, op->completed);
                 crm_xml_add_ll(entry, F_STONITH_DATE_NSEC, op->completed_nsec);
                 crm_xml_add_int(entry, F_STONITH_STATE, op->state);
+                stonith__xe_set_result(entry, &op->result);
             }
     }
 
     if (remote_history) {
-        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
         init_stonith_remote_op_hash_table(&stonith_remote_op_list);
 
         updated |= g_hash_table_size(remote_history);
@@ -378,10 +378,10 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 /* CRM_EX_EXPIRED + PCMK_EXEC_INVALID prevents finalize_op()
                  * from setting a delegate
                  */
-                pcmk__set_result(&result, CRM_EX_EXPIRED, PCMK_EXEC_INVALID,
+                pcmk__set_result(&op->result, CRM_EX_EXPIRED, PCMK_EXEC_INVALID,
                                  "Initiated by earlier fencer "
                                  "process and presumed failed");
-                fenced_broadcast_op_result(op, &result, false);
+                fenced_broadcast_op_result(op, false);
             }
 
             g_hash_table_iter_steal(&iter);
@@ -396,7 +396,6 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
              */
         }
 
-        pcmk__reset_result(&result);
         g_hash_table_destroy(remote_history); /* remove what is left */
     }
 

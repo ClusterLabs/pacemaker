@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -111,6 +111,7 @@ typedef struct stonith_history_s {
     time_t completed;
     struct stonith_history_s *next;
     long completed_nsec;
+    char *exit_reason;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
