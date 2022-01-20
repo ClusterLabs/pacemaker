@@ -98,6 +98,39 @@ failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Ban a resource from a node if it reached its failure threshold there
+ *
+ * \param[in] rsc       Resource to check failure threshold for
+ * \param[in] node      Node to check \p rsc on
+ */
+static void
+check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
+{
+    if (failcount_clear_action_exists(node, rsc)) {
+        /* Don't force the resource away from this node due to a failcount
+         * that's going to be cleared.
+         *
+         * @TODO Failcount clearing can be scheduled in
+         * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
+         * stage5() via check_params(). This runs well before then, so it cannot
+         * detect those, meaning we might check the migration threshold when we
+         * shouldn't. Worst case, we stop or move the resource, then move it
+         * back in the next transition.
+         */
+        return;
+
+    } else {
+        pe_resource_t *failed = NULL;
+
+        if (pcmk__threshold_reached(rsc, node, &failed)) {
+            resource_location(failed, node, -INFINITY, "__fail_limit__",
+                              rsc->cluster);
+        }
+    }
+}
+
 static void
 common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
@@ -139,27 +172,7 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
             }
         }
     }
-
-    /* Check the migration threshold only if a failcount clear action
-     * has not already been placed for this resource on the node.
-     * There is no sense in potentially forcing the resource from this
-     * node if the failcount is being reset anyway.
-     *
-     * @TODO A clear_failcount operation can be scheduled in
-     * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
-     * stage5() via check_params(). This runs in stage2(), so it cannot detect
-     * those, meaning we might check the migration threshold when we shouldn't
-     * -- worst case, we stop or move the resource, then move it back next
-     *  transition.
-     */
-    if (!failcount_clear_action_exists(node, rsc)) {
-        pe_resource_t *failed = NULL;
-
-        if (pcmk__threshold_reached(rsc, node, &failed)) {
-            resource_location(failed, node, -INFINITY, "__fail_limit__",
-                              data_set);
-        }
-    }
+    check_failure_threshold(rsc, node);
 }
 
 gboolean
