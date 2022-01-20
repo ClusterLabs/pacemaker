@@ -248,7 +248,8 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
     // Only primitives and (uncloned) groups may be locked
     if (rsc->variant == pe_group) {
         g_list_foreach(rsc->children, (GFunc) apply_shutdown_lock, data_set);
-    } else if (rsc->variant != pe_native) {
+    }
+    if (rsc->variant != pe_native) {
         return;
     }
 
