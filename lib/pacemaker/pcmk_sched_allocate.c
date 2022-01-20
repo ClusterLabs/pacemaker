@@ -215,6 +215,25 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                       rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Apply shutdown locks for all resources as appropriate
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+apply_shutdown_locks(pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        for (GList *iter = data_set->resources; iter != NULL;
+             iter = iter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+            rsc->cmds->shutdown_lock(rsc);
+        }
+    }
+}
+
 /*
  * \internal
  * \brief Stage 2 of cluster status: apply node-specific criteria
@@ -227,13 +246,7 @@ stage2(pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
 
-    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-            rsc->cmds->shutdown_lock(rsc);
-        }
-    }
+    apply_shutdown_locks(data_set);
 
     if (!pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
         // @COMPAT API backward compatibility
