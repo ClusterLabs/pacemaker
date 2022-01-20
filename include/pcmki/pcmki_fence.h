@@ -13,6 +13,15 @@
 #  include <crm/common/output_internal.h>
 
 /*!
+ * \brief Control how much of the fencing history is output.
+ */
+enum pcmk__fence_history {
+    pcmk__fence_history_none,
+    pcmk__fence_history_reduced,
+    pcmk__fence_history_full
+};
+
+/*!
  * \brief Ask the cluster to perform fencing
  *
  * \note This is the internal version of pcmk_request_fencing(). External users
@@ -230,11 +239,11 @@ int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
  *
  * \param[in]  st              The STONITH API object
  * \param[out] stonith_history Destination for storing the history
- * \param[in]  reduce          Should history be reduced?
+ * \param[in]  fence_history   How much of the fencing history to display?
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
-                          bool reduce);
+                          enum pcmk__fence_history fence_history);
 #endif

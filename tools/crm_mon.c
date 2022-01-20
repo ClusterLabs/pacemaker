@@ -84,7 +84,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
-static gboolean fence_history = FALSE;
+static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
 
@@ -395,22 +395,22 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
     switch (interactive_fence_level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -863,26 +863,26 @@ set_fencing_options(int level)
     switch (level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             show &= ~pcmk_section_fencing_all;
             break;
     }
@@ -2037,7 +2037,6 @@ mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
-    bool reduce = false;
     int history_rc = pcmk_rc_ok;
     GList *unames = NULL;
     GList *resources = NULL;
@@ -2057,10 +2056,13 @@ mon_refresh_display(gpointer user_data)
     }
 
     /* get the stonith-history if there is evidence we need it */
-    if (fence_history) {
-        reduce = !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
-                 (output_format != mon_output_xml);
-        history_rc = pcmk__get_fencing_history(st, &stonith_history, reduce);
+    if (fence_history == pcmk__fence_history_full) {
+        if (!pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
+            (output_format != mon_output_xml)) {
+            fence_history = pcmk__fence_history_reduced;
+        }
+
+        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
     }
 
     if (mon_data_set == NULL) {
