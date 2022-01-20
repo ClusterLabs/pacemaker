@@ -186,25 +186,6 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                       rsc->cluster);
 }
 
-gboolean
-stage0(pe_working_set_t * data_set)
-{
-    if (data_set->input == NULL) {
-        return FALSE;
-    }
-
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
-        crm_trace("Calculating status");
-        cluster_status(data_set);
-    }
-
-    pcmk__set_allocation_methods(data_set);
-    pcmk__apply_node_health(data_set);
-    pcmk__unpack_constraints(data_set);
-
-    return TRUE;
-}
-
 static void
 rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
@@ -746,16 +727,20 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 
     CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
 
+    // Unpack the CIB
     if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+        crm_trace("Calculating cluster status");
         set_working_set_defaults(data_set);
         data_set->input = xml_input;
-
+        cluster_status(data_set);
     } else {
         crm_trace("Already have status - reusing");
     }
 
-    crm_trace("Calculate cluster status");
-    stage0(data_set);
+    pcmk__set_allocation_methods(data_set);
+    pcmk__apply_node_health(data_set);
+    pcmk__unpack_constraints(data_set);
+
     if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
         return data_set->graph;
     }
