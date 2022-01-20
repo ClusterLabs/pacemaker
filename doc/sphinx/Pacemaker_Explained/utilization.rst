@@ -83,6 +83,14 @@ or provided capacities is completely irrelevant to Pacemaker -- it just makes
 sure that all capacity requirements of a resource are satisfied before placing
 a resource to a node.
 
+.. note::
+
+   Utilization is supported for bundles *(since 2.1.3)*, but only for bundles
+   with an inner primitive. Any resource utilization values should be specified
+   for the inner primitive, but any priority meta-attribute should be specified
+   for the outer bundle.
+
+
 Placement Strategy
 ##################
 

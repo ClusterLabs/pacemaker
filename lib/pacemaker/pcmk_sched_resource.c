@@ -206,8 +206,7 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
                                                     rsc);
     chosen->details->num_resources++;
     chosen->count++;
-    calculate_utilization(chosen->details->utilization, rsc->utilization,
-                          FALSE);
+    pcmk__consume_node_capacity(chosen->details->utilization, rsc);
 
     if (pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)) {
         out->message(out, "resource-util", rsc, chosen, __func__);
@@ -285,7 +284,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
     old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc,
                                                 rsc);
     old->details->num_resources--;
-    calculate_utilization(old->details->utilization, rsc->utilization, TRUE);
+    pcmk__release_node_capacity(old->details->utilization, rsc);
     free(old);
 }
 

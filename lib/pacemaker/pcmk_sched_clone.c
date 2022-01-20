@@ -1534,3 +1534,46 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         free(name);
     }
 }
+
+// Clone implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization)
+{
+    bool existing = false;
+    pe_resource_t *child = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    // Look for any child already existing in the list
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        child = (pe_resource_t *) iter->data;
+        if (g_list_find(all_rscs, child)) {
+            existing = true; // Keep checking remaining children
+        } else {
+            // If this is a clone of a group, look for group's members
+            for (GList *member_iter = child->children; member_iter != NULL;
+                 member_iter = member_iter->next) {
+
+                pe_resource_t *member = (pe_resource_t *) member_iter->data;
+
+                if (g_list_find(all_rscs, member) != NULL) {
+                    // Add *child's* utilization, not group member's
+                    child->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                                 utilization);
+                    existing = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!existing && (rsc->children != NULL)) {
+        // If nothing was found, still add first child's utilization
+        child = (pe_resource_t *) rsc->children->data;
+
+        child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
+    }
+}

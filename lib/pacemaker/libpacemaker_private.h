@@ -306,4 +306,25 @@ G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);
 
 
+// Functions related to node utilization (pcmk_sched_utilization.c)
+
+G_GNUC_INTERNAL
+int pcmk__compare_node_capacities(const pe_node_t *node1,
+                                  const pe_node_t *node2);
+
+G_GNUC_INTERNAL
+void pcmk__consume_node_capacity(GHashTable *current_utilization,
+                                 pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__release_node_capacity(GHashTable *current_utilization,
+                                 pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
+                                     pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL void pcmk__create_utilization_constraints(pe_resource_t *rsc,
+                                                          GList *allowed_nodes);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

@@ -1,0 +1,893 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0" priority="10000">
+    <action_set>
+      <rsc_op id="32" operation="stop" operation_key="dummy3_stop_0" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="dummy3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1" priority="1000">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="dummy5_monitor_10000" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="dummy5" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="34" operation="start" operation_key="dummy5_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2" priority="1000">
+    <action_set>
+      <rsc_op id="34" operation="start" operation_key="dummy5_start_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="dummy5" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="31" operation="load_stopped_rhel8-5" operation_key="load_stopped_rhel8-5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="33" operation="stop" operation_key="dummy5_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3" priority="1000">
+    <action_set>
+      <rsc_op id="33" operation="stop" operation_key="dummy5_stop_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="dummy5" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4" priority="900">
+    <action_set>
+      <rsc_op id="54" operation="start" operation_key="httpd_start_0" internal_operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-5">
+        <primitive id="httpd" long-id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rhel8-5" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd-bundle-podman-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="httpd_stop_0" internal_operation_key="httpd:0_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5" priority="900">
+    <action_set>
+      <rsc_op id="53" operation="stop" operation_key="httpd_stop_0" internal_operation_key="httpd:0_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-2">
+        <primitive id="httpd" long-id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rhel8-2" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="httpd-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="61" operation="stop" operation_key="httpd-bundle-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="900">
+    <action_set>
+      <rsc_op id="23" operation="monitor" operation_key="httpd_monitor_15000" internal_operation_key="httpd:0_monitor_15000" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-5">
+        <primitive id="httpd" long-id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rhel8-5" CRM_meta_timeout="15000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="httpd_start_0" internal_operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7" priority="1000000">
+    <action_set>
+      <pseudo_event id="62" operation="stopped" operation_key="httpd-bundle-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="httpd_stop_0" internal_operation_key="httpd:0_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="61" operation="stop" operation_key="httpd-bundle-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8" priority="900">
+    <action_set>
+      <pseudo_event id="61" operation="stop" operation_key="httpd-bundle-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="httpd-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <pseudo_event id="60" operation="running" operation_key="httpd-bundle-clone_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="httpd_start_0" internal_operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10" priority="900">
+    <action_set>
+      <pseudo_event id="59" operation="start" operation_key="httpd-bundle-clone_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="49" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stopped" operation_key="httpd-bundle-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11" priority="900">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="httpd-bundle-ip-192.168.122.131_monitor_60000" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.131" nic="enp1s0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="37" operation="start" operation_key="httpd-bundle-ip-192.168.122.131_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12" priority="900">
+    <action_set>
+      <rsc_op id="37" operation="start" operation_key="httpd-bundle-ip-192.168.122.131_start_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.131" nic="enp1s0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="stop" operation_key="httpd-bundle-ip-192.168.122.131_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13" priority="900">
+    <action_set>
+      <rsc_op id="36" operation="stop" operation_key="httpd-bundle-ip-192.168.122.131_stop_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.131" nic="enp1s0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="39" operation="stop" operation_key="httpd-bundle-podman-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="900">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="httpd-bundle-podman-0_monitor_60000" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-podman-0" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="localhost/pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /dev/log:/dev/log:rw,Z -v /var/local/containers/httpd-bundle-0:/var/www/html:rw,Z -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999  --add-host=httpd-bundle-0:192.168.122.131 --add-host=httpd-bundle-1:192.168.122.132 --add-host=httpd-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd-bundle-podman-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="900">
+    <action_set>
+      <rsc_op id="40" operation="start" operation_key="httpd-bundle-podman-0_start_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-podman-0" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="localhost/pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /dev/log:/dev/log:rw,Z -v /var/local/containers/httpd-bundle-0:/var/www/html:rw,Z -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999  --add-host=httpd-bundle-0:192.168.122.131 --add-host=httpd-bundle-1:192.168.122.132 --add-host=httpd-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="31" operation="load_stopped_rhel8-5" operation_key="load_stopped_rhel8-5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="start" operation_key="httpd-bundle-ip-192.168.122.131_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="39" operation="stop" operation_key="httpd-bundle-podman-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="900">
+    <action_set>
+      <rsc_op id="39" operation="stop" operation_key="httpd-bundle-podman-0_stop_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="httpd-bundle-podman-0" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="localhost/pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /dev/log:/dev/log:rw,Z -v /var/local/containers/httpd-bundle-0:/var/www/html:rw,Z -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999  --add-host=httpd-bundle-0:192.168.122.131 --add-host=httpd-bundle-1:192.168.122.132 --add-host=httpd-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="httpd-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17" priority="900">
+    <action_set>
+      <rsc_op id="44" operation="monitor" operation_key="httpd-bundle-0_monitor_30000" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-podman-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="30000" addr="192.168.122.131"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18" priority="900">
+    <action_set>
+      <rsc_op id="43" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-podman-0" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd-bundle-podman-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="42" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19" priority="900">
+    <action_set>
+      <rsc_op id="42" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-podman-0" CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+        <downed>
+          <node id="httpd-bundle-0"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="stop" operation_key="httpd_stop_0" internal_operation_key="httpd:0_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rhel8-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20" priority="75">
+    <action_set>
+      <rsc_op id="65" operation="monitor" operation_key="dummy4_monitor_10000" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="64" operation="start" operation_key="dummy4_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21" priority="75">
+    <action_set>
+      <rsc_op id="64" operation="start" operation_key="dummy4_start_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="30" operation="load_stopped_rhel8-4" operation_key="load_stopped_rhel8-4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="63" operation="stop" operation_key="dummy4_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22" priority="75">
+    <action_set>
+      <rsc_op id="63" operation="stop" operation_key="dummy4_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="dummy4" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="23" priority="5">
+    <action_set>
+      <rsc_op id="68" operation="monitor" operation_key="dummy1_monitor_10000" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="67" operation="start" operation_key="dummy1_start_0" on_node="rhel8-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24" priority="5">
+    <action_set>
+      <rsc_op id="67" operation="start" operation_key="dummy1_start_0" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="29" operation="load_stopped_rhel8-3" operation_key="load_stopped_rhel8-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="66" operation="stop" operation_key="dummy1_stop_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25" priority="5">
+    <action_set>
+      <rsc_op id="66" operation="stop" operation_key="dummy1_stop_0" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="26" priority="5">
+    <action_set>
+      <rsc_op id="71" operation="monitor" operation_key="dummy2_monitor_10000" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="dummy2_start_0" on_node="rhel8-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27" priority="5">
+    <action_set>
+      <rsc_op id="70" operation="start" operation_key="dummy2_start_0" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="29" operation="load_stopped_rhel8-3" operation_key="load_stopped_rhel8-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="69" operation="stop" operation_key="dummy2_stop_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28" priority="5">
+    <action_set>
+      <rsc_op id="69" operation="stop" operation_key="dummy2_stop_0" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="74" operation="monitor" operation_key="Fencing_monitor_120000" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel8-1 remote-rhel8-1 rhel8-2 remote-rhel8-2 rhel8-3 remote-rhel8-3 rhel8-4 remote-rhel8-4 rhel8-5 remote-rhel8-5" pcmk_host_map="remote-rhel8-1:rhel8-1;remote-rhel8-2:rhel8-2;remote-rhel8-3:rhel8-3;remote-rhel8-4:rhel8-4;remote-rhel8-5:rhel8-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="73" operation="start" operation_key="Fencing_start_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="73" operation="start" operation_key="Fencing_start_0" on_node="rhel8-1" on_node_uuid="1">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel8-1 remote-rhel8-1 rhel8-2 remote-rhel8-2 rhel8-3 remote-rhel8-3 rhel8-4 remote-rhel8-4 rhel8-5 remote-rhel8-5" pcmk_host_map="remote-rhel8-1:rhel8-1;remote-rhel8-2:rhel8-2;remote-rhel8-3:rhel8-3;remote-rhel8-4:rhel8-4;remote-rhel8-5:rhel8-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="stop" operation_key="Fencing_stop_0" on_node="rhel8-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="72" operation="stop" operation_key="Fencing_stop_0" on_node="rhel8-3" on_node_uuid="3">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel8-1 remote-rhel8-1 rhel8-2 remote-rhel8-2 rhel8-3 remote-rhel8-3 rhel8-4 remote-rhel8-4 rhel8-5 remote-rhel8-5" pcmk_host_map="remote-rhel8-1:rhel8-1;remote-rhel8-2:rhel8-2;remote-rhel8-3:rhel8-3;remote-rhel8-4:rhel8-4;remote-rhel8-5:rhel8-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="78" operation="start" operation_key="FencingFail_start_0" on_node="rhel8-2" on_node_uuid="2">
+        <primitive id="FencingFail" class="stonith" type="fence_dummy"/>
+        <attributes CRM_meta_on_node="rhel8-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="90000"  mode="fail" pcmk_host_list="rhel8-2 remote-rhel8-2" random_sleep_range="30"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="77" operation="stop" operation_key="FencingFail_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="77" operation="stop" operation_key="FencingFail_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="FencingFail" class="stonith" type="fence_dummy"/>
+        <attributes CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000"  mode="fail" pcmk_host_list="rhel8-2 remote-rhel8-2" random_sleep_range="30"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <pseudo_event id="91" operation="stopped" operation_key="g1_stopped_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="g1m1_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="82" operation="stop" operation_key="g1m2_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="g1m3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="90" operation="stop" operation_key="g1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <pseudo_event id="90" operation="stop" operation_key="g1_stop_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <pseudo_event id="89" operation="running" operation_key="g1_running_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="g1m1_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="83" operation="start" operation_key="g1m2_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="86" operation="start" operation_key="g1m3_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="88" operation="start" operation_key="g1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <pseudo_event id="88" operation="start" operation_key="g1_start_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="91" operation="stopped" operation_key="g1_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38" priority="50">
+    <action_set>
+      <rsc_op id="81" operation="monitor" operation_key="g1m1_monitor_10000" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="g1m1_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39" priority="50">
+    <action_set>
+      <rsc_op id="80" operation="start" operation_key="g1m1_start_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="30" operation="load_stopped_rhel8-4" operation_key="load_stopped_rhel8-4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="g1m1_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="88" operation="start" operation_key="g1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40" priority="50">
+    <action_set>
+      <rsc_op id="79" operation="stop" operation_key="g1m1_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="g1m1" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="82" operation="stop" operation_key="g1m2_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="90" operation="stop" operation_key="g1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41" priority="50">
+    <action_set>
+      <rsc_op id="84" operation="monitor" operation_key="g1m2_monitor_10000" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="83" operation="start" operation_key="g1m2_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42" priority="50">
+    <action_set>
+      <rsc_op id="83" operation="start" operation_key="g1m2_start_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="30" operation="load_stopped_rhel8-4" operation_key="load_stopped_rhel8-4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="g1m1_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="82" operation="stop" operation_key="g1m2_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="88" operation="start" operation_key="g1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43" priority="50">
+    <action_set>
+      <rsc_op id="82" operation="stop" operation_key="g1m2_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="g1m2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="g1m3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="90" operation="stop" operation_key="g1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="44" priority="50">
+    <action_set>
+      <rsc_op id="87" operation="monitor" operation_key="g1m3_monitor_10000" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="86" operation="start" operation_key="g1m3_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45" priority="50">
+    <action_set>
+      <rsc_op id="86" operation="start" operation_key="g1m3_start_0" on_node="rhel8-4" on_node_uuid="4">
+        <primitive id="g1m3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel8-4" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="30" operation="load_stopped_rhel8-4" operation_key="load_stopped_rhel8-4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="83" operation="start" operation_key="g1m2_start_0" on_node="rhel8-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="g1m3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="88" operation="start" operation_key="g1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46" priority="50">
+    <action_set>
+      <rsc_op id="85" operation="stop" operation_key="g1m3_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="g1m3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="90" operation="stop" operation_key="g1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47" priority="10">
+    <action_set>
+      <rsc_op id="98" operation="stop" operation_key="clone1_stop_0" internal_operation_key="clone1:3_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="clone1" long-id="clone1:3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="103" operation="stop" operation_key="clone1-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48" priority="1000000">
+    <action_set>
+      <pseudo_event id="104" operation="stopped" operation_key="clone1-clone_stopped_0">
+        <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="98" operation="stop" operation_key="clone1_stop_0" internal_operation_key="clone1:3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="103" operation="stop" operation_key="clone1-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <pseudo_event id="103" operation="stop" operation_key="clone1-clone_stop_0">
+        <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="50" priority="10">
+    <action_set>
+      <rsc_op id="111" operation="stop" operation_key="clone2_stop_0" internal_operation_key="clone2:3_stop_0" on_node="rhel8-5" on_node_uuid="5">
+        <primitive id="clone2" long-id="clone2:3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="rhel8-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="116" operation="stop" operation_key="clone2-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51" priority="1000000">
+    <action_set>
+      <pseudo_event id="117" operation="stopped" operation_key="clone2-clone_stopped_0">
+        <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="111" operation="stop" operation_key="clone2_stop_0" internal_operation_key="clone2:3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stop" operation_key="clone2-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <pseudo_event id="116" operation="stop" operation_key="clone2-clone_stop_0">
+        <attributes CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="53" priority="1000000">
+    <action_set>
+      <pseudo_event id="52" operation="stopped" operation_key="httpd-bundle_stopped_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="39" operation="stop" operation_key="httpd-bundle-podman-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="stopped" operation_key="httpd-bundle-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54" priority="900">
+    <action_set>
+      <pseudo_event id="51" operation="stop" operation_key="httpd-bundle_stop_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="55" priority="1000000">
+    <action_set>
+      <pseudo_event id="50" operation="running" operation_key="httpd-bundle_running_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd-bundle-podman-0_start_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="60" operation="running" operation_key="httpd-bundle-clone_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56" priority="900">
+    <action_set>
+      <pseudo_event id="49" operation="start" operation_key="httpd-bundle_start_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <pseudo_event id="31" operation="load_stopped_rhel8-5" operation_key="load_stopped_rhel8-5">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="63" operation="stop" operation_key="dummy4_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="g1m1_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="82" operation="stop" operation_key="g1m2_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="85" operation="stop" operation_key="g1m3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="98" operation="stop" operation_key="clone1_stop_0" internal_operation_key="clone1:3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="111" operation="stop" operation_key="clone2_stop_0" internal_operation_key="clone2:3_stop_0" on_node="rhel8-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <pseudo_event id="30" operation="load_stopped_rhel8-4" operation_key="load_stopped_rhel8-4">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <pseudo_event id="29" operation="load_stopped_rhel8-3" operation_key="load_stopped_rhel8-3">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <pseudo_event id="28" operation="load_stopped_rhel8-2" operation_key="load_stopped_rhel8-2">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="33" operation="stop" operation_key="dummy5_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="39" operation="stop" operation_key="httpd-bundle-podman-0_stop_0" on_node="rhel8-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <pseudo_event id="27" operation="load_stopped_httpd-bundle-2" operation_key="load_stopped_httpd-bundle-2">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="62">
+    <action_set>
+      <pseudo_event id="26" operation="load_stopped_httpd-bundle-1" operation_key="load_stopped_httpd-bundle-1">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <pseudo_event id="25" operation="load_stopped_httpd-bundle-0" operation_key="load_stopped_httpd-bundle-0">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="64">
+    <action_set>
+      <pseudo_event id="24" operation="load_stopped_rhel8-1" operation_key="load_stopped_rhel8-1">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="32" operation="stop" operation_key="dummy3_stop_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="66" operation="stop" operation_key="dummy1_stop_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="69" operation="stop" operation_key="dummy2_stop_0" on_node="rhel8-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

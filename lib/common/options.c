@@ -436,7 +436,7 @@ pcmk__valid_script(const char *value)
 }
 
 bool
-pcmk__valid_utilization(const char *value)
+pcmk__valid_percentage(const char *value)
 {
     char *end = NULL;
     long number = strtol(value, &end, 10);

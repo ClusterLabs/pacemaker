@@ -45,6 +45,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__output_resource_actions,
      native_expand,
      native_append_meta,
+     pcmk__primitive_add_utilization,
      },
     {
      pcmk__group_merge_weights,
@@ -61,6 +62,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__output_resource_actions,
      group_expand,
      group_append_meta,
+     pcmk__group_add_utilization,
      },
     {
      pcmk__native_merge_weights,
@@ -77,6 +79,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__output_resource_actions,
      clone_expand,
      clone_append_meta,
+     pcmk__clone_add_utilization,
      },
     {
      pcmk__native_merge_weights,
@@ -93,6 +96,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      pcmk__output_bundle_actions,
      pcmk__bundle_expand,
      pcmk__bundle_append_meta,
+     pcmk__bundle_add_utilization,
      }
 };
 
