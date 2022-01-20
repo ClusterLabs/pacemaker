@@ -298,6 +298,16 @@ typedef struct stonith_api_operations_s
     int (*register_notification)(
         stonith_t *st, const char *event,
         void (*notify)(stonith_t *st, stonith_event_t *e));
+
+    /*!
+     * \brief Remove a previously registered notification for \c event, or all
+     *        notifications if NULL.
+     *
+     * \param[in] st     Fencer connection to use
+     * \param[in] event  The event to remove notifications for (may be NULL).
+     *
+     * \return Legacy Pacemaker return code
+     */
     int (*remove_notification)(stonith_t *st, const char *event);
 
     /*!

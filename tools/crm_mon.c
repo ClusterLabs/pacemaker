@@ -2322,9 +2322,7 @@ clean_up_fencing_connection(void)
     }
 
     if (st->state != stonith_disconnected) {
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+        st->cmds->remove_notification(st, NULL);
         st->cmds->disconnect(st);
     }
 
