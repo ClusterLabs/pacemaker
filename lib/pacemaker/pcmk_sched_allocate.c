@@ -108,7 +108,13 @@ failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
 static void
 check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
 {
-    if (failcount_clear_action_exists(node, rsc)) {
+    // If this is a collective resource, apply recursively to children instead
+    if (rsc->children != NULL) {
+        g_list_foreach(rsc->children, (GFunc) check_failure_threshold,
+                       node);
+        return;
+
+    } else if (failcount_clear_action_exists(node, rsc)) {
         /* Don't force the resource away from this node due to a failcount
          * that's going to be cleared.
          *
@@ -131,48 +137,53 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
     }
 }
 
+/*!
+ * \internal
+ * \brief Apply stickiness to a resource if appropriate
+ *
+ * \param[in] rsc       Resource to check for stickiness
+ * \param[in] data_set  Cluster working set
+ */
 static void
-common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
+apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    if (rsc->children) {
-        GList *gIter = rsc->children;
+    pe_node_t *node = NULL;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            common_apply_stickiness(child_rsc, node, data_set);
-        }
+    // If this is a collective resource, apply recursively to children instead
+    if (rsc->children != NULL) {
+        g_list_foreach(rsc->children, (GFunc) apply_stickiness, data_set);
         return;
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_managed)
-        && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
-        pe_node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-        pe_node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-
-        if (current == NULL) {
-
-        } else if ((match != NULL)
-                   || pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-            pe_resource_t *sticky_rsc = rsc;
-
-            resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
-            pe_rsc_debug(sticky_rsc, "Resource %s: preferring current location"
-                         " (node=%s, weight=%d)", sticky_rsc->id,
-                         node->details->uname, rsc->stickiness);
-        } else {
-            GHashTableIter iter;
-            pe_node_t *nIter = NULL;
-
-            pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
-                         " and node %s is not explicitly allowed", rsc->id, node->details->uname);
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&nIter)) {
-                crm_err("%s[%s] = %d", rsc->id, nIter->details->uname, nIter->weight);
-            }
-        }
+    /* A resource is sticky if it is managed, has stickiness configured, and is
+     * active on a single node.
+     */
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
+        return;
     }
-    check_failure_threshold(rsc, node);
+
+    node = rsc->running_on->data;
+
+    /* In a symmetric cluster, stickiness can always be used. In an
+     * asymmetric cluster, we have to check whether the resource is still
+     * allowed on the node, so we don't keep the resource somewhere it is no
+     * longer explicitly enabled.
+     */
+    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
+        && (pe_hash_table_lookup(rsc->allowed_nodes,
+                                 node->details->id) == NULL)) {
+        pe_rsc_debug(rsc,
+                     "Ignoring %s stickiness because the cluster is "
+                     "asymmetric and node %s is not explicitly allowed",
+                     rsc->id, node->details->uname);
+        return;
+    }
+
+    pe_rsc_debug(rsc, "Resource %s has %d stickiness on node %s",
+                 rsc->id, rsc->stickiness, node->details->uname);
+    resource_location(rsc, node, rsc->stickiness, "stickiness",
+                      rsc->cluster);
 }
 
 gboolean
@@ -335,6 +346,7 @@ stage2(pe_working_set_t * data_set)
     }
 
     pcmk__apply_locations(data_set);
+    g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -345,7 +357,7 @@ stage2(pe_working_set_t * data_set)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
-            common_apply_stickiness(rsc, node, data_set);
+            check_failure_threshold(rsc, node);
             rsc_discover_filter(rsc, node);
         }
     }
