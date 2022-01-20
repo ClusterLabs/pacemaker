@@ -1043,7 +1043,7 @@ Once you've done whatever you needed to do, you can then re-enable it with
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
 
-.. [#] See https://github.com/ClusterLabs/OCF-spec/tree/master/ra. The
+.. [#] See https://github.com/ClusterLabs/OCF-spec/tree/main/ra. The
        Pacemaker implementation has been somewhat extended from the OCF specs.
 
 .. [#] The resource-agents source code includes the **ocf-tester** script,

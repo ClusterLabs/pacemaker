@@ -246,7 +246,7 @@ Every C file should start with a short copyright and license notice:
     */
 
 *<LICENSE>* should follow the policy set forth in the
-`COPYING <https://github.com/ClusterLabs/pacemaker/blob/master/COPYING>`_ file,
+`COPYING <https://github.com/ClusterLabs/pacemaker/blob/main/COPYING>`_ file,
 generally one of "GNU General Public License version 2 or later (GPLv2+)"
 or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
 
