@@ -139,6 +139,35 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
 
 /*!
  * \internal
+ * \brief If resource has exclusive discovery, ban node if not allowed
+ *
+ * Location constraints have a resource-discovery option that allows users to
+ * specify where probes are done for the affected resource. If this is set to
+ * exclusive, probes will only be done on nodes listed in exclusive constraints.
+ * This function bans the resource from the node if the node is not listed.
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check \p rsc on
+ */
+static void
+apply_exclusive_discovery(pe_resource_t *rsc, pe_node_t *node)
+{
+    if (rsc->exclusive_discover || uber_parent(rsc)->exclusive_discover) {
+        pe_node_t *match = NULL;
+
+        // If this is a collective resource, apply recursively to children
+        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery, node);
+
+        match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        if ((match != NULL)
+            && (match->rsc_discover_mode != pe_discover_exclusive)) {
+            match->weight = -INFINITY;
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
  * \param[in] rsc       Resource to check for stickiness
@@ -184,24 +213,6 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                  rsc->id, rsc->stickiness, node->details->uname);
     resource_location(rsc, node, rsc->stickiness, "stickiness",
                       rsc->cluster);
-}
-
-static void
-rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
-{
-    pe_resource_t *top = uber_parent(rsc);
-    pe_node_t *match;
-
-    if (rsc->exclusive_discover == FALSE && top->exclusive_discover == FALSE) {
-        return;
-    }
-
-    g_list_foreach(rsc->children, (GFunc) rsc_discover_filter, node);
-
-    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-    if (match && match->rsc_discover_mode != pe_discover_exclusive) {
-        match->weight = -INFINITY;
-    }
 }
 
 static time_t
@@ -340,7 +351,7 @@ stage2(pe_working_set_t * data_set)
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
             check_failure_threshold(rsc, node);
-            rsc_discover_filter(rsc, node);
+            apply_exclusive_discovery(rsc, node);
         }
     }
 
