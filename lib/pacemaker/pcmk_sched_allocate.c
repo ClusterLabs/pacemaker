@@ -261,36 +261,32 @@ count_available_nodes(pe_working_set_t *data_set)
 
 /*
  * \internal
- * \brief Stage 2 of cluster status: apply node-specific criteria
+ * \brief Apply node-specific scheduling criteria
  *
- * Count known nodes, and apply location constraints, stickiness, and exclusive
- * resource discovery.
+ * After the CIB has been unpacked, process node-specific scheduling criteria
+ * including shutdown locks, location constraints, resource stickiness,
+ * migration thresholds, and exclusive resource discovery.
  */
-gboolean
-stage2(pe_working_set_t * data_set)
+static void
+apply_node_criteria(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
+    crm_trace("Applying node-specific scheduling criteria");
     apply_shutdown_locks(data_set);
     count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
     g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
 
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        GList *gIter2 = NULL;
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        gIter2 = data_set->resources;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
+    for (GList *node_iter = data_set->nodes; node_iter != NULL;
+         node_iter = node_iter->next) {
+        for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
+             rsc_iter = rsc_iter->next) {
+            pe_node_t *node = (pe_node_t *) node_iter->data;
+            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
             check_failure_threshold(rsc, node);
             apply_exclusive_discovery(rsc, node);
         }
     }
-
-    return TRUE;
 }
 
 static void
@@ -737,8 +733,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
         log_resource_details(data_set);
     }
 
-    crm_trace("Applying location constraints");
-    stage2(data_set);
+    apply_node_criteria(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         return;
