@@ -215,20 +215,29 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                       rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Get epoch time of node's shutdown attribute (or now if none)
+ *
+ * \param[in] node      Node to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Epoch time corresponding to shutdown attribute if set or now if not
+ */
 static time_t
 shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
 
-    if (shutdown) {
+    if (shutdown != NULL) {
         long long result_ll;
 
         if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
             result = (time_t) result_ll;
         }
     }
-    return result? result : get_effective_time(data_set);
+    return (result == 0)? get_effective_time(data_set) : result;
 }
 
 static void
