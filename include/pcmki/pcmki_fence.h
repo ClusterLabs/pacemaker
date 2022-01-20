@@ -226,6 +226,20 @@ int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
                          unsigned int timeout);
 
 /**
+ * \brief Fetch STONITH history, optionally reducing it as described by
+ *        pcmk__reduce_fence_history()
+ *
+ * \param[in]  st              The STONITH API object
+ * \param[out] stonith_history Destination for storing the history
+ * \param[in]  reduce          Should history be reduced?
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
+                          bool reduce);
+
+/**
  * \brief Reduce the STONITH history
  *
  * STONITH history is reduced as follows:

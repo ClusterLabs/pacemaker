@@ -2113,30 +2113,6 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
-get_fencing_history(stonith_t *st, stonith_history_t **stonith_history, bool reduce)
-{
-    int rc = pcmk_rc_ok;
-
-    if (st == NULL) {
-        rc = ENOTCONN;
-    } else {
-        rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
-
-        rc = pcmk_legacy2rc(rc);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-
-        *stonith_history = stonith__sort_history(*stonith_history);
-        if (reduce) {
-            *stonith_history = pcmk__reduce_fence_history(*stonith_history);
-        }
-    }
-
-    return rc;
-}
-
-static int
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
@@ -2164,7 +2140,7 @@ mon_refresh_display(gpointer user_data)
     if (fence_history) {
         reduce = !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
                  (output_format != mon_output_xml);
-        history_rc = get_fencing_history(st, &stonith_history, reduce);
+        history_rc = pcmk__get_fencing_history(st, &stonith_history, reduce);
     }
 
     if (mon_data_set == NULL) {
