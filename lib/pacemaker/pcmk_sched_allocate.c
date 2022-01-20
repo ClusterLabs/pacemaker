@@ -234,6 +234,31 @@ apply_shutdown_locks(pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Calculate the number of available nodes in the cluster
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+count_available_nodes(pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
+        return;
+    }
+
+    // @COMPAT for API backward compatibility only (cluster does not use value)
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+
+        if ((node != NULL) && (node->weight >= 0) && node->details->online
+            && (node->details->type != node_ping)) {
+            data_set->max_valid_nodes++;
+        }
+    }
+    crm_trace("Online node count: %d", data_set->max_valid_nodes);
+}
+
 /*
  * \internal
  * \brief Stage 2 of cluster status: apply node-specific criteria
@@ -247,20 +272,7 @@ stage2(pe_working_set_t * data_set)
     GList *gIter = NULL;
 
     apply_shutdown_locks(data_set);
-
-    if (!pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
-        // @COMPAT API backward compatibility
-        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node = (pe_node_t *) gIter->data;
-
-            if (node && (node->weight >= 0) && node->details->online
-                && (node->details->type != node_ping)) {
-                data_set->max_valid_nodes++;
-            }
-        }
-        crm_trace("Online node count: %d", data_set->max_valid_nodes);
-    }
-
+    count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
     g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
 
