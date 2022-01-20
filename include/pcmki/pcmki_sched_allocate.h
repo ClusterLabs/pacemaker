@@ -82,6 +82,14 @@ struct resource_alloc_functions_s {
      */
     void (*add_utilization)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                             GList *all_rscs, GHashTable *utilization);
+
+    /*!
+     * \internal
+     * \brief Apply a shutdown lock for a resource, if appropriate
+     *
+     * \param[in] rsc       Resource to check for shutdown lock
+     */
+    void (*shutdown_lock)(pe_resource_t *rsc);
 };
 
 GHashTable *pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
@@ -112,6 +120,7 @@ extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__primitive_add_utilization(pe_resource_t *rsc,
                                      pe_resource_t *orig_rsc, GList *all_rscs,
                                      GHashTable *utilization);
+void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 
 pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
@@ -129,6 +138,7 @@ extern void group_expand(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
+void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 
 pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                  pe_working_set_t *data_set);
@@ -154,6 +164,7 @@ void pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t *data_set);
 void pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml);
 void pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                   GList *all_rscs, GHashTable *utilization);
+void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
 pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                 pe_working_set_t *data_set);
@@ -173,6 +184,7 @@ extern gboolean clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_act
 extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
+void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
 void pcmk__add_promotion_scores(pe_resource_t *rsc);
 pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,

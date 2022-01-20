@@ -2405,3 +2405,99 @@ pcmk__primitive_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                  orig_rsc->id, rsc->id);
     pcmk__release_node_capacity(utilization, rsc);
 }
+
+/*!
+ * \internal
+ * \brief Get epoch time of node's shutdown attribute (or now if none)
+ *
+ * \param[in] node      Node to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Epoch time corresponding to shutdown attribute if set or now if not
+ */
+static time_t
+shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
+{
+    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    time_t result = 0;
+
+    if (shutdown != NULL) {
+        long long result_ll;
+
+        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+            result = (time_t) result_ll;
+        }
+    }
+    return (result == 0)? get_effective_time(data_set) : result;
+}
+
+// Primitive implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
+{
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+    // Fence devices and remote connections can't be locked
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
+        || pe__resource_is_remote_conn(rsc, rsc->cluster)) {
+        return;
+    }
+
+    if (rsc->lock_node != NULL) {
+        // The lock was obtained from resource history
+
+        if (rsc->running_on != NULL) {
+            /* The resource was started elsewhere even though it is now
+             * considered locked. This shouldn't be possible, but as a
+             * failsafe, we don't want to disturb the resource now.
+             */
+            pe_rsc_info(rsc,
+                        "Cancelling shutdown lock because %s is already active",
+                        rsc->id);
+            pe__clear_resource_history(rsc, rsc->lock_node, rsc->cluster);
+            rsc->lock_node = NULL;
+            rsc->lock_time = 0;
+        }
+
+    // Only a resource active on exactly one node can be locked
+    } else if (pcmk__list_of_1(rsc->running_on)) {
+        pe_node_t *node = rsc->running_on->data;
+
+        if (node->details->shutdown) {
+            if (node->details->unclean) {
+                pe_rsc_debug(rsc, "Not locking %s to unclean %s for shutdown",
+                             rsc->id, node->details->uname);
+            } else {
+                rsc->lock_node = node;
+                rsc->lock_time = shutdown_time(node, rsc->cluster);
+            }
+        }
+    }
+
+    if (rsc->lock_node == NULL) {
+        // No lock needed
+        return;
+    }
+
+    if (rsc->cluster->shutdown_lock > 0) {
+        time_t lock_expiration = rsc->lock_time + rsc->cluster->shutdown_lock;
+
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
+                    rsc->id, rsc->lock_node->details->uname,
+                    (long long) lock_expiration);
+        pe__update_recheck_time(++lock_expiration, rsc->cluster);
+    } else {
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown",
+                    rsc->id, rsc->lock_node->details->uname);
+    }
+
+    // If resource is locked to one node, ban it from all other nodes
+    for (GList *item = rsc->cluster->nodes; item != NULL; item = item->next) {
+        pe_node_t *node = item->data;
+
+        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
+            resource_location(rsc, node, -CRM_SCORE_INFINITY,
+                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
+        }
+    }
+}

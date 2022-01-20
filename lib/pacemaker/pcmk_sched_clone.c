@@ -1560,3 +1560,10 @@ pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
         child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
     }
 }
+
+// Clone implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__clone_shutdown_lock(pe_resource_t *rsc)
+{
+    return; // Clones currently don't support shutdown locks
+}

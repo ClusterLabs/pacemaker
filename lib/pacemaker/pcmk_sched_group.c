@@ -681,3 +681,14 @@ pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
         }
     }
 }
+
+// Group implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__group_shutdown_lock(pe_resource_t *rsc)
+{
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
+
+        child->cmds->shutdown_lock(child);
+    }
+}
