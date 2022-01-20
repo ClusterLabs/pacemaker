@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__AGENTS__H
-#  define PCMK__AGENTS__H
+#ifndef PCMK__CRM_COMMON_AGENTS__H
+#  define PCMK__CRM_COMMON_AGENTS__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,4 +68,4 @@ bool pcmk_stonith_param(const char *param);
 }
 #endif
 
-#endif // PCMK__AGENTS__H
+#endif // PCMK__CRM_COMMON_AGENTS__H

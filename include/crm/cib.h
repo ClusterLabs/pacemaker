@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CIB__H
-#  define CIB__H
+#ifndef PCMK__CRM_CIB__H
+#  define PCMK__CRM_CIB__H
+
+#  include <glib.h>             // gboolean
+#  include <crm/common/ipc.h>
+#  include <crm/common/xml.h>
+#  include <crm/cib/cib_types.h>
+#  include <crm/cib/util.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,12 +25,6 @@ extern "C" {
  * \brief Cluster Configuration
  * \ingroup cib
  */
-
-#  include <glib.h>             // gboolean
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
-#  include <crm/cib/cib_types.h>
-#  include <crm/cib/util.h>
 
 #  define CIB_FEATURE_SET "2.0"
 

@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__IPC_CONTROLD__H
-#  define PCMK__IPC_CONTROLD__H
+#ifndef PCMK__CRM_COMMON_IPC_CONTROLD__H
+#  define PCMK__CRM_COMMON_IPC_CONTROLD__H
+
+
+#include <stdbool.h>                    // bool
+#include <glib.h>                       // GList
+#include <libxml/tree.h>                // xmlNode
+#include <crm/common/ipc.h>             // pcmk_ipc_api_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,11 +26,6 @@ extern "C" {
  *
  * \ingroup core
  */
-
-#include <stdbool.h>                    // bool
-#include <glib.h>                       // GList
-#include <libxml/tree.h>                // xmlNode
-#include <crm/common/ipc.h>             // pcmk_ipc_api_t
 
 //! Possible types of controller replies
 enum pcmk_controld_api_reply {
@@ -107,4 +108,4 @@ unsigned int pcmk_controld_api_replies_expected(pcmk_ipc_api_t *api);
 }
 #endif
 
-#endif // PCMK__IPC_CONTROLD__H
+#endif // PCMK__CRM_COMMON_IPC_CONTROLD__H

@@ -6,8 +6,8 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef PCMKI_ERROR__H
-#  define PCMKI_ERROR__H
+#ifndef PCMK__PCMKI_PCMKI_ERROR__H
+#  define  PCMK__PCMKI_PCMKI_ERROR__H
 
 #define CMD_ERR(fmt, args...) do {              \
             crm_warn(fmt, ##args);              \

@@ -7,14 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef SCHED_ALLOCATE__H
-#  define SCHED_ALLOCATE__H
+#ifndef PCMK__PCMKI_PCMKI_SCHED_ALLOCATE__H
+#  define PCMK__PCMKI_PCMKI_SCHED_ALLOCATE__H
 
 #  include <glib.h>
 #  include <crm/common/xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/complex.h>
+#  include <crm/common/xml_internal.h>
 #  include <crm/pengine/internal.h>
+#  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
 struct resource_alloc_functions_s {

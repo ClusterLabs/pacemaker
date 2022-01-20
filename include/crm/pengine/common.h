@@ -7,17 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_COMMON__H
-#  define PE_COMMON__H
+#ifndef PCMK__CRM_PENGINE_COMMON__H
+#  define PCMK__CRM_PENGINE_COMMON__H
+
+#  include <glib.h>
+#  include <regex.h>
+#  include <crm/common/iso8601.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#  include <glib.h>
-#  include <regex.h>
-
-#  include <crm/common/iso8601.h>
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;

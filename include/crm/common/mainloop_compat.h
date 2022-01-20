@@ -7,8 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_MAINLOOP_COMPAT__H
-#  define PCMK__COMMON_MAINLOOP_COMPAT__H
+#ifndef PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
+#  define PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
+
+#  include <glib.h>
+#  include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,4 +33,4 @@ gboolean crm_signal(int sig, void (*dispatch) (int sig));
 }
 #endif
 
-#endif // PCMK__COMMON_MAINLOOP_COMPAT__H
+#endif // PCMK__CRM_COMMON_MAINLOOP_COMPAT__H

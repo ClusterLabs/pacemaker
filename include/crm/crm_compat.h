@@ -7,8 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CRM_COMPAT__H
-#  define PCMK__CRM_COMPAT__H
+#ifndef PCMK__CRM_CRM_COMPAT__H
+#  define PCMK__CRM_CRM_COMPAT__H
+
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,4 +52,4 @@ typedef GList *GListPtr;
 }
 #endif
 
-#endif // PCMK__CRM_COMPAT__H
+#endif // PCMK__CRM_CRM_COMPAT__H

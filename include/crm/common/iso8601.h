@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_ISO8601
-#  define CRM_COMMON_ISO8601
+#ifndef PCMK__CRM_COMMON_ISO8601__H
+#  define PCMK__CRM_COMMON_ISO8601__H
+
+#  include <time.h>
+#  include <ctype.h>
+#  include <stdint.h>   // uint32_t
+#  include <stdbool.h>  // bool
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,11 +28,6 @@ extern "C" {
 /*
  * See https://en.wikipedia.org/wiki/ISO_8601
  */
-
-#  include <time.h>
-#  include <ctype.h>
-#  include <stdint.h>   // uint32_t
-#  include <stdbool.h>  // bool
 
 typedef struct crm_time_s crm_time_t;
 

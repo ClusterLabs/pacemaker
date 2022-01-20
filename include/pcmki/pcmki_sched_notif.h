@@ -6,9 +6,10 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef CRM_PE_NOTIF__H
-#  define CRM_PE_NOTIF__H
+#ifndef PCMK__PCMKI_PCMKI_SCHED_NOTIF__H
+#  define PCMK__PCMKI_PCMKI_SCHED_NOTIF__H
 
+#  include <crm/common/xml_internal.h>
 #  include <crm/pengine/internal.h>
 
 notify_data_t * create_notification_boundaries(pe_resource_t *rsc,
@@ -31,4 +32,4 @@ void create_secondary_notification(pe_action_t *action, pe_resource_t *rsc,
                                    pe_action_t *stonith_op,
                                    pe_working_set_t *data_set);
 
-#endif /* CRM_PE_NOTIF__H */
+#endif /* PCMK__PCMKI_SCHED_NOTIF__H */

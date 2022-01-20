@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__PENGINE_RULES_COMPAT__H
-#  define PCMK__PENGINE_RULES_COMPAT__H
+#ifndef PCMK__CRM_PENGINE_RULES_COMPAT__H
+#  define PCMK__CRM_PENGINE_RULES_COMPAT__H
+
+#include <glib.h>
+#include <libxml/tree.h>        // xmlNode
+#include <crm/common/iso8601.h> // crm_time_t
+#include <crm/pengine/pe_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,4 +69,4 @@ void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
 }
 #endif
 
-#endif // PCMK__PENGINE_RULES_COMPAT__H
+#endif // PCMK__CRM_PENGINE_RULES_COMPAT__H

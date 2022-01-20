@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE__H
-#  define PENGINE__H
+#ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
+#  define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
 typedef struct rsc_ticket_s rsc_ticket_t;
 

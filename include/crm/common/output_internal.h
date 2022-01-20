@@ -10,6 +10,14 @@
 #ifndef PCMK__OUTPUT_INTERNAL__H
 #  define PCMK__OUTPUT_INTERNAL__H
 
+#  include <stdbool.h>
+#  include <stdio.h>
+#  include <libxml/tree.h>
+#  include <libxml/HTMLtree.h>
+
+#  include <glib.h>
+#  include <crm/common/results.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,13 +27,6 @@ extern "C" {
  * \brief Formatted output for pacemaker tools
  */
 
-#  include <stdbool.h>
-#  include <stdio.h>
-#  include <libxml/tree.h>
-#  include <libxml/HTMLtree.h>
-
-#  include <glib.h>
-#  include <crm/common/results.h>
 
 #  define PCMK__API_VERSION "2.15"
 

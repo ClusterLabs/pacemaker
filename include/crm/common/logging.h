@@ -7,6 +7,14 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__CRM_COMMON_LOGGING__H
+#  define PCMK__CRM_COMMON_LOGGING__H
+
+#  include <stdio.h>
+#  include <glib.h>
+#  include <qb/qblog.h>
+#  include <libxml/tree.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,13 +25,6 @@ extern "C" {
  * \ingroup core
  */
 
-#ifndef CRM_LOGGING__H
-#  define CRM_LOGGING__H
-
-#  include <stdio.h>
-#  include <glib.h>
-#  include <qb/qblog.h>
-#  include <libxml/tree.h>
 
 /* Define custom log priorities.
  *
