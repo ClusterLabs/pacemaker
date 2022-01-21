@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_CIB_UTIL_COMPAT__H
 #  define PCMK__CRM_CIB_UTIL_COMPAT__H
 
-#include <crm/common/xml_internal.h>
+#include <crm/common/xml.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
