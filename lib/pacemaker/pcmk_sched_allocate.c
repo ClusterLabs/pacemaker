@@ -330,31 +330,44 @@ allocate_resources(pe_working_set_t *data_set)
     }
 }
 
-// Clear fail counts for orphaned rsc on all online nodes
+/*!
+ * \internal
+ * \brief Schedule fail count clearing on online nodes if resource is orphaned
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] data_set  Cluster working set
+ */
 static void
-cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
+clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        return;
+    }
+    crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    /* There's no need to recurse into rsc->children because those
+     * should just be unallocated clone instances.
+     */
 
-        if (node->details->online
-            && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                                data_set)) {
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        pe_action_t *clear_op = NULL;
 
-            pe_action_t *clear_op = NULL;
-
-            clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
-                                           data_set);
-
-            /* We can't use order_action_then_stop() here because its
-             * pe_order_preserve breaks things
-             */
-            pcmk__new_ordering(clear_op->rsc, NULL, clear_op,
-                               rsc, stop_key(rsc), NULL,
-                               pe_order_optional, data_set);
+        if (!node->details->online) {
+            continue;
         }
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                             data_set) == 0) {
+            continue;
+        }
+
+        clear_op = pe__clear_failcount(rsc, node, "it is orphaned", data_set);
+
+        /* We can't use order_action_then_stop() here because its
+         * pe_order_preserve breaks things
+         */
+        pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
+                           NULL, pe_order_optional, data_set);
     }
 }
 
@@ -399,18 +412,9 @@ stage5(pe_working_set_t * data_set)
         pcmk__schedule_probes(data_set);
     }
 
-    crm_trace("Handle orphans");
     if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-            /* There's no need to recurse into rsc->children because those
-             * should just be unallocated clone instances.
-             */
-            if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-                cleanup_orphans(rsc, data_set);
-            }
-        }
+        g_list_foreach(data_set->resources,
+                       (GFunc) clear_failcounts_if_orphaned, data_set);
     }
 
     crm_trace("Creating actions");
