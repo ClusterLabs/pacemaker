@@ -120,10 +120,10 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
          *
          * @TODO Failcount clearing can be scheduled in
          * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
-         * stage5() via check_params(). This runs well before then, so it cannot
-         * detect those, meaning we might check the migration threshold when we
-         * shouldn't. Worst case, we stop or move the resource, then move it
-         * back in the next transition.
+         * schedule_resource_actions() via check_params(). This runs well before
+         * then, so it cannot detect those, meaning we might check the migration
+         * threshold when we shouldn't. Worst case, we stop or move the
+         * resource, then move it back in the next transition.
          */
         return;
 
@@ -379,17 +379,21 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 }
 
-gboolean
-stage5(pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Schedule any resource actions needed
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+schedule_resource_actions(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
     // Process deferred action checks
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
-        crm_trace("Calculating needed probes");
+        crm_trace("Scheduling probes");
         pcmk__schedule_probes(data_set);
     }
 
@@ -398,16 +402,12 @@ stage5(pe_working_set_t * data_set)
                        (GFunc) clear_failcounts_if_orphaned, data_set);
     }
 
-    crm_trace("Creating actions");
-
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+    crm_trace("Scheduling resource actions");
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         rsc->cmds->create_actions(rsc, data_set);
     }
-
-    crm_trace("Creating done");
-    return TRUE;
 }
 
 static gboolean
@@ -735,8 +735,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__handle_rsc_config_changes(data_set);
 
     allocate_resources(data_set);
-
-    stage5(data_set);
+    schedule_resource_actions(data_set);
 
     crm_trace("Processing fencing and shutdown cases");
     stage6(data_set);
