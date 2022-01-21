@@ -833,7 +833,7 @@ stage5(pe_working_set_t * data_set)
     GList *gIter = NULL;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        sort_resources(data_set);
+        pcmk__sort_resources(data_set);
     }
 
     gIter = data_set->nodes;

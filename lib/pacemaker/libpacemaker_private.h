@@ -327,7 +327,7 @@ bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL
-void sort_resources(pe_working_set_t *data_set);
+void pcmk__sort_resources(pe_working_set_t *data_set);
 
 
 // Functions related to probes (pcmk_sched_probes.c)

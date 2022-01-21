@@ -556,133 +556,128 @@ convert_const_pointer(const void *ptr)
     return (void *)ptr;
 }
 
+/*!
+ * \internal
+ * \brief Compare two resources according to which should be allocated first
+ *
+ * \param[in] a     First resource to compare
+ * \param[in] b     Second resource to compare
+ * \param[in] data  Sorted list of all nodes in cluster
+ *
+ * \return -1 if \p a should be allocated before \b, 0 if they are equal,
+ *         or +1 if \p a should be allocated after \b
+ */
 static gint
-sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
+cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
+    const pe_resource_t *resource1 = a;
+    const pe_resource_t *resource2 = b;
+    GList *nodes = (GList *) data;
+
     int rc = 0;
     int r1_weight = -INFINITY;
     int r2_weight = -INFINITY;
-
-    const char *reason = "existence";
-
-    GList *nodes = (GList *) data;
-    const pe_resource_t *resource1 = a;
-    const pe_resource_t *resource2 = b;
-
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
-    GList *gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
+    const char *reason = NULL;
 
+    // Resources with highest priority should be allocated first
     reason = "priority";
     r1_weight = resource1->priority;
     r2_weight = resource2->priority;
-
     if (r1_weight > r2_weight) {
         rc = -1;
         goto done;
     }
-
     if (r1_weight < r2_weight) {
         rc = 1;
         goto done;
     }
 
+    // We need nodes to make any other useful comparisons
     reason = "no node list";
     if (nodes == NULL) {
         goto done;
     }
 
+    // Calculate and log node weights
     r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
                                           resource1->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
-                          resource1->cluster);
-
     r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
                                           resource2->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
+                          resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
                           resource2->cluster);
 
-    /* Current location score */
+    // The resource with highest score on its current node goes first
     reason = "current location";
-    r1_weight = -INFINITY;
-    r2_weight = -INFINITY;
-
-    if (resource1->running_on) {
+    if (resource1->running_on != NULL) {
         r1_node = pe__current_node(resource1);
         r1_node = g_hash_table_lookup(r1_nodes, r1_node->details->id);
-        if (r1_node != NULL) {
-            r1_weight = r1_node->weight;
-        }
     }
-    if (resource2->running_on) {
+    if (resource2->running_on != NULL) {
         r2_node = pe__current_node(resource2);
         r2_node = g_hash_table_lookup(r2_nodes, r2_node->details->id);
-        if (r2_node != NULL) {
-            r2_weight = r2_node->weight;
-        }
     }
-
+    r1_weight = (r1_node == NULL)? -INFINITY : r1_node->weight;
+    r2_weight = (r2_node == NULL)? -INFINITY : r2_node->weight;
     if (r1_weight > r2_weight) {
         rc = -1;
         goto done;
     }
-
     if (r1_weight < r2_weight) {
         rc = 1;
         goto done;
     }
 
+    // Otherwise a higher weight on any node will do
     reason = "score";
-    for (gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
         r1_node = NULL;
-        r2_node = NULL;
-
-        r1_weight = -INFINITY;
-        if (r1_nodes) {
+        if (r1_nodes != NULL) {
             r1_node = g_hash_table_lookup(r1_nodes, node->details->id);
         }
-        if (r1_node) {
-            r1_weight = r1_node->weight;
-        }
+        r1_weight = (r1_node == NULL)? -INFINITY : r1_node->weight;
 
-        r2_weight = -INFINITY;
-        if (r2_nodes) {
+        r2_node = NULL;
+        if (r2_nodes != NULL) {
             r2_node = g_hash_table_lookup(r2_nodes, node->details->id);
         }
-        if (r2_node) {
-            r2_weight = r2_node->weight;
-        }
+        r2_weight = (r2_node == NULL)? -INFINITY : r2_node->weight;
 
         if (r1_weight > r2_weight) {
             rc = -1;
             goto done;
         }
-
         if (r1_weight < r2_weight) {
             rc = 1;
             goto done;
         }
     }
 
-  done:
-    crm_trace("%s (%d) on %s %c %s (%d) on %s: %s",
-              resource1->id, r1_weight, r1_node ? r1_node->details->id : "n/a",
-              rc < 0 ? '>' : rc > 0 ? '<' : '=',
-              resource2->id, r2_weight, r2_node ? r2_node->details->id : "n/a", reason);
-
-    if (r1_nodes) {
+done:
+    crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
+              resource1->id, r1_weight,
+              ((r1_node == NULL)? "" : " on "),
+              ((r1_node == NULL)? "" : r1_node->details->id),
+              ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
+              resource2->id, r2_weight,
+              ((r2_node == NULL)? "" : " on "),
+              ((r2_node == NULL)? "" : r2_node->details->id),
+              reason);
+    if (r1_nodes != NULL) {
         g_hash_table_destroy(r1_nodes);
     }
-    if (r2_nodes) {
+    if (r2_nodes != NULL) {
         g_hash_table_destroy(r2_nodes);
     }
-
     return rc;
 }
 
@@ -693,12 +688,12 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
  * \param[in] data_set  Cluster working set
  */
 void
-sort_resources(pe_working_set_t *data_set)
+pcmk__sort_resources(pe_working_set_t *data_set)
 {
     GList *nodes = g_list_copy(data_set->nodes);
 
     nodes = pcmk__sort_nodes(nodes, NULL, data_set);
     data_set->resources = g_list_sort_with_data(data_set->resources,
-                                                sort_rsc_process_order, nodes);
+                                                cmp_resources, nodes);
     g_list_free(nodes);
 }
