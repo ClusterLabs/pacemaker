@@ -374,34 +374,19 @@ clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
 gboolean
 stage5(pe_working_set_t * data_set)
 {
-    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         pcmk__sort_resources(data_set);
     }
 
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            out->message(out, "node-capacity", node, "Original");
-        }
-    }
+    pcmk__show_node_capacities("Original", data_set);
 
     /* Take (next) highest resource, assign it and create its actions */
 
     allocate_resources(data_set);
 
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            out->message(out, "node-capacity", node, "Remaining");
-        }
-    }
+    pcmk__show_node_capacities("Remaining", data_set);
 
     // Process deferred action checks
     pe__foreach_param_check(data_set, check_params);

@@ -441,3 +441,23 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
                            pe_order_load, rsc->cluster);
     }
 }
+
+/*!
+ * \internal
+ * \brief Output node capacities if enabled
+ *
+ * \param[in] desc      Prefix for output
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+        for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+            pe_node_t *node = (pe_node_t *) iter->data;
+            pcmk__output_t *out = data_set->priv;
+
+            out->message(out, "node-capacity", node, desc);
+        }
+    }
+}
