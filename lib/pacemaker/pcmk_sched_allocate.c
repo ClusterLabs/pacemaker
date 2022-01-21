@@ -301,6 +301,12 @@ allocate_resources(pe_working_set_t *data_set)
     GList *iter = NULL;
 
     crm_trace("Allocating resources to nodes");
+
+    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
+        pcmk__sort_resources(data_set);
+    }
+    pcmk__show_node_capacities("Original", data_set);
+
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
          * any colocation dependencies). If the connection is migrating, always
@@ -328,6 +334,8 @@ allocate_resources(pe_working_set_t *data_set)
             rsc->cmds->allocate(rsc, NULL, data_set);
         }
     }
+
+    pcmk__show_node_capacities("Remaining", data_set);
 }
 
 /*!
@@ -376,17 +384,7 @@ stage5(pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
 
-    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        pcmk__sort_resources(data_set);
-    }
-
-    pcmk__show_node_capacities("Original", data_set);
-
-    /* Take (next) highest resource, assign it and create its actions */
-
     allocate_resources(data_set);
-
-    pcmk__show_node_capacities("Remaining", data_set);
 
     // Process deferred action checks
     pe__foreach_param_check(data_set, check_params);
