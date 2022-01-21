@@ -107,7 +107,6 @@ GMainLoop *mainloop = NULL;
 
 static gboolean fatal_error = FALSE;
 
-static gboolean check_active_before_startup_processes(gpointer user_data);
 static int child_liveness(pcmk_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
 static int start_child(pcmk_child_t * child);
@@ -127,7 +126,7 @@ pcmkd_cluster_connected(void)
 }
 
 static gboolean
-check_active_before_startup_processes(gpointer user_data)
+check_next_subdaemon(gpointer user_data)
 {
     static int next_child = 0;
     int rc = child_liveness(&pcmk_children[next_child]);
@@ -800,8 +799,8 @@ find_and_track_existing_processes(void)
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
-    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
-                              check_active_before_startup_processes, NULL);
+    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
+                          NULL);
     return pcmk_rc_ok;
 }
 
