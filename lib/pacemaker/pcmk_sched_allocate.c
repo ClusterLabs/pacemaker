@@ -1107,6 +1107,23 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Sort resources in the order they should be allocated to nodes
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+sort_resources(pe_working_set_t *data_set)
+{
+    GList *nodes = g_list_copy(data_set->nodes);
+
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    data_set->resources = g_list_sort_with_data(data_set->resources,
+                                                sort_rsc_process_order, nodes);
+    g_list_free(nodes);
+}
+
 static void
 allocate_resources(pe_working_set_t * data_set)
 {
@@ -1175,13 +1192,7 @@ stage5(pe_working_set_t * data_set)
     GList *gIter = NULL;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        GList *nodes = g_list_copy(data_set->nodes);
-
-        nodes = pcmk__sort_nodes(nodes, NULL, data_set);
-        data_set->resources =
-            g_list_sort_with_data(data_set->resources, sort_rsc_process_order, nodes);
-
-        g_list_free(nodes);
+        sort_resources(data_set);
     }
 
     gIter = data_set->nodes;
