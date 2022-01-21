@@ -384,8 +384,6 @@ stage5(pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
 
-    allocate_resources(data_set);
-
     // Process deferred action checks
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
@@ -736,7 +734,8 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__create_internal_constraints(data_set);
     pcmk__handle_rsc_config_changes(data_set);
 
-    crm_trace("Allocate resources");
+    allocate_resources(data_set);
+
     stage5(data_set);
 
     crm_trace("Processing fencing and shutdown cases");
