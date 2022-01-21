@@ -289,36 +289,44 @@ apply_node_criteria(pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Allocate resources to nodes
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-allocate_resources(pe_working_set_t * data_set)
+allocate_resources(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
+    crm_trace("Allocating resources to nodes");
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
          * any colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-            if (rsc->is_remote_node == FALSE) {
-                continue;
+        for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+            if (rsc->is_remote_node) {
+                pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                             rsc->id);
+                rsc->cmds->allocate(rsc, rsc->partial_migration_target,
+                                    data_set);
             }
-            pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
-                         rsc->id);
-            rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
 
     /* now do the rest of the resources */
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-        if (rsc->is_remote_node == TRUE) {
-            continue;
+    for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        if (!rsc->is_remote_node) {
+            pe_rsc_trace(rsc, "Allocating %s resource '%s'",
+                         crm_element_name(rsc->xml), rsc->id);
+            rsc->cmds->allocate(rsc, NULL, data_set);
         }
-        pe_rsc_trace(rsc, "Allocating %s resource '%s'",
-                     crm_element_name(rsc->xml), rsc->id);
-        rsc->cmds->allocate(rsc, NULL, data_set);
     }
 }
 
@@ -369,7 +377,6 @@ stage5(pe_working_set_t * data_set)
         }
     }
 
-    crm_trace("Allocating services");
     /* Take (next) highest resource, assign it and create its actions */
 
     allocate_resources(data_set);
