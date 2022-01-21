@@ -558,6 +558,26 @@ convert_const_pointer(const void *ptr)
 
 /*!
  * \internal
+ * \brief Get a node's weight
+ *
+ * \param[in] node     Unweighted node to check (for node ID)
+ * \param[in] nodes    List of weighted nodes to look for \p node in
+ *
+ * \return Node's weight, or -INFINITY if not found
+ */
+static int
+get_node_weight(pe_node_t *node, GHashTable *nodes)
+{
+    pe_node_t *weighted_node = NULL;
+
+    if ((node != NULL) && (nodes != NULL)) {
+        weighted_node = g_hash_table_lookup(nodes, node->details->id);
+    }
+    return (weighted_node == NULL)? -INFINITY : weighted_node->weight;
+}
+
+/*!
+ * \internal
  * \brief Compare two resources according to which should be allocated first
  *
  * \param[in] a     First resource to compare
@@ -618,14 +638,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     reason = "current location";
     if (resource1->running_on != NULL) {
         r1_node = pe__current_node(resource1);
-        r1_node = g_hash_table_lookup(r1_nodes, r1_node->details->id);
     }
     if (resource2->running_on != NULL) {
         r2_node = pe__current_node(resource2);
-        r2_node = g_hash_table_lookup(r2_nodes, r2_node->details->id);
     }
-    r1_weight = (r1_node == NULL)? -INFINITY : r1_node->weight;
-    r2_weight = (r2_node == NULL)? -INFINITY : r2_node->weight;
+    r1_weight = get_node_weight(r1_node, r1_nodes);
+    r2_weight = get_node_weight(r2_node, r2_nodes);
     if (r1_weight > r2_weight) {
         rc = -1;
         goto done;
@@ -640,18 +658,8 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     for (GList *iter = nodes; iter != NULL; iter = iter->next) {
         pe_node_t *node = (pe_node_t *) iter->data;
 
-        r1_node = NULL;
-        if (r1_nodes != NULL) {
-            r1_node = g_hash_table_lookup(r1_nodes, node->details->id);
-        }
-        r1_weight = (r1_node == NULL)? -INFINITY : r1_node->weight;
-
-        r2_node = NULL;
-        if (r2_nodes != NULL) {
-            r2_node = g_hash_table_lookup(r2_nodes, node->details->id);
-        }
-        r2_weight = (r2_node == NULL)? -INFINITY : r2_node->weight;
-
+        r1_weight = get_node_weight(node, r1_nodes);
+        r2_weight = get_node_weight(node, r2_nodes);
         if (r1_weight > r2_weight) {
             rc = -1;
             goto done;
