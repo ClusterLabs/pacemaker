@@ -132,11 +132,10 @@ check_active_before_startup_processes(gpointer user_data)
     static int next_child = 0;
     int rc = child_liveness(&pcmk_children[next_child]);
 
-    crm_trace("%s[%lld] checked as %d",
-                           pcmk_children[next_child].name,
-                           (long long) PCMK__SPECIAL_PID_AS_0(
-                            pcmk_children[next_child].pid),
-                            rc);
+    crm_trace("Checked %s[%lld]: %s (%d)",
+              pcmk_children[next_child].name,
+              (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[next_child].pid),
+              pcmk_rc_str(rc), rc);
 
     switch (rc) {
         case pcmk_rc_ok:
@@ -315,15 +314,14 @@ pcmk_process_exit(pcmk_child_t * child)
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
 
-    } else {
-        if (child->needs_cluster && !pcmkd_cluster_connected()) {
-            crm_notice("Skipping cluster-based subdaemon %s until cluster returns",
-                       child->name);
-            child->needs_retry = true;
-            return;
-        }
+    } else if (child->needs_cluster && !pcmkd_cluster_connected()) {
+        crm_notice("Not respawning %s subdaemon until cluster returns",
+                   child->name);
+        child->needs_retry = true;
 
-        crm_notice("Respawning failed child process: %s", child->name);
+    } else {
+        crm_notice("Respawning %s subdaemon after unexpected exit",
+                   child->name);
         start_child(child);
     }
 }
