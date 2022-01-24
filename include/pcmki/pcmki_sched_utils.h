@@ -7,14 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE_AUTILS__H
-#  define PENGINE_AUTILS__H
+#ifndef PCMK__PCMKI_PCMKI_SCHED_UTILS__H
+#  define PCMK__PCMKI_PCMKI_SCHED_UTILS__H
 
 #include <stdbool.h>                    // bool
 #include <glib.h>                       // GList, GHashTable, gboolean, guint
 #include <crm/lrmd.h>                   // lrmd_event_data_t
 #include <crm/cib.h>                    // cib_t
 #include <crm/pengine/pe_types.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include <pcmki/pcmki_scheduler.h>
 #include <pcmki/pcmki_transition.h>

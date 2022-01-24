@@ -7,18 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
+#ifndef PCMK__CRM_SERVICES__H
+#  define PCMK__CRM_SERVICES__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \file
- * \brief Services API
- * \ingroup core
- */
 
 #  include <glib.h>
 #  include <stdio.h>
@@ -30,6 +21,15 @@ extern "C" {
 #  include <crm_config.h>       // OCF_ROOT_DIR
 #  include "common/results.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \file
+ * \brief Services API
+ * \ingroup core
+ */
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"

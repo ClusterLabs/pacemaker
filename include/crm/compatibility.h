@@ -6,8 +6,11 @@
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
-#ifndef CRM_COMPATIBILITY__H
-#  define CRM_COMPATIBILITY__H
+#ifndef PCMK__CRM_COMPATIBILITY__H
+#  define PCMK__CRM_COMPATIBILITY__H
+
+#include <crm/msg_xml.h>
+#include <crm/pengine/pe_types.h> // enum pe_obj_types
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,9 +25,6 @@ extern "C" {
  * release (i.e. 3.0), so it should only be used during a transitionary period
  * while the external code is being updated to the current API.
  */
-
-#include <crm/msg_xml.h>
-#include <crm/pengine/pe_types.h> // enum pe_obj_types
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
  * entirely, so any code branches relying on these should be deleted.

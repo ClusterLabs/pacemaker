@@ -7,17 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_TRANSITION__H
-#  define CRM_TRANSITION__H
+#ifndef PCMK__PCMKI_PCMKI_TRANSITION__H
+#  define PCMK__PCMKI_PCMKI_TRANSITION__H
+
+#  include <glib.h>
+#  include <crm/crm.h>
+#  include <crm/msg_xml.h>
+#  include <crm/common/xml.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <glib.h>
-#include <crm/crm.h>
-#include <crm/msg_xml.h>
-#include <crm/common/xml.h>
 
 typedef enum {
     action_type_pseudo,

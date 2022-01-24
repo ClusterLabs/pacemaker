@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef LRMD__H
-#  define LRMD__H
+#ifndef PCMK__CRM_LRMD__H
+#  define PCMK__CRM_LRMD__H
+
+#include <stdbool.h>      // bool
+#include <glib.h>         // guint, GList
+#include <crm_config.h>
+#include <crm/services.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,10 +24,6 @@ extern "C" {
  * \brief Resource agent executor
  * \ingroup lrmd
  */
-#include <stdbool.h>      // bool
-#include <glib.h>         // guint, GList
-#include <crm_config.h>
-#include <crm/services.h>
 
 typedef struct lrmd_s lrmd_t;
 typedef struct lrmd_key_value_s {

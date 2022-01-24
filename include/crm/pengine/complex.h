@@ -7,16 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE_COMPLEX__H
-#  define PENGINE_COMPLEX__H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef PCMK__CRM_PENGINE_COMPLEX__H
+#  define PCMK__CRM_PENGINE_COMPLEX__H
 
 #include <glib.h>                   // gboolean, GHashTable
 #include <libxml/tree.h>            // xmlNode
 #include <crm/pengine/pe_types.h>   // pe_node_t, pe_resource_t, etc.
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern resource_object_functions_t resource_class_functions[];
 

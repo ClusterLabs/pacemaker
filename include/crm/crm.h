@@ -7,8 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM__H
-#  define CRM__H
+#ifndef PCMK__CRM_CRM__H
+#  define PCMK__CRM_CRM__H
+
+#  include <crm_config.h>
+#  include <stdlib.h>
+#  include <glib.h>
+#  include <stdbool.h>
+
+#  include <string.h>
+
+#  include <libxml/tree.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,15 +28,6 @@ extern "C" {
  * \brief A dumping ground
  * \ingroup core
  */
-
-#  include <crm_config.h>
-#  include <stdlib.h>
-#  include <glib.h>
-#  include <stdbool.h>
-
-#  include <string.h>
-
-#  include <libxml/tree.h>
 
 #ifndef PCMK_ALLOW_DEPRECATED
 /*!

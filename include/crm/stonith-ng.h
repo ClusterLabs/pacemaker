@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef STONITH_NG__H
-#  define STONITH_NG__H
+#ifndef PCMK__CRM_STONITH_NG__H
+#  define PCMK__CRM_STONITH_NG__H
 
 #ifdef __cplusplus
 extern "C" {

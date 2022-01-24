@@ -7,8 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__IPC_PACEMAKERD__H
-#  define PCMK__IPC_PACEMAKERD__H
+#ifndef PCMK__CRM_COMMON_IPC_PACEMAKERD__H
+#  define PCMK__CRM_COMMON_IPC_PACEMAKERD__H
+
+#include <sys/types.h>       // time_t
+#include <crm/common/ipc.h>  // pcmk_ipc_api_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,9 +23,6 @@ extern "C" {
  *
  * \ingroup core
  */
-
-#include <sys/types.h>       // time_t
-#include <crm/common/ipc.h>  // pcmk_ipc_api_t
 
 enum pcmk_pacemakerd_state {
     pcmk_pacemakerd_state_invalid = -1,
@@ -75,4 +75,4 @@ const char
 }
 #endif
 
-#endif // PCMK__IPC_PACEMAKERD__H
+#endif // PCMK__CRM_COMMON_IPC_PACEMAKERD__H

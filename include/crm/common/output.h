@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_OUTPUT__H
-#  define PCMK__COMMON_OUTPUT__H
+#ifndef PCMK__CRM_COMMON_OUTPUT__H
+#  define PCMK__CRM_COMMON_OUTPUT__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,4 +76,4 @@ typedef enum {
 }
 #endif
 
-#endif // PCMK__COMMON_OUTPUT__H
+#endif // PCMK__CRM_COMMON_OUTPUT__H

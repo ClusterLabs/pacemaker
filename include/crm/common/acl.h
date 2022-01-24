@@ -7,8 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_ACL__H
-#  define PCMK__COMMON_ACL__H
+#ifndef PCMK__CRM_COMMON_ACL__H
+#  define PCMK__CRM_COMMON_ACL__H
+
+#  include <libxml/tree.h> // xmlNode
+#  include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,8 +22,6 @@ extern "C" {
  * \brief Low-level API for XML Access Control Lists (ACLs)
  * \ingroup core
  */
-
-#  include <libxml/tree.h> // xmlNode
 
 bool xml_acl_enabled(xmlNode *xml);
 void xml_acl_disable(xmlNode *xml);
@@ -34,4 +35,4 @@ bool pcmk_acl_required(const char *user);
 }
 #endif
 
-#endif // PCMK__COMMON_ACL__H
+#endif // PCMK__CRM_COMMON_ACL__H

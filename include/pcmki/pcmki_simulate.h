@@ -7,11 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMKI_SIMULATE__H
-#  define PCMKI_SIMULATE__H
+#ifndef PCMK__PCMKI_PCMKI_SIMULATE__H
+#  define PCMK__PCMKI_PCMKI_SIMULATE__H
 
 #include <crm/common/output_internal.h>
 #include <crm/pengine/pe_types.h>
+#include <pcmki/pcmki_transition.h>
+#include <crm/cib.h>                    // cib_t
 #include <pacemaker.h>
 #include <stdbool.h>
 #include <stdint.h>

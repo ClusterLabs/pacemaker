@@ -7,8 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__IPC_SCHEDULERD__H
-#  define PCMK__IPC_SCHEDULERD__H
+#ifndef PCMK__CRM_COMMON_IPC_SCHEDULERD__H
+#  define PCMK__CRM_COMMON_IPC_SCHEDULERD__H
+
+#include <crm/common/ipc.h>  // pcmk_ipc_api_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +23,6 @@ extern "C" {
  * \ingroup core
  */
 
-#include <crm/common/ipc.h>  // pcmk_ipc_api_t
 
 //! Possible types of schedulerd replies
 enum pcmk_schedulerd_api_reply {
@@ -60,4 +61,4 @@ int pcmk_schedulerd_api_graph(pcmk_ipc_api_t *api, xmlNode *cib, char **ref);
 }
 #endif
 
-#endif // PCMK__IPC_SCHEDULERD__H
+#endif // PCMK__CRM_COMMON_IPC_SCHEDULERD__H

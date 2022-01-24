@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_AGENTS_COMPAT__H
-#  define PCMK__COMMON_AGENTS_COMPAT__H
+#ifndef PCMK__CRM_COMMON_AGENTS_COMPAT__H
+#  define PCMK__CRM_COMMON_AGENTS_COMPAT__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +23,8 @@ extern "C" {
  *             release.
  */
 
+#include <stdbool.h>
+
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
 
@@ -30,4 +32,4 @@ bool crm_provider_required(const char *standard);
 }
 #endif
 
-#endif // PCMK__COMMON_AGENTS_COMPAT__H
+#endif // PCMK__CRM_COMMON_AGENTS_COMPAT__H

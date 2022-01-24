@@ -7,8 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE_STATUS__H
-#  define PENGINE_STATUS__H
+#ifndef PCMK__CRM_PENGINE_STATUS__H
+#  define PCMK__CRM_PENGINE_STATUS__H
+
+#  include <glib.h>                 // gboolean
+#  include <stdbool.h>              // bool
+#  include <crm/common/util.h>      // pcmk_is_set()
+#  include <crm/common/iso8601.h>
+#  include <crm/pengine/common.h>
+#  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.
+#  include <crm/pengine/complex.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,14 +27,6 @@ extern "C" {
  * \brief Cluster status and scheduling
  * \ingroup pengine
  */
-
-#  include <glib.h>                 // gboolean
-#  include <stdbool.h>              // bool
-#  include <crm/common/util.h>      // pcmk_is_set()
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/common.h>
-#  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.
-#  include <crm/pengine/complex.h>
 
 const char *rsc_printable_id(pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);

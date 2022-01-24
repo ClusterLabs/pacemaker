@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CIB_UTIL__H
-#  define CIB_UTIL__H
+#ifndef PCMK__CRM_CIB_UTIL__H
+#  define PCMK__CRM_CIB_UTIL__H
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
