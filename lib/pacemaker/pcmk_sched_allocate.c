@@ -453,6 +453,43 @@ any_managed_resources(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Check whether a node requires fencing
+ *
+ * \param[in] node          Node to check
+ * \param[in] have_managed  Whether any resource in cluster is managed
+ * \param[in] data_set      Cluster working set
+ *
+ * \return true if \p node should be fenced, otherwise false
+ */
+static bool
+needs_fencing(pe_node_t *node, bool have_managed, pe_working_set_t *data_set)
+{
+    return have_managed && node->details->unclean
+           && pe_can_fence(data_set, node);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a node requires shutdown
+ *
+ * \param[in] node          Node to check
+ *
+ * \return true if \p node should be shut down, otherwise false
+ */
+static bool
+needs_shutdown(pe_node_t *node)
+{
+    if (pe__is_guest_or_remote_node(node)) {
+       /* Do not send shutdown actions for Pacemaker Remote nodes.
+        * @TODO We might come up with a good use for this in the future.
+        */
+        return false;
+    }
+    return node->details->online && node->details->shutdown;
+}
+
+/*!
+ * \internal
  * \brief Track and order non-DC fencing
  *
  * \param[in] list    List of existing non-DC fencing actions
@@ -484,7 +521,7 @@ stage6(pe_working_set_t * data_set)
     pe_action_t *dc_down = NULL;
     pe_action_t *stonith_op = NULL;
     gboolean integrity_lost = FALSE;
-    gboolean need_stonith = TRUE;
+    bool need_stonith = true;
     GList *gIter;
     GList *stonith_ops = NULL;
     GList *shutdown_ops = NULL;
@@ -492,7 +529,7 @@ stage6(pe_working_set_t * data_set)
     crm_trace("Processing fencing and shutdown cases");
     if (!any_managed_resources(data_set)) {
         crm_notice("Delaying fencing operations until there are resources to manage");
-        need_stonith = FALSE;
+        need_stonith = false;
     }
 
     /* Check each node for stonith/shutdown */
@@ -512,12 +549,9 @@ stage6(pe_working_set_t * data_set)
 
         stonith_op = NULL;
 
-        if (node->details->unclean
-            && need_stonith && pe_can_fence(data_set, node)) {
-
+        if (needs_fencing(node, need_stonith, data_set)) {
             stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", FALSE, data_set);
             pe_warn("Scheduling Node %s for STONITH", node->details->uname);
-
             pcmk__order_vs_fence(stonith_op, data_set);
 
             // Track DC and non-DC fence actions separately
@@ -528,12 +562,7 @@ stage6(pe_working_set_t * data_set)
                                                 data_set);
             }
 
-        } else if (node->details->online && node->details->shutdown &&
-                /* TODO define what a shutdown op means for a remote node.
-                 * For now we do not send shutdown operations for remote nodes, but
-                 * if we can come up with a good use for this in the future, we will. */
-                    pe__is_guest_or_remote_node(node) == FALSE) {
-
+        } else if (needs_shutdown(node)) {
             pe_action_t *down_op = pcmk__new_shutdown_action(node, data_set);
 
             if (node->details->is_dc) {
