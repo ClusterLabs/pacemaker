@@ -410,40 +410,45 @@ schedule_resource_actions(pe_working_set_t *data_set)
     }
 }
 
-static gboolean
-is_managed(const pe_resource_t * rsc)
+/*!
+ * \internal
+ * \brief Check whether a resource or any of its descendants are managed
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if resource or any descendent is managed, otherwise false
+ */
+static bool
+is_managed(const pe_resource_t *rsc)
 {
-    GList *gIter = rsc->children;
-
     if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        return TRUE;
+        return true;
     }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        if (is_managed(child_rsc)) {
-            return TRUE;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        if (is_managed((pe_resource_t *) iter->data)) {
+            return true;
         }
     }
-
-    return FALSE;
+    return false;
 }
 
-static gboolean
-any_managed_resources(pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Check whether any resources in the cluster are managed
+ *
+ * \param[in] data_set  Cluster working set
+ *
+ * \return true if any resource is managed, otherwise false
+ */
+static bool
+any_managed_resources(pe_working_set_t *data_set)
 {
-
-    GList *gIter = data_set->resources;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        if (is_managed(rsc)) {
-            return TRUE;
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        if (is_managed((pe_resource_t *) iter->data)) {
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 /*
@@ -466,7 +471,7 @@ stage6(pe_working_set_t * data_set)
     pcmk__order_remote_connection_actions(data_set);
 
     crm_trace("Processing fencing and shutdown cases");
-    if (any_managed_resources(data_set) == FALSE) {
+    if (!any_managed_resources(data_set)) {
         crm_notice("Delaying fencing operations until there are resources to manage");
         need_stonith = FALSE;
     }
