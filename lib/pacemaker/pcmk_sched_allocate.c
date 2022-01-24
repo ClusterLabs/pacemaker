@@ -451,6 +451,30 @@ any_managed_resources(pe_working_set_t *data_set)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Track and order non-DC fencing
+ *
+ * \param[in] list    List of existing non-DC fencing actions
+ * \param[in] action  Fencing action to prepend to \p list
+ *
+ * \return (Possibly new) head of \p list
+ */
+static GList *
+add_nondc_fencing(GList *list, pe_action_t *action, pe_working_set_t *data_set)
+{
+    if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
+        && (list != NULL)) {
+        /* Concurrent fencing is disabled, so order each non-DC
+         * fencing in a chain. If there is any DC fencing or
+         * shutdown, it will be ordered after the last action in the
+         * chain later.
+         */
+        order_actions((pe_action_t *) list->data, action, pe_order_optional);
+    }
+    return g_list_prepend(list, action);
+}
+
 /*
  * Create dependencies for stonith and shutdown operations
  */
@@ -496,25 +520,12 @@ stage6(pe_working_set_t * data_set)
 
             pcmk__order_vs_fence(stonith_op, data_set);
 
+            // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {
-                // Remember if the DC is being fenced
                 dc_down = stonith_op;
-
             } else {
-
-                if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
-                    && (stonith_ops != NULL)) {
-                    /* Concurrent fencing is disabled, so order each non-DC
-                     * fencing in a chain. If there is any DC fencing or
-                     * shutdown, it will be ordered after the last action in the
-                     * chain later.
-                     */
-                    order_actions((pe_action_t *) stonith_ops->data,
-                                  stonith_op, pe_order_optional);
-                }
-
-                // Remember all non-DC fencing actions in a separate list
-                stonith_ops = g_list_prepend(stonith_ops, stonith_op);
+                stonith_ops = add_nondc_fencing(stonith_ops, stonith_op,
+                                                data_set);
             }
 
         } else if (node->details->online && node->details->shutdown &&
