@@ -465,11 +465,6 @@ stage6(pe_working_set_t * data_set)
     GList *stonith_ops = NULL;
     GList *shutdown_ops = NULL;
 
-    /* Remote ordering constraints need to happen prior to calculating fencing
-     * because it is one more place we can mark nodes as needing fencing.
-     */
-    pcmk__order_remote_connection_actions(data_set);
-
     crm_trace("Processing fencing and shutdown cases");
     if (!any_managed_resources(data_set)) {
         crm_notice("Delaying fencing operations until there are resources to manage");
@@ -741,6 +736,11 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
 
     allocate_resources(data_set);
     schedule_resource_actions(data_set);
+
+    /* Remote ordering constraints need to happen prior to calculating fencing
+     * because it is one more place we can mark nodes as needing fencing.
+     */
+    pcmk__order_remote_connection_actions(data_set);
 
     crm_trace("Processing fencing and shutdown cases");
     stage6(data_set);
