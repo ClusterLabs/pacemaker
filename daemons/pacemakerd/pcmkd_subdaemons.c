@@ -141,7 +141,6 @@ check_active_before_startup_processes(gpointer user_data)
     switch (rc) {
         case pcmk_rc_ok:
             pcmk_children[next_child].check_count = 0;
-            next_child++;
             subdaemon_check_progress = time(NULL);
             break;
         case pcmk_rc_ipc_pid_only: // This case: it was previously OK
@@ -178,9 +177,27 @@ check_active_before_startup_processes(gpointer user_data)
             /* go to the next child and see if
                we can make progress there
              */
-            next_child++;
             break;
         case pcmk_rc_ipc_unresponsive:
+            if (!pcmk_children[next_child].respawn) {
+                /* if a subdaemon is down and we don't want it
+                   to be restarted this is a success during
+                   shutdown. if it isn't restarted anymore
+                   due to MAX_RESPAWN it is
+                   rather no success.
+                 */
+                if (pcmk_children[next_child].respawn_count <= MAX_RESPAWN) {
+                    subdaemon_check_progress = time(NULL);
+                }
+            }
+            if (!pcmk_children[next_child].active_before_startup) {
+                crm_trace("found %s[%lld] missing - signal-handler "
+                          "will take care of it",
+                           pcmk_children[next_child].name,
+                           (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid));
+                break;
+            }
             if (pcmk_children[next_child].respawn) {
                 crm_err("%s[%lld] terminated",
                         pcmk_children[next_child].name,
@@ -194,24 +211,13 @@ check_active_before_startup_processes(gpointer user_data)
                                 pcmk_children[next_child].pid));
             }
             pcmk_process_exit(&(pcmk_children[next_child]));
-            if (!pcmk_children[next_child].respawn) {
-                /* if a subdaemon is down and we don't want it
-                   to be restarted this is a success during
-                   shutdown. if it isn't restarted anymore
-                   due to MAX_RESPAWN it is
-                   rather no success.
-                 */
-                if (pcmk_children[next_child].respawn_count <= MAX_RESPAWN) {
-                    subdaemon_check_progress = time(NULL);
-                }
-                next_child++;
-            }
             break;
         default:
             crm_exit(CRM_EX_FATAL);
             break;  /* static analysis/noreturn */
     }
 
+    next_child++;
     if (next_child >= PCMK__NELEM(pcmk_children)) {
         next_child = 0;
     }
@@ -285,6 +291,7 @@ pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
     child->active_before_startup = false;
+    child->check_count = 0;
 
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
@@ -307,8 +314,6 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_warn("One-off suppressing strict respawning of a child process %s,"
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
-        /* need to monitor how it evolves, and start new process if badly */
-        child->active_before_startup = true;
 
     } else {
         if (child->needs_cluster && !pcmkd_cluster_connected()) {
@@ -422,6 +427,7 @@ start_child(pcmk_child_t * child)
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
     child->active_before_startup = false;
+    child->check_count = 0;
 
     if (child->command == NULL) {
         crm_info("Nothing to do for child \"%s\"", child->name);
