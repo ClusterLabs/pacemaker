@@ -85,7 +85,8 @@ static int stonith_send_command(stonith_t *stonith, const char *op,
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
-
+static int stonith_api_del_notification(stonith_t *stonith,
+                                        const char *event);
 /*!
  * \brief Get agent namespace by name
  *
@@ -1218,6 +1219,18 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     return pcmk_ok;
 }
 
+static void
+del_notify_entry(gpointer data, gpointer user_data)
+{
+    stonith_notify_client_t *entry = data;
+    stonith_t * stonith = user_data;
+
+    if (!entry->delete) {
+        crm_debug("Removing callback for %s events", entry->event);
+        stonith_api_del_notification(stonith, entry->event);
+    }
+}
+
 static int
 stonith_api_del_notification(stonith_t * stonith, const char *event)
 {
@@ -1226,30 +1239,8 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
     stonith_private_t *private = stonith->st_private;
 
     if (event == NULL) {
-        while (true) {
-            stonith_notify_client_t *list_client;
-
-            list_item = private->notify_list;
-
-            if (list_item == NULL) {
-                break;
-            }
-
-            list_client = (stonith_notify_client_t *) list_item->data;
-
-            crm_debug("Removing callback for %s events", list_client->event);
-            stonith_set_notification(stonith, list_client->event, 0);
-
-            if (private->notify_refcnt) {
-                list_client->delete = TRUE;
-                private->notify_deletes = TRUE;
-            } else {
-                private->notify_list = g_list_remove(private->notify_list, list_client);
-                free(list_client);
-            }
-
-            crm_trace("Removed callback");
-        }
+        foreach_notify_entry(private, del_notify_entry, stonith);
+        crm_trace("Removed callback");
 
         return pcmk_ok;
     }
