@@ -774,7 +774,6 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
 
     pcmk__create_internal_constraints(data_set);
     pcmk__handle_rsc_config_changes(data_set);
-
     allocate_resources(data_set);
     schedule_resource_actions(data_set);
 
@@ -784,12 +783,10 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__order_remote_connection_actions(data_set);
 
     schedule_fencing_and_shutdowns(data_set);
-
     pcmk__apply_orderings(data_set);
     log_all_actions(data_set);
-
-    crm_trace("Create transition graph");
     pcmk__create_graph(data_set);
+
     if (get_crm_log_level() == LOG_TRACE) {
         log_unrunnable_actions(data_set);
     }
