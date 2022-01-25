@@ -223,30 +223,25 @@ directly. This allows them to run using a ``CIB_file`` without the cluster
 needing to be active.
 
 The main entry point for the scheduler code is
-``lib/pacemaker/pcmk_sched_messages.c:pcmk__schedule_actions()``. It sets
-defaults and calls a series of functions for each "stage" of the scheduling.
-(Some of the functions are named like ``stageN()`` but the code has evolved
-over time to where the numbers no longer make sense. A project is in progress
-to reorganize and rename them.)
+``lib/pacemaker/pcmk_sched_allocate.c:pcmk__schedule_actions()``. It sets
+defaults and calls a series of functions for the scheduling. Some key steps:
 
-* ``stage0()`` "unpacks" most of the CIB XML into data structures, and
-  determines the current cluster status. It also creates implicit location
-  constraints for the node health feature.
-* ``stage2()`` applies factors that make resources prefer certain nodes (such
-  as shutdown locks, location constraints, and stickiness).
-* ``pcmk__create_internal_constraints()`` creates internal constraints (such as
+* ``unpack_cib()`` parses most of the CIB XML into data structures, and
+  determines the current cluster status.
+* ``apply_node_criteria()`` applies factors that make resources prefer certain
+  nodes, such as shutdown locks, location constraints, and stickiness.
+* ``pcmk__create_internal_constraints()`` creates internal constraints, such as
   the implicit ordering for group members, or start actions being implicitly
-  ordered before promote actions).
-* ``stage4()`` "checks actions", which means processing resource history
-  entries in the CIB status section. This is used to decide whether certain
+  ordered before promote actions.
+* ``pcmk__handle_rsc_config_changes()`` processes resource history entries in
+  the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
   when a resource definition changes, etc.
-* ``stage5()`` allocates resources to nodes and creates actions (which might or
-  might not end up in the final graph).
-* ``stage6()`` creates implicit ordering constraints for resources running
-  across remote connections, and schedules fencing actions and shutdowns.
-* ``stage7()`` "updates actions", which means applying ordering constraints in
-  order to modify action attributes such as optional or required.
+* ``allocate_resources()`` assigns resources to nodes.
+* ``schedule_resource_actions()`` schedules resource-specific actions (which
+  might or might not end up in the final graph).
+* ``pcmk__apply_orderings()`` processes ordering constraints in order to modify
+  action attributes such as optional or required.
 * ``pcmk__create_graph()`` creates the transition graph.
 
 Challenges
@@ -266,7 +261,7 @@ Working with the scheduler is difficult. Challenges include:
   different points in the scheduling process, so you have to keep in mind
   whether information you're using at one point of the code can possibly change
   later. For example, data unpacked from the CIB can safely be used anytime
-  after ``stage0(),`` but actions may become optional or required anytime
+  after ``unpack_cib(),`` but actions may become optional or required anytime
   before ``pcmk__create_graph()``. There's no easy way to deal with this.
 * Many names of struct members, functions, etc., are suboptimal, but are part
   of the public API and cannot be changed until an API backward compatibility
@@ -303,9 +298,8 @@ XML, and determining the current or planned location of the resource.
 
 The allocation functions have more obscure capabilities needed for scheduling,
 such as processing location and ordering constraints. For example,
-``stage3()``, which creates internal constraints, simply calls the
-``internal_constraints()`` method for each top-level resource in the working
-set.
+``pcmk__create_internal_constraints()`` simply calls the
+``internal_constraints()`` method for each top-level resource in the cluster.
 
 .. index::
    single: pe_node_t
