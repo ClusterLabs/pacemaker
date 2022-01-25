@@ -66,8 +66,7 @@ extern gboolean stage6(pe_working_set_t * data_set);
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 extern void add_maintenance_update(pe_working_set_t *data_set);
-xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
-                                crm_time_t *now);
+xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input);
 
 extern const char *transition_idle_timeout;
 

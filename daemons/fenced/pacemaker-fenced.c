@@ -825,7 +825,7 @@ cib_devices_update(void)
     pe__set_working_set_flags(fenced_data_set, pe_flag_quick_location);
 
     cluster_status(fenced_data_set);
-    pcmk__schedule_actions(fenced_data_set, NULL, NULL);
+    pcmk__schedule_actions(fenced_data_set, NULL);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {

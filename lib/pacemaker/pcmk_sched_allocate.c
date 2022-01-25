@@ -738,11 +738,9 @@ log_all_actions(pe_working_set_t *data_set)
  *
  * \param[in,out] data_set  Cluster working set
  * \param[in]     xml_input CIB XML to use as scheduler input
- * \param[in]     now       Time to use for rule evaluation (or NULL for now)
  */
 xmlNode *
-pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
-                       crm_time_t *now)
+pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 {
     GList *gIter = NULL;
 
@@ -751,14 +749,9 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         set_working_set_defaults(data_set);
         data_set->input = xml_input;
-        data_set->now = now;
 
     } else {
         crm_trace("Already have status - reusing");
-    }
-
-    if (data_set->now == NULL) {
-        data_set->now = crm_time_new(NULL);
     }
 
     crm_trace("Calculate cluster status");

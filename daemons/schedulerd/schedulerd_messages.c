@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,7 +93,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     }
 
     if (process) {
-        pcmk__schedule_actions(sched_data_set, converted, NULL);
+        pcmk__schedule_actions(sched_data_set, converted);
     }
 
     // Get appropriate index into series[] array

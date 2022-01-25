@@ -355,7 +355,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
 
         data_set->input = input;
         set_effective_date(data_set, false, use_date);
-        pcmk__schedule_actions(data_set, input, NULL);
+        pcmk__schedule_actions(data_set, input);
         pe_reset_working_set(data_set);
     }
 
@@ -844,7 +844,6 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
-        crm_time_t *local_date = NULL;
         pcmk__output_t *logger_out = NULL;
 
         if (pcmk_all_flags_set(data_set->flags,
@@ -873,7 +872,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
             data_set->priv = logger_out;
         }
 
-        pcmk__schedule_actions(data_set, input, local_date);
+        pcmk__schedule_actions(data_set, input);
 
         if (logger_out == NULL) {
             out->end_list(out);

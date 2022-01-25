@@ -229,7 +229,7 @@ main(int argc, char **argv)
     if (cib_object == NULL) {
     } else if (status != NULL || options.use_live_cib) {
         /* live queries will always have a status section and can do a full simulation */
-        pcmk__schedule_actions(data_set, cib_object, NULL);
+        pcmk__schedule_actions(data_set, cib_object);
 
     } else {
         data_set->now = crm_time_new(NULL);
