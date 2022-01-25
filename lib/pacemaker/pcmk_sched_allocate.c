@@ -767,20 +767,20 @@ unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
  * \internal
  * \brief Run the scheduler for a given CIB
  *
+ * \param[in]     cib       CIB XML to use as scheduler input
  * \param[in,out] data_set  Cluster working set
- * \param[in]     xml_input CIB XML to use as scheduler input
  */
-xmlNode *
-pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
+void
+pcmk__schedule_actions(xmlNode *cib, pe_working_set_t *data_set)
 {
-    unpack_cib(xml_input, data_set);
+    unpack_cib(cib, data_set);
     pcmk__set_allocation_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
-
     if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
-        return data_set->graph;
+        return;
     }
+
     if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
          pcmk__is_daemon) {
         log_resource_details(data_set);
@@ -790,7 +790,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
     stage2(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
-        return NULL;
+        return;
     }
 
     pcmk__create_internal_constraints(data_set);
@@ -810,5 +810,4 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
     if (get_crm_log_level() == LOG_TRACE) {
         log_unrunnable_actions(data_set);
     }
-    return data_set->graph;
 }

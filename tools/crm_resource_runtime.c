@@ -1164,7 +1164,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(data_set, data_set->input);
+        pcmk__schedule_actions(data_set->input, data_set);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
@@ -1652,7 +1652,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             pe_free_working_set(data_set);
             return rc;
         }
-        pcmk__schedule_actions(data_set, data_set->input);
+        pcmk__schedule_actions(data_set->input, data_set);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

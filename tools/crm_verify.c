@@ -234,7 +234,7 @@ main(int argc, char **argv)
             // No status available, so do minimal checks
             pe__set_working_set_flags(data_set, pe_flag_check_config);
         }
-        pcmk__schedule_actions(data_set, cib_object);
+        pcmk__schedule_actions(cib_object, data_set);
     }
     pe_free_working_set(data_set);
 

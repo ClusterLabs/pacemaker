@@ -355,7 +355,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
 
         data_set->input = input;
         set_effective_date(data_set, false, use_date);
-        pcmk__schedule_actions(data_set, input);
+        pcmk__schedule_actions(input, data_set);
         pe_reset_working_set(data_set);
     }
 
@@ -872,7 +872,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
             data_set->priv = logger_out;
         }
 
-        pcmk__schedule_actions(data_set, input);
+        pcmk__schedule_actions(input, data_set);
 
         if (logger_out == NULL) {
             out->end_list(out);
