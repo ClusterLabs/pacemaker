@@ -525,7 +525,7 @@ schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, data_set);
 
-    pe_warn("Scheduling Node %s for STONITH", node->details->uname);
+    pe_warn("Scheduling node %s for fencing", node->details->uname);
     pcmk__order_vs_fence(fencing, data_set);
     return fencing;
 }
@@ -547,7 +547,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
     crm_trace("Scheduling fencing and shutdowns as needed");
     if (!have_managed) {
-        crm_notice("Delaying fencing operations until there are resources to manage");
+        crm_notice("No fencing will be done until there are resources to manage");
     }
 
     // Check each node for whether it needs fencing or shutdown
@@ -589,18 +589,20 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
-            pe_warn("Node %s is unclean!", node->details->uname);
+            pe_warn("Node %s is unclean but cannot be fenced",
+                    node->details->uname);
         }
     }
 
     if (integrity_lost) {
         if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-            pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+            pe_warn("Resource functionality and data integrity cannot be "
+                    "guaranteed (configure, enable, and test fencing to "
+                    "correct this)");
 
         } else if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
-            crm_notice("Cannot fence unclean nodes until quorum is"
-                       " attained (or no-quorum-policy is set to ignore)");
+            crm_notice("Unclean nodes will not be fenced until quorum is "
+                       "attained or no-quorum-policy is set to ignore");
         }
     }
 
