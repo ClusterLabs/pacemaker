@@ -530,68 +530,65 @@ schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
     return fencing;
 }
 
-/*
- * Create dependencies for stonith and shutdown operations
+/*!
+ * \internal
+ * \brief Create and order node fencing and shutdown actions
+ *
+ * \param[in] data_set  Cluster working set
  */
-gboolean
-stage6(pe_working_set_t * data_set)
+static void
+schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
 {
     pe_action_t *dc_down = NULL;
-    pe_action_t *stonith_op = NULL;
-    gboolean integrity_lost = FALSE;
-    bool need_stonith = true;
-    GList *gIter;
-    GList *stonith_ops = NULL;
+    bool integrity_lost = false;
+    bool have_managed = any_managed_resources(data_set);
+    GList *fencing_ops = NULL;
     GList *shutdown_ops = NULL;
 
-    crm_trace("Processing fencing and shutdown cases");
-    if (!any_managed_resources(data_set)) {
+    crm_trace("Scheduling fencing and shutdowns as needed");
+    if (!have_managed) {
         crm_notice("Delaying fencing operations until there are resources to manage");
-        need_stonith = false;
     }
 
-    /* Check each node for stonith/shutdown */
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    // Check each node for whether it needs fencing or shutdown
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        pe_action_t *fencing = NULL;
 
         /* Guest nodes are "fenced" by recovering their container resource,
          * so handle them separately.
          */
         if (pe__is_guest_node(node)) {
-            if (node->details->remote_requires_reset && need_stonith
+            if (node->details->remote_requires_reset && have_managed
                 && pe_can_fence(data_set, node)) {
                 pcmk__fence_guest(node, data_set);
             }
             continue;
         }
 
-        stonith_op = NULL;
-
-        if (needs_fencing(node, need_stonith, data_set)) {
-            stonith_op = schedule_fencing(node, data_set);
+        if (needs_fencing(node, have_managed, data_set)) {
+            fencing = schedule_fencing(node, data_set);
 
             // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {
-                dc_down = stonith_op;
+                dc_down = fencing;
             } else {
-                stonith_ops = add_nondc_fencing(stonith_ops, stonith_op,
-                                                data_set);
+                fencing_ops = add_nondc_fencing(fencing_ops, fencing, data_set);
             }
 
         } else if (needs_shutdown(node)) {
             pe_action_t *down_op = pcmk__new_shutdown_action(node, data_set);
 
+            // Track DC and non-DC shutdown actions separately
             if (node->details->is_dc) {
-                // Remember if the DC is being shut down
                 dc_down = down_op;
             } else {
-                // Remember non-DC shutdowns for later ordering
                 shutdown_ops = g_list_prepend(shutdown_ops, down_op);
             }
         }
 
-        if (node->details->unclean && stonith_op == NULL) {
-            integrity_lost = TRUE;
+        if ((fencing == NULL) && node->details->unclean) {
+            integrity_lost = true;
             pe_warn("Node %s is unclean!", node->details->uname);
         }
     }
@@ -615,7 +612,7 @@ stage6(pe_working_set_t * data_set)
          * clone stop that's also ordered before the shutdowns, thus leading to
          * a graph loop.
          */
-        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
             pcmk__order_after_all(dc_down, shutdown_ops);
         }
 
@@ -625,20 +622,19 @@ stage6(pe_working_set_t * data_set)
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
-            pcmk__order_after_all(dc_down, stonith_ops);
-        } else if (stonith_ops) {
+            pcmk__order_after_all(dc_down, fencing_ops);
+        } else if (fencing_ops != NULL) {
             /* Without concurrent fencing, the non-DC fencing actions are
              * already ordered relative to each other, so we just need to order
              * the DC fencing after the last action in the chain (which is the
              * first item in the list).
              */
-            order_actions((pe_action_t *) stonith_ops->data, dc_down,
+            order_actions((pe_action_t *) fencing_ops->data, dc_down,
                           pe_order_optional);
         }
     }
-    g_list_free(stonith_ops);
+    g_list_free(fencing_ops);
     g_list_free(shutdown_ops);
-    return TRUE;
 }
 
 static void
@@ -787,8 +783,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
      */
     pcmk__order_remote_connection_actions(data_set);
 
-    crm_trace("Processing fencing and shutdown cases");
-    stage6(data_set);
+    schedule_fencing_and_shutdowns(data_set);
 
     pcmk__apply_orderings(data_set);
     log_all_actions(data_set);
