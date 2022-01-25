@@ -821,14 +821,12 @@ cib_devices_update(void)
              crm_element_value(local_cib, XML_ATTR_GENERATION),
              crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 
-    CRM_ASSERT(fenced_data_set != NULL);
-    fenced_data_set->input = local_cib;
-    fenced_data_set->now = crm_time_new(NULL);
+    if (fenced_data_set->now != NULL) {
+        crm_time_free(fenced_data_set->now);
+        fenced_data_set->now = NULL;
+    }
     fenced_data_set->localhost = stonith_our_uname;
-    pe__set_working_set_flags(fenced_data_set, data_set_flags);
-
-    cluster_status(fenced_data_set);
-    pcmk__schedule_actions(NULL, data_set_flags, fenced_data_set);
+    pcmk__schedule_actions(local_cib, data_set_flags, fenced_data_set);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
