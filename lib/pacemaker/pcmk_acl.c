@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,11 +19,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
-#if HAVE_LIBXSLT
-#  include <libxslt/transform.h>
-#  include <libxslt/variables.h>
-#  include <libxslt/xsltutils.h>
-#endif
+#include <libxslt/transform.h>
+#include <libxslt/variables.h>
+#include <libxslt/xsltutils.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -210,7 +208,6 @@ int
 pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
                         xmlChar **doc_txt_ptr)
 {
-#if HAVE_LIBXSLT
     xmlDoc *xslt_doc;
     xsltStylesheet *xslt;
     xsltTransformContext *xslt_ctxt;
@@ -322,7 +319,4 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     }
     xsltFreeStylesheet(xslt);
     return ret;
-#else
-    return EINVAL;
-#endif
 }
