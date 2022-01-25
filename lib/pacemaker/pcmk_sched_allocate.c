@@ -600,15 +600,7 @@ stage6(pe_working_set_t * data_set)
          * a graph loop.
          */
         if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
-            for (gIter = shutdown_ops; gIter != NULL; gIter = gIter->next) {
-                pe_action_t *node_stop = (pe_action_t *) gIter->data;
-
-                crm_debug("Ordering shutdown on %s before %s on DC %s",
-                          node_stop->node->details->uname,
-                          dc_down->task, dc_down->node->details->uname);
-
-                order_actions(node_stop, dc_down, pe_order_optional);
-            }
+            pcmk__order_after_all(dc_down, shutdown_ops);
         }
 
         // Order any non-DC fencing before any DC fencing or shutdown
@@ -617,10 +609,7 @@ stage6(pe_working_set_t * data_set)
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
-            for (gIter = stonith_ops; gIter != NULL; gIter = gIter->next) {
-                order_actions((pe_action_t *) gIter->data, dc_down,
-                              pe_order_optional);
-            }
+            pcmk__order_after_all(dc_down, stonith_ops);
         } else if (stonith_ops) {
             /* Without concurrent fencing, the non-DC fencing actions are
              * already ordered relative to each other, so we just need to order

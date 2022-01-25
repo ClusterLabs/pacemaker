@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1539,4 +1539,27 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
                    (GFunc) pcmk__update_action_for_orderings, data_set);
 
     pcmk__disable_invalid_orderings(data_set);
+}
+
+/*!
+ * \internal
+ * \brief Order a given action after each action in a given list
+ *
+ * \param[in] after   "After" action
+ * \param[in] list    List of "before" actions
+ */
+void
+pcmk__order_after_all(pe_action_t *after, GList *list)
+{
+    const char *after_desc = (after->task == NULL)? after->uuid : after->task;
+
+    for (GList *iter = list; iter != NULL; iter = iter->next) {
+        pe_action_t *before = (pe_action_t *) iter->data;
+        const char *before_desc = before->task? before->task : before->uuid;
+
+        crm_debug("Ordering %s on %s before %s on %s",
+                  before_desc, crm_str(before->node->details->uname),
+                  after_desc, crm_str(after->node->details->uname));
+        order_actions(before, after, pe_order_optional);
+    }
 }
