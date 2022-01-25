@@ -715,6 +715,27 @@ log_all_actions(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Log all required but unrunnable actions at trace level
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+log_unrunnable_actions(pe_working_set_t *data_set)
+{
+    const uint64_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+
+    crm_trace("Required but unrunnable actions:");
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        if (!pcmk_any_flags_set(action->flags, flags)) {
+            pcmk__log_action("\t", action, true);
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Unpack the CIB for scheduling
  *
  * \param[in] cib       CIB XML to unpack (may be NULL if previously unpacked)
@@ -752,8 +773,6 @@ unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
 xmlNode *
 pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 {
-    GList *gIter = NULL;
-
     unpack_cib(xml_input, data_set);
     pcmk__set_allocation_methods(data_set);
     pcmk__apply_node_health(data_set);
@@ -788,22 +807,8 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 
     crm_trace("Create transition graph");
     pcmk__create_graph(data_set);
-
-    crm_trace("=#=#=#=#= Summary =#=#=#=#=");
-    crm_trace("\t========= Set %d (Un-runnable) =========", -1);
     if (get_crm_log_level() == LOG_TRACE) {
-        gIter = data_set->actions;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *action = (pe_action_t *) gIter->data;
-
-            if (!pcmk_any_flags_set(action->flags,
-                                    pe_action_optional
-                                    |pe_action_runnable
-                                    |pe_action_pseudo)) {
-                pcmk__log_action("\t", action, true);
-            }
-        }
+        log_unrunnable_actions(data_set);
     }
-
     return data_set->graph;
 }
