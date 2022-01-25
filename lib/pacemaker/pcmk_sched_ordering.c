@@ -690,6 +690,7 @@ pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
     }
 
     order = calloc(1, sizeof(pe__ordering_t));
+    CRM_ASSERT(order != NULL);
 
     order->id = data_set->order_id++;
     order->type = type;
