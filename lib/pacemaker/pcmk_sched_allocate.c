@@ -512,6 +512,24 @@ add_nondc_fencing(GList *list, pe_action_t *action, pe_working_set_t *data_set)
     return g_list_prepend(list, action);
 }
 
+/*!
+ * \internal
+ * \brief Schedule a node for fencing
+ *
+ * \param[in] node      Node that requires fencing
+ * \param[in] data_set  Cluster working set
+ */
+static pe_action_t *
+schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
+{
+    pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
+                                       FALSE, data_set);
+
+    pe_warn("Scheduling Node %s for STONITH", node->details->uname);
+    pcmk__order_vs_fence(fencing, data_set);
+    return fencing;
+}
+
 /*
  * Create dependencies for stonith and shutdown operations
  */
@@ -550,9 +568,7 @@ stage6(pe_working_set_t * data_set)
         stonith_op = NULL;
 
         if (needs_fencing(node, need_stonith, data_set)) {
-            stonith_op = pe_fence_op(node, NULL, FALSE, "node is unclean", FALSE, data_set);
-            pe_warn("Scheduling Node %s for STONITH", node->details->uname);
-            pcmk__order_vs_fence(stonith_op, data_set);
+            stonith_op = schedule_fencing(node, data_set);
 
             // Track DC and non-DC fence actions separately
             if (node->details->is_dc) {
