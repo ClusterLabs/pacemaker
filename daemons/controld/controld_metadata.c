@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -369,9 +369,11 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {
-        crm_warn("Failed to get metadata for %s (%s:%s:%s): %s",
-                 rsc->id, rsc->standard, rsc->provider, rsc->type,
-                 pcmk_strerror(rc));
+        crm_warn("Failed to get metadata for %s (%s%s%s:%s): %s",
+                 rsc->id, rsc->standard,
+                 ((rsc->provider == NULL)? "" : ":"),
+                 ((rsc->provider == NULL)? "" : rsc->provider),
+                 rsc->type, pcmk_strerror(rc));
         return NULL;
     }
 
@@ -379,8 +381,9 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                                      metadata_str);
     free(metadata_str);
     if (metadata == NULL) {
-        crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                 rsc->id, rsc->standard, rsc->provider, rsc->type);
+        crm_warn("Failed to update metadata for %s (%s%s%s:%s)",
+                 rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+                 ((rsc->provider == NULL)? "" : rsc->provider), rsc->type);
     }
     return metadata;
 }
