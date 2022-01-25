@@ -715,6 +715,35 @@ log_all_actions(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Unpack the CIB for scheduling
+ *
+ * \param[in] cib       CIB XML to unpack (may be NULL if previously unpacked)
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+        crm_trace("Reusing previously calculated cluster status");
+        return;
+    }
+
+    CRM_ASSERT(cib != NULL);
+    crm_trace("Calculating cluster status");
+
+    /* This will zero the entire struct without freeing anything first, so
+     * callers should never call pcmk__schedule_actions() with a populated data
+     * set unless pe_flag_have_status is set (i.e. cluster_status() was
+     * previously called, whether directly or via pcmk__schedule_actions()).
+     */
+    set_working_set_defaults(data_set);
+
+    data_set->input = cib;
+    cluster_status(data_set); // Sets pe_flag_have_status
+}
+
+/*!
+ * \internal
  * \brief Run the scheduler for a given CIB
  *
  * \param[in,out] data_set  Cluster working set
@@ -725,18 +754,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 {
     GList *gIter = NULL;
 
-    CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
-
-    // Unpack the CIB
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
-        crm_trace("Calculating cluster status");
-        set_working_set_defaults(data_set);
-        data_set->input = xml_input;
-        cluster_status(data_set);
-    } else {
-        crm_trace("Already have status - reusing");
-    }
-
+    unpack_cib(xml_input, data_set);
     pcmk__set_allocation_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);
