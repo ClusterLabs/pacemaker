@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -618,12 +618,11 @@ internal_stonith_action_execute(stonith_action_t * action)
     }
 
     if (action->async) {
-        /* async */
-        if (services_action_async_fork_notify(svc_action,
+        // We never create a recurring action, so this should always return TRUE
+        CRM_LOG_ASSERT(services_action_async_fork_notify(svc_action,
                                               &stonith_action_async_done,
-                                              &stonith_action_async_forked)) {
-            return pcmk_ok;
-        }
+                                              &stonith_action_async_forked));
+        return pcmk_ok;
 
     } else if (services_action_sync(svc_action)) { // sync success
         rc = pcmk_ok;
