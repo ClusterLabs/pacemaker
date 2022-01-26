@@ -304,7 +304,7 @@ match_down_event(const char *target)
              gIter2 = gIter2->next) {
 
             match = (crm_action_t*)gIter2->data;
-            if (pcmk_is_set(match->flags, pcmk__graph_action_confirmed)) {
+            if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
                 xpath_ret = xpath_search(match->xml, xpath);
                 if (numXpathResults(xpath_ret) < 1) {
                     match = NULL;

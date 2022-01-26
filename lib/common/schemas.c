@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,13 +17,10 @@
 #include <stdarg.h>
 
 #include <libxml/relaxng.h>
-
-#if HAVE_LIBXSLT
-#  include <libxslt/xslt.h>
-#  include <libxslt/transform.h>
-#  include <libxslt/security.h>
-#  include <libxslt/xsltutils.h>
-#endif
+#include <libxslt/xslt.h>
+#include <libxslt/transform.h>
+#include <libxslt/security.h>
+#include <libxslt/xsltutils.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -735,8 +732,6 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
     return FALSE;
 }
 
-#if HAVE_LIBXSLT
-
 static void
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
@@ -1015,8 +1010,6 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
     return final;
 }
 
-#endif  /* HAVE_LIBXSLT */
-
 const char *
 get_schema_name(int version)
 {
@@ -1146,9 +1139,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                            known_schemas[lpc].name, known_schemas[next].name,
                            known_schemas[lpc].transform);
 
-#if HAVE_LIBXSLT
                 upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
-#endif
                 if (upgrade == NULL) {
                     crm_err("Transformation %s.xsl failed",
                             known_schemas[lpc].transform);
