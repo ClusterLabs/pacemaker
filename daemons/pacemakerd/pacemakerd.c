@@ -47,6 +47,7 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features(pcmk__output_t *out, va_list args) {
     out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
@@ -54,6 +55,7 @@ pacemakerd_features(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
