@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -858,8 +858,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         clone_data->promote_notify = pcmk__clone_notif_pseudo_ops(rsc,
                                                                   RSC_PROMOTE,
                                                                   action,
-                                                                  action_complete,
-                                                                  data_set);
+                                                                  action_complete);
     }
 
     /* demote */
@@ -874,8 +873,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         clone_data->demote_notify = pcmk__clone_notif_pseudo_ops(rsc,
                                                                  RSC_DEMOTE,
                                                                  action,
-                                                                 action_complete,
-                                                                 data_set);
+                                                                 action_complete);
 
         if (clone_data->promote_notify) {
             /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day

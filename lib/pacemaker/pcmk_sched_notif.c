@@ -308,14 +308,12 @@ new_notify_pseudo_action(pe_resource_t *rsc, const pe_action_t *action,
  * \param[in] op            Action that notification is for
  * \param[in] notify_done   Parent pseudo-action for notifications complete
  * \param[in] n_data        Notification values to add to action meta-data
- * \param[in] data_set      Cluster working set
  *
  * \return Newly created notify action
  */
 static pe_action_t *
 new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
-                  pe_action_t *notify_done, notify_data_t *n_data,
-                  pe_working_set_t *data_set)
+                  pe_action_t *notify_done, notify_data_t *n_data)
 {
     char *key = NULL;
     pe_action_t *notify_action = NULL;
@@ -351,7 +349,7 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
     key = pcmk__notify_key(rsc->id, value, task);
     notify_action = custom_action(rsc, key, op->task, node,
                                   pcmk_is_set(op->flags, pe_action_optional),
-                                  TRUE, data_set);
+                                  TRUE, rsc->cluster);
 
     // Add meta-data to notify action
     g_hash_table_foreach(op->meta, copy_meta_to_notify, notify_action);
@@ -370,17 +368,16 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
  * \param[in] rsc           Clone instance that notification is for
  * \param[in] node          Node that notification is for
  * \param[in] n_data        Notification values to add to action meta-data
- * \param[in] data_set      Cluster working set
  */
 static void
 new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
-                       notify_data_t *n_data, pe_working_set_t *data_set)
+                       notify_data_t *n_data)
 {
     pe_action_t *notify = NULL;
 
     // Create the "post-" notify action for specified instance
     notify = new_notify_action(rsc, node, n_data->post, n_data->post_done,
-                               n_data, data_set);
+                               n_data);
     if (notify != NULL) {
         notify->priority = INFINITY;
     }
@@ -431,14 +428,12 @@ new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
  * \param[in] complete  If not NULL, create a "post-" pseudo-action ordered
  *                      after this action, and a "post-" complete pseudo-action
  *                      ordered after that
- * \param[in] data_set  Cluster working set
  *
  * \return Newly created notification data
  */
 notify_data_t *
 pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                             pe_action_t *action, pe_action_t *complete,
-                             pe_working_set_t *data_set)
+                             pe_action_t *action, pe_action_t *complete)
 {
     notify_data_t *n_data = NULL;
 
@@ -655,11 +650,9 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
  *
  * \param[in]     rsc       Resource that notification is for
  * \param[in,out] n_data    Notification data
- * \param[in]     data_set  Cluster working set
  */
 static void
-add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data,
-               pe_working_set_t *data_set)
+add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data)
 {
     bool required = false; // Whether to make notify actions required
     char *rsc_list = NULL;
@@ -745,10 +738,10 @@ add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data,
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
     if (pcmk__str_eq("host", source, pcmk__str_none)) {
-        get_node_names(data_set->nodes, &node_list, &metal_list);
+        get_node_names(rsc->cluster->nodes, &node_list, &metal_list);
         add_notify_env_free(n_data, "notify_all_hosts", metal_list);
     } else {
-        get_node_names(data_set->nodes, &node_list, NULL);
+        get_node_names(rsc->cluster->nodes, &node_list, NULL);
     }
     add_notify_env_free(n_data, "notify_all_uname", node_list);
 
@@ -791,11 +784,9 @@ find_remote_start(pe_action_t *action)
  *
  * \param[in] rsc       Clone or clone instance that notification is for
  * \param[in] n_data    Clone notification data for some action
- * \param[in] data_set  Cluster working set
  */
 static void
-create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
-                      pe_working_set_t *data_set)
+create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
 {
     GList *iter = NULL;
     pe_action_t *stop = NULL;
@@ -804,11 +795,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
 
     // If this is a clone, call recursively for each instance
     if (rsc->children != NULL) {
-        for (iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
-
-            create_notify_actions(child, n_data, data_set);
-        }
+        g_list_foreach(rsc->children, (GFunc) create_notify_actions, n_data);
         return;
     }
 
@@ -883,11 +870,11 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
             }
 
             new_notify_action(rsc, current_node, n_data->pre,
-                              n_data->pre_done, n_data, data_set);
+                              n_data->pre_done, n_data);
 
             if ((task == action_demote) || (stop == NULL)
                 || pcmk_is_set(stop->flags, pe_action_optional)) {
-                new_post_notify_action(rsc, current_node, n_data, data_set);
+                new_post_notify_action(rsc, current_node, n_data);
             }
         }
     }
@@ -919,9 +906,9 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
             || pcmk_is_set(start->flags, pe_action_optional)) {
 
             new_notify_action(rsc, rsc->allocated_to, n_data->pre,
-                              n_data->pre_done, n_data, data_set);
+                              n_data->pre_done, n_data);
         }
-        new_post_notify_action(rsc, rsc->allocated_to, n_data, data_set);
+        new_post_notify_action(rsc, rsc->allocated_to, n_data);
     }
 }
 
@@ -939,8 +926,8 @@ pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
         return;
     }
     collect_resource_data(rsc, true, n_data);
-    add_notif_keys(rsc, n_data, rsc->cluster);
-    create_notify_actions(rsc, n_data, rsc->cluster);
+    add_notif_keys(rsc, n_data);
+    create_notify_actions(rsc, n_data);
 }
 
 /*!
@@ -980,21 +967,18 @@ pcmk__free_notification_data(notify_data_t *n_data)
  * \param[in] stop        Stop action implied by fencing
  * \param[in] rsc         Clone resource that notification is for
  * \param[in] stonith_op  Fencing action that implies \p stop
- * \param[in] data_set    Cluster working set
  */
 void
 pcmk__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
-                                 pe_action_t *stonith_op,
-                                 pe_working_set_t *data_set)
+                                 pe_action_t *stonith_op)
 {
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op,
-                                          data_set);
+    n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
     collect_resource_data(rsc, false, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
-    create_notify_actions(uber_parent(rsc), n_data, data_set);
+    create_notify_actions(uber_parent(rsc), n_data);
     pcmk__free_notification_data(n_data);
 }

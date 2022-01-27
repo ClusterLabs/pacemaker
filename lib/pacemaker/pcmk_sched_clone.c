@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -925,7 +925,7 @@ clone_create_pseudo_actions(
 
     if (start_notify != NULL && *start_notify == NULL) {
         *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
-                                                     started, data_set);
+                                                     started);
     }
 
     /* stop */
@@ -939,7 +939,7 @@ clone_create_pseudo_actions(
 
     if (stop_notify != NULL && *stop_notify == NULL) {
         *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
-                                                    stopped, data_set);
+                                                    stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
