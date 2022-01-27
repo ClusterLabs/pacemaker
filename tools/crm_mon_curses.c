@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -436,8 +437,8 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t",
-                  "stonith_history_t *", "gboolean", "unsigned int",
-                  "unsigned int", "const char *", "GList *", "GList *")
+                  "stonith_history_t *", "gboolean", "uint32_t", "uint32_t",
+                  "const char *", "GList *", "GList *")
 static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
