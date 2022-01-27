@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.3-b133b3f19797c00f9189f4b66b513963f9d25db9"/>
-        <nvpair id="cib-bootstrap-options-pe-node-health-strategy" name="pe-node-health-strategy" value="only-green"/>
+        <nvpair id="cib-bootstrap-options-node-health-strategy" name="node-health-strategy" value="only-green"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
