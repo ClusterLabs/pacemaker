@@ -935,11 +935,12 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data,
 void
 pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
-    if (n_data != NULL) {
-        collect_resource_data(rsc, true, n_data);
-        add_notif_keys(rsc, n_data, rsc->cluster);
-        create_notify_actions(rsc, n_data, rsc->cluster);
+    if ((rsc == NULL) || (n_data == NULL)) {
+        return;
     }
+    collect_resource_data(rsc, true, n_data);
+    add_notif_keys(rsc, n_data, rsc->cluster);
+    create_notify_actions(rsc, n_data, rsc->cluster);
 }
 
 /*!
