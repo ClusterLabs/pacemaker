@@ -72,7 +72,7 @@ static void search_devices_record_result(struct device_search_s *search, const c
 
 static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
-static int stonith_level_kind(xmlNode *level);
+static enum fenced_target_by unpack_level_kind(xmlNode *level);
 
 typedef struct async_command_s {
 
@@ -1505,55 +1505,52 @@ init_topology_list(void)
     }
 }
 
-char *stonith_level_key(xmlNode *level, int mode)
+char *
+stonith_level_key(xmlNode *level, enum fenced_target_by mode)
 {
-    if(mode == -1) {
-        mode = stonith_level_kind(level);
+    if (mode == fenced_target_by_unknown) {
+        mode = unpack_level_kind(level);
     }
-
-    switch(mode) {
-        case 0:
+    switch (mode) {
+        case fenced_target_by_name:
             return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET);
-        case 1:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
-        case 2:
-            {
-                const char *name = crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
-                const char *value = crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE);
 
-                if(name && value) {
-                    return crm_strdup_printf("%s=%s", name, value);
-                }
-            }
+        case fenced_target_by_pattern:
+            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
+
+        case fenced_target_by_attribute:
+            return crm_strdup_printf("%s=%s",
+                crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE),
+                crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE));
+
         default:
-            return crm_strdup_printf("Unknown-%d-%s", mode, ID(level));
+            return crm_strdup_printf("unknown-%s", ID(level));
     }
 }
 
+/*!
+ * \internal
+ * \brief Parse target identification from topology level XML
+ *
+ * \param[in] level  Topology level XML to parse
+ *
+ * \return How to identify target of \p level
+ */
 static int
-stonith_level_kind(xmlNode *level)
+unpack_level_kind(xmlNode *level)
 {
-    int mode = 0;
-    const char *target = crm_element_value(level, XML_ATTR_STONITH_TARGET);
-
-    if(target == NULL) {
-        mode++;
-        target = crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN);
+    if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
+        return fenced_target_by_name;
     }
-
-    if(stand_alone == FALSE && target == NULL) {
-
-        mode++;
-
-        if(crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) == NULL) {
-            mode++;
-
-        } else if(crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL) {
-            mode++;
-        }
+    if (crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN) != NULL) {
+        return fenced_target_by_pattern;
     }
-
-    return mode;
+    if (!stand_alone /* if standalone, there's no attribute manager */
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL)) {
+        return fenced_target_by_attribute;
+    }
+    return fenced_target_by_unknown;
 }
 
 static stonith_key_value_t *
@@ -1601,7 +1598,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 {
     int id = 0;
     xmlNode *level;
-    int mode;
+    enum fenced_target_by mode;
     char *target;
 
     stonith_topology_t *tp;
@@ -1629,8 +1626,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         return;
     }
 
-    mode = stonith_level_kind(level);
-
+    mode = unpack_level_kind(level);
     target = stonith_level_key(level, mode);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
@@ -1639,7 +1635,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure a valid target was specified
-    if ((mode < 0) || (mode > 2)) {
+    if (mode == fenced_target_by_unknown) {
         crm_warn("Ignoring topology level registration without valid target");
         free(target);
         crm_log_xml_warn(level, "Bad level");
@@ -1676,7 +1672,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s (%d) to the topology (%d active entries)",
-                  target, mode, g_hash_table_size(topology));
+                  target, (int) mode, g_hash_table_size(topology));
     } else {
         free(target);
     }
@@ -1740,7 +1736,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         return;
     }
 
-    target = stonith_level_key(level, -1);
+    target = stonith_level_key(level, fenced_target_by_unknown);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
     // Ensure level ID is in allowed range

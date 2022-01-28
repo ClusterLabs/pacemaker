@@ -502,7 +502,7 @@ handle_topology_change(xmlNode *match, bool remove)
 
     if(remove) {
         int index = 0;
-        char *key = stonith_level_key(match, -1);
+        char *key = stonith_level_key(match, fenced_target_by_unknown);
 
         crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
         topology_remove_helper(key, index);
@@ -527,7 +527,7 @@ remove_fencing_topology(xmlXPathObjectPtr xpathObj)
         if (match && crm_element_value(match, XML_DIFF_MARKER)) {
             /* Deletion */
             int index = 0;
-            char *target = stonith_level_key(match, -1);
+            char *target = stonith_level_key(match, fenced_target_by_unknown);
 
             crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
             if (target == NULL) {

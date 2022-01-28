@@ -167,6 +167,14 @@ enum st_client_flags {
     st_callback_notify_history_synced = (UINT64_C(1) << 6)
 };
 
+// How the user specified the target of a topology level
+enum fenced_target_by {
+    fenced_target_by_unknown = -1,  // Invalid or not yet parsed
+    fenced_target_by_name,          // By target name
+    fenced_target_by_pattern,       // By a pattern matching target names
+    fenced_target_by_attribute,     // By a node attribute/value on target
+};
+
 /*
  * Complex fencing requirements are specified via fencing topologies.
  * A topology consists of levels; each level is a list of fencing devices.
@@ -182,7 +190,7 @@ enum st_client_flags {
  * Topology levels start from 1, so levels[0] is unused and always NULL.
  */
 typedef struct stonith_topology_s {
-    int kind;
+    enum fenced_target_by kind; // How target was specified
 
     /*! Node name regex or attribute name=value for which topology applies */
     char *target;

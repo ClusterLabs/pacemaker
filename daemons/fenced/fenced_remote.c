@@ -829,8 +829,8 @@ topology_matches(const stonith_topology_t *tp, const char *node)
     regex_t r_patt;
 
     CRM_CHECK(node && tp && tp->target, return FALSE);
-    switch(tp->kind) {
-        case 2:
+    switch (tp->kind) {
+        case fenced_target_by_attribute:
             /* This level targets by attribute, so tp->target is a NAME=VALUE pair
              * of a permanent attribute applied to targeted nodes. The test below
              * relies on the locally cached copy of the CIB, so if fencing needs to
@@ -842,11 +842,11 @@ topology_matches(const stonith_topology_t *tp, const char *node)
                 return TRUE;
             }
             break;
-        case 1:
-            /* This level targets by name, so tp->target is a regular expression
-             * matching names of nodes to be targeted.
-             */
 
+        case fenced_target_by_pattern:
+            /* This level targets node names matching a pattern, so tp->target
+             * (and tp->target_pattern) is a regular expression.
+             */
             if (regcomp(&r_patt, tp->target_pattern, REG_EXTENDED|REG_NOSUB)) {
                 crm_info("Bad regex '%s' for fencing level", tp->target);
             } else {
@@ -859,9 +859,13 @@ topology_matches(const stonith_topology_t *tp, const char *node)
                 }
             }
             break;
-        case 0:
+
+        case fenced_target_by_name:
             crm_trace("Testing %s against %s", node, tp->target);
             return pcmk__str_eq(tp->target, node, pcmk__str_casei);
+
+        default:
+            break;
     }
     crm_trace("No match for %s with %s", node, tp->target);
     return FALSE;
