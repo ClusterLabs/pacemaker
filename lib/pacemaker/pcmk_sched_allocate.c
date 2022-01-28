@@ -756,6 +756,9 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input)
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
+    if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
+        return data_set->graph;
+    }
     if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
          pcmk__is_daemon) {
         log_resource_details(data_set);
