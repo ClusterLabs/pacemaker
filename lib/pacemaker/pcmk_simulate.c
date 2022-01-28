@@ -141,16 +141,17 @@ print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
+    crm_exit_t stonith_rc = 0;
 
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
+    show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
 
     all = g_list_prepend(all, (gpointer) "*");
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, 0, NULL, FALSE, section_opts,
-                 show_opts | pcmk_show_inactive_rscs | pcmk_show_failed_detail,
-                 NULL, all, all);
+    out->message(out, "cluster-status", data_set, stonith_rc, NULL, FALSE,
+                 section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
     g_list_free(all);

@@ -1463,7 +1463,8 @@ node_html(pcmk__output_t *out, va_list args) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
                 PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources");
 
-                out->message(out, crm_map_element_name(rsc->xml), show_opts | pcmk_show_rsc_only,
+                show_opts |= pcmk_show_rsc_only;
+                out->message(out, crm_map_element_name(rsc->xml), show_opts,
                              rsc, only_node, only_rsc);
             }
 
@@ -1538,7 +1539,9 @@ node_text(pcmk__output_t *out, va_list args) {
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
                     pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
-                    out->message(out, crm_map_element_name(rsc->xml), show_opts | pcmk_show_rsc_only,
+
+                    show_opts |= pcmk_show_rsc_only;
+                    out->message(out, crm_map_element_name(rsc->xml), show_opts,
                                  rsc, only_node, only_rsc);
                 }
 
@@ -1611,7 +1614,9 @@ node_xml(pcmk__output_t *out, va_list args) {
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-                out->message(out, crm_map_element_name(rsc->xml), show_opts | pcmk_show_rsc_only,
+
+                show_opts |= pcmk_show_rsc_only;
+                out->message(out, crm_map_element_name(rsc->xml), show_opts,
                              rsc, only_node, only_rsc);
             }
         }
@@ -2883,9 +2888,10 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+            uint32_t show_opts = pe_print_pending;
 
-            out->message(out, crm_map_element_name(rsc->xml),
-                         pe_print_pending, rsc, all, all);
+            out->message(out, crm_map_element_name(rsc->xml), show_opts,
+                         rsc, all, all);
         }
 
         g_list_free(all);
