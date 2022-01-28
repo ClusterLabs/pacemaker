@@ -14,6 +14,7 @@
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
+#include <crm/common/results.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -151,7 +152,7 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int", "const char *")
+                  "const char *", "const char *", "crm_exit_t", "const char *")
 static int
 agent_status_default(pcmk__output_t *out, va_list args) {
     int status = va_arg(args, int);
@@ -160,7 +161,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
     const char *class = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
     const char *type = va_arg(args, const char *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
     if (status == PCMK_EXEC_DONE) {
@@ -173,7 +174,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
                   class,
                   ((provider == NULL)? "" : ":"),
                   ((provider == NULL)? "" : provider),
-                  type, rc, services_ocf_exitcode_str(rc),
+                  type, (int) rc, services_ocf_exitcode_str((int) rc),
                   ((exit_reason == NULL)? "" : ": "),
                   ((exit_reason == NULL)? "" : exit_reason));
     } else {
@@ -196,7 +197,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int", "const char *")
+                  "const char *", "const char *", "crm_exit_t", "const char *")
 static int
 agent_status_xml(pcmk__output_t *out, va_list args) {
     int status = va_arg(args, int);
@@ -205,7 +206,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *class G_GNUC_UNUSED = va_arg(args, const char *);
     const char *provider G_GNUC_UNUSED = va_arg(args, const char *);
     const char *type G_GNUC_UNUSED = va_arg(args, const char *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
     char *exit_str = pcmk__itoa(rc);
@@ -213,7 +214,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "agent-status",
                                  "code", exit_str,
-                                 "message", services_ocf_exitcode_str(rc),
+                                 "message", services_ocf_exitcode_str((int) rc),
                                  "execution_code", status_str,
                                  "execution_message", pcmk_exec_status_str(status),
                                  "reason", exit_reason,
@@ -317,7 +318,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_default(pcmk__output_t *out, va_list args) {
     int verbose = va_arg(args, int);
@@ -328,7 +329,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     const char *rsc_name = va_arg(args, const char *);
     const char *action = va_arg(args, const char *);
     GHashTable *overrides = va_arg(args, GHashTable *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
@@ -376,7 +377,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     int verbose G_GNUC_UNUSED = va_arg(args, int);
@@ -387,7 +388,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     const char *rsc_name = va_arg(args, const char *);
     const char *action = va_arg(args, const char *);
     GHashTable *overrides = va_arg(args, GHashTable *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
