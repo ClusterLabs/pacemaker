@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -271,6 +271,25 @@ void pcmk__inject_failcount(pcmk__output_t *out, xmlNode *cib_node,
 G_GNUC_INTERNAL
 xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
                                     lrmd_event_data_t *op, int target_rc);
+
+
+// Clone notifictions (pcmk_sched_notif.c)
+
+G_GNUC_INTERNAL
+void pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+
+G_GNUC_INTERNAL
+notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
+                                            const char *task,
+                                            pe_action_t *action,
+                                            pe_action_t *complete);
+
+G_GNUC_INTERNAL
+void pcmk__free_notification_data(notify_data_t *n_data);
+
+G_GNUC_INTERNAL
+void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
+                                      pe_action_t *stonith_op);
 
 
 // Functions applying to more than one variant (pcmk_sched_resource.c)

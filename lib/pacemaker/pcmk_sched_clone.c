@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -924,7 +924,8 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                     started);
     }
 
     /* stop */
@@ -937,7 +938,8 @@ clone_create_pseudo_actions(
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
+                                                    stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
@@ -1308,29 +1310,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    if (clone_data->start_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
-        pcmk__create_notification_keys(rsc, clone_data->start_notify, data_set);
-        create_notifications(rsc, clone_data->start_notify, data_set);
-    }
-
-    if (clone_data->stop_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
-        pcmk__create_notification_keys(rsc, clone_data->stop_notify, data_set);
-        create_notifications(rsc, clone_data->stop_notify, data_set);
-    }
-
-    if (clone_data->promote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->promote_notify, data_set);
-        create_notifications(rsc, clone_data->promote_notify, data_set);
-    }
-
-    if (clone_data->demote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->demote_notify, data_set);
-        create_notifications(rsc, clone_data->demote_notify, data_set);
-    }
+    pcmk__create_notifications(rsc, clone_data->start_notify);
+    pcmk__create_notifications(rsc, clone_data->stop_notify);
+    pcmk__create_notifications(rsc, clone_data->promote_notify);
+    pcmk__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -1344,13 +1327,13 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    free_notification_data(clone_data->demote_notify);
+    pcmk__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    free_notification_data(clone_data->stop_notify);
+    pcmk__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    free_notification_data(clone_data->start_notify);
+    pcmk__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    free_notification_data(clone_data->promote_notify);
+    pcmk__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
