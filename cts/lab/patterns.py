@@ -1,7 +1,7 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, os
@@ -136,7 +136,7 @@ class crm_corosync(BasePatterns):
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
             "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated( with signal 9|$)",
-            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
+            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning %s subdaemon after unexpected exit",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
             "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
@@ -257,10 +257,10 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-based"] = [
             r"pacemakerd.* pacemaker-attrd\[[0-9]+\] exited with status 102",
             r"pacemakerd.* pacemaker-controld\[[0-9]+\] exited with status 1",
-            r"pacemakerd.* Respawning failed child process: pacemaker-attrd",
-            r"pacemakerd.* Respawning failed child process: pacemaker-based",
-            r"pacemakerd.* Respawning failed child process: pacemaker-controld",
-            r"pacemakerd.* Respawning failed child process: pacemaker-fenced",
+            r"pacemakerd.* Respawning pacemaker-attrd subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning pacemaker-based subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning pacemaker-fenced subdaemon after unexpected exit",
             r"pacemaker-.* Connection to cib_.* (failed|closed)",
             r"pacemaker-attrd.*:.*Lost connection to the CIB manager",
             r"pacemaker-controld.*:.*Lost connection to the CIB manager",
@@ -286,8 +286,8 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
             r"pacemakerd.*pacemaker-controld\[[0-9]+\] exited with status 1",
-            r"pacemakerd.*Respawning failed child process: pacemaker-execd",
-            r"pacemakerd.*Respawning failed child process: pacemaker-controld",
+            r"pacemakerd.* Respawning pacemaker-execd subdaemon after unexpected exit",
+            r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
         ]
         self.components["pacemaker-execd-ignore"] = [
             r"pacemaker-(attrd|controld).*Connection to lrmd.* (failed|closed)",
@@ -307,7 +307,7 @@ class crm_corosync(BasePatterns):
 
         self.components["pacemaker-schedulerd"] = [
                     "State transition .* S_RECOVERY",
-                    r"Respawning failed child process: pacemaker-controld",
+                    r"pacemakerd.* Respawning pacemaker-controld subdaemon after unexpected exit",
                     r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
                     r"Connection to the scheduler failed",
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
