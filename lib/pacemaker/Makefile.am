@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,7 +26,10 @@ libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la \
 			$(top_builddir)/lib/lrmd/liblrmd.la \
+			$(top_builddir)/lib/fencing/libstonithd.la \
+			$(top_builddir)/lib/services/libcrmservice.la \
 			$(top_builddir)/lib/common/libcrmcommon.la
+
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
 # Use += rather than backlashed continuation lines for parsing by bumplibs
 libpacemaker_la_SOURCES	=
