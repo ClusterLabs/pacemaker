@@ -337,8 +337,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
     if (overrides) {
         GHashTableIter iter;
-        char *name = NULL;
-        char *value = NULL;
+        const char *name = NULL;
+        const char *value = NULL;
 
         out->begin_list(out, NULL, NULL, "overrides");
 
@@ -410,8 +410,8 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
 
     if (overrides) {
         GHashTableIter iter;
-        char *name = NULL;
-        char *value = NULL;
+        const char *name = NULL;
+        const char *value = NULL;
 
         out->begin_list(out, NULL, NULL, "overrides");
 
