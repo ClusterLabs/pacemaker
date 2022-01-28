@@ -213,7 +213,6 @@ int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
 void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(xmlNode * msg, int mode);
-int stonith_level_kind(xmlNode * msg);
 void fenced_register_level(xmlNode *msg, char **desc,
                            pcmk__action_result_t *result);
 void fenced_unregister_level(xmlNode *msg, char **desc,

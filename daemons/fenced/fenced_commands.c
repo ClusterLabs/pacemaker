@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,6 +72,7 @@ static void search_devices_record_result(struct device_search_s *search, const c
 
 static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
+static int stonith_level_kind(xmlNode *level);
 
 typedef struct async_command_s {
 
@@ -1529,7 +1530,8 @@ char *stonith_level_key(xmlNode *level, int mode)
     }
 }
 
-int stonith_level_kind(xmlNode * level)
+static int
+stonith_level_kind(xmlNode *level)
 {
     int mode = 0;
     const char *target = crm_element_value(level, XML_ATTR_STONITH_TARGET);
