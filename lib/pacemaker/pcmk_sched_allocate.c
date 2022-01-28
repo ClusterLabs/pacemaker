@@ -739,13 +739,15 @@ log_unrunnable_actions(pe_working_set_t *data_set)
  * \brief Unpack the CIB for scheduling
  *
  * \param[in] cib       CIB XML to unpack (may be NULL if previously unpacked)
+ * \param[in] flags     Working set flags to set in addition to defaults
  * \param[in] data_set  Cluster working set
  */
 static void
-unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
+unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
     if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
+        pe__set_working_set_flags(data_set, flags);
         return;
     }
 
@@ -759,6 +761,7 @@ unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
      */
     set_working_set_defaults(data_set);
 
+    pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;
     cluster_status(data_set); // Sets pe_flag_have_status
 }
@@ -768,12 +771,14 @@ unpack_cib(xmlNode *cib, pe_working_set_t *data_set)
  * \brief Run the scheduler for a given CIB
  *
  * \param[in]     cib       CIB XML to use as scheduler input
+ * \param[in]     flags     Working set flags to set in addition to defaults
  * \param[in,out] data_set  Cluster working set
  */
 void
-pcmk__schedule_actions(xmlNode *cib, pe_working_set_t *data_set)
+pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                       pe_working_set_t *data_set)
 {
-    unpack_cib(cib, data_set);
+    unpack_cib(cib, flags, data_set);
     pcmk__set_allocation_methods(data_set);
     pcmk__apply_node_health(data_set);
     pcmk__unpack_constraints(data_set);

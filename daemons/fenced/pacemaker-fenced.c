@@ -53,6 +53,9 @@ static gboolean stonith_shutdown_flag = FALSE;
 static qb_ipcs_service_t *ipcs = NULL;
 static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
+static const unsigned long long data_set_flags = pe_flag_quick_location
+                                                 | pe_flag_no_compat
+                                                 | pe_flag_no_counts;
 
 static cib_t *cib_api = NULL;
 
@@ -822,10 +825,10 @@ cib_devices_update(void)
     fenced_data_set->input = local_cib;
     fenced_data_set->now = crm_time_new(NULL);
     fenced_data_set->localhost = stonith_our_uname;
-    pe__set_working_set_flags(fenced_data_set, pe_flag_quick_location);
+    pe__set_working_set_flags(fenced_data_set, data_set_flags);
 
     cluster_status(fenced_data_set);
-    pcmk__schedule_actions(NULL, fenced_data_set);
+    pcmk__schedule_actions(NULL, data_set_flags, fenced_data_set);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
@@ -1644,9 +1647,6 @@ main(int argc, char **argv)
 
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
-    pe__set_working_set_flags(fenced_data_set,
-                              pe_flag_no_counts|pe_flag_no_compat);
-    pe__set_working_set_flags(fenced_data_set, pe_flag_show_utilization);
 
     cluster = calloc(1, sizeof(crm_cluster_t));
     CRM_ASSERT(cluster != NULL);

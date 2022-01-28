@@ -221,7 +221,6 @@ main(int argc, char **argv)
         crm_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     data_set->priv = out;
 
     /* Process the configuration to set crm_config_error/crm_config_warning.
@@ -230,11 +229,13 @@ main(int argc, char **argv)
      * example, action configuration), so we aren't necessarily checking those.
      */
     if (cib_object != NULL) {
+        unsigned long long flags = pe_flag_no_counts|pe_flag_no_compat;
+
         if ((status == NULL) && !options.use_live_cib) {
             // No status available, so do minimal checks
-            pe__set_working_set_flags(data_set, pe_flag_check_config);
+            flags |= pe_flag_check_config;
         }
-        pcmk__schedule_actions(cib_object, data_set);
+        pcmk__schedule_actions(cib_object, flags, data_set);
     }
     pe_free_working_set(data_set);
 

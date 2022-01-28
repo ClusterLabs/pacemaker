@@ -93,7 +93,10 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     }
 
     if (process) {
-        pcmk__schedule_actions(converted, sched_data_set);
+        pcmk__schedule_actions(converted,
+                               pe_flag_no_counts
+                               |pe_flag_no_compat
+                               |pe_flag_show_utilization, sched_data_set);
     }
 
     // Get appropriate index into series[] array

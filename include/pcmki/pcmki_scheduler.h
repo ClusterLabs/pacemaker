@@ -65,7 +65,8 @@ extern gboolean stage6(pe_working_set_t * data_set);
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 extern void add_maintenance_update(pe_working_set_t *data_set);
-void pcmk__schedule_actions(xmlNode *cib, pe_working_set_t *data_set);
+void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                            pe_working_set_t *data_set);
 
 extern const char *transition_idle_timeout;
 
