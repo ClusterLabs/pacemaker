@@ -1227,11 +1227,11 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1241,11 +1241,11 @@ inject_spec(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec_xml(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1257,12 +1257,12 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1281,12 +1281,12 @@ inject_modify_config(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config_xml(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     xmlNodePtr node = NULL;
 
