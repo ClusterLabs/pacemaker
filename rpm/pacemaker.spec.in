@@ -291,6 +291,9 @@ BuildRequires: make
 BuildRequires: pkgconfig
 BuildRequires: sed
 
+# obviously gone from defaults in rawhide
+BuildRequires: glibc-headers
+
 # Required for core functionality
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
 BuildRequires: libxml2-devel
