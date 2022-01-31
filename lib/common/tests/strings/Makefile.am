@@ -29,6 +29,7 @@ check_PROGRAMS = \
 		pcmk__starts_with_test 		\
 		pcmk__str_any_of_test		\
 		pcmk__str_in_list_test		\
+		pcmk__str_table_dup_test	\
 		pcmk__strcmp_test 			\
 		pcmk__strkey_table_test 	\
 		pcmk__strikey_table_test 	\
