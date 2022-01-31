@@ -30,6 +30,7 @@ check_PROGRAMS = \
 		pcmk__str_any_of_test		\
 		pcmk__str_in_list_test		\
 		pcmk__strcmp_test 			\
+		pcmk__strkey_table_test 	\
 		pcmk__trim_test
 
 TESTS = $(check_PROGRAMS)
