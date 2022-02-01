@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -280,7 +280,7 @@ add_schema_by_version(const schema_version_t *version, int next,
     if (transform_expected) {
         /* check if there's suitable "upgrade" stylesheet */
         transform_upgrade = schema_strdup_printf("upgrade-", *version, );
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+        xslt = pcmk__xml_artifact_path(pcmk__xml_artifact_ns_legacy_xslt,
                                        transform_upgrade);
     }
 
@@ -291,7 +291,7 @@ add_schema_by_version(const schema_version_t *version, int next,
         /* perhaps there's also a targeted "upgrade-enter" stylesheet */
         transform_enter = schema_strdup_printf("upgrade-", *version, "-enter");
         free(xslt);
-        xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+        xslt = pcmk__xml_artifact_path(pcmk__xml_artifact_ns_legacy_xslt,
                                        transform_enter);
         if (stat(xslt, &s) != 0) {
             /* or initially, at least a generic one */
@@ -299,7 +299,7 @@ add_schema_by_version(const schema_version_t *version, int next,
             free(xslt);
             free(transform_enter);
             transform_enter = strdup("upgrade-enter");
-            xslt = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+            xslt = pcmk__xml_artifact_path(pcmk__xml_artifact_ns_legacy_xslt,
                                            transform_enter);
             if (stat(xslt, &s) != 0) {
                 crm_debug("Upgrade-enter transform %s.xsl not found, either", xslt);
@@ -379,7 +379,7 @@ void
 crm_schema_init(void)
 {
     int lpc, max;
-    char *base = pcmk__xml_artefact_root(pcmk__xml_artefact_ns_legacy_rng);
+    char *base = pcmk__xml_artifact_root(pcmk__xml_artifact_ns_legacy_rng);
     struct dirent **namelist = NULL;
     const schema_version_t zero = SCHEMA_ZERO;
 
@@ -606,7 +606,7 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
+    file = pcmk__xml_artifact_path(pcmk__xml_artifact_ns_legacy_rng,
                                    known_schemas[method].name);
 
     crm_trace("Validating with: %s (type=%d)",
@@ -914,7 +914,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
-    xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
+    xform = pcmk__xml_artifact_path(pcmk__xml_artifact_ns_legacy_xslt,
                                     transform);
 
     xmlLoadExtDtdDefaultValue = 1;

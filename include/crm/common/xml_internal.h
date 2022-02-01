@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -146,11 +146,11 @@ do {                                                                            
     "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
     "[@" XML_NODE_IS_REMOTE "='true']"
 
-enum pcmk__xml_artefact_ns {
-    pcmk__xml_artefact_ns_legacy_rng = 1,
-    pcmk__xml_artefact_ns_legacy_xslt,
-    pcmk__xml_artefact_ns_base_rng,
-    pcmk__xml_artefact_ns_base_xslt,
+enum pcmk__xml_artifact_ns {
+    pcmk__xml_artifact_ns_legacy_rng = 1,
+    pcmk__xml_artifact_ns_legacy_xslt,
+    pcmk__xml_artifact_ns_base_rng,
+    pcmk__xml_artifact_ns_base_xslt,
 };
 
 void pcmk__strip_xml_text(xmlNode *xml);
@@ -165,14 +165,14 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
 
 /*!
  * \internal
- * \brief Get the root directory to scan XML artefacts of given kind for
+ * \brief Get the root directory to scan XML artifacts of given kind for
  *
  * \param[in] ns governs the hierarchy nesting against the inherent root dir
  *
- * \return root directory to scan XML artefacts of given kind for
+ * \return root directory to scan XML artifacts of given kind for
  */
 char *
-pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
+pcmk__xml_artifact_root(enum pcmk__xml_artifact_ns ns);
 
 /*!
  * \internal
@@ -180,10 +180,10 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
  *
  * \param[in] ns       denotes path forming details (parent dir, suffix)
  * \param[in] filespec symbolic file specification to be combined with
- *                     #artefact_ns to form the final path
+ *                     #artifact_ns to form the final path
  * \return unwrapped path to particular XML artifact (RNG/XSLT)
  */
-char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
+char *pcmk__xml_artifact_path(enum pcmk__xml_artifact_ns ns,
                               const char *filespec);
 
 /*!

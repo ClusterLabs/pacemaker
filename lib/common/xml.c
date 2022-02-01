@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2898,7 +2898,7 @@ crm_destroy_xml(gpointer data)
 }
 
 char *
-pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
+pcmk__xml_artifact_root(enum pcmk__xml_artifact_ns ns)
 {
     static const char *base = NULL;
     char *ret = NULL;
@@ -2911,36 +2911,36 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
     }
 
     switch (ns) {
-        case pcmk__xml_artefact_ns_legacy_rng:
-        case pcmk__xml_artefact_ns_legacy_xslt:
+        case pcmk__xml_artifact_ns_legacy_rng:
+        case pcmk__xml_artifact_ns_legacy_xslt:
             ret = strdup(base);
             break;
-        case pcmk__xml_artefact_ns_base_rng:
-        case pcmk__xml_artefact_ns_base_xslt:
+        case pcmk__xml_artifact_ns_base_rng:
+        case pcmk__xml_artifact_ns_base_xslt:
             ret = crm_strdup_printf("%s/base", base);
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            crm_err("XML artifact family specified as %u not recognized", ns);
     }
     return ret;
 }
 
 char *
-pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
+pcmk__xml_artifact_path(enum pcmk__xml_artifact_ns ns, const char *filespec)
 {
-    char *base = pcmk__xml_artefact_root(ns), *ret = NULL;
+    char *base = pcmk__xml_artifact_root(ns), *ret = NULL;
 
     switch (ns) {
-        case pcmk__xml_artefact_ns_legacy_rng:
-        case pcmk__xml_artefact_ns_base_rng:
+        case pcmk__xml_artifact_ns_legacy_rng:
+        case pcmk__xml_artifact_ns_base_rng:
             ret = crm_strdup_printf("%s/%s.rng", base, filespec);
             break;
-        case pcmk__xml_artefact_ns_legacy_xslt:
-        case pcmk__xml_artefact_ns_base_xslt:
+        case pcmk__xml_artifact_ns_legacy_xslt:
+        case pcmk__xml_artifact_ns_base_xslt:
             ret = crm_strdup_printf("%s/%s.xsl", base, filespec);
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            crm_err("XML artifact family specified as %u not recognized", ns);
     }
     free(base);
 
