@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -132,6 +132,9 @@ cluster_status(pe_working_set_t * data_set)
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);
         }
+        crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
+                  data_set->ninstances, data_set->disabled_resources,
+                  data_set->blocked_resources);
     }
 
     pe__set_working_set_flags(data_set, pe_flag_have_status);

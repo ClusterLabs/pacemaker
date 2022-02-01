@@ -343,6 +343,7 @@ stage2(pe_working_set_t * data_set)
                 data_set->max_valid_nodes++;
             }
         }
+        crm_trace("Online node count: %d", data_set->max_valid_nodes);
     }
 
     pcmk__apply_locations(data_set);
