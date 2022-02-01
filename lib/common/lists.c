@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,17 +13,13 @@
 GList*
 pcmk__subtract_lists(GList *from, GList *items, GCompareFunc cmp)
 {
-    GList *item = NULL;
     GList *result = g_list_copy(from);
 
-    for (item = items; item != NULL; item = item->next) {
-        GList *candidate = NULL;
+    for (GList *item = items; item != NULL; item = item->next) {
+        GList *match = g_list_find_custom(result, item->data, cmp);
 
-        for (candidate = from; candidate != NULL; candidate = candidate->next) {
-            if(cmp(candidate->data, item->data) == 0) {
-                result = g_list_remove(result, candidate->data);
-                break;
-            }
+        if (match != NULL) {
+            result = g_list_remove(result, match->data);
         }
     }
 
