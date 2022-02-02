@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,6 +40,11 @@
  * - Each unit test defines its own __wrap_X for whatever function it's
  *   mocking that overrides the version here.
  */
+
+void *__attribute__((weak))
+__wrap_calloc(size_t nmemb, size_t size) {
+    return __real_calloc(nmemb, size);
+}
 
 char *__attribute__((weak))
 __wrap_getenv(const char *name) {
