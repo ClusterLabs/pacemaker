@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2021 the Pacemaker project contributors
+# Copyright 2020-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,6 +19,7 @@ pcmk_hostname_test_LDFLAGS = -Wl,--wrap=uname
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS =	\
+	char2score_test \
 	pcmk_str_is_infinity_test		\
 	pcmk_str_is_minus_infinity_test
 
