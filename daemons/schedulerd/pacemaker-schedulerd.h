@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <crm_internal.h>
 #include <crm/pengine/pe_types.h>
 
-extern pe_working_set_t *sched_data_set;
 extern pcmk__output_t *logger_out;
 extern pcmk__output_t *out;
 extern struct qb_ipcs_service_handlers ipc_callbacks;
