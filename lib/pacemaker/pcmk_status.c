@@ -94,17 +94,11 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 }
 
 static int
-pacemakerd_status(pcmk__output_t *out, cib_t *cib)
+pacemakerd_status(pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
     pcmk_ipc_api_t *pacemakerd_api = NULL;
     enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
-
-    if (cib != NULL &&
-        (cib->state == cib_connected_query ||
-         cib->state == cib_connected_command)) {
-        return rc;
-    }
 
     rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
     if (pacemakerd_api == NULL) {
@@ -250,8 +244,16 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
     int rc = pcmk_rc_ok;
     stonith_t *st = NULL;
 
+    if (cib == NULL) {
+        return ENOTCONN;
+    }
+
     if (cib->variant == cib_native) {
-        rc = pacemakerd_status(out, cib);
+        if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
+            rc = pcmk_rc_ok;
+        } else {
+            rc = pacemakerd_status(out);
+        }
     }
 
     if (rc != pcmk_rc_ok) {
