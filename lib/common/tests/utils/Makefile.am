@@ -7,8 +7,6 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-include $(top_srcdir)/lib/common/mock.mk
-
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/lib/common
 LDADD = $(top_builddir)/lib/common/libcrmcommon.la -lcmocka
 
