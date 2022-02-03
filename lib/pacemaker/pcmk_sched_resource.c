@@ -93,14 +93,12 @@ static resource_alloc_functions_t allocation_methods[] = {
  * \param[in] node            Node needing unfencing/restart if agent changed
  * \param[in] rsc_entry       XML with previously known agent information
  * \param[in] active_on_node  Whether \p rsc is active on \p node
- * \param[in] data_set
  *
  * \return true if agent for \p rsc changed, otherwise false
  */
 bool
 pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
-                        const xmlNode *rsc_entry, bool active_on_node,
-                        pe_working_set_t *data_set)
+                        const xmlNode *rsc_entry, bool active_on_node)
 {
     bool changed = false;
     const char *attr_list[] = {
@@ -116,7 +114,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
         if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {
             changed = true;
             trigger_unfencing(rsc, node, "Device definition changed", NULL,
-                              data_set);
+                              rsc->cluster);
             if (active_on_node) {
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
@@ -127,7 +125,8 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
     }
     if (changed && active_on_node) {
         // Make sure the resource is restarted
-        stop_action(rsc, node, FALSE);
+        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+                      rsc->cluster);
         pe__set_resource_flags(rsc, pe_rsc_start_pending);
     }
     return changed;
@@ -489,7 +488,6 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  *
  * \param[in]  rsc       Resource to check
  * \param[in]  node      Node to check
- * \param[in]  data_set  Cluster working set
  * \param[out] failed    If the threshold has been reached, this will be set to
  *                       the resource that failed (possibly a parent of \p rsc)
  *
@@ -497,7 +495,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  */
 bool
 pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                        pe_working_set_t *data_set, pe_resource_t **failed)
+                        pe_resource_t **failed)
 {
     int fail_count, remaining_tries;
     pe_resource_t *rsc_to_ban = rsc;
@@ -515,7 +513,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
                                   pe_fc_effective|pe_fc_fillers, NULL,
-                                  data_set);
+                                  rsc->cluster);
     if (fail_count <= 0) {
         return false;
     }

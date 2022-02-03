@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -129,7 +129,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                 if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
                 } else if (!pcmk__threshold_reached(replica->child, node,
-                                                    data_set, NULL)) {
+                                                    NULL)) {
                     node->weight = INFINITY;
                 }
             }

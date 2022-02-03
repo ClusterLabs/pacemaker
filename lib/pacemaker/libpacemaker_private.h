@@ -299,8 +299,7 @@ void pcmk__set_allocation_methods(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 bool pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
-                             const xmlNode *rsc_entry, bool active_on_node,
-                             pe_working_set_t *data_set);
+                             const xmlNode *rsc_entry, bool active_on_node);
 
 G_GNUC_INTERNAL
 GList *pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set);
@@ -323,7 +322,6 @@ void pcmk__unassign_resource(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                             pe_working_set_t *data_set,
                              pe_resource_t **failed);
 
 G_GNUC_INTERNAL
