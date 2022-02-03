@@ -7,7 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <pwd.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
 
 #include "mock_private.h"
@@ -49,6 +51,12 @@ __wrap_calloc(size_t nmemb, size_t size) {
 char *__attribute__((weak))
 __wrap_getenv(const char *name) {
     return __real_getenv(name);
+}
+
+int __attribute__((weak))
+__wrap_getpwnam_r(const char *name, struct passwd *pwd,
+                  char *buf, size_t buflen, struct passwd **result) {
+    return __real_getpwnam_r(name, pwd, buf, buflen, result);
 }
 
 int __attribute__((weak))
