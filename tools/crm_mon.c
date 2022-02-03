@@ -135,7 +135,7 @@ struct {
 static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
-static void handle_connection_failures(int rc);
+static void clean_up_if_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(void);
 static int fencing_connect(void);
@@ -1339,7 +1339,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
 }
 
 static void
-handle_connection_failures(int rc)
+clean_up_if_connection_failure(int rc)
 {
     if (rc == pcmk_rc_ok) {
         return;
@@ -1348,20 +1348,18 @@ handle_connection_failures(int rc)
     if (output_format == mon_output_monitor) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
                     pcmk_rc_str(rc));
-        rc = MON_STATUS_CRIT;
+        clean_up(MON_STATUS_CRIT);
     } else if (rc == ENOTCONN) {
         if (on_remote_node) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: remote-node not connected to cluster");
         } else {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
         }
-        rc = pcmk_rc2exitc(rc);
     } else {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_rc_str(rc));
-        rc = pcmk_rc2exitc(rc);
     }
 
-    clean_up(rc);
+    clean_up(pcmk_rc2exitc(rc));
 }
 
 static void
@@ -1372,10 +1370,12 @@ one_shot(void)
                           options.neg_location_prefix,
                           output_format == mon_output_monitor);
 
-    if (rc != pcmk_rc_ok) {
-        handle_connection_failures(rc);
-    }
+    clean_up_if_connection_failure(rc);
 
+    /* If clean_up_if_connection_failure didn't call clean_up (because there wasn't
+     * a connection failure), we still need to call clean_up here because one_shot
+     * mode is done.
+     */
     clean_up(pcmk_rc2exitc(rc));
 }
 
@@ -1648,7 +1648,7 @@ main(int argc, char **argv)
 
     } while (rc == ENOTCONN);
 
-    handle_connection_failures(rc);
+    clean_up_if_connection_failure(rc);
     set_fencing_options(interactive_fence_level);
     mon_refresh_display(NULL);
 
