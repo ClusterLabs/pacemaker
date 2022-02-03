@@ -32,15 +32,26 @@
  * which means the unit tests can define another wrapped version for
  * unit testing that will override the version defined here.
  *
- * IN SUMMARY:
+ * HOW TO ADD A MOCKED FUNCTION:
  *
- * - Define two functions for each function listed in WRAPPED in mock.mk.
- *   One function is a weakly defined __wrap_X function that just calls
- *   __real_X.
- * - Add a __real_X and __wrap_X function prototype for each function to
- *   mock_private.h.
- * - Each unit test defines its own __wrap_X for whatever function it's
- *   mocking that overrides the version here.
+ * - Define a __wrap_X function here below with the same prototype as the
+ *   actual function and that just calls __real_X.
+ * - Add a __real_X and __wrap_X function prototype to mock_private.h.
+ * - Add the function name to the WRAPPED variable in Makefile.am.
+ *
+ * HOW TO USE A MOCKED FUNCTION:
+ *
+ * - In the Makefile.am for your new test, add:
+ *
+ *   your_fn_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
+ *   your_fn_test_LDFLAGS = -Wl,--wrap=X
+ *
+ *   You can use multiple wrapped functions by adding multiple -Wl
+ *   arguments.
+ * - #include "mock_private.h" in your test file.
+ * - Add a __wrap_X function with the same prototype as the real function.
+ * - Write your test cases, using will_return(), mock_type(), and
+ *   mock_ptr_type() from cmocka.  See existing test cases for details.
  */
 
 void *__attribute__((weak))
