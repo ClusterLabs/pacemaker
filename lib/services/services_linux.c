@@ -679,11 +679,14 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else if (mainloop_child_timeout(p)) {
         const char *reason = NULL;
 
-        if (op->rsc != NULL) {
-            reason = "Resource agent did not complete in time";
-        } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH,
-                                pcmk__str_none)) {
+        if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH,
+                         pcmk__str_none)) {
             reason = "Fence agent did not complete in time";
+        } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_ALERT,
+                                pcmk__str_none)) {
+            reason = "Alert agent did not complete in time";
+        } else if (op->standard != NULL) {
+            reason = "Resource agent did not complete in time";
         } else {
             reason = "Process did not complete in time";
         }

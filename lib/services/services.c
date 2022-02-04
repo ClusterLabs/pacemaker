@@ -415,8 +415,11 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    action->timeout = timeout;
     action->id = strdup(id);
+    action->standard = strdup(PCMK_RESOURCE_CLASS_ALERT);
+    CRM_ASSERT((action->id != NULL) && (action->standard != NULL));
+
+    action->timeout = timeout;
     action->params = params;
     action->sequence = sequence;
     action->cb_data = cb_data;
