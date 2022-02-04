@@ -476,9 +476,7 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
                       other->client_name, other->originator,
                       pcmk_exec_status_str(op->result.execution_status),
                       other->id);
-            pcmk__set_result(&other->result, op->result.exit_status,
-                             op->result.execution_status,
-                             op->result.exit_reason);
+            pcmk__copy_result(&op->result, &other->result);
             finalize_op(other, data, true);
 
         } else {
