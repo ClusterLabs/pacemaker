@@ -45,6 +45,9 @@ struct svc_action_private_s {
 };
 
 G_GNUC_INTERNAL
+const char *services__action_kind(svc_action_t *action);
+
+G_GNUC_INTERNAL
 GList *services_os_get_single_directory_list(const char *root, gboolean files,
                                              gboolean executable);
 

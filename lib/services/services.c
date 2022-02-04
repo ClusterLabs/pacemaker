@@ -1342,6 +1342,30 @@ services__set_cancelled(svc_action_t *action)
 
 /*!
  * \internal
+ * \brief Get a readable description of what an action is for
+ *
+ * \param[in] action  Action to check
+ *
+ * \return Readable name for the kind of \p action
+ */
+const char *
+services__action_kind(svc_action_t *action)
+{
+    if ((action == NULL) || (action->standard == NULL)) {
+        return "Process";
+    } else if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
+                            pcmk__str_none)) {
+        return "Fence agent";
+    } else if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_ALERT,
+                            pcmk__str_none)) {
+        return "Alert agent";
+    } else {
+        return "Resource agent";
+    }
+}
+
+/*!
+ * \internal
  * \brief Get the exit reason of an action
  *
  * \param[in] action  Action to check
