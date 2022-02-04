@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,200 @@
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
+
+// Resource allocation methods that vary by resource variant
+static resource_alloc_functions_t allocation_methods[] = {
+    {
+        pcmk__native_merge_weights,
+        pcmk__native_allocate,
+        native_create_actions,
+        native_create_probe,
+        native_internal_constraints,
+        native_rsc_colocation_lh,
+        native_rsc_colocation_rh,
+        pcmk__colocated_resources,
+        native_rsc_location,
+        native_action_flags,
+        native_update_actions,
+        pcmk__output_resource_actions,
+        native_expand,
+        native_append_meta,
+        pcmk__primitive_add_utilization,
+    },
+    {
+        pcmk__group_merge_weights,
+        pcmk__group_allocate,
+        group_create_actions,
+        native_create_probe,
+        group_internal_constraints,
+        group_rsc_colocation_lh,
+        group_rsc_colocation_rh,
+        pcmk__group_colocated_resources,
+        group_rsc_location,
+        group_action_flags,
+        group_update_actions,
+        pcmk__output_resource_actions,
+        group_expand,
+        group_append_meta,
+        pcmk__group_add_utilization,
+    },
+    {
+        pcmk__native_merge_weights,
+        pcmk__clone_allocate,
+        clone_create_actions,
+        clone_create_probe,
+        clone_internal_constraints,
+        clone_rsc_colocation_lh,
+        clone_rsc_colocation_rh,
+        pcmk__colocated_resources,
+        clone_rsc_location,
+        clone_action_flags,
+        pcmk__multi_update_actions,
+        pcmk__output_resource_actions,
+        clone_expand,
+        clone_append_meta,
+        pcmk__clone_add_utilization,
+    },
+    {
+        pcmk__native_merge_weights,
+        pcmk__bundle_allocate,
+        pcmk__bundle_create_actions,
+        pcmk__bundle_create_probe,
+        pcmk__bundle_internal_constraints,
+        pcmk__bundle_rsc_colocation_lh,
+        pcmk__bundle_rsc_colocation_rh,
+        pcmk__colocated_resources,
+        pcmk__bundle_rsc_location,
+        pcmk__bundle_action_flags,
+        pcmk__multi_update_actions,
+        pcmk__output_bundle_actions,
+        pcmk__bundle_expand,
+        pcmk__bundle_append_meta,
+        pcmk__bundle_add_utilization,
+    }
+};
+
+/*!
+ * \internal
+ * \brief Check whether a resource's agent standard, provider, or type changed
+ *
+ * \param[in] rsc             Resource to check
+ * \param[in] node            Node needing unfencing/restart if agent changed
+ * \param[in] rsc_entry       XML with previously known agent information
+ * \param[in] active_on_node  Whether \p rsc is active on \p node
+ *
+ * \return true if agent for \p rsc changed, otherwise false
+ */
+bool
+pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
+                        const xmlNode *rsc_entry, bool active_on_node)
+{
+    bool changed = false;
+    const char *attr_list[] = {
+        XML_ATTR_TYPE,
+        XML_AGENT_ATTR_CLASS,
+        XML_AGENT_ATTR_PROVIDER
+    };
+
+    for (int i = 0; i < PCMK__NELEM(attr_list); i++) {
+        const char *value = crm_element_value(rsc->xml, attr_list[i]);
+        const char *old_value = crm_element_value(rsc_entry, attr_list[i]);
+
+        if (!pcmk__str_eq(value, old_value, pcmk__str_none)) {
+            changed = true;
+            trigger_unfencing(rsc, node, "Device definition changed", NULL,
+                              rsc->cluster);
+            if (active_on_node) {
+                crm_notice("Forcing restart of %s on %s "
+                           "because %s changed from '%s' to '%s'",
+                           rsc->id, node->details->uname, attr_list[i],
+                           crm_str(old_value), crm_str(value));
+            }
+        }
+    }
+    if (changed && active_on_node) {
+        // Make sure the resource is restarted
+        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+                      rsc->cluster);
+        pe__set_resource_flags(rsc, pe_rsc_start_pending);
+    }
+    return changed;
+}
+
+/*!
+ * \internal
+ * \brief Add resource (and any matching children) to list if it matches ID
+ *
+ * \param[in] result  List to add resource to
+ * \param[in] rsc     Resource to check
+ * \param[in] id      ID to match
+ *
+ * \return (Possibly new) head of list
+ */
+static GList *
+add_rsc_if_matching(GList *result, pe_resource_t *rsc, const char *id)
+{
+    if ((strcmp(rsc->id, id) == 0)
+        || ((rsc->clone_name != NULL) && (strcmp(rsc->clone_name, id) == 0))) {
+        result = g_list_prepend(result, rsc);
+    }
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
+
+        result = add_rsc_if_matching(result, child, id);
+    }
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Find all resources matching a given ID by either ID or clone name
+ *
+ * \param[in] id        Resource ID to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return List of all resources that match \p id
+ * \note The caller is responsible for freeing the return value with
+ *       g_list_free().
+ */
+GList *
+pcmk__rscs_matching_id(const char *id, pe_working_set_t *data_set)
+{
+    GList *result = NULL;
+
+    CRM_CHECK((id != NULL) && (data_set != NULL), return NULL);
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        result = add_rsc_if_matching(result, (pe_resource_t *) iter->data, id);
+    }
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Set the variant-appropriate allocation methods for a resource
+ *
+ * \param[in] rsc      Resource to set allocation methods for
+ * \param[in] ignored  Only here so function can be used with g_list_foreach()
+ */
+static void
+set_allocation_methods_for_rsc(pe_resource_t *rsc, void *ignored)
+{
+    rsc->cmds = &allocation_methods[rsc->variant];
+    g_list_foreach(rsc->children, (GFunc) set_allocation_methods_for_rsc, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Set the variant-appropriate allocation methods for all resources
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__set_allocation_methods(pe_working_set_t *data_set)
+{
+    g_list_foreach(data_set->resources, (GFunc) set_allocation_methods_for_rsc,
+                   NULL);
+}
 
 // Shared implementation of resource_alloc_functions_t:colocated_resources()
 GList *
@@ -294,7 +488,6 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  *
  * \param[in]  rsc       Resource to check
  * \param[in]  node      Node to check
- * \param[in]  data_set  Cluster working set
  * \param[out] failed    If the threshold has been reached, this will be set to
  *                       the resource that failed (possibly a parent of \p rsc)
  *
@@ -302,7 +495,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
  */
 bool
 pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                        pe_working_set_t *data_set, pe_resource_t **failed)
+                        pe_resource_t **failed)
 {
     int fail_count, remaining_tries;
     pe_resource_t *rsc_to_ban = rsc;
@@ -320,7 +513,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     // If there are no failures, there's no need to force away
     fail_count = pe_get_failcount(node, rsc, NULL,
                                   pe_fc_effective|pe_fc_fillers, NULL,
-                                  data_set);
+                                  rsc->cluster);
     if (fail_count <= 0) {
         return false;
     }
@@ -352,3 +545,159 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     return false;
 }
 
+static void *
+convert_const_pointer(const void *ptr)
+{
+    /* Worst function ever */
+    return (void *)ptr;
+}
+
+/*!
+ * \internal
+ * \brief Get a node's weight
+ *
+ * \param[in] node     Unweighted node to check (for node ID)
+ * \param[in] nodes    List of weighted nodes to look for \p node in
+ *
+ * \return Node's weight, or -INFINITY if not found
+ */
+static int
+get_node_weight(pe_node_t *node, GHashTable *nodes)
+{
+    pe_node_t *weighted_node = NULL;
+
+    if ((node != NULL) && (nodes != NULL)) {
+        weighted_node = g_hash_table_lookup(nodes, node->details->id);
+    }
+    return (weighted_node == NULL)? -INFINITY : weighted_node->weight;
+}
+
+/*!
+ * \internal
+ * \brief Compare two resources according to which should be allocated first
+ *
+ * \param[in] a     First resource to compare
+ * \param[in] b     Second resource to compare
+ * \param[in] data  Sorted list of all nodes in cluster
+ *
+ * \return -1 if \p a should be allocated before \b, 0 if they are equal,
+ *         or +1 if \p a should be allocated after \b
+ */
+static gint
+cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
+{
+    const pe_resource_t *resource1 = a;
+    const pe_resource_t *resource2 = b;
+    GList *nodes = (GList *) data;
+
+    int rc = 0;
+    int r1_weight = -INFINITY;
+    int r2_weight = -INFINITY;
+    pe_node_t *r1_node = NULL;
+    pe_node_t *r2_node = NULL;
+    GHashTable *r1_nodes = NULL;
+    GHashTable *r2_nodes = NULL;
+    const char *reason = NULL;
+
+    // Resources with highest priority should be allocated first
+    reason = "priority";
+    r1_weight = resource1->priority;
+    r2_weight = resource2->priority;
+    if (r1_weight > r2_weight) {
+        rc = -1;
+        goto done;
+    }
+    if (r1_weight < r2_weight) {
+        rc = 1;
+        goto done;
+    }
+
+    // We need nodes to make any other useful comparisons
+    reason = "no node list";
+    if (nodes == NULL) {
+        goto done;
+    }
+
+    // Calculate and log node weights
+    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
+                                          resource1->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
+                                          resource2->id, NULL, NULL, 1,
+                                          pe_weights_forward | pe_weights_init);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
+                          resource1->cluster);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
+                          resource2->cluster);
+
+    // The resource with highest score on its current node goes first
+    reason = "current location";
+    if (resource1->running_on != NULL) {
+        r1_node = pe__current_node(resource1);
+    }
+    if (resource2->running_on != NULL) {
+        r2_node = pe__current_node(resource2);
+    }
+    r1_weight = get_node_weight(r1_node, r1_nodes);
+    r2_weight = get_node_weight(r2_node, r2_nodes);
+    if (r1_weight > r2_weight) {
+        rc = -1;
+        goto done;
+    }
+    if (r1_weight < r2_weight) {
+        rc = 1;
+        goto done;
+    }
+
+    // Otherwise a higher weight on any node will do
+    reason = "score";
+    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+
+        r1_weight = get_node_weight(node, r1_nodes);
+        r2_weight = get_node_weight(node, r2_nodes);
+        if (r1_weight > r2_weight) {
+            rc = -1;
+            goto done;
+        }
+        if (r1_weight < r2_weight) {
+            rc = 1;
+            goto done;
+        }
+    }
+
+done:
+    crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
+              resource1->id, r1_weight,
+              ((r1_node == NULL)? "" : " on "),
+              ((r1_node == NULL)? "" : r1_node->details->id),
+              ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
+              resource2->id, r2_weight,
+              ((r2_node == NULL)? "" : " on "),
+              ((r2_node == NULL)? "" : r2_node->details->id),
+              reason);
+    if (r1_nodes != NULL) {
+        g_hash_table_destroy(r1_nodes);
+    }
+    if (r2_nodes != NULL) {
+        g_hash_table_destroy(r2_nodes);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Sort resources in the order they should be allocated to nodes
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__sort_resources(pe_working_set_t *data_set)
+{
+    GList *nodes = g_list_copy(data_set->nodes);
+
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    data_set->resources = g_list_sort_with_data(data_set->resources,
+                                                cmp_resources, nodes);
+    g_list_free(nodes);
+}

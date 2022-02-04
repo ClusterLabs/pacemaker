@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,127 +25,8 @@ CRM_TRACE_INIT_DATA(pacemaker);
 
 extern bool pcmk__is_daemon;
 
-void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
 extern gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
-
-resource_alloc_functions_t resource_class_alloc_functions[] = {
-    {
-     pcmk__native_merge_weights,
-     pcmk__native_allocate,
-     native_create_actions,
-     native_create_probe,
-     native_internal_constraints,
-     native_rsc_colocation_lh,
-     native_rsc_colocation_rh,
-     pcmk__colocated_resources,
-     native_rsc_location,
-     native_action_flags,
-     native_update_actions,
-     pcmk__output_resource_actions,
-     native_expand,
-     native_append_meta,
-     pcmk__primitive_add_utilization,
-     },
-    {
-     pcmk__group_merge_weights,
-     pcmk__group_allocate,
-     group_create_actions,
-     native_create_probe,
-     group_internal_constraints,
-     group_rsc_colocation_lh,
-     group_rsc_colocation_rh,
-     pcmk__group_colocated_resources,
-     group_rsc_location,
-     group_action_flags,
-     group_update_actions,
-     pcmk__output_resource_actions,
-     group_expand,
-     group_append_meta,
-     pcmk__group_add_utilization,
-     },
-    {
-     pcmk__native_merge_weights,
-     pcmk__clone_allocate,
-     clone_create_actions,
-     clone_create_probe,
-     clone_internal_constraints,
-     clone_rsc_colocation_lh,
-     clone_rsc_colocation_rh,
-     pcmk__colocated_resources,
-     clone_rsc_location,
-     clone_action_flags,
-     pcmk__multi_update_actions,
-     pcmk__output_resource_actions,
-     clone_expand,
-     clone_append_meta,
-     pcmk__clone_add_utilization,
-     },
-    {
-     pcmk__native_merge_weights,
-     pcmk__bundle_allocate,
-     pcmk__bundle_create_actions,
-     pcmk__bundle_create_probe,
-     pcmk__bundle_internal_constraints,
-     pcmk__bundle_rsc_colocation_lh,
-     pcmk__bundle_rsc_colocation_rh,
-     pcmk__colocated_resources,
-     pcmk__bundle_rsc_location,
-     pcmk__bundle_action_flags,
-     pcmk__multi_update_actions,
-     pcmk__output_bundle_actions,
-     pcmk__bundle_expand,
-     pcmk__bundle_append_meta,
-     pcmk__bundle_add_utilization,
-     }
-};
-
-static gboolean
-check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
-                     gboolean active_here, pe_working_set_t * data_set)
-{
-    int attr_lpc = 0;
-    gboolean force_restart = FALSE;
-    gboolean delete_resource = FALSE;
-    gboolean changed = FALSE;
-
-    const char *value = NULL;
-    const char *old_value = NULL;
-
-    const char *attr_list[] = {
-        XML_ATTR_TYPE,
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER
-    };
-
-    for (; attr_lpc < PCMK__NELEM(attr_list); attr_lpc++) {
-        value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
-        old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
-        if (value == old_value  /* i.e. NULL */
-            || pcmk__str_eq(value, old_value, pcmk__str_none)) {
-            continue;
-        }
-
-        changed = TRUE;
-        trigger_unfencing(rsc, node, "Device definition changed", NULL, data_set);
-        if (active_here) {
-            force_restart = TRUE;
-            crm_notice("Forcing restart of %s on %s, %s changed: %s -> %s",
-                       rsc->id, node->details->uname, attr_list[attr_lpc],
-                       crm_str(old_value), crm_str(value));
-        }
-    }
-    if (force_restart) {
-        /* make sure the restart happens */
-        stop_action(rsc, node, FALSE);
-        pe__set_resource_flags(rsc, pe_rsc_start_pending);
-        delete_resource = TRUE;
-
-    } else if (changed) {
-        delete_resource = TRUE;
-    }
-    return delete_resource;
-}
 
 static void
 CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
@@ -374,7 +255,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         return;
 
     } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
-        if (check_rsc_parameters(rsc, node, rsc_entry, FALSE, data_set)) {
+        if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
             DeleteRsc(rsc, node, FALSE, data_set);
         }
         pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
@@ -384,7 +265,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
 
     pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
 
-    if (check_rsc_parameters(rsc, node, rsc_entry, TRUE, data_set)) {
+    if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 
@@ -449,63 +330,6 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     g_list_free(sorted_op_list);
 }
 
-static GList *
-find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
-              gboolean partial, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    gboolean match = FALSE;
-
-    if (id == NULL) {
-        return NULL;
-    }
-
-    if (rsc == NULL) {
-        if (data_set == NULL) {
-            return NULL;
-        }
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id, renamed_clones, partial,
-                                   NULL);
-        }
-        return result;
-    }
-
-    if (partial) {
-        if (strstr(rsc->id, id)) {
-            match = TRUE;
-
-        } else if (renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
-            match = TRUE;
-        }
-
-    } else {
-        if (strcmp(rsc->id, id) == 0) {
-            match = TRUE;
-
-        } else if (renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-            match = TRUE;
-        }
-    }
-
-    if (match) {
-        result = g_list_prepend(result, rsc);
-    }
-
-    if (rsc->children) {
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
-        }
-    }
-
-    return result;
-}
-
 static void
 check_actions(pe_working_set_t * data_set)
 {
@@ -551,11 +375,9 @@ check_actions(pe_working_set_t * data_set)
                         if (xml_has_children(rsc_entry)) {
                             GList *gIter = NULL;
                             GList *result = NULL;
-                            const char *rsc_id = ID(rsc_entry);
 
-                            CRM_CHECK(rsc_id != NULL, return);
-
-                            result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
+                            result = pcmk__rscs_matching_id(ID(rsc_entry),
+                                                            data_set);
                             for (gIter = result; gIter != NULL; gIter = gIter->next) {
                                 pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
@@ -642,37 +464,10 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
         pe_resource_t *failed = NULL;
 
-        if (pcmk__threshold_reached(rsc, node, data_set, &failed)) {
+        if (pcmk__threshold_reached(rsc, node, &failed)) {
             resource_location(failed, node, -INFINITY, "__fail_limit__",
                               data_set);
         }
-    }
-}
-
-void
-complex_set_cmds(pe_resource_t * rsc)
-{
-    GList *gIter = rsc->children;
-
-    rsc->cmds = &resource_class_alloc_functions[rsc->variant];
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        complex_set_cmds(child_rsc);
-    }
-}
-
-void
-set_alloc_actions(pe_working_set_t * data_set)
-{
-
-    GList *gIter = data_set->resources;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        complex_set_cmds(rsc);
     }
 }
 
@@ -794,7 +589,7 @@ stage0(pe_working_set_t * data_set)
         cluster_status(data_set);
     }
 
-    set_alloc_actions(data_set);
+    pcmk__set_allocation_methods(data_set);
     apply_system_health(data_set);
     pcmk__unpack_constraints(data_set);
 
@@ -970,143 +765,6 @@ stage4(pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void *
-convert_const_pointer(const void *ptr)
-{
-    /* Worst function ever */
-    return (void *)ptr;
-}
-
-static gint
-sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
-{
-    int rc = 0;
-    int r1_weight = -INFINITY;
-    int r2_weight = -INFINITY;
-
-    const char *reason = "existence";
-
-    GList *nodes = (GList *) data;
-    const pe_resource_t *resource1 = a;
-    const pe_resource_t *resource2 = b;
-
-    pe_node_t *r1_node = NULL;
-    pe_node_t *r2_node = NULL;
-    GList *gIter = NULL;
-    GHashTable *r1_nodes = NULL;
-    GHashTable *r2_nodes = NULL;
-
-    reason = "priority";
-    r1_weight = resource1->priority;
-    r2_weight = resource2->priority;
-
-    if (r1_weight > r2_weight) {
-        rc = -1;
-        goto done;
-    }
-
-    if (r1_weight < r2_weight) {
-        rc = 1;
-        goto done;
-    }
-
-    reason = "no node list";
-    if (nodes == NULL) {
-        goto done;
-    }
-
-    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
-                                          resource1->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
-                          resource1->cluster);
-
-    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
-                                          resource2->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
-                          resource2->cluster);
-
-    /* Current location score */
-    reason = "current location";
-    r1_weight = -INFINITY;
-    r2_weight = -INFINITY;
-
-    if (resource1->running_on) {
-        r1_node = pe__current_node(resource1);
-        r1_node = g_hash_table_lookup(r1_nodes, r1_node->details->id);
-        if (r1_node != NULL) {
-            r1_weight = r1_node->weight;
-        }
-    }
-    if (resource2->running_on) {
-        r2_node = pe__current_node(resource2);
-        r2_node = g_hash_table_lookup(r2_nodes, r2_node->details->id);
-        if (r2_node != NULL) {
-            r2_weight = r2_node->weight;
-        }
-    }
-
-    if (r1_weight > r2_weight) {
-        rc = -1;
-        goto done;
-    }
-
-    if (r1_weight < r2_weight) {
-        rc = 1;
-        goto done;
-    }
-
-    reason = "score";
-    for (gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        r1_node = NULL;
-        r2_node = NULL;
-
-        r1_weight = -INFINITY;
-        if (r1_nodes) {
-            r1_node = g_hash_table_lookup(r1_nodes, node->details->id);
-        }
-        if (r1_node) {
-            r1_weight = r1_node->weight;
-        }
-
-        r2_weight = -INFINITY;
-        if (r2_nodes) {
-            r2_node = g_hash_table_lookup(r2_nodes, node->details->id);
-        }
-        if (r2_node) {
-            r2_weight = r2_node->weight;
-        }
-
-        if (r1_weight > r2_weight) {
-            rc = -1;
-            goto done;
-        }
-
-        if (r1_weight < r2_weight) {
-            rc = 1;
-            goto done;
-        }
-    }
-
-  done:
-    crm_trace("%s (%d) on %s %c %s (%d) on %s: %s",
-              resource1->id, r1_weight, r1_node ? r1_node->details->id : "n/a",
-              rc < 0 ? '>' : rc > 0 ? '<' : '=',
-              resource2->id, r2_weight, r2_node ? r2_node->details->id : "n/a", reason);
-
-    if (r1_nodes) {
-        g_hash_table_destroy(r1_nodes);
-    }
-    if (r2_nodes) {
-        g_hash_table_destroy(r2_nodes);
-    }
-
-    return rc;
-}
-
 static void
 allocate_resources(pe_working_set_t * data_set)
 {
@@ -1175,13 +833,7 @@ stage5(pe_working_set_t * data_set)
     GList *gIter = NULL;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        GList *nodes = g_list_copy(data_set->nodes);
-
-        nodes = pcmk__sort_nodes(nodes, NULL, data_set);
-        data_set->resources =
-            g_list_sort_with_data(data_set->resources, sort_rsc_process_order, nodes);
-
-        g_list_free(nodes);
+        pcmk__sort_resources(data_set);
     }
 
     gIter = data_set->nodes;
