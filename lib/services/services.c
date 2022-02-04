@@ -1287,6 +1287,43 @@ services__set_result(svc_action_t *action, int agent_status,
 
 /*!
  * \internal
+ * \brief Set the result of an action, with a formatted exit reason
+ *
+ * \param[out] action        Where to set action result
+ * \param[in]  agent_status  Exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  format        printf-style format for a human-friendly
+ *                           description of reason for result
+ * \param[in]  ...           arguments for \p format
+ */
+void
+services__format_result(svc_action_t *action, int agent_status,
+                        enum pcmk_exec_status exec_status,
+                        const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *reason = NULL;
+
+    if (action == NULL) {
+        return;
+    }
+
+    action->rc = agent_status;
+    action->status = exec_status;
+
+    if (format != NULL) {
+        va_start(ap, format);
+        len = vasprintf(&reason, format, ap);
+        CRM_ASSERT(len > 0);
+        va_end(ap);
+    }
+    free(action->opaque->exit_reason);
+    action->opaque->exit_reason = reason;
+}
+
+/*!
+ * \internal
  * \brief Set the result of an action to cancelled
  *
  * \param[out] action        Where to set action result

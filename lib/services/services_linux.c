@@ -677,22 +677,23 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
-        const char *reason = NULL;
+        const char *what = NULL;
 
         if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH,
                          pcmk__str_none)) {
-            reason = "Fence agent did not complete in time";
+            what = "Fence agent";
         } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_ALERT,
                                 pcmk__str_none)) {
-            reason = "Alert agent did not complete in time";
+            what = "Alert agent";
         } else if (op->standard != NULL) {
-            reason = "Resource agent did not complete in time";
+            what = "Resource agent";
         } else {
-            reason = "Process did not complete in time";
+            what = "Process";
         }
         crm_info("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
-                             reason);
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_TIMEOUT,
+                                "%s did not complete in time", what);
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
