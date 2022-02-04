@@ -316,8 +316,9 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
             return;
         }
 
-        services__set_result(op, PCMK_OCF_NOT_INSTALLED,
-                             PCMK_EXEC_NOT_INSTALLED, "systemd unit not found");
+        services__format_result(op, PCMK_OCF_NOT_INSTALLED,
+                               PCMK_EXEC_NOT_INSTALLED,
+                               "systemd unit %s not found", op->agent);
     }
 
     crm_info("DBus request for %s of systemd unit %s for resource %s failed: %s",
@@ -372,8 +373,9 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
             invoke_unit_by_path(op, path);
 
         } else if (!(op->synchronous)) {
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 "No DBus object found for systemd unit");
+            services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                    "No DBus object found for systemd unit %s",
+                                    op->agent);
             services__finalize_async_op(op);
         }
     }
@@ -939,8 +941,9 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
             free(state);
 
         } else if (pending == NULL) { // Could not get ActiveState property
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 "Could not get unit state from DBus");
+            services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                    "Could not get state for unit %s from DBus",
+                                    op->agent);
             services__finalize_async_op(op);
 
         } else {
@@ -960,8 +963,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         method = "RestartUnit";
 
     } else {
-        services__set_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                             "Action not implemented for systemd resources");
+        services__format_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                PCMK_EXEC_ERROR,
+                                "Action %s not implemented "
+                                "for systemd resources", crm_str(op->action));
         if (!(op->synchronous)) {
             services__finalize_async_op(op);
         }
@@ -1017,8 +1022,9 @@ systemd_timeout_callback(gpointer p)
     op->opaque->timerid = 0;
     crm_info("%s action for systemd unit %s named '%s' timed out",
              op->action, op->agent, op->rsc);
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Systemd unit action did not complete in time");
+    services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
+                            "%s action for systemd unit %s "
+                            "did not complete in time", op->action, op->agent);
     services__finalize_async_op(op);
     return FALSE;
 }

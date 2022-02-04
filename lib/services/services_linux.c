@@ -706,8 +706,9 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else {
         crm_info("%s[%d] terminated with signal %d (%s)",
                  op->id, op->pid, signo, strsignal(signo));
-        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
+        services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                "Process interrupted by %s signal",
+                                strsignal(signo));
     }
 
     services__finalize_async_op(op);
@@ -867,19 +868,30 @@ services__configuration_error(svc_action_t *op, bool is_fatal)
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
+    const char *name = op->opaque->exec;
+
+    if (name == NULL) {
+        name = op->agent;
+        if (name == NULL) {
+            name = op->id;
+        }
+    }
+
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            services__set_result(op, services__not_installed_error(op),
-                                 PCMK_EXEC_NOT_INSTALLED, pcmk_rc_str(error));
+            services__format_result(op, services__not_installed_error(op),
+                                    PCMK_EXEC_NOT_INSTALLED, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            services__set_result(op, services__authorization_error(op),
-                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
+            services__format_result(op, services__authorization_error(op),
+                                    PCMK_EXEC_ERROR, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         default:
             services__set_result(op, services__generic_error(op),
@@ -1126,8 +1138,10 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_ERROR,
+                                "Process interrupted by %s signal",
+                                strsignal(signo));
         crm_info("%s[%d] terminated with signal %d (%s)",
                  op->id, op->pid, signo, strsignal(signo));
 

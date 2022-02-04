@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1805,8 +1805,9 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
     if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
                               PCMK_RESOURCE_CLASS_LSB, NULL)) {
-        services__set_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                             "Manual execution of this standard is unsupported");
+        services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
+                                "Manual execution of the %s standard "
+                                "is unsupported", crm_str(class));
     }
 
     if (op->rc != PCMK_OCF_UNKNOWN) {
