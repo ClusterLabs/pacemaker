@@ -72,20 +72,29 @@ pcmk__pid_active(pid_t pid, const char *daemon)
 
         rc = readlink(proc_path, exe_path, sizeof(exe_path) - 1);
         if (rc < 0) {
+            int rdlnk_errno = errno;
+
+            if (rdlnk_errno != EACCES) {
+                int rc = kill(pid,0); /* check once again - filter out races */
+
+                if ((rc < 0) && (errno == ESRCH)) {
+                    return ESRCH;
+                }
+            }
             if (last_asked_pid != pid) {
-                if (errno == EACCES) {
+                if (rdlnk_errno == EACCES) {
                     crm_info("Could not read from %s: %s " CRM_XS " errno=%d",
-                             proc_path, strerror(errno), errno);
+                             proc_path, strerror(rdlnk_errno), rdlnk_errno);
                 } else {
                     crm_err("Could not read from %s: %s " CRM_XS " errno=%d",
-                            proc_path, strerror(errno), errno);
+                            proc_path, strerror(rdlnk_errno), rdlnk_errno);
                 }
                 last_asked_pid = pid;
             }
-            if ((errno == EACCES) && checked_through_kill) {
+            if ((rdlnk_errno == EACCES) && checked_through_kill) {
                 // Trust kill result, can't double-check via path
                 return pcmk_rc_ok;
-            } else if (errno == EACCES) {
+            } else if (rdlnk_errno == EACCES) {
                 return EACCES;
             } else {
                 return ESRCH;  /* most likely errno == ENOENT */
