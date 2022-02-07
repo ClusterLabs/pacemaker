@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,7 +48,7 @@ typedef struct lrmd_rsc_s {
      * PCMK_EXEC_NO_FENCE_DEVICE ("not running"), or
      * PCMK_EXEC_NOT_CONNECTED ("unknown because fencer connection was lost").
      */
-    enum pcmk_exec_status fence_probe_result;
+    pcmk__action_result_t fence_probe_result;
 
     crm_trigger_t *work;
 } lrmd_rsc_t;
