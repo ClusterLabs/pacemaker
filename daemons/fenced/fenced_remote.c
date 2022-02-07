@@ -2249,6 +2249,7 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
         const char *device = NULL;
+        const char *reason = op->result.exit_reason;
 
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
@@ -2266,8 +2267,8 @@ fenced_process_fencing_reply(xmlNode *msg)
             crm_warn("Ignoring %s 'on' failure (%s%s%s) targeting %s "
                      "after successful 'off'",
                      device, pcmk_exec_status_str(op->result.execution_status),
-                     (op->result.exit_reason == NULL)? "" : ": ",
-                     (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
+                     (reason == NULL)? "" : ": ",
+                     (reason == NULL)? "" : reason,
                      op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
@@ -2276,9 +2277,9 @@ fenced_process_fencing_reply(xmlNode *msg)
                        op->action, op->target, device, op->client_name,
                        op->originator,
                        pcmk_exec_status_str(op->result.execution_status),
-                       (op->result.exit_reason == NULL)? "" : " (",
-                       (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
-                       (op->result.exit_reason == NULL)? "" : ")");
+                       (reason == NULL)? "" : " (",
+                       (reason == NULL)? "" : reason,
+                       (reason == NULL)? "" : ")");
         }
 
         if (pcmk__result_ok(&op->result)) {

@@ -3016,6 +3016,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
+    const char *reason = NULL;
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
@@ -3271,13 +3272,14 @@ done:
         free_xml(reply);
     }
 
+    reason = result.exit_reason;
     crm_debug("Processed %s request from %s %s: %s%s%s%s",
               op, ((client == NULL)? "peer" : "client"),
               ((client == NULL)? remote_peer : pcmk__client_name(client)),
               pcmk_exec_status_str(result.execution_status),
-              (result.exit_reason == NULL)? "" : " (",
-              (result.exit_reason == NULL)? "" : result.exit_reason,
-              (result.exit_reason == NULL)? "" : ")");
+              (reason == NULL)? "" : " (",
+              (reason == NULL)? "" : reason,
+              (reason == NULL)? "" : ")");
 
     free_xml(data);
     pcmk__reset_result(&result);
