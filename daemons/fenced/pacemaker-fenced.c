@@ -226,7 +226,7 @@ stonith_peer_cs_destroy(gpointer user_data)
 #endif
 
 void
-do_local_reply(xmlNode *notify_src, const char *client_id, gboolean sync_reply)
+do_local_reply(xmlNode *notify_src, const char *client_id, int call_options)
 {
     /* send callback to originating child */
     pcmk__client_t *client_obj = NULL;
@@ -242,12 +242,14 @@ do_local_reply(xmlNode *notify_src, const char *client_id, gboolean sync_reply)
 
     } else {
         int rid = 0;
+        uint32_t ipc_flags = crm_ipc_server_event;
 
-        if (sync_reply) {
+        if (pcmk_is_set(call_options, st_opt_sync_call)) {
             CRM_LOG_ASSERT(client_obj->request_id);
 
             rid = client_obj->request_id;
             client_obj->request_id = 0;
+            ipc_flags = crm_ipc_flags_none;
 
             crm_trace("Sending response %d to client %s",
                       rid, pcmk__client_name(client_obj));
@@ -257,14 +259,12 @@ do_local_reply(xmlNode *notify_src, const char *client_id, gboolean sync_reply)
                       pcmk__client_name(client_obj));
         }
 
-        local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                      (sync_reply? crm_ipc_flags_none
-                                       : crm_ipc_server_event));
+        local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src, ipc_flags);
     }
 
     if ((local_rc != pcmk_rc_ok) && (client_obj != NULL)) {
-        crm_warn("%s reply to client %s failed: %s",
-                 (sync_reply? "Synchronous" : "Asynchronous"),
+        crm_warn("%synchronous reply to client %s failed: %s",
+                 (pcmk_is_set(call_options, st_opt_sync_call)? "S" : "As"),
                  pcmk__client_name(client_obj), pcmk_rc_str(local_rc));
     }
 }

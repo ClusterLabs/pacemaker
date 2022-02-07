@@ -229,7 +229,7 @@ void fenced_unregister_level(xmlNode *msg, char **desc,
 stonith_topology_t *find_topology_for_host(const char *host);
 
 void do_local_reply(xmlNode *notify_src, const char *client_id,
-                    gboolean sync_reply);
+                    int call_options);
 
 xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
                                 pcmk__action_result_t *result);
