@@ -1249,8 +1249,6 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
     op = create_remote_stonith_op(client_id, request, FALSE);
     op->owner = TRUE;
     if (manual_ack) {
-        crm_notice("Processing manual confirmation of fencing targeting %s "
-                   CRM_XS " id=%.8s", op->target, op->id);
         return op;
     }
 
@@ -2232,13 +2230,6 @@ fenced_process_fencing_reply(xmlNode *msg)
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
-        crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s%s%s%s "
-                  CRM_XS " id=%.8s",
-                  op->action, op->target, op->client_name, op->originator,
-                  pcmk_exec_status_str(op->result.execution_status),
-                  (op->result.exit_reason == NULL)? "" : " (",
-                  (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
-                  (op->result.exit_reason == NULL)? "" : ")", op->id);
         if (pcmk__result_ok(&op->result)) {
             op->state = st_done;
         } else {
@@ -2257,15 +2248,7 @@ fenced_process_fencing_reply(xmlNode *msg)
     }
 
     if (pcmk_is_set(op->call_options, st_opt_topology)) {
-        const char *device = crm_element_value(msg, F_STONITH_DEVICE);
-
-        crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: %s%s%s%s",
-                   op->action, op->target, device, op->client_name,
-                   op->originator,
-                   pcmk_exec_status_str(op->result.execution_status),
-                  (op->result.exit_reason == NULL)? "" : " (",
-                  (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
-                  (op->result.exit_reason == NULL)? "" : ")");
+        const char *device = NULL;
 
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
@@ -2273,6 +2256,8 @@ fenced_process_fencing_reply(xmlNode *msg)
             finalize_op(op, msg, false);
             return;
         }
+
+        device = crm_element_value(msg, F_STONITH_DEVICE);
 
         if ((op->phase == 2) && !pcmk__result_ok(&op->result)) {
             /* A remapped "on" failed, but the node was already turned off
@@ -2285,6 +2270,15 @@ fenced_process_fencing_reply(xmlNode *msg)
                      (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
                      op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        } else {
+            crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: "
+                       "%s%s%s%s",
+                       op->action, op->target, device, op->client_name,
+                       op->originator,
+                       pcmk_exec_status_str(op->result.execution_status),
+                       (op->result.exit_reason == NULL)? "" : " (",
+                       (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
+                       (op->result.exit_reason == NULL)? "" : ")");
         }
 
         if (pcmk__result_ok(&op->result)) {
@@ -2303,7 +2297,6 @@ fenced_process_fencing_reply(xmlNode *msg)
         }
 
     } else if (pcmk__result_ok(&op->result) && (op->devices == NULL)) {
-        crm_trace("All done for %s", op->target);
         op->state = st_done;
         finalize_op(op, msg, false);
         return;

@@ -467,7 +467,6 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 static void
 pipe_in_action_stdin_parameters(const svc_action_t *op)
 {
-    crm_debug("sending args");
     if (op->params) {
         g_hash_table_foreach(op->params, pipe_in_single_parameter, (gpointer) op);
     }
