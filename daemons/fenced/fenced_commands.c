@@ -3050,10 +3050,6 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         CRM_ASSERT(client);
         crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
         crm_xml_add(reply, F_STONITH_CLIENTID, client->id);
-        pcmk__ipc_send_xml(client, id, reply, flags);
-        client->request_id = 0;
-        free_xml(reply);
-        reply = NULL;
         pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
     } else if (pcmk__str_eq(op, STONITH_OP_EXEC, pcmk__str_none)) {
@@ -3295,7 +3291,16 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 done:
     // Reply if result is known
     if (reply != NULL) {
-        stonith_send_reply(reply, call_options, remote_peer, client);
+        if (pcmk__str_any_of(op, CRM_OP_REGISTER, NULL) && (client != NULL)) {
+            /* These IPC-only commands must reuse the call options from the
+             * original request rather than the ones set by stonith_send_reply()
+             * -> do_local_reply().
+             */
+            pcmk__ipc_send_xml(client, id, reply, flags);
+            client->request_id = 0;
+        } else {
+            stonith_send_reply(reply, call_options, remote_peer, client);
+        }
         free_xml(reply);
     }
 
