@@ -613,11 +613,12 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
-            if (op->connection_rc == -ENOKEY) {
+            if ((op->connection_rc == -ENOKEY)
+                || (op->connection_rc == -EKEYREJECTED)) {
                 // Hard error, don't retry
                 pcmk__set_result(&(cmd->result), PCMK_OCF_INVALID_PARAM,
                                  PCMK_EXEC_ERROR,
-                                 "Authentication key not readable");
+                                 pcmk_strerror(op->connection_rc));
 
             } else if (cmd->remaining_timeout > 3000) {
                 crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
