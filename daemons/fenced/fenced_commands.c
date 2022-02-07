@@ -65,7 +65,7 @@ static gboolean stonith_device_dispatch(gpointer user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
 static void stonith_send_reply(xmlNode * reply, int call_options, const char *remote_peer,
-                               const char *client_id);
+                               pcmk__client_t *client);
 
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
@@ -2243,6 +2243,16 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     xmlNode *dev = NULL;
     xmlNode *list = NULL;
     GList *lpc = NULL;
+    pcmk__client_t *client = NULL;
+
+    if (query->client_id != NULL) {
+        client = pcmk__find_client_by_id(query->client_id);
+        if ((client == NULL) && (query->remote_peer == NULL)) {
+            crm_trace("Skipping reply to %s: no longer a client",
+                      query->client_id);
+            goto done;
+        }
+    }
 
     /* Pack the results into XML */
     list = create_xml_node(NULL, __func__);
@@ -2318,8 +2328,11 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_log_xml_trace(list, "Add query results");
         add_message_xml(query->reply, F_STONITH_CALLDATA, list);
     }
-    stonith_send_reply(query->reply, query->call_options, query->remote_peer, query->client_id);
 
+    stonith_send_reply(query->reply, query->call_options, query->remote_peer,
+                       client);
+
+done:
     free_xml(query->reply);
     free(query->remote_peer);
     free(query->client_id);
@@ -2465,10 +2478,19 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
                  int pid, bool merged)
 {
     xmlNode *reply = NULL;
+    pcmk__client_t *client = NULL;
 
     CRM_CHECK((cmd != NULL) && (result != NULL), return);
 
     log_async_result(cmd, result, pid, NULL, merged);
+
+    if (cmd->client != NULL) {
+        client = pcmk__find_client_by_id(cmd->client);
+        if ((client == NULL) && (cmd->origin == NULL)) {
+            crm_trace("Skipping reply to %s: no longer a client", cmd->client);
+            return;
+        }
+    }
 
     reply = construct_async_reply(cmd, result);
     if (merged) {
@@ -2487,7 +2509,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
         // Reply only to the originator
-        stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);
+        stonith_send_reply(reply, cmd->options, cmd->origin, client);
     }
 
     crm_log_xml_trace(reply, "Reply");
@@ -2910,23 +2932,17 @@ check_alternate_host(const char *target)
  * \param[in] reply         XML reply to send
  * \param[in] call_options  Send synchronously if st_opt_sync_call is set here
  * \param[in] remote_peer   If not NULL, name of peer node to send CPG reply
- * \param[in] client_id     If not NULL, name of client to send IPC reply
+ * \param[in] client        If not NULL, client to send IPC reply
  */
 static void
 stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
-                   const char *client_id)
+                   pcmk__client_t *client)
 {
-    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client_id != NULL)),
+    CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
               return);
 
     if (remote_peer == NULL) {
-        pcmk__client_t *client = pcmk__find_client_by_id(client_id);
-
-        if (client == NULL) {
-            crm_trace("Skipping reply to %s: no longer a client", client_id);
-        } else {
-            do_local_reply(reply, client, call_options);
-        }
+        do_local_reply(reply, client, call_options);
     } else {
         send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
                              reply, FALSE);
@@ -3279,7 +3295,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
 done:
     // Reply if result is known
     if (reply != NULL) {
-        stonith_send_reply(reply, call_options, remote_peer, client_id);
+        stonith_send_reply(reply, call_options, remote_peer, client);
         free_xml(reply);
     }
 
