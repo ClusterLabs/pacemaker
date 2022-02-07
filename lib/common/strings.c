@@ -1102,33 +1102,31 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 {
     /* If this flag is set, the second string is a regex. */
     if (pcmk_is_set(flags, pcmk__str_regex)) {
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        regex_t r_patt;
         int reg_flags = REG_EXTENDED | REG_NOSUB;
         int regcomp_rc = 0;
         int rc = 0;
 
         if (s1 == NULL || s2 == NULL) {
-            free(r_patt);
             return 1;
         }
 
         if (pcmk_is_set(flags, pcmk__str_casei)) {
             reg_flags |= REG_ICASE;
         }
-        regcomp_rc = regcomp(r_patt, s2, reg_flags);
+        regcomp_rc = regcomp(&r_patt, s2, reg_flags);
         if (regcomp_rc != 0) {
             rc = 1;
             crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
         } else {
-            rc = regexec(r_patt, s1, 0, NULL, 0);
+            rc = regexec(&r_patt, s1, 0, NULL, 0);
 
             if (rc != 0) {
                 rc = 1;
             }
         }
 
-        regfree(r_patt);
-        free(r_patt);
+        regfree(&r_patt);
         return rc;
     }
 

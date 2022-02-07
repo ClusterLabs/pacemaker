@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,12 +10,23 @@
 #ifndef MOCK_PRIVATE__H
 #  define MOCK_PRIVATE__H
 
+#include <pwd.h>
+#include <stdlib.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
 
 /* This header is for the sole use of libcrmcommon_test. */
 
+void *__real_calloc(size_t nmemb, size_t size);
+void *__wrap_calloc(size_t nmemb, size_t size);
+
 char *__real_getenv(const char *name);
 char *__wrap_getenv(const char *name);
+
+int __real_getpwnam_r(const char *name, struct passwd *pwd,
+                      char *buf, size_t buflen, struct passwd **result);
+int __wrap_getpwnam_r(const char *name, struct passwd *pwd,
+                      char *buf, size_t buflen, struct passwd **result);
 
 int __real_uname(struct utsname *buf);
 int __wrap_uname(struct utsname *buf);
