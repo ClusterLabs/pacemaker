@@ -226,7 +226,7 @@ stonith_peer_cs_destroy(gpointer user_data)
 #endif
 
 void
-do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
+do_local_reply(xmlNode *notify_src, const char *client_id, gboolean sync_reply)
 {
     /* send callback to originating child */
     pcmk__client_t *client_obj = NULL;
@@ -249,14 +249,12 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
-            crm_trace("Sending response %d to client %s%s",
-                      rid, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
+            crm_trace("Sending response %d to client %s",
+                      rid, pcmk__client_name(client_obj));
 
         } else {
-            crm_trace("Sending an event to client %s%s",
-                      pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
+            crm_trace("Sending an event to client %s",
+                      pcmk__client_name(client_obj));
         }
 
         local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,

@@ -2921,7 +2921,7 @@ stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
 
     if (remote_peer == NULL) {
         do_local_reply(reply, client_id,
-                       pcmk_is_set(call_options, st_opt_sync_call), FALSE);
+                       pcmk_is_set(call_options, st_opt_sync_call));
     } else {
         send_cluster_message(crm_get_peer(0, remote_peer), crm_msg_stonith_ng,
                              reply, FALSE);

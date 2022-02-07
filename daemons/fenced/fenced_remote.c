@@ -443,7 +443,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
-    do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
+    do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call);
 
     /* bcast to all local clients that the fencing operation happend */
     notify_data = fencing_result2xml(op);
