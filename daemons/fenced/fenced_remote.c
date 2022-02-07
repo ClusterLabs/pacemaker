@@ -428,6 +428,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
 {
     xmlNode *notify_data = NULL;
     xmlNode *reply = NULL;
+    pcmk__client_t *client = NULL;
 
     if (op->notify_sent == TRUE) {
         /* nothing to do */
@@ -443,7 +444,12 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     crm_xml_add(reply, F_STONITH_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
-    do_local_reply(reply, op->client_id, op->call_options);
+    client = pcmk__find_client_by_id(op->client_id);
+    if (client == NULL) {
+        crm_trace("Skipping reply to %s: no longer a client", op->client_id);
+    } else {
+        do_local_reply(reply, client, op->call_options);
+    }
 
     /* bcast to all local clients that the fencing operation happend */
     notify_data = fencing_result2xml(op);
