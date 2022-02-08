@@ -294,13 +294,15 @@ pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
  *
  * \param[in] api  IPC API connection
  */
-static void
+static bool
 call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
 {
     crm_log_xml_trace(message, "ipc-received");
     if ((api->cmds != NULL) && (api->cmds->dispatch != NULL)) {
-        api->cmds->dispatch(api, message);
+        return api->cmds->dispatch(api, message);
     }
+
+    return false;
 }
 
 /*!

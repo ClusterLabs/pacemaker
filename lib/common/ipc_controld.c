@@ -157,7 +157,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
            || !strcmp(command, CRM_OP_LRM_DELETE);
 }
 
-static void
+static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     struct controld_api_private_s *private = api->api_data;
@@ -236,6 +236,8 @@ done:
     if (pcmk__str_eq(value, PCMK__CONTROLD_CMD_NODES, pcmk__str_casei)) {
         g_list_free_full(reply_data.data.nodes, free);
     }
+
+    return false;
 }
 
 pcmk__ipc_methods_t *

@@ -74,7 +74,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
     return pcmk__str_any_of(command, CRM_OP_PECALC, NULL);
 }
 
-static void
+static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     crm_exit_t status = CRM_EX_OK;
@@ -85,7 +85,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     const char *value = NULL;
 
     if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_casei)) {
-        return;
+        return false;
     }
 
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
@@ -119,6 +119,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
 done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
+    return false;
 }
 
 pcmk__ipc_methods_t *

@@ -177,8 +177,10 @@ typedef struct pcmk__ipc_methods_s {
      *
      * \param[in] api  IPC API connection
      * \param[in] msg  Message read from IPC connection
+     *
+     * \return true if more IPC reply messages should be expected
      */
-    void (*dispatch)(pcmk_ipc_api_t *api, xmlNode *msg);
+    bool (*dispatch)(pcmk_ipc_api_t *api, xmlNode *msg);
 
     /*!
      * \internal
