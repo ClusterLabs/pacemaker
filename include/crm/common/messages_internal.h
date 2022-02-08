@@ -54,4 +54,25 @@ pcmk__request_origin_type(pcmk__request_t *request)
     }
 }
 
+/*!
+ * \internal
+ * \brief Get a loggable name for a request's origin
+ *
+ * \param[in] request
+ *
+ * \return Peer name if request was via CPG, client name if via IPC, or
+ *         "(unspecified)" if unknown
+ */
+static inline const char *
+pcmk__request_origin(pcmk__request_t *request)
+{
+    if ((request != NULL) && (request->client != NULL)) {
+        return pcmk__client_name(request->client);
+    } else if ((request != NULL) && (request->peer != NULL)) {
+        return request->peer;
+    } else {
+        return "(unspecified)";
+    }
+}
+
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H

@@ -3091,7 +3091,7 @@ handle_request(pcmk__request_t *request)
         flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_ACTIVATE);
         if (flag_name) {
             crm_debug("Enabling %s callbacks for client %s",
-                      flag_name, pcmk__client_name(request->client));
+                      flag_name, pcmk__request_origin(request));
             pcmk__set_client_flags(request->client, get_stonith_flag(flag_name));
         }
 
@@ -3099,7 +3099,7 @@ handle_request(pcmk__request_t *request)
                                       F_STONITH_NOTIFY_DEACTIVATE);
         if (flag_name) {
             crm_debug("Disabling %s callbacks for client %s",
-                      flag_name, pcmk__client_name(request->client));
+                      flag_name, pcmk__request_origin(request));
             pcmk__clear_client_flags(request->client,
                                      get_stonith_flag(flag_name));
         }
@@ -3114,7 +3114,7 @@ handle_request(pcmk__request_t *request)
         crm_notice("Received forwarded fencing request from "
                    "%s %s to fence (%s) peer %s",
                    pcmk__request_origin_type(request),
-                   ((request->client == NULL)? request->peer : pcmk__client_name(request->client)),
+                   pcmk__request_origin(request),
                    crm_element_value(dev, F_STONITH_ACTION),
                    crm_element_value(dev, F_STONITH_TARGET));
 
@@ -3158,7 +3158,7 @@ handle_request(pcmk__request_t *request)
                 int tolerance = 0;
 
                 crm_notice("Client %s wants to fence (%s) %s using %s",
-                           pcmk__client_name(request->client), action,
+                           pcmk__request_origin(request), action,
                            target, (device? device : "any device"));
                 crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
                 if (stonith_check_fence_tolerance(tolerance, target, action)) {
@@ -3308,7 +3308,7 @@ handle_request(pcmk__request_t *request)
     } else {
         crm_err("Unknown IPC request %s from %s %s", op,
                 pcmk__request_origin_type(request),
-                ((request->client == NULL)? request->peer : pcmk__client_name(request->client)));
+                pcmk__request_origin(request));
         pcmk__format_result(&request->result,
                             CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                             "Unknown IPC request type '%s' (bug?)",
@@ -3338,7 +3338,7 @@ done:
     reason = request->result.exit_reason;
     crm_debug("Processed %s request from %s %s: %s%s%s%s",
               op, pcmk__request_origin_type(request),
-              ((request->client == NULL)? request->peer : pcmk__client_name(request->client)),
+              pcmk__request_origin(request),
               pcmk_exec_status_str(request->result.execution_status),
               (reason == NULL)? "" : " (",
               (reason == NULL)? "" : reason,
