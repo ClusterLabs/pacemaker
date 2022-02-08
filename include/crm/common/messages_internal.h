@@ -33,4 +33,25 @@ typedef struct {
 
 const char *pcmk__message_name(const char *name);
 
+/*!
+ * \internal
+ * \brief Get a loggable description of a request's origin
+ *
+ * \param[in] request
+ *
+ * \return "peer" if request was via CPG, "client" if via IPC, or "originator"
+ *         if unknown
+ */
+static inline const char *
+pcmk__request_origin_type(pcmk__request_t *request)
+{
+    if ((request != NULL) && (request->client != NULL)) {
+        return "client";
+    } else if ((request != NULL) && (request->peer != NULL)) {
+        return "peer";
+    } else {
+        return "originator";
+    }
+}
+
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H

@@ -3113,7 +3113,7 @@ handle_request(pcmk__request_t *request)
 
         crm_notice("Received forwarded fencing request from "
                    "%s %s to fence (%s) peer %s",
-                   ((request->client == NULL)? "peer" : "client"),
+                   pcmk__request_origin_type(request),
                    ((request->client == NULL)? request->peer : pcmk__client_name(request->client)),
                    crm_element_value(dev, F_STONITH_ACTION),
                    crm_element_value(dev, F_STONITH_TARGET));
@@ -3307,7 +3307,7 @@ handle_request(pcmk__request_t *request)
 
     } else {
         crm_err("Unknown IPC request %s from %s %s", op,
-                ((request->client == NULL)? "peer" : "client"),
+                pcmk__request_origin_type(request),
                 ((request->client == NULL)? request->peer : pcmk__client_name(request->client)));
         pcmk__format_result(&request->result,
                             CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
@@ -3337,7 +3337,7 @@ done:
 
     reason = request->result.exit_reason;
     crm_debug("Processed %s request from %s %s: %s%s%s%s",
-              op, ((request->client == NULL)? "peer" : "client"),
+              op, pcmk__request_origin_type(request),
               ((request->client == NULL)? request->peer : pcmk__client_name(request->client)),
               pcmk_exec_status_str(request->result.execution_status),
               (reason == NULL)? "" : " (",
