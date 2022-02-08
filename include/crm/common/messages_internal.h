@@ -10,6 +10,27 @@
 #ifndef PCMK__CRM_COMMON_MESSAGES_INTERNAL__H
 #define PCMK__CRM_COMMON_MESSAGES_INTERNAL__H
 
+#include <stdint.h>                         // uint32_t
+#include <libxml/tree.h>                    // xmlNode
+#include <crm/common/ipc_internal.h>        // pcmk__client_t
+#include <crm/common/results_internal.h>    // pcmk__action_result_t
+
+// Server request (whether from an IPC client or cluster peer)
+typedef struct {
+    // If request is from an IPC client
+    pcmk__client_t *client;  // IPC client (NULL if not via IPC)
+    uint32_t id;             // IPC message ID
+    uint32_t flags;          // IPC message flags
+
+    // If message is from a cluster peer
+    const char *peer;       // Peer name (NULL if not via cluster)
+
+    // Common information regardless of origin
+    xmlNode *xml;                   // Request XML
+    int call_options;               // Call options set on request
+    pcmk__action_result_t result;   // Where to store operation result
+} pcmk__request_t;
+
 const char *pcmk__message_name(const char *name);
 
 #endif // PCMK__CRM_COMMON_MESSAGES_INTERNAL__H
