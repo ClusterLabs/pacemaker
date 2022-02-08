@@ -34,8 +34,8 @@ msgid ""
 "(a good value is the number of resources in the cluster multiplied by the "
 "number of nodes)."
 msgstr ""
-"如果日志中包含集群守护程序PID的“正在退出客户端”消息，请提高此值（这个值应该"
-"是集群中的资源数量乘以节点数量）"
+"如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为"
+"集群中的资源数量乘以节点数量）"
 
 #: daemons/controld/controld_control.c:543
 msgid ""
