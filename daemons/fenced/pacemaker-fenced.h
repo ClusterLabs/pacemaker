@@ -210,6 +210,7 @@ void free_topology_list(void);
 void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
+void fenced_unregister_handlers(void);
 
 uint64_t get_stonith_flag(const char *name);
 

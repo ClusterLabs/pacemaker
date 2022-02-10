@@ -1286,6 +1286,7 @@ stonith_cleanup(void)
     free_topology_list();
     free_device_list();
     free_metadata_cache();
+    fenced_unregister_handlers();
 
     free(stonith_our_uname);
     stonith_our_uname = NULL;

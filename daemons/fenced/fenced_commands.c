@@ -39,6 +39,8 @@ GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
 GList *cmd_list = NULL;
 
+static GHashTable *fenced_handlers = NULL;
+
 struct device_search_s {
     /* target of fence action */
     char *host;
@@ -3352,6 +3354,36 @@ handle_unknown_request(pcmk__request_t *request)
 }
 
 static void
+fenced_register_handlers(void)
+{
+    pcmk__server_command_t handlers[] = {
+        { CRM_OP_REGISTER, handle_register_request },
+        { STONITH_OP_EXEC, handle_agent_request },
+        { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
+        { STONITH_OP_QUERY, handle_query_request },
+        { T_STONITH_NOTIFY, handle_notify_request },
+        { STONITH_OP_RELAY, handle_relay_request },
+        { STONITH_OP_FENCE, handle_fence_request },
+        { STONITH_OP_FENCE_HISTORY, handle_history_request },
+        { STONITH_OP_DEVICE_ADD, handle_device_add_request },
+        { STONITH_OP_DEVICE_DEL, handle_device_delete_request },
+        { STONITH_OP_LEVEL_ADD, handle_level_add_request },
+        { STONITH_OP_LEVEL_DEL, handle_level_delete_request },
+        { CRM_OP_RM_NODE_CACHE, handle_cache_request },
+        { NULL, handle_unknown_request },
+    };
+
+    fenced_handlers = pcmk__register_handlers(handlers);
+}
+
+void
+fenced_unregister_handlers(void)
+{
+    g_hash_table_destroy(fenced_handlers);
+    fenced_handlers = NULL;
+}
+
+static void
 handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
@@ -3363,55 +3395,13 @@ handle_request(pcmk__request_t *request)
     op = crm_element_value(request->xml, F_STONITH_OPERATION);
     CRM_CHECK(op != NULL, return);
 
-    if (pcmk_is_set(request->call_options, st_opt_sync_call)
-        && (request->client != NULL)) {
-        CRM_ASSERT(request->client->request_id == request->id);
+    if (fenced_handlers == NULL) {
+        fenced_register_handlers();
     }
-
-    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        reply = handle_register_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_EXEC, pcmk__str_none)) {
-        reply = handle_agent_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_TIMEOUT_UPDATE, pcmk__str_none)) {
-        reply = handle_update_timeout_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
-        reply = handle_query_request(request);
-
-    } else if (pcmk__str_eq(op, T_STONITH_NOTIFY, pcmk__str_none)) {
-        reply = handle_notify_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {
-        reply = handle_relay_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
-        reply = handle_fence_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_FENCE_HISTORY, pcmk__str_none)) {
-        reply = handle_history_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
-        reply = handle_device_add_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
-        reply = handle_device_delete_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
-        reply = handle_level_add_request(request);
-
-    } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
-        reply = handle_level_delete_request(request);
-
-    } else if (pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        reply = handle_cache_request(request);
-
-    } else {
-        reply = handle_unknown_request(request);
-    }
-
-    // Reply if result is known
+    reply = pcmk__process_request(request, op,
+                                  pcmk_is_set(request->call_options,
+                                              st_opt_sync_call),
+                                  fenced_handlers);
     if (reply != NULL) {
         if (pcmk__str_any_of(op, CRM_OP_REGISTER, T_STONITH_NOTIFY, NULL)
             && (request->client != NULL)) {
