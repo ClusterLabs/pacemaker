@@ -64,3 +64,4 @@ libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c
 libpacemaker_la_SOURCES += pcmk_sched_utilization.c
 libpacemaker_la_SOURCES += pcmk_simulate.c
+libpacemaker_la_SOURCES += pcmk_status.c

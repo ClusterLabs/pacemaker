@@ -72,6 +72,49 @@ handle_level(stonith_t *st, char *target, int fence_level,
     return pcmk_legacy2rc(rc);
 }
 
+static stonith_history_t *
+reduce_fence_history(stonith_history_t *history)
+{
+    stonith_history_t *new, *hp, *np;
+
+    if (!history) {
+        return history;
+    }
+
+    new = history;
+    hp = new->next;
+    new->next = NULL;
+
+    while (hp) {
+        stonith_history_t *hp_next = hp->next;
+
+        hp->next = NULL;
+
+        for (np = new; ; np = np->next) {
+            if ((hp->state == st_done) || (hp->state == st_failed)) {
+                /* action not in progress */
+                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                    pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
+                    (hp->state == np->state) &&
+                    ((hp->state == st_done) ||
+                     pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
+                        /* purge older hp */
+                        stonith_history_free(hp);
+                        break;
+                }
+            }
+
+            if (!np->next) {
+                np->next = hp;
+                break;
+            }
+        }
+        hp = hp_next;
+    }
+
+    return new;
+}
+
 static void
 notify_callback(stonith_t * st, stonith_event_t * e)
 {
@@ -531,45 +574,27 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
 }
 #endif
 
-stonith_history_t *
-pcmk__reduce_fence_history(stonith_history_t *history)
+int
+pcmk__get_fencing_history(stonith_t *st, stonith_history_t **stonith_history,
+                          enum pcmk__fence_history fence_history)
 {
-    stonith_history_t *new, *hp, *np;
+    int rc = pcmk_rc_ok;
 
-    if (!history) {
-        return history;
-    }
+    if (st == NULL) {
+        rc = ENOTCONN;
+    } else if (fence_history != pcmk__fence_history_none) {
+        rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
 
-    new = history;
-    hp = new->next;
-    new->next = NULL;
-
-    while (hp) {
-        stonith_history_t *hp_next = hp->next;
-
-        hp->next = NULL;
-
-        for (np = new; ; np = np->next) {
-            if ((hp->state == st_done) || (hp->state == st_failed)) {
-                /* action not in progress */
-                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                    pcmk__str_eq(hp->action, np->action, pcmk__str_none) &&
-                    (hp->state == np->state) &&
-                    ((hp->state == st_done) ||
-                     pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
-                        /* purge older hp */
-                        stonith_history_free(hp);
-                        break;
-                }
-            }
-
-            if (!np->next) {
-                np->next = hp;
-                break;
-            }
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            return rc;
         }
-        hp = hp_next;
+
+        *stonith_history = stonith__sort_history(*stonith_history);
+        if (fence_history == pcmk__fence_history_reduced) {
+            *stonith_history = reduce_fence_history(*stonith_history);
+        }
     }
 
-    return new;
+    return rc;
 }

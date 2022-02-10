@@ -69,7 +69,6 @@ static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
 static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
-static pe_working_set_t *mon_data_set = NULL;
 
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
@@ -84,8 +83,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
-static gboolean fence_history = FALSE;
-static gboolean has_warnings = FALSE;
+static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
 
@@ -396,22 +394,22 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
     switch (interactive_fence_level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -814,12 +812,10 @@ cib_connect(gboolean full)
         return rc;
     }
 
-#if CURSES_ENABLED
     /* just show this if refresh is gonna remove all traces */
     if (output_format == mon_output_console) {
         out->info(out,"Waiting for CIB ...");
     }
-#endif
 
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
@@ -864,26 +860,26 @@ set_fencing_options(int level)
     switch (level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             show &= ~pcmk_section_fencing_all;
             break;
     }
@@ -1020,13 +1016,11 @@ pacemakerd_status(void)
         case EREMOTEIO:
             rc = pcmk_rc_ok;
             on_remote_node = TRUE;
-#if CURSES_ENABLED
             /* just show this if refresh is gonna remove all traces */
             if (output_format == mon_output_console) {
                 out->info(out,
                     "Running on remote-node waiting to be connected by cluster ...");
             }
-#endif
             break;
         default:
             break;
@@ -1696,85 +1690,6 @@ main(int argc, char **argv)
     return clean_up(CRM_EX_OK);
 }
 
-/*!
- * \internal
- * \brief Print one-line status suitable for use with monitoring software
- *
- * \param[in] data_set  Working set of CIB state
- *
- * \note This function's output (and the return code when the program exits)
- *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
- */
-static void
-print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    int nodes_online = 0;
-    int nodes_standby = 0;
-    int nodes_maintenance = 0;
-    char *offline_nodes = NULL;
-    size_t offline_nodes_len = 0;
-    gboolean no_dc = FALSE;
-    gboolean offline = FALSE;
-
-    if (data_set->dc_node == NULL) {
-        has_warnings = TRUE;
-        no_dc = TRUE;
-    }
-
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (node->details->standby && node->details->online) {
-            nodes_standby++;
-        } else if (node->details->maintenance && node->details->online) {
-            nodes_maintenance++;
-        } else if (node->details->online) {
-            nodes_online++;
-        } else {
-            char *s = crm_strdup_printf("offline node: %s", node->details->uname);
-            /* coverity[leaked_storage] False positive */
-            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
-            free(s);
-            has_warnings = TRUE;
-            offline = TRUE;
-        }
-    }
-
-    if (has_warnings) {
-        out->info(out, "CLUSTER WARN: %s%s%s",
-                  no_dc ? "No DC" : "",
-                  no_dc && offline ? ", " : "",
-                  (offline? offline_nodes : ""));
-        free(offline_nodes);
-    } else {
-        char *nodes_standby_s = NULL;
-        char *nodes_maint_s = NULL;
-
-        if (nodes_standby > 0) {
-            nodes_standby_s = crm_strdup_printf(", %d standby node%s", nodes_standby,
-                                                pcmk__plural_s(nodes_standby));
-        }
-
-        if (nodes_maintenance > 0) {
-            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              nodes_maintenance,
-                                              pcmk__plural_s(nodes_maintenance));
-        }
-
-        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
-                       "%d resource instance%s configured",
-                  nodes_online, pcmk__plural_s(nodes_online),
-                  nodes_standby_s != NULL ? nodes_standby_s : "",
-                  nodes_maint_s != NULL ? nodes_maint_s : "",
-                  data_set->ninstances, pcmk__plural_s(data_set->ninstances));
-
-        free(nodes_standby_s);
-        free(nodes_maint_s);
-    }
-    /* coverity[leaked_storage] False positive */
-}
-
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
                  int status, const char *desc)
@@ -2113,38 +2028,12 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
-get_fencing_history(stonith_history_t **stonith_history)
-{
-    int rc = 0;
-
-    while (fence_history) {
-        if (st != NULL) {
-            rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
-
-            if (rc == 0) {
-                *stonith_history = stonith__sort_history(*stonith_history);
-                if (!pcmk_all_flags_set(show, pcmk_section_fencing_all)
-                    && (output_format != mon_output_xml)) {
-
-                    *stonith_history = pcmk__reduce_fence_history(*stonith_history);
-                }
-                break; /* all other cases are errors */
-            }
-        } else {
-            rc = ENOTCONN;
-            break;
-        }
-    }
-
-    return rc;
-}
-
-static int
 mon_refresh_display(gpointer user_data)
 {
+    pe_working_set_t *mon_data_set = NULL;
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
-    int history_rc = 0;
+    int history_rc = pcmk_rc_ok;
     GList *unames = NULL;
     GList *resources = NULL;
 
@@ -2155,18 +2044,27 @@ mon_refresh_display(gpointer user_data)
         out->err(out, "Upgrade failed: %s",
                  pcmk_rc_str(pcmk_rc_schema_validation));
         clean_up(CRM_EX_CONFIG);
-        return 0;
+        return G_SOURCE_REMOVE;
+    }
+
+    if (output_format == mon_output_none || output_format == mon_output_unset) {
+        return G_SOURCE_REMOVE;
     }
 
     /* get the stonith-history if there is evidence we need it */
-    history_rc = get_fencing_history(&stonith_history);
+    if (fence_history == pcmk__fence_history_full) {
+        if (!pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
+            (output_format != mon_output_xml)) {
+            fence_history = pcmk__fence_history_reduced;
+        }
 
-    if (mon_data_set == NULL) {
-        mon_data_set = pe_new_working_set();
-        CRM_ASSERT(mon_data_set != NULL);
+        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
     }
-    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
+    mon_data_set = pe_new_working_set();
+    CRM_ASSERT(mon_data_set != NULL);
+
+    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
     mon_data_set->input = cib_copy;
     mon_data_set->priv = out;
     cluster_status(mon_data_set);
@@ -2190,35 +2088,16 @@ mon_refresh_display(gpointer user_data)
         show |= pcmk_section_dc;
     }
 
-    switch (output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            if (out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, fence_history, show, show_opts,
-                             options.neg_location_prefix, unames, resources) != 0) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
-                clean_up(CRM_EX_CANTCREAT);
-                return 0;
-            }
-            break;
-
-        case mon_output_monitor:
-            print_simple_status(out, mon_data_set);
-            if (has_warnings) {
-                clean_up(MON_STATUS_WARN);
-                return FALSE;
-            }
-            break;
-
-        case mon_output_unset:
-        case mon_output_none:
-            break;
-
-        default:
-            out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                         stonith_history, fence_history, show, show_opts,
-                         options.neg_location_prefix, unames, resources);
-            break;
+    if (output_format == mon_output_monitor) {
+        if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
+            pe_free_working_set(mon_data_set);
+            clean_up(MON_STATUS_WARN);
+            return G_SOURCE_REMOVE;
+        }
+    } else {
+        out->message(out, "cluster-status", mon_data_set, pcmk_rc2exitc(history_rc),
+                     stonith_history, fence_history, show, show_opts,
+                     options.neg_location_prefix, unames, resources);
     }
 
     if (options.daemonize) {
@@ -2230,8 +2109,8 @@ mon_refresh_display(gpointer user_data)
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_reset_working_set(mon_data_set);
-    return 1;
+    pe_free_working_set(mon_data_set);
+    return G_SOURCE_CONTINUE;
 }
 
 /* This function is called for fencing events (see fencing_connect for which ones) when
@@ -2351,9 +2230,6 @@ clean_up(crm_exit_t exit_code)
     free(options.only_rsc);
     free(options.pid_file);
     g_slist_free_full(options.includes_excludes, free);
-
-    pe_free_working_set(mon_data_set);
-    mon_data_set = NULL;
 
     g_strfreev(processed_args);
 
