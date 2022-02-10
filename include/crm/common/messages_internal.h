@@ -31,7 +31,16 @@ typedef struct {
     pcmk__action_result_t result;   // Where to store operation result
 } pcmk__request_t;
 
+// Type for mapping a server command to a handler
+typedef struct {
+    const char *command;
+    xmlNode *(*handler)(pcmk__request_t *request);
+} pcmk__server_command_t;
+
 const char *pcmk__message_name(const char *name);
+GHashTable *pcmk__register_handlers(pcmk__server_command_t handlers[]);
+xmlNode *pcmk__process_request(pcmk__request_t *request, const char *op,
+                               bool sync, GHashTable *handlers);
 
 /*!
  * \internal

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -205,4 +205,78 @@ pcmk__message_name(const char *name)
     } else {
         return name;
     }
+}
+
+/*!
+ * \internal
+ * \brief Register handlers for server commands
+ *
+ * \param[in] handlers  Array of handler functions for supported server commands
+ *                      (the final entry must have a NULL command name, and if
+ *                      it has a handler it will be used as the default handler
+ *                      for unrecognized commands)
+ *
+ * \return Newly created hash table with commands and handlers
+ * \note The caller is responsible for freeing the return value with
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__register_handlers(pcmk__server_command_t *handlers)
+{
+    GHashTable *commands = g_hash_table_new(g_str_hash, g_str_equal);
+
+    if (handlers != NULL) {
+        int i;
+
+        for (i = 0; handlers[i].command != NULL; ++i) {
+            g_hash_table_insert(commands, (gpointer) handlers[i].command,
+                                handlers[i].handler);
+        }
+        if (handlers[i].handler != NULL) {
+            // g_str_hash() can't handle NULL, so use empty string for default
+            g_hash_table_insert(commands, (gpointer) "", handlers[i].handler);
+        }
+    }
+    return commands;
+}
+
+/*!
+ * \internal
+ * \brief Process an incoming request
+ *
+ * \param[in] request   Request to process
+ * \param[in] op        Operation type of request
+ * \param[in] sync      Whether request is synchronous
+ * \param[in] handlers  Command table created by pcmk__register_handlers()
+ *
+ * \return XML to send as reply (or NULL if no reply is needed)
+ * \todo It would be nice if we could pull \p op from \p request->xml and
+ *       \p sync from \p request->call_options, but the relevant identifiers are
+ *       not currently standardized across daemons.
+ */
+xmlNode *
+pcmk__process_request(pcmk__request_t *request, const char *op,
+                      bool sync, GHashTable *handlers)
+{
+    xmlNode *(*handler)(pcmk__request_t *request) = NULL;
+
+    CRM_CHECK((request != NULL) && (op != NULL) && (handlers != NULL),
+              return NULL);
+
+    if (sync && (request->client != NULL)) {
+        CRM_CHECK(request->client->request_id == request->id, return NULL);
+    }
+
+    handler = g_hash_table_lookup(handlers, op);
+    if (handler == NULL) {
+        handler = g_hash_table_lookup(handlers, ""); // Default handler
+        if (handler == NULL) {
+            crm_info("Ignoring %s request from %s %s with no handler",
+                     op, pcmk__request_origin_type(request),
+                     pcmk__request_origin(request));
+            return NULL;
+        }
+    }
+
+    return (*handler)(request);
 }
