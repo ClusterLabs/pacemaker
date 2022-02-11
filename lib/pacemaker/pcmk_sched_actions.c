@@ -1371,63 +1371,60 @@ reschedule_recurring(pe_resource_t *rsc, const char *task, guint interval_ms,
     pe__set_action_flags(op, pe_action_reschedule);
 }
 
+/*!
+ * \internal
+ * \brief Schedule a reload of a resource on a node
+ *
+ * \param[in] rsc   Resource to reload
+ * \param[in] node  Where resource should be reloaded
+ */
 static void
-ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
+schedule_reload(pe_resource_t *rsc, pe_node_t *node)
 {
-    GList *gIter = NULL;
     pe_action_t *reload = NULL;
 
-    if (rsc->children) {
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            ReloadRsc(child_rsc, node, data_set);
-        }
-        return;
-
-    } else if (rsc->variant > pe_native) {
-        /* Complex resource with no children */
-        return;
-
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
-        return;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        /* We don't need to specify any particular actions here, normal failure
-         * recovery will apply.
-         */
-        pe_rsc_trace(rsc, "%s: preventing agent reload because failed",
-                     rsc->id);
-        return;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
-        /* If a resource's configuration changed while a start was pending,
-         * force a full restart.
-         */
-        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
-                     rsc->id);
-        stop_action(rsc, node, FALSE);
-        return;
-
-    } else if (node == NULL) {
-        pe_rsc_trace(rsc, "%s: not active", rsc->id);
+    // For collective resources, just call recursively for children
+    if (rsc->variant > pe_native) {
+        g_list_foreach(rsc->children, (GFunc) schedule_reload, node);
         return;
     }
 
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
-    pe__set_resource_flags(rsc, pe_rsc_reload);
+    // Skip the reload in certain situations
+    if ((node == NULL)
+        || !pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        pe_rsc_trace(rsc, "Skip reload of %s:%s%s %s",
+                     rsc->id,
+                     pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : " unmanaged",
+                     pcmk_is_set(rsc->flags, pe_rsc_failed)? " failed" : "",
+                     (node == NULL)? "inactive" : node->details->uname);
+        return;
+    }
 
+    /* If a resource's configuration changed while a start was pending,
+     * force a full restart instead of a reload.
+     */
+    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
+                     rsc->id);
+        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+                      rsc->cluster);
+        return;
+    }
+
+    // Schedule the reload
+    pe__set_resource_flags(rsc, pe_rsc_reload);
     reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
-                           FALSE, TRUE, data_set);
+                           FALSE, TRUE, rsc->cluster);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
+    // Set orderings so that a required stop or demote cancels the reload
     pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
                        pe_order_optional|pe_order_then_cancels_first,
-                       data_set);
+                       rsc->cluster);
     pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
                        pe_order_optional|pe_order_then_cancels_first,
-                       data_set);
+                       rsc->cluster);
 }
 
 /*!
@@ -1524,7 +1521,7 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
                                   "Device parameters changed (reload)", NULL,
                                   rsc->cluster);
                 crm_log_xml_debug(digest_data->params_all, "params:reload");
-                ReloadRsc(rsc, node, rsc->cluster);
+                schedule_reload(rsc, node);
 
             } else {
                 pe_rsc_trace(rsc,
