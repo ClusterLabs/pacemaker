@@ -1710,6 +1710,11 @@ process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_
     }
 }
 
+// XPath to find a node's resource history
+#define XPATH_NODE_HISTORY "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS             \
+                           "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']" \
+                           "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES
+
 /*!
  * \internal
  * \brief Process any resource configuration changes in the CIB status
@@ -1725,33 +1730,28 @@ process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_
 void
 pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
 {
-    xmlNode *status = pcmk_find_cib_element(data_set->input,
-                                            XML_CIB_TAG_STATUS);
-
     crm_trace("Check resource and action configuration for changes");
-    for (xmlNode *node_state = first_named_child(status, XML_CIB_TAG_STATE);
-         node_state != NULL; node_state = crm_next_same_xml(node_state)) {
 
-        pe_node_t *node = NULL;
-        xmlNode *lrm_rscs = NULL;
-
-        lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-        lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
-        if (lrm_rscs == NULL) {
-            continue;
-        }
-
-        node = pe_find_node_id(data_set->nodes, ID(node_state));
-        if (node == NULL) {
-            continue; // Orphaned node
-        }
+    /* Rather than iterate through the status section, iterate through the nodes
+     * and search for the appropriate status subsection for each. This skips
+     * orphaned nodes and lets us eliminate some cases before searching the XML.
+     */
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
         /* Don't bother checking actions for a node that can't run actions ...
          * unless it's in maintenance mode, in which case we still need to
          * cancel any existing recurring monitors.
          */
         if (node->details->maintenance || pcmk__node_available(node)) {
-            process_node_history(node, lrm_rscs, data_set);
+            char *xpath = NULL;
+            xmlNode *history = NULL;
+
+            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->details->uname);
+            history = get_xpath_object(xpath, data_set->input, LOG_NEVER);
+            free(xpath);
+
+            process_node_history(node, history, data_set);
         }
     }
 }
