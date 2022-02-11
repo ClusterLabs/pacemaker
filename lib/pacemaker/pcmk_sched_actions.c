@@ -1337,17 +1337,15 @@ only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
  * \param[in] task         Name of action whose configuration changed
  * \param[in] interval_ms  Action interval (in milliseconds)
  * \param[in] node         Node where resource should be restarted
- * \param[in] digest_data  Operation digest information being compared
  */
 static void
 force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
-              pe_node_t *node, const op_digest_cache_t *digest_data)
+              pe_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
     pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
                                           rsc->cluster);
 
-    crm_log_xml_debug(digest_data->params_restart, "params:restart");
     pe_action_set_reason(required, "resource definition change", true);
     trigger_unfencing(rsc, node, "Device parameters changed", NULL,
                       rsc->cluster);
@@ -1446,7 +1444,8 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
 
     switch (digest_data->rc) {
         case RSC_DIGEST_RESTART:
-            force_restart(rsc, task, interval_ms, node, digest_data);
+            crm_log_xml_debug(digest_data->params_restart, "params:restart");
+            force_restart(rsc, task, interval_ms, node);
             return true;
 
         case RSC_DIGEST_ALL:
@@ -1474,7 +1473,9 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
                 pe_rsc_trace(rsc,
                              "Restarting %s because agent doesn't support reload",
                              rsc->id);
-                force_restart(rsc, task, interval_ms, node, digest_data);
+                crm_log_xml_debug(digest_data->params_restart,
+                                  "params:restart");
+                force_restart(rsc, task, interval_ms, node);
             }
             return true;
 
