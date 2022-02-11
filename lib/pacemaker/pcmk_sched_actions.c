@@ -17,8 +17,6 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-extern void ReloadRsc(pe_resource_t *rsc, pe_node_t *node,
-                      pe_working_set_t *data_set);
 extern gboolean DeleteRsc(pe_resource_t *rsc, pe_node_t *node,
                           gboolean optional, pe_working_set_t *data_set);
 
@@ -1371,6 +1369,65 @@ reschedule_recurring(pe_resource_t *rsc, const char *task, guint interval_ms,
     op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
                        task, node, TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_reschedule);
+}
+
+static void
+ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
+{
+    GList *gIter = NULL;
+    pe_action_t *reload = NULL;
+
+    if (rsc->children) {
+        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+            ReloadRsc(child_rsc, node, data_set);
+        }
+        return;
+
+    } else if (rsc->variant > pe_native) {
+        /* Complex resource with no children */
+        return;
+
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
+        return;
+
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        /* We don't need to specify any particular actions here, normal failure
+         * recovery will apply.
+         */
+        pe_rsc_trace(rsc, "%s: preventing agent reload because failed",
+                     rsc->id);
+        return;
+
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+        /* If a resource's configuration changed while a start was pending,
+         * force a full restart.
+         */
+        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
+                     rsc->id);
+        stop_action(rsc, node, FALSE);
+        return;
+
+    } else if (node == NULL) {
+        pe_rsc_trace(rsc, "%s: not active", rsc->id);
+        return;
+    }
+
+    pe_rsc_trace(rsc, "Processing %s", rsc->id);
+    pe__set_resource_flags(rsc, pe_rsc_reload);
+
+    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
+                           FALSE, TRUE, data_set);
+    pe_action_set_reason(reload, "resource definition change", FALSE);
+
+    pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       data_set);
 }
 
 /*!
