@@ -578,15 +578,15 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         }
 
         g_string_append_printf(s, "    <parameter name=\"%s\">\n"
-                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n"
-                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
+                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
+                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n",
                                   option_list[lpc].name,
-                                  option_list[lpc].description_short,
                                   option_list[lpc].description_long?
                                      option_list[lpc].description_long :
                                       option_list[lpc].description_short,
                                   (option_list[lpc].values? "  Allowed values: " : ""),
-                                  (option_list[lpc].values? option_list[lpc].values : ""));
+                                  (option_list[lpc].values? option_list[lpc].values : ""),
+                                  option_list[lpc].description_short);
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);
