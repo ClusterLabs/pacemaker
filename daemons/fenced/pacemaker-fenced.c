@@ -1511,6 +1511,7 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_LIST);
+        printf("    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n");
         printf("    <shortdesc lang=\"en\">A list of machines controlled by "
                "this device (Optional unless %s=static-list).</shortdesc>\n",
                PCMK_STONITH_HOST_CHECK);
