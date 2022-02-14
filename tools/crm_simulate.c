@@ -146,33 +146,21 @@ process_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.injections->quorum) {
-        free(options.injections->quorum);
-    }
-
-    options.injections->quorum = strdup(optarg);
+    pcmk__str_update(&options.injections->quorum, optarg);
     return TRUE;
 }
 
 static gboolean
 save_dotfile_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.dot_file) {
-        free(options.dot_file);
-    }
-
     options.flags |= pcmk_sim_process;
-    options.dot_file = strdup(optarg);
+    pcmk__str_update(&options.dot_file, optarg);
     return TRUE;
 }
 
 static gboolean
 save_graph_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.graph_file) {
-        free(options.graph_file);
-    }
-
     options.flags |= pcmk_sim_process;
-    options.graph_file = strdup(optarg);
+    pcmk__str_update(&options.graph_file, optarg);
     return TRUE;
 }
 
@@ -220,32 +208,20 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 static gboolean
 watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.injections->watchdog) {
-        free(options.injections->watchdog);
-    }
-
-    options.injections->watchdog = strdup(optarg);
+    pcmk__str_update(&options.injections->watchdog, optarg);
     return TRUE;
 }
 
 static gboolean
 xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.xml_file) {
-        free(options.xml_file);
-    }
-
-    options.xml_file = strdup(optarg);
+    pcmk__str_update(&options.xml_file, optarg);
     options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
 
 static gboolean
 xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.xml_file) {
-        free(options.xml_file);
-    }
-
-    options.xml_file = strdup("-");
+    pcmk__str_update(&options.xml_file, "-");
     options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }

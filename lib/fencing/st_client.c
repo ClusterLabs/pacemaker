@@ -1870,12 +1870,8 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
     stonith_key_value_t *p, *end;
 
     p = calloc(1, sizeof(stonith_key_value_t));
-    if (key) {
-        p->key = strdup(key);
-    }
-    if (value) {
-        p->value = strdup(value);
-    }
+    pcmk__str_update(&p->key, key);
+    pcmk__str_update(&p->value, value);
 
     end = head;
     while (end && end->next) {

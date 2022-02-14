@@ -931,31 +931,7 @@ pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
     }
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
-
-    if (!pcmk__str_eq(src->exit_reason, dst->exit_reason, pcmk__str_none)) {
-        free(dst->exit_reason);
-        if (src->exit_reason == NULL) {
-            dst->exit_reason = NULL;
-        } else {
-            dst->exit_reason = strdup(src->exit_reason);
-        }
-    }
-
-    if (!pcmk__str_eq(src->action_stdout, dst->action_stdout, pcmk__str_none)) {
-        free(dst->action_stdout);
-        if (src->action_stdout == NULL) {
-            dst->action_stdout = NULL;
-        } else {
-            dst->action_stdout = strdup(src->action_stdout);
-        }
-    }
-
-    if (!pcmk__str_eq(src->action_stderr, dst->action_stderr, pcmk__str_none)) {
-        free(dst->action_stderr);
-        if (src->action_stderr == NULL) {
-            dst->action_stderr = NULL;
-        } else {
-            dst->action_stderr = strdup(src->action_stderr);
-        }
-    }
+    pcmk__str_update(&src->exit_reason, dst->exit_reason);
+    pcmk__str_update(&src->action_stdout, dst->action_stdout);
+    pcmk__str_update(&src->action_stderr, dst->action_stderr);
 }

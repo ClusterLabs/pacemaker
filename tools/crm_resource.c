@@ -632,15 +632,9 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     options.require_resource = FALSE;
 
     if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
-        if (options.v_provider) {
-           free(options.v_provider);
-        }
-        options.v_provider = strdup(optarg);
+        pcmk__str_update(&options.v_provider, optarg);
     } else {
-        if (options.v_agent) {
-           free(options.v_agent);
-        }
-        options.v_agent = strdup(optarg);
+        pcmk__str_update(&options.v_agent, optarg);
     }
 
     return TRUE;
@@ -659,12 +653,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.v_class != NULL) {
-        free(options.v_class);
-    }
-
-    options.v_class = strdup(optarg);
-
+    pcmk__str_update(&options.v_class, optarg);
     options.cmdline_config = TRUE;
     options.require_resource = FALSE;
     return TRUE;
@@ -707,13 +696,7 @@ get_agent_spec(const gchar *optarg)
     options.require_cib = FALSE;
     options.require_dataset = FALSE;
     options.require_resource = FALSE;
-    if (options.agent_spec != NULL) {
-        free(options.agent_spec);
-        options.agent_spec = NULL;
-    }
-    if (optarg != NULL) {
-        options.agent_spec = strdup(optarg);
-    }
+    pcmk__str_update(&options.agent_spec, optarg);
 }
 
 gboolean
@@ -827,11 +810,7 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
         SET_COMMAND(cmd_get_property);
     }
 
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
+    pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -862,11 +841,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
         SET_COMMAND(cmd_delete_param);
     }
 
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
+    pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -874,12 +849,7 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_dataset = FALSE;
-
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
+    pcmk__str_update(&options.prop_name, optarg);
     SET_COMMAND(cmd_set_property);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;

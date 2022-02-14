@@ -251,9 +251,7 @@ stonith_action_create(const char *agent,
               _action, (victim? victim : "no target"), agent);
     action->agent = strdup(agent);
     action->action = strdup(_action);
-    if (victim) {
-        action->victim = strdup(victim);
-    }
+    pcmk__str_update(&action->victim, victim);
     action->timeout = action->remaining_timeout = timeout;
     action->max_retries = FAILURE_MAX_RETRIES;
 

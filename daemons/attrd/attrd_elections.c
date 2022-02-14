@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,8 +81,7 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
              * Approximate a test for that case as best as possible.
              */
             if ((peer_writer == NULL) || (previous != election_lost)) {
-                free(peer_writer);
-                peer_writer = strdup(peer->uname);
+                pcmk__str_update(&peer_writer, peer->uname);
                 crm_debug("Election lost, presuming %s is writer for now",
                           peer_writer);
             }
@@ -114,8 +113,7 @@ attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml)
         } else if (!pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
             crm_notice("Recorded new attribute writer: %s (was %s)",
                        peer->uname, (peer_writer? peer_writer : "unset"));
-            free(peer_writer);
-            peer_writer = strdup(peer->uname);
+            pcmk__str_update(&peer_writer, peer->uname);
         }
     }
     return (peer_state == election_won);
@@ -126,8 +124,7 @@ attrd_declare_winner()
 {
     crm_notice("Recorded local node as attribute writer (was %s)",
                (peer_writer? peer_writer : "unset"));
-    free(peer_writer);
-    peer_writer = strdup(attrd_cluster->uname);
+    pcmk__str_update(&peer_writer, attrd_cluster->uname);
 }
 
 void

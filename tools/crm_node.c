@@ -128,7 +128,7 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     options.command = 'R';
     options.dangerous_cmd = TRUE;
-    options.target_uname = strdup(optarg);
+    pcmk__str_update(&options.target_uname, optarg);
     return TRUE;
 }
 

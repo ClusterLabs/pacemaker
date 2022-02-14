@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,8 +53,8 @@ pcmk__new_nvpair(const char *name, const char *value)
     nvpair = calloc(1, sizeof(pcmk_nvpair_t));
     CRM_ASSERT(nvpair);
 
-    nvpair->name = strdup(name);
-    nvpair->value = value? strdup(value) : NULL;
+    pcmk__str_update(&nvpair->name, name);
+    pcmk__str_update(&nvpair->value, value);
     return nvpair;
 }
 
@@ -726,11 +726,8 @@ char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
     char *value_copy = NULL;
-    const char *value = crm_element_value(data, name);
 
-    if (value != NULL) {
-        value_copy = strdup(value);
-    }
+    pcmk__str_update(&value_copy, crm_element_value(data, name));
     return value_copy;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -124,13 +124,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
         return TRUE;
     }
 
-    if (optarg) {
-        if (options.optarg != NULL) {
-            free(options.optarg);
-        }
-        options.optarg = strdup(optarg);
-    }
-
+    pcmk__str_update(&options.optarg, optarg);
     return TRUE;
 }
 

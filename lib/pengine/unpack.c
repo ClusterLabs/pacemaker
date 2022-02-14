@@ -1909,8 +1909,7 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_casei)
         && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
 
-        free(rsc->clone_name);
-        rsc->clone_name = strdup(rsc_id);
+        pcmk__str_update(&rsc->clone_name, rsc_id);
         pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                      rsc_id, node->details->uname, rsc->id,
                      (pcmk_is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));

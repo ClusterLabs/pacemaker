@@ -1280,10 +1280,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
     child->privatedata = privatedata;
     child->callback = callback;
     child->flags = flags;
-
-    if(desc) {
-        child->desc = strdup(desc);
-    }
+    pcmk__str_update(&child->desc, desc);
 
     if (timeout) {
         child->timerid = g_timeout_add(timeout, child_timeout_callback, child);

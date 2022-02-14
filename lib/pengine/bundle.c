@@ -887,11 +887,10 @@ mount_add(pe__bundle_variant_data_t *bundle_data, const char *source,
 {
     pe__bundle_mount_t *mount = calloc(1, sizeof(pe__bundle_mount_t));
 
+    CRM_ASSERT(mount != NULL);
     mount->source = strdup(source);
     mount->target = strdup(target);
-    if (options) {
-        mount->options = strdup(options);
-    }
+    pcmk__str_update(&mount->options, options);
     mount->flags = flags;
     bundle_data->mounts = g_list_append(bundle_data->mounts, mount);
 }

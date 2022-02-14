@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2350,7 +2350,6 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
                      action->uuid, action->reason, crm_str(reason));
-        free(action->reason);
     } else if (action->reason == NULL) {
         pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
                      action->uuid, crm_str(reason));
@@ -2359,11 +2358,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
         return;
     }
 
-    if (reason != NULL) {
-        action->reason = strdup(reason);
-    } else {
-        action->reason = NULL;
-    }
+    pcmk__str_update(&action->reason, reason);
 }
 
 /*!

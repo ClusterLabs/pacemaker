@@ -1097,7 +1097,7 @@ schedule_internal_command(const char *origin,
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
     cmd->action = strdup(action);
-    cmd->victim = victim ? strdup(victim) : NULL;
+    pcmk__str_update(&cmd->victim, victim);
     cmd->device = strdup(device->id);
     cmd->origin = strdup(origin);
     cmd->client = strdup(crm_system_name);
@@ -2109,8 +2109,8 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
         return;
     }
 
-    search->host = host ? strdup(host) : NULL;
-    search->action = action ? strdup(action) : NULL;
+    pcmk__str_update(&search->host, host);
+    pcmk__str_update(&search->action, action);
     search->per_device_timeout = timeout;
     search->allow_suicide = suicide;
     search->callback = callback;
@@ -2357,10 +2357,10 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
 
     pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     query->reply = fenced_construct_reply(msg, NULL, &result);
-    query->remote_peer = remote_peer ? strdup(remote_peer) : NULL;
-    query->client_id = client_id ? strdup(client_id) : NULL;
-    query->target = target ? strdup(target) : NULL;
-    query->action = action ? strdup(action) : NULL;
+    pcmk__str_update(&query->remote_peer, remote_peer);
+    pcmk__str_update(&query->client_id, client_id);
+    pcmk__str_update(&query->target, target);
+    pcmk__str_update(&query->action, action);
     query->call_options = call_options;
 
     get_capable_devices(target, action, timeout,

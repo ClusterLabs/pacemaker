@@ -177,11 +177,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         out->spacer(out);
 
     } else if(value) {
-        const char *tmp = crm_element_value(xml_search, attr);
-
-        if (tmp) {
-            *value = strdup(tmp);
-        }
+        pcmk__str_update(value, crm_element_value(xml_search, attr));
     }
 
   done:

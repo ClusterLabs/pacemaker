@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -373,10 +373,9 @@ do_dc_join_filter_offer(long long action,
         crm_log_xml_debug(max_generation_xml, "Old max generation");
         crm_log_xml_debug(generation, "New max generation");
 
-        free(max_generation_from);
-        free_xml(max_generation_xml);
+        pcmk__str_update(&max_generation_from, join_from);
 
-        max_generation_from = strdup(join_from);
+        free_xml(max_generation_xml);
         max_generation_xml = copy_xml(join_ack->xml);
 
     } else {

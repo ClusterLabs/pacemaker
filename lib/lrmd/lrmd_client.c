@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -197,14 +197,8 @@ lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
     lrmd_event_data_t *event = calloc(1, sizeof(lrmd_event_data_t));
 
     CRM_ASSERT(event != NULL);
-    if (rsc_id != NULL) {
-        event->rsc_id = strdup(rsc_id);
-        CRM_ASSERT(event->rsc_id != NULL);
-    }
-    if (task != NULL) {
-        event->op_type = strdup(task);
-        CRM_ASSERT(event->op_type != NULL);
-    }
+    pcmk__str_update((char **) &event->rsc_id, rsc_id);
+    pcmk__str_update((char **) &event->op_type, task);
     event->interval_ms = interval_ms;
     return event;
 }
@@ -216,18 +210,26 @@ lrmd_copy_event(lrmd_event_data_t * event)
 
     copy = calloc(1, sizeof(lrmd_event_data_t));
 
-    /* This will get all the int values.
-     * we just have to be careful not to leave any
-     * dangling pointers to strings. */
-    memcpy(copy, event, sizeof(lrmd_event_data_t));
-
-    copy->rsc_id = event->rsc_id ? strdup(event->rsc_id) : NULL;
-    copy->op_type = event->op_type ? strdup(event->op_type) : NULL;
-    copy->user_data = event->user_data ? strdup(event->user_data) : NULL;
-    copy->output = event->output ? strdup(event->output) : NULL;
-    copy->exit_reason = event->exit_reason ? strdup(event->exit_reason) : NULL;
-    copy->remote_nodename = event->remote_nodename ? strdup(event->remote_nodename) : NULL;
+    copy->type = event->type;
+    pcmk__str_update((char **) &copy->rsc_id, event->rsc_id);
+    pcmk__str_update((char **) &copy->op_type, event->op_type);
+    pcmk__str_update((char **) &copy->user_data, event->user_data);
+    copy->call_id = event->call_id;
+    copy->timeout = event->timeout;
+    copy->interval_ms = event->interval_ms;
+    copy->start_delay = event->start_delay;
+    copy->rsc_deleted = event->rsc_deleted;
+    copy->rc = event->rc;
+    copy->op_status = event->op_status;
+    pcmk__str_update((char **) &copy->output, event->output);
+    copy->t_run = event->t_run;
+    copy->t_rcchange = event->t_rcchange;
+    copy->exec_time = event->exec_time;
+    copy->queue_time = event->queue_time;
+    copy->connection_rc = event->connection_rc;
     copy->params = pcmk__str_table_dup(event->params);
+    pcmk__str_update((char **) &copy->remote_nodename, event->remote_nodename);
+    pcmk__str_update((char **) &copy->exit_reason, event->exit_reason);
 
     return copy;
 }
@@ -1723,22 +1725,10 @@ lrmd_new_rsc_info(const char *rsc_id, const char *standard,
     lrmd_rsc_info_t *rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
 
     CRM_ASSERT(rsc_info);
-    if (rsc_id) {
-        rsc_info->id = strdup(rsc_id);
-        CRM_ASSERT(rsc_info->id);
-    }
-    if (standard) {
-        rsc_info->standard = strdup(standard);
-        CRM_ASSERT(rsc_info->standard);
-    }
-    if (provider) {
-        rsc_info->provider = strdup(provider);
-        CRM_ASSERT(rsc_info->provider);
-    }
-    if (type) {
-        rsc_info->type = strdup(type);
-        CRM_ASSERT(rsc_info->type);
-    }
+    pcmk__str_update(&rsc_info->id, rsc_id);
+    pcmk__str_update(&rsc_info->standard, standard);
+    pcmk__str_update(&rsc_info->provider, provider);
+    pcmk__str_update(&rsc_info->type, type);
     return rsc_info;
 }
 
@@ -2372,11 +2362,7 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
 
     event->rc = rc;
     event->op_status = op_status;
-
-    if (!pcmk__str_eq(event->exit_reason, exit_reason, pcmk__str_none)) {
-        free((void *) event->exit_reason);
-        event->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
-    }
+    pcmk__str_update((char **) &event->exit_reason, exit_reason);
 }
 
 /*!

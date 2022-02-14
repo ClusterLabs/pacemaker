@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -156,12 +156,6 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
     free(attr_section); \
     free(attr_set);
 
-#define set_option(option_var) \
-    if (option_var) { \
-        free(option_var); \
-    } \
-    option_var = strdup(optarg);
-
 int
 main(int argc, char **argv)
 {
@@ -204,20 +198,20 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'n':
-                set_option(attr_name);
+                pcmk__str_update(&attr_name, optarg);
                 break;
             case 's':
-                set_option(attr_set);
+                pcmk__str_update(&attr_set, optarg);
                 break;
             case 'd':
-                set_option(attr_dampen);
+                pcmk__str_update(&attr_dampen, optarg);
                 break;
             case 'l':
             case 'S':
-                set_option(attr_section);
+                pcmk__str_update(&attr_section, optarg);
                 break;
             case 'N':
-                set_option(attr_node);
+                pcmk__str_update(&attr_node, optarg);
                 break;
             case 'A':
                 query_all = TRUE;

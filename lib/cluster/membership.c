@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -333,7 +333,7 @@ guint
 reap_crm_member(uint32_t id, const char *name)
 {
     int matches = 0;
-    crm_node_t search;
+    crm_node_t search = { 0, };
 
     if (crm_peer_cache == NULL) {
         crm_trace("Membership cache not initialized, ignoring purge request");
@@ -341,7 +341,7 @@ reap_crm_member(uint32_t id, const char *name)
     }
 
     search.id = id;
-    search.uname = name ? strdup(name) : NULL;
+    pcmk__str_update(&search.uname, name);
     matches = g_hash_table_foreach_remove(crm_peer_cache, crm_reap_dead_member, &search);
     if(matches) {
         crm_notice("Purged %d peer%s with id=%u%s%s from the membership cache",
@@ -797,9 +797,7 @@ update_peer_uname(crm_node_t *node, const char *uname)
         }
     }
 
-    free(node->uname);
-    node->uname = strdup(uname);
-    CRM_ASSERT(node->uname != NULL);
+    pcmk__str_update(&node->uname, uname);
 
     if (peer_status_callback != NULL) {
         peer_status_callback(crm_status_uname, node, NULL);
@@ -1216,11 +1214,7 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         g_hash_table_replace(known_node_cache, uniqueid, node);
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
-        if (!pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
-            free(node->uname);
-            node->uname = strdup(uname);
-            CRM_ASSERT(node->uname != NULL);
-        }
+        pcmk__str_update(&node->uname, uname);
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
         clear_peer_flags(node, crm_node_dirty);

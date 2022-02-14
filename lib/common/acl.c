@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -303,8 +303,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
                                          source, LOG_NEVER);
 
-        free(p->user);
-        p->user = strdup(user);
+        pcmk__str_update(&p->user, user);
 
         if (acls) {
             xmlNode *child = NULL;

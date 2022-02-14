@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -186,11 +186,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->rsc.id = entry->id;
         entry->rsc.type = strdup(rsc->type);
         entry->rsc.standard = strdup(rsc->standard);
-        if (rsc->provider) {
-            entry->rsc.provider = strdup(rsc->provider);
-        } else {
-            entry->rsc.provider = NULL;
-        }
+        pcmk__str_update(&entry->rsc.provider, rsc->provider);
 
     } else if (entry == NULL) {
         crm_info("Resource %s no longer exists, not updating cache", op->rsc_id);
@@ -2364,7 +2360,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
-        pending->user_data = op->user_data? strdup(op->user_data) : NULL;
+        pcmk__str_update(&pending->user_data, op->user_data);
         if (crm_element_value_epoch(msg, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
