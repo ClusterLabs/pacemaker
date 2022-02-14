@@ -926,9 +926,7 @@ pcmk__reset_result(pcmk__action_result_t *result)
 void
 pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
 {
-    if ((src == NULL) || (dst == NULL)) {
-        return;
-    }
+    CRM_CHECK((src != NULL) && (dst != NULL), return);
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
     pcmk__str_update(&src->exit_reason, dst->exit_reason);
