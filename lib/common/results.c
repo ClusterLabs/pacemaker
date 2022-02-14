@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -825,6 +825,45 @@ pcmk__set_result(pcmk__action_result_t *result, int exit_status,
         free(result->exit_reason);
         result->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
     }
+}
+
+
+/*!
+ * \internal
+ * \brief Set the result of an action, with a formatted exit reason
+ *
+ * \param[out] result        Where to set action result
+ * \param[in]  exit_status   OCF exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  format        printf-style format for a human-friendly
+ *                           description of reason for result
+ * \param[in]  ...           arguments for \p format
+ */
+G_GNUC_PRINTF(4, 5)
+void
+pcmk__format_result(pcmk__action_result_t *result, int exit_status,
+                    enum pcmk_exec_status exec_status,
+                    const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *reason = NULL;
+
+    if (result == NULL) {
+        return;
+    }
+
+    result->exit_status = exit_status;
+    result->execution_status = exec_status;
+
+    if (format != NULL) {
+        va_start(ap, format);
+        len = vasprintf(&reason, format, ap);
+        CRM_ASSERT(len > 0);
+        va_end(ap);
+    }
+    free(result->exit_reason);
+    result->exit_reason = reason;
 }
 
 /*!

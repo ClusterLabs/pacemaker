@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,6 +48,10 @@ typedef struct {
 void pcmk__set_result(pcmk__action_result_t *result, int exit_status,
                       enum pcmk_exec_status exec_status,
                       const char *exit_reason);
+
+void pcmk__format_result(pcmk__action_result_t *result, int exit_status,
+                         enum pcmk_exec_status exec_status,
+                         const char *format, ...) G_GNUC_PRINTF(4, 5);
 
 void pcmk__set_result_output(pcmk__action_result_t *result,
                              char *out, char *err);
