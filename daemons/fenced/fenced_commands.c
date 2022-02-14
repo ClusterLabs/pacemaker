@@ -1636,11 +1636,13 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
-        crm_warn("Ignoring topology level registration without valid target");
+        crm_warn("Ignoring registration for topology level '%s' "
+                 "without valid target", crm_str(ID(level)));
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level target");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid target for topology level '%s'",
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1649,9 +1651,12 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level number");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid level number '%s' for topology level '%s'",
+                            crm_str(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX)),
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1744,9 +1749,12 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid level number '%s' for topology level '%s'",
+                            crm_str(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX)),
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1875,16 +1883,16 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     if (device == NULL) {
         crm_info("Ignoring API '%s' action request because device %s not found",
                  action, id);
-        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         NULL);
+        pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "'%s' not found", id);
         return;
 
     } else if (!device->api_registered && !strcmp(action, "monitor")) {
         // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API '%s' action request because device %s not active",
                  action, id);
-        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         "Fence device not active");
+        pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "'%s' not active", id);
         return;
     }
 
@@ -2670,8 +2678,9 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     if (device == NULL) { // No device found
         pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         "No fence device configured for target");
+        pcmk__format_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "No device configured for target '%s'",
+                            cmd->victim);
         send_async_reply(cmd, &result, 0, false);
         pcmk__reset_result(&result);
         free_async_command(cmd);
@@ -2711,8 +2720,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
-            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                             "Requested fence device not found");
+            pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                                "Requested device '%s' not found", device_id);
             return;
         }
         schedule_stonith_command(cmd, device);
@@ -3248,8 +3257,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         crm_err("Unknown IPC request %s from %s %s", op,
                 ((client == NULL)? "peer" : "client"),
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
-        pcmk__set_result(&result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                         "Unknown IPC request type (bug?)");
+        pcmk__format_result(&result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                            "Unknown IPC request type '%s' (bug?)",
+                            crm_str(op));
     }
 
 done:
