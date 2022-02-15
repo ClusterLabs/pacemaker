@@ -94,7 +94,7 @@ main(int argc, char **argv)
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
 
-#ifdef PCMK__SUPPORT_NLS
+#ifdef ENABLE_NLS
     setlocale (LC_ALL, "");
     bindtextdomain(PACKAGE, PCMK__LOCALE_DIR);
     textdomain(PACKAGE);
