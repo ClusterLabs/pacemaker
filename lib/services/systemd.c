@@ -208,21 +208,39 @@ systemd_unit_extension(const char *name)
 static char *
 systemd_service_name(const char *name, bool add_instance_name)
 {
+    const char *dot = NULL;
+
     if (pcmk__str_empty(name)) {
         return NULL;
     }
 
-    if (systemd_unit_extension(name)) {
-        return strdup(name);
-
     /* Services that end with an @ sign are systemd templates.  They expect an
      * instance name to follow the service name.  If no instance name was
-     * provided, just add "x" to the string as the instance name.  It doesn't
-     * seem to matter for purposes of looking up whether a service exists or
-     * not.
+     * provided, just add "pacemaker" to the string as the instance name.  It
+     * doesn't seem to matter for purposes of looking up whether a service
+     * exists or not.
+     *
+     * A template can be specified either with or without the unit extension,
+     * so this block handles both cases.
      */
+    dot = systemd_unit_extension(name);
+
+    if (dot) {
+        if (dot != name && *(dot-1) == '@') {
+            char *s = NULL;
+
+            if (asprintf(&s, "%.*spacemaker%s", (int) (dot-name), name, dot) == -1) {
+                /* If asprintf fails, just return name. */
+                return strdup(name);
+            }
+
+            return s;
+        } else {
+            return strdup(name);
+        }
+
     } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
-        return crm_strdup_printf("%sx.service", name);
+        return crm_strdup_printf("%spacemaker.service", name);
 
     } else {
         return crm_strdup_printf("%s.service", name);
