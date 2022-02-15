@@ -123,7 +123,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether watchdog integration is enabled",
+        N_("Whether watchdog integration is enabled"),
         "This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
             "The value `true` is meaningful if diskless SBD is used and "

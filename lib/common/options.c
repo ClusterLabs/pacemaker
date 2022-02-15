@@ -585,9 +585,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         }
 
         escaped_long = crm_xml_escape(option_list[lpc].description_long?
-                                         option_list[lpc].description_long :
-                                          option_list[lpc].description_short);
-        escaped_short = crm_xml_escape(option_list[lpc].description_short);
+                                         _(option_list[lpc].description_long) :
+                                          _(option_list[lpc].description_short));
+        escaped_short = crm_xml_escape(_(option_list[lpc].description_short));
 
         g_string_append_printf(s, "    <parameter name=\"%s\">\n"
                                   "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
