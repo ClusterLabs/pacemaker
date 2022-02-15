@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,13 +93,6 @@ main(int argc, char **argv)
     int argerr = 0;
     struct passwd *pwentry = NULL;
     crm_ipc_t *old_instance = NULL;
-
-#ifdef ENABLE_NLS
-    setlocale (LC_ALL, "");
-    bindtextdomain(PACKAGE, PCMK__LOCALE_DIR);
-    textdomain(PACKAGE);
-    bind_textdomain_codeset(PACKAGE, "UTF-8");
-#endif
 
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
