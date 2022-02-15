@@ -693,9 +693,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         caller_version = CRM_FEATURE_SET;
     }
 
-    crm_trace("Building %s operation update with originator version: %s", op->rsc_id, caller_version);
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      fsa_our_uname, src, LOG_DEBUG);
+                                      fsa_our_uname, src);
     if (xml_op == NULL) {
         return TRUE;
     }

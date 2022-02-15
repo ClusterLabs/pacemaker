@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,13 +9,14 @@
 
 #include <crm_internal.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #include "crm_mon.h"
 
@@ -436,8 +437,8 @@ cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t",
-                  "stonith_history_t *", "gboolean", "unsigned int",
-                  "unsigned int", "const char *", "GList *", "GList *")
+                  "stonith_history_t *", "gboolean", "uint32_t", "uint32_t",
+                  "const char *", "GList *", "GList *")
 static int
 cluster_status_console(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
@@ -463,8 +464,13 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            curses_indented_printf(out, "%s of %s failed: delegate=%s, client=%s, origin=%s, %s='%s'%s\n",
+            curses_indented_printf(out,
+                                   "%s of %s failed%s%s%s: "
+                                   "delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
                                    stonith_action_str(event->action), event->target,
+                                   (event->exit_reason == NULL)? "" : " (",
+                                   (event->exit_reason == NULL)? "" : event->exit_reason,
+                                   (event->exit_reason == NULL)? "" : ")",
                                    event->delegate ? event->delegate : "",
                                    event->client, event->origin,
                                    full_history ? "completed" : "last-failed", buf,

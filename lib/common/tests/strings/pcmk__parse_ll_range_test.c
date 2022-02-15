@@ -72,6 +72,8 @@ range_start_and_end(void **state)
     assert_int_equal(pcmk__parse_ll_range("2000-2020", &start, &end), pcmk_rc_ok);
     assert_int_equal(start, 2000);
     assert_int_equal(end, 2020);
+
+    assert_int_equal(pcmk__parse_ll_range("2000-2020-2030", &start, &end), pcmk_rc_unknown_format);
 }
 
 static void
@@ -88,6 +90,15 @@ garbage(void **state)
     assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
+static void
+strtoll_errors(void **state)
+{
+    long long start, end;
+
+    assert_int_equal(pcmk__parse_ll_range("20000000000000000000-", &start, &end), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000", &start, &end), pcmk_rc_unknown_format);
+}
+
 int main(int argc, char **argv)
 {
     const struct CMUnitTest tests[] = {
@@ -97,6 +108,7 @@ int main(int argc, char **argv)
         cmocka_unit_test(no_range_end),
         cmocka_unit_test(no_range_start),
         cmocka_unit_test(range_start_and_end),
+        cmocka_unit_test(strtoll_errors),
 
         cmocka_unit_test(garbage),
     };

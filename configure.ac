@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2021 the Pacemaker project contributors
+dnl Copyright 2009-2022 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1324,10 +1324,11 @@ PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
+dnl libqb libqb-2.0.3 + ipc-connect-async-API (2022-01)
+AC_CHECK_FUNCS([qb_ipcc_connect_async])
+
 dnl libqb 2.0.2+ (2020-10)
-AC_CHECK_FUNCS(qb_ipcc_auth_get,
-               AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
-                         [Have qb_ipcc_auth_get function]))
+AC_CHECK_FUNCS([qb_ipcc_auth_get])
 
 dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
@@ -1353,7 +1354,8 @@ AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for th
 AC_SUBST(CRM_SCHEMA_DIRECTORY)
 
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
 if test x"${CRM_DAEMON_USER}" = x""; then
@@ -1383,10 +1385,6 @@ AC_SUBST(PE_STATE_DIR)
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
-
-CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
-AC_SUBST(CRM_CONFIG_CTS)
 
 CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
@@ -1599,9 +1597,7 @@ AS_IF([test $with_corosync -ne $DISABLED],
           dnl Shutdown tracking added (back) to corosync Jan 2021
           saved_LIBS="$LIBS"
           LIBS="$LIBS $COROSYNC_LIBS"
-          AC_CHECK_FUNCS(corosync_cfg_trackstart,
-          AC_DEFINE(HAVE_COROSYNC_CFG_TRACKSTART, 1,
-                         [Have corosync_cfg_trackstart function]))
+          AC_CHECK_FUNCS([corosync_cfg_trackstart])
           LIBS="$saved_LIBS"
       ]
 )
@@ -2135,6 +2131,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
+                lib/common/tests/lists/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/operations/Makefile                \
                 lib/common/tests/results/Makefile                   \

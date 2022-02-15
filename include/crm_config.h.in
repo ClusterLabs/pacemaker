@@ -7,8 +7,8 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_CONFIG__H
-#define CRM_CONFIG__H
+#ifndef PCMK__CRM_CONFIG__H
+#define PCMK__CRM_CONFIG__H
 
 /****** Versions ******/
 

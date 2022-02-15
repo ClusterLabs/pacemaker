@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef STONITH_NG__H
-#  define STONITH_NG__H
+#ifndef PCMK__CRM_STONITH_NG__H
+#  define PCMK__CRM_STONITH_NG__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +111,7 @@ typedef struct stonith_history_s {
     time_t completed;
     struct stonith_history_s *next;
     long completed_nsec;
+    char *exit_reason;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
@@ -297,6 +298,16 @@ typedef struct stonith_api_operations_s
     int (*register_notification)(
         stonith_t *st, const char *event,
         void (*notify)(stonith_t *st, stonith_event_t *e));
+
+    /*!
+     * \brief Remove a previously registered notification for \c event, or all
+     *        notifications if NULL.
+     *
+     * \param[in] st     Fencer connection to use
+     * \param[in] event  The event to remove notifications for (may be NULL).
+     *
+     * \return Legacy Pacemaker return code
+     */
     int (*remove_notification)(stonith_t *st, const char *event);
 
     /*!

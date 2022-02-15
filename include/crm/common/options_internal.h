@@ -111,7 +111,7 @@ bool pcmk__valid_number(const char *value);
 bool pcmk__valid_positive_number(const char *value);
 bool pcmk__valid_quorum(const char *value);
 bool pcmk__valid_script(const char *value);
-bool pcmk__valid_utilization(const char *value);
+bool pcmk__valid_percentage(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_timeout(void);

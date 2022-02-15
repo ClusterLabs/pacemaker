@@ -6,8 +6,10 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef PCMKI_ACL__H
-#define PCMKI_ACL__H
+#ifndef PCMK__PCMKI_PCMKI_ACL__H
+#define PCMK__PCMKI_PCMKI_ACL__H
+
+#include <crm/common/xml.h>
 
 enum pcmk__acl_cred_type {
     pcmk__acl_cred_unset = 0,

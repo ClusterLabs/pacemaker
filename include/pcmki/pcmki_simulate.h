@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,13 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMKI_SIMULATE__H
-#  define PCMKI_SIMULATE__H
+#ifndef PCMK__PCMKI_PCMKI_SIMULATE__H
+#  define PCMK__PCMKI_PCMKI_SIMULATE__H
 
 #include <crm/common/output_internal.h>
 #include <crm/pengine/pe_types.h>
+#include <pcmki/pcmki_transition.h>
+#include <crm/cib.h>                    // cib_t
 #include <pacemaker.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * \internal
@@ -80,7 +83,15 @@ enum transition_status pcmk__simulate_transition(pe_working_set_t *data_set,
  */
 int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                    pcmk_injections_t *injections, unsigned int flags,
-                   unsigned int section_opts, char *use_date, char *input_file,
+                   uint32_t section_opts, char *use_date, char *input_file,
                    char *graph_file, char *dot_file);
+
+/*!
+ * \internal
+ *
+ * If this global is set to true, simulations will add nodes to the
+ * CIB configuration section, as well as the status section.
+ */
+extern bool pcmk__simulate_node_config;
 
 #endif

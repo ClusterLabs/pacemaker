@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,27 +177,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
-            /* Create a second notification that will be delivered
-             *   immediately after the node is fenced
-             *
-             * Basic problem:
-             * - C is a clone active on the node to be shot and stopping on another
-             * - R is a resource that depends on C
-             *
-             * + C.stop depends on R.stop
-             * + C.stopped depends on STONITH
-             * + C.notify depends on C.stopped
-             * + C.healthy depends on C.notify
-             * + R.stop depends on C.healthy
-             *
-             * The extra notification here changes
-             *  + C.healthy depends on C.notify
-             * into:
-             *  + C.healthy depends on C.notify'
-             *  + C.notify' depends on STONITH'
-             * thus breaking the loop
-             */
-            create_secondary_notification(action, rsc, stonith_op, data_set);
+            pcmk__order_notifs_after_fencing(action, rsc, stonith_op);
         }
 
 #if 0

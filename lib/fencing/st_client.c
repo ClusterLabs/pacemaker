@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,7 +85,8 @@ static int stonith_send_command(stonith_t *stonith, const char *op,
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
-
+static int stonith_api_del_notification(stonith_t *stonith,
+                                        const char *event);
 /*!
  * \brief Get agent namespace by name
  *
@@ -187,7 +188,12 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  * we drop in here - so as not to make remote nodes
                  * panic on that answer
                  */
-                crm_warn("watchdog-fencing-query failed");
+                if (rc == -ENODEV) {
+                    crm_notice("Cluster does not have watchdog fencing device");
+                } else {
+                    crm_warn("Could not check for watchdog fencing device: %s",
+                             pcmk_strerror(rc));
+                }
             } else if (list[0] == '\0') {
                 rv = TRUE;
             } else {
@@ -693,6 +699,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;
+            pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -705,6 +712,11 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+
+            stonith__xe_get_result(op, &result);
+            kvp->exit_reason = result.exit_reason;
+            result.exit_reason = NULL;
+            pcmk__reset_result(&result);
 
             if (last) {
                 last->next = kvp;
@@ -730,6 +742,7 @@ void stonith_history_free(stonith_history_t *history)
         free(hp->origin);
         free(hp->delegate);
         free(hp->client);
+        free(hp->exit_reason);
     }
 }
 
@@ -901,7 +914,7 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     if (msg == NULL) {
         // Fencer didn't reply in time
         pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Timeout waiting for reply from fencer");
+                         "Fencer accepted request but did not reply in time");
         CRM_LOG_ASSERT(call_id > 0);
 
     } else {
@@ -1206,16 +1219,34 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     return pcmk_ok;
 }
 
+static void
+del_notify_entry(gpointer data, gpointer user_data)
+{
+    stonith_notify_client_t *entry = data;
+    stonith_t * stonith = user_data;
+
+    if (!entry->delete) {
+        crm_debug("Removing callback for %s events", entry->event);
+        stonith_api_del_notification(stonith, entry->event);
+    }
+}
+
 static int
 stonith_api_del_notification(stonith_t * stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
-    stonith_private_t *private = NULL;
+    stonith_private_t *private = stonith->st_private;
+
+    if (event == NULL) {
+        foreach_notify_entry(private, del_notify_entry, stonith);
+        crm_trace("Removed callback");
+
+        return pcmk_ok;
+    }
 
     crm_debug("Removing callback for %s events", event);
 
-    private = stonith->st_private;
     new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;

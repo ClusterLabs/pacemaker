@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__MSG_XML_COMPAT__H
-#  define PCMK__MSG_XML_COMPAT__H
+#ifndef PCMK__CRM_MSG_XML_COMPAT__H
+#  define PCMK__CRM_MSG_XML_COMPAT__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,4 +39,4 @@ extern "C" {
 }
 #endif
 
-#endif // PCMK__MSG_XML_COMPAT__H
+#endif // PCMK__CRM_MSG_XML_COMPAT__H

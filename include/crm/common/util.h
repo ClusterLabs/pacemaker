@@ -7,18 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_UTIL__H
-#  define CRM_COMMON_UTIL__H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \file
- * \brief Utility functions
- * \ingroup core
- */
+#ifndef PCMK__CRM_COMMON_UTIL__H
+#  define PCMK__CRM_COMMON_UTIL__H
 
 #  include <sys/types.h>    // gid_t, mode_t, size_t, time_t, uid_t
 #  include <stdlib.h>
@@ -34,6 +24,17 @@ extern "C" {
 #  include <crm/common/acl.h>
 #  include <crm/common/agents.h>
 #  include <crm/common/results.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \file
+ * \brief Utility functions
+ * \ingroup core
+ */
+
 
 #  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client

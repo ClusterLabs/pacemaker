@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__CLUSTER_COMPAT__H
-#  define PCMK__CLUSTER_COMPAT__H
+#ifndef PCMK__CRM_CLUSTER_COMPAT__H
+#  define PCMK__CRM_CLUSTER_COMPAT__H
 
 #ifdef __cplusplus
 extern "C" {

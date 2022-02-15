@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,8 +31,8 @@ empty_input(void **state) {
 
 static void
 no_specials(void **state) {
-    const char *argv[] = { "-a", "-b", "-c", "-d", NULL };
-    const gchar *expected[] = { "-a", "-b", "-c", "-d", NULL };
+    const char *argv[] = { "-a", "-b", "-c", "-d", "-1", NULL };
+    const gchar *expected[] = { "-a", "-b", "-c", "-d", "-1", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);

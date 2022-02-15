@@ -1491,26 +1491,27 @@ main(int argc, char **argv)
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_ARGUMENT);
         printf
-            ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
-        printf
             ("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
              "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
              "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
              "     </longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
         printf("    <content type=\"string\" default=\"port\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_MAP);
         printf
-            ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
-        printf
             ("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_LIST);
+        printf("    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n");
         printf("    <shortdesc lang=\"en\">A list of machines controlled by "
                "this device (Optional unless %s=static-list).</shortdesc>\n",
                PCMK_STONITH_HOST_CHECK);
@@ -1519,35 +1520,33 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_CHECK);
-        printf
-            ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
                "(query the device via the 'list' command), static-list "
                "(check the " PCMK_STONITH_HOST_LIST " attribute), status "
                "(query the device via the 'status' command), none (assume "
                "every device can fence every machine)</longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_DELAY_MAX);
-        printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
-               "time specified before executing fencing actions. Pacemaker "
-               "derives the overall delay by taking the value of "
-               PCMK_STONITH_DELAY_BASE " and adding a random delay value such "
-               "that the sum is kept below this maximum.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">This prevents double fencing when "
                "using slow devices such as sbd.\nUse this to enable a random "
                "delay for fencing actions.\nThe overall delay is derived from "
                "this random delay value adding a static delay so that the sum "
                "is kept below the maximum delay.</longdesc>\n");
+        printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
+               "time specified before executing fencing actions. Pacemaker "
+               "derives the overall delay by taking the value of "
+               PCMK_STONITH_DELAY_BASE " and adding a random delay value such "
+               "that the sum is kept below this maximum.</shortdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_DELAY_BASE);
-        printf("    <shortdesc lang=\"en\">Enable a base delay for "
-               "fencing actions and specify base delay value.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">This enables a static delay for "
                "fencing actions, which can help avoid \"death matches\" where "
                "two nodes try to fence each other at the same time. If "
@@ -1558,16 +1557,18 @@ main(int argc, char **argv)
                "configured for each target), or to a node map (for example, "
                "\"node1:1s;node2:5\") to set a different value per target.\n"
                "    </longdesc>\n");
+        printf("    <shortdesc lang=\"en\">Enable a base delay for "
+               "fencing actions and specify base delay value.</shortdesc>\n");
         printf("    <content type=\"string\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_ACTION_LIMIT);
         printf
-            ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
-        printf
             ("    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to be configured first.\n"
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
+        printf
+            ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
         printf("    <content type=\"integer\" default=\"1\"/>\n");
         printf("  </parameter>\n");
 
@@ -1575,34 +1576,34 @@ main(int argc, char **argv)
         for (lpc = 0; lpc < PCMK__NELEM(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf
-                ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",
-                 actions[lpc]);
-            printf
                 ("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
                  "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n",
+                 actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",
                  actions[lpc]);
             printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
             printf("  </parameter>\n");
 
             printf("  <parameter name=\"pcmk_%s_timeout\" unique=\"0\">\n", actions[lpc]);
             printf
-                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n",
-                 actions[lpc]);
-            printf
                 ("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
                  "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n",
+                 actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n",
                  actions[lpc]);
             printf("    <content type=\"time\" default=\"60s\"/>\n");
             printf("  </parameter>\n");
 
             printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
-            printf
-                ("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n",
-                 actions[lpc]);
             printf("    <longdesc lang=\"en\">Some devices do not support multiple connections."
                    " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining."
                    " Use this option to alter the number of times Pacemaker retries '%s' actions before giving up."
                    "</longdesc>\n", actions[lpc]);
+            printf
+                ("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n",
+                 actions[lpc]);
             printf("    <content type=\"integer\" default=\"2\"/>\n");
             printf("  </parameter>\n");
         }

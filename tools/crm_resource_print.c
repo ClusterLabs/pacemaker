@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>
+
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
+#include <crm/common/results.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -111,7 +114,7 @@ int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     pcmk__output_t *out = data_set->priv;
-    unsigned int show_opts = pcmk_show_pending;
+    uint32_t show_opts = pcmk_show_pending;
     GList *all = NULL;
 
     all = g_list_prepend(all, (gpointer) "*");
@@ -149,7 +152,7 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int", "const char *")
+                  "const char *", "const char *", "crm_exit_t", "const char *")
 static int
 agent_status_default(pcmk__output_t *out, va_list args) {
     int status = va_arg(args, int);
@@ -158,7 +161,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
     const char *class = va_arg(args, const char *);
     const char *provider = va_arg(args, const char *);
     const char *type = va_arg(args, const char *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
     if (status == PCMK_EXEC_DONE) {
@@ -171,7 +174,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
                   class,
                   ((provider == NULL)? "" : ":"),
                   ((provider == NULL)? "" : provider),
-                  type, rc, services_ocf_exitcode_str(rc),
+                  type, (int) rc, services_ocf_exitcode_str((int) rc),
                   ((exit_reason == NULL)? "" : ": "),
                   ((exit_reason == NULL)? "" : exit_reason));
     } else {
@@ -194,7 +197,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
-                  "const char *", "const char *", "int", "const char *")
+                  "const char *", "const char *", "crm_exit_t", "const char *")
 static int
 agent_status_xml(pcmk__output_t *out, va_list args) {
     int status = va_arg(args, int);
@@ -203,7 +206,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     const char *class G_GNUC_UNUSED = va_arg(args, const char *);
     const char *provider G_GNUC_UNUSED = va_arg(args, const char *);
     const char *type G_GNUC_UNUSED = va_arg(args, const char *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
     char *exit_str = pcmk__itoa(rc);
@@ -211,7 +214,7 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, "agent-status",
                                  "code", exit_str,
-                                 "message", services_ocf_exitcode_str(rc),
+                                 "message", services_ocf_exitcode_str((int) rc),
                                  "execution_code", status_str,
                                  "execution_message", pcmk_exec_status_str(status),
                                  "reason", exit_reason,
@@ -315,7 +318,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_default(pcmk__output_t *out, va_list args) {
     int verbose = va_arg(args, int);
@@ -326,7 +329,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     const char *rsc_name = va_arg(args, const char *);
     const char *action = va_arg(args, const char *);
     GHashTable *overrides = va_arg(args, GHashTable *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
@@ -334,8 +337,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
     if (overrides) {
         GHashTableIter iter;
-        char *name = NULL;
-        char *value = NULL;
+        const char *name = NULL;
+        const char *value = NULL;
 
         out->begin_list(out, NULL, NULL, "overrides");
 
@@ -374,7 +377,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
-                  "int", "int", "const char *", "char *", "char *")
+                  "crm_exit_t", "int", "const char *", "char *", "char *")
 static int
 resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     int verbose G_GNUC_UNUSED = va_arg(args, int);
@@ -385,7 +388,7 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
     const char *rsc_name = va_arg(args, const char *);
     const char *action = va_arg(args, const char *);
     GHashTable *overrides = va_arg(args, GHashTable *);
-    int rc = va_arg(args, int);
+    crm_exit_t rc = va_arg(args, crm_exit_t);
     int status = va_arg(args, int);
     const char *exit_reason = va_arg(args, const char *);
     char *stdout_data = va_arg(args, char *);
@@ -407,8 +410,8 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
 
     if (overrides) {
         GHashTableIter iter;
-        char *name = NULL;
-        char *value = NULL;
+        const char *name = NULL;
+        const char *value = NULL;
 
         out->begin_list(out, NULL, NULL, "overrides");
 

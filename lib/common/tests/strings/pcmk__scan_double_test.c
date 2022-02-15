@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,9 +73,11 @@ static void
 trailing_chars(void **state)
 {
     double result;
+    char *end_text;
 
-    assert_int_equal(pcmk__scan_double("2.0asdf", &result, NULL, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__scan_double("2.0asdf", &result, NULL, &end_text), pcmk_rc_ok);
     assert_float_equal(result, 2.0, DBL_EPSILON);
+    assert_string_equal(end_text, "asdf");
 }
 
 static void

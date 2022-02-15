@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,14 +32,16 @@ typedef struct pcmk_child_s {
     const char *command;
     const char *endpoint;  /* IPC server name */
     bool needs_cluster;
+    int check_count;
 
     /* Anything below here will be dynamically initialized */
     bool needs_retry;
     bool active_before_startup;
 } pcmk_child_t;
 
-#define PCMK_PROCESS_CHECK_INTERVAL 5
-#define SHUTDOWN_ESCALATION_PERIOD 180000  /* 3m */
+#define PCMK_PROCESS_CHECK_INTERVAL 1
+#define PCMK_PROCESS_CHECK_RETRIES  5
+#define SHUTDOWN_ESCALATION_PERIOD  180000  /* 3m */
 
 /* Index into the array below */
 #define PCMK_CHILD_CONTROLD  5
@@ -82,6 +84,7 @@ static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
 
 crm_trigger_t *shutdown_trigger = NULL;
 crm_trigger_t *startup_trigger = NULL;
+time_t subdaemon_check_progress = 0;
 
 /* When contacted via pacemakerd-api by a client having sbd in
  * the name we assume it is sbd-daemon which wants to know
@@ -103,9 +106,7 @@ gboolean running_with_sbd = FALSE; /* local copy */
 GMainLoop *mainloop = NULL;
 
 static gboolean fatal_error = FALSE;
-static bool global_keep_tracking = false;
 
-static gboolean check_active_before_startup_processes(gpointer user_data);
 static int child_liveness(pcmk_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
 static int start_child(pcmk_child_t * child);
@@ -125,46 +126,101 @@ pcmkd_cluster_connected(void)
 }
 
 static gboolean
-check_active_before_startup_processes(gpointer user_data)
+check_next_subdaemon(gpointer user_data)
 {
-    gboolean keep_tracking = FALSE;
+    static int next_child = 0;
+    int rc = child_liveness(&pcmk_children[next_child]);
 
-    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (!pcmk_children[i].active_before_startup) {
-            /* we are already tracking it as a child process. */
-            continue;
-        } else {
-            int rc = child_liveness(&pcmk_children[i]);
+    crm_trace("Checked %s[%lld]: %s (%d)",
+              pcmk_children[next_child].name,
+              (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[next_child].pid),
+              pcmk_rc_str(rc), rc);
 
-            switch (rc) {
-                case pcmk_rc_ok:
-                    break;
-                case pcmk_rc_ipc_unresponsive:
-                case pcmk_rc_ipc_pid_only: // This case: it was previously OK
-                    if (pcmk_children[i].respawn) {
-                        crm_err("%s[%lld] terminated%s", pcmk_children[i].name,
-                                (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[i].pid),
-                                (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
-                    } else {
-                        /* orderly shutdown */
-                        crm_notice("%s[%lld] terminated%s", pcmk_children[i].name,
-                                   (long long) PCMK__SPECIAL_PID_AS_0(pcmk_children[i].pid),
-                                   (rc == pcmk_rc_ipc_pid_only)? " as IPC server" : "");
-                    }
-                    pcmk_process_exit(&(pcmk_children[i]));
-                    continue;
-                default:
-                    crm_exit(CRM_EX_FATAL);
-                    break;  /* static analysis/noreturn */
+    switch (rc) {
+        case pcmk_rc_ok:
+            pcmk_children[next_child].check_count = 0;
+            subdaemon_check_progress = time(NULL);
+            break;
+        case pcmk_rc_ipc_pid_only: // This case: it was previously OK
+            pcmk_children[next_child].check_count++;
+            if (pcmk_children[next_child].check_count >= PCMK_PROCESS_CHECK_RETRIES) {
+                crm_err("%s[%lld] is unresponsive to ipc after %d tries but "
+                        "we found the pid so have it killed that we can restart",
+                        pcmk_children[next_child].name,
+                        (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid),
+                        pcmk_children[next_child].check_count);
+                stop_child(&pcmk_children[next_child], SIGKILL);
+                if (pcmk_children[next_child].respawn) {
+                    /* as long as the respawn-limit isn't reached
+                       give it another round of check retries
+                     */
+                    pcmk_children[next_child].check_count = 0;
+                }
+            } else {
+                crm_notice("%s[%lld] is unresponsive to ipc after %d tries",
+                        pcmk_children[next_child].name,
+                        (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid),
+                        pcmk_children[next_child].check_count);
+                if (pcmk_children[next_child].respawn) {
+                    /* as long as the respawn-limit isn't reached
+                       and we haven't run out of connect retries
+                       we account this as progress we are willing
+                       to tell to sbd
+                     */
+                    subdaemon_check_progress = time(NULL);
+                }
             }
-        }
-        /* at least one of the processes found at startup
-         * is still going, so keep this recurring timer around */
-        keep_tracking = TRUE;
+            /* go to the next child and see if
+               we can make progress there
+             */
+            break;
+        case pcmk_rc_ipc_unresponsive:
+            if (!pcmk_children[next_child].respawn) {
+                /* if a subdaemon is down and we don't want it
+                   to be restarted this is a success during
+                   shutdown. if it isn't restarted anymore
+                   due to MAX_RESPAWN it is
+                   rather no success.
+                 */
+                if (pcmk_children[next_child].respawn_count <= MAX_RESPAWN) {
+                    subdaemon_check_progress = time(NULL);
+                }
+            }
+            if (!pcmk_children[next_child].active_before_startup) {
+                crm_trace("found %s[%lld] missing - signal-handler "
+                          "will take care of it",
+                           pcmk_children[next_child].name,
+                           (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid));
+                break;
+            }
+            if (pcmk_children[next_child].respawn) {
+                crm_err("%s[%lld] terminated",
+                        pcmk_children[next_child].name,
+                        (long long) PCMK__SPECIAL_PID_AS_0(
+                            pcmk_children[next_child].pid));
+            } else {
+                /* orderly shutdown */
+                crm_notice("%s[%lld] terminated",
+                           pcmk_children[next_child].name,
+                           (long long) PCMK__SPECIAL_PID_AS_0(
+                                pcmk_children[next_child].pid));
+            }
+            pcmk_process_exit(&(pcmk_children[next_child]));
+            break;
+        default:
+            crm_exit(CRM_EX_FATAL);
+            break;  /* static analysis/noreturn */
     }
 
-    global_keep_tracking = keep_tracking;
-    return keep_tracking;
+    next_child++;
+    if (next_child >= PCMK__NELEM(pcmk_children)) {
+        next_child = 0;
+    }
+
+    return G_SOURCE_CONTINUE;
 }
 
 static gboolean
@@ -233,6 +289,7 @@ pcmk_process_exit(pcmk_child_t * child)
 {
     child->pid = 0;
     child->active_before_startup = false;
+    child->check_count = 0;
 
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
@@ -255,23 +312,15 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_warn("One-off suppressing strict respawning of a child process %s,"
                  " appears alright per %s IPC end-point",
                  child->name, child->endpoint);
-        /* need to monitor how it evolves, and start new process if badly */
-        child->active_before_startup = true;
-        if (!global_keep_tracking) {
-            global_keep_tracking = true;
-            g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
-                                  check_active_before_startup_processes, NULL);
-        }
+
+    } else if (child->needs_cluster && !pcmkd_cluster_connected()) {
+        crm_notice("Not respawning %s subdaemon until cluster returns",
+                   child->name);
+        child->needs_retry = true;
 
     } else {
-        if (child->needs_cluster && !pcmkd_cluster_connected()) {
-            crm_notice("Skipping cluster-based subdaemon %s until cluster returns",
-                       child->name);
-            child->needs_retry = true;
-            return;
-        }
-
-        crm_notice("Respawning failed child process: %s", child->name);
+        crm_notice("Respawning %s subdaemon after unexpected exit",
+                   child->name);
         start_child(child);
     }
 }
@@ -375,6 +424,7 @@ start_child(pcmk_child_t * child)
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
 
     child->active_before_startup = false;
+    child->check_count = 0;
 
     if (child->command == NULL) {
         crm_info("Nothing to do for child \"%s\"", child->name);
@@ -462,7 +512,8 @@ start_child(pcmk_child_t * child)
              * the user, plus haclient (so we can access IPC).
              */
             if (initgroups(child->uid, gid) < 0) {
-                crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
+                crm_err("Cannot initialize groups for %s: %s (%d)",
+                        child->uid, pcmk_rc_str(errno), errno);
             }
         }
 
@@ -647,7 +698,6 @@ child_liveness(pcmk_child_t *child)
 int
 find_and_track_existing_processes(void)
 {
-    bool tracking = false;
     bool wait_in_progress;
     int rc;
     size_t i, rounds;
@@ -715,7 +765,6 @@ find_and_track_existing_processes(void)
                                                pcmk_children[i].pid));
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
                     pcmk_children[i].active_before_startup = true;
-                    tracking = true;
                     break;
                 case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
@@ -750,10 +799,8 @@ find_and_track_existing_processes(void)
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
     }
 
-    if (tracking) {
-        g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL,
-                              check_active_before_startup_processes, NULL);
-    }
+    g_timeout_add_seconds(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
+                          NULL);
     return pcmk_rc_ok;
 }
 

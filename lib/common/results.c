@@ -57,75 +57,7 @@ pcmk_errorname(int rc)
 const char *
 pcmk_strerror(int rc)
 {
-    if (rc == 0) {
-        return "OK";
-    }
-
-    rc = abs(rc);
-
-    // Of course rc > 0 ... unless someone passed INT_MIN as rc
-    if ((rc > 0) && (rc < PCMK_ERROR_OFFSET)) {
-        return strerror(rc);
-    }
-
-    switch (rc) {
-        case pcmk_err_generic:
-            return "Generic Pacemaker error";
-        case pcmk_err_no_quorum:
-            return "Operation requires quorum";
-        case pcmk_err_schema_validation:
-            return "Update does not conform to the configured schema";
-        case pcmk_err_transform_failed:
-            return "Schema transform failed";
-        case pcmk_err_old_data:
-            return "Update was older than existing configuration";
-        case pcmk_err_diff_failed:
-            return "Application of an update diff failed";
-        case pcmk_err_diff_resync:
-            return "Application of an update diff failed, requesting a full refresh";
-        case pcmk_err_cib_modified:
-            return "The on-disk configuration was manually modified";
-        case pcmk_err_cib_backup:
-            return "Could not archive the previous configuration";
-        case pcmk_err_cib_save:
-            return "Could not save the new configuration to disk";
-        case pcmk_err_cib_corrupt:
-            return "Could not parse on-disk configuration";
-        case pcmk_err_multiple:
-            return "Resource active on multiple nodes";
-        case pcmk_err_node_unknown:
-            return "Node not found";
-        case pcmk_err_already:
-            return "Situation already as requested";
-        case pcmk_err_bad_nvpair:
-            return "Bad name/value pair given";
-        case pcmk_err_schema_unchanged:
-            return "Schema is already the latest available";
-        case pcmk_err_unknown_format:
-            return "Unknown output format";
-
-            /* The following cases will only be hit on systems for which they are non-standard */
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOTUNIQ:
-            return "Name not unique on network";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ECOMM:
-            return "Communication error on send";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ELIBACC:
-            return "Can not access a needed shared library";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case EREMOTEIO:
-            return "Remote I/O error";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case EUNATCH:
-            return "Protocol driver not attached";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOKEY:
-            return "Required key not available";
-    }
-    crm_err("Unknown error code: %d", rc);
-    return "Unknown error";
+    return pcmk_rc_str(pcmk_legacy2rc(rc));
 }
 
 // Standard Pacemaker API return codes
@@ -342,8 +274,12 @@ pcmk_rc_name(int rc)
         case ENOMSG:            return "ENOMSG";
         case ENOPROTOOPT:       return "ENOPROTOOPT";
         case ENOSPC:            return "ENOSPC";
+#ifdef ENOSR
         case ENOSR:             return "ENOSR";
+#endif
+#ifdef ENOSTR
         case ENOSTR:            return "ENOSTR";
+#endif
         case ENOSYS:            return "ENOSYS";
         case ENOTBLK:           return "ENOTBLK";
         case ENOTCONN:          return "ENOTCONN";
@@ -376,7 +312,9 @@ pcmk_rc_name(int rc)
         case ETIME:             return "ETIME";
         case ETIMEDOUT:         return "ETIMEDOUT";
         case ETXTBSY:           return "ETXTBSY";
+#ifdef EUNATCH
         case EUNATCH:           return "EUNATCH";
+#endif
         case EUSERS:            return "EUSERS";
         /* case EWOULDBLOCK:    return "EWOULDBLOCK"; */
         case EXDEV:             return "EXDEV";
@@ -392,9 +330,9 @@ pcmk_rc_name(int rc)
 #ifdef EISNAM // Not available on OS X, Illumos, Solaris
         case EISNAM:            return "EISNAM";
         case EKEYEXPIRED:       return "EKEYEXPIRED";
-        case EKEYREJECTED:      return "EKEYREJECTED";
         case EKEYREVOKED:       return "EKEYREVOKED";
 #endif
+        case EKEYREJECTED:      return "EKEYREJECTED";
         case EL2HLT:            return "EL2HLT";
         case EL2NSYNC:          return "EL2NSYNC";
         case EL3HLT:            return "EL3HLT";
@@ -438,9 +376,37 @@ pcmk_rc_str(int rc)
         return pcmk__rcs[pcmk_rc_error - rc].desc;
     }
     if (rc < 0) {
-        return "Unknown error";
+        return "Error";
     }
-    return strerror(rc);
+
+    // Handle values that could be defined by system or by portability.h
+    switch (rc) {
+#ifdef PCMK__ENOTUNIQ
+        case ENOTUNIQ:      return "Name not unique on network";
+#endif
+#ifdef PCMK__ECOMM
+        case ECOMM:         return "Communication error on send";
+#endif
+#ifdef PCMK__ELIBACC
+        case ELIBACC:       return "Can not access a needed shared library";
+#endif
+#ifdef PCMK__EREMOTEIO
+        case EREMOTEIO:     return "Remote I/O error";
+#endif
+#ifdef PCMK__ENOKEY
+        case ENOKEY:        return "Required key not available";
+#endif
+#ifdef PCMK__ENODATA
+        case ENODATA:       return "No data available";
+#endif
+#ifdef PCMK__ETIME
+        case ETIME:         return "Timer expired";
+#endif
+#ifdef PCMK__EKEYREJECTED
+        case EKEYREJECTED:  return "Key was rejected by service";
+#endif
+        default:            return strerror(rc);
+    }
 }
 
 // This returns negative values for errors
@@ -802,7 +768,7 @@ bz2_strerror(int rc)
         case BZ_OUTBUFF_FULL:
             return "output data will not fit into the buffer provided";
     }
-    return "Unknown error";
+    return "Data compression error";
 }
 
 crm_exit_t

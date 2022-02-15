@@ -7,14 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE_AUTILS__H
-#  define PENGINE_AUTILS__H
+#ifndef PCMK__PCMKI_PCMKI_SCHED_UTILS__H
+#  define PCMK__PCMKI_PCMKI_SCHED_UTILS__H
 
 #include <stdbool.h>                    // bool
 #include <glib.h>                       // GList, GHashTable, gboolean, guint
 #include <crm/lrmd.h>                   // lrmd_event_data_t
 #include <crm/cib.h>                    // cib_t
 #include <crm/pengine/pe_types.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include <pcmki/pcmki_scheduler.h>
 #include <pcmki/pcmki_transition.h>
@@ -44,20 +45,10 @@ enum pe_action_flags summary_action_flags(pe_action_t * action, GList *children,
 enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
-extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
-extern void calculate_utilization(GHashTable * current_utilization,
-                                  GHashTable * utilization, gboolean plus);
-
-extern void process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set);
-
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,
-                                 const char *node, const char *origin,
-                                 int level);
+                                 const char *node, const char *origin);
 
 #  define LOAD_STOPPED "load_stopped"
-
-void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
-                          pcmk_injections_t *injections);
 
 #endif

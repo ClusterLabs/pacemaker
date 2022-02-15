@@ -424,9 +424,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
         if (stonith_api->state != stonith_disconnected) {
             stonith_api->cmds->disconnect(st);
         }
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_FENCE);
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_HISTORY_SYNCED);
+        stonith_api->cmds->remove_notification(stonith_api, NULL);
     }
 
     if (AM_I_DC) {
@@ -701,9 +699,7 @@ controld_disconnect_fencer(bool destroy)
         if (stonith_api->state != stonith_disconnected) {
             stonith_api->cmds->disconnect(stonith_api);
         }
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_FENCE);
-        stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_HISTORY_SYNCED);
+        stonith_api->cmds->remove_notification(stonith_api, NULL);
     }
     if (destroy) {
         if (stonith_api) {

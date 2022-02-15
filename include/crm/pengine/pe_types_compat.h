@@ -7,8 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__PENGINE_PE_TYPES_COMPAT__H
-#  define PCMK__PENGINE_PE_TYPES_COMPAT__H
+#ifndef PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
+#  define PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
+
+#include <crm/pengine/pe_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,4 +50,4 @@ typedef struct pe_ticket_s ticket_t;
 }
 #endif
 
-#endif // PCMK__PENGINE_PE_TYPES_COMPAT__H
+#endif // PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H

@@ -7,18 +7,18 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_CLUSTER__H
-#  define CRM_COMMON_CLUSTER__H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef PCMK__CRM_CLUSTER__H
+#  define PCMK__CRM_CLUSTER__H
 
 #  include <stdint.h>           // uint32_t, uint64_t
 #  include <glib.h>             // gboolean, GHashTable
 #  include <libxml/tree.h>      // xmlNode
 #  include <crm/common/xml.h>
 #  include <crm/common/util.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #  if SUPPORT_COROSYNC
 #    include <corosync/cpg.h>

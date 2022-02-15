@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_NVPAIR__H
-#  define CRM_COMMON_NVPAIR__H
+#ifndef PCMK__CRM_COMMON_NVPAIR__H
+#  define PCMK__CRM_COMMON_NVPAIR__H
+
+#  include <sys/time.h>     // struct timeval
+#  include <glib.h>         // gpointer, gboolean, guint
+#  include <libxml/tree.h>  // xmlNode
+#  include <crm/crm.h>
+
 
 #  ifdef __cplusplus
 extern "C" {
@@ -19,11 +25,6 @@ extern "C" {
  * \brief Functionality for manipulating name/value pairs
  * \ingroup core
  */
-
-#  include <sys/time.h>     // struct timeval
-#  include <glib.h>         // gpointer, gboolean, guint
-#  include <libxml/tree.h>  // xmlNode
-#  include <crm/crm.h>
 
 typedef struct pcmk_nvpair_s {
     char *name;
@@ -102,4 +103,4 @@ crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
 }
 #  endif
 
-#endif // CRM_COMMON_NVPAIR__H
+#endif // PCMK__CRM_COMMON_NVPAIR__H

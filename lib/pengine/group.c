@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
@@ -68,7 +70,7 @@ group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, b
 
 static bool
 skip_child_rsc(pe_resource_t *rsc, pe_resource_t *child, gboolean parent_passes,
-               GList *only_rsc, unsigned int show_opts)
+               GList *only_rsc, uint32_t show_opts)
 {
     bool star_list = pcmk__list_of_1(only_rsc) &&
                      pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
@@ -254,11 +256,11 @@ group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("group", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -304,11 +306,11 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("group", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__group_default(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -924,7 +924,8 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                     started);
     }
 
     /* stop */
@@ -937,7 +938,8 @@ clone_create_pseudo_actions(
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
+                                                    stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
@@ -1308,29 +1310,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    if (clone_data->start_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
-        pcmk__create_notification_keys(rsc, clone_data->start_notify, data_set);
-        create_notifications(rsc, clone_data->start_notify, data_set);
-    }
-
-    if (clone_data->stop_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
-        pcmk__create_notification_keys(rsc, clone_data->stop_notify, data_set);
-        create_notifications(rsc, clone_data->stop_notify, data_set);
-    }
-
-    if (clone_data->promote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->promote_notify, data_set);
-        create_notifications(rsc, clone_data->promote_notify, data_set);
-    }
-
-    if (clone_data->demote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->demote_notify, data_set);
-        create_notifications(rsc, clone_data->demote_notify, data_set);
-    }
+    pcmk__create_notifications(rsc, clone_data->start_notify);
+    pcmk__create_notifications(rsc, clone_data->stop_notify);
+    pcmk__create_notifications(rsc, clone_data->promote_notify);
+    pcmk__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -1344,13 +1327,13 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    free_notification_data(clone_data->demote_notify);
+    pcmk__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    free_notification_data(clone_data->stop_notify);
+    pcmk__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    free_notification_data(clone_data->start_notify);
+    pcmk__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    free_notification_data(clone_data->promote_notify);
+    pcmk__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
@@ -1532,5 +1515,48 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
+    }
+}
+
+// Clone implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization)
+{
+    bool existing = false;
+    pe_resource_t *child = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    // Look for any child already existing in the list
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        child = (pe_resource_t *) iter->data;
+        if (g_list_find(all_rscs, child)) {
+            existing = true; // Keep checking remaining children
+        } else {
+            // If this is a clone of a group, look for group's members
+            for (GList *member_iter = child->children; member_iter != NULL;
+                 member_iter = member_iter->next) {
+
+                pe_resource_t *member = (pe_resource_t *) member_iter->data;
+
+                if (g_list_find(all_rscs, member) != NULL) {
+                    // Add *child's* utilization, not group member's
+                    child->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                                 utilization);
+                    existing = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!existing && (rsc->children != NULL)) {
+        // If nothing was found, still add first child's utilization
+        child = (pe_resource_t *) rsc->children->data;
+
+        child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
     }
 }

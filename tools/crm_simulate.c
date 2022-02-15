@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -50,9 +51,8 @@ struct {
     .repeat = 1
 };
 
-unsigned int section_opts = 0;
+uint32_t section_opts = 0;
 char *temp_shadow = NULL;
-extern gboolean bringing_nodes_online;
 crm_exit_t exit_code = CRM_EX_OK;
 
 #define INDENT "                                   "
@@ -114,7 +114,7 @@ node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    bringing_nodes_online = TRUE;
+    pcmk__simulate_node_config = true;
     options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
 }

@@ -6,15 +6,15 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef PCMKI_OUTPUT_H
-#  define PCMKI_OUTPUT_H
+#ifndef PCMK__PCMKI_PCMKI_OUTPUT__H
+#  define PCMK__PCMKI_PCMKI_OUTPUT__H
+
+#  include <libxml/tree.h>
+#  include <crm/common/output_internal.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#  include <libxml/tree.h>
-#  include <crm/common/output_internal.h>
 
 extern pcmk__supported_format_t pcmk__out_formats[];
 

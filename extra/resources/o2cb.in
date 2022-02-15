@@ -366,10 +366,10 @@ meta_data() {
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="o2cb" version="1.0">
   <version>1.0</version>
-  <shortdesc lang="en">OCFS2 daemon resource agent</shortdesc>
   <longdesc lang="en">
 This Resource Agent controls the userspace daemon needed by OCFS2.
   </longdesc>
+  <shortdesc lang="en">OCFS2 daemon resource agent</shortdesc>
   <parameters>
 
     <parameter name="sysfs" unique="0">

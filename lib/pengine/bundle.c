@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <ctype.h>
+#include <stdint.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
@@ -1305,6 +1306,29 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             rsc->fns->free(rsc);
             return FALSE;
         }
+
+        /* Utilization needs special handling for bundles. It makes no sense for
+         * the inner primitive to have utilization, because it is tied
+         * one-to-one to the guest node created by the container resource -- and
+         * there's no way to set capacities for that guest node anyway.
+         *
+         * What the user really wants is to configure utilization for the
+         * container. However, the schema only allows utilization for
+         * primitives, and the container resource is implicit anyway, so the
+         * user can *only* configure utilization for the inner primitive. If
+         * they do, move the primitive's utilization values to the container.
+         *
+         * @TODO This means that bundles without an inner primitive can't have
+         * utilization. An alternative might be to allow utilization values in
+         * the top-level bundle XML in the schema, and copy those to each
+         * container.
+         */
+        if (replica->child != NULL) {
+            GHashTable *empty = replica->container->utilization;
+
+            replica->container->utilization = replica->child->utilization;
+            replica->child->utilization = empty;
+        }
     }
 
     if (bundle_data->child) {
@@ -1463,11 +1487,11 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1561,7 +1585,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, unsigned int show_opts)
+                               pe_node_t *node, uint32_t show_opts)
 {
     pe_resource_t *rsc = replica->child;
 
@@ -1587,11 +1611,11 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1634,7 +1658,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            unsigned int new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
@@ -1689,7 +1713,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, unsigned int show_opts)
+                               pe_node_t *node, uint32_t show_opts)
 {
     pe_resource_t *rsc = replica->child;
 
@@ -1715,11 +1739,11 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1762,7 +1786,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            unsigned int new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",

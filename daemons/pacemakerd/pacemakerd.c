@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,6 +47,7 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features(pcmk__output_t *out, va_list args) {
     out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
@@ -54,6 +55,7 @@ pacemakerd_features(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
@@ -133,7 +135,7 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
 
     if (rc < 0) {
         crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
+                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
     }
 }
 
@@ -258,6 +260,8 @@ main(int argc, char **argv)
 
     pcmk_ipc_api_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
+
+    subdaemon_check_progress = time(NULL);
 
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGHUP, pcmk_ignore);

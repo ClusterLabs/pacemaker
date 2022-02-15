@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's scheduler
 """
 
-__copyright__ = "Copyright 2004-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2004-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -711,6 +711,7 @@ TESTS = [
         [ "utilization-order2", "Utilization Order - Complex" ],
         [ "utilization-order3", "Utilization Order - Migrate" ],
         [ "utilization-order4", "Utilization Order - Live Migration (bnc#695440)" ],
+        [ "utilization-complex", "Utilization with complex relationships" ],
         [ "utilization-shuffle",
           "Don't displace prmExPostgreSQLDB2 on act2, Start prmExPostgreSQLDB1 on act3" ],
         [ "load-stopped-loop", "Avoid transition loop due to load_stopped (cl#5044)" ],

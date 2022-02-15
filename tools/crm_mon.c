@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,8 +55,8 @@
  * Definitions indicating which items to print
  */
 
-static unsigned int show;
-static unsigned int show_opts = pcmk_show_pending;
+static uint32_t show;
+static uint32_t show_opts = pcmk_show_pending;
 
 /*
  * Definitions indicating how to output
@@ -68,7 +69,6 @@ static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
 static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
-static pe_working_set_t *mon_data_set = NULL;
 
 static cib_t *cib = NULL;
 static stonith_t *st = NULL;
@@ -83,8 +83,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
-static gboolean fence_history = FALSE;
-static gboolean has_warnings = FALSE;
+static enum pcmk__fence_history fence_history = pcmk__fence_history_none;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
 
@@ -144,7 +143,7 @@ static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
-static unsigned int
+static uint32_t
 all_includes(mon_output_format_t fmt) {
     if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
         return ~pcmk_section_options;
@@ -153,7 +152,7 @@ all_includes(mon_output_format_t fmt) {
     }
 }
 
-static unsigned int
+static uint32_t
 default_includes(mon_output_format_t fmt) {
     switch (fmt) {
         case mon_output_monitor:
@@ -178,7 +177,7 @@ default_includes(mon_output_format_t fmt) {
 
 struct {
     const char *name;
-    unsigned int bit;
+    uint32_t bit;
 } sections[] = {
     { "attributes", pcmk_section_attributes },
     { "bans", pcmk_section_bans },
@@ -202,7 +201,7 @@ struct {
     { NULL }
 };
 
-static unsigned int
+static uint32_t
 find_section_bit(const char *name) {
     for (int i = 0; sections[i].name != NULL; i++) {
         if (pcmk__str_eq(sections[i].name, name, pcmk__str_casei)) {
@@ -220,7 +219,7 @@ apply_exclude(const gchar *excludes, GError **error) {
 
     parts = g_strsplit(excludes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
-        unsigned int bit = find_section_bit(*s);
+        uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
@@ -250,7 +249,7 @@ apply_include(const gchar *includes, GError **error) {
 
     parts = g_strsplit(includes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
-        unsigned int bit = find_section_bit(*s);
+        uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
@@ -395,22 +394,22 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
     switch (interactive_fence_level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -813,12 +812,10 @@ cib_connect(gboolean full)
         return rc;
     }
 
-#if CURSES_ENABLED
     /* just show this if refresh is gonna remove all traces */
     if (output_format == mon_output_console) {
         out->info(out,"Waiting for CIB ...");
     }
-#endif
 
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
@@ -863,26 +860,26 @@ set_fencing_options(int level)
     switch (level) {
         case 3:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 2:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fencing_all;
             break;
 
         case 1:
             options.fence_connect = TRUE;
-            fence_history = TRUE;
+            fence_history = pcmk__fence_history_full;
             show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
             options.fence_connect = FALSE;
-            fence_history = FALSE;
+            fence_history = pcmk__fence_history_none;
             show &= ~pcmk_section_fencing_all;
             break;
     }
@@ -1019,13 +1016,11 @@ pacemakerd_status(void)
         case EREMOTEIO:
             rc = pcmk_rc_ok;
             on_remote_node = TRUE;
-#if CURSES_ENABLED
             /* just show this if refresh is gonna remove all traces */
             if (output_format == mon_output_console) {
                 out->info(out,
                     "Running on remote-node waiting to be connected by cluster ...");
             }
-#endif
             break;
         default:
             break;
@@ -1155,7 +1150,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
+#ifdef PCMK__COMPAT_2_0
+        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details & ~pcmk_show_failed_detail));
+#else
         print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
+#endif
         print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
         print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
@@ -1177,13 +1176,13 @@ avoid_zombies(void)
 
     memset(&sa, 0, sizeof(struct sigaction));
     if (sigemptyset(&sa.sa_mask) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
         return;
     }
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
     if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_strerror(errno));
+        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
     }
 }
 
@@ -1385,10 +1384,22 @@ one_shot(void)
     clean_up(CRM_EX_OK);
 }
 
+static void
+exit_on_invalid_cib(void)
+{
+    if (cib != NULL) {
+        return;
+    }
+
+    // Shouldn't really be possible
+    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
+    clean_up(CRM_EX_ERROR);
+}
+
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GOptionGroup *output_group = NULL;
 
     args = pcmk__new_common_args(SUMMARY);
@@ -1444,39 +1455,36 @@ main(int argc, char **argv)
          */
         cib = cib_new();
 
-        if (cib == NULL) {
-            rc = -EINVAL;
-        } else {
-            switch (cib->variant) {
+        exit_on_invalid_cib();
 
-                case cib_native:
-                    /* cib & fencing - everything available */
-                    use_cib_native = TRUE;
-                    break;
+        switch (cib->variant) {
+            case cib_native:
+                /* cib & fencing - everything available */
+                use_cib_native = TRUE;
+                break;
 
-                case cib_file:
-                    /* Don't try to connect to fencing as we
-                     * either don't have a running cluster or
-                     * the fencing-information would possibly
-                     * not match the cib data from a file.
-                     * As we don't expect cib-updates coming
-                     * in enforce one-shot. */
-                    fence_history_cb("--fence-history", "0", NULL, NULL);
-                    options.one_shot = TRUE;
-                    break;
+            case cib_file:
+                /* Don't try to connect to fencing as we
+                 * either don't have a running cluster or
+                 * the fencing-information would possibly
+                 * not match the cib data from a file.
+                 * As we don't expect cib-updates coming
+                 * in enforce one-shot. */
+                fence_history_cb("--fence-history", "0", NULL, NULL);
+                options.one_shot = TRUE;
+                break;
 
-                case cib_remote:
-                    /* updates coming in but no fencing */
-                    fence_history_cb("--fence-history", "0", NULL, NULL);
-                    break;
+            case cib_remote:
+                /* updates coming in but no fencing */
+                fence_history_cb("--fence-history", "0", NULL, NULL);
+                break;
 
-                case cib_undefined:
-                case cib_database:
-                default:
-                    /* something is odd */
-                    rc = -EINVAL;
-                    break;
-            }
+            case cib_undefined:
+            case cib_database:
+            default:
+                /* something is odd */
+                exit_on_invalid_cib();
+                break;
         }
 
         if (options.one_shot) {
@@ -1485,32 +1493,12 @@ main(int argc, char **argv)
             }
 
         } else if (options.daemonize) {
-            if ((output_format == mon_output_console) || (args->output_dest == NULL)) {
-                output_format = mon_output_none;
-            }
-            crm_enable_stderr(FALSE);
-
-            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches | pcmk__str_casei) && !options.external_agent) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches|pcmk__str_casei) &&
+                !options.external_agent) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
-
-            if (cib) {
-                /* to be on the safe side don't have cib-object around
-                 * when we are forking
-                 */
-                cib_delete(cib);
-                cib = NULL;
-                pcmk__daemonize(crm_system_name, options.pid_file);
-                cib = cib_new();
-                if (cib == NULL) {
-                    rc = -EINVAL;
-                }
-                /* otherwise assume we've got the same cib-object we've just destroyed
-                 * in our parent
-                 */
-            }
-
 
         } else if (output_format == mon_output_console) {
 #if CURSES_ENABLED
@@ -1524,14 +1512,10 @@ main(int argc, char **argv)
         }
     }
 
-    if (rc != pcmk_ok) {
-        // Shouldn't really be possible
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
-        return clean_up(CRM_EX_ERROR);
-    }
-
     reconcile_output_format(args);
     add_output_args();
+
+    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
 
     if (args->version && output_format == mon_output_console) {
         /* Use the text output format here if we are in curses mode but were given
@@ -1549,7 +1533,23 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_ERROR);
     }
 
-    /* output_format MUST NOT BE CHANGED AFTER THIS POINT. */
+    if (options.daemonize) {
+        if (!options.external_agent && (output_format == mon_output_console ||
+                                        output_format == mon_output_unset ||
+                                        output_format == mon_output_none)) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                        "--daemonize requires --output-as=[html|text|xml]");
+            return clean_up(CRM_EX_USAGE);
+        }
+
+        crm_enable_stderr(FALSE);
+
+        cib_delete(cib);
+        cib = NULL;
+        pcmk__daemonize(crm_system_name, options.pid_file);
+        cib = cib_new();
+        exit_on_invalid_cib();
+    }
 
     show = default_includes(output_format);
 
@@ -1690,85 +1690,6 @@ main(int argc, char **argv)
     return clean_up(CRM_EX_OK);
 }
 
-/*!
- * \internal
- * \brief Print one-line status suitable for use with monitoring software
- *
- * \param[in] data_set  Working set of CIB state
- *
- * \note This function's output (and the return code when the program exits)
- *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
- */
-static void
-print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    int nodes_online = 0;
-    int nodes_standby = 0;
-    int nodes_maintenance = 0;
-    char *offline_nodes = NULL;
-    size_t offline_nodes_len = 0;
-    gboolean no_dc = FALSE;
-    gboolean offline = FALSE;
-
-    if (data_set->dc_node == NULL) {
-        has_warnings = TRUE;
-        no_dc = TRUE;
-    }
-
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (node->details->standby && node->details->online) {
-            nodes_standby++;
-        } else if (node->details->maintenance && node->details->online) {
-            nodes_maintenance++;
-        } else if (node->details->online) {
-            nodes_online++;
-        } else {
-            char *s = crm_strdup_printf("offline node: %s", node->details->uname);
-            /* coverity[leaked_storage] False positive */
-            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
-            free(s);
-            has_warnings = TRUE;
-            offline = TRUE;
-        }
-    }
-
-    if (has_warnings) {
-        out->info(out, "CLUSTER WARN: %s%s%s",
-                  no_dc ? "No DC" : "",
-                  no_dc && offline ? ", " : "",
-                  (offline? offline_nodes : ""));
-        free(offline_nodes);
-    } else {
-        char *nodes_standby_s = NULL;
-        char *nodes_maint_s = NULL;
-
-        if (nodes_standby > 0) {
-            nodes_standby_s = crm_strdup_printf(", %d standby node%s", nodes_standby,
-                                                pcmk__plural_s(nodes_standby));
-        }
-
-        if (nodes_maintenance > 0) {
-            nodes_maint_s = crm_strdup_printf(", %d maintenance node%s",
-                                              nodes_maintenance,
-                                              pcmk__plural_s(nodes_maintenance));
-        }
-
-        out->info(out, "CLUSTER OK: %d node%s online%s%s, "
-                       "%d resource instance%s configured",
-                  nodes_online, pcmk__plural_s(nodes_online),
-                  nodes_standby_s != NULL ? nodes_standby_s : "",
-                  nodes_maint_s != NULL ? nodes_maint_s : "",
-                  data_set->ninstances, pcmk__plural_s(data_set->ninstances));
-
-        free(nodes_standby_s);
-        free(nodes_maint_s);
-    }
-    /* coverity[leaked_storage] False positive */
-}
-
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
                  int status, const char *desc)
@@ -1887,7 +1808,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     }
 
     /* look up where we expected it to be? */
-    desc = pcmk_strerror(pcmk_ok);
+    desc = pcmk_rc_str(pcmk_rc_ok);
     if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
@@ -2107,38 +2028,12 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
-get_fencing_history(stonith_history_t **stonith_history)
-{
-    int rc = 0;
-
-    while (fence_history) {
-        if (st != NULL) {
-            rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
-
-            if (rc == 0) {
-                *stonith_history = stonith__sort_history(*stonith_history);
-                if (!pcmk_all_flags_set(show, pcmk_section_fencing_all)
-                    && (output_format != mon_output_xml)) {
-
-                    *stonith_history = pcmk__reduce_fence_history(*stonith_history);
-                }
-                break; /* all other cases are errors */
-            }
-        } else {
-            rc = ENOTCONN;
-            break;
-        }
-    }
-
-    return rc;
-}
-
-static int
 mon_refresh_display(gpointer user_data)
 {
+    pe_working_set_t *mon_data_set = NULL;
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
-    int history_rc = 0;
+    int history_rc = pcmk_rc_ok;
     GList *unames = NULL;
     GList *resources = NULL;
 
@@ -2146,20 +2041,30 @@ mon_refresh_display(gpointer user_data)
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
         cib__clean_up_connection(&cib);
-        out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
+        out->err(out, "Upgrade failed: %s",
+                 pcmk_rc_str(pcmk_rc_schema_validation));
         clean_up(CRM_EX_CONFIG);
-        return 0;
+        return G_SOURCE_REMOVE;
+    }
+
+    if (output_format == mon_output_none || output_format == mon_output_unset) {
+        return G_SOURCE_REMOVE;
     }
 
     /* get the stonith-history if there is evidence we need it */
-    history_rc = get_fencing_history(&stonith_history);
+    if (fence_history == pcmk__fence_history_full) {
+        if (!pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
+            (output_format != mon_output_xml)) {
+            fence_history = pcmk__fence_history_reduced;
+        }
 
-    if (mon_data_set == NULL) {
-        mon_data_set = pe_new_working_set();
-        CRM_ASSERT(mon_data_set != NULL);
+        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
     }
-    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
+    mon_data_set = pe_new_working_set();
+    CRM_ASSERT(mon_data_set != NULL);
+
+    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
     mon_data_set->input = cib_copy;
     mon_data_set->priv = out;
     cluster_status(mon_data_set);
@@ -2183,35 +2088,16 @@ mon_refresh_display(gpointer user_data)
         show |= pcmk_section_dc;
     }
 
-    switch (output_format) {
-        case mon_output_html:
-        case mon_output_cgi:
-            if (out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, fence_history, show, show_opts,
-                             options.neg_location_prefix, unames, resources) != 0) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
-                clean_up(CRM_EX_CANTCREAT);
-                return 0;
-            }
-            break;
-
-        case mon_output_monitor:
-            print_simple_status(out, mon_data_set);
-            if (has_warnings) {
-                clean_up(MON_STATUS_WARN);
-                return FALSE;
-            }
-            break;
-
-        case mon_output_unset:
-        case mon_output_none:
-            break;
-
-        default:
-            out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
-                         stonith_history, fence_history, show, show_opts,
-                         options.neg_location_prefix, unames, resources);
-            break;
+    if (output_format == mon_output_monitor) {
+        if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
+            pe_free_working_set(mon_data_set);
+            clean_up(MON_STATUS_WARN);
+            return G_SOURCE_REMOVE;
+        }
+    } else {
+        out->message(out, "cluster-status", mon_data_set, pcmk_rc2exitc(history_rc),
+                     stonith_history, fence_history, show, show_opts,
+                     options.neg_location_prefix, unames, resources);
     }
 
     if (options.daemonize) {
@@ -2223,8 +2109,8 @@ mon_refresh_display(gpointer user_data)
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_reset_working_set(mon_data_set);
-    return 1;
+    pe_free_working_set(mon_data_set);
+    return G_SOURCE_CONTINUE;
 }
 
 /* This function is called for fencing events (see fencing_connect for which ones) when
@@ -2315,9 +2201,7 @@ clean_up_fencing_connection(void)
     }
 
     if (st->state != stonith_disconnected) {
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+        st->cmds->remove_notification(st, NULL);
         st->cmds->disconnect(st);
     }
 
@@ -2346,9 +2230,6 @@ clean_up(crm_exit_t exit_code)
     free(options.only_rsc);
     free(options.pid_file);
     g_slist_free_full(options.includes_excludes, free);
-
-    pe_free_working_set(mon_data_set);
-    mon_data_set = NULL;
 
     g_strfreev(processed_args);
 

@@ -15,6 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -135,23 +136,22 @@ create_action_name(pe_action_t *action, bool verbose)
  * \param[in] print_spacer  Whether to display a spacer first
  */
 static void
-print_cluster_status(pe_working_set_t *data_set, unsigned int show_opts,
-                     unsigned int section_opts, const char *title,
-                     bool print_spacer)
+print_cluster_status(pe_working_set_t *data_set, uint32_t show_opts,
+                     uint32_t section_opts, const char *title, bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
+    crm_exit_t stonith_rc = 0;
 
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
+    show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
 
     all = g_list_prepend(all, (gpointer) "*");
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
-    out->message(out, "cluster-status", data_set, 0, NULL, FALSE,
-                 section_opts,
-                 show_opts | pcmk_show_inactive_rscs | pcmk_show_failed_detail,
-                 NULL, all, all);
+    out->message(out, "cluster-status", data_set, stonith_rc, NULL, FALSE,
+                 section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
     g_list_free(all);
@@ -768,7 +768,7 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
 int
 pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                pcmk_injections_t *injections, unsigned int flags,
-               unsigned int section_opts, char *use_date, char *input_file,
+               uint32_t section_opts, char *use_date, char *input_file,
                char *graph_file, char *dot_file)
 {
     int printed = pcmk_rc_no_output;
@@ -821,7 +821,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
         || (injections->watchdog != NULL)) {
 
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        modify_configuration(data_set, cib, injections);
+        pcmk__inject_scheduler_input(data_set, cib, injections);
         printed = pcmk_rc_ok;
 
         rc = cib->cmds->query(cib, NULL, &input, cib_sync_call);
@@ -963,26 +963,4 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
                         use_date, input_file, graph_file, dot_file);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
-}
-
-void
-pcmk_free_injections(pcmk_injections_t *injections)
-{
-    if (injections == NULL) {
-        return;
-    }
-
-    g_list_free_full(injections->node_up, g_free);
-    g_list_free_full(injections->node_down, g_free);
-    g_list_free_full(injections->node_fail, g_free);
-    g_list_free_full(injections->op_fail, g_free);
-    g_list_free_full(injections->op_inject, g_free);
-    g_list_free_full(injections->ticket_grant, g_free);
-    g_list_free_full(injections->ticket_revoke, g_free);
-    g_list_free_full(injections->ticket_standby, g_free);
-    g_list_free_full(injections->ticket_activate, g_free);
-    free(injections->quorum);
-    free(injections->watchdog);
-
-    free(injections);
 }

@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -7,7 +7,6 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/mk/common.mk
-include $(top_srcdir)/lib/common/mock.mk
 
 AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
 
@@ -99,6 +98,9 @@ libcrmcommon_la_SOURCES	+= xpath.c
 # but distclean chokes on that because it tries to include the source's .Plo
 # file, which may have already been cleaned.
 nodist_libcrmcommon_la_SOURCES	= md5.c
+
+WRAPPED = calloc getenv getpwnam_r uname
+WRAPPED_FLAGS = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c

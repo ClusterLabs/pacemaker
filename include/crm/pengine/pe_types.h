@@ -7,8 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_TYPES__H
-#  define PE_TYPES__H
+#ifndef PCMK__CRM_PENGINE_PE_TYPES__H
+#  define PCMK__CRM_PENGINE_PE_TYPES__H
+
+
+#  include <stdbool.h>              // bool
+#  include <sys/types.h>            // time_t
+#  include <libxml/tree.h>          // xmlNode
+#  include <glib.h>                 // gboolean, guint, GList, GHashTable
+#  include <crm/common/iso8601.h>
+#  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,13 +27,6 @@ extern "C" {
  * \brief Data types for cluster status
  * \ingroup pengine
  */
-
-#  include <stdbool.h>              // bool
-#  include <sys/types.h>            // time_t
-#  include <libxml/tree.h>          // xmlNode
-#  include <glib.h>                 // gboolean, guint, GList, GHashTable
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/common.h>
 
 typedef struct pe_node_s pe_node_t;
 typedef struct pe_action_s pe_action_t;
@@ -542,4 +543,4 @@ typedef struct pe_action_wrapper_s {
 }
 #endif
 
-#endif // PE_TYPES__H
+#endif // PCMK__CRM_PENGINE_PE_TYPES__H

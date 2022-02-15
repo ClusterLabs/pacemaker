@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2021 the Pacemaker project contributors
+ * Copyright 2005-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1244,7 +1244,8 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
     /* tm_gmtoff == offset from UTC in seconds */
     h_offset = GMTOFF(source) / HOUR_SECONDS;
     m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
-    crm_trace("Offset (s): %ld, offset (hh:mm): %.2d:%.2d", GMTOFF(source), h_offset, m_offset);
+    crm_trace("Time offset is %lds (%.2d:%.2d)",
+              GMTOFF(source), h_offset, m_offset);
 
     target->offset += HOUR_SECONDS * h_offset;
     target->offset += 60 * m_offset;

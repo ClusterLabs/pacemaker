@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm/common/output.h>
 #include <crm/pengine/rules.h>
@@ -540,7 +542,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  */
 gchar *
 pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                           unsigned long show_opts, const char *target_role, bool show_nodes)
+                           uint32_t show_opts, const char *target_role, bool show_nodes)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
@@ -683,7 +685,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
 int
 pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, unsigned int show_opts)
+                       const char *name, pe_node_t *node, uint32_t show_opts)
 {
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
@@ -739,7 +741,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
 int
 pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, unsigned int show_opts)
+                       const char *name, pe_node_t *node, uint32_t show_opts)
 {
     const char *target_role = NULL;
 
@@ -904,11 +906,11 @@ native_print(pe_resource_t * rsc, const char *pre_text, long options, void *prin
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -975,11 +977,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -999,11 +1001,11 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1265,7 +1267,7 @@ print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
 }
 
 int
-pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_opts)
+pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
 {
     GHashTable *rsc_table = pcmk__strkey_table(free, free);
     GHashTable *active_table = pcmk__strkey_table(free, destroy_node_table);

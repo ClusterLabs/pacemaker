@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -802,7 +802,7 @@ crm_ipc_connect(crm_ipc_t * client)
 
     if (client->ipc == NULL) {
         crm_debug("Could not establish %s IPC connection: %s (%d)",
-                  client->server_name, pcmk_strerror(errno), errno);
+                  client->server_name, pcmk_rc_str(errno), errno);
         return FALSE;
     }
 
@@ -1407,13 +1407,35 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     int32_t qb_rc;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
     qb_ipcc_connection_t *c;
+#ifdef HAVE_QB_IPCC_CONNECT_ASYNC
+    struct pollfd pollfd = { 0, };
+    int poll_rc;
 
+    c = qb_ipcc_connect_async(name, 0,
+                              &(pollfd.fd));
+#else
     c = qb_ipcc_connect(name, 0);
+#endif
     if (c == NULL) {
         crm_info("Could not connect to %s IPC: %s", name, strerror(errno));
         rc = pcmk_rc_ipc_unresponsive;
         goto bail;
     }
+#ifdef HAVE_QB_IPCC_CONNECT_ASYNC
+    pollfd.events = POLLIN;
+    do {
+        poll_rc = poll(&pollfd, 1, 2000);
+    } while ((poll_rc == -1) && (errno == EINTR));
+    if ((poll_rc <= 0) || (qb_ipcc_connect_continue(c) != 0)) {
+        crm_info("Could not connect to %s IPC: %s", name,
+                 (poll_rc == 0)?"timeout":strerror(errno));
+        rc = pcmk_rc_ipc_unresponsive;
+        if (poll_rc > 0) {
+            c = NULL; // qb_ipcc_connect_continue cleaned up for us
+        }
+        goto bail;
+    }
+#endif
 
     qb_rc = qb_ipcc_fd_get(c, &fd);
     if (qb_rc != 0) {

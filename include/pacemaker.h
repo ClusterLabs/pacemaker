@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PACEMAKER__H
-#  define PACEMAKER__H
+#ifndef PCMK__PACEMAKER__H
+#  define PCMK__PACEMAKER__H
+
+#  include <glib.h>
+#  include <libxml/tree.h>
+#  include <crm/pengine/pe_types.h>
+
+#  include <crm/stonith-ng.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,11 +26,6 @@ extern "C" {
  * \ingroup pacemaker
  */
 
-#  include <glib.h>
-#  include <libxml/tree.h>
-#  include <crm/pengine/pe_types.h>
-
-#  include <crm/stonith-ng.h>
 
 /*!
  * \brief Modify operation of running a cluster simulation.

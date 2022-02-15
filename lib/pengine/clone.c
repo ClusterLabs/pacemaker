@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
@@ -688,11 +690,11 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("clone", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -750,16 +752,16 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("clone", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_default(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
-    GHashTable *stopped = pcmk__strkey_table(free, free);
+    GHashTable *stopped = NULL;
 
     char *list_text = NULL;
     size_t list_text_len = 0;
@@ -816,7 +818,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+                && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+                if (stopped == NULL) {
+                    stopped = pcmk__strkey_table(free, free);
+                }
                 g_hash_table_insert(stopped, strdup(child_rsc->id), strdup("Stopped"));
             }
 
@@ -871,7 +877,6 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
-        g_hash_table_destroy(stopped);
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
         return pcmk_rc_ok;
     }
@@ -946,8 +951,10 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped table for non-unique clones */
-            g_hash_table_destroy(stopped);
-            stopped = pcmk__strkey_table(free, free);
+            if (stopped != NULL) {
+                g_hash_table_destroy(stopped);
+                stopped = NULL;
+            }
 
             if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
@@ -970,6 +977,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                         state = "Stopped (disabled)";
                     }
 
+                    if (stopped == NULL) {
+                        stopped = pcmk__strkey_table(free, free);
+                    }
                     if (probe_op != NULL) {
                         int rc;
 
@@ -985,7 +995,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             g_list_free(list);
         }
 
-        if (g_hash_table_size(stopped) > 0) {
+        if (stopped != NULL) {
             GList *list = sorted_hash_table_values(stopped);
 
             clone_header(out, &rc, rsc, clone_data);

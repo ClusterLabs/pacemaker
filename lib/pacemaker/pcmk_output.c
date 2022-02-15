@@ -17,6 +17,8 @@
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>
 
+#include <stdint.h>
+
 static char *
 colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
                    gboolean dependents) {
@@ -1225,11 +1227,11 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1239,11 +1241,11 @@ inject_spec(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec_xml(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1255,12 +1257,12 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1279,12 +1281,12 @@ inject_modify_config(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config_xml(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     xmlNodePtr node = NULL;
 
@@ -1486,8 +1488,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
-                  "GList *")
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
@@ -1495,8 +1496,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
@@ -1604,8 +1605,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
-                  "GList *")
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
@@ -1613,8 +1613,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
@@ -1630,7 +1630,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
         /* XML output always displays full details. */
-        unsigned int full_show_opts = show_opts & ~pcmk_show_brief;
+        uint32_t full_show_opts = show_opts & ~pcmk_show_brief;
 
         out->message(out, "resource-list", data_set, full_show_opts,
                      FALSE, unames, resources, FALSE);
@@ -1679,7 +1679,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *",
                   "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
@@ -1688,8 +1688,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);

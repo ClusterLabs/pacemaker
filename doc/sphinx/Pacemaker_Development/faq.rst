@@ -31,13 +31,13 @@ Frequently Asked Questions
    single: git; branch
 
 :Q: What are the different Git branches and repositories used for?
-:A: * The `master branch <https://github.com/ClusterLabs/pacemaker/tree/master>`_
+:A: * The `main branch <https://github.com/ClusterLabs/pacemaker/tree/main>`_
       is the primary branch used for development.
     * The `2.1 branch <https://github.com/ClusterLabs/pacemaker/tree/2.1>`_ is
       the current release branch. Normally, it does not receive any changes, but
       during the release cycle for a new release, it will contain release
       candidates. During the release cycle, certain bug fixes will go to the
-      2.1 branch first (and be pulled into master later).
+      2.1 branch first (and be pulled into main later).
     * The `2.0 branch <https://github.com/ClusterLabs/pacemaker/tree/2.0>`_,
       `1.1 branch <https://github.com/ClusterLabs/pacemaker/tree/1.1>`_,
       and separate
@@ -51,7 +51,7 @@ Frequently Asked Questions
 ----
 
 :Q: How do I build from the source code?
-:A: See `INSTALL.md <https://github.com/ClusterLabs/pacemaker/blob/master/INSTALL.md>`_
+:A: See `INSTALL.md <https://github.com/ClusterLabs/pacemaker/blob/main/INSTALL.md>`_
     in the main checkout directory.
 
 ----

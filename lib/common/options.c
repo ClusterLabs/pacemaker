@@ -436,7 +436,7 @@ pcmk__valid_script(const char *value)
 }
 
 bool
-pcmk__valid_utilization(const char *value)
+pcmk__valid_percentage(const char *value)
 {
     char *end = NULL;
     long number = strtol(value, &end, 10);
@@ -557,10 +557,15 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              pcmk__cluster_option_t *option_list, int len)
 {
+    char *escaped_long = NULL;
+    char *escaped_short = NULL;
     char *retval;
     /* big enough to hold "pacemaker-schedulerd metadata" output */
     GString *s = g_string_sized_new(13000);
     int lpc = 0;
+
+    escaped_long = crm_xml_escape(desc_long);
+    escaped_short = crm_xml_escape(desc_short);
 
     g_string_append_printf(s, "<?xml version=\"1.0\"?>"
                               "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
@@ -569,7 +574,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                               "  <longdesc lang=\"en\">%s</longdesc>\n"
                               "  <shortdesc lang=\"en\">%s</shortdesc>\n"
                               "  <parameters>\n",
-                              name, PCMK_OCF_VERSION, desc_long, desc_short);
+                              name, PCMK_OCF_VERSION, escaped_long, escaped_short);
+    free(escaped_long);
+    free(escaped_short);
 
     for (lpc = 0; lpc < len; lpc++) {
         if ((option_list[lpc].description_long == NULL)
@@ -577,16 +584,21 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             continue;
         }
 
+        escaped_long = crm_xml_escape(option_list[lpc].description_long?
+                                         _(option_list[lpc].description_long) :
+                                          _(option_list[lpc].description_short));
+        escaped_short = crm_xml_escape(_(option_list[lpc].description_short));
+
         g_string_append_printf(s, "    <parameter name=\"%s\">\n"
-                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n"
-                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n",
+                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
+                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n",
                                   option_list[lpc].name,
-                                  _(option_list[lpc].description_short),
-                                  option_list[lpc].description_long?
-                                     _(option_list[lpc].description_long) :
-                                     _(option_list[lpc].description_short),
+                                  escaped_long,
                                   (option_list[lpc].values? "  Allowed values: " : ""),
-                                  (option_list[lpc].values? option_list[lpc].values : ""));
+                                  (option_list[lpc].values? option_list[lpc].values : ""),
+                                  escaped_short);
+        free(escaped_long);
+        free(escaped_short);
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);
