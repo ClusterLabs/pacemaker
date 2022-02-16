@@ -25,7 +25,7 @@ COPYRIGHT_HOLDER = the Pacemaker project contributors
 # Possible values are "yes", "no", or empty.  If it is empty, try to
 # detect it automatically by scanning the files in $(top_srcdir) for
 # "GNU packagename" string.
-PACKAGE_GNU =
+PACKAGE_GNU = no
 
 # This is the email address or URL to which the translators shall report
 # bugs in the untranslated strings:

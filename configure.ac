@@ -286,17 +286,21 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
+# AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
+# to enabled. We override the definition of AM_NLS to flip the default and mark
+# it as experimental in the help text.
+AC_DEFUN([AM_NLS],
+    [AC_MSG_CHECKING([whether NLS is requested])
+    AC_ARG_ENABLE([nls],
+        [AS_HELP_STRING([--enable-nls],
+            [use Native Language Support (experimental)])],
+        USE_NLS=$enableval, USE_NLS=no)
+    AC_MSG_RESULT([$USE_NLS])
+    AC_SUBST([USE_NLS])]
+)
+
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
-
-AC_ARG_ENABLE(nls,
-    [  --enable-nls            enable Native Language Support],
-    USE_NLS=$enableval, USE_NLS=no)
-
-AS_IF([test "x${USE_NLS}" = "xyes"],
-      [
-          AC_DEFINE([PCMK__SUPPORT_NLS],[1],[Define to 1 if USE_NLS should be enabled])
-])
 
 dnl --with-* options: external software support, and custom locations
 

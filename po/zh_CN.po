@@ -10,8 +10,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-05 13:00+0800\n"
+"Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
+"POT-Creation-Date: 2022-02-15 17:24-0600\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -20,39 +20,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: lib/cib/cib_utils.c:634
+#: daemons/controld/controld_control.c:543
+msgid ""
+"Zero disables polling, while positive values are an interval in "
+"seconds(unless other units are specified, for example \"5min\")"
+msgstr ""
+"设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
+"如\"5min\"表示5分钟）"
+
+#: lib/cib/cib_utils.c:558
 msgid "Enable Access Control Lists (ACLs) for the CIB"
 msgstr "为CIB启用访问控制列表(ACL)"
 
-#: lib/cib/cib_utils.c:640
+#: lib/cib/cib_utils.c:564
 msgid "Maximum IPC message backlog before disconnecting a cluster daemon"
 msgstr "断开集群守护程序之前的最大IPC消息积压"
 
-#: lib/cib/cib_utils.c:641
+#: lib/cib/cib_utils.c:565
 msgid ""
 "Raise this if log has \"Evicting client\" messages for cluster daemon PIDs "
 "(a good value is the number of resources in the cluster multiplied by the "
 "number of nodes)."
 msgstr ""
-"如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为"
-"集群中的资源数量乘以节点数量）"
+"如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
+"中的资源数量乘以节点数量）"
 
-#: daemons/controld/controld_control.c:543
-msgid ""
-"Zero disables polling, while positive values are an interval in seconds(unless other units are specified, for example \"5min\")"
-msgstr ""
-"设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比如\"5min\"表示5分钟）"
-
-#: lib/pengine/common.c:132
+#: lib/pengine/common.c:126
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用看门狗集成设置"
 
 #: tools/crm_resource.c:1418
-#, c-format
-msgid "'%s' is not a valid agent specification"
-msgstr "'%s' 是一个无效的代理"
+#, fuzzy, c-format
+msgid "Metadata query for %s failed: %s"
+msgstr "，查询%s的元数据失败: %s\n"
 
 #: tools/crm_resource.c:1424
 #, c-format
-msgid "Metadata query for %s failed: %s\n"
-msgstr "，查询%s的元数据失败: %s\n"
+msgid "'%s' is not a valid agent specification"
+msgstr "'%s' 是一个无效的代理"
