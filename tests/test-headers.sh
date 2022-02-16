@@ -31,7 +31,7 @@ do
     then
         exit 1
     fi
-    if [ "$CXX" ]
+    if [ "$CXX" ] && [ command -v "$CXX" >/dev/null 2>&1 ]
     then
         ${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LIBS} -I ../include _test_file.c -o /dev/null
         if [ $? -ne 0 ]
