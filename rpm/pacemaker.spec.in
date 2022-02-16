@@ -302,6 +302,7 @@ BuildRequires: %{pkgname_bzip2_devel}
 BuildRequires: pkgconfig(dbus-1)
 BuildRequires: %{pkgname_docbook_xsl}
 BuildRequires: %{pkgname_gnutls_devel}
+BuildRequires: gettext-devel
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
