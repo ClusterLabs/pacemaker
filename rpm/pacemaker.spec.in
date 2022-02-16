@@ -56,6 +56,9 @@
 %bcond_without cibsecrets
 %endif
 
+## Add option to enable Native Language Support (experimental)
+%bcond_with nls
+
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
@@ -305,6 +308,7 @@ BuildRequires: %{pkgname_gnutls_devel}
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
+BuildRequires: gettext >= 0.18
 
 # Required for "make check"
 BuildRequires: libcmocka-devel
@@ -347,8 +351,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets coverage doc hardening pre_release profiling stonithd
-                upstart_job
+  --with(out) : cibsecrets coverage doc hardening nls pre_release profiling
+                stonithd upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -520,6 +524,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
+        %{?with_nls:           --enable-nls}                                    \
         %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?bug_url:            --with-bug-url=%{bug_url}}                       \
@@ -568,6 +573,10 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 
 %if %{defined _unitdir}
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
+%endif
+
+%if %{with nls}
+%find_lang %{name}
 %endif
 
 # Don't package libtool archives
@@ -835,7 +844,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files -n %{pkgname_pcmk_libs}
+%files -n %{pkgname_pcmk_libs} %{?with_nls:-f %{name}.lang}
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
