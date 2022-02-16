@@ -302,6 +302,8 @@ AC_DEFUN([AM_NLS],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
+AS_IF([test "$enable_nls" = "yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+
 dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
