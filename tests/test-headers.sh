@@ -27,9 +27,17 @@ do
 
     # Not including ${CFLAGS} because it seems to break header detection. But we're not really building here
     ${CC} -I ../include -DHAVE_CONFIG_H ${CPPFLAGS} ${LIBS} _test_file.c -o /dev/null
+    if [ $? -ne 0 ]
+    then
+        exit 1
+    fi
     if [ "$CXX" ]
     then
         ${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LIBS} -I ../include _test_file.c -o /dev/null
+        if [ $? -ne 0 ]
+        then
+            exit 1
+        fi
         echo -n
     fi
     rm -f _test_file.c
