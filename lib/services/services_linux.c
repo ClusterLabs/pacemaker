@@ -677,19 +677,14 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
-        const char *reason = NULL;
+        const char *kind = services__action_kind(op);
 
-        if (op->rsc != NULL) {
-            reason = "Resource agent did not complete in time";
-        } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_STONITH,
-                                pcmk__str_none)) {
-            reason = "Fence agent did not complete in time";
-        } else {
-            reason = "Process did not complete in time";
-        }
-        crm_info("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
-                             reason);
+        crm_info("%s %s[%d] timed out after %s",
+                 kind, op->id, op->pid, pcmk__readable_interval(op->timeout));
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_TIMEOUT,
+                                "%s did not complete within %s",
+                                kind, pcmk__readable_interval(op->timeout));
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
@@ -702,8 +697,9 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else {
         crm_info("%s[%d] terminated with signal %d (%s)",
                  op->id, op->pid, signo, strsignal(signo));
-        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
+        services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                "%s interrupted by %s signal",
+                                services__action_kind(op), strsignal(signo));
     }
 
     services__finalize_async_op(op);
@@ -863,19 +859,30 @@ services__configuration_error(svc_action_t *op, bool is_fatal)
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
+    const char *name = op->opaque->exec;
+
+    if (name == NULL) {
+        name = op->agent;
+        if (name == NULL) {
+            name = op->id;
+        }
+    }
+
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            services__set_result(op, services__not_installed_error(op),
-                                 PCMK_EXEC_NOT_INSTALLED, pcmk_rc_str(error));
+            services__format_result(op, services__not_installed_error(op),
+                                    PCMK_EXEC_NOT_INSTALLED, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            services__set_result(op, services__authorization_error(op),
-                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
+            services__format_result(op, services__authorization_error(op),
+                                    PCMK_EXEC_ERROR, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         default:
             services__set_result(op, services__generic_error(op),
@@ -1089,9 +1096,10 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     if (wait_rc <= 0) {
 
         if ((op->timeout > 0) && (timeout <= 0)) {
-            services__set_result(op, services__generic_error(op),
-                                 PCMK_EXEC_TIMEOUT,
-                                 "Process did not exit within specified timeout");
+            services__format_result(op, services__generic_error(op),
+                                    PCMK_EXEC_TIMEOUT,
+                                    "%s did not exit within specified timeout",
+                                    services__action_kind(op));
             crm_info("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
@@ -1122,8 +1130,9 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_ERROR, "%s interrupted by %s signal",
+                                services__action_kind(op), strsignal(signo));
         crm_info("%s[%d] terminated with signal %d (%s)",
                  op->id, op->pid, signo, strsignal(signo));
 

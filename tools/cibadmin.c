@@ -20,7 +20,7 @@ static int command_options = 0;
 static int request_id = 0;
 static int bump_log_num = 0;
 
-static const char *host = NULL;
+static char *host = NULL;
 static const char *cib_user = NULL;
 static const char *cib_action = NULL;
 static const char *obj_type = NULL;
@@ -514,7 +514,7 @@ main(int argc, char **argv)
                 break;
             case 'N':
             case 'h':
-                host = strdup(optarg);
+                pcmk__str_update(&host, optarg);
                 break;
             case 'l':
                 cib__set_call_options(command_options, crm_system_name,
@@ -703,6 +703,7 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
     }
 
+    free(host);
     crm_exit(exit_code);
 }
 

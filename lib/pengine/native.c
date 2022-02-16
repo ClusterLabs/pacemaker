@@ -337,9 +337,7 @@ native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const c
         /* try meta attributes instead */
         value = g_hash_table_lookup(rsc->meta, name);
     }
-    if (value != NULL) {
-        value_copy = strdup(value);
-    }
+    pcmk__str_update(&value_copy, value);
     return value_copy;
 }
 

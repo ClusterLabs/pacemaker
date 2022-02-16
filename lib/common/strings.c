@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1168,6 +1168,33 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         return strcasecmp(s1, s2);
     } else {
         return strcmp(s1, s2);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a dynamically allocated string with a new value
+ *
+ * Given a dynamically allocated string and a new value for it, if the string
+ * is different from the new value, free the string and replace it with either a
+ * newly allocated duplicate of the value or NULL as appropriate.
+ *
+ * \param[in] str    Pointer to dynamically allocated string
+ * \param[in] value  New value to duplicate (or NULL)
+ *
+ * \note The caller remains responsibile for freeing \p *str.
+ */
+void
+pcmk__str_update(char **str, const char *value)
+{
+    if ((str != NULL) && !pcmk__str_eq(*str, value, pcmk__str_none)) {
+        free(*str);
+        if (value == NULL) {
+            *str = NULL;
+        } else {
+            *str = strdup(value);
+            CRM_ASSERT(*str != NULL);
+        }
     }
 }
 

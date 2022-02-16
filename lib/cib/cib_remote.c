@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2021 the Pacemaker project contributors
+ * Copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -121,17 +121,9 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->variant = cib_remote;
     cib->variant_opaque = private;
 
-    if (server) {
-        private->server = strdup(server);
-    }
-
-    if (user) {
-        private->user = strdup(user);
-    }
-
-    if (passwd) {
-        private->passwd = strdup(passwd);
-    }
+    pcmk__str_update(&private->server, server);
+    pcmk__str_update(&private->user, user);
+    pcmk__str_update(&private->passwd, passwd);
 
     private->port = port;
     private->encrypted = encrypted;

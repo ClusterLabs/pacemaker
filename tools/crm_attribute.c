@@ -98,12 +98,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 static gboolean
 update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'v';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = strdup(optarg);
+    pcmk__str_update(&options.attr_value, optarg);
     return TRUE;
 }
 

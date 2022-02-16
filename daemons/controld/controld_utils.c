@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -724,17 +724,9 @@ update_dc(xmlNode * msg)
         }
     }
 
-    free(fsa_our_dc_version);
-    fsa_our_dc_version = NULL;
-
     fsa_our_dc = NULL;          /* Free'd as last_dc */
-
-    if (welcome_from != NULL) {
-        fsa_our_dc = strdup(welcome_from);
-    }
-    if (dc_version != NULL) {
-        fsa_our_dc_version = strdup(dc_version);
-    }
+    pcmk__str_update(&fsa_our_dc, welcome_from);
+    pcmk__str_update(&fsa_our_dc_version, dc_version);
 
     if (pcmk__str_eq(fsa_our_dc, last_dc, pcmk__str_casei)) {
         /* do nothing */

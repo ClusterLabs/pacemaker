@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -158,11 +158,7 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         }
 
     } else {
-        const char *tmp = crm_element_value(xml_search, attr);
-
-        if (tmp) {
-            *value = strdup(tmp);
-        }
+        pcmk__str_update(value, crm_element_value(xml_search, attr));
     }
 
   done:

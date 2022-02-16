@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -305,15 +305,13 @@ main(int argc, char **argv)
             case 's':
             case 'r':
                 command = flag;
-                free(shadow);
-                shadow = strdup(optarg);
+                pcmk__str_update(&shadow, optarg);
                 break;
             case 'C':
             case 'D':
                 command = flag;
                 dangerous_cmd = TRUE;
-                free(shadow);
-                shadow = strdup(optarg);
+                pcmk__str_update(&shadow, optarg);
                 break;
             case 'V':
                 command_options = command_options | cib_verbose;

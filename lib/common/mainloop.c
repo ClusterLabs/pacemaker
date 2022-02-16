@@ -1272,7 +1272,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
                    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
 {
     static bool need_init = TRUE;
-    mainloop_child_t *child = g_new(mainloop_child_t, 1);
+    mainloop_child_t *child = calloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
     child->timerid = 0;
@@ -1280,10 +1280,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
     child->privatedata = privatedata;
     child->callback = callback;
     child->flags = flags;
-
-    if(desc) {
-        child->desc = strdup(desc);
-    }
+    pcmk__str_update(&child->desc, desc);
 
     if (timeout) {
         child->timerid = g_timeout_add(timeout, child_timeout_callback, child);

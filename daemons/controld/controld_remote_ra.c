@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -613,11 +613,12 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
-            if (op->connection_rc == -ENOKEY) {
+            if ((op->connection_rc == -ENOKEY)
+                || (op->connection_rc == -EKEYREJECTED)) {
                 // Hard error, don't retry
                 pcmk__set_result(&(cmd->result), PCMK_OCF_INVALID_PARAM,
                                  PCMK_EXEC_ERROR,
-                                 "Authentication key not readable");
+                                 pcmk_strerror(op->connection_rc));
 
             } else if (cmd->remaining_timeout > 3000) {
                 crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
@@ -627,9 +628,10 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             } else {
                 crm_trace("can't reschedule start, remaining timeout too small %d",
                           cmd->remaining_timeout);
-                pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                                 PCMK_EXEC_TIMEOUT,
-                                 pcmk_strerror(op->connection_rc));
+                pcmk__format_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                                    PCMK_EXEC_TIMEOUT,
+                                    "%s without enough time to retry",
+                                    pcmk_strerror(op->connection_rc));
             }
 
         } else {
@@ -760,8 +762,10 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     rc = controld_connect_remote_executor(lrm_state, server, port,
                                           timeout_used);
     if (rc != pcmk_rc_ok) {
-        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, pcmk_rc_str(rc));
+        pcmk__format_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                            PCMK_EXEC_ERROR,
+                            "Could not connect to Pacemaker Remote node %s: %s",
+                            lrm_state->node_name, pcmk_rc_str(rc));
     }
     return rc;
 }

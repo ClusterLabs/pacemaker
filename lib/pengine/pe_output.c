@@ -1137,8 +1137,7 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
     }
     CRM_ASSERT((rsc_id != NULL) && (task != NULL));
 
-    str = g_string_sized_new(strlen(rsc_id) + strlen(task) + strlen(node_name)
-                             + 100); // reasonable starting size
+    str = g_string_sized_new(256); // Should be sufficient for most messages
 
     g_string_printf(str, "%s ", rsc_id);
 
@@ -1152,14 +1151,19 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
     if (status == PCMK_EXEC_DONE) {
         g_string_append_printf(str, " returned '%s'",
                                services_ocf_exitcode_str(rc));
+        if (!pcmk__str_empty(exit_reason)) {
+            g_string_append_printf(str, " (%s)", exit_reason);
+        }
+
     } else {
-        g_string_append_printf(str, " could not be executed (%s)",
+        g_string_append_printf(str, " could not be executed (%s",
                                pcmk_exec_status_str(status));
+        if (!pcmk__str_empty(exit_reason)) {
+            g_string_append_printf(str, ": %s", exit_reason);
+        }
+        g_string_append(str, ")");
     }
 
-    if (!pcmk__str_empty(exit_reason)) {
-        g_string_append_printf(str, " because '%s'", exit_reason);
-    }
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {

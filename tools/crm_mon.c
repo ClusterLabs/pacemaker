@@ -329,11 +329,7 @@ include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 static gboolean
 as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    args->output_ty = strdup("html");
+    pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_cgi;
     options.one_shot = TRUE;
     return TRUE;
@@ -341,20 +337,8 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 static gboolean
 as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    if (args->output_dest != NULL) {
-        free(args->output_dest);
-        args->output_dest = NULL;
-    }
-
-    if (optarg != NULL) {
-        args->output_dest = strdup(optarg);
-    }
-
-    args->output_ty = strdup("html");
+    pcmk__str_update(&args->output_dest, optarg);
+    pcmk__str_update(&args->output_ty, "html");
     output_format = mon_output_html;
     umask(S_IWGRP | S_IWOTH);
     return TRUE;
@@ -362,11 +346,7 @@ as_html_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    args->output_ty = strdup("text");
+    pcmk__str_update(&args->output_ty, "text");
     output_format = mon_output_monitor;
     options.one_shot = TRUE;
     return TRUE;
@@ -374,11 +354,7 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    if (args->output_ty != NULL) {
-        free(args->output_ty);
-    }
-
-    args->output_ty = strdup("xml");
+    pcmk__str_update(&args->output_ty, "xml");
     output_format = mon_output_legacy_xml;
     return TRUE;
 }
@@ -1299,35 +1275,20 @@ reconcile_output_format(pcmk__common_args_t *args) {
     if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
         char *dest = NULL;
 
-        if (args->output_dest != NULL) {
-            dest = strdup(args->output_dest);
-        }
-
+        pcmk__str_update(&dest, args->output_dest);
         retval = as_html_cb("h", dest, NULL, &err);
         free(dest);
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
         retval = no_curses_cb("N", NULL, NULL, &err);
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
-        if (args->output_ty != NULL) {
-            free(args->output_ty);
-        }
-
-        args->output_ty = strdup("xml");
+        pcmk__str_update(&args->output_ty, "xml");
         output_format = mon_output_xml;
     } else if (options.one_shot) {
-        if (args->output_ty != NULL) {
-            free(args->output_ty);
-        }
-
-        args->output_ty = strdup("text");
+        pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
     } else {
         /* Neither old nor new arguments were given, so set the default. */
-        if (args->output_ty != NULL) {
-            free(args->output_ty);
-        }
-
-        args->output_ty = strdup("console");
+        pcmk__str_update(&args->output_ty, "console");
         output_format = mon_output_console;
     }
 

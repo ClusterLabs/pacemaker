@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,6 +126,7 @@ bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 int pcmk__numeric_strcasecmp(const char *s1, const char *s2);
+void pcmk__str_update(char **str, const char *value);
 
 static inline bool
 pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)

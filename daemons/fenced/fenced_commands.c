@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,6 +72,7 @@ static void search_devices_record_result(struct device_search_s *search, const c
 
 static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
+static enum fenced_target_by unpack_level_kind(xmlNode *level);
 
 typedef struct async_command_s {
 
@@ -1096,7 +1097,7 @@ schedule_internal_command(const char *origin,
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
     cmd->action = strdup(action);
-    cmd->victim = victim ? strdup(victim) : NULL;
+    pcmk__str_update(&cmd->victim, victim);
     cmd->device = strdup(device->id);
     cmd->origin = strdup(origin);
     cmd->client = strdup(crm_system_name);
@@ -1504,54 +1505,52 @@ init_topology_list(void)
     }
 }
 
-char *stonith_level_key(xmlNode *level, int mode)
+char *
+stonith_level_key(xmlNode *level, enum fenced_target_by mode)
 {
-    if(mode == -1) {
-        mode = stonith_level_kind(level);
+    if (mode == fenced_target_by_unknown) {
+        mode = unpack_level_kind(level);
     }
-
-    switch(mode) {
-        case 0:
+    switch (mode) {
+        case fenced_target_by_name:
             return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET);
-        case 1:
-            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
-        case 2:
-            {
-                const char *name = crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE);
-                const char *value = crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE);
 
-                if(name && value) {
-                    return crm_strdup_printf("%s=%s", name, value);
-                }
-            }
+        case fenced_target_by_pattern:
+            return crm_element_value_copy(level, XML_ATTR_STONITH_TARGET_PATTERN);
+
+        case fenced_target_by_attribute:
+            return crm_strdup_printf("%s=%s",
+                crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE),
+                crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE));
+
         default:
-            return crm_strdup_printf("Unknown-%d-%s", mode, ID(level));
+            return crm_strdup_printf("unknown-%s", ID(level));
     }
 }
 
-int stonith_level_kind(xmlNode * level)
+/*!
+ * \internal
+ * \brief Parse target identification from topology level XML
+ *
+ * \param[in] level  Topology level XML to parse
+ *
+ * \return How to identify target of \p level
+ */
+static int
+unpack_level_kind(xmlNode *level)
 {
-    int mode = 0;
-    const char *target = crm_element_value(level, XML_ATTR_STONITH_TARGET);
-
-    if(target == NULL) {
-        mode++;
-        target = crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN);
+    if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
+        return fenced_target_by_name;
     }
-
-    if(stand_alone == FALSE && target == NULL) {
-
-        mode++;
-
-        if(crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) == NULL) {
-            mode++;
-
-        } else if(crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL) {
-            mode++;
-        }
+    if (crm_element_value(level, XML_ATTR_STONITH_TARGET_PATTERN) != NULL) {
+        return fenced_target_by_pattern;
     }
-
-    return mode;
+    if (!stand_alone /* if standalone, there's no attribute manager */
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL)) {
+        return fenced_target_by_attribute;
+    }
+    return fenced_target_by_unknown;
 }
 
 static stonith_key_value_t *
@@ -1599,7 +1598,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 {
     int id = 0;
     xmlNode *level;
-    int mode;
+    enum fenced_target_by mode;
     char *target;
 
     stonith_topology_t *tp;
@@ -1627,8 +1626,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         return;
     }
 
-    mode = stonith_level_kind(level);
-
+    mode = unpack_level_kind(level);
     target = stonith_level_key(level, mode);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
@@ -1637,12 +1635,14 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     }
 
     // Ensure a valid target was specified
-    if ((mode < 0) || (mode > 2)) {
-        crm_warn("Ignoring topology level registration without valid target");
+    if (mode == fenced_target_by_unknown) {
+        crm_warn("Ignoring registration for topology level '%s' "
+                 "without valid target", crm_str(ID(level)));
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level target");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid target for topology level '%s'",
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1651,9 +1651,12 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level number");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid level number '%s' for topology level '%s'",
+                            crm_str(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX)),
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1674,7 +1677,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
         g_hash_table_replace(topology, tp->target, tp);
         crm_trace("Added %s (%d) to the topology (%d active entries)",
-                  target, mode, g_hash_table_size(topology));
+                  target, (int) mode, g_hash_table_size(topology));
     } else {
         free(target);
     }
@@ -1738,7 +1741,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         return;
     }
 
-    target = stonith_level_key(level, -1);
+    target = stonith_level_key(level, fenced_target_by_unknown);
     crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
     // Ensure level ID is in allowed range
@@ -1746,9 +1749,12 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_warn(level, "Bad level");
-        pcmk__set_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                         "Invalid topology level");
+        crm_log_xml_info(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Invalid level number '%s' for topology level '%s'",
+                            crm_str(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX)),
+                            crm_str(ID(level)));
         return;
     }
 
@@ -1877,16 +1883,16 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     if (device == NULL) {
         crm_info("Ignoring API '%s' action request because device %s not found",
                  action, id);
-        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         NULL);
+        pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "'%s' not found", id);
         return;
 
     } else if (!device->api_registered && !strcmp(action, "monitor")) {
         // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API '%s' action request because device %s not active",
                  action, id);
-        pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         "Fence device not active");
+        pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "'%s' not active", id);
         return;
     }
 
@@ -2103,8 +2109,8 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
         return;
     }
 
-    search->host = host ? strdup(host) : NULL;
-    search->action = action ? strdup(action) : NULL;
+    pcmk__str_update(&search->host, host);
+    pcmk__str_update(&search->action, action);
     search->per_device_timeout = timeout;
     search->allow_suicide = suicide;
     search->callback = callback;
@@ -2351,10 +2357,10 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
 
     pcmk__set_result(&result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     query->reply = fenced_construct_reply(msg, NULL, &result);
-    query->remote_peer = remote_peer ? strdup(remote_peer) : NULL;
-    query->client_id = client_id ? strdup(client_id) : NULL;
-    query->target = target ? strdup(target) : NULL;
-    query->action = action ? strdup(action) : NULL;
+    pcmk__str_update(&query->remote_peer, remote_peer);
+    pcmk__str_update(&query->client_id, client_id);
+    pcmk__str_update(&query->target, target);
+    pcmk__str_update(&query->action, action);
     query->call_options = call_options;
 
     get_capable_devices(target, action, timeout,
@@ -2672,8 +2678,9 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     if (device == NULL) { // No device found
         pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                         "No fence device configured for target");
+        pcmk__format_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                            "No device configured for target '%s'",
+                            cmd->victim);
         send_async_reply(cmd, &result, 0, false);
         pcmk__reset_result(&result);
         free_async_command(cmd);
@@ -2713,8 +2720,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
-            pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
-                             "Requested fence device not found");
+            pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
+                                "Requested device '%s' not found", device_id);
             return;
         }
         schedule_stonith_command(cmd, device);
@@ -3250,8 +3257,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         crm_err("Unknown IPC request %s from %s %s", op,
                 ((client == NULL)? "peer" : "client"),
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
-        pcmk__set_result(&result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                         "Unknown IPC request type (bug?)");
+        pcmk__format_result(&result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                            "Unknown IPC request type '%s' (bug?)",
+                            crm_str(op));
     }
 
 done:

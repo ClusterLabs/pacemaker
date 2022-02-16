@@ -812,11 +812,8 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
     cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
                               rsc->cluster);
 
-    free(cancel_op->task);
-    cancel_op->task = strdup(RSC_CANCEL);
-
-    free(cancel_op->cancel_task);
-    cancel_op->cancel_task = strdup(task);
+    pcmk__str_update(&cancel_op->task, RSC_CANCEL);
+    pcmk__str_update(&cancel_op->cancel_task, task);
 
     interval_ms_s = crm_strdup_printf("%u", interval_ms);
     add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);

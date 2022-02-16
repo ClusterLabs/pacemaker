@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -827,6 +827,45 @@ pcmk__set_result(pcmk__action_result_t *result, int exit_status,
     }
 }
 
+
+/*!
+ * \internal
+ * \brief Set the result of an action, with a formatted exit reason
+ *
+ * \param[out] result        Where to set action result
+ * \param[in]  exit_status   OCF exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  format        printf-style format for a human-friendly
+ *                           description of reason for result
+ * \param[in]  ...           arguments for \p format
+ */
+G_GNUC_PRINTF(4, 5)
+void
+pcmk__format_result(pcmk__action_result_t *result, int exit_status,
+                    enum pcmk_exec_status exec_status,
+                    const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *reason = NULL;
+
+    if (result == NULL) {
+        return;
+    }
+
+    result->exit_status = exit_status;
+    result->execution_status = exec_status;
+
+    if (format != NULL) {
+        va_start(ap, format);
+        len = vasprintf(&reason, format, ap);
+        CRM_ASSERT(len > 0);
+        va_end(ap);
+    }
+    free(result->exit_reason);
+    result->exit_reason = reason;
+}
+
 /*!
  * \internal
  * \brief Set the output of an action
@@ -875,4 +914,22 @@ pcmk__reset_result(pcmk__action_result_t *result)
 
     free(result->action_stderr);
     result->action_stderr = NULL;
+}
+
+/*!
+ * \internal
+ * \brief Copy the result of an action
+ *
+ * \param[in]  src  Result to copy
+ * \param[out] dst  Where to copy \p src to
+ */
+void
+pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
+{
+    CRM_CHECK((src != NULL) && (dst != NULL), return);
+    dst->exit_status = src->exit_status;
+    dst->execution_status = src->execution_status;
+    pcmk__str_update(&src->exit_reason, dst->exit_reason);
+    pcmk__str_update(&src->action_stdout, dst->action_stdout);
+    pcmk__str_update(&src->action_stderr, dst->action_stderr);
 }

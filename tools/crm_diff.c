@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2021 the Pacemaker project contributors
+ * Copyright 2005-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,36 +85,21 @@ static GOptionEntry addl_entries[] = {
 gboolean
 new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.raw_2 = TRUE;
-
-    if (options.xml_file_2 != NULL) {
-        free(options.xml_file_2);
-    }
-
-    options.xml_file_2 = strdup(optarg);
+    pcmk__str_update(&options.xml_file_2, optarg);
     return TRUE;
 }
 
 gboolean
 original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.raw_1 = TRUE;
-
-    if (options.xml_file_1 != NULL) {
-        free(options.xml_file_1);
-    }
-
-    options.xml_file_1 = strdup(optarg);
+    pcmk__str_update(&options.xml_file_1, optarg);
     return TRUE;
 }
 
 gboolean
 patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.apply = TRUE;
-
-    if (options.xml_file_2 != NULL) {
-        free(options.xml_file_2);
-    }
-
-    options.xml_file_2 = strdup(optarg);
+    pcmk__str_update(&options.xml_file_2, optarg);
     return TRUE;
 }
 

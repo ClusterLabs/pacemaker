@@ -29,6 +29,7 @@
 
 CRM_TRACE_INIT_DATA(stonith);
 
+// Used as stonith_t:st_private
 typedef struct stonith_private_s {
     char *token;
     crm_ipc_t *ipc;
@@ -41,6 +42,11 @@ typedef struct stonith_private_s {
     void (*op_callback) (stonith_t * st, stonith_callback_data_t * data);
 
 } stonith_private_t;
+
+// Used as stonith_event_t:opaque
+struct event_private {
+    pcmk__action_result_t result;
+};
 
 typedef struct stonith_notify_client_s {
     const char *event;
@@ -1380,21 +1386,25 @@ get_event_data_xml(xmlNode *msg, const char *ntype)
  </notify>
 */
 static stonith_event_t *
-xml_to_event(xmlNode *msg, pcmk__action_result_t *result)
+xml_to_event(xmlNode *msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
+    struct event_private *event_private = NULL;
 
-    CRM_ASSERT((event != NULL) && (result != NULL));
+    CRM_ASSERT(event != NULL);
+
+    event->opaque = calloc(1, sizeof(struct event_private));
+    CRM_ASSERT(event->opaque != NULL);
+    event_private = (struct event_private *) event->opaque;
 
     crm_log_xml_trace(msg, "stonith_notify");
 
     // All notification types have the operation result
-    event->opaque = result;
-    stonith__xe_get_result(msg, result);
+    stonith__xe_get_result(msg, &event_private->result);
 
     // @COMPAT The API originally provided the result as a legacy return code
-    event->result = pcmk_rc2legacy(stonith__result2rc(result));
+    event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
 
     // Fence notifications have additional information
     if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
@@ -1421,6 +1431,8 @@ xml_to_event(xmlNode *msg, pcmk__action_result_t *result)
 static void
 event_free(stonith_event_t * event)
 {
+    struct event_private *event_private = event->opaque;
+
     free(event->id);
     free(event->type);
     free(event->message);
@@ -1431,7 +1443,8 @@ event_free(stonith_event_t * event)
     free(event->executioner);
     free(event->device);
     free(event->client_origin);
-    pcmk__reset_result((pcmk__action_result_t *) (event->opaque));
+    pcmk__reset_result(&event_private->result);
+    free(event->opaque);
     free(event);
 }
 
@@ -1442,7 +1455,6 @@ stonith_send_notification(gpointer data, gpointer user_data)
     stonith_notify_client_t *entry = data;
     stonith_event_t *st_event = NULL;
     const char *event = NULL;
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     if (blob->xml == NULL) {
         crm_warn("Skipping callback - NULL message");
@@ -1468,7 +1480,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    st_event = xml_to_event(blob->xml, &result);
+    st_event = xml_to_event(blob->xml);
 
     crm_trace("Invoking callback for %p/%s event...", entry, event);
     entry->notify(blob->stonith, st_event);
@@ -1858,12 +1870,8 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
     stonith_key_value_t *p, *end;
 
     p = calloc(1, sizeof(stonith_key_value_t));
-    if (key) {
-        p->key = strdup(key);
-    }
-    if (value) {
-        p->value = strdup(value);
-    }
+    pcmk__str_update(&p->key, key);
+    pcmk__str_update(&p->value, value);
 
     end = head;
     while (end && end->next) {
@@ -2422,8 +2430,11 @@ stonith__event_exit_status(stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return CRM_EX_ERROR;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.exit_status;
     }
-    return ((pcmk__action_result_t *) event->opaque)->exit_status;
 }
 
 /*!
@@ -2439,8 +2450,11 @@ stonith__event_execution_status(stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return PCMK_EXEC_UNKNOWN;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.execution_status;
     }
-    return ((pcmk__action_result_t *) event->opaque)->execution_status;
 }
 
 /*!
@@ -2456,8 +2470,11 @@ stonith__event_exit_reason(stonith_event_t *event)
 {
     if ((event == NULL) || (event->opaque == NULL)) {
         return NULL;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.exit_reason;
     }
-    return ((pcmk__action_result_t *) event->opaque)->exit_reason;
 }
 
 /*!

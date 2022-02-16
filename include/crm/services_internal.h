@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,6 +46,10 @@ char *services__grab_stderr(svc_action_t *action);
 void services__set_result(svc_action_t *action, int agent_status,
                           enum pcmk_exec_status exec_status,
                           const char *exit_reason);
+
+void services__format_result(svc_action_t *action, int agent_status,
+                             enum pcmk_exec_status exec_status,
+                             const char *format, ...) G_GNUC_PRINTF(4, 5);
 
 #  ifdef __cplusplus
 }
