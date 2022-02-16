@@ -4446,7 +4446,7 @@ Started: [ cluster01 cluster02 ]
 Promoted: [ cluster02 ]
 Unpromoted: [ cluster01 ]
 
-Only 'private' parameters to dummy_monitor_60000 on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
 Original: cluster01 capacity:
 Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:

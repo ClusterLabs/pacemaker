@@ -136,25 +136,25 @@
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="4" operation="delete" operation_key="service2:0_delete_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
-        <primitive id="service2:0" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_on_node="alice.demo" CRM_meta_on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="11">
-    <action_set>
-      <rsc_op id="1" operation="delete" operation_key="service2:0_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
+      <rsc_op id="3" operation="delete" operation_key="service2:0_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
         <primitive id="service2:0" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_on_node="bob.demo" CRM_meta_on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="1" operation="delete" operation_key="service2:0_delete_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
+        <primitive id="service2:0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="alice.demo" CRM_meta_on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="2" operation="delete" operation_key="service2:1_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
+      <rsc_op id="4" operation="delete" operation_key="service2:1_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
         <primitive id="service2:1" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_on_node="bob.demo" CRM_meta_on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -163,18 +163,18 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="5" operation="delete" operation_key="service1_delete_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
+      <rsc_op id="5" operation="delete" operation_key="service1_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
         <primitive id="service1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_on_node="alice.demo" CRM_meta_on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="bob.demo" CRM_meta_on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
   <synapse id="14">
     <action_set>
-      <rsc_op id="3" operation="delete" operation_key="service1_delete_0" on_node="bob.demo" on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de">
+      <rsc_op id="2" operation="delete" operation_key="service1_delete_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">
         <primitive id="service1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_on_node="bob.demo" CRM_meta_on_node_uuid="0af1add7-22b5-4342-9816-67e6351605de" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="alice.demo" CRM_meta_on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

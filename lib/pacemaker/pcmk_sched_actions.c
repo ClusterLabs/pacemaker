@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,9 @@
 #include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
+
+extern gboolean DeleteRsc(pe_resource_t *rsc, pe_node_t *node,
+                          gboolean optional, pe_working_set_t *data_set);
 
 /*!
  * \internal
@@ -1212,5 +1215,543 @@ pcmk__output_actions(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         rsc->cmds->output_actions(rsc);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Schedule cancellation of a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] call_id      Action's call ID from history
+ * \param[in] task         Action name
+ * \param[in] interval_ms  Action interval
+ * \param[in] node         Node that history entry is for
+ * \param[in] reason       Short description of why action is being cancelled
+ */
+static void
+schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
+                guint interval_ms, pe_node_t *node, const char *reason)
+{
+    pe_action_t *cancel = NULL;
+
+    CRM_CHECK((rsc != NULL) && (task != NULL)
+              && (node != NULL) && (reason != NULL),
+              return);
+
+    crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
+             pcmk__readable_interval(interval_ms), task, rsc->id,
+             crm_str(node->details->uname), reason);
+    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
+    add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
+
+    // Cancellations happen after stops
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
+                       pe_order_optional, rsc->cluster);
+}
+
+/*!
+ * \internal
+ * \brief Check whether action from resource history is still in configuration
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Action's name
+ * \param[in] interval_ms  Action's interval (in milliseconds)
+ *
+ * \return true if action is still in resource configuration, otherwise false
+ */
+static bool
+action_in_config(pe_resource_t *rsc, const char *task, guint interval_ms)
+{
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
+    bool config = (find_rsc_op_entry(rsc, key) != NULL);
+
+    free(key);
+    return config;
+}
+
+/*!
+ * \internal
+ * \brief Get action name needed to compare digest for configuration changes
+ *
+ * \param[in] task         Action name from history
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ *
+ * \return Action name whose digest should be compared
+ */
+static const char *
+task_for_digest(const char *task, guint interval_ms)
+{
+    /* Certain actions need to be compared against the parameters used to start
+     * the resource.
+     */
+    if ((interval_ms == 0)
+        && pcmk__str_any_of(task, RSC_STATUS, RSC_MIGRATED, RSC_PROMOTE, NULL)) {
+        task = RSC_START;
+    }
+    return task;
+}
+
+/*!
+ * \internal
+ * \brief Check whether only sanitized parameters to an action changed
+ *
+ * When collecting CIB files for troubleshooting, crm_report will mask
+ * sensitive resource parameters. If simulations were run using that, affected
+ * resources would appear to need a restart, which would complicate
+ * troubleshooting. To avoid that, we save a "secure digest" of non-sensitive
+ * parameters. This function used that digest to check whether only masked
+ * parameters are different.
+ *
+ * \param[in] xml_op       Resource history entry with secure digest
+ * \param[in] digest_data  Operation digest information being compared
+ * \param[in] data_set     Cluster working set
+ *
+ * \return true if only sanitized parameters changed, otherwise false
+ */
+static bool
+only_sanitized_changed(xmlNode *xml_op, const op_digest_cache_t *digest_data,
+                       pe_working_set_t *data_set)
+{
+    const char *digest_secure = NULL;
+
+    if (!pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
+        // The scheduler is not being run as a simulation
+        return false;
+    }
+
+    digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
+
+    return (digest_data->rc != RSC_DIGEST_MATCH) && (digest_secure != NULL)
+           && (digest_data->digest_secure_calc != NULL)
+           && (strcmp(digest_data->digest_secure_calc, digest_secure) == 0);
+}
+
+/*!
+ * \internal
+ * \brief Force a restart due to a configuration change
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Name of action whose configuration changed
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] node         Node where resource should be restarted
+ */
+static void
+force_restart(pe_resource_t *rsc, const char *task, guint interval_ms,
+              pe_node_t *node)
+{
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
+    pe_action_t *required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
+                                          rsc->cluster);
+
+    pe_action_set_reason(required, "resource definition change", true);
+    trigger_unfencing(rsc, node, "Device parameters changed", NULL,
+                      rsc->cluster);
+}
+
+/*!
+ * \internal
+ * \brief Reschedule a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Name of action being rescheduled
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] node         Node where action should be rescheduled
+ */
+static void
+reschedule_recurring(pe_resource_t *rsc, const char *task, guint interval_ms,
+                     pe_node_t *node)
+{
+    pe_action_t *op = NULL;
+
+    trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
+                      NULL, rsc->cluster);
+    op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
+                       task, node, TRUE, TRUE, rsc->cluster);
+    pe__set_action_flags(op, pe_action_reschedule);
+}
+
+/*!
+ * \internal
+ * \brief Schedule a reload of a resource on a node
+ *
+ * \param[in] rsc   Resource to reload
+ * \param[in] node  Where resource should be reloaded
+ */
+static void
+schedule_reload(pe_resource_t *rsc, pe_node_t *node)
+{
+    pe_action_t *reload = NULL;
+
+    // For collective resources, just call recursively for children
+    if (rsc->variant > pe_native) {
+        g_list_foreach(rsc->children, (GFunc) schedule_reload, node);
+        return;
+    }
+
+    // Skip the reload in certain situations
+    if ((node == NULL)
+        || !pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        pe_rsc_trace(rsc, "Skip reload of %s:%s%s %s",
+                     rsc->id,
+                     pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : " unmanaged",
+                     pcmk_is_set(rsc->flags, pe_rsc_failed)? " failed" : "",
+                     (node == NULL)? "inactive" : node->details->uname);
+        return;
+    }
+
+    /* If a resource's configuration changed while a start was pending,
+     * force a full restart instead of a reload.
+     */
+    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
+                     rsc->id);
+        custom_action(rsc, stop_key(rsc), CRMD_ACTION_STOP, node, FALSE, TRUE,
+                      rsc->cluster);
+        return;
+    }
+
+    // Schedule the reload
+    pe__set_resource_flags(rsc, pe_rsc_reload);
+    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
+                           FALSE, TRUE, rsc->cluster);
+    pe_action_set_reason(reload, "resource definition change", FALSE);
+
+    // Set orderings so that a required stop or demote cancels the reload
+    pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       rsc->cluster);
+    pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
+                       pe_order_optional|pe_order_then_cancels_first,
+                       rsc->cluster);
+}
+
+/*!
+ * \internal
+ * \brief Handle any configuration change for an action
+ *
+ * Given an action from resource history, if the resource's configuration
+ * changed since the action was done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, etc.).
+ *
+ * \param[in] rsc     Resource that action is for
+ * \param[in] node    Node that action was on
+ * \param[in] xml_op  Action XML from resource history
+ *
+ * \return true if action configuration changed, otherwise false
+ */
+bool
+pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
+{
+    guint interval_ms = 0;
+    const char *task = NULL;
+    const op_digest_cache_t *digest_data = NULL;
+
+    CRM_CHECK((rsc != NULL) && (node != NULL) && (xml_op != NULL),
+              return false);
+
+    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    CRM_CHECK(task != NULL, return false);
+
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
+    // If this is a recurring action, check whether it has been orphaned
+    if (interval_ms > 0) {
+        if (action_in_config(rsc, task, interval_ms)) {
+            pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
+                         pcmk__readable_interval(interval_ms), task, rsc->id,
+                         node->details->uname);
+        } else if (pcmk_is_set(rsc->cluster->flags,
+                               pe_flag_stop_action_orphans)) {
+            schedule_cancel(rsc,
+                            crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                            task, interval_ms, node, "orphan");
+            return true;
+        } else {
+            pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
+                         pcmk__readable_interval(interval_ms), task, rsc->id,
+                         node->details->uname);
+            return true;
+        }
+    }
+
+    crm_trace("Checking %s-interval %s for %s on %s for configuration changes",
+              pcmk__readable_interval(interval_ms), task, rsc->id,
+              node->details->uname);
+    task = task_for_digest(task, interval_ms);
+    digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
+
+    if (only_sanitized_changed(xml_op, digest_data, rsc->cluster)) {
+        if (!pcmk__is_daemon && (rsc->cluster->priv != NULL)) {
+            pcmk__output_t *out = rsc->cluster->priv;
+
+            out->info(out,
+                      "Only 'private' parameters to %s-interval %s for %s "
+                      "on %s changed: %s",
+                      pcmk__readable_interval(interval_ms), task, rsc->id,
+                      node->details->uname,
+                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        }
+        return false;
+    }
+
+    switch (digest_data->rc) {
+        case RSC_DIGEST_RESTART:
+            crm_log_xml_debug(digest_data->params_restart, "params:restart");
+            force_restart(rsc, task, interval_ms, node);
+            return true;
+
+        case RSC_DIGEST_ALL:
+        case RSC_DIGEST_UNKNOWN:
+            // Changes that can potentially be handled by an agent reload
+
+            if (interval_ms > 0) {
+                /* Recurring actions aren't reloaded per se, they are just
+                 * re-scheduled so the next run uses the new parameters.
+                 * The old instance will be cancelled automatically.
+                 */
+                crm_log_xml_debug(digest_data->params_all, "params:reschedule");
+                reschedule_recurring(rsc, task, interval_ms, node);
+
+            } else if (crm_element_value(xml_op,
+                                         XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
+                // Agent supports reload, so use it
+                trigger_unfencing(rsc, node,
+                                  "Device parameters changed (reload)", NULL,
+                                  rsc->cluster);
+                crm_log_xml_debug(digest_data->params_all, "params:reload");
+                schedule_reload(rsc, node);
+
+            } else {
+                pe_rsc_trace(rsc,
+                             "Restarting %s because agent doesn't support reload",
+                             rsc->id);
+                crm_log_xml_debug(digest_data->params_restart,
+                                  "params:restart");
+                force_restart(rsc, task, interval_ms, node);
+            }
+            return true;
+
+        default:
+            break;
+    }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Create a list of resource's action history entries, sorted by call ID
+ *
+ * \param[in]  rsc          Resource whose history should be checked
+ * \param[in]  rsc_entry    Resource's <lrm_rsc_op> status XML
+ * \param[out] start_index  Where to store index of start-like action, if any
+ * \param[out] stop_index   Where to store index of stop action, if any
+ */
+static GList *
+rsc_history_as_list(pe_resource_t *rsc, xmlNode *rsc_entry,
+                    int *start_index, int *stop_index)
+{
+    GList *ops = NULL;
+
+    for (xmlNode *rsc_op = first_named_child(rsc_entry, XML_LRM_TAG_RSC_OP);
+         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
+        ops = g_list_prepend(ops, rsc_op);
+    }
+    ops = g_list_sort(ops, sort_op_by_callid);
+    calculate_active_ops(ops, start_index, stop_index);
+    return ops;
+}
+
+/*!
+ * \internal
+ * \brief Process a resource's action history from the CIB status
+ *
+ * Given a resource's action history, if the resource's configuration
+ * changed since the actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] rsc_entry  Resource's <lrm_rsc_op> status XML
+ * \param[in] rsc        Resource whose history is being processed
+ * \param[in] node       Node whose history is being processed
+ */
+static void
+process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
+{
+    int offset = -1;
+    int stop_index = 0;
+    int start_index = 0;
+    GList *sorted_op_list = NULL;
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        if (pe_rsc_is_anon_clone(uber_parent(rsc))) {
+            pe_rsc_trace(rsc,
+                         "Skipping configuration check "
+                         "for orphaned clone instance %s",
+                         rsc->id);
+        } else {
+            pe_rsc_trace(rsc,
+                         "Skipping configuration check and scheduling clean-up "
+                         "for orphaned resource %s", rsc->id);
+            DeleteRsc(rsc, node, FALSE, rsc->cluster);
+        }
+        return;
+    }
+
+    if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
+        if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
+            DeleteRsc(rsc, node, FALSE, rsc->cluster);
+        }
+        pe_rsc_trace(rsc,
+                     "Skipping configuration check for %s "
+                     "because no longer active on %s",
+                     rsc->id, node->details->uname);
+        return;
+    }
+
+    pe_rsc_trace(rsc, "Checking for configuration changes for %s on %s",
+                 rsc->id, node->details->uname);
+
+    if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
+        DeleteRsc(rsc, node, FALSE, rsc->cluster);
+    }
+
+    sorted_op_list = rsc_history_as_list(rsc, rsc_entry, &start_index,
+                                         &stop_index);
+    if (start_index < stop_index) {
+        return; // Resource is stopped
+    }
+
+    for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        xmlNode *rsc_op = (xmlNode *) iter->data;
+        const char *task = NULL;
+        guint interval_ms = 0;
+
+        if (++offset < start_index) {
+            // Skip actions that happened before a start
+            continue;
+        }
+
+        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
+        if ((interval_ms > 0)
+            && (pcmk_is_set(rsc->flags, pe_rsc_maintenance)
+                || node->details->maintenance)) {
+            // Maintenance mode cancels recurring operations
+            schedule_cancel(rsc,
+                            crm_element_value(rsc_op, XML_LRM_ATTR_CALLID),
+                            task, interval_ms, node, "maintenance mode");
+
+        } else if ((interval_ms > 0)
+                   || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
+                                           RSC_PROMOTE, RSC_MIGRATED, NULL)) {
+            /* If a resource operation failed, and the operation's definition
+             * has changed, clear any fail count so they can be retried fresh.
+             */
+
+            if (pe__bundle_needs_remote_name(rsc, rsc->cluster)) {
+                /* We haven't allocated resources to nodes yet, so if the
+                 * REMOTE_CONTAINER_HACK is used, we may calculate the digest
+                 * based on the literal "#uname" value rather than the properly
+                 * substituted value. That would mistakenly make the action
+                 * definition appear to have been changed. Defer the check until
+                 * later in this case.
+                 */
+                pe__add_param_check(rsc_op, rsc, node, pe_check_active,
+                                    rsc->cluster);
+
+            } else if (pcmk__check_action_config(rsc, node, rsc_op)
+                       && (pe_get_failcount(node, rsc, NULL, pe_fc_effective,
+                                            NULL, rsc->cluster) != 0)) {
+                pe__clear_failcount(rsc, node, "action definition changed",
+                                    rsc->cluster);
+            }
+        }
+    }
+    g_list_free(sorted_op_list);
+}
+
+/*!
+ * \internal
+ * \brief Process a node's action history from the CIB status
+ *
+ * Given a node's resource history, if the resource's configuration changed
+ * since the actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] node      Node whose history is being processed
+ * \param[in] lrm_rscs  Node's <lrm_resources> from CIB status XML
+ * \param[in] data_set  Cluster working set
+ */
+static void
+process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_set)
+{
+    crm_trace("Processing history for node %s", node->details->uname);
+    for (xmlNode *rsc_entry = first_named_child(lrm_rscs, XML_LRM_TAG_RESOURCE);
+         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+
+        if (xml_has_children(rsc_entry)) {
+            GList *result = pcmk__rscs_matching_id(ID(rsc_entry), data_set);
+
+            for (GList *iter = result; iter != NULL; iter = iter->next) {
+                pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+                if (rsc->variant == pe_native) {
+                    process_rsc_history(rsc_entry, rsc, node);
+                }
+            }
+            g_list_free(result);
+        }
+    }
+}
+
+// XPath to find a node's resource history
+#define XPATH_NODE_HISTORY "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS             \
+                           "/" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']" \
+                           "/" XML_CIB_TAG_LRM "/" XML_LRM_TAG_RESOURCES
+
+/*!
+ * \internal
+ * \brief Process any resource configuration changes in the CIB status
+ *
+ * Go through all nodes' resource history, and if a resource's configuration
+ * changed since its actions were done, schedule any actions needed (restart,
+ * reload, unfencing, rescheduling recurring actions, clean-up, etc.).
+ * (This also cancels recurring actions for maintenance mode, which is not
+ * entirely related but convenient to do here.)
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
+{
+    crm_trace("Check resource and action configuration for changes");
+
+    /* Rather than iterate through the status section, iterate through the nodes
+     * and search for the appropriate status subsection for each. This skips
+     * orphaned nodes and lets us eliminate some cases before searching the XML.
+     */
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+
+        /* Don't bother checking actions for a node that can't run actions ...
+         * unless it's in maintenance mode, in which case we still need to
+         * cancel any existing recurring monitors.
+         */
+        if (node->details->maintenance || pcmk__node_available(node)) {
+            char *xpath = NULL;
+            xmlNode *history = NULL;
+
+            xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->details->uname);
+            history = get_xpath_object(xpath, data_set->input, LOG_NEVER);
+            free(xpath);
+
+            process_node_history(node, history, data_set);
+        }
     }
 }

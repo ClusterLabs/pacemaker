@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -120,9 +120,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     }
 
     pcmk__create_internal_constraints(data_set);
-
-    crm_trace("Check actions");
-    stage4(data_set);
+    pcmk__handle_rsc_config_changes(data_set);
 
     crm_trace("Allocate resources");
     stage5(data_set);

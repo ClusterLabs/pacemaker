@@ -25,163 +25,6 @@ CRM_TRACE_INIT_DATA(pacemaker);
 
 extern bool pcmk__is_daemon;
 
-extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
-extern gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
-
-static void
-CancelXmlOp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * active_node,
-            const char *reason, pe_working_set_t * data_set)
-{
-    guint interval_ms = 0;
-    pe_action_t *cancel = NULL;
-
-    const char *task = NULL;
-    const char *call_id = NULL;
-
-    CRM_CHECK(xml_op != NULL, return);
-    CRM_CHECK(active_node != NULL, return);
-
-    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-
-    crm_info("Action " PCMK__OP_FMT " on %s will be stopped: %s",
-             rsc->id, task, interval_ms,
-             active_node->details->uname, (reason? reason : "unknown"));
-
-    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, active_node);
-    add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
-    pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
-                       pe_order_optional, data_set);
-}
-
-static gboolean
-check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * xml_op,
-                        pe_working_set_t * data_set)
-{
-    char *key = NULL;
-    guint interval_ms = 0;
-    const op_digest_cache_t *digest_data = NULL;
-    gboolean did_change = FALSE;
-
-    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *digest_secure = NULL;
-
-    CRM_CHECK(active_node != NULL, return FALSE);
-
-    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    if (interval_ms > 0) {
-        xmlNode *op_match = NULL;
-
-        /* we need to reconstruct the key because of the way we used to construct resource IDs */
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-
-        pe_rsc_trace(rsc, "Checking parameters for %s", key);
-        op_match = find_rsc_op_entry(rsc, key);
-
-        if ((op_match == NULL)
-            && pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
-            CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
-            free(key);
-            return TRUE;
-
-        } else if (op_match == NULL) {
-            pe_rsc_debug(rsc, "Orphan action detected: %s on %s", key, active_node->details->uname);
-            free(key);
-            return TRUE;
-        }
-        free(key);
-        key = NULL;
-    }
-
-    crm_trace("Testing " PCMK__OP_FMT " on %s",
-              rsc->id, task, interval_ms, active_node->details->uname);
-    if ((interval_ms == 0) && pcmk__str_eq(task, RSC_STATUS, pcmk__str_casei)) {
-        /* Reload based on the start action not a probe */
-        task = RSC_START;
-
-    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_MIGRATED, pcmk__str_casei)) {
-        /* Reload based on the start action not a migrate */
-        task = RSC_START;
-    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_PROMOTE, pcmk__str_casei)) {
-        /* Reload based on the start action not a promote */
-        task = RSC_START;
-    }
-
-    digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
-
-    if (pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
-        digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
-    }
-
-    if(digest_data->rc != RSC_DIGEST_MATCH
-       && digest_secure
-       && digest_data->digest_secure_calc
-       && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (!pcmk__is_daemon && data_set->priv != NULL) {
-            pcmk__output_t *out = data_set->priv;
-            out->info(out, "Only 'private' parameters to "
-                      PCMK__OP_FMT " on %s changed: %s", rsc->id, task,
-                      interval_ms, active_node->details->uname,
-                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-        }
-
-    } else if (digest_data->rc == RSC_DIGEST_RESTART) {
-        /* Changes that force a restart */
-        pe_action_t *required = NULL;
-
-        did_change = TRUE;
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-        crm_log_xml_info(digest_data->params_restart, "params:restart");
-        required = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-        pe_action_set_reason(required, "resource definition change", true);
-        trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
-
-    } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
-        // Changes that can potentially be handled by an agent reload
-        const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
-
-        did_change = TRUE;
-        trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
-        crm_log_xml_info(digest_data->params_all, "params:reload");
-        key = pcmk__op_key(rsc->id, task, interval_ms);
-
-        if (interval_ms > 0) {
-            pe_action_t *op = NULL;
-
-#if 0
-            /* Always reload/restart the entire resource */
-            ReloadRsc(rsc, active_node, data_set);
-#else
-            /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
-            op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
-            pe__set_action_flags(op, pe_action_reschedule);
-#endif
-
-        } else if (digest_restart) {
-            pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
-
-            /* Reload this resource */
-            ReloadRsc(rsc, active_node, data_set);
-            free(key);
-
-        } else {
-            pe_action_t *required = NULL;
-            pe_rsc_trace(rsc, "Resource %s doesn't support agent reloads",
-                         rsc->id);
-
-            /* Re-send the start/demote/promote op
-             * Recurring ops will be detected independently
-             */
-            required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
-                                     data_set);
-            pe_action_set_reason(required, "resource definition change", true);
-        }
-    }
-
-    return did_change;
-}
-
 /*!
  * \internal
  * \brief Do deferred action checks after allocation
@@ -197,7 +40,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 
     switch (check) {
         case pe_check_active:
-            if (check_action_definition(rsc, node, rsc_op, data_set)
+            if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
 
@@ -223,175 +66,6 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 
     if (reason) {
         pe__clear_failcount(rsc, node, reason, data_set);
-    }
-}
-
-static void
-check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    int offset = -1;
-    int stop_index = 0;
-    int start_index = 0;
-
-    const char *task = NULL;
-
-    xmlNode *rsc_op = NULL;
-    GList *op_list = NULL;
-    GList *sorted_op_list = NULL;
-
-    CRM_CHECK(node != NULL, return);
-
-    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        pe_resource_t *parent = uber_parent(rsc);
-        if(parent == NULL
-           || pe_rsc_is_clone(parent) == FALSE
-           || pcmk_is_set(parent->flags, pe_rsc_unique)) {
-            pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
-            DeleteRsc(rsc, node, FALSE, data_set);
-        } else {
-            pe_rsc_trace(rsc, "Skipping param check for %s (orphan clone)", rsc->id);
-        }
-        return;
-
-    } else if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
-        if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
-            DeleteRsc(rsc, node, FALSE, data_set);
-        }
-        pe_rsc_trace(rsc, "Skipping param check for %s: no longer active on %s",
-                     rsc->id, node->details->uname);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Processing %s on %s", rsc->id, node->details->uname);
-
-    if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
-        DeleteRsc(rsc, node, FALSE, data_set);
-    }
-
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
-         rsc_op = pcmk__xe_next(rsc_op)) {
-
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
-            op_list = g_list_prepend(op_list, rsc_op);
-        }
-    }
-
-    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-    calculate_active_ops(sorted_op_list, &start_index, &stop_index);
-
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
-        guint interval_ms = 0;
-
-        offset++;
-
-        if (start_index < stop_index) {
-            /* stopped */
-            continue;
-        } else if (offset < start_index) {
-            /* action occurred prior to a start */
-            continue;
-        }
-
-        task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-
-        if ((interval_ms > 0) &&
-            (pcmk_is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
-            // Maintenance mode cancels recurring operations
-            CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
-
-        } else if ((interval_ms > 0) || pcmk__strcase_any_of(task, RSC_STATUS, RSC_START,
-                                                             RSC_PROMOTE, RSC_MIGRATED, NULL)) {
-            /* If a resource operation failed, and the operation's definition
-             * has changed, clear any fail count so they can be retried fresh.
-             */
-
-            if (pe__bundle_needs_remote_name(rsc, data_set)) {
-                /* We haven't allocated resources to nodes yet, so if the
-                 * REMOTE_CONTAINER_HACK is used, we may calculate the digest
-                 * based on the literal "#uname" value rather than the properly
-                 * substituted value. That would mistakenly make the action
-                 * definition appear to have been changed. Defer the check until
-                 * later in this case.
-                 */
-                pe__add_param_check(rsc_op, rsc, node, pe_check_active,
-                                    data_set);
-
-            } else if (check_action_definition(rsc, node, rsc_op, data_set)
-                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                                    data_set)) {
-                pe__clear_failcount(rsc, node, "action definition changed",
-                                    data_set);
-            }
-        }
-    }
-    g_list_free(sorted_op_list);
-}
-
-static void
-check_actions(pe_working_set_t * data_set)
-{
-    const char *id = NULL;
-    pe_node_t *node = NULL;
-    xmlNode *lrm_rscs = NULL;
-    xmlNode *status = pcmk_find_cib_element(data_set->input,
-                                            XML_CIB_TAG_STATUS);
-    xmlNode *node_state = NULL;
-
-    for (node_state = pcmk__xe_first_child(status); node_state != NULL;
-         node_state = pcmk__xe_next(node_state)) {
-
-        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE,
-                         pcmk__str_none)) {
-            id = crm_element_value(node_state, XML_ATTR_ID);
-            lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
-
-            node = pe_find_node_id(data_set->nodes, id);
-
-            if (node == NULL) {
-                continue;
-
-            /* Still need to check actions for a maintenance node to cancel existing monitor operations */
-            } else if (!pcmk__node_available(node) && !node->details->maintenance) {
-                crm_trace("Skipping param check for %s: can't run resources",
-                          node->details->uname);
-                continue;
-            }
-
-            crm_trace("Processing node %s", node->details->uname);
-            if (node->details->online
-                || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-                xmlNode *rsc_entry = NULL;
-
-                for (rsc_entry = pcmk__xe_first_child(lrm_rscs);
-                     rsc_entry != NULL;
-                     rsc_entry = pcmk__xe_next(rsc_entry)) {
-
-                    if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-
-                        if (xml_has_children(rsc_entry)) {
-                            GList *gIter = NULL;
-                            GList *result = NULL;
-
-                            result = pcmk__rscs_matching_id(ID(rsc_entry),
-                                                            data_set);
-                            for (gIter = result; gIter != NULL; gIter = gIter->next) {
-                                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-                                if (rsc->variant != pe_native) {
-                                    continue;
-                                }
-                                check_actions_for(rsc_entry, rsc, node, data_set);
-                            }
-                            g_list_free(result);
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -455,11 +129,12 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
      * There is no sense in potentially forcing the resource from this
      * node if the failcount is being reset anyway.
      *
-     * @TODO A clear_failcount operation can be scheduled in stage4() via
-     * check_actions_for(), or in stage5() via check_params(). This runs in
-     * stage2(), so it cannot detect those, meaning we might check the migration
-     * threshold when we shouldn't -- worst case, we stop or move the resource,
-     * then move it back next transition.
+     * @TODO A clear_failcount operation can be scheduled in
+     * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
+     * stage5() via check_params(). This runs in stage2(), so it cannot detect
+     * those, meaning we might check the migration threshold when we shouldn't
+     * -- worst case, we stop or move the resource, then move it back next
+     *  transition.
      */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
         pe_resource_t *failed = NULL;
@@ -752,16 +427,6 @@ stage2(pe_working_set_t * data_set)
         }
     }
 
-    return TRUE;
-}
-
-/*
- * Check for orphaned or redefined actions
- */
-gboolean
-stage4(pe_working_set_t * data_set)
-{
-    check_actions(data_set);
     return TRUE;
 }
 

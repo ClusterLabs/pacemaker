@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -501,7 +501,7 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
 
 /* Magic string to use as action name for digest cache entries used for
  * unfencing checks. This is not a real action name (i.e. "on"), so
- * check_action_definition() won't confuse these entries with real actions.
+ * pcmk__check_action_config() won't confuse these entries with real actions.
  */
 #define STONITH_DIGEST_TASK "stonith-on"
 
