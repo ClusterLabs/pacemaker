@@ -125,8 +125,8 @@ Frequently Asked Questions
 :A: Except where noted otherwise in the file itself, the source code for all
     Pacemaker programs is licensed under version 2 or later of the GNU General
     Public License (`GPLv2+ <https://www.gnu.org/licenses/gpl-2.0.html>`_), its
-    headers and libraries under version 2.1 or later of the less restrictive
-    GNU Lesser General Public License
+    headers, libraries, and native language translations under version 2.1 or
+    later of the less restrictive GNU Lesser General Public License
     (`LGPLv2.1+ <https://www.gnu.org/licenses/lgpl-2.1.html>`_),
     its documentation under version 4.0 or later of the
     Creative Commons Attribution-ShareAlike International Public License
