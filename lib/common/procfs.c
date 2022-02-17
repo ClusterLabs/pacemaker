@@ -200,3 +200,28 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
     return EOPNOTSUPP;
 #endif
 }
+
+/*!
+ * \internal
+ * \brief Check whether process ID information is available from procfs
+ *
+ * \return true if process ID information is available, otherwise false
+ */
+bool
+pcmk__procfs_has_pids(void)
+{
+#if SUPPORT_PROCFS
+    static bool have_pids = false;
+    static bool checked = false;
+
+    if (!checked) {
+        char path[PATH_MAX];
+
+        have_pids = pcmk__procfs_pid2path(getpid(), path, sizeof(path)) == pcmk_rc_ok;
+        checked = true;
+    }
+    return have_pids;
+#else
+    return false;
+#endif
+}

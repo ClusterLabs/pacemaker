@@ -23,23 +23,7 @@ int
 pcmk__pid_active(pid_t pid, const char *daemon)
 {
     static pid_t last_asked_pid = 0;  /* log spam prevention */
-#if SUPPORT_PROCFS
-    static int have_proc_pid = 0;
-#else
-    static int have_proc_pid = -1;
-#endif
     int rc = 0;
-
-    if (have_proc_pid == 0) {
-        /* evaluation of /proc/PID/exe applicability via self-introspection */
-        char path[PATH_MAX];
-
-        if (pcmk__procfs_pid2path(getpid(), path, sizeof(path)) == pcmk_rc_ok) {
-            have_proc_pid = 1;
-        } else {
-            have_proc_pid = -1;
-        }
-    }
 
     if (pid <= 0) {
         return EINVAL;
@@ -49,7 +33,7 @@ pcmk__pid_active(pid_t pid, const char *daemon)
     if ((rc < 0) && (errno == ESRCH)) {
         return ESRCH;  /* no such PID detected */
 
-    } else if ((daemon == NULL) || (have_proc_pid == -1)) {
+    } else if ((daemon == NULL) || !pcmk__procfs_has_pids()) {
         // The kill result is all we have, we can't check the name
 
         if (rc == 0) {
