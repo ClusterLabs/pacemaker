@@ -29,7 +29,6 @@ pcmk__pid_active(pid_t pid, const char *daemon)
     static int have_proc_pid = -1;
 #endif
     int rc = 0;
-    bool no_name_check = ((daemon == NULL) || (have_proc_pid == -1));
 
     if (have_proc_pid == 0) {
         /* evaluation of /proc/PID/exe applicability via self-introspection */
@@ -50,19 +49,21 @@ pcmk__pid_active(pid_t pid, const char *daemon)
     if ((rc < 0) && (errno == ESRCH)) {
         return ESRCH;  /* no such PID detected */
 
-    } else if ((rc < 0) && no_name_check) {
+    } else if ((daemon == NULL) || (have_proc_pid == -1)) {
+        // The kill result is all we have, we can't check the name
+
+        if (rc == 0) {
+            return pcmk_rc_ok;
+        }
         rc = errno;
         if (last_asked_pid != pid) {
             crm_info("Cannot examine PID %lld: %s",
-                     (long long) pid, strerror(errno));
+                     (long long) pid, pcmk_rc_str(rc));
             last_asked_pid = pid;
         }
         return rc; /* errno != ESRCH */
 
-    } else if ((rc == 0) && no_name_check) {
-        return pcmk_rc_ok; /* kill as the only indicator, cannot double check */
-
-    } else if (daemon != NULL) {
+    } else {
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
@@ -75,9 +76,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
             int rdlnk_errno = errno;
 
             if (rdlnk_errno != EACCES) {
-                int rc = kill(pid,0); /* check once again - filter out races */
-
-                if ((rc < 0) && (errno == ESRCH)) {
+                // Check again to filter out races
+                if ((kill(pid, 0) < 0) && (errno == ESRCH)) {
                     return ESRCH;
                 }
             }
@@ -91,11 +91,9 @@ pcmk__pid_active(pid_t pid, const char *daemon)
                 }
                 last_asked_pid = pid;
             }
-            if ((rdlnk_errno == EACCES) && checked_through_kill) {
-                // Trust kill result, can't double-check via path
-                return pcmk_rc_ok;
-            } else if (rdlnk_errno == EACCES) {
-                return EACCES;
+            if (rdlnk_errno == EACCES) {
+                // Trust kill if it was OK (we can't double-check via path)
+                return checked_through_kill? pcmk_rc_ok : EACCES;
             } else {
                 return ESRCH;  /* most likely errno == ENOENT */
             }
