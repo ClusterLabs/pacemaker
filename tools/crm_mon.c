@@ -35,6 +35,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/results.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -134,9 +135,9 @@ struct {
 static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
-static void handle_connection_failures(int rc);
+static void clean_up_if_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
-static int cib_connect(gboolean full);
+static int cib_connect(void);
 static int fencing_connect(void);
 static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
@@ -653,7 +654,7 @@ reconnect_after_timeout(gpointer data)
     out->info(out, "Reconnecting...");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
-        if (cib_connect(TRUE) == pcmk_rc_ok) {
+        if (cib_connect() == pcmk_rc_ok) {
             /* trigger redrawing the screen (needs reconnect_timer == 0) */
             reconnect_timer = 0;
             refresh_after_event(FALSE, TRUE);
@@ -768,7 +769,7 @@ fencing_connect(void)
 }
 
 static int
-cib_connect(gboolean full)
+cib_connect(void)
 {
     int rc = pcmk_rc_ok;
 
@@ -796,7 +797,7 @@ cib_connect(gboolean full)
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
 
-    if (rc == pcmk_rc_ok && full) {
+    if (rc == pcmk_rc_ok) {
         rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
@@ -1299,7 +1300,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
 }
 
 static void
-handle_connection_failures(int rc)
+clean_up_if_connection_failure(int rc)
 {
     if (rc == pcmk_rc_ok) {
         return;
@@ -1308,41 +1309,35 @@ handle_connection_failures(int rc)
     if (output_format == mon_output_monitor) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
                     pcmk_rc_str(rc));
-        rc = MON_STATUS_CRIT;
+        clean_up(MON_STATUS_CRIT);
     } else if (rc == ENOTCONN) {
         if (on_remote_node) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: remote-node not connected to cluster");
         } else {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
         }
-        rc = pcmk_rc2exitc(rc);
     } else {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_rc_str(rc));
-        rc = pcmk_rc2exitc(rc);
     }
 
-    clean_up(rc);
+    clean_up(pcmk_rc2exitc(rc));
 }
 
 static void
 one_shot(void)
 {
-    int rc;
+    int rc = pcmk__status(out, cib, fence_history, show, show_opts,
+                          options.only_node, options.only_rsc,
+                          options.neg_location_prefix,
+                          output_format == mon_output_monitor);
 
-    rc = pacemakerd_status();
+    clean_up_if_connection_failure(rc);
 
-    if (rc == pcmk_rc_ok) {
-        fencing_connect();
-        rc = cib_connect(FALSE);
-    }
-
-    if (rc == pcmk_rc_ok) {
-        mon_refresh_display(NULL);
-    } else {
-        handle_connection_failures(rc);
-    }
-
-    clean_up(CRM_EX_OK);
+    /* If clean_up_if_connection_failure didn't call clean_up (because there wasn't
+     * a connection failure), we still need to call clean_up here because one_shot
+     * mode is done.
+     */
+    clean_up(pcmk_rc2exitc(rc));
 }
 
 static void
@@ -1597,7 +1592,7 @@ main(int argc, char **argv)
         rc = pacemakerd_status();
         if (rc == pcmk_rc_ok) {
             fencing_connect();
-            rc = cib_connect(TRUE);
+            rc = cib_connect();
         }
 
         if (rc != pcmk_rc_ok) {
@@ -1614,7 +1609,7 @@ main(int argc, char **argv)
 
     } while (rc == ENOTCONN);
 
-    handle_connection_failures(rc);
+    clean_up_if_connection_failure(rc);
     set_fencing_options(interactive_fence_level);
     mon_refresh_display(NULL);
 
@@ -1991,86 +1986,41 @@ crm_diff_update(const char *event, xmlNode * msg)
 static int
 mon_refresh_display(gpointer user_data)
 {
-    pe_working_set_t *mon_data_set = NULL;
-    xmlNode *cib_copy = copy_xml(current_cib);
-    stonith_history_t *stonith_history = NULL;
-    int history_rc = pcmk_rc_ok;
-    GList *unames = NULL;
-    GList *resources = NULL;
+    int rc = pcmk_rc_ok;
 
     last_refresh = time(NULL);
-
-    if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
-        cib__clean_up_connection(&cib);
-        out->err(out, "Upgrade failed: %s",
-                 pcmk_rc_str(pcmk_rc_schema_validation));
-        clean_up(CRM_EX_CONFIG);
-        return G_SOURCE_REMOVE;
-    }
 
     if (output_format == mon_output_none || output_format == mon_output_unset) {
         return G_SOURCE_REMOVE;
     }
 
-    /* get the stonith-history if there is evidence we need it */
-    if (fence_history == pcmk__fence_history_full) {
-        if (!pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
-            (output_format != mon_output_xml)) {
-            fence_history = pcmk__fence_history_reduced;
-        }
-
-        history_rc = pcmk__get_fencing_history(st, &stonith_history, fence_history);
-    }
-
-    mon_data_set = pe_new_working_set();
-    CRM_ASSERT(mon_data_set != NULL);
-
-    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
-    mon_data_set->input = cib_copy;
-    mon_data_set->priv = out;
-    cluster_status(mon_data_set);
-
-    /* Unpack constraints if any section will need them
-     * (tickets may be referenced in constraints but not granted yet,
-     * and bans need negative location constraints) */
-    if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
-        pcmk__unpack_constraints(mon_data_set);
-    }
+    if (fence_history == pcmk__fence_history_full &&
+        !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
+        output_format != mon_output_xml) {
+        fence_history = pcmk__fence_history_reduced;
+     }
 
     if (options.daemonize) {
         out->reset(out);
     }
 
-    unames = pe__build_node_name_list(mon_data_set, options.only_node);
-    resources = pe__build_rsc_list(mon_data_set, options.only_rsc);
+    rc = pcmk__output_cluster_status(out, st, cib, current_cib, fence_history,
+                                     show, show_opts, options.only_node,
+                                     options.only_rsc, options.neg_location_prefix,
+                                     output_format == mon_output_monitor);
 
-    /* Always print DC if NULL. */
-    if (mon_data_set->dc_node == NULL) {
-        show |= pcmk_section_dc;
-    }
-
-    if (output_format == mon_output_monitor) {
-        if (pcmk__output_simple_status(out, mon_data_set) != pcmk_rc_ok) {
-            pe_free_working_set(mon_data_set);
-            clean_up(MON_STATUS_WARN);
-            return G_SOURCE_REMOVE;
-        }
-    } else {
-        out->message(out, "cluster-status", mon_data_set, pcmk_rc2exitc(history_rc),
-                     stonith_history, fence_history, show, show_opts,
-                     options.neg_location_prefix, unames, resources);
+    if (output_format == mon_output_monitor && rc != pcmk_rc_ok) {
+        clean_up(MON_STATUS_WARN);
+        return G_SOURCE_REMOVE;
+    } else if (rc == pcmk_rc_schema_validation) {
+        clean_up(CRM_EX_CONFIG);
+        return G_SOURCE_REMOVE;
     }
 
     if (options.daemonize) {
         out->finish(out, CRM_EX_OK, true, NULL);
     }
 
-    g_list_free_full(unames, free);
-    g_list_free_full(resources, free);
-
-    stonith_history_free(stonith_history);
-    stonith_history = NULL;
-    pe_free_working_set(mon_data_set);
     return G_SOURCE_CONTINUE;
 }
 

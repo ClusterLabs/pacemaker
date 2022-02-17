@@ -294,13 +294,15 @@ pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
  *
  * \param[in] api  IPC API connection
  */
-static void
+static bool
 call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
 {
     crm_log_xml_trace(message, "ipc-received");
     if ((api->cmds != NULL) && (api->cmds->dispatch != NULL)) {
-        api->cmds->dispatch(api, message);
+        return api->cmds->dispatch(api, message);
     }
+
+    return false;
 }
 
 /*!
@@ -612,8 +614,21 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
 
     // With synchronous dispatch, we dispatch any reply now
     if (reply != NULL) {
-        call_api_dispatch(api, reply);
+        bool more = call_api_dispatch(api, reply);
+
         free_xml(reply);
+
+        while (more) {
+            rc = crm_ipc_read(api->ipc);
+
+            if (rc == -ENOMSG || rc == pcmk_ok) {
+                return pcmk_rc_ok;
+            } else if (rc < 0) {
+                return -rc;
+            }
+
+            dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
+        }
     }
     return pcmk_rc_ok;
 }

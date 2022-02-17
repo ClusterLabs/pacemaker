@@ -12,6 +12,7 @@
 
 #  include <glib.h>
 #  include <libxml/tree.h>
+#  include <crm/cib/cib_types.h>
 #  include <crm/pengine/pe_types.h>
 
 #  include <crm/stonith-ng.h>
@@ -174,6 +175,16 @@ int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
  * \return Standard Pacemaker return code
  */
 int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
+
+/*!
+ * \brief Output the current status of the cluster, formatted in the same way
+ *        that `crm_mon --output-as=xml` would.
+ *
+ * \param[in,out] xml The destination for the result, as an XML tree.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_status(xmlNodePtr *xml);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
