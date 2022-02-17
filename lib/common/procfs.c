@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -162,4 +162,41 @@ pcmk__procfs_num_cores(void)
         fclose(stream);
     }
     return cores? cores : 1;
+}
+
+/*!
+ * \internal
+ * \brief Get the executable path corresponding to a process ID
+ *
+ * \param[in]  pid        Process ID to check
+ * \param[out] path       Where to store executable path
+ * \param[in]  path_size  Size of \p path in characters (ideally PATH_MAX)
+ *
+ * \return Standard Pacemaker error code (as possible errno values from
+ *         readlink())
+ */
+int
+pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
+{
+#if SUPPORT_PROCFS
+    char procfs_exe_path[PATH_MAX];
+    ssize_t link_rc;
+
+    if (snprintf(procfs_exe_path, path_size, "/proc/%lld/exe",
+                 (long long) pid) >= path_size) {
+        return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
+    }
+
+    link_rc = readlink(procfs_exe_path, path, path_size - 1);
+    if (link_rc < 0) {
+        return errno;
+    } else if (link_rc >= (path_size - 1)) {
+        return ENAMETOOLONG;
+    }
+
+    path[link_rc] = '\0';
+    return pcmk_rc_ok;
+#else
+    return EOPNOTSUPP;
+#endif
 }

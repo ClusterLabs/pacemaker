@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,11 +32,11 @@ pcmk__pid_active(pid_t pid, const char *daemon)
 
     if (have_proc_pid == 0) {
         /* evaluation of /proc/PID/exe applicability via self-introspection */
-        char proc_path[PATH_MAX], exe_path[PATH_MAX];
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lld/exe",
-                 (long long) getpid());
-        have_proc_pid = 1;
-        if (readlink(proc_path, exe_path, sizeof(exe_path) - 1) < 0) {
+        char path[PATH_MAX];
+
+        if (pcmk__procfs_pid2path(getpid(), path, sizeof(path)) == pcmk_rc_ok) {
+            have_proc_pid = 1;
+        } else {
             have_proc_pid = -1;
         }
     }
@@ -67,38 +67,35 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
-        char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lld/exe",
-                 (long long) pid);
+        char exe_path[PATH_MAX], myexe_path[PATH_MAX];
 
-        rc = readlink(proc_path, exe_path, sizeof(exe_path) - 1);
-        if (rc < 0) {
-            int rdlnk_errno = errno;
-
-            if (rdlnk_errno != EACCES) {
+        rc = pcmk__procfs_pid2path(pid, exe_path, sizeof(exe_path));
+        if (rc != pcmk_rc_ok) {
+            if (rc != EACCES) {
                 // Check again to filter out races
                 if ((kill(pid, 0) < 0) && (errno == ESRCH)) {
                     return ESRCH;
                 }
             }
             if (last_asked_pid != pid) {
-                if (rdlnk_errno == EACCES) {
-                    crm_info("Could not read from %s: %s " CRM_XS " errno=%d",
-                             proc_path, strerror(rdlnk_errno), rdlnk_errno);
+                if (rc == EACCES) {
+                    crm_info("Could not get executable for PID %lld: %s "
+                             CRM_XS " rc=%d",
+                             (long long) pid, pcmk_rc_str(rc), rc);
                 } else {
-                    crm_err("Could not read from %s: %s " CRM_XS " errno=%d",
-                            proc_path, strerror(rdlnk_errno), rdlnk_errno);
+                    crm_err("Could not get executable for PID %lld: %s "
+                            CRM_XS " rc=%d",
+                            (long long) pid, pcmk_rc_str(rc), rc);
                 }
                 last_asked_pid = pid;
             }
-            if (rdlnk_errno == EACCES) {
+            if (rc == EACCES) {
                 // Trust kill if it was OK (we can't double-check via path)
                 return checked_through_kill? pcmk_rc_ok : EACCES;
             } else {
                 return ESRCH;  /* most likely errno == ENOENT */
             }
         }
-        exe_path[rc] = '\0';
 
         if (daemon[0] != '/') {
             rc = snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
