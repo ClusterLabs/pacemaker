@@ -1,5 +1,5 @@
 #
-# Copyright 2021 the Pacemaker project contributors
+# Copyright 2021-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,15 +24,15 @@ EXTRA_DIST		= $(foreach f,$(CONFIGS),sysconfig/$(f))
 
 # Don't overwrite user's existing config files
 install-data-local:
-	$(AM_V_AT)$(MKDIR_P) $(DESTDIR)$(configdir)
-	$(AM_V_AT)for f in $(CONFIGS); do				\
+	$(AM_V_at)$(MKDIR_P) $(DESTDIR)$(configdir)
+	$(AM_V_at)for f in $(CONFIGS); do				\
 		dest="$(DESTDIR)$(configdir)/$$f";			\
 		[ -e "$$dest" ] && dest="$$dest.new";			\
 		$(INSTALL_DATA) "$(srcdir)/sysconfig/$$f" "$$dest";	\
 	done
 
 uninstall-local:
-	$(AM_V_AT)for f in $(CONFIGS); do		\
+	$(AM_V_at)for f in $(CONFIGS); do		\
 		dest="$(DESTDIR)$(configdir)/$$f";	\
 		rm -f "$$dest" "$$dest.new";		\
 	done
