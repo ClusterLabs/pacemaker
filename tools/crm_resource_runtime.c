@@ -291,7 +291,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
-    static bool need_init = TRUE;
+    static bool need_init = true;
 
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
@@ -402,7 +402,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
             GList *lpc = NULL;
 
             if(need_init) {
-                need_init = FALSE;
+                need_init = false;
                 pcmk__unpack_constraints(data_set);
                 pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
             }
@@ -970,12 +970,12 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
 
 bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
-    bool found = TRUE;
+    bool found = true;
     GList *hIter = NULL;
     GList *hosts = NULL;
 
-    if(rsc == NULL) {
-        return FALSE;
+    if (rsc == NULL) {
+        return false;
     }
 
     rsc->fns->location(rsc, &hosts, TRUE);
@@ -991,13 +991,13 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
         }
     }
 
-    if(host != NULL) {
+    if (host != NULL) {
         crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
-        found = FALSE;
+        found = false;
 
     } else if(host == NULL && hosts == NULL) {
         crm_trace("Resource %s is not running\n", rsc->id);
-        found = FALSE;
+        found = false;
     }
 
   done:
@@ -1173,7 +1173,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         pcmk__simulate_transition(data_set, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(shadow_cib, data_set, FALSE);
+        rc = update_dataset(shadow_cib, data_set, false);
 
     } else {
         cluster_status(data_set);
@@ -1281,7 +1281,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     int sleep_interval = 2;
     int timeout = timeout_ms / 1000;
 
-    bool stop_via_ban = FALSE;
+    bool stop_via_ban = false;
     char *rsc_id = NULL;
     char *orig_target_role = NULL;
 
@@ -1304,7 +1304,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     rsc_id = strdup(rsc->id);
     if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
-        stop_via_ban = TRUE;
+        stop_via_ban = true;
     }
 
     /*
@@ -1333,7 +1333,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     data_set->priv = out;
-    rc = update_dataset(cib, data_set, FALSE);
+    rc = update_dataset(cib, data_set, false);
 
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
@@ -1377,7 +1377,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         goto done;
     }
 
-    rc = update_dataset(cib, data_set, TRUE);
+    rc = update_dataset(cib, data_set, true);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
@@ -1432,7 +1432,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
+        rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, true, force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
@@ -1476,7 +1476,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, data_set, FALSE);
+            rc = update_dataset(cib, data_set, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
@@ -1511,7 +1511,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
+        cli_resource_clear(rsc_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
@@ -1568,10 +1568,10 @@ actions_are_pending(GList *actions)
         pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
             crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 static void
@@ -1670,7 +1670,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
                 out->info(out, "warning: wait option may not work properly in "
                           "mixed-version cluster");
-                printed_version_warning = TRUE;
+                printed_version_warning = true;
             }
         }
 
@@ -1905,7 +1905,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     unsigned int count = 0;
     pe_node_t *current = NULL;
     pe_node_t *dest = pe_find_node(data_set->nodes, host_name);
-    bool cur_is_dest = FALSE;
+    bool cur_is_dest = false;
 
     if (dest == NULL) {
         return pcmk_rc_node_unknown;
@@ -1958,7 +1958,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     if (current && (current->details == dest->details)) {
-        cur_is_dest = TRUE;
+        cur_is_dest = true;
         if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                      rsc_id, promoted_role_only?"promoted":"active", dest->details->uname);
@@ -1968,7 +1968,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, FALSE, force);
+    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, false, force);
 
     /* Clear any previous ban constraints on 'dest'. */
     cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib,
@@ -1985,7 +1985,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
      * resource is currently located */
-    if(force && (cur_is_dest == FALSE)) {
+    if (force && !cur_is_dest) {
         /* Ban the original location if possible */
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->details->uname, move_lifetime,
