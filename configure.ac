@@ -302,6 +302,8 @@ AC_DEFUN([AM_NLS],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
+AS_IF([test "$enable_nls" = "yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+
 dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
@@ -1593,6 +1595,7 @@ AS_IF([test $with_corosync -ne $DISABLED],
           AC_MSG_CHECKING([for Corosync 2 or later])
           AC_MSG_RESULT([yes])
           CFLAGS="$CFLAGS $libqb_CFLAGS $cpg_CFLAGS $cfg_CFLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
+          CPPFLAGS="$CPPFLAGS `$PKG_CONFIG --cflags-only-I corosync`"
           COROSYNC_LIBS="$COROSYNC_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
           CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
           PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
