@@ -982,10 +982,7 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pe_node_t *node = (pe_node_t *) hIter->data;
 
-        if(strcmp(host, node->details->uname) == 0) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
-            goto done;
-        } else if(strcmp(host, node->details->id) == 0) {
+        if (pcmk__strcase_any_of(host, node->details->uname, node->details->id, NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
         }
