@@ -22,17 +22,14 @@ pcmk_hostname_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmo
 pcmk_hostname_test_LDFLAGS = -Wl,--wrap=uname
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS =	\
-	char2score_test \
-	compare_version_test \
-	crm_meta_name_test \
-	crm_meta_value_test \
-	crm_user_lookup_test \
-	pcmk_daemon_user_test \
+check_PROGRAMS =				\
+	compare_version_test			\
+	crm_meta_name_test			\
+	crm_meta_value_test			\
+	crm_user_lookup_test			\
+	pcmk_daemon_user_test			\
 	pcmk_str_is_infinity_test		\
-	pcmk_str_is_minus_infinity_test \
-	score2char_stack_test 	\
-	score2char_test
+	pcmk_str_is_minus_infinity_test
 
 if WRAPPABLE_UNAME
 check_PROGRAMS += pcmk_hostname_test

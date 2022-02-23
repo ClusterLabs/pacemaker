@@ -2132,7 +2132,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-cluster.pc                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
-                lib/common/tests/acl/Makefile                   \
+                lib/common/tests/acl/Makefile                       \
                 lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
@@ -2142,6 +2142,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/operations/Makefile                \
                 lib/common/tests/results/Makefile                   \
+                lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/common/tests/xpath/Makefile                     \

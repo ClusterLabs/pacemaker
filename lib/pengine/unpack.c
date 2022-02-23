@@ -192,6 +192,51 @@ set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Set the node health values to use for "red", "yellow", and "green"
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_node_health_values(pe_working_set_t *data_set)
+{
+    const char *health_strategy = pe_pref(data_set->config_hash,
+                                          "node-health-strategy");
+
+    if (pcmk__str_eq(health_strategy, "none",
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        pcmk__score_red = 0;
+        pcmk__score_yellow = 0;
+        pcmk__score_green = 0;
+
+    } else if (pcmk__str_eq(health_strategy, "migrate-on-red",
+                            pcmk__str_casei)) {
+        pcmk__score_red = -INFINITY;
+        pcmk__score_yellow = 0;
+        pcmk__score_green = 0;
+
+    } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
+        pcmk__score_red = -INFINITY;
+        pcmk__score_yellow = -INFINITY;
+        pcmk__score_green = 0;
+
+    } else { // "progressive" or "custom"
+        pcmk__score_red = char2score(pe_pref(data_set->config_hash,
+                                             "node-health-red"));
+        pcmk__score_green = char2score(pe_pref(data_set->config_hash,
+                                               "node-health-green"));
+        pcmk__score_yellow = char2score(pe_pref(data_set->config_hash,
+                                                "node-health-yellow"));
+    }
+
+    if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
+        || (pcmk__score_green != 0)) {
+        crm_debug("Values of node health scores: red=%d yellow=%d green=%d",
+                  pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
+    }
+}
+
 gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
@@ -359,14 +404,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
-    pcmk__score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
-    pcmk__score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
-    pcmk__score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
-
-    crm_debug("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
-             pe_pref(data_set->config_hash, "node-health-red"),
-             pe_pref(data_set->config_hash, "node-health-yellow"),
-             pe_pref(data_set->config_hash, "node-health-green"));
+    unpack_node_health_values(data_set);
 
     data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
     crm_trace("Placement strategy: %s", data_set->placement_strategy);

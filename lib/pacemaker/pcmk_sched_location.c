@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -164,7 +164,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             }
 
             if (!do_and) {
-                local->weight = pe__add_scores(local->weight, score_f);
+                local->weight = pcmk__add_scores(local->weight, score_f);
             }
             crm_trace("node %s now has weight %d",
                       node->details->uname, local->weight);
@@ -657,8 +657,8 @@ pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
         } else {
             pe_rsc_trace(rsc, "* + %d on %s",
                          node->weight, node->details->uname);
-            weighted_node->weight = pe__add_scores(weighted_node->weight,
-                                                   node->weight);
+            weighted_node->weight = pcmk__add_scores(weighted_node->weight,
+                                                     node->weight);
         }
 
         if (weighted_node->rsc_discover_mode < constraint->discover_mode) {

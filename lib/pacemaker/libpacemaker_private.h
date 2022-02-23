@@ -279,6 +279,25 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
                                     lrmd_event_data_t *op, int target_rc);
 
 
+// Nodes (pcmk_sched_nodes.c)
+
+G_GNUC_INTERNAL
+bool pcmk__node_available(const pe_node_t *node);
+
+G_GNUC_INTERNAL
+bool pcmk__any_node_available(GHashTable *nodes);
+
+G_GNUC_INTERNAL
+GHashTable *pcmk__copy_node_table(GHashTable *nodes);
+
+G_GNUC_INTERNAL
+GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
+                        pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__apply_node_health(pe_working_set_t *data_set);
+
+
 // Clone notifictions (pcmk_sched_notif.c)
 
 G_GNUC_INTERNAL

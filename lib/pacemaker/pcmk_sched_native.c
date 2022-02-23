@@ -313,7 +313,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
             }
         }
 
-        new_score = pe__add_scores(weight, node->weight);
+        new_score = pcmk__add_scores(weight, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -868,7 +868,7 @@ common_update_score(pe_resource_t * rsc, const char *id, int score)
     node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if (node != NULL) {
         pe_rsc_trace(rsc, "Updating score for %s on %s: %d + %d", rsc->id, id, node->weight, score);
-        node->weight = pe__add_scores(node->weight, score);
+        node->weight = pcmk__add_scores(node->weight, score);
     }
 
     if (rsc->children) {

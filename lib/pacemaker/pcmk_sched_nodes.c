@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -252,4 +252,72 @@ pcmk__any_node_available(GHashTable *nodes)
         }
     }
     return false;
+}
+
+/*!
+ * \internal
+ * \brief Add node attribute value to an integer, if it is a health attribute
+ *
+ * \param[in] key        Name of node attribute
+ * \param[in] value      String value of node attribute
+ * \param[in] user_data  Address of integer to which \p value should be added
+ *                       if \p key is a node health attribute
+ */
+static void
+add_node_health_value(gpointer key, gpointer value, gpointer user_data)
+{
+    if (pcmk__starts_with((const char *) key, "#health")) {
+        int score = char2score((const char *) value);
+        int *health = (int *) user_data;
+
+        *health = pcmk__add_scores(score, *health);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Apply node health values for all nodes in cluster
+ *
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__apply_node_health(pe_working_set_t *data_set)
+{
+    const char *health_strategy = pe_pref(data_set->config_hash,
+                                          "node-health-strategy");
+    int base_health = 0;
+
+    if (pcmk__str_eq(health_strategy, "none",
+                     pcmk__str_null_matches|pcmk__str_casei)) {
+        return;
+    }
+    crm_info("Applying node health strategy '%s'", health_strategy);
+
+    // The progressive strategy can use a base health score
+    if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
+        base_health = char2score(pe_pref(data_set->config_hash,
+                                         "node-health-base"));
+    }
+
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        int health = base_health;
+
+        // Calculate overall node health score as sum of all health values
+        g_hash_table_foreach(node->details->attrs, add_node_health_value,
+                             &health);
+
+        // A health score of 0 has no effect
+        if (health == 0) {
+            continue;
+        }
+        crm_info("Node %s overall system health is %d",
+                 node->details->uname, health);
+
+        // Use node health as a location score for each resource on the node
+        for (GList *rsc = data_set->resources; rsc != NULL; rsc = rsc->next) {
+            pcmk__new_location(health_strategy, (pe_resource_t *) rsc->data,
+                               health, NULL, node, data_set);
+        }
+    }
 }

@@ -8,16 +8,17 @@
 #
 
 SUBDIRS = \
-	acl			\
+	acl		\
 	agents		\
 	cmdline		\
 	flags		\
-	io			\
+	io		\
 	iso8601		\
 	lists		\
 	nvpair 		\
 	operations	\
 	results		\
+	scores		\
 	strings		\
 	utils		\
 	xpath
