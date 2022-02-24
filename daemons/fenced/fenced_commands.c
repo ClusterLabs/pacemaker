@@ -2068,13 +2068,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     }
 
     if (pcmk__str_eq(host, alias, pcmk__str_casei)) {
-        crm_notice("%s is%s eligible to fence (%s) %s: %s",
-                   dev->id, (can? "" : " not"), search->action, host,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s: %s",
+                 dev->id, (can? "" : " not"), search->action, host, check_type);
     } else {
-        crm_notice("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                   dev->id, (can? "" : " not"), search->action, host, alias,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
+                 dev->id, (can? "" : " not"), search->action, host, alias,
+                 check_type);
     }
 
   search_report_results:
