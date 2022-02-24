@@ -799,7 +799,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action");
 
-        crm_notice("Fence operation %d for %s passed", data->call_id, target);
+        crm_info("Fence operation %d for %s succeeded", data->call_id, target);
         if (!(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
