@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <crm/crm.h>
+#include <crm/common/output.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -459,9 +460,11 @@ stonith_event_console(pcmk__output_t *out, va_list args)
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     int full_history = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
-    uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
 
-    gchar *desc = stonith__history_description(event, full_history, succeeded);
+    gchar *desc = stonith__history_description(event, full_history, succeeded,
+                                               show_opts);
+
 
     curses_indented_printf(out, "%s\n", desc);
     g_free(desc);

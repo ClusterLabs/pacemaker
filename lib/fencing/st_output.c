@@ -61,6 +61,7 @@ state_str(stonith_history_t *history)
  * \param[in] full_history     Whether this is for full or condensed history
  * \param[in] later_succeeded  Node that a later equivalent attempt succeeded
  *                             from, or NULL if none
+ * \param[in] show_opts        Flag group of pcmk_show_opt_e
  *
  * \return Newly created string with fencing history entry description
  *
@@ -71,7 +72,7 @@ state_str(stonith_history_t *history)
  */
 gchar *
 stonith__history_description(stonith_history_t *history, bool full_history,
-                             const char *later_succeeded)
+                             const char *later_succeeded, uint32_t show_opts)
 {
     GString *str = g_string_sized_new(256); // Generous starting size
     char *retval = NULL;
@@ -357,9 +358,10 @@ stonith_event_html(pcmk__output_t *out, va_list args)
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     int full_history = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
-    uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
 
-    gchar *desc = stonith__history_description(event, full_history, succeeded);
+    gchar *desc = stonith__history_description(event, full_history, succeeded,
+                                               show_opts);
 
     switch(event->state) {
         case st_done:
@@ -386,9 +388,10 @@ stonith_event_text(pcmk__output_t *out, va_list args)
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     int full_history = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
-    uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
 
-    gchar *desc = stonith__history_description(event, full_history, succeeded);
+    gchar *desc = stonith__history_description(event, full_history, succeeded,
+                                               show_opts);
 
     pcmk__indented_printf(out, "%s\n", desc);
     g_free(desc);
