@@ -33,6 +33,98 @@ time_t_string(time_t when) {
     return buf;
 }
 
+/*!
+ * \internal
+ * \brief Return a status-friendly description of fence history entry state
+ *
+ * \param[in] history  Fence history entry to describe
+ *
+ * \return One-word description of history entry state
+ * \note This is similar to stonith_op_state_str() except user-oriented (i.e.
+ *       for cluster status) instead of developer-oriented (for debug logs).
+ */
+static const char *
+state_str(stonith_history_t *history)
+{
+    switch (history->state) {
+        case st_failed: return "failed";
+        case st_done:   return "successful";
+        default:        return "pending";
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create a description of a fencing history entry for status displays
+ *
+ * \param[in] history          Fencing history entry to describe
+ * \param[in] full_history     Whether this is for full or condensed history
+ * \param[in] later_succeeded  Node that a later equivalent attempt succeeded
+ *                             from, or NULL if none
+ *
+ * \return Newly created string with fencing history entry description
+ *
+ * \note The caller is responsible for freeing the return value with g_free().
+ * \note This is similar to stonith__event_description(), except this is used
+ *       for history entries (stonith_history_t) in status displays rather than
+ *       event notifications (stonith_event_t) in log messages.
+ */
+gchar *
+stonith__history_description(stonith_history_t *history, bool full_history,
+                             const char *later_succeeded)
+{
+    GString *str = g_string_sized_new(256); // Generous starting size
+    char *retval = NULL;
+    char *completed_time = NULL;
+
+    if ((history->state == st_failed) || (history->state == st_done)) {
+        completed_time = time_t_string(history->completed);
+    }
+
+    g_string_printf(str, "%s of %s %s",
+                    stonith_action_str(history->action), history->target,
+                    state_str(history));
+
+    // For failed actions, add exit reason if available
+    if ((history->state == st_failed) && (history->exit_reason != NULL)) {
+        g_string_append_printf(str, " (%s)", history->exit_reason);
+    }
+
+    g_string_append(str, ": ");
+
+    // For completed actions, add delegate if available
+    if (((history->state == st_failed) || (history->state == st_done))
+        && (history->delegate != NULL)) {
+        g_string_append_printf(str, "delegate=%s, ", history->delegate);
+    }
+
+    // Add information about originator
+    g_string_append_printf(str, "client=%s, origin=%s",
+                           history->client, history->origin);
+
+    // For completed actions, add completion time
+    if (completed_time != NULL) {
+        if (full_history) {
+            g_string_append(str, ", completed");
+        } else if (history->state == st_failed) {
+            g_string_append(str, ", last-failed");
+        } else {
+            g_string_append(str, ", last-successful");
+        }
+        g_string_append_printf(str, "='%s'", completed_time);
+    }
+
+    if ((history->state == st_failed) && (later_succeeded != NULL)) {
+        g_string_append_printf(str, " (a later attempt from %s succeeded)",
+                               later_succeeded);
+    }
+
+    retval = str->str;
+    g_string_free(str, FALSE);
+    free(completed_time);
+    return retval;
+}
+
 PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *", "uint32_t",
                   "gboolean")
 int
@@ -246,50 +338,22 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
     gboolean full_history = va_arg(args, gboolean);
     const char *succeeded = va_arg(args, const char *);
 
+    gchar *desc = stonith__history_description(event, full_history, succeeded);
+
     switch(event->state) {
-        case st_done: {
-            char *completed_s = time_t_string(event->completed);
-
-            out->list_item(out, "successful-stonith-event",
-                           "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'",
-                           stonith_action_str(event->action), event->target,
-                           event->delegate ? event->delegate : "",
-                           event->client, event->origin,
-                           full_history ? "completed" : "last-successful",
-                           completed_s);
-            free(completed_s);
+        case st_done:
+            out->list_item(out, "successful-stonith-event", "%s", desc);
             break;
-        }
 
-        case st_failed: {
-            char *failed_s = time_t_string(event->completed);
-
-            out->list_item(out, "failed-stonith-event",
-                           "%s of %s failed%s%s%s: "
-                           "delegate=%s, client=%s, origin=%s, %s='%s'%s%s%s",
-                           stonith_action_str(event->action), event->target,
-                           (event->exit_reason == NULL)? "" : " (",
-                           (event->exit_reason == NULL)? "" : event->exit_reason,
-                           (event->exit_reason == NULL)? "" : ")",
-                           event->delegate ? event->delegate : "",
-                           event->client, event->origin,
-                           full_history ? "completed" : "last-failed",
-                           failed_s,
-                           (succeeded == NULL)? "" : " (a later attempt from ",
-                           (succeeded == NULL)? "" : succeeded,
-                           (succeeded == NULL)? "" : " succeeded)");
-            free(failed_s);
+        case st_failed:
+            out->list_item(out, "failed-stonith-event", "%s", desc);
             break;
-        }
 
         default:
-            out->list_item(out, "pending-stonith-event",
-                           "%s of %s pending: client=%s, origin=%s",
-                           stonith_action_str(event->action), event->target,
-                           event->client, event->origin);
+            out->list_item(out, "pending-stonith-event", "%s", desc);
             break;
     }
-
+    g_free(desc);
     return pcmk_rc_ok;
 }
 
@@ -300,41 +364,10 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
     gboolean full_history = va_arg(args, gboolean);
     const char *succeeded = va_arg(args, const char *);
 
-    char *buf = time_t_string(event->completed);
+    gchar *desc = stonith__history_description(event, full_history, succeeded);
 
-    switch (event->state) {
-        case st_failed:
-            pcmk__indented_printf(out,
-                                  "%s of %s failed%s%s%s: delegate=%s, "
-                                  "client=%s, origin=%s, %s='%s'%s%s%s\n",
-                                  stonith_action_str(event->action), event->target,
-                                  (event->exit_reason == NULL)? "" : " (",
-                                  (event->exit_reason == NULL)? "" : event->exit_reason,
-                                  (event->exit_reason == NULL)? "" : ")",
-                                  event->delegate ? event->delegate : "",
-                                  event->client, event->origin,
-                                  full_history ? "completed" : "last-failed", buf,
-                                  (succeeded == NULL)? "" : " (a later attempt from ",
-                                  (succeeded == NULL)? "" : succeeded,
-                                  (succeeded == NULL)? "" : " succeeded)");
-            break;
-
-        case st_done:
-            pcmk__indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
-                                  stonith_action_str(event->action), event->target,
-                                  event->delegate ? event->delegate : "",
-                                  event->client, event->origin,
-                                  full_history ? "completed" : "last-successful", buf);
-            break;
-
-        default:
-            pcmk__indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
-                                  stonith_action_str(event->action), event->target,
-                                  event->client, event->origin);
-            break;
-    }
-
-    free(buf);
+    pcmk__indented_printf(out, "%s\n", desc);
+    g_free(desc);
     return pcmk_rc_ok;
 }
 

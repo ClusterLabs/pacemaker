@@ -458,47 +458,10 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     gboolean full_history = va_arg(args, gboolean);
     const char *succeeded = va_arg(args, const char *);
 
-    crm_time_t *crm_when = crm_time_new(NULL);
-    char *buf = NULL;
+    gchar *desc = stonith__history_description(event, full_history, succeeded);
 
-    crm_time_set_timet(crm_when, &(event->completed));
-    buf = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-
-    switch (event->state) {
-        case st_failed:
-            curses_indented_printf(out,
-                                   "%s of %s failed%s%s%s: "
-                                   "delegate=%s, client=%s, origin=%s, %s='%s'%s%s%s\n",
-                                   stonith_action_str(event->action), event->target,
-                                   (event->exit_reason == NULL)? "" : " (",
-                                   (event->exit_reason == NULL)? "" : event->exit_reason,
-                                   (event->exit_reason == NULL)? "" : ")",
-                                   event->delegate ? event->delegate : "",
-                                   event->client, event->origin,
-                                   full_history ? "completed" : "last-failed", buf,
-                                   (succeeded == NULL)? "" : " (a later attempt from ",
-                                   (succeeded == NULL)? "" : succeeded,
-                                   (succeeded == NULL)? "" : " succeeded)");
-
-            break;
-
-        case st_done:
-            curses_indented_printf(out, "%s of %s successful: delegate=%s, client=%s, origin=%s, %s='%s'\n",
-                                   stonith_action_str(event->action), event->target,
-                                   event->delegate ? event->delegate : "",
-                                   event->client, event->origin,
-                                   full_history ? "completed" : "last-successful", buf);
-            break;
-
-        default:
-            curses_indented_printf(out, "%s of %s pending: client=%s, origin=%s\n",
-                                   stonith_action_str(event->action), event->target,
-                                   event->client, event->origin);
-            break;
-    }
-
-    free(buf);
-    crm_time_free(crm_when);
+    curses_indented_printf(out, "%s\n", desc);
+    g_free(desc);
     return pcmk_rc_ok;
 }
 
