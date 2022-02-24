@@ -1641,7 +1641,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring registration for topology level '%s' "
                  "without valid target", crm_str(ID(level)));
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
                             crm_str(ID(level)));
@@ -1653,7 +1653,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
                             crm_str(crm_element_value(level,
@@ -1751,7 +1751,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
                             crm_str(crm_element_value(level,
@@ -3063,7 +3063,7 @@ handle_query_request(pcmk__request_t *request)
         action = crm_element_value(dev, F_STONITH_ACTION);
     }
 
-    crm_log_xml_debug(request->xml, "Query");
+    crm_log_xml_trace(request->xml, "Query");
 
     query = calloc(1, sizeof(struct st_query_data));
     CRM_ASSERT(query != NULL);
