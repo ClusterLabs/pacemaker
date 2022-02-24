@@ -956,9 +956,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return pcmk_rc_ok;
     }
 
-    crm_notice("All fencing options targeting %s for client %s@%s failed "
-               CRM_XS " id=%.8s",
-               op->target, op->client_name, op->originator, op->id);
+    crm_info("All fencing options targeting %s for client %s@%s failed "
+             CRM_XS " id=%.8s",
+             op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
 
