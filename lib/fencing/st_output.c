@@ -82,37 +82,59 @@ stonith__history_description(stonith_history_t *history, bool full_history,
         completed_time = time_t_string(history->completed);
     }
 
-    g_string_printf(str, "%s of %s %s",
-                    stonith_action_str(history->action), history->target,
-                    state_str(history));
+    g_string_printf(str, "%s of %s",
+                    stonith_action_str(history->action), history->target);
+
+    if (!pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+        // More human-friendly
+        if (((history->state == st_failed) || (history->state == st_done))
+            && (history->delegate != NULL)) {
+            g_string_append_printf(str, " by %s", history->delegate);
+        }
+        g_string_append_printf(str, " for %s@%s",
+                               history->client, history->origin);
+        if (!full_history) {
+            g_string_append(str, " last"); // For example, "last failed at ..."
+        }
+    }
+
+    g_string_append_printf(str, " %s", state_str(history));
 
     // For failed actions, add exit reason if available
     if ((history->state == st_failed) && (history->exit_reason != NULL)) {
         g_string_append_printf(str, " (%s)", history->exit_reason);
     }
 
-    g_string_append(str, ": ");
+    if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+        // More technical
+        g_string_append(str, ": ");
 
-    // For completed actions, add delegate if available
-    if (((history->state == st_failed) || (history->state == st_done))
-        && (history->delegate != NULL)) {
-        g_string_append_printf(str, "delegate=%s, ", history->delegate);
-    }
+        // For completed actions, add delegate if available
+        if (((history->state == st_failed) || (history->state == st_done))
+            && (history->delegate != NULL)) {
 
-    // Add information about originator
-    g_string_append_printf(str, "client=%s, origin=%s",
-                           history->client, history->origin);
-
-    // For completed actions, add completion time
-    if (completed_time != NULL) {
-        if (full_history) {
-            g_string_append(str, ", completed");
-        } else if (history->state == st_failed) {
-            g_string_append(str, ", last-failed");
-        } else {
-            g_string_append(str, ", last-successful");
+            g_string_append_printf(str, "delegate=%s, ", history->delegate);
         }
-        g_string_append_printf(str, "='%s'", completed_time);
+
+        // Add information about originator
+        g_string_append_printf(str, "client=%s, origin=%s",
+                               history->client, history->origin);
+
+        // For completed actions, add completion time
+        if (completed_time != NULL) {
+            if (full_history) {
+                g_string_append(str, ", completed");
+            } else if (history->state == st_failed) {
+                g_string_append(str, ", last-failed");
+            } else {
+                g_string_append(str, ", last-successful");
+            }
+            g_string_append_printf(str, "='%s'", completed_time);
+        }
+    } else { // More human-friendly
+        if (completed_time != NULL) {
+            g_string_append_printf(str, " at %s", completed_time);
+        }
     }
 
     if ((history->state == st_failed) && (later_succeeded != NULL)) {
