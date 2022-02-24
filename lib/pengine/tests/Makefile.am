@@ -1,1 +1,1 @@
-SUBDIRS = rules
+SUBDIRS = rules native
