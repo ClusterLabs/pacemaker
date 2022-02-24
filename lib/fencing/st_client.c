@@ -2206,8 +2206,7 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
          if ((prev_hp->state == st_done) &&
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
-            pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
-            ((event->completed < prev_hp->completed) || 
+            ((event->completed < prev_hp->completed) ||
              ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
             ret = TRUE;
             break;
