@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/results.h>
+#include <crm/common/output.h>
 #include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -269,7 +270,9 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
             continue;
         }
 
-        out->message(out, "stonith-event", hp, 1, stonith__later_succeeded(hp, history));
+        out->message(out, "stonith-event", hp, true,
+                     stonith__later_succeeded(hp, history),
+                     (uint32_t) pcmk_show_failed_detail);
         out->increment_list(out);
     }
 
@@ -277,7 +280,8 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
         if (out->is_quiet(out)) {
             pcmk__formatted_printf(out, "%lld\n", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest, 0, NULL);
+            out->message(out, "stonith-event", latest, false, NULL,
+                         (uint32_t) pcmk_show_failed_detail);
             out->increment_list(out);
         }
     }

@@ -1556,8 +1556,9 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                                                                   GINT_TO_POINTER(st_failed));
 
             if (hp) {
-                CHECK_RC(rc, out->message(out, "failed-fencing-list", stonith_history, unames,
-                                          section_opts, rc == pcmk_rc_ok));
+                CHECK_RC(rc, out->message(out, "failed-fencing-list",
+                                          stonith_history, unames, section_opts,
+                                          show_opts, rc == pcmk_rc_ok));
             }
         } else {
             PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -1597,14 +1598,16 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 
             if (hp) {
                 CHECK_RC(rc, out->message(out, "fencing-list", hp, unames,
-                                          section_opts, rc == pcmk_rc_ok));
+                                          section_opts, show_opts,
+                                          rc == pcmk_rc_ok));
             }
         } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
-                CHECK_RC(rc, out->message(out, "pending-fencing-list", hp, unames,
-                                          section_opts, rc == pcmk_rc_ok));
+                CHECK_RC(rc, out->message(out, "pending-fencing-list", hp,
+                                          unames, section_opts, show_opts,
+                                          rc == pcmk_rc_ok));
             }
         }
     }
@@ -1669,7 +1672,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /* Print stonith history */
     if (pcmk_is_set(section_opts, pcmk_section_fencing_all) && fence_history) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
-                     unames, section_opts, FALSE);
+                     unames, section_opts, show_opts, FALSE);
     }
 
     /* Print tickets if requested */
@@ -1747,7 +1750,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
             if (hp) {
                 out->message(out, "failed-fencing-list", stonith_history, unames,
-                             section_opts, FALSE);
+                             section_opts, show_opts, FALSE);
             }
         } else {
             out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -1771,14 +1774,15 @@ cluster_status_html(pcmk__output_t *out, va_list args)
                                                                   GINT_TO_POINTER(st_failed));
 
             if (hp) {
-                out->message(out, "fencing-list", hp, unames, section_opts, FALSE);
+                out->message(out, "fencing-list", hp, unames, section_opts,
+                             show_opts, FALSE);
             }
         } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
                 out->message(out, "pending-fencing-list", hp, unames,
-                             section_opts, FALSE);
+                             section_opts, show_opts, FALSE);
             }
         }
     }
