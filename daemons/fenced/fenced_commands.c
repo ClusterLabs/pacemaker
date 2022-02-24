@@ -2389,7 +2389,9 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     if (cmd->victim != NULL) {
         g_string_append_printf(msg, "targeting %s ", cmd->victim);
     }
-    g_string_append_printf(msg, "using %s ", cmd->device);
+    if (cmd->device != NULL) {
+        g_string_append_printf(msg, "using %s ", cmd->device);
+    }
 
     // Add exit status or execution status as appropriate
     if (result->execution_status == PCMK_EXEC_DONE) {
