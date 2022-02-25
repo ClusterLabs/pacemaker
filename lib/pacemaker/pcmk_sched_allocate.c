@@ -23,12 +23,20 @@
 
 CRM_TRACE_INIT_DATA(pacemaker);
 
-extern bool pcmk__is_daemon;
-
 /*!
  * \internal
  * \brief Do deferred action checks after allocation
  *
+ * When unpacking the resource history, the scheduler checks for resource
+ * configurations that have changed since an action was run. However, at that
+ * time, bundles using the REMOTE_CONTAINER_HACK don't have their final
+ * parameter information, so instead they add a deferred check to a list. This
+ * function processes one entry in that list.
+ *
+ * \param[in] rsc       Resource that action history is for
+ * \param[in] node      Node that action history is for
+ * \param[in] rsc_op    Action history entry
+ * \param[in] check     Type of deferred check to do
  * \param[in] data_set  Working set for cluster
  */
 static void
@@ -43,7 +51,6 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             if (pcmk__check_action_config(rsc, node, rsc_op)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
-
                 reason = "action definition changed";
             }
             break;
@@ -52,7 +59,8 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             digest_data = rsc_action_digest_cmp(rsc, rsc_op, node, data_set);
             switch (digest_data->rc) {
                 case RSC_DIGEST_UNKNOWN:
-                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                    crm_trace("Resource %s history entry %s on %s has "
+                              "no digest to compare",
                               rsc->id, ID(rsc_op), node->details->id);
                     break;
                 case RSC_DIGEST_MATCH:
@@ -63,87 +71,119 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
             }
             break;
     }
-
-    if (reason) {
+    if (reason != NULL) {
         pe__clear_failcount(rsc, node, reason, data_set);
     }
 }
 
-static gboolean
-failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
+/*!
+ * \internal
+ * \brief Check whether a resource has failcount clearing scheduled on a node
+ *
+ * \param[in] node  Node to check
+ * \param[in] rsc   Resource to check
+ *
+ * \return true if \p rsc has failcount clearing scheduled on \p node,
+ *         otherwise false
+ */
+static bool
+failcount_clear_action_exists(pe_node_t *node, pe_resource_t *rsc)
 {
-    gboolean rc = FALSE;
     GList *list = pe__resource_actions(rsc, node, CRM_OP_CLEAR_FAILCOUNT, TRUE);
 
-    if (list) {
-        rc = TRUE;
+    if (list != NULL) {
+        g_list_free(list);
+        return true;
     }
-    g_list_free(list);
-    return rc;
+    return false;
 }
 
+/*!
+ * \internal
+ * \brief Ban a resource from a node if it reached its failure threshold there
+ *
+ * \param[in] rsc       Resource to check failure threshold for
+ * \param[in] node      Node to check \p rsc on
+ */
 static void
-common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
+check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
 {
-    if (rsc->children) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            common_apply_stickiness(child_rsc, node, data_set);
-        }
+    // If this is a collective resource, apply recursively to children instead
+    if (rsc->children != NULL) {
+        g_list_foreach(rsc->children, (GFunc) check_failure_threshold,
+                       node);
         return;
-    }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_managed)
-        && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
-        pe_node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-        pe_node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    } else if (failcount_clear_action_exists(node, rsc)) {
+        /* Don't force the resource away from this node due to a failcount
+         * that's going to be cleared.
+         *
+         * @TODO Failcount clearing can be scheduled in
+         * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
+         * stage5() via check_params(). This runs well before then, so it cannot
+         * detect those, meaning we might check the migration threshold when we
+         * shouldn't. Worst case, we stop or move the resource, then move it
+         * back in the next transition.
+         */
+        return;
 
-        if (current == NULL) {
-
-        } else if ((match != NULL)
-                   || pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-            pe_resource_t *sticky_rsc = rsc;
-
-            resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
-            pe_rsc_debug(sticky_rsc, "Resource %s: preferring current location"
-                         " (node=%s, weight=%d)", sticky_rsc->id,
-                         node->details->uname, rsc->stickiness);
-        } else {
-            GHashTableIter iter;
-            pe_node_t *nIter = NULL;
-
-            pe_rsc_debug(rsc, "Ignoring stickiness for %s: the cluster is asymmetric"
-                         " and node %s is not explicitly allowed", rsc->id, node->details->uname);
-            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&nIter)) {
-                crm_err("%s[%s] = %d", rsc->id, nIter->details->uname, nIter->weight);
-            }
-        }
-    }
-
-    /* Check the migration threshold only if a failcount clear action
-     * has not already been placed for this resource on the node.
-     * There is no sense in potentially forcing the resource from this
-     * node if the failcount is being reset anyway.
-     *
-     * @TODO A clear_failcount operation can be scheduled in
-     * pcmk__handle_rsc_config_changes() via process_rsc_history(), or in
-     * stage5() via check_params(). This runs in stage2(), so it cannot detect
-     * those, meaning we might check the migration threshold when we shouldn't
-     * -- worst case, we stop or move the resource, then move it back next
-     *  transition.
-     */
-    if (failcount_clear_action_exists(node, rsc) == FALSE) {
+    } else {
         pe_resource_t *failed = NULL;
 
         if (pcmk__threshold_reached(rsc, node, &failed)) {
             resource_location(failed, node, -INFINITY, "__fail_limit__",
-                              data_set);
+                              rsc->cluster);
         }
     }
+}
+
+/*!
+ * \internal
+ * \brief Apply stickiness to a resource if appropriate
+ *
+ * \param[in] rsc       Resource to check for stickiness
+ * \param[in] data_set  Cluster working set
+ */
+static void
+apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    pe_node_t *node = NULL;
+
+    // If this is a collective resource, apply recursively to children instead
+    if (rsc->children != NULL) {
+        g_list_foreach(rsc->children, (GFunc) apply_stickiness, data_set);
+        return;
+    }
+
+    /* A resource is sticky if it is managed, has stickiness configured, and is
+     * active on a single node.
+     */
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || (rsc->stickiness < 1) || !pcmk__list_of_1(rsc->running_on)) {
+        return;
+    }
+
+    node = rsc->running_on->data;
+
+    /* In a symmetric cluster, stickiness can always be used. In an
+     * asymmetric cluster, we have to check whether the resource is still
+     * allowed on the node, so we don't keep the resource somewhere it is no
+     * longer explicitly enabled.
+     */
+    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_symmetric_cluster)
+        && (pe_hash_table_lookup(rsc->allowed_nodes,
+                                 node->details->id) == NULL)) {
+        pe_rsc_debug(rsc,
+                     "Ignoring %s stickiness because the cluster is "
+                     "asymmetric and node %s is not explicitly allowed",
+                     rsc->id, node->details->uname);
+        return;
+    }
+
+    pe_rsc_debug(rsc, "Resource %s has %d stickiness on node %s",
+                 rsc->id, rsc->stickiness, node->details->uname);
+    resource_location(rsc, node, rsc->stickiness, "stickiness",
+                      rsc->cluster);
 }
 
 gboolean
@@ -306,6 +346,7 @@ stage2(pe_working_set_t * data_set)
     }
 
     pcmk__apply_locations(data_set);
+    g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -316,7 +357,7 @@ stage2(pe_working_set_t * data_set)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
-            common_apply_stickiness(rsc, node, data_set);
+            check_failure_threshold(rsc, node);
             rsc_discover_filter(rsc, node);
         }
     }
@@ -637,4 +678,132 @@ stage6(pe_working_set_t * data_set)
     g_list_free(stonith_ops);
     g_list_free(shutdown_ops);
     return TRUE;
+}
+
+static void
+log_resource_details(pe_working_set_t *data_set)
+{
+    pcmk__output_t *out = data_set->priv;
+    GList *all = NULL;
+
+    /* We need a list of nodes that we are allowed to output information for.
+     * This is necessary because out->message for all the resource-related
+     * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
+     * we just make it a list of all the nodes.
+     */
+    all = g_list_prepend(all, (gpointer) "*");
+
+    for (GList *item = data_set->resources; item != NULL; item = item->next) {
+        pe_resource_t *rsc = (pe_resource_t *) item->data;
+
+        // Log all resources except inactive orphans
+        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)
+            || (rsc->role != RSC_ROLE_STOPPED)) {
+            out->message(out, crm_map_element_name(rsc->xml), 0, rsc, all, all);
+        }
+    }
+
+    g_list_free(all);
+}
+
+static void
+log_all_actions(pe_working_set_t *data_set)
+{
+    /* This only ever outputs to the log, so ignore whatever output object was
+     * previously set and just log instead.
+     */
+    pcmk__output_t *prev_out = data_set->priv;
+    pcmk__output_t *out = pcmk__new_logger();
+
+    if (out == NULL) {
+        return;
+    }
+
+    pcmk__output_set_log_level(out, LOG_NOTICE);
+    data_set->priv = out;
+
+    out->begin_list(out, NULL, NULL, "Actions");
+    pcmk__output_actions(data_set);
+    out->end_list(out);
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
+    data_set->priv = prev_out;
+}
+
+/*!
+ * \internal
+ * \brief Run the scheduler for a given CIB
+ *
+ * \param[in,out] data_set  Cluster working set
+ * \param[in]     xml_input CIB XML to use as scheduler input
+ * \param[in]     now       Time to use for rule evaluation (or NULL for now)
+ */
+xmlNode *
+pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
+                       crm_time_t *now)
+{
+    GList *gIter = NULL;
+
+    CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
+
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+        set_working_set_defaults(data_set);
+        data_set->input = xml_input;
+        data_set->now = now;
+
+    } else {
+        crm_trace("Already have status - reusing");
+    }
+
+    if (data_set->now == NULL) {
+        data_set->now = crm_time_new(NULL);
+    }
+
+    crm_trace("Calculate cluster status");
+    stage0(data_set);
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
+         pcmk__is_daemon) {
+        log_resource_details(data_set);
+    }
+
+    crm_trace("Applying location constraints");
+    stage2(data_set);
+
+    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+        return NULL;
+    }
+
+    pcmk__create_internal_constraints(data_set);
+    pcmk__handle_rsc_config_changes(data_set);
+
+    crm_trace("Allocate resources");
+    stage5(data_set);
+
+    crm_trace("Processing fencing and shutdown cases");
+    stage6(data_set);
+
+    pcmk__apply_orderings(data_set);
+    log_all_actions(data_set);
+
+    crm_trace("Create transition graph");
+    pcmk__create_graph(data_set);
+
+    crm_trace("=#=#=#=#= Summary =#=#=#=#=");
+    crm_trace("\t========= Set %d (Un-runnable) =========", -1);
+    if (get_crm_log_level() == LOG_TRACE) {
+        gIter = data_set->actions;
+        for (; gIter != NULL; gIter = gIter->next) {
+            pe_action_t *action = (pe_action_t *) gIter->data;
+
+            if (!pcmk_any_flags_set(action->flags,
+                                    pe_action_optional
+                                    |pe_action_runnable
+                                    |pe_action_pseudo)) {
+                pcmk__log_action("\t", action, true);
+            }
+        }
+    }
+
+    return data_set->graph;
 }
