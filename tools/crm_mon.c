@@ -2000,7 +2000,7 @@ mon_refresh_display(gpointer user_data)
         fence_history = pcmk__fence_history_reduced;
      }
 
-    if (options.daemonize) {
+    if (out->dest != stdout) {
         out->reset(out);
     }
 
@@ -2017,7 +2017,7 @@ mon_refresh_display(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
 
-    if (options.daemonize) {
+    if (out->dest != stdout) {
         out->finish(out, CRM_EX_OK, true, NULL);
     }
 
