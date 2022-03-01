@@ -694,7 +694,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         (*rsc)->recovery_type = recovery_block;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: block");
 
-    } else {
+    } else { // "stop_start"
+        if (!pcmk__str_eq(value, "stop_start",
+                          pcmk__str_casei|pcmk__str_null_matches)) {
+            pe_warn("%s is not a valid value for " XML_RSC_ATTR_MULTIPLE
+                    ", using default of \"stop_start\"", value);
+        }
         (*rsc)->recovery_type = recovery_stop_start;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: stop/start");
     }
