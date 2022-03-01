@@ -135,7 +135,7 @@ struct {
 static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
-static void clean_up_if_connection_failure(int rc);
+static void clean_up_on_connection_failure(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(void);
 static int fencing_connect(void);
@@ -1300,12 +1300,8 @@ reconcile_output_format(pcmk__common_args_t *args) {
 }
 
 static void
-clean_up_if_connection_failure(int rc)
+clean_up_on_connection_failure(int rc)
 {
-    if (rc == pcmk_rc_ok) {
-        return;
-    }
-
     if (output_format == mon_output_monitor) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
                     pcmk_rc_str(rc));
@@ -1331,13 +1327,11 @@ one_shot(void)
                           options.neg_location_prefix,
                           output_format == mon_output_monitor);
 
-    clean_up_if_connection_failure(rc);
-
-    /* If clean_up_if_connection_failure didn't call clean_up (because there wasn't
-     * a connection failure), we still need to call clean_up here because one_shot
-     * mode is done.
-     */
-    clean_up(pcmk_rc2exitc(rc));
+    if (rc == pcmk_rc_ok) {
+        clean_up(pcmk_rc2exitc(rc));
+    } else {
+        clean_up_on_connection_failure(rc);
+    }
 }
 
 static void
@@ -1609,7 +1603,10 @@ main(int argc, char **argv)
 
     } while (rc == ENOTCONN);
 
-    clean_up_if_connection_failure(rc);
+    if (rc != pcmk_rc_ok) {
+        clean_up_on_connection_failure(rc);
+    }
+
     set_fencing_options(interactive_fence_level);
     mon_refresh_display(NULL);
 
