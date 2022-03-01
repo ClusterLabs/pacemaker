@@ -1131,6 +1131,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     pcmk__output_t *out = data_set->priv;
 
     pe_reset_working_set(data_set);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_working_set_from_cib(out, data_set, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
@@ -1164,7 +1165,8 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set->input,
+                               pe_flag_no_counts|pe_flag_no_compat, data_set);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
@@ -1331,7 +1333,6 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     data_set->priv = out;
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_dataset(cib, data_set, FALSE);
 
     if(rc != pcmk_rc_ok) {
@@ -1628,7 +1629,6 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     if (data_set == NULL) {
         return ENOMEM;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     do {
 
@@ -1652,7 +1652,8 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             pe_free_working_set(data_set);
             return rc;
         }
-        pcmk__schedule_actions(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set->input,
+                               pe_flag_no_counts|pe_flag_no_compat, data_set);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two

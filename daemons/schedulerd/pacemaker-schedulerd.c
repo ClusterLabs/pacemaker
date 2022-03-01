@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,6 @@ struct {
     gchar **remainder;
 } options;
 
-pe_working_set_t *sched_data_set = NULL;
 pcmk__output_t *logger_out = NULL;
 pcmk__output_t *out = NULL;
 
@@ -162,11 +161,6 @@ pengine_shutdown(int nsig)
         crm_trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
-    }
-
-    if (sched_data_set != NULL) {
-        pe_free_working_set(sched_data_set);
-        sched_data_set = NULL;
     }
 
     if (logger_out != NULL) {

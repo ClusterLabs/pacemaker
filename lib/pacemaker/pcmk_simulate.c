@@ -330,6 +330,7 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
     xmlNode *cib_object = NULL;
     clock_t start = 0;
     clock_t end;
+    unsigned long long data_set_flags = pe_flag_no_compat;
 
     CRM_ASSERT(out != NULL);
 
@@ -350,12 +351,19 @@ profile_file(const char *xml_file, long long repeat, pe_working_set_t *data_set,
         return;
     }
 
+    if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
+        data_set_flags |= pe_flag_show_scores;
+    }
+    if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+        data_set_flags |= pe_flag_show_utilization;
+    }
+
     for (int i = 0; i < repeat; ++i) {
         xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
 
         data_set->input = input;
         set_effective_date(data_set, false, use_date);
-        pcmk__schedule_actions(data_set, input, NULL);
+        pcmk__schedule_actions(input, data_set_flags, data_set);
         pe_reset_working_set(data_set);
     }
 
@@ -844,8 +852,15 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
     }
 
     if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
-        crm_time_t *local_date = NULL;
         pcmk__output_t *logger_out = NULL;
+        unsigned long long data_set_flags = pe_flag_no_compat;
+
+        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
+            data_set_flags |= pe_flag_show_scores;
+        }
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            data_set_flags |= pe_flag_show_utilization;
+        }
 
         if (pcmk_all_flags_set(data_set->flags,
                                pe_flag_show_scores|pe_flag_show_utilization)) {
@@ -873,7 +888,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
             data_set->priv = logger_out;
         }
 
-        pcmk__schedule_actions(data_set, input, local_date);
+        pcmk__schedule_actions(input, data_set_flags, data_set);
 
         if (logger_out == NULL) {
             out->end_list(out);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,6 +133,12 @@ enum pe_find {
 
 #  define pe_flag_show_scores           0x02000000ULL
 #  define pe_flag_show_utilization      0x04000000ULL
+
+/*!
+ * When scheduling, only unpack the CIB (including constraints), calculate
+ * as much cluster status as possible, and apply node health.
+ */
+#  define pe_flag_check_config          0x08000000ULL
 
 struct pe_working_set_s {
     xmlNode *input;

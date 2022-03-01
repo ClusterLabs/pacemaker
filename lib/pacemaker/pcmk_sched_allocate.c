@@ -186,25 +186,6 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                       rsc->cluster);
 }
 
-gboolean
-stage0(pe_working_set_t * data_set)
-{
-    if (data_set->input == NULL) {
-        return FALSE;
-    }
-
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
-        crm_trace("Calculating status");
-        cluster_status(data_set);
-    }
-
-    pcmk__set_allocation_methods(data_set);
-    pcmk__apply_node_health(data_set);
-    pcmk__unpack_constraints(data_set);
-
-    return TRUE;
-}
-
 static void
 rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
@@ -343,6 +324,7 @@ stage2(pe_working_set_t * data_set)
                 data_set->max_valid_nodes++;
             }
         }
+        crm_trace("Online node count: %d", data_set->max_valid_nodes);
     }
 
     pcmk__apply_locations(data_set);
@@ -733,35 +715,77 @@ log_all_actions(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Log all required but unrunnable actions at trace level
+ *
+ * \param[in] data_set  Cluster working set
+ */
+static void
+log_unrunnable_actions(pe_working_set_t *data_set)
+{
+    const uint64_t flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
+
+    crm_trace("Required but unrunnable actions:");
+    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
+
+        if (!pcmk_any_flags_set(action->flags, flags)) {
+            pcmk__log_action("\t", action, true);
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Unpack the CIB for scheduling
+ *
+ * \param[in] cib       CIB XML to unpack (may be NULL if previously unpacked)
+ * \param[in] flags     Working set flags to set in addition to defaults
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
+        crm_trace("Reusing previously calculated cluster status");
+        pe__set_working_set_flags(data_set, flags);
+        return;
+    }
+
+    CRM_ASSERT(cib != NULL);
+    crm_trace("Calculating cluster status");
+
+    /* This will zero the entire struct without freeing anything first, so
+     * callers should never call pcmk__schedule_actions() with a populated data
+     * set unless pe_flag_have_status is set (i.e. cluster_status() was
+     * previously called, whether directly or via pcmk__schedule_actions()).
+     */
+    set_working_set_defaults(data_set);
+
+    pe__set_working_set_flags(data_set, flags);
+    data_set->input = cib;
+    cluster_status(data_set); // Sets pe_flag_have_status
+}
+
+/*!
+ * \internal
  * \brief Run the scheduler for a given CIB
  *
+ * \param[in]     cib       CIB XML to use as scheduler input
+ * \param[in]     flags     Working set flags to set in addition to defaults
  * \param[in,out] data_set  Cluster working set
- * \param[in]     xml_input CIB XML to use as scheduler input
- * \param[in]     now       Time to use for rule evaluation (or NULL for now)
  */
-xmlNode *
-pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
-                       crm_time_t *now)
+void
+pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                       pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
-    CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
-
-    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
-        set_working_set_defaults(data_set);
-        data_set->input = xml_input;
-        data_set->now = now;
-
-    } else {
-        crm_trace("Already have status - reusing");
+    unpack_cib(cib, flags, data_set);
+    pcmk__set_allocation_methods(data_set);
+    pcmk__apply_node_health(data_set);
+    pcmk__unpack_constraints(data_set);
+    if (pcmk_is_set(data_set->flags, pe_flag_check_config)) {
+        return;
     }
 
-    if (data_set->now == NULL) {
-        data_set->now = crm_time_new(NULL);
-    }
-
-    crm_trace("Calculate cluster status");
-    stage0(data_set);
     if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
          pcmk__is_daemon) {
         log_resource_details(data_set);
@@ -771,7 +795,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     stage2(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
-        return NULL;
+        return;
     }
 
     pcmk__create_internal_constraints(data_set);
@@ -788,22 +812,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Create transition graph");
     pcmk__create_graph(data_set);
-
-    crm_trace("=#=#=#=#= Summary =#=#=#=#=");
-    crm_trace("\t========= Set %d (Un-runnable) =========", -1);
     if (get_crm_log_level() == LOG_TRACE) {
-        gIter = data_set->actions;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *action = (pe_action_t *) gIter->data;
-
-            if (!pcmk_any_flags_set(action->flags,
-                                    pe_action_optional
-                                    |pe_action_runnable
-                                    |pe_action_pseudo)) {
-                pcmk__log_action("\t", action, true);
-            }
-        }
+        log_unrunnable_actions(data_set);
     }
-
-    return data_set->graph;
 }

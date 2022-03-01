@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,8 +44,6 @@ struct {
     gboolean xml_stdin;
     char *xml_string;
 } options;
-
-extern gboolean stage0(pe_working_set_t * data_set);
 
 static GOptionEntry data_entries[] = {
     { "live-check", 'L', 0, G_OPTION_ARG_NONE,
@@ -223,18 +221,21 @@ main(int argc, char **argv)
         crm_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     data_set->priv = out;
 
-    if (cib_object == NULL) {
-    } else if (status != NULL || options.use_live_cib) {
-        /* live queries will always have a status section and can do a full simulation */
-        pcmk__schedule_actions(data_set, cib_object, NULL);
+    /* Process the configuration to set crm_config_error/crm_config_warning.
+     *
+     * @TODO Some parts of the configuration are unpacked only when needed (for
+     * example, action configuration), so we aren't necessarily checking those.
+     */
+    if (cib_object != NULL) {
+        unsigned long long flags = pe_flag_no_counts|pe_flag_no_compat;
 
-    } else {
-        data_set->now = crm_time_new(NULL);
-        data_set->input = cib_object;
-        stage0(data_set);
+        if ((status == NULL) && !options.use_live_cib) {
+            // No status available, so do minimal checks
+            flags |= pe_flag_check_config;
+        }
+        pcmk__schedule_actions(cib_object, flags, data_set);
     }
     pe_free_working_set(data_set);
 

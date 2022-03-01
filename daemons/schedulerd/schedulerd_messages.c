@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,26 +19,21 @@
 
 #include "pacemaker-schedulerd.h"
 
-static void
+static pe_working_set_t *
 init_working_set(void)
 {
+    pe_working_set_t *data_set = pe_new_working_set();
+
+    CRM_ASSERT(data_set != NULL);
+
     crm_config_error = FALSE;
     crm_config_warning = FALSE;
 
     was_processing_error = FALSE;
     was_processing_warning = FALSE;
 
-    if (sched_data_set == NULL) {
-        sched_data_set = pe_new_working_set();
-        CRM_ASSERT(sched_data_set != NULL);
-        pe__set_working_set_flags(sched_data_set,
-                                  pe_flag_no_counts|pe_flag_no_compat);
-        pe__set_working_set_flags(sched_data_set,
-                                  pe_flag_show_utilization);
-        sched_data_set->priv = logger_out;
-    } else {
-        pe_reset_working_set(sched_data_set);
-    }
+    data_set->priv = logger_out;
+    return data_set;
 }
 
 static void
@@ -70,16 +65,15 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     xmlNode *reply = NULL;
     bool is_repoke = false;
     bool process = true;
-
-    init_working_set();
+    pe_working_set_t *data_set = init_working_set();
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
     converted = copy_xml(xml_data);
     if (!cli_config_update(&converted, NULL, TRUE)) {
-        sched_data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-        crm_xml_add_int(sched_data_set->graph, "transition_id", 0);
-        crm_xml_add_int(sched_data_set->graph, "cluster-delay", 0);
+        data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+        crm_xml_add_int(data_set->graph, "transition_id", 0);
+        crm_xml_add_int(data_set->graph, "cluster-delay", 0);
         process = false;
         free(digest);
 
@@ -93,7 +87,10 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     }
 
     if (process) {
-        pcmk__schedule_actions(sched_data_set, converted, NULL);
+        pcmk__schedule_actions(converted,
+                               pe_flag_no_counts
+                               |pe_flag_no_compat
+                               |pe_flag_show_utilization, data_set);
     }
 
     // Get appropriate index into series[] array
@@ -105,7 +102,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         series_id = 2;
     }
 
-    value = pe_pref(sched_data_set->config_hash, series[series_id].param);
+    value = pe_pref(data_set->config_hash, series[series_id].param);
     if ((value == NULL)
         || (pcmk__scan_min_int(value, &series_wrap, -1) != pcmk_rc_ok)) {
         series_wrap = series[series_id].wrap;
@@ -119,8 +116,8 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
               series[series_id].name, series_wrap, seq, value);
 
-    sched_data_set->input = NULL;
-    reply = create_reply(msg, sched_data_set->graph);
+    data_set->input = NULL;
+    reply = create_reply(msg, data_set->graph);
     CRM_ASSERT(reply != NULL);
 
     if (series_wrap == 0) { // Don't save any inputs of this kind
@@ -153,7 +150,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
                 graph_file);
 
         crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
-        write_xml_fd(sched_data_set->graph, graph_file, graph_file_fd, FALSE);
+        write_xml_fd(data_set->graph, graph_file, graph_file_fd, FALSE);
 
         free(graph_file);
         free_xml(first_named_child(reply, F_CRM_DATA));
@@ -179,6 +176,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     }
 
     free_xml(converted);
+    pe_free_working_set(data_set);
 }
 
 static void

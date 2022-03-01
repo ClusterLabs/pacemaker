@@ -58,7 +58,6 @@ struct rsc_ticket_s {
     int role_lh;
 };
 
-extern gboolean stage0(pe_working_set_t * data_set);
 extern gboolean stage2(pe_working_set_t * data_set);
 extern gboolean stage5(pe_working_set_t * data_set);
 extern gboolean stage6(pe_working_set_t * data_set);
@@ -66,8 +65,8 @@ extern gboolean stage6(pe_working_set_t * data_set);
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 extern void add_maintenance_update(pe_working_set_t *data_set);
-xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
-                                crm_time_t *now);
+void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                            pe_working_set_t *data_set);
 
 extern const char *transition_idle_timeout;
 
