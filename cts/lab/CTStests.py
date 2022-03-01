@@ -1703,7 +1703,7 @@ class Reattach(CTSTest):
         pats = []
         # Conveniently, the scheduler will display this message when disabling
         # management, even if fencing is not enabled, so we can rely on it.
-        managed = self.create_watch(["Delaying fencing operations"], 60)
+        managed = self.create_watch(["No fencing will be done"], 60)
         managed.setwatch()
 
         self._set_unmanaged(node)
