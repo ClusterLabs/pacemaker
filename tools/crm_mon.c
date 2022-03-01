@@ -1287,6 +1287,10 @@ reconcile_output_format(pcmk__common_args_t *args) {
     } else if (options.one_shot) {
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
+    } else if (!options.daemonize && args->output_dest != NULL) {
+        options.one_shot = TRUE;
+        pcmk__str_update(&args->output_ty, "text");
+        output_format = mon_output_plain;
     } else {
         /* Neither old nor new arguments were given, so set the default. */
         pcmk__str_update(&args->output_ty, "console");
