@@ -694,6 +694,11 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         (*rsc)->recovery_type = recovery_block;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: block");
 
+    } else if (pcmk__str_eq(value, "stop_unexpected", pcmk__str_casei)) {
+        (*rsc)->recovery_type = recovery_stop_unexpected;
+        pe_rsc_trace((*rsc), "\tMultiple running resource recovery: "
+                             "stop unexpected instances");
+
     } else { // "stop_start"
         if (!pcmk__str_eq(value, "stop_start",
                           pcmk__str_casei|pcmk__str_null_matches)) {

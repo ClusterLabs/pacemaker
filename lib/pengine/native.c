@@ -149,8 +149,6 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     }
                 }
                 break;
-            case recovery_stop_start:
-                break;
             case recovery_block:
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
@@ -170,6 +168,11 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                         pe__set_resource_flags(child, pe_rsc_block);
                     }
                 }
+                break;
+            default: // recovery_stop_start, recovery_stop_unexpected
+                /* The scheduler will do the right thing because the relevant
+                 * variables and flags are set when unpacking the history.
+                 */
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
