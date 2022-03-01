@@ -830,7 +830,8 @@ crm_log_preinit(const char *entity, int argc, char **argv)
      * documentation, to reduce the burden of maintaining them.
      */
 
-    setlocale (LC_ALL, "");
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
 
     // Tell gettext where to find Pacemaker message catalogs
     CRM_ASSERT(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
