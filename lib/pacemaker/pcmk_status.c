@@ -270,8 +270,6 @@ pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_his
 
     rc = cib_connect(out, cib, &current_cib);
     if (rc != pcmk_rc_ok) {
-        cib__clean_up_connection(&cib);
-
         goto done;
     }
 
