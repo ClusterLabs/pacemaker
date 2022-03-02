@@ -18,9 +18,9 @@
 // Server request (whether from an IPC client or cluster peer)
 typedef struct {
     // If request is from an IPC client
-    pcmk__client_t *client;  // IPC client (NULL if not via IPC)
-    uint32_t id;             // IPC message ID
-    uint32_t flags;          // IPC message flags
+    pcmk__client_t *ipc_client;     // IPC client (NULL if not via IPC)
+    uint32_t ipc_id;                // IPC message ID
+    uint32_t ipc_flags;             // IPC message flags
 
     // If message is from a cluster peer
     const char *peer;       // Peer name (NULL if not via cluster)
@@ -54,7 +54,7 @@ xmlNode *pcmk__process_request(pcmk__request_t *request, const char *op,
 static inline const char *
 pcmk__request_origin_type(pcmk__request_t *request)
 {
-    if ((request != NULL) && (request->client != NULL)) {
+    if ((request != NULL) && (request->ipc_client != NULL)) {
         return "client";
     } else if ((request != NULL) && (request->peer != NULL)) {
         return "peer";
@@ -75,8 +75,8 @@ pcmk__request_origin_type(pcmk__request_t *request)
 static inline const char *
 pcmk__request_origin(pcmk__request_t *request)
 {
-    if ((request != NULL) && (request->client != NULL)) {
-        return pcmk__client_name(request->client);
+    if ((request != NULL) && (request->ipc_client != NULL)) {
+        return pcmk__client_name(request->ipc_client);
     } else if ((request != NULL) && (request->peer != NULL)) {
         return request->peer;
     } else {

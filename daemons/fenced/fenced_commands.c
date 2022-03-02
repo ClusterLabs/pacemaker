@@ -2996,9 +2996,9 @@ handle_register_request(pcmk__request_t *request)
 {
     xmlNode *reply = create_xml_node(NULL, "reply");
 
-    CRM_ASSERT(request->client != NULL);
+    CRM_ASSERT(request->ipc_client != NULL);
     crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reply, F_STONITH_CLIENTID, request->client->id);
+    crm_xml_add(reply, F_STONITH_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return reply;
 }
@@ -3085,25 +3085,25 @@ handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
-    CRM_ASSERT(request->client);
+    CRM_ASSERT(request->ipc_client != NULL);
     flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
-        pcmk__set_client_flags(request->client, get_stonith_flag(flag_name));
+        pcmk__set_client_flags(request->ipc_client, get_stonith_flag(flag_name));
     }
 
     flag_name = crm_element_value(request->xml, F_STONITH_NOTIFY_DEACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Disabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
-        pcmk__clear_client_flags(request->client,
+        pcmk__clear_client_flags(request->ipc_client,
                                  get_stonith_flag(flag_name));
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 
-    return pcmk__ipc_create_ack(request->flags, "ack", CRM_EX_OK);
+    return pcmk__ipc_create_ack(request->ipc_flags, "ack", CRM_EX_OK);
 }
 
 // STONITH_OP_RELAY
@@ -3137,7 +3137,7 @@ handle_fence_request(pcmk__request_t *request)
         fence_locally(request->xml, &request->result);
 
     } else if (pcmk_is_set(request->call_options, st_opt_manual_ack)) {
-        switch (fenced_handle_manual_confirmation(request->client,
+        switch (fenced_handle_manual_confirmation(request->ipc_client,
                                                   request->xml)) {
             case pcmk_rc_ok:
                 pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
@@ -3160,7 +3160,7 @@ handle_fence_request(pcmk__request_t *request)
         const char *action = crm_element_value(dev, F_STONITH_ACTION);
         const char *device = crm_element_value(dev, F_STONITH_DEVICE);
 
-        if (request->client != NULL) {
+        if (request->ipc_client != NULL) {
             int tolerance = 0;
 
             crm_notice("Client %s wants to fence (%s) %s using %s",
@@ -3182,17 +3182,17 @@ handle_fence_request(pcmk__request_t *request)
 
         alternate_host = check_alternate_host(target);
 
-        if ((alternate_host != NULL) && (request->client != NULL)) {
+        if ((alternate_host != NULL) && (request->ipc_client != NULL)) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
 
             crm_notice("Forwarding self-fencing request to peer %s "
                        "due to topology", alternate_host);
 
-            if (request->client->id == 0) {
+            if (request->ipc_client->id == 0) {
                 client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
             } else {
-                client_id = request->client->id;
+                client_id = request->ipc_client->id;
             }
 
             /* Create a duplicate fencing operation to relay with the client ID.
@@ -3202,14 +3202,15 @@ handle_fence_request(pcmk__request_t *request)
             op = create_remote_stonith_op(client_id, request->xml, FALSE);
 
             crm_xml_add(request->xml, F_STONITH_OPERATION, STONITH_OP_RELAY);
-            crm_xml_add(request->xml, F_STONITH_CLIENTID, request->client->id);
+            crm_xml_add(request->xml, F_STONITH_CLIENTID,
+                        request->ipc_client->id);
             crm_xml_add(request->xml, F_STONITH_REMOTE_OP_ID, op->id);
             send_cluster_message(crm_get_peer(0, alternate_host),
                                  crm_msg_stonith_ng, request->xml, FALSE);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
                              NULL);
 
-        } else if (initiate_remote_stonith_op(request->client, request->xml,
+        } else if (initiate_remote_stonith_op(request->ipc_client, request->xml,
                                               FALSE) == NULL) {
             fenced_set_protocol_error(&request->result);
 
@@ -3252,7 +3253,7 @@ handle_device_add_request(pcmk__request_t *request)
     const char *device_id = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
-    if (is_privileged(request->client, op)) {
+    if (is_privileged(request->ipc_client, op)) {
         int rc = stonith_device_register(request->xml, &device_id, FALSE);
 
         pcmk__set_result(&request->result,
@@ -3277,7 +3278,7 @@ handle_device_delete_request(pcmk__request_t *request)
     const char *device_id = crm_element_value(dev, XML_ATTR_ID);
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
-    if (is_privileged(request->client, op)) {
+    if (is_privileged(request->ipc_client, op)) {
         stonith_device_remove(device_id, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     } else {
@@ -3296,7 +3297,7 @@ handle_level_add_request(pcmk__request_t *request)
     char *device_id = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
-    if (is_privileged(request->client, op)) {
+    if (is_privileged(request->ipc_client, op)) {
         fenced_register_level(request->xml, &device_id, &request->result);
     } else {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
@@ -3315,7 +3316,7 @@ handle_level_delete_request(pcmk__request_t *request)
     char *device_id = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
-    if (is_privileged(request->client, op)) {
+    if (is_privileged(request->ipc_client, op)) {
         fenced_unregister_level(request->xml, &device_id, &request->result);
     } else {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
@@ -3404,17 +3405,17 @@ handle_request(pcmk__request_t *request)
                                   fenced_handlers);
     if (reply != NULL) {
         if (pcmk__str_any_of(op, CRM_OP_REGISTER, T_STONITH_NOTIFY, NULL)
-            && (request->client != NULL)) {
+            && (request->ipc_client != NULL)) {
             /* These IPC-only commands must reuse the call options from the
              * original request rather than the ones set by stonith_send_reply()
              * -> do_local_reply().
              */
-            pcmk__ipc_send_xml(request->client, request->id, reply,
-                               request->flags);
-            request->client->request_id = 0;
+            pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
+                               request->ipc_flags);
+            request->ipc_client->request_id = 0;
         } else {
             stonith_send_reply(reply, request->call_options,
-                               request->peer, request->client);
+                               request->peer, request->ipc_client);
         }
         free_xml(reply);
     }
@@ -3487,13 +3488,13 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
         handle_reply(client, message, remote_peer);
     } else {
         pcmk__request_t request = {
-            .client = client,
-            .id = id,
-            .flags = flags,
-            .peer = remote_peer,
-            .xml = message,
-            .call_options = call_options,
-            .result = PCMK__UNKNOWN_RESULT,
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = remote_peer,
+            .xml            = message,
+            .call_options   = call_options,
+            .result         = PCMK__UNKNOWN_RESULT,
         };
 
         handle_request(&request);

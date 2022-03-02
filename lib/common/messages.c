@@ -263,8 +263,9 @@ pcmk__process_request(pcmk__request_t *request, const char *op,
     CRM_CHECK((request != NULL) && (op != NULL) && (handlers != NULL),
               return NULL);
 
-    if (sync && (request->client != NULL)) {
-        CRM_CHECK(request->client->request_id == request->id, return NULL);
+    if (sync && (request->ipc_client != NULL)) {
+        CRM_CHECK(request->ipc_client->request_id == request->ipc_id,
+                  return NULL);
     }
 
     handler = g_hash_table_lookup(handlers, op);
