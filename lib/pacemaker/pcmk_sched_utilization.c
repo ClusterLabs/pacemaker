@@ -452,12 +452,13 @@ pcmk__create_utilization_constraints(pe_resource_t *rsc, GList *allowed_nodes)
 void
 pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set)
 {
-    if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-        for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
-            pe_node_t *node = (pe_node_t *) iter->data;
-            pcmk__output_t *out = data_set->priv;
+    if (!pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+        return;
+    }
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        pcmk__output_t *out = data_set->priv;
 
-            out->message(out, "node-capacity", node, desc);
-        }
+        out->message(out, "node-capacity", node, desc);
     }
 }
