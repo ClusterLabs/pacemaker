@@ -325,10 +325,10 @@ main(int argc, char **argv)
     }
 
     if (options.promotion_score && options.attr_name == NULL) {
-        fprintf(stderr, "-p/--promotion must be called from an "
-                        " OCF resource agent or with a resource ID "
-                        " specified\n\n");
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "-p/--promotion must be called from an OCF resource agent "
+                    "or with a resource ID specified");
         goto done;
     }
 
@@ -345,9 +345,9 @@ main(int argc, char **argv)
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to the CIB: %s", pcmk_strerror(rc));
         goto done;
     }
 
@@ -392,15 +392,17 @@ main(int argc, char **argv)
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
         if (pcmk_ok != rc) {
-            fprintf(stderr, "Could not map name=%s to a UUID\n", options.dest_uname);
             exit_code = crm_errno2exit(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not map name=%s to a UUID", options.dest_uname);
             goto done;
         }
     }
 
     if ((options.command == 'D') && (options.attr_name == NULL) && (options.attr_pattern == NULL)) {
-        fprintf(stderr, "Error: must specify attribute name or pattern to delete\n");
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error: must specify attribute name or pattern to delete");
         goto done;
     }
 
@@ -408,8 +410,9 @@ main(int argc, char **argv)
         if (((options.command != 'v') && (options.command != 'D'))
             || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
 
-            fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: pattern can only be used with till-reboot update or delete");
             goto done;
         }
         options.command = 'u';
@@ -488,12 +491,14 @@ main(int argc, char **argv)
     }
 
     if (rc == -ENOTUNIQ) {
-        printf("Please choose from one of the matches above and supply the 'id' with --attr-id\n");
         exit_code = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Please choose from one of the matches above and supply the 'id' with --attr-id");
 
     } else if (rc != pcmk_ok) {
-        fprintf(stderr, "Error performing operation: %s\n", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error performing operation: %s", pcmk_strerror(rc));
     }
 
 done:
