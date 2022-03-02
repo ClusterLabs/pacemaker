@@ -21,9 +21,8 @@ ACL Prerequisites
    
 In order to use ACLs:
 
-* The Pacemaker software must have been built with ACL support. If the output
-  of the command ``pacemakerd --features`` contains ``acls``, your installation
-  supports ACLs.
+* The ``enable-acl`` :ref:`cluster option <cluster_options>` must be set to
+  true.
 
 * Desired users must have user accounts in the ``haclient`` group on all
   cluster nodes in the cluster.
@@ -32,8 +31,10 @@ In order to use ACLs:
   to the current schema (using ``cibadmin --upgrade`` or a higher-level tool
   equivalent) in order to use the syntax documented here.
 
-* The ``enable-acl`` :ref:`cluster option <cluster_options>` must be set to
-  true.
+* Prior to the 2.1.0 release, the Pacemaker software had to have been built
+  with ACL support. If you are using an older release, your installation
+  supports ACLs only if the output of the command ``pacemakerd --features``
+  contains ``acls``. In newer versions, ACLs are always enabled.
    
 
 .. index::
