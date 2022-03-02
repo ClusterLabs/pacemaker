@@ -15,6 +15,21 @@
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
 #include <crm/common/results_internal.h>    // pcmk__action_result_t
 
+enum pcmk__request_flags {
+    pcmk__request_none          = UINT32_C(0),
+
+    /* It would be nice if we could check for synchronous requests generically,
+     * but each daemon uses its own call options, so the daemons are responsible
+     * for setting this flag when appropriate.
+     */
+    pcmk__request_sync          = (UINT32_C(1) << 0),
+
+    /* Whether reply must use original call options (the library code does not
+     * use this, so it is for internal daemon use)
+     */
+    pcmk__request_reuse_options = (UINT32_C(1) << 1),
+};
+
 // Server request (whether from an IPC client or cluster peer)
 typedef struct {
     // If request is from an IPC client
@@ -28,8 +43,25 @@ typedef struct {
     // Common information regardless of origin
     xmlNode *xml;                   // Request XML
     int call_options;               // Call options set on request
+    uint32_t flags;                 // Flag group of pcmk__request_flags
     pcmk__action_result_t result;   // Where to store operation result
+
+    /* It would be nice if we could pull the IPC command from the XML
+     * generically, but each daemon uses a different XML attribute for it,
+     * so the daemon is responsible for populating this field.
+     *
+     * @TODO Create a per-daemon struct with IPC handlers, IPC endpoints, etc.,
+     * and the name of the XML attribute for IPC commands, then replace this
+     * with a convenience function to grab the command.
+     */
+    const char *op;                 // IPC command from xml
 } pcmk__request_t;
+
+#define pcmk__set_request_flags(request, flags_to_set) do {         \
+        (request)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
+        LOG_TRACE, "Request", "message", (request)->flags,          \
+        (flags_to_set), #flags_to_set);                             \
+    } while (0)
 
 // Type for mapping a server command to a handler
 typedef struct {
@@ -39,8 +71,7 @@ typedef struct {
 
 const char *pcmk__message_name(const char *name);
 GHashTable *pcmk__register_handlers(pcmk__server_command_t handlers[]);
-xmlNode *pcmk__process_request(pcmk__request_t *request, const char *op,
-                               bool sync, GHashTable *handlers);
+xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);
 
 /*!
  * \internal

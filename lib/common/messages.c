@@ -245,35 +245,30 @@ pcmk__register_handlers(pcmk__server_command_t *handlers)
  * \brief Process an incoming request
  *
  * \param[in] request   Request to process
- * \param[in] op        Operation type of request
- * \param[in] sync      Whether request is synchronous
  * \param[in] handlers  Command table created by pcmk__register_handlers()
  *
  * \return XML to send as reply (or NULL if no reply is needed)
- * \todo It would be nice if we could pull \p op from \p request->xml and
- *       \p sync from \p request->call_options, but the relevant identifiers are
- *       not currently standardized across daemons.
  */
 xmlNode *
-pcmk__process_request(pcmk__request_t *request, const char *op,
-                      bool sync, GHashTable *handlers)
+pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
 {
     xmlNode *(*handler)(pcmk__request_t *request) = NULL;
 
-    CRM_CHECK((request != NULL) && (op != NULL) && (handlers != NULL),
+    CRM_CHECK((request != NULL) && (request->op != NULL) && (handlers != NULL),
               return NULL);
 
-    if (sync && (request->ipc_client != NULL)) {
+    if (pcmk_is_set(request->flags, pcmk__request_sync)
+        && (request->ipc_client != NULL)) {
         CRM_CHECK(request->ipc_client->request_id == request->ipc_id,
                   return NULL);
     }
 
-    handler = g_hash_table_lookup(handlers, op);
+    handler = g_hash_table_lookup(handlers, request->op);
     if (handler == NULL) {
         handler = g_hash_table_lookup(handlers, ""); // Default handler
         if (handler == NULL) {
             crm_info("Ignoring %s request from %s %s with no handler",
-                     op, pcmk__request_origin_type(request),
+                     request->op, pcmk__request_origin_type(request),
                      pcmk__request_origin(request));
             return NULL;
         }

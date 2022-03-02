@@ -3000,6 +3000,7 @@ handle_register_request(pcmk__request_t *request)
     crm_xml_add(reply, F_STONITH_OPERATION, CRM_OP_REGISTER);
     crm_xml_add(reply, F_STONITH_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    pcmk__set_request_flags(request, pcmk__request_reuse_options);
     return reply;
 }
 
@@ -3102,6 +3103,7 @@ handle_notify_request(pcmk__request_t *request)
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    pcmk__set_request_flags(request, pcmk__request_reuse_options);
 
     return pcmk__ipc_create_ack(request->ipc_flags, "ack", CRM_EX_OK);
 }
@@ -3388,25 +3390,16 @@ static void
 handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
-    const char *op = NULL;
     const char *reason = NULL;
-
-    CRM_CHECK((request != NULL) && (request->xml != NULL), return);
-
-    op = crm_element_value(request->xml, F_STONITH_OPERATION);
-    CRM_CHECK(op != NULL, return);
 
     if (fenced_handlers == NULL) {
         fenced_register_handlers();
     }
-    reply = pcmk__process_request(request, op,
-                                  pcmk_is_set(request->call_options,
-                                              st_opt_sync_call),
-                                  fenced_handlers);
+    reply = pcmk__process_request(request, fenced_handlers);
     if (reply != NULL) {
-        if (pcmk__str_any_of(op, CRM_OP_REGISTER, T_STONITH_NOTIFY, NULL)
+        if (pcmk_is_set(request->flags, pcmk__request_reuse_options)
             && (request->ipc_client != NULL)) {
-            /* These IPC-only commands must reuse the call options from the
+            /* Certain IPC-only commands must reuse the call options from the
              * original request rather than the ones set by stonith_send_reply()
              * -> do_local_reply().
              */
@@ -3422,7 +3415,7 @@ handle_request(pcmk__request_t *request)
 
     reason = request->result.exit_reason;
     crm_debug("Processed %s request from %s %s: %s%s%s%s",
-              op, pcmk__request_origin_type(request),
+              request->op, pcmk__request_origin_type(request),
               pcmk__request_origin(request),
               pcmk_exec_status_str(request->result.execution_status),
               (reason == NULL)? "" : " (",
@@ -3469,9 +3462,13 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 xmlNode *message, const char *remote_peer)
 {
     int call_options = st_opt_none;
-    bool is_reply = get_xpath_object("//" T_STONITH_REPLY, message,
-                                     LOG_NEVER) != NULL;
+    bool is_reply = false;
 
+    CRM_CHECK(message != NULL, return);
+
+    if (get_xpath_object("//" T_STONITH_REPLY, message, LOG_NEVER) != NULL) {
+        is_reply = true;
+    }
     crm_element_value_int(message, F_STONITH_CALLOPTS, &call_options);
     crm_debug("Processing %ssynchronous %s %s %u from %s %s",
               pcmk_is_set(call_options, st_opt_sync_call)? "" : "a",
@@ -3496,6 +3493,13 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
             .call_options   = call_options,
             .result         = PCMK__UNKNOWN_RESULT,
         };
+
+        request.op = crm_element_value(request.xml, F_STONITH_OPERATION);
+        CRM_CHECK(request.op != NULL, return);
+
+        if (pcmk_is_set(request.call_options, st_opt_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
 
         handle_request(&request);
         pcmk__reset_result(&request.result);
