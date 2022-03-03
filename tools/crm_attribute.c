@@ -422,7 +422,7 @@ main(int argc, char **argv)
 
     // Don't try to contact attribute manager if we're using a file as CIB
     if (getenv("CIB_file") || getenv("CIB_shadow")) {
-        try_attrd = FALSE;
+        try_attrd = false;
     }
 
     if (is_remote_node) {
