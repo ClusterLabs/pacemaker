@@ -380,7 +380,11 @@ G_GNUC_INTERNAL
 void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
                                      pe_working_set_t *data_set);
 
-G_GNUC_INTERNAL void pcmk__create_utilization_constraints(pe_resource_t *rsc,
-                                                          GList *allowed_nodes);
+G_GNUC_INTERNAL
+void pcmk__create_utilization_constraints(pe_resource_t *rsc,
+                                          GList *allowed_nodes);
+
+G_GNUC_INTERNAL
+void pcmk__show_node_capacities(const char *desc, pe_working_set_t *data_set);
 
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

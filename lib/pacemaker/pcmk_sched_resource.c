@@ -31,6 +31,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         native_expand,
         native_append_meta,
         pcmk__primitive_add_utilization,
+        pcmk__primitive_shutdown_lock,
     },
     {
         pcmk__group_merge_weights,
@@ -48,6 +49,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         group_expand,
         group_append_meta,
         pcmk__group_add_utilization,
+        pcmk__group_shutdown_lock,
     },
     {
         pcmk__native_merge_weights,
@@ -65,6 +67,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         clone_expand,
         clone_append_meta,
         pcmk__clone_add_utilization,
+        pcmk__clone_shutdown_lock,
     },
     {
         pcmk__native_merge_weights,
@@ -82,6 +85,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__bundle_expand,
         pcmk__bundle_append_meta,
         pcmk__bundle_add_utilization,
+        pcmk__bundle_shutdown_lock,
     }
 };
 

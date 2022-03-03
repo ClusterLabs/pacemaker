@@ -139,6 +139,35 @@ check_failure_threshold(pe_resource_t *rsc, pe_node_t *node)
 
 /*!
  * \internal
+ * \brief If resource has exclusive discovery, ban node if not allowed
+ *
+ * Location constraints have a resource-discovery option that allows users to
+ * specify where probes are done for the affected resource. If this is set to
+ * exclusive, probes will only be done on nodes listed in exclusive constraints.
+ * This function bans the resource from the node if the node is not listed.
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check \p rsc on
+ */
+static void
+apply_exclusive_discovery(pe_resource_t *rsc, pe_node_t *node)
+{
+    if (rsc->exclusive_discover || uber_parent(rsc)->exclusive_discover) {
+        pe_node_t *match = NULL;
+
+        // If this is a collective resource, apply recursively to children
+        g_list_foreach(rsc->children, (GFunc) apply_exclusive_discovery, node);
+
+        match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+        if ((match != NULL)
+            && (match->rsc_discover_mode != pe_discover_exclusive)) {
+            match->weight = -INFINITY;
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Apply stickiness to a resource if appropriate
  *
  * \param[in] rsc       Resource to check for stickiness
@@ -186,260 +215,174 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                       rsc->cluster);
 }
 
+/*!
+ * \internal
+ * \brief Apply shutdown locks for all resources as appropriate
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
+apply_shutdown_locks(pe_working_set_t *data_set)
 {
-    pe_resource_t *top = uber_parent(rsc);
-    pe_node_t *match;
-
-    if (rsc->exclusive_discover == FALSE && top->exclusive_discover == FALSE) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         return;
     }
+    for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-    g_list_foreach(rsc->children, (GFunc) rsc_discover_filter, node);
-
-    match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-    if (match && match->rsc_discover_mode != pe_discover_exclusive) {
-        match->weight = -INFINITY;
+        rsc->cmds->shutdown_lock(rsc);
     }
 }
 
-static time_t
-shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
-{
-    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
-    time_t result = 0;
-
-    if (shutdown) {
-        long long result_ll;
-
-        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
-            result = (time_t) result_ll;
-        }
-    }
-    return result? result : get_effective_time(data_set);
-}
-
+/*!
+ * \internal
+ * \brief Calculate the number of available nodes in the cluster
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
+count_available_nodes(pe_working_set_t *data_set)
 {
-    const char *class;
-
-    // Only primitives and (uncloned) groups may be locked
-    if (rsc->variant == pe_group) {
-        g_list_foreach(rsc->children, (GFunc) apply_shutdown_lock, data_set);
-    } else if (rsc->variant != pe_native) {
+    if (pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
         return;
     }
 
-    // Fence devices and remote connections can't be locked
-    class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
-        || pe__resource_is_remote_conn(rsc, data_set)) {
-        return;
-    }
+    // @COMPAT for API backward compatibility only (cluster does not use value)
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
 
-    if (rsc->lock_node != NULL) {
-        // The lock was obtained from resource history
-
-        if (rsc->running_on != NULL) {
-            /* The resource was started elsewhere even though it is now
-             * considered locked. This shouldn't be possible, but as a
-             * failsafe, we don't want to disturb the resource now.
-             */
-            pe_rsc_info(rsc,
-                        "Cancelling shutdown lock because %s is already active",
-                        rsc->id);
-            pe__clear_resource_history(rsc, rsc->lock_node, data_set);
-            rsc->lock_node = NULL;
-            rsc->lock_time = 0;
-        }
-
-    // Only a resource active on exactly one node can be locked
-    } else if (pcmk__list_of_1(rsc->running_on)) {
-        pe_node_t *node = rsc->running_on->data;
-
-        if (node->details->shutdown) {
-            if (node->details->unclean) {
-                pe_rsc_debug(rsc, "Not locking %s to unclean %s for shutdown",
-                             rsc->id, node->details->uname);
-            } else {
-                rsc->lock_node = node;
-                rsc->lock_time = shutdown_time(node, data_set);
-            }
+        if ((node != NULL) && (node->weight >= 0) && node->details->online
+            && (node->details->type != node_ping)) {
+            data_set->max_valid_nodes++;
         }
     }
-
-    if (rsc->lock_node == NULL) {
-        // No lock needed
-        return;
-    }
-
-    if (data_set->shutdown_lock > 0) {
-        time_t lock_expiration = rsc->lock_time + data_set->shutdown_lock;
-
-        pe_rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
-                    rsc->id, rsc->lock_node->details->uname,
-                    (long long) lock_expiration);
-        pe__update_recheck_time(++lock_expiration, data_set);
-    } else {
-        pe_rsc_info(rsc, "Locking %s to %s due to shutdown",
-                    rsc->id, rsc->lock_node->details->uname);
-    }
-
-    // If resource is locked to one node, ban it from all other nodes
-    for (GList *item = data_set->nodes; item != NULL; item = item->next) {
-        pe_node_t *node = item->data;
-
-        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
-            resource_location(rsc, node, -CRM_SCORE_INFINITY,
-                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, data_set);
-        }
-    }
+    crm_trace("Online node count: %d", data_set->max_valid_nodes);
 }
 
 /*
  * \internal
- * \brief Stage 2 of cluster status: apply node-specific criteria
+ * \brief Apply node-specific scheduling criteria
  *
- * Count known nodes, and apply location constraints, stickiness, and exclusive
- * resource discovery.
+ * After the CIB has been unpacked, process node-specific scheduling criteria
+ * including shutdown locks, location constraints, resource stickiness,
+ * migration thresholds, and exclusive resource discovery.
  */
-gboolean
-stage2(pe_working_set_t * data_set)
+static void
+apply_node_criteria(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
-    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-        g_list_foreach(data_set->resources, (GFunc) apply_shutdown_lock, data_set);
-    }
-
-    if (!pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
-        // @COMPAT API backward compatibility
-        for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node = (pe_node_t *) gIter->data;
-
-            if (node && (node->weight >= 0) && node->details->online
-                && (node->details->type != node_ping)) {
-                data_set->max_valid_nodes++;
-            }
-        }
-        crm_trace("Online node count: %d", data_set->max_valid_nodes);
-    }
-
+    crm_trace("Applying node-specific scheduling criteria");
+    apply_shutdown_locks(data_set);
+    count_available_nodes(data_set);
     pcmk__apply_locations(data_set);
     g_list_foreach(data_set->resources, (GFunc) apply_stickiness, data_set);
 
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        GList *gIter2 = NULL;
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        gIter2 = data_set->resources;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
+    for (GList *node_iter = data_set->nodes; node_iter != NULL;
+         node_iter = node_iter->next) {
+        for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
+             rsc_iter = rsc_iter->next) {
+            pe_node_t *node = (pe_node_t *) node_iter->data;
+            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
             check_failure_threshold(rsc, node);
-            rsc_discover_filter(rsc, node);
+            apply_exclusive_discovery(rsc, node);
         }
     }
-
-    return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Allocate resources to nodes
+ *
+ * \param[in] data_set  Cluster working set
+ */
 static void
-allocate_resources(pe_working_set_t * data_set)
+allocate_resources(pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
+
+    crm_trace("Allocating resources to nodes");
+
+    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
+        pcmk__sort_resources(data_set);
+    }
+    pcmk__show_node_capacities("Original", data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
          * any colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
          */
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-            if (rsc->is_remote_node == FALSE) {
-                continue;
+        for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+            pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+            if (rsc->is_remote_node) {
+                pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
+                             rsc->id);
+                rsc->cmds->allocate(rsc, rsc->partial_migration_target,
+                                    data_set);
             }
-            pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
-                         rsc->id);
-            rsc->cmds->allocate(rsc, rsc->partial_migration_target, data_set);
         }
     }
 
     /* now do the rest of the resources */
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-        if (rsc->is_remote_node == TRUE) {
-            continue;
+    for (iter = data_set->resources; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        if (!rsc->is_remote_node) {
+            pe_rsc_trace(rsc, "Allocating %s resource '%s'",
+                         crm_element_name(rsc->xml), rsc->id);
+            rsc->cmds->allocate(rsc, NULL, data_set);
         }
-        pe_rsc_trace(rsc, "Allocating %s resource '%s'",
-                     crm_element_name(rsc->xml), rsc->id);
-        rsc->cmds->allocate(rsc, NULL, data_set);
     }
+
+    pcmk__show_node_capacities("Remaining", data_set);
 }
 
-// Clear fail counts for orphaned rsc on all online nodes
+/*!
+ * \internal
+ * \brief Schedule fail count clearing on online nodes if resource is orphaned
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] data_set  Cluster working set
+ */
 static void
-cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
+clear_failcounts_if_orphaned(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
+    if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        return;
+    }
+    crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
+    /* There's no need to recurse into rsc->children because those
+     * should just be unallocated clone instances.
+     */
 
-        if (node->details->online
-            && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
-                                data_set)) {
+    for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
+        pe_node_t *node = (pe_node_t *) iter->data;
+        pe_action_t *clear_op = NULL;
 
-            pe_action_t *clear_op = NULL;
-
-            clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
-                                           data_set);
-
-            /* We can't use order_action_then_stop() here because its
-             * pe_order_preserve breaks things
-             */
-            pcmk__new_ordering(clear_op->rsc, NULL, clear_op,
-                               rsc, stop_key(rsc), NULL,
-                               pe_order_optional, data_set);
+        if (!node->details->online) {
+            continue;
         }
+        if (pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                             data_set) == 0) {
+            continue;
+        }
+
+        clear_op = pe__clear_failcount(rsc, node, "it is orphaned", data_set);
+
+        /* We can't use order_action_then_stop() here because its
+         * pe_order_preserve breaks things
+         */
+        pcmk__new_ordering(clear_op->rsc, NULL, clear_op, rsc, stop_key(rsc),
+                           NULL, pe_order_optional, data_set);
     }
 }
 
 gboolean
 stage5(pe_working_set_t * data_set)
 {
-    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
-
-    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        pcmk__sort_resources(data_set);
-    }
-
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            out->message(out, "node-capacity", node, "Original");
-        }
-    }
-
-    crm_trace("Allocating services");
-    /* Take (next) highest resource, assign it and create its actions */
-
-    allocate_resources(data_set);
-
-    gIter = data_set->nodes;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            out->message(out, "node-capacity", node, "Remaining");
-        }
-    }
 
     // Process deferred action checks
     pe__foreach_param_check(data_set, check_params);
@@ -450,18 +393,9 @@ stage5(pe_working_set_t * data_set)
         pcmk__schedule_probes(data_set);
     }
 
-    crm_trace("Handle orphans");
     if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-            /* There's no need to recurse into rsc->children because those
-             * should just be unallocated clone instances.
-             */
-            if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-                cleanup_orphans(rsc, data_set);
-            }
-        }
+        g_list_foreach(data_set->resources,
+                       (GFunc) clear_failcounts_if_orphaned, data_set);
     }
 
     crm_trace("Creating actions");
@@ -791,8 +725,7 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
         log_resource_details(data_set);
     }
 
-    crm_trace("Applying location constraints");
-    stage2(data_set);
+    apply_node_criteria(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         return;
@@ -801,7 +734,8 @@ pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
     pcmk__create_internal_constraints(data_set);
     pcmk__handle_rsc_config_changes(data_set);
 
-    crm_trace("Allocate resources");
+    allocate_resources(data_set);
+
     stage5(data_set);
 
     crm_trace("Processing fencing and shutdown cases");

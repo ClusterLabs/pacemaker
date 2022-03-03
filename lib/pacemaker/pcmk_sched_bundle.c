@@ -1119,3 +1119,10 @@ pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                                   all_rscs, utilization);
     }
 }
+
+// Bundle implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
+{
+    return; // Bundles currently don't support shutdown locks
+}

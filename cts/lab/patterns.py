@@ -245,7 +245,7 @@ class crm_corosync(BasePatterns):
             # However, if the CIB manager loses its connection first,
             # it's possible for another daemon to lose that connection and
             # exit before losing the cluster connection.
-            r"pacemakerd.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemakerd.*:\s*warning:.*Lost connection to cluster layer",
             r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
