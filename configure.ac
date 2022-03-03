@@ -2077,8 +2077,8 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/Makefile                                    \
                 cts/lab/CTSvars.py                                  \
+                cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \
@@ -2097,9 +2097,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
+                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
-                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
@@ -2119,17 +2119,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 include/crm/fencing/Makefile                        \
                 include/crm/pengine/Makefile                        \
                 include/pcmki/Makefile                              \
-                replace/Makefile                                    \
                 lib/Makefile                                        \
-                lib/libpacemaker.pc                                 \
-                lib/pacemaker.pc                                    \
-                lib/pacemaker-cib.pc                                \
-                lib/pacemaker-lrmd.pc                               \
-                lib/pacemaker-service.pc                            \
-                lib/pacemaker-pe_rules.pc                           \
-                lib/pacemaker-pe_status.pc                          \
-                lib/pacemaker-fencing.pc                            \
-                lib/pacemaker-cluster.pc                            \
+                lib/cib/Makefile                                    \
+                lib/cluster/Makefile                                \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/acl/Makefile                       \
@@ -2146,27 +2138,35 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/common/tests/xpath/Makefile                     \
-                lib/cluster/Makefile                                \
-                lib/cib/Makefile                                    \
+                lib/fencing/Makefile                                \
                 lib/gnu/Makefile                                    \
+                lib/libpacemaker.pc                                 \
+                lib/lrmd/Makefile                                   \
                 lib/pacemaker/Makefile                              \
+                lib/pacemaker.pc                                    \
+                lib/pacemaker-cib.pc                                \
+                lib/pacemaker-cluster.pc                            \
+                lib/pacemaker-fencing.pc                            \
+                lib/pacemaker-lrmd.pc                               \
+                lib/pacemaker-service.pc                            \
+                lib/pacemaker-pe_rules.pc                           \
+                lib/pacemaker-pe_status.pc                          \
                 lib/pengine/Makefile                                \
                 lib/pengine/tests/Makefile                          \
                 lib/pengine/tests/rules/Makefile                    \
-                lib/fencing/Makefile                                \
-                lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                po/Makefile.in                                      \
+                replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
-                tools/report.collector                              \
-                tools/report.common                                 \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
+                tools/report.collector                              \
+                tools/report.common                                 \
                 xml/Makefile                                        \
                 xml/pacemaker-schemas.pc                            \
-                po/Makefile.in                                      \
 )
 
 dnl Now process the entire list of files added by previous
