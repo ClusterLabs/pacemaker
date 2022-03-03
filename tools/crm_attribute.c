@@ -58,8 +58,6 @@ struct {
     .promotion_score = FALSE
 };
 
-gboolean BE_QUIET = FALSE;
-
 #define INDENT "                              "
 
 static gboolean
@@ -337,10 +335,6 @@ main(int argc, char **argv)
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
-    if (args->quiet) {
-        BE_QUIET = TRUE;
-    }
-
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
@@ -477,7 +471,7 @@ main(int argc, char **argv)
             // Multiple matches (already displayed) are not error for queries
             rc = pcmk_ok;
 
-        } else if (BE_QUIET == FALSE) {
+        } else if (!args->quiet) {
             fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
                     options.type ? "scope=" : "", options.type ? options.type : "",
                     options.attr_id ? "id=" : "", options.attr_id ? options.attr_id : "",
