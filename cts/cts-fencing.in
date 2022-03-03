@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's fencer
 """
 
-__copyright__ = "Copyright 2012-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -1563,6 +1563,9 @@ def main(argv):
     """ Run fencing regression tests as specified by arguments """
 
     update_path()
+
+    # Ensure all command output is in portable locale for comparison
+    os.environ['LC_ALL'] = "C"
 
     opts = TestOptions()
     opts.build_options(argv)
