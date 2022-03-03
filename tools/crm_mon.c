@@ -1287,6 +1287,10 @@ reconcile_output_format(pcmk__common_args_t *args) {
     } else if (options.one_shot) {
         pcmk__str_update(&args->output_ty, "text");
         output_format = mon_output_plain;
+    } else if (!options.daemonize && args->output_dest != NULL) {
+        options.one_shot = TRUE;
+        pcmk__str_update(&args->output_ty, "text");
+        output_format = mon_output_plain;
     } else {
         /* Neither old nor new arguments were given, so set the default. */
         pcmk__str_update(&args->output_ty, "console");
@@ -1997,7 +2001,7 @@ mon_refresh_display(gpointer user_data)
         fence_history = pcmk__fence_history_reduced;
      }
 
-    if (options.daemonize) {
+    if (out->dest != stdout) {
         out->reset(out);
     }
 
@@ -2014,7 +2018,7 @@ mon_refresh_display(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
 
-    if (options.daemonize) {
+    if (out->dest != stdout) {
         out->finish(out, CRM_EX_OK, true, NULL);
     }
 
