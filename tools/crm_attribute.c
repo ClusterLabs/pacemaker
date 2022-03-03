@@ -300,7 +300,7 @@ main(int argc, char **argv)
     bool try_attrd = true;
     int attrd_opts = pcmk__node_attr_none;
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
@@ -337,11 +337,12 @@ main(int argc, char **argv)
 
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_ok) {
-        exit_code = crm_errno2exit(rc);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not connect to the CIB: %s", pcmk_strerror(rc));
+                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -385,8 +386,10 @@ main(int argc, char **argv)
         }
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
-        if (pcmk_ok != rc) {
-            exit_code = crm_errno2exit(rc);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not map name=%s to a UUID", options.dest_uname);
             goto done;
@@ -435,13 +438,14 @@ main(int argc, char **argv)
     } else if (options.command == 'D') {
         rc = delete_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
                                   options.attr_id, options.attr_name, options.attr_value, TRUE, NULL);
+        rc = pcmk_legacy2rc(rc);
 
-        if (rc == -ENXIO) {
+        if (rc == ENXIO) {
             /* Nothing to delete...
              * which means it's not there...
              * which is what the admin wanted
              */
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
     } else if (options.command == 'v') {
@@ -451,6 +455,7 @@ main(int argc, char **argv)
 
         rc = update_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
                                   options.attr_id, options.attr_name, options.attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
+        rc = pcmk_legacy2rc(rc);
 
     } else {                    /* query */
 
@@ -458,18 +463,19 @@ main(int argc, char **argv)
 
         rc = read_attr_delegate(the_cib, options.type, options.dest_node, options.set_type, options.set_name,
                                 options.attr_id, options.attr_name, &read_value, TRUE, NULL);
+        rc = pcmk_legacy2rc(rc);
 
-        if (rc == -ENXIO && options.attr_default) {
+        if (rc == ENXIO && options.attr_default) {
             read_value = strdup(options.attr_default);
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
         crm_info("Read %s=%s %s%s",
                  options.attr_name, crm_str(read_value), options.set_name ? "in " : "", options.set_name ? options.set_name : "");
 
-        if (rc == -ENOTUNIQ) {
+        if (rc == ENOTUNIQ) {
             // Multiple matches (already displayed) are not error for queries
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
 
         } else if (!args->quiet) {
             fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
@@ -484,13 +490,13 @@ main(int argc, char **argv)
         free(read_value);
     }
 
-    if (rc == -ENOTUNIQ) {
-        exit_code = crm_errno2exit(rc);
+    if (rc == ENOTUNIQ) {
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Please choose from one of the matches above and supply the 'id' with --attr-id");
 
-    } else if (rc != pcmk_ok) {
-        exit_code = crm_errno2exit(rc);
+    } else if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error performing operation: %s", pcmk_strerror(rc));
     }
