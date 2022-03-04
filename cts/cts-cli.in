@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -1768,6 +1768,9 @@ EOF
 
     unset CIB_shadow_dir
 }
+
+# Ensure all command output is in portable locale for comparison
+export LC_ALL="C"
 
 # Process command-line arguments
 while [ $# -gt 0 ]; do

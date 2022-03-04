@@ -1,4 +1,13 @@
-# Makefile variables for PO directory in any package using GNU gettext.
+#
+# Copyright 2022 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+# Makefile variables for gettext PO directory
 
 # Usually the message domain is the same as the package name.
 DOMAIN = $(PACKAGE)

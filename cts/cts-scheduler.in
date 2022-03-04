@@ -1239,6 +1239,9 @@ class CtsScheduler(object):
 
     def __init__(self, argv=sys.argv):
 
+        # Ensure all command output is in portable locale for comparison
+        os.environ['LC_ALL'] = "C"
+
         self._parse_args(argv)
 
         # Where this executable lives

@@ -263,6 +263,8 @@ main(int argc, char **argv)
 
     subdaemon_check_progress = time(NULL);
 
+    setenv("LC_ALL", "C", 1); // Ensure logs are in a common language
+
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);
@@ -295,8 +297,6 @@ main(int argc, char **argv)
         out->version(out, false);
         goto done;
     }
-
-    setenv("LC_ALL", "C", 1);
 
     pcmk__set_env_option("mcp", "true");
 

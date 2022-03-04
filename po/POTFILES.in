@@ -1,3 +1,4 @@
+# Alphabetically sorted list of source files that contain translatable strings
 daemons/based/pacemaker-based.c
 daemons/controld/controld_control.c
 lib/cib/cib_utils.c

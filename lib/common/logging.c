@@ -771,56 +771,58 @@ crm_log_preinit(const char *entity, int argc, char **argv)
     int32_t qb_facility = 0;
     pid_t pid = getpid();
     const char *nodename = "localhost";
-    static bool have_logging = FALSE;
+    static bool have_logging = false;
 
-    if(have_logging == FALSE) {
-        have_logging = TRUE;
+    if (have_logging) {
+        return;
+    }
 
-        crm_xml_init(); /* Sets buffer allocation strategy */
+    have_logging = true;
 
-        if (crm_trace_nonlog == 0) {
-            crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
-        }
+    crm_xml_init(); /* Sets buffer allocation strategy */
 
-        umask(S_IWGRP | S_IWOTH | S_IROTH);
+    if (crm_trace_nonlog == 0) {
+        crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
+    }
 
-        /* Redirect messages from glib functions to our handler */
-        glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
 
-        /* and for good measure... - this enum is a bit field (!) */
-        g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
+    /* Redirect messages from glib functions to our handler */
+    glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
 
-        /* Set crm_system_name, which is used as the logging name. It may also
-         * be used for other purposes such as an IPC client name.
-         */
-        set_identity(entity, argc, argv);
+    /* and for good measure... - this enum is a bit field (!) */
+    g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
 
-        qb_facility = qb_log_facility2int("local0");
-        qb_log_init(crm_system_name, qb_facility, LOG_ERR);
-        crm_log_level = LOG_CRIT;
+    /* Set crm_system_name, which is used as the logging name. It may also
+     * be used for other purposes such as an IPC client name.
+     */
+    set_identity(entity, argc, argv);
 
-        /* Nuke any syslog activity until it's asked for */
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+    qb_facility = qb_log_facility2int("local0");
+    qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+    crm_log_level = LOG_CRIT;
+
+    /* Nuke any syslog activity until it's asked for */
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
-        // Shorter than default, generous for what we *should* send to syslog
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
+    // Shorter than default, generous for what we *should* send to syslog
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
 #endif
-        if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
-            nodename = res.nodename;
-        }
+    if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+        nodename = res.nodename;
+    }
 
-        /* Set format strings and disable threading
-         * Pacemaker and threads do not mix well (due to the amount of forking)
-         */
-        qb_log_tags_stringify_fn_set(crm_quark_to_string);
-        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+    /* Set format strings and disable threading
+     * Pacemaker and threads do not mix well (due to the amount of forking)
+     */
+    qb_log_tags_stringify_fn_set(crm_quark_to_string);
+    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
-            // End truncated lines with '...'
-            qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
+        // End truncated lines with '...'
+        qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-            set_format_string(lpc, crm_system_name, pid, nodename);
-        }
+        set_format_string(lpc, crm_system_name, pid, nodename);
     }
 
 #ifdef ENABLE_NLS
@@ -830,7 +832,8 @@ crm_log_preinit(const char *entity, int argc, char **argv)
      * documentation, to reduce the burden of maintaining them.
      */
 
-    setlocale (LC_ALL, "");
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
 
     // Tell gettext where to find Pacemaker message catalogs
     CRM_ASSERT(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
