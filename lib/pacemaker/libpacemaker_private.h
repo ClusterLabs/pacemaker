@@ -193,7 +193,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_orderings(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__order_after_all(pe_action_t *after, GList *list);
+void pcmk__order_after_each(pe_action_t *after, GList *list);
 
 
 /*!

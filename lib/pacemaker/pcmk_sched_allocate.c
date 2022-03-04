@@ -615,7 +615,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
          * a graph loop.
          */
         if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
-            pcmk__order_after_all(dc_down, shutdown_ops);
+            pcmk__order_after_each(dc_down, shutdown_ops);
         }
 
         // Order any non-DC fencing before any DC fencing or shutdown
@@ -624,7 +624,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
-            pcmk__order_after_all(dc_down, fencing_ops);
+            pcmk__order_after_each(dc_down, fencing_ops);
         } else if (fencing_ops != NULL) {
             /* Without concurrent fencing, the non-DC fencing actions are
              * already ordered relative to each other, so we just need to order

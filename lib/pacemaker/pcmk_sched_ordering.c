@@ -1549,7 +1549,7 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
  * \param[in] list    List of "before" actions
  */
 void
-pcmk__order_after_all(pe_action_t *after, GList *list)
+pcmk__order_after_each(pe_action_t *after, GList *list)
 {
     const char *after_desc = (after->task == NULL)? after->uuid : after->task;
 
