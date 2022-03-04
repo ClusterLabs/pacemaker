@@ -278,7 +278,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         if (!pe_rsc_is_clone(uber_parent(rsc))) {
             match = false;
 
-        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_casei)) {
+        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_none)) {
             match = true;
         }
 
