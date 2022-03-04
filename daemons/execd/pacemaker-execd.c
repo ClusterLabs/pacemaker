@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,6 @@ static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
 {
     stonith_api->state = stonith_disconnected;
-    crm_err("Connection to fencer lost");
     stonith_connection_failed();
 }
 
