@@ -58,9 +58,6 @@ struct rsc_ticket_s {
     int role_lh;
 };
 
-extern gboolean stage5(pe_working_set_t * data_set);
-extern gboolean stage6(pe_working_set_t * data_set);
-
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
 extern void add_maintenance_update(pe_working_set_t *data_set);

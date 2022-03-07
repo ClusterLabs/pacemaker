@@ -1,7 +1,7 @@
 """ ClusterManager class for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = """Copyright 2000-2021 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2022 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -946,7 +946,7 @@ class ClusterManager(UserDict):
 #                    "A new node joined the cluster",
 
 #                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling Node .* for STONITH",
+#                    "Scheduling node .* for fencing",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
 #                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
@@ -980,7 +980,7 @@ class ClusterManager(UserDict):
         controld = Process(self, "pacemaker-controld", triggersreboot=self.fastfail,
                     pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling Node .* for STONITH",
+#                    "Scheduling node .* for fencing",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
                     "State transition .* S_IDLE",

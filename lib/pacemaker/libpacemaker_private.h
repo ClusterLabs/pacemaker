@@ -169,6 +169,9 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+
+// Ordering constraints (pcmk_sched_ordering.c)
+
 G_GNUC_INTERNAL
 void pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_task,
                         pe_action_t *lh_action, pe_resource_t *rh_rsc,
@@ -188,6 +191,10 @@ void pcmk__order_stops_before_shutdown(pe_node_t *node,
 
 G_GNUC_INTERNAL
 void pcmk__apply_orderings(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+void pcmk__order_after_each(pe_action_t *after, GList *list);
+
 
 /*!
  * \internal

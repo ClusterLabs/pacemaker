@@ -2211,9 +2211,10 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
              * At least add `priority-fencing-delay` field as an indicator. */
         && (priority_delay
 
-            /* Re-calculate priority delay for the suitable case when
-             * pe_fence_op() is called again by stage6() after node priority has
-             * been actually calculated with native_add_running() */
+            /* The priority delay needs to be recalculated if this function has
+             * been called by schedule_fencing_and_shutdowns() after node
+             * priority has already been calculated by native_add_running().
+             */
             || g_hash_table_lookup(stonith_op->meta,
                                    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
 

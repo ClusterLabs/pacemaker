@@ -250,7 +250,7 @@ class crm_corosync(BasePatterns):
             r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
-            r"schedulerd.*Scheduling Node .* for STONITH",
+            r"schedulerd.*Scheduling node .* for fencing",
             r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* on behalf of .*:\s*OK",
         ]
 
@@ -296,7 +296,7 @@ class crm_corosync(BasePatterns):
 
         self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling Node .* for STONITH",
+#                    "Scheduling node .* for fencing",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
                     ]
