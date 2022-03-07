@@ -161,6 +161,7 @@
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
+%global pkgname_gettext gettext-tools
 %global pkgname_gnutls_devel libgnutls-devel
 %global pkgname_shadow_utils shadow
 %global pkgname_procps procps
@@ -172,6 +173,7 @@
 %global pkgname_libtool_devel_arch libtool-ltdl-devel%{?_isa}
 %global pkgname_bzip2_devel bzip2-devel
 %global pkgname_docbook_xsl docbook-style-xsl
+%global pkgname_gettext gettext-devel
 %global pkgname_gnutls_devel gnutls-devel
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
@@ -308,7 +310,7 @@ BuildRequires: %{pkgname_gnutls_devel}
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
-BuildRequires: gettext >= 0.18
+BuildRequires: %{pkgname_gettext} >= 0.18
 
 # Required for "make check"
 BuildRequires: libcmocka-devel
