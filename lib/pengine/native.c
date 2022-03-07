@@ -248,26 +248,26 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
             pe_node_t *loc = (pe_node_t *) iter->data;
 
             if (loc->details == node->details) {
-                return TRUE;
+                return true;
             }
         }
 
     } else if (pcmk_is_set(flags, pe_find_inactive)
                && (rsc->running_on == NULL)) {
-        return TRUE;
+        return true;
 
     } else if (!pcmk_is_set(flags, pe_find_current) && rsc->allocated_to
                && (rsc->allocated_to->details == node->details)) {
-        return TRUE;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 pe_resource_t *
 native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
                 int flags)
 {
-    bool match = FALSE;
+    bool match = false;
     pe_resource_t *result = NULL;
 
     CRM_CHECK(id && rsc && rsc->id, return NULL);
@@ -276,18 +276,18 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         const char *rid = ID(rsc->xml);
 
         if (!pe_rsc_is_clone(uber_parent(rsc))) {
-            match = FALSE;
+            match = false;
 
-        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_casei)) {
-            match = TRUE;
+        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_none)) {
+            match = true;
         }
 
     } else if (!strcmp(id, rsc->id)) {
-        match = TRUE;
+        match = true;
 
     } else if (pcmk_is_set(flags, pe_find_renamed)
                && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-        match = TRUE;
+        match = true;
 
     } else if (pcmk_is_set(flags, pe_find_any)
                || (pcmk_is_set(flags, pe_find_anon)
@@ -296,10 +296,8 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     }
 
     if (match && on_node) {
-        bool match_node = rsc_is_on_node(rsc, on_node, flags);
-
-        if (match_node == FALSE) {
-            match = FALSE;
+        if (!rsc_is_on_node(rsc, on_node, flags)) {
+            match = false;
         }
     }
 

@@ -2153,7 +2153,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-pe_status.pc                          \
                 lib/pengine/Makefile                                \
                 lib/pengine/tests/Makefile                          \
+                lib/pengine/tests/native/Makefile                   \
                 lib/pengine/tests/rules/Makefile                    \
+                lib/pengine/tests/unpack/Makefile                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
                 po/Makefile.in                                      \
