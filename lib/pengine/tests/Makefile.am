@@ -1,1 +1,1 @@
-SUBDIRS = rules native
+SUBDIRS = rules native unpack
