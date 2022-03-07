@@ -127,7 +127,7 @@ struct {
     .promotion_score = FALSE
 };
 
-#define INDENT "                              "
+#define INDENT "                               "
 
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
