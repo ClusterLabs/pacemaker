@@ -256,9 +256,9 @@ Call failed: File exists
 * Passed: crm_attribute  - Set duplicate cluster option
 =#=#=#= Begin test: Setting multiply defined cluster option should fail =#=#=#=
 Multiple attributes match name=cluster-delay
+crm_attribute: Please choose from one of the matches above and supply the 'id' with --attr-id
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
-Please choose from one of the matches above and supply the 'id' with --attr-id
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
 <cib epoch="6" num_updates="0" admin_epoch="0">
   <configuration>
@@ -302,7 +302,6 @@ Please choose from one of the matches above and supply the 'id' with --attr-id
 * Passed: crm_attribute  - Set cluster option with -s
 =#=#=#= Begin test: Delete cluster option with -i =#=#=#=
 Deleted crm_config option: id=(null) name=cluster-delay
-
 =#=#=#= Current cib after: Delete cluster option with -i =#=#=#=
 <cib epoch="8" num_updates="0" admin_epoch="0">
   <configuration>
@@ -504,7 +503,6 @@ Current cluster status:
 * Passed: crm_simulate   - Show node attributes with crm_simulate
 =#=#=#= Begin test: Delete a transient (fail-count) node attribute =#=#=#=
 Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
-
 =#=#=#= Current cib after: Delete a transient (fail-count) node attribute =#=#=#=
 <cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
@@ -703,7 +701,6 @@ scope=nodes  name=standby value=true
 * Passed: crm_standby    - Query standby value
 =#=#=#= Begin test: Delete standby value =#=#=#=
 Deleted nodes attribute: id=nodes-node1-standby name=standby
-
 =#=#=#= Current cib after: Delete standby value =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
