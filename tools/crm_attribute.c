@@ -40,10 +40,71 @@
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
+static int
+attribute_default(pcmk__output_t *out, va_list args)
+{
+    char *type = va_arg(args, char *);
+    char *attr_id = va_arg(args, char *);
+    char *attr_name = va_arg(args, char *);
+    char *read_value = va_arg(args, char *);
+
+    if (out->quiet) {
+        pcmk__formatted_printf(out, "%s\n", read_value);
+    } else {
+        out->info(out, "%s%s %s%s %s%s value=%s",
+                  type ? "scope=" : "", type ? type : "",
+                  attr_id ? "id=" : "", attr_id ? attr_id : "",
+                  attr_name ? "name=" : "", attr_name ? attr_name : "",
+                  read_value ? read_value : "(null)");
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
+static int
+attribute_xml(pcmk__output_t *out, va_list args)
+{
+    char *type = va_arg(args, char *);
+    char *attr_id = va_arg(args, char *);
+    char *attr_name = va_arg(args, char *);
+    char *read_value = va_arg(args, char *);
+
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, "attribute", NULL);
+
+    if (type) {
+        crm_xml_add(node, "scope", type);
+    }
+
+    if (attr_id) {
+        crm_xml_add(node, "id", attr_id);
+    }
+
+    if (attr_name) {
+        crm_xml_add(node, "name", attr_name);
+    }
+
+    if (read_value) {
+        crm_xml_add(node, "value", read_value);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "attribute", "default", attribute_default },
+    { "attribute", "xml", attribute_xml },
+
     { NULL, NULL, NULL }
 };
 
@@ -334,6 +395,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_messages(out, fmt_functions);
+
     if (args->version) {
         out->version(out, false);
         goto done;
@@ -455,9 +518,9 @@ main(int argc, char **argv)
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
     } else if (options.command == 'D') {
-        rc = delete_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
-                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL);
-        rc = pcmk_legacy2rc(rc);
+        rc = cib__delete_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
+                                   options.set_type, options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value, NULL);
 
         if (rc == ENXIO) {
             /* Nothing to delete...
@@ -472,17 +535,18 @@ main(int argc, char **argv)
         CRM_LOG_ASSERT(options.attr_name != NULL);
         CRM_LOG_ASSERT(options.attr_value != NULL);
 
-        rc = update_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
-                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
-        rc = pcmk_legacy2rc(rc);
+        rc = cib__update_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
+                                   options.set_type, options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value, NULL,
+                                   is_remote_node ? "remote" : NULL);
 
     } else {                    /* query */
 
         char *read_value = NULL;
 
-        rc = read_attr_delegate(the_cib, options.type, options.dest_node, options.set_type, options.set_name,
-                                options.attr_id, options.attr_name, &read_value, TRUE, NULL);
-        rc = pcmk_legacy2rc(rc);
+        rc = cib__read_node_attr(out, the_cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, options.attr_id,
+                                 options.attr_name, &read_value, NULL);
 
         if (rc == ENXIO && options.attr_default) {
             read_value = strdup(options.attr_default);
@@ -495,17 +559,11 @@ main(int argc, char **argv)
         if (rc == ENOTUNIQ) {
             // Multiple matches (already displayed) are not error for queries
             rc = pcmk_rc_ok;
-
-        } else if (!args->quiet) {
-            fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
-                    options.type ? "scope=" : "", options.type ? options.type : "",
-                    options.attr_id ? "id=" : "", options.attr_id ? options.attr_id : "",
-                    options.attr_name ? "name=" : "", options.attr_name ? options.attr_name : "",
-                    read_value ? read_value : "(null)");
-
-        } else if (read_value != NULL) {
-            fprintf(stdout, "%s\n", read_value);
+        } else {
+            out->message(out, "attribute", options.type, options.attr_id,
+                         options.attr_name, read_value);
         }
+
         free(read_value);
     }
 
