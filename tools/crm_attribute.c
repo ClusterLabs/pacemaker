@@ -570,7 +570,7 @@ main(int argc, char **argv)
     if (rc == ENOTUNIQ) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Please choose from one of the matches above and supply the 'id' with --attr-id");
+                    "Please choose from one of the matches below and supply the 'id' with --attr-id");
 
     } else if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);

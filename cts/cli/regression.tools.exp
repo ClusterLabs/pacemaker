@@ -255,8 +255,8 @@ Call failed: File exists
 =#=#=#= End test: Set duplicate cluster option - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set duplicate cluster option
 =#=#=#= Begin test: Setting multiply defined cluster option should fail =#=#=#=
+crm_attribute: Please choose from one of the matches below and supply the 'id' with --attr-id
 Multiple attributes match name=cluster-delay
-crm_attribute: Please choose from one of the matches above and supply the 'id' with --attr-id
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
