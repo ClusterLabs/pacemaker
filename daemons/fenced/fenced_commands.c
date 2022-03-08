@@ -1766,20 +1766,11 @@ fenced_unregister_level(xmlNode *msg, char **desc,
 
     CRM_CHECK(result != NULL, return);
 
-    if (msg == NULL) {
-        fenced_set_protocol_error(result);
-        return;
-    }
-
-    // Unlike additions, removal requests should always have one level tag
-    level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
+    level = unpack_level_request(msg, NULL, &target, &id, desc);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
     }
-
-    target = stonith_level_key(level, fenced_target_by_unknown);
-    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
     // Ensure level ID is in allowed range
     if ((id < 0) || (id >= ST_LEVEL_MAX)) {
@@ -1793,10 +1784,6 @@ fenced_unregister_level(xmlNode *msg, char **desc,
                                                       XML_ATTR_STONITH_INDEX)),
                             crm_str(ID(level)));
         return;
-    }
-
-    if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", target, id);
     }
 
     tp = g_hash_table_lookup(topology, target);
@@ -3354,18 +3341,19 @@ handle_level_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_delete_request(pcmk__request_t *request)
 {
-    char *device_id = NULL;
+    char *desc = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_unregister_level(request->xml, &device_id, &request->result);
+        fenced_unregister_level(request->xml, &desc, &request->result);
     } else {
+        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, device_id);
-    free(device_id);
+    fenced_send_level_notification(op, &request->result, desc);
+    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
