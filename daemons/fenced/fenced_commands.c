@@ -1669,6 +1669,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         if (tp == NULL) {
             pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                              strerror(ENOMEM));
+            free(target);
             return;
         }
         tp->kind = mode;
@@ -3326,6 +3327,7 @@ handle_level_delete_request(pcmk__request_t *request)
                          "Unprivileged users must delete level via CIB");
     }
     fenced_send_level_notification(op, &request->result, device_id);
+    free(device_id);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
