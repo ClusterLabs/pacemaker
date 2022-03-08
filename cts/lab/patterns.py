@@ -75,7 +75,6 @@ class BasePatterns(object):
             "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
             "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
-            "Pat:FenceOpOK"     : "Operation .* targeting %s using .* returned 0",
         }
 
     def get_component(self, key):
