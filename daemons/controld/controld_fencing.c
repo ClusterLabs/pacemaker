@@ -520,10 +520,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
      * DC later. The current DC has already updated its fail count in
      * tengine_stonith_callback().
      */
-    if (!AM_I_DC
-        && pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
-                        pcmk__str_none)) {
-
+    if (!AM_I_DC) {
         if (succeeded) {
             st_fail_count_reset(event->target);
         } else {
