@@ -1580,6 +1580,65 @@ parse_device_list(const char *devices)
 
 /*!
  * \internal
+ * \brief Unpack essential information from topology request XML
+ *
+ * \param[in]  xml     Request XML to search
+ * \param[out] mode    If not NULL, where to store level kind
+ * \param[out] target  If not NULL, where to store representation of target
+ * \param[out] id      If not NULL, where to store level number
+ * \param[out] desc    If not NULL, where to store log-friendly level description
+ *
+ * \return Topology level XML from within \p xml, or NULL if not found
+ * \note The caller is responsible for freeing \p *target and \p *desc if set.
+ */
+static xmlNode *
+unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
+                     int *id, char **desc)
+{
+    enum fenced_target_by local_mode = fenced_target_by_unknown;
+    char *local_target = NULL;
+    int local_id = 0;
+
+    /* The level element can be the top element or lower. If top level, don't
+     * search by xpath, because it might give multiple hits if the XML is the
+     * CIB.
+     */
+    if ((xml != NULL)
+        && !pcmk__str_eq(TYPE(xml), XML_TAG_FENCING_LEVEL, pcmk__str_none)) {
+        xml = get_xpath_object("//" XML_TAG_FENCING_LEVEL, xml, LOG_WARNING);
+    }
+
+    if (xml == NULL) {
+        if (desc != NULL) {
+            *desc = crm_strdup_printf("missing");
+        }
+    } else {
+        local_mode = unpack_level_kind(xml);
+        local_target = stonith_level_key(xml, local_mode);
+        crm_element_value_int(xml, XML_ATTR_STONITH_INDEX, &local_id);
+        if (desc != NULL) {
+            *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
+        }
+    }
+
+    if (mode != NULL) {
+        *mode = local_mode;
+    }
+    if (id != NULL) {
+        *id = local_id;
+    }
+
+    if (target != NULL) {
+        *target = local_target;
+    } else {
+        free(local_target);
+    }
+
+    return xml;
+}
+
+/*!
+ * \internal
  * \brief Register a fencing topology level for a target
  *
  * Given an XML request specifying the target name, level index, and device IDs
@@ -1605,31 +1664,10 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     CRM_CHECK(result != NULL, return);
 
-    if (msg == NULL) {
-        fenced_set_protocol_error(result);
-        return;
-    }
-
-    /* Allow the XML here to point to the level tag directly, or wrapped in
-     * another tag. If directly, don't search by xpath, because it might give
-     * multiple hits (e.g. if the XML is the CIB).
-     */
-    if (pcmk__str_eq(TYPE(msg), XML_TAG_FENCING_LEVEL, pcmk__str_casei)) {
-        level = msg;
-    } else {
-        level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
-    }
+    level = unpack_level_request(msg, &mode, &target, &id, desc);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
-    }
-
-    mode = unpack_level_kind(level);
-    target = stonith_level_key(level, mode);
-    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
-
-    if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", target, id);
     }
 
     // Ensure a valid target was specified
@@ -3296,18 +3334,19 @@ handle_device_delete_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_add_request(pcmk__request_t *request)
 {
-    char *device_id = NULL;
+    char *desc = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_register_level(request->xml, &device_id, &request->result);
+        fenced_register_level(request->xml, &desc, &request->result);
     } else {
+        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must add level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, device_id);
-    free(device_id);
+    fenced_send_level_notification(op, &request->result, desc);
+    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
