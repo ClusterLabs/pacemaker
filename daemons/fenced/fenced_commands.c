@@ -1000,10 +1000,9 @@ target_list_type(stonith_device_t * dev)
 }
 
 static stonith_device_t *
-build_device_from_xml(xmlNode * msg)
+build_device_from_xml(xmlNode *dev)
 {
     const char *value;
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
     char *agent = crm_element_value_copy(dev, "agent");
 
@@ -1308,10 +1307,10 @@ device_has_duplicate(stonith_device_t * device)
 }
 
 int
-stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
+stonith_device_register(xmlNode *dev, gboolean from_cib)
 {
     stonith_device_t *dup = NULL;
-    stonith_device_t *device = build_device_from_xml(msg);
+    stonith_device_t *device = build_device_from_xml(dev);
     guint ndevices = 0;
     int rv = pcmk_ok;
 
@@ -1400,9 +1399,6 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
         ndevices = g_hash_table_size(device_list);
         crm_notice("Added '%s' to device list (%d active device%s)",
                    device->id, ndevices, pcmk__plural_s(ndevices));
-    }
-    if (desc) {
-        *desc = device->id;
     }
 
     if (from_cib) {
@@ -3254,11 +3250,12 @@ handle_history_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_add_request(pcmk__request_t *request)
 {
-    const char *device_id = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
+    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+                                    LOG_ERR);
 
     if (is_privileged(request->ipc_client, op)) {
-        int rc = stonith_device_register(request->xml, &device_id, FALSE);
+        int rc = stonith_device_register(dev, FALSE);
 
         pcmk__set_result(&request->result,
                          ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
@@ -3269,7 +3266,8 @@ handle_device_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must register device via CIB");
     }
-    fenced_send_device_notification(op, &request->result, device_id);
+    fenced_send_device_notification(op, &request->result,
+                                    (dev == NULL)? NULL : ID(dev));
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 

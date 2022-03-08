@@ -624,7 +624,7 @@ watchdog_device_update(void)
                              so we can skip that here
                            */
                     NULL);
-            rc = stonith_device_register(xml, NULL, TRUE);
+            rc = stonith_device_register(xml, TRUE);
             free_xml(xml);
             if (rc != pcmk_ok) {
                 crm_crit("Cannot register watchdog pseudo fence agent");
@@ -780,7 +780,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
                                               agent, params, rsc_provides);
         stonith_key_value_freeall(params, 1, 1);
-        rc = stonith_device_register(data, NULL, TRUE);
+        rc = stonith_device_register(data, TRUE);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(data);
     }

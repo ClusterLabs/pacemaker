@@ -217,7 +217,7 @@ uint64_t get_stonith_flag(const char *name);
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);
 
-int stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib);
+int stonith_device_register(xmlNode *msg, gboolean from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
