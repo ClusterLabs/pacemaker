@@ -131,6 +131,7 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
+extern pcmk__output_t *logger_out;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
@@ -145,6 +146,13 @@ crmd_fast_exit(crm_exit_t exit_code)
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
+
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, exit_code, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
+    }
+
     crm_exit(exit_code);
 }
 

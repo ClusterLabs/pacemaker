@@ -21,6 +21,7 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_free_event()
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml_internal.h>
@@ -626,11 +627,11 @@ pcmk__inject_scheduler_input(pe_working_set_t *data_set, cib_t *cib,
     }
 
     if (injections->watchdog != NULL) {
-        rc = update_attr_delegate(cib, cib_sync_call|cib_scope_local,
-                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                  XML_ATTR_HAVE_WATCHDOG, injections->watchdog,
-                                  FALSE, NULL, NULL);
-        CRM_ASSERT(rc == pcmk_ok);
+        rc = cib__update_node_attr(out, cib, cib_sync_call|cib_scope_local,
+                                   XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                                   XML_ATTR_HAVE_WATCHDOG, injections->watchdog,
+                                   NULL, NULL);
+        CRM_ASSERT(rc == pcmk_rc_ok);
     }
 
     for (iter = injections->node_up; iter != NULL; iter = iter->next) {
