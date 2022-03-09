@@ -2041,7 +2041,6 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
 CONFIG_FILES_EXEC([cts/cts-cli],
-                  [cts/cts-coverage],
                   [cts/cts-exec],
                   [cts/cts-fencing],
                   [cts/cts-regression],

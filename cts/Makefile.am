@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2021 the Pacemaker project contributors
+# Copyright 2001-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,7 +13,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 # and command-specific test data should be in a command-specific subdirectory.
 testdir			= $(datadir)/$(PACKAGE)/tests
 test_SCRIPTS		= cts-cli		\
-			  cts-coverage		\
 			  cts-exec		\
 			  cts-fencing		\
 			  cts-regression	\

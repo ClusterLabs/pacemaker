@@ -7,7 +7,6 @@ addFilter("E: hardcoded-library-path in /usr/lib/os-release")
 # When building developer packages
 addFilter("W: invalid-url Source0:")
 addFilter("W: unstripped-binary-or-object")
-addFilter("W: hidden-file-or-dir /var/lib/pacemaker/gcov")
 addFilter("W: incoherent-version-in-changelog")
 addFilter("E: changelog-time-in-future")
 
