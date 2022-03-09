@@ -62,9 +62,6 @@
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
-## Add option to create binaries with coverage analysis
-%bcond_with coverage
-
 ## Add option to skip (or enable, on RHEL) generating documentation
 ## (the build tools aren't available everywhere)
 %if 0%{?rhel}
@@ -353,7 +350,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets coverage doc hardening nls pre_release profiling
+  --with(out) : cibsecrets doc hardening nls pre_release profiling
                 stonithd upstart_job
 
 %package cli
@@ -524,7 +521,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_hardening:    --disable-hardening}                             \
         %{?with_legacy_links:  --enable-legacy-links}                           \
         %{?with_profiling:     --with-profiling}                                \
-        %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?with_nls:           --enable-nls}                                    \
         %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
@@ -596,16 +592,6 @@ rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
 %if !%{defined _python_bytecompile_extra}
 %{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
 %endif
-%endif
-
-%if %{with coverage}
-GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
-mkdir -p $GCOV_BASE
-find . -name '*.gcno' -type f | while read F ; do
-        D=`dirname $F`
-        mkdir -p ${GCOV_BASE}/$D
-        cp $F ${GCOV_BASE}/$D
-done
 %endif
 
 %post
@@ -902,9 +888,6 @@ exit 0
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
 %{_libdir}/*.so
-%if %{with coverage}
-%{_var}/lib/pacemaker/gcov
-%endif
 %{_libdir}/pkgconfig/*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
