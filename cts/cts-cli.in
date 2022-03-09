@@ -1730,12 +1730,20 @@ EOF
     cmd="crm_rule -c -r blahblah"
     test_assert $CRM_EX_NOSUCH
 
+    desc="Try to check a rule that doesn't exist, with XML output"
+    cmd="crm_rule -c -r blahblah --output-as=xml"
+    test_assert $CRM_EX_NOSUCH
+
     desc="Try to check a rule that has too many date_expressions"
     cmd="crm_rule -c -r cli-rule-too-many-date-expressions"
     test_assert $CRM_EX_UNIMPLEMENT_FEATURE
 
     desc="Verify basic rule is expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
+    test_assert $CRM_EX_EXPIRED
+
+    desc="Verify basic rule is expired, with XML output"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml"
     test_assert $CRM_EX_EXPIRED
 
     desc="Verify basic rule worked in the past"

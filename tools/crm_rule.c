@@ -25,6 +25,13 @@
 
 GError *error = NULL;
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 enum crm_rule_mode {
     crm_rule_mode_none,
     crm_rule_mode_check
@@ -39,7 +46,8 @@ struct {
     .mode = crm_rule_mode_none
 };
 
-static int crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date);
+static int crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set,
+                          const char *rule_id, crm_time_t *effective_date);
 
 static gboolean mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
@@ -104,8 +112,59 @@ eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
     return pe__eval_date_expr(expr, &rule_data, next_change);
 }
 
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
 static int
-crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date)
+rule_check_default(pcmk__output_t *out, va_list args)
+{
+    const char *rule_id = va_arg(args, const char *);
+    int result = va_arg(args, int);
+
+    if (result == pcmk_rc_within_range) {
+        out->info(out, "Rule %s is still in effect", rule_id);
+    } else if (result == pcmk_rc_ok) {
+        out->info(out, "Rule %s satisfies conditions", rule_id);
+    } else if (result == pcmk_rc_after_range) {
+        out->info(out, "Rule %s is expired", rule_id);
+    } else if (result == pcmk_rc_before_range) {
+        out->info(out, "Rule %s has not yet taken effect", rule_id);
+    } else if (result == pcmk_rc_op_unsatisfied) {
+        out->info(out, "Rule %s does not satisfy conditions", rule_id);
+    } else {
+        out->info(out, "Could not determine whether rule %s is expired", rule_id);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
+static int
+rule_check_xml(pcmk__output_t *out, va_list args)
+{
+    const char *rule_id = va_arg(args, const char *);
+    int result = va_arg(args, int);
+
+    char *rc_str = pcmk__itoa(pcmk_rc2exitc(result));
+
+    pcmk__output_create_xml_node(out, "rule-check",
+                                 "rule-id", rule_id,
+                                 "rc", rc_str,
+                                 NULL);
+
+    free(rc_str);
+
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "rule-check", "default", rule_check_default },
+    { "rule-check", "xml", rule_check_xml },
+
+    { NULL, NULL, NULL }
+};
+
+static int
+crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
+               crm_time_t *effective_date)
 {
     xmlNode *cib_constraints = NULL;
     xmlNode *match = NULL;
@@ -190,19 +249,9 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
 
     rc = eval_date_expression(match, effective_date, NULL);
 
+    out->message(out, "rule-check", rule_id, rc);
     if (rc == pcmk_rc_within_range) {
-        printf("Rule %s is still in effect\n", rule_id);
         rc = pcmk_rc_ok;
-    } else if (rc == pcmk_rc_ok) {
-        printf("Rule %s satisfies conditions\n", rule_id);
-    } else if (rc == pcmk_rc_after_range) {
-        printf("Rule %s is expired\n", rule_id);
-    } else if (rc == pcmk_rc_before_range) {
-        printf("Rule %s has not yet taken effect\n", rule_id);
-    } else if (rc == pcmk_rc_op_unsatisfied) {
-        printf("Rule %s does not satisfy conditions\n", rule_id);
-    } else {
-        printf("Could not determine whether rule %s is expired\n", rule_id);
     }
 
 done:
@@ -212,14 +261,14 @@ done:
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     const char *description = "This tool is currently experimental.\n"
                               "The interface, behavior, and output may change "
                               "with any version of Pacemaker.";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "modes", "Modes (mutually exclusive):",
@@ -239,13 +288,17 @@ main(int argc, char **argv)
     crm_time_t *rule_date = NULL;
     xmlNode *input = NULL;
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
 
+    pcmk__output_t *out = NULL;
+
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "drX");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -253,11 +306,19 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_rule", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    pcmk__register_messages(out, fmt_functions);
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_rule is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+        out->version(out, false);
+        goto done;
     }
 
     /* Check command line arguments before opening a connection to
@@ -340,7 +401,7 @@ main(int argc, char **argv)
      */
     switch(options.mode) {
         case crm_rule_mode_check:
-            rc = crm_rule_check(data_set, options.rule, rule_date);
+            rc = crm_rule_check(out, data_set, options.rule, rule_date);
             exit_code = pcmk_rc2exitc(rc);
             break;
 
@@ -353,6 +414,12 @@ done:
     pcmk__free_arg_context(context);
     pe_free_working_set(data_set);
 
-    pcmk__output_and_clear_error(error, NULL);
-    crm_exit(exit_code);
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    return crm_exit(exit_code);
 }
