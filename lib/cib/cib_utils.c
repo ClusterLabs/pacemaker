@@ -786,5 +786,5 @@ get_object_root(const char *object_type, xmlNode *the_root)
     return pcmk_find_cib_element(the_root, object_type);
 }
 
-// LCOV_EXCL_END
+// LCOV_EXCL_STOP
 // End deprecated API
