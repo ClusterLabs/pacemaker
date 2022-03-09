@@ -1325,5 +1325,5 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
     return pcmk__numeric_strcasecmp(s1, s2);
 }
 
-// LCOV_EXCL_END
+// LCOV_EXCL_STOP
 // End deprecated API
