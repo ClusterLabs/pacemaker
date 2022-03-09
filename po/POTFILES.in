@@ -5,3 +5,4 @@ lib/cib/cib_utils.c
 lib/common/options.c
 lib/pengine/common.c
 tools/crm_resource.c
+daemons/fenced/pacemaker-fenced.c
