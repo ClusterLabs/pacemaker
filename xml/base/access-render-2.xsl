@@ -119,7 +119,9 @@
     </xsl:choose>
   </xsl:variable>
   <xsl:variable name="extra-annotation">
-    <xsl:if test="namespace-uri() != namespace-uri(..)">
+    <xsl:if test="namespace-uri() != namespace-uri(..)
+                  or
+                  $accessrendercfg:c-reset != ''">
       <xsl:call-template name="accessrender:interpolate-annotation"/>
     </xsl:if>
   </xsl:variable>
@@ -195,6 +197,8 @@
       <xsl:apply-templates mode="accessrender:proceed" select="node()"/>
     </xsl:otherwise>
   </xsl:choose>
+  <!-- do not taint any subsequent terminal session -->
+  <xsl:value-of select="$accessrendercfg:c-reset"/>
 </xsl:template>
 
 <xsl:template match="@*" mode="accessrender:proceed">

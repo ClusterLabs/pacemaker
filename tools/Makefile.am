@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -78,8 +78,9 @@ crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/common/libcrmcommon.la
+cibadmin_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la		\
+			  	$(top_builddir)/lib/cib/libcib.la		\
+				$(top_builddir)/lib/common/libcrmcommon.la
 
 crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
