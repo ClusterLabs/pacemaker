@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,8 @@
 #include <sys/stat.h>
 
 #define SUMMARY "evaluate rules from the Pacemaker configuration"
+
+GError *error = NULL;
 
 enum crm_rule_mode {
     crm_rule_mode_none,
@@ -129,12 +131,12 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     max = numXpathResults(xpathObj);
 
     if (max == 0) {
-        CMD_ERR("No rule found with ID=%s", rule_id);
         rc = ENXIO;
+        g_set_error(&error, PCMK__RC_ERROR, rc, "No rule found with ID=%s", rule_id);
         goto done;
     } else if (max > 1) {
-        CMD_ERR("More than one rule with ID=%s found", rule_id);
         rc = ENXIO;
+        g_set_error(&error, PCMK__RC_ERROR, rc, "More than one rule with ID=%s found", rule_id);
         goto done;
     }
 
@@ -147,8 +149,9 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     max = numXpathResults(xpathObj);
 
     if (max != 1) {
-        CMD_ERR("Can't check rule %s because it does not have exactly one date_expression", rule_id);
         rc = EOPNOTSUPP;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Can't check rule %s because it does not have exactly one date_expression", rule_id);
         goto done;
     }
 
@@ -170,8 +173,9 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
         max = numXpathResults(xpathObj);
 
         if (max == 0) {
-            CMD_ERR("Rule either must not use date_spec, or use date_spec with years= but not moon=");
             rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Rule either must not use date_spec, or use date_spec with years= but not moon=");
             goto done;
         }
     }
@@ -237,7 +241,6 @@ main(int argc, char **argv)
 
     int rc = pcmk_ok;
     crm_exit_t exit_code = CRM_EX_OK;
-    GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     GOptionContext *context = build_arg_context(args);
@@ -263,16 +266,16 @@ main(int argc, char **argv)
     switch(options.mode) {
         case crm_rule_mode_check:
             if (options.rule == NULL) {
-                CMD_ERR("--check requires use of --rule=");
                 exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "--check requires use of --rule=");
                 goto done;
             }
 
             break;
 
         default:
-            CMD_ERR("No mode operation given");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "No mode operation given");
             goto done;
             break;
     }
@@ -280,8 +283,9 @@ main(int argc, char **argv)
     /* Set up some defaults. */
     rule_date = crm_time_new(options.date);
     if (rule_date == NULL) {
-        CMD_ERR("No --date given and can't determine current date");
         exit_code = CRM_EX_DATAERR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "No --date given and can't determine current date");
         goto done;
     }
 
@@ -292,25 +296,26 @@ main(int argc, char **argv)
         input = stdin2xml();
 
         if (input == NULL) {
-            CMD_ERR("Couldn't parse input from STDIN\n");
             exit_code = CRM_EX_DATAERR;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Couldn't parse input from STDIN\n");
             goto done;
         }
     } else if (options.input_xml != NULL) {
         input = string2xml(options.input_xml);
 
         if (input == NULL) {
-            CMD_ERR("Couldn't parse input string: %s\n", options.input_xml);
-
             exit_code = CRM_EX_DATAERR;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Couldn't parse input string: %s\n", options.input_xml);
             goto done;
         }
     } else {
         rc = cib__signon_query(NULL, &input);
 
         if (rc != pcmk_rc_ok) {
-            CMD_ERR("CIB query failed: %s", pcmk_rc_str(rc));
             exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "CIB query failed: %s", pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -336,11 +341,6 @@ main(int argc, char **argv)
     switch(options.mode) {
         case crm_rule_mode_check:
             rc = crm_rule_check(data_set, options.rule, rule_date);
-
-            if (rc > 0) {
-                CMD_ERR("Error checking rule: %s", pcmk_rc_str(rc));
-            }
-
             exit_code = pcmk_rc2exitc(rc);
             break;
 
