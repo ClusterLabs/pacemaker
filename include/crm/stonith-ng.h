@@ -120,7 +120,7 @@ typedef struct stonith_event_s
 {
     char *id;
     char *type;     //!< \deprecated Will be removed in future release
-    char *message;
+    char *message;  //!< \deprecated Will be removed in future release
     char *operation;
 
     int result;
