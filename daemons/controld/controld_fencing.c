@@ -483,7 +483,6 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         if (succeeded) {
             crm_notice("%s was unfenced by %s at the request of %s@%s",
                        event->target, executioner, client, event->origin);
-                    /* TODO: Hook up event->device */
         } else {
             crm_err("Unfencing of %s by %s failed (%s%s%s) with exit status %d",
                     event->target, executioner,
