@@ -1627,7 +1627,8 @@ test_rules() {
 
     create_shadow_cib
 
-    cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
+    cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'
+    cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     cat <<EOF > "$TMPXML"
