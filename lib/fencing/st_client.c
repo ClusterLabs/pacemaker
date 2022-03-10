@@ -1389,7 +1389,6 @@ static stonith_event_t *
 xml_to_event(xmlNode *msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
-    const char *ntype = crm_element_value(msg, F_SUBTYPE);
     struct event_private *event_private = NULL;
 
     CRM_ASSERT(event != NULL);
@@ -1409,11 +1408,12 @@ xml_to_event(xmlNode *msg)
 
     // Some notification subtypes have additional information
 
-    if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
-        xmlNode *data = get_event_data_xml(msg, ntype);
+    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
+                     pcmk__str_casei)) {
+        xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
-            crm_err("No data for %s event", ntype);
+            crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
@@ -1425,14 +1425,14 @@ xml_to_event(xmlNode *msg)
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
         }
 
-    } else if (pcmk__str_any_of(ntype,
+    } else if (pcmk__str_any_of(event->operation,
                                 STONITH_OP_DEVICE_ADD, STONITH_OP_DEVICE_DEL,
                                 STONITH_OP_LEVEL_ADD, STONITH_OP_LEVEL_DEL,
                                 NULL)) {
-        xmlNode *data = get_event_data_xml(msg, ntype);
+        xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
-            crm_err("No data for %s event", ntype);
+            crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
