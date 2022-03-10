@@ -1407,7 +1407,8 @@ xml_to_event(xmlNode *msg)
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
 
-    // Fence notifications have additional information
+    // Some notification subtypes have additional information
+
     if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         xmlNode *data = get_event_data_xml(msg, ntype);
 
@@ -1421,6 +1422,19 @@ xml_to_event(xmlNode *msg)
             event->executioner = crm_element_value_copy(data, F_STONITH_DELEGATE);
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
+            event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
+        }
+
+    } else if (pcmk__str_any_of(ntype,
+                                STONITH_OP_DEVICE_ADD, STONITH_OP_DEVICE_DEL,
+                                STONITH_OP_LEVEL_ADD, STONITH_OP_LEVEL_DEL,
+                                NULL)) {
+        xmlNode *data = get_event_data_xml(msg, ntype);
+
+        if (data == NULL) {
+            crm_err("No data for %s event", ntype);
+            crm_log_xml_notice(msg, "BadEvent");
+        } else {
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
         }
     }
