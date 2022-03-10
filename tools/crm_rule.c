@@ -41,7 +41,7 @@ struct {
     char *date;
     char *input_xml;
     enum crm_rule_mode mode;
-    char *rule;
+    gchar **rules;
 } options = {
     .mode = crm_rule_mode_none
 };
@@ -71,8 +71,8 @@ static GOptionEntry addl_entries[] = {
     { "date", 'd', 0, G_OPTION_ARG_STRING, &options.date,
       "Whether the rule is in effect on a given date",
       NULL },
-    { "rule", 'r', 0, G_OPTION_ARG_STRING, &options.rule,
-      "The ID of the rule to check",
+    { "rule", 'r', 0, G_OPTION_ARG_STRING_ARRAY, &options.rules,
+      "The ID of the rule to check (may be specified multiple times)",
       NULL },
 
     { NULL }
@@ -248,11 +248,7 @@ crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
     rc = eval_date_expression(match, effective_date, NULL);
-
     out->message(out, "rule-check", rule_id, rc);
-    if (rc == pcmk_rc_within_range) {
-        rc = pcmk_rc_ok;
-    }
 
 done:
     free(xpath);
@@ -321,7 +317,7 @@ main(int argc, char **argv)
      */
     switch(options.mode) {
         case crm_rule_mode_check:
-            if (options.rule == NULL) {
+            if (options.rules == NULL) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "--check requires use of --rule=");
                 goto done;
@@ -396,7 +392,14 @@ main(int argc, char **argv)
      */
     switch(options.mode) {
         case crm_rule_mode_check:
-            rc = crm_rule_check(out, data_set, options.rule, rule_date);
+            for (char **s = options.rules; *s != NULL; s++) {
+                int last_rc = crm_rule_check(out, data_set, *s, rule_date);
+
+                if (last_rc != pcmk_rc_ok) {
+                    rc = last_rc;
+                }
+            }
+
             exit_code = pcmk_rc2exitc(rc);
             break;
 

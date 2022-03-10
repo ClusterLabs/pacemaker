@@ -1758,6 +1758,14 @@ EOF
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years"
     test_assert $CRM_EX_EXPIRED
 
+    desc="Verify multiple rules at once"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years"
+    test_assert $CRM_EX_EXPIRED
+
+    desc="Verify multiple rules at once, with XML output"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
+    test_assert $CRM_EX_EXPIRED
+
     desc="Verify date_spec rule with years is in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"
     test_assert $CRM_EX_OK
