@@ -1400,8 +1400,9 @@ xml_to_event(xmlNode *msg)
 
     crm_log_xml_trace(msg, "stonith_notify");
 
-    // All notification types have the operation result
+    // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
+    event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
 
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
@@ -1422,7 +1423,6 @@ xml_to_event(xmlNode *msg)
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
         }
-        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
     }
 
     return event;
