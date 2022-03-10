@@ -4702,7 +4702,7 @@ Transition Summary:
   * Move       Public-IP                           ( cluster02 -> cluster01 )
   * Move       Email                               ( cluster02 -> cluster01 )
   * Stop       mysql-proxy:0                       (              cluster02 )  due to node availability
-  * Stop       promotable-rsc:0                    (       Promoted cluster02 )  due to node availability
+  * Stop       promotable-rsc:0                    (     Promoted cluster02 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   httpd-bundle-1_stop_0
