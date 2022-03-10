@@ -2511,22 +2511,37 @@ stonith__event_exit_reason(stonith_event_t *event)
  * \return Newly allocated string with description of \p event
  * \note The caller is responsible for freeing the return value.
  *       This function asserts on memory errors and never returns NULL.
- * \note This currently is useful only for events of type
- *       T_STONITH_NOTIFY_FENCE.
  */
 char *
 stonith__event_description(stonith_event_t *event)
 {
     const char *origin = event->client_origin;
+    const char *origin_node = event->origin;
     const char *executioner = event->executioner;
+    const char *device = event->device;
+    const char *action = event->action;
+    const char *target = event->target;
     const char *reason = stonith__event_exit_reason(event);
     const char *status;
 
+    // Use somewhat readable defaults
     if (origin == NULL) {
         origin = "a client";
     }
+    if (origin_node == NULL) {
+        origin_node = "a node";
+    }
     if (executioner == NULL) {
         executioner = "the cluster";
+    }
+    if (device == NULL) {
+        device = "unknown";
+    }
+    if (action == NULL) {
+        action = (event->operation == NULL)? "(unknown)" : event->operation;
+    }
+    if (target == NULL) {
+        target = "no node";
     }
 
     if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
@@ -2537,13 +2552,38 @@ stonith__event_description(stonith_event_t *event)
         status = crm_exit_str(CRM_EX_OK);
     }
 
+    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_HISTORY,
+                     pcmk__str_none)) {
+        return crm_strdup_printf("Fencing history may have changed");
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_ADD,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing device (%s) was added", device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_DEL,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing device (%s) was removed", device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_ADD,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing topology level (%s) was added",
+                                 device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_DEL,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing topology level (%s) was removed",
+                                 device);
+    }
+
+    // event->operation should be T_STONITH_NOTIFY_FENCE
+
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
-                             event->action, event->target, executioner, origin,
-                             event->origin, status,
+                             action, target, executioner, origin, origin_node,
+                             status,
                              ((reason == NULL)? "" : " ("),
                              ((reason == NULL)? "" : reason),
                              ((reason == NULL)? "" : ")"),
-                             event->id);
+                             ((event->id == NULL)? "(none)" : event->id));
 }
 
 
