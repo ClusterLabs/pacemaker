@@ -1365,11 +1365,13 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
-        if (current_active) {
+        if (current_active != NULL) {
             g_list_free_full(current_active, free);
+            current_active = NULL;
         }
-        if (restart_target_active) {
+        if (restart_target_active != NULL) {
             g_list_free_full(restart_target_active, free);
+            restart_target_active = NULL;
         }
         goto done;
     }
@@ -1407,11 +1409,13 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 goto failure;
             }
 
-            if (current_active) {
+            if (current_active != NULL) {
                 g_list_free_full(current_active, free);
+                current_active = NULL;
             }
             current_active = get_active_resources(host, data_set->resources);
             g_list_free(list_delta);
+            list_delta = NULL;
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
@@ -1449,8 +1453,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         goto done;
     }
 
-    if (target_active) {
+    if (target_active != NULL) {
         g_list_free_full(target_active, free);
+        target_active = NULL;
     }
     target_active = restart_target_active;
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
@@ -1479,8 +1484,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 goto failure;
             }
 
-            if (current_active) {
+            if (current_active != NULL) {
                 g_list_free_full(current_active, free);
+                current_active = NULL;
             }
 
             /* It's OK if dependent resources moved to a different node,
@@ -1521,16 +1527,16 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
 done:
-    if (list_delta) {
+    if (list_delta != NULL) {
         g_list_free(list_delta);
     }
-    if (current_active) {
+    if (current_active != NULL) {
         g_list_free_full(current_active, free);
     }
-    if (target_active && (target_active != restart_target_active)) {
+    if (target_active != NULL && (target_active != restart_target_active)) {
         g_list_free_full(target_active, free);
     }
-    if (restart_target_active) {
+    if (restart_target_active != NULL) {
         g_list_free_full(restart_target_active, free);
     }
     free(rsc_id);
