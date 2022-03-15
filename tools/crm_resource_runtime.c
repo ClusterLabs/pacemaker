@@ -1288,6 +1288,14 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     GList *restart_target_active = NULL;
 
     pe_working_set_t *data_set = NULL;
+    pe_resource_t *parent = uber_parent(rsc);
+
+    /* If the implicit resource or primitive resource of a bundle is given, operate on the
+     * bundle itself instead.
+     */
+    if (pe_rsc_is_bundled(rsc)) {
+        rsc = parent->parent;
+    }
 
     if (!resource_is_running_on(rsc, host)) {
         const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
