@@ -557,6 +557,7 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              pcmk__cluster_option_t *option_list, int len)
 {
+    char *locale = NULL;
     char *escaped_long = NULL;
     char *escaped_short = NULL;
     char *retval;
@@ -584,20 +585,40 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             continue;
         }
 
+        g_string_append_printf(s, "    <parameter name=\"%s\">\n",
+                                  option_list[lpc].name);
+
+        escaped_long = crm_xml_escape(option_list[lpc].description_long?
+                                         option_list[lpc].description_long :
+                                          option_list[lpc].description_short);
+        escaped_short = crm_xml_escape(option_list[lpc].description_short);
+
+        g_string_append_printf(s,
+                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
+                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n",
+                                  escaped_long,
+                                  (option_list[lpc].values? "  Allowed values: " : ""),
+                                  (option_list[lpc].values? option_list[lpc].values : ""),
+                                  escaped_short);
+
+#ifdef ENABLE_NLS
         escaped_long = crm_xml_escape(option_list[lpc].description_long?
                                          _(option_list[lpc].description_long) :
                                           _(option_list[lpc].description_short));
         escaped_short = crm_xml_escape(_(option_list[lpc].description_short));
 
-        g_string_append_printf(s, "    <parameter name=\"%s\">\n"
-                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
-                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n",
-                                  option_list[lpc].name,
-                                  escaped_long,
+	locale=strtok(setlocale(LC_ALL,NULL),"_");
+	g_string_append_printf(s,
+                                  "      <longdesc lang=\"%s\">%s%s%s</longdesc>\n"
+                                  "      <shortdesc lang=\"%s\">%s</shortdesc>\n",
+                                  locale,
+				  escaped_long,
                                   (option_list[lpc].values? "  Allowed values: " : ""),
                                   (option_list[lpc].values? option_list[lpc].values : ""),
-                                  escaped_short);
-        free(escaped_long);
+                                  locale,
+				  escaped_short);
+#endif
+	free(escaped_long);
         free(escaped_short);
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {

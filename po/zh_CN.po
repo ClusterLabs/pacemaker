@@ -59,7 +59,7 @@ msgstr "，查询%s的元数据失败: %s\n"
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: daemons/fenced/pacemaker-fenced.c:1478
+#: daemons/fenced/pacemaker-fenced.c:1482
 #, c-format
 msgid ""
 " <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -69,7 +69,7 @@ msgstr ""
 " <longdesc lang=\"zh\">实例属性可用于所有stonith类资源，并由Pacemaker的fence"
 "守护程序使用（以前称为stonithd）</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1480
+#: daemons/fenced/pacemaker-fenced.c:1484
 #, c-format
 msgid ""
 " <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -77,7 +77,7 @@ msgid ""
 msgstr ""
 " <shortdesc lang=\"zh\">可用于所有stonith类资源的实例属性</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1495
+#: daemons/fenced/pacemaker-fenced.c:1508
 #, c-format
 msgid ""
 "    <longdesc lang=\"en\">Some devices do not support the standard 'port' "
@@ -88,12 +88,12 @@ msgid ""
 "additional parameters.\n"
 "     </longdesc>\n"
 msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的端口参数，也可能会提供额外的端口参数。\n"
-"使用此参数可以为需要防护（fence）的机器指定一个备用的，专用于该设备的参数,该参数应指出要fence的机器。\n"
-"使用值none可用来告诉集群不提供任何额外的参数\n"
+"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可能会提供额外的端口参数。\n"
+"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参数应指出要fence的机器。\n"
+"使用值'none'可用来告诉集群不提供任何额外的参数\n"
 "     </longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1500
+#: daemons/fenced/pacemaker-fenced.c:1513
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to "
@@ -101,7 +101,7 @@ msgid ""
 msgstr ""
 "    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替代'port'</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1507
+#: daemons/fenced/pacemaker-fenced.c:1526
 #, c-format
 msgid ""
 "    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to "
@@ -110,7 +110,7 @@ msgstr ""
 "    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群的"
 "节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1509
+#: daemons/fenced/pacemaker-fenced.c:1528
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">A mapping of host names to ports numbers for "
