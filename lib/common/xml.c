@@ -2517,8 +2517,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                *object_href_val = NULL;
 
 #if XML_PARSER_DEBUG
-    crm_log_xml_trace("update:", update);
-    crm_log_xml_trace("target:", target);
+    crm_log_xml_trace(update, "update:");
+    crm_log_xml_trace(target, "target:");
 #endif
 
     CRM_CHECK(update != NULL, return);

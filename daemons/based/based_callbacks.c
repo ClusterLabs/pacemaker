@@ -1456,7 +1456,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         crm_xml_add(msg, F_CIB_CLIENTNAME, originator);
     }
 
-    /* crm_log_xml_trace("Peer[inbound]", msg); */
+    /* crm_log_xml_trace(msg, "Peer[inbound]"); */
     cib_process_request(msg, TRUE, NULL);
     return;
 

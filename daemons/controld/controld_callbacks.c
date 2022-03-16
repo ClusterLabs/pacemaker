@@ -59,7 +59,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
     }
 
-    /* crm_log_xml_trace("HA[inbound]", msg); */
+    /* crm_log_xml_trace(msg, "HA[inbound]"); */
     route_message(C_HA_MESSAGE, msg);
 
   done:
