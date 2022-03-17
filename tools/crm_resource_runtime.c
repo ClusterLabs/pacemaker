@@ -1280,6 +1280,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     bool stop_via_ban = false;
     char *rsc_id = NULL;
+    char *lookup_id = NULL;
     char *orig_target_role = NULL;
 
     GList *list_delta = NULL;
@@ -1308,7 +1309,14 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     rsc_id = strdup(rsc->id);
-    if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
+
+    if (pe_rsc_is_unique_clone(parent)) {
+        lookup_id = strdup(rsc->id);
+    } else {
+        lookup_id = clone_strip(rsc->id);
+    }
+
+    if ((pe_rsc_is_clone(rsc) || pe_rsc_is_clone(parent) || pe_bundle_replicas(rsc)) && host) {
         stop_via_ban = true;
     }
 
@@ -1353,7 +1361,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         out->quiet = true;
-        rc = cli_resource_ban(out, rsc_id, host, move_lifetime, NULL, cib,
+        rc = cli_resource_ban(out, lookup_id, host, move_lifetime, NULL, cib,
                               cib_options, promoted_role_only);
 
     } else {
@@ -1361,11 +1369,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
          * Remember any existing target-role so we can restore it later
          * (though it only makes any difference if it's Unpromoted).
          */
-        char *lookup_id = clone_strip(rsc->id);
 
         find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
-        free(lookup_id);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            RSC_STOPPED, FALSE, cib, cib_options,
@@ -1441,7 +1447,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, true, force);
+        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
@@ -1522,7 +1528,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(rsc_id, host, NULL, cib, cib_options, true, force);
+        cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
@@ -1548,6 +1554,7 @@ done:
         g_list_free_full(restart_target_active, free);
     }
     free(rsc_id);
+    free(lookup_id);
     pe_free_working_set(data_set);
     return rc;
 }
