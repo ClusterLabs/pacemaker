@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_rule"/>
+    </start>
+
+    <define name="element-crm_rule">
+        <zeroOrMore>
+            <ref name="element-rule-check" />
+        </zeroOrMore>
+    </define>
+
+    <define name="element-rule-check">
+        <element name="rule-check">
+            <attribute name="rule-id"> <text /> </attribute>
+            <attribute name="rc"> <data type="nonNegativeInteger" /> </attribute>
+        </element>
+    </define>
+</grammar>

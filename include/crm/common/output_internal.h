@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@ extern "C" {
  */
 
 
-#  define PCMK__API_VERSION "2.15"
+#  define PCMK__API_VERSION "2.16"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
