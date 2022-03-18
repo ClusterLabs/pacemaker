@@ -1333,8 +1333,14 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
         lookup_id = clone_strip(rsc->id);
     }
 
-    if ((pe_rsc_is_clone(rsc) || pe_rsc_is_clone(parent) || pe_bundle_replicas(rsc)) && host) {
-        stop_via_ban = true;
+    if (host) {
+        if (pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) {
+            stop_via_ban = true;
+        } else if (pe_rsc_is_clone(parent)) {
+            stop_via_ban = true;
+            free(lookup_id);
+            lookup_id = strdup(parent->id);
+        }
     }
 
     /*
