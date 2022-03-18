@@ -1821,10 +1821,9 @@ main(int argc, char **argv)
              * update the working set multiple times, so it needs to use its own
              * copy.
              */
-            rc = cli_resource_restart(out, rsc, options.host_uname,
-                                      options.move_lifetime, options.timeout_ms,
-                                      cib_conn, options.cib_options,
-                                      options.promoted_role_only,
+            rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                      options.timeout_ms, cib_conn,
+                                      options.cib_options, options.promoted_role_only,
                                       options.force);
             break;
 

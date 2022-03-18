@@ -1267,7 +1267,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
+cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
                      const char *move_lifetime, int timeout_ms, cib_t *cib,
                      int cib_options, gboolean promoted_role_only, gboolean force)
 {
@@ -1290,6 +1290,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     pe_working_set_t *data_set = NULL;
     pe_resource_t *parent = uber_parent(rsc);
+
+    const char *host = node ? node->details->uname : NULL;
 
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
      * bundle itself instead.
