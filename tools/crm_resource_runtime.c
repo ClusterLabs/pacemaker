@@ -1291,6 +1291,8 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
     pe_working_set_t *data_set = NULL;
     pe_resource_t *parent = uber_parent(rsc);
 
+    bool running = false;
+    const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
     const char *host = node ? node->details->uname : NULL;
 
     /* If the implicit resource or primitive resource of a bundle is given, operate on the
@@ -1300,9 +1302,22 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
         rsc = parent->parent;
     }
 
-    if (!resource_is_running_on(rsc, host)) {
-        const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
-        if(host) {
+    running = resource_is_running_on(rsc, host);
+
+    if (pe_rsc_is_clone(parent) && !running) {
+        if (pe_rsc_is_unique_clone(parent)) {
+            lookup_id = strdup(rsc->id);
+        } else {
+            lookup_id = clone_strip(rsc->id);
+        }
+
+        rsc = parent->fns->find_rsc(parent, lookup_id, node, pe_find_any|pe_find_current);
+        free(lookup_id);
+        running = resource_is_running_on(rsc, host);
+    }
+
+    if (!running) {
+        if (host) {
             out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
         } else {
             out->err(out, "%s is not running anywhere and so cannot be restarted", id);
