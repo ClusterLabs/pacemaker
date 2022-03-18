@@ -1744,6 +1744,13 @@ main(int argc, char **argv)
     // If user supplied a node name, check whether it exists
     if ((options.host_uname != NULL) && (data_set != NULL)) {
         node = pe_find_node(data_set->nodes, options.host_uname);
+
+        if (node == NULL) {
+            exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Node '%s' not found", options.host_uname);
+            goto done;
+        }
     }
 
     // Establish a connection to the controller if needed
