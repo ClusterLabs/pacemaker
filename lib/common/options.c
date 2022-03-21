@@ -557,7 +557,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              pcmk__cluster_option_t *option_list, int len)
 {
+#ifdef ENABLE_NLS
     char *locale = NULL;
+#endif
     char *escaped_long = NULL;
     char *escaped_short = NULL;
     char *retval;
@@ -601,6 +603,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                                   (option_list[lpc].values? option_list[lpc].values : ""),
                                   escaped_short);
 
+	free(escaped_long);
+	free(escaped_short);
 #ifdef ENABLE_NLS
         escaped_long = crm_xml_escape(option_list[lpc].description_long?
                                          _(option_list[lpc].description_long) :
@@ -617,9 +621,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                                   (option_list[lpc].values? option_list[lpc].values : ""),
                                   locale,
 				  escaped_short);
-#endif
-	free(escaped_long);
+        free(escaped_long);
         free(escaped_short);
+#endif
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);
