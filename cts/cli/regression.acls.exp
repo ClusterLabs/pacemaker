@@ -365,11 +365,11 @@ Call failed: Permission denied
 =#=#=#= End test: unknownguy: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - unknownguy: Query configuration
 =#=#=#= Begin test: unknownguy: Set enable-acl =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set enable-acl
 =#=#=#= Begin test: unknownguy: Set stonith-enabled =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
@@ -386,11 +386,11 @@ Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Query configuration
 =#=#=#= Begin test: l33t-haxor: Set enable-acl =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set enable-acl
 =#=#=#= Begin test: l33t-haxor: Set stonith-enabled =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set stonith-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
@@ -465,8 +465,8 @@ Call failed: Permission denied
 * Passed: cibadmin       - niceguy: Query configuration
 =#=#=#= Begin test: niceguy: Set enable-acl =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]
-Error performing operation: Permission denied
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
@@ -2347,11 +2347,11 @@ Call failed: Permission denied
 =#=#=#= End test: unknownguy: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - unknownguy: Query configuration
 =#=#=#= Begin test: unknownguy: Set enable-acl =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set enable-acl
 =#=#=#= Begin test: unknownguy: Set stonith-enabled =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - unknownguy: Set stonith-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
@@ -2368,11 +2368,11 @@ Call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin       - l33t-haxor: Query configuration
 =#=#=#= Begin test: l33t-haxor: Set enable-acl =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set enable-acl
 =#=#=#= Begin test: l33t-haxor: Set stonith-enabled =#=#=#=
-Error performing operation: Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - l33t-haxor: Set stonith-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
@@ -2457,8 +2457,8 @@ Call failed: Permission denied
 * Passed: cibadmin       - niceguy: Query configuration
 =#=#=#= Begin test: niceguy: Set enable-acl =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]
-Error performing operation: Permission denied
 Error setting enable-acl=false (section=crm_config, set=<null>): Permission denied
+crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute  - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=

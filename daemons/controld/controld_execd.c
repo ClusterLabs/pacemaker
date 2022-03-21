@@ -34,6 +34,8 @@ struct delete_event_s {
     lrm_state_t *lrm_state;
 };
 
+extern pcmk__output_t *logger_out;
+
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
@@ -897,9 +899,8 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
-        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                             NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s,
-                             FALSE, NULL, NULL);
+        cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                              NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, NULL, NULL);
         free(now_s);
     }
 }

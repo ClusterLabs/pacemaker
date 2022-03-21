@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
+
+extern pcmk__output_t *logger_out;
 
 int reannounce_count = 0;
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
@@ -195,14 +197,16 @@ set_join_state(const char * start_state)
     if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
-        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                             NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
+        cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
+                              XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL,
+                              NULL, "standby", "on", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
-        update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
-                             NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
+        cib__update_node_attr(logger_out, fsa_cib_conn, cib_sync_call,
+                              XML_CIB_TAG_NODES, fsa_our_uuid, NULL, NULL,
+                              NULL, "standby", "off", NULL, NULL);
 
     } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", fsa_our_uname);

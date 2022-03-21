@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,8 @@ void crmd_hamsg_callback(const xmlNode * msg, void *private_data);
 extern void init_dotfile(void);
 
 GMainLoop *crmd_mainloop = NULL;
+
+pcmk__output_t *logger_out = NULL;
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -127,6 +129,13 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
+    logger_out = pcmk__new_logger();
+    if (logger_out == NULL) {
+        return CRM_EX_FATAL;
+    }
+
+    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+
     crmd_init();
     return 0; // not reachable
 }
@@ -172,5 +181,6 @@ crmd_init(void)
     crm_info("%s[%lu] exiting with status %d (%s)",
              crm_system_name, (unsigned long) getpid(), exit_code,
              crm_exit_str(exit_code));
+
     crmd_fast_exit(exit_code);
 }

@@ -166,10 +166,10 @@ modifying is present more than once.
 
       # crm_attribute --name batch-limit --delete
 
+      Please choose from one of the matches below and supply the 'id' with --id
       Multiple attributes match name=batch-limit in crm_config:
       Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
       Value: 100         (set=custom, id=custom-batch-limit)
-      Please choose from one of the matches above and supply the 'id' with --id
 
 In such cases, follow the on-screen instructions to perform the requested
 action.  To determine which value is currently being used by the cluster, refer
