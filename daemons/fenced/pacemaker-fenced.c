@@ -1477,7 +1477,14 @@ main(int argc, char **argv)
         printf(" <version>1.0</version>\n");
         printf(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources"
                                        " and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>\n");
+#ifdef ENABLE_NLS 
+        printf(_(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources"
+                                       " and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>\n"));
+#endif
         printf(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n");
+#ifdef ENABLE_NLS 
+        printf(_(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n"));
+#endif
         printf(" <parameters>\n");
 
 #if 0
@@ -1496,8 +1503,19 @@ main(int argc, char **argv)
              "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
              "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
              "     </longdesc>\n");
+#ifdef ENABLE_NLS 
+        printf
+            (_("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
+             "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
+             "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+             "     </longdesc>\n"));
+#endif
         printf
             ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
+#ifdef ENABLE_NLS 
+        printf
+            (_("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n"));
+#endif
         printf("    <content type=\"string\" default=\"port\"/>\n");
         printf("  </parameter>\n");
 
@@ -1505,8 +1523,16 @@ main(int argc, char **argv)
                PCMK_STONITH_HOST_MAP);
         printf
             ("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
+#ifdef ENABLE_NLS
+        printf
+            (_("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n"));
+#endif
         printf
             ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
+#ifdef ENABLE_NLS
+        printf
+            (_("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n"));
+#endif
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
