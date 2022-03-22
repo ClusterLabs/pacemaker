@@ -1185,6 +1185,58 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
     }
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions to bring resource down and back to current role
+ *
+ * \param[in] rsc           Resource to restart
+ * \param[in] current       Node that resource should be brought down on
+ * \param[in] chosen        Node that resource should be brought up on
+ * \param[in] need_stop     Whether the resource must be stopped
+ * \param[in] need_promote  Whether the resource must be promoted
+ *
+ * \return Role that resource would have after scheduled actions are taken
+ */
+static void
+schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
+                         pe_node_t *chosen, bool need_stop, bool need_promote)
+{
+    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e next_role;
+
+    // Bring resource down to a stop on its current node
+    while (role != RSC_ROLE_STOPPED) {
+        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
+        pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
+                     (need_stop? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, current, !need_stop,
+                                                rsc->cluster)) {
+            break;
+        }
+        role = next_role;
+    }
+
+    // Bring resource up to its next role on its next node
+    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
+           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        bool required = need_stop;
+
+        next_role = rsc_state_matrix[role][rsc->role];
+        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
+            required = true;
+        }
+        pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
+                     (required? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required,
+                                                rsc->cluster)) {
+            break;
+        }
+        role = next_role;
+    }
+}
+
 void
 native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1332,39 +1384,10 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     /* Create any additional actions required when bringing resource down and
      * back up to same level.
      */
-    role = rsc->role;
-    while (role != RSC_ROLE_STOPPED) {
-        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
-        pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
-                     (need_stop? "required" : "optional"), rsc->id,
-                     role2text(role), role2text(next_role));
-        if (rsc_action_matrix[role][next_role] (rsc, current, !need_stop, data_set) == FALSE) {
-            break;
-        }
-        role = next_role;
-    }
-
-
-    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
-           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        bool required = need_stop;
-
-        next_role = rsc_state_matrix[role][rsc->role];
-        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
-            required = true;
-        }
-        pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
-                     (required? "required" : "optional"), rsc->id,
-                     role2text(role), role2text(next_role));
-        if (rsc_action_matrix[role][next_role](rsc, chosen, !required,
-                                               data_set) == FALSE) {
-            break;
-        }
-        role = next_role;
-    }
-    role = rsc->role;
+    schedule_restart_actions(rsc, current, chosen, need_stop, need_promote);
 
     /* Required steps from this role to the next */
+    role = rsc->role;
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
