@@ -19,10 +19,28 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 
 #include <crm/common/attrd_internal.h>
+
+#define SUMMARY "query and update Pacemaker node attributes"
+
+struct {
+    char command;
+    char *attr_dampen;
+    char *attr_name;
+    char *attr_node;
+    char *attr_section;
+    char *attr_set;
+    char *attr_value;
+    int attr_options;
+    gboolean query_all;
+} options = {
+    .attr_options = pcmk__node_attr_none,
+    .command = 'Q'
+};
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -150,29 +168,20 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
 
 // Free memory at exit to make analyzers happy
 #define cleanup_memory() \
-    free(attr_dampen); \
-    free(attr_name); \
-    free(attr_node); \
-    free(attr_section); \
-    free(attr_set);
+    free(options.attr_dampen); \
+    free(options.attr_name); \
+    free(options.attr_node); \
+    free(options.attr_section); \
+    free(options.attr_set); \
+    free(options.attr_value);
 
 int
 main(int argc, char **argv)
 {
     int index = 0;
     int argerr = 0;
-    int attr_options = pcmk__node_attr_none;
     int flag;
     crm_exit_t exit_code = CRM_EX_OK;
-    char *attr_node = NULL;
-    char *attr_name = NULL;
-    char *attr_set = NULL;
-    char *attr_section = NULL;
-    char *attr_dampen = NULL;
-    const char *attr_value = NULL;
-    char command = 'Q';
-
-    gboolean query_all = FALSE;
 
     pcmk__cli_init_logging("attrd_updater", 0);
     pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
@@ -198,31 +207,31 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'n':
-                pcmk__str_update(&attr_name, optarg);
+                pcmk__str_update(&options.attr_name, optarg);
                 break;
             case 's':
-                pcmk__str_update(&attr_set, optarg);
+                pcmk__str_update(&options.attr_set, optarg);
                 break;
             case 'd':
-                pcmk__str_update(&attr_dampen, optarg);
+                pcmk__str_update(&options.attr_dampen, optarg);
                 break;
             case 'l':
             case 'S':
-                pcmk__str_update(&attr_section, optarg);
+                pcmk__str_update(&options.attr_section, optarg);
                 break;
             case 'N':
-                pcmk__str_update(&attr_node, optarg);
+                pcmk__str_update(&options.attr_node, optarg);
                 break;
             case 'A':
-                query_all = TRUE;
+                options.query_all = TRUE;
                 break;
             case 'p':
-                pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_private);
+                pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
                 break;
             case 'q':
                 break;
             case 'Y':
-                command = flag;
+                options.command = flag;
                 crm_log_args(argc, argv); /* Too much? */
                 break;
             case 'Q':
@@ -231,8 +240,12 @@ main(int argc, char **argv)
             case 'D':
             case 'U':
             case 'v':
-                command = flag;
-                attr_value = optarg;
+                if (options.attr_value != NULL) {
+                    free(options.attr_value);
+                }
+
+                options.command = flag;
+                options.attr_value = strdup(optarg);
                 crm_log_args(argc, argv); /* Too much? */
                 break;
             default:
@@ -245,7 +258,7 @@ main(int argc, char **argv)
         ++argerr;
     }
 
-    if (command != 'R' && attr_name == NULL) {
+    if (options.command != 'R' && options.attr_name == NULL) {
         ++argerr;
     }
 
@@ -254,21 +267,22 @@ main(int argc, char **argv)
         pcmk__cli_help('?', CRM_EX_USAGE);
     }
 
-    if (command == 'Q') {
-        exit_code = crm_errno2exit(do_query(attr_name, attr_node, query_all));
+    if (options.command == 'Q') {
+        exit_code = crm_errno2exit(do_query(options.attr_name, options.attr_node,
+                                            options.query_all));
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
          * node or not, so we can't set pcmk__node_attr_remote when appropriate.
          * However, it's not a big problem, because pacemaker-attrd will learn
          * and remember a node's "remoteness".
          */
-        const char *target = pcmk__node_attr_target(attr_node);
+        const char *target = pcmk__node_attr_target(options.attr_node);
 
-        exit_code = pcmk_rc2exitc(do_update(command,
-                                            target == NULL ? attr_node : target,
-                                            attr_name, attr_value,
-                                            attr_section, attr_set,
-                                            attr_dampen, attr_options));
+        exit_code = pcmk_rc2exitc(do_update(options.command,
+                                            target == NULL ? options.attr_node : target,
+                                            options.attr_name, options.attr_value,
+                                            options.attr_section, options.attr_set,
+                                            options.attr_dampen, options.attr_options));
     }
 
     cleanup_memory();
