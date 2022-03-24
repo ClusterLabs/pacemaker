@@ -27,6 +27,8 @@
 
 #define SUMMARY "query and update Pacemaker node attributes"
 
+GError *error = NULL;
+
 struct {
     char command;
     char *attr_dampen;
@@ -39,126 +41,123 @@ struct {
     gboolean query_all;
 } options = {
     .attr_options = pcmk__node_attr_none,
-    .command = 'Q'
+    .command = 'Q',
 };
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output\n", pcmk__option_default
-    },
-    {
-        "name", required_argument, NULL, 'n',
-        "The attribute's name", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nCommands:", pcmk__option_default
-    },
-    {
-        "update", required_argument, NULL, 'U',
-        "Update attribute's value in pacemaker-attrd. If this causes the value "
-            "to change, it will also be updated in the cluster configuration.",
-        pcmk__option_default
-    },
-    {
-        "update-both", required_argument, NULL, 'B',
-        "Update attribute's value and time to wait (dampening) in "
-            "pacemaker-attrd. If this causes the value or dampening to change, "
-            "the attribute will also be written to the cluster configuration, "
-            "so be aware that repeatedly changing the dampening reduces its "
-            "effectiveness.",
-        pcmk__option_default
-    },
-    {
-        "update-delay", no_argument, NULL, 'Y',
-        "Update attribute's dampening in pacemaker-attrd (requires "
-            "-d/--delay). If this causes the dampening to change, the "
-            "attribute will also be written to the cluster configuration, so "
-            "be aware that repeatedly changing the dampening reduces its "
-            "effectiveness.",
-        pcmk__option_default
-    },
-    {
-        "query", no_argument, NULL, 'Q',
-        "\tQuery the attribute's value from pacemaker-attrd",
-        pcmk__option_default
-    },
-    {
-        "delete", no_argument, NULL, 'D',
-        "\tDelete attribute from pacemaker-attrd. If a value was previously "
-            "set, it will also be removed from the cluster configuration",
-        pcmk__option_default
-    },
-    {
-        "refresh", no_argument, NULL, 'R',
-        "\t(Advanced) Force the pacemaker-attrd daemon to resend all current "
-            "values to the CIB",
-        pcmk__option_default
-    },
+static gboolean
+command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__str_update(&options.attr_value, optarg);
 
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional options:", pcmk__option_default
-    },
-    {
-        "delay", required_argument, NULL, 'd',
-        "The time to wait (dampening) in seconds for further changes "
-            "before writing",
-        pcmk__option_default
-    },
-    {
-        "set", required_argument, NULL, 's',
-        "(Advanced) The attribute set in which to place the value",
-        pcmk__option_default
-    },
-    {
-        "node", required_argument, NULL, 'N',
-        "Set the attribute for the named node (instead of the local one)",
-        pcmk__option_default
-    },
-    {
-        "all", no_argument, NULL, 'A',
-        "Show values of the attribute for all nodes (query only)",
-        pcmk__option_default
-    },
+    if (pcmk__str_any_of(option_name, "--update-both", "-B", NULL)) {
+        options.command = 'B';
+    } else if (pcmk__str_any_of(option_name, "--delete", "-D", NULL)) {
+        options.command = 'D';
+    } else if (pcmk__str_any_of(option_name, "--query", "-Q", NULL)) {
+        options.command = 'Q';
+    } else if (pcmk__str_any_of(option_name, "--refresh", "-R", NULL)) {
+        options.command = 'R';
+    } else if (pcmk__str_any_of(option_name, "--update", "-U", NULL)) {
+        options.command = 'U';
+    }
 
-    // @TODO Implement --lifetime
-    {
-        "lifetime", required_argument, NULL, 'l',
-        "(Not yet implemented) Lifetime of the node attribute (silently "
-            "ignored by cluster)",
-        pcmk__option_default
-    },
-    {
-        "private", no_argument, NULL, 'p',
-        "\tIf this creates a new attribute, never write the attribute to CIB",
-        pcmk__option_default
-    },
+    return TRUE;
+}
 
-    /* Legacy options */
-    {
-        "quiet", no_argument, NULL, 'q',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "update", required_argument, NULL, 'v',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "section", required_argument, NULL, 'S',
-        NULL, pcmk__option_hidden
-    },
-    { 0, 0, 0, 0 }
+static gboolean
+private_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
+    return TRUE;
+}
+
+#define INDENT "                              "
+
+static GOptionEntry required_entries[] = {
+    { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
+      "The attribute's name",
+      "NAME" },
+
+    { NULL }
+};
+
+static GOptionEntry command_entries[] = {
+    { "update", 'U', 0, G_OPTION_ARG_CALLBACK, command_cb,
+      "Update attribute's value in pacemaker-attrd. If this causes the value\n"
+      INDENT "to change, it will also be updated in the cluster configuration.",
+      "VALUE" },
+
+    { "update-both", 'B', 0, G_OPTION_ARG_CALLBACK, command_cb,
+      "Update attribute's value and time to wait (dampening) in\n"
+      INDENT "pacemaker-attrd. If this causes the value or dampening to change,\n"
+      INDENT "the attribute will also be written to the cluster configuration,\n"
+      INDENT "so be aware that repeatedly changing the dampening reduces its\n"
+      INDENT "effectiveness.",
+      "VALUE" },
+
+    { "update-delay", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Update attribute's dampening in pacemaker-attrd (requires\n"
+      INDENT "-d/--delay). If this causes the dampening to change, the\n"
+      INDENT "attribute will also be written to the cluster configuration, so\n"
+      INDENT "be aware that repeatedly changing the dampening reduces its\n"
+      INDENT "effectiveness.",
+      NULL },
+
+    { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Query the attribute's value from pacemaker-attrd",
+      NULL },
+
+    { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Delete attribute from pacemaker-attrd. If a value was previously\n"
+      INDENT "set, it will also be removed from the cluster configuration",
+      NULL },
+
+    { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "(Advanced) Force the pacemaker-attrd daemon to resend all current\n"
+      INDENT "values to the CIB",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "delay", 'd', 0, G_OPTION_ARG_STRING, &options.attr_dampen,
+      "The time to wait (dampening) in seconds for further changes\n"
+      INDENT "before writing",
+      "SECONDS" },
+
+    { "set", 's', 0, G_OPTION_ARG_STRING, &options.attr_set,
+      "(Advanced) The attribute set in which to place the value",
+      "SET" },
+
+    { "node", 'N', 0, G_OPTION_ARG_STRING, &options.attr_node,
+      "Set the attribute for the named node (instead of the local one)",
+      "NODE" },
+
+    { "all", 'A', 0, G_OPTION_ARG_NONE, &options.query_all,
+      "Show values of the attribute for all nodes (query only)",
+      NULL },
+
+    { "lifetime", 'l', 0, G_OPTION_ARG_STRING, &options.attr_section,
+      "(Not yet implemented) Lifetime of the node attribute (silently\n"
+      INDENT "ignored by cluster)",
+      "SECTION" },
+
+    { "private", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, private_cb,
+      "If this creates a new attribute, never write the attribute to CIB",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry deprecated_entries[] = {
+    { NULL, 'v', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
+      NULL,
+      NULL },
+
+    { "section", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_section,
+      NULL,
+      NULL },
+
+    { NULL }
 };
 
 static int do_query(const char *attr_name, const char *attr_node, gboolean query_all);
@@ -166,8 +165,28 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+
+    pcmk__add_arg_group(context, "required", "Required Arguments:",
+                        "Show required arguments", required_entries);
+    pcmk__add_arg_group(context, "command", "Command:",
+                        "Show command options (mutually exclusive)", command_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
+                        "Show deprecated options", deprecated_entries);
+
+    return context;
+}
+
 // Free memory at exit to make analyzers happy
 #define cleanup_memory() \
+    g_strfreev(processed_args); \
+    pcmk__free_arg_context(context); \
     free(options.attr_dampen); \
     free(options.attr_name); \
     free(options.attr_node); \
@@ -178,93 +197,31 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
 int
 main(int argc, char **argv)
 {
-    int index = 0;
-    int argerr = 0;
-    int flag;
     crm_exit_t exit_code = CRM_EX_OK;
 
-    pcmk__cli_init_logging("attrd_updater", 0);
-    pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
-                          long_options,
-                          "query and update Pacemaker node attributes");
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    GOptionContext *context = build_arg_context(args);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "dlnsvBNUS");
 
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        cleanup_memory();
+        crm_exit(exit_code);
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
+    pcmk__cli_init_logging("attrd_updater", args->verbosity);
 
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '?':
-            case '$':
-                cleanup_memory();
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'n':
-                pcmk__str_update(&options.attr_name, optarg);
-                break;
-            case 's':
-                pcmk__str_update(&options.attr_set, optarg);
-                break;
-            case 'd':
-                pcmk__str_update(&options.attr_dampen, optarg);
-                break;
-            case 'l':
-            case 'S':
-                pcmk__str_update(&options.attr_section, optarg);
-                break;
-            case 'N':
-                pcmk__str_update(&options.attr_node, optarg);
-                break;
-            case 'A':
-                options.query_all = TRUE;
-                break;
-            case 'p':
-                pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
-                break;
-            case 'q':
-                break;
-            case 'Y':
-                options.command = flag;
-                crm_log_args(argc, argv); /* Too much? */
-                break;
-            case 'Q':
-            case 'B':
-            case 'R':
-            case 'D':
-            case 'U':
-            case 'v':
-                if (options.attr_value != NULL) {
-                    free(options.attr_value);
-                }
+    if (args->version) {
+        cleanup_memory();
 
-                options.command = flag;
-                options.attr_value = strdup(optarg);
-                crm_log_args(argc, argv); /* Too much? */
-                break;
-            default:
-                ++argerr;
-                break;
-        }
-    }
-
-    if (optind > argc) {
-        ++argerr;
+        /* FIXME:  When attrd_updater is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_OK);
     }
 
     if (options.command != 'R' && options.attr_name == NULL) {
-        ++argerr;
-    }
-
-    if (argerr) {
+        exit_code = CRM_EX_USAGE;
         cleanup_memory();
-        pcmk__cli_help('?', CRM_EX_USAGE);
+        crm_exit(exit_code);
     }
 
     if (options.command == 'Q') {
