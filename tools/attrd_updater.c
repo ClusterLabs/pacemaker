@@ -211,8 +211,8 @@ main(int argc, char **argv)
     }
 
     if (options.command == 'Q') {
-        exit_code = crm_errno2exit(do_query(options.attr_name, options.attr_node,
-                                            options.query_all));
+        int rc = do_query(options.attr_name, options.attr_node, options.query_all);
+        exit_code = pcmk_rc2exitc(rc);
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
          * node or not, so we can't set pcmk__node_attr_remote when appropriate.
@@ -251,20 +251,20 @@ done:
  * \param[in] host    Query applies to this host only (or all hosts if NULL)
  * \param[out] reply  On success, will be set to new XML tree with reply
  *
- * \return pcmk_ok on success, -errno on error
+ * \return Standard Pacemaker return code
  * \note On success, caller is responsible for freeing result via free_xml(*reply)
  */
 static int
 send_attrd_query(const char *name, const char *host, xmlNode **reply)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     crm_ipc_t *ipc;
     xmlNode *query;
 
     /* Build the query XML */
     query = create_xml_node(NULL, __func__);
     if (query == NULL) {
-        return -ENOMEM;
+        return ENOMEM;
     }
     crm_xml_add(query, F_TYPE, T_ATTRD);
     crm_xml_add(query, F_ORIG, crm_system_name);
@@ -275,13 +275,13 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     /* Connect to pacemaker-attrd, send query XML and get reply */
     crm_debug("Sending query for value of %s on %s", name, (host? host : "all nodes"));
     ipc = crm_ipc_new(T_ATTRD, 0);
-    if (crm_ipc_connect(ipc) == FALSE) {
+    if (!crm_ipc_connect(ipc)) {
         crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
-        rc = -ENOTCONN;
+        rc = ENOTCONN;
     } else {
         rc = crm_ipc_send(ipc, query, crm_ipc_client_response, 0, reply);
         if (rc > 0) {
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
         crm_ipc_close(ipc);
     }
@@ -297,17 +297,17 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
  * param[in] reply      Root of reply XML tree to validate
  * param[in] attr_name  Name of attribute that was queried
  *
- * \return pcmk_ok on success,
- *         -errno on error (-ENXIO = requested attribute does not exist)
+ * \return Standard Pacemaker return code
+ * \note A return value of ENXIO means the requested attribute does not exist
  */
 static int
 validate_attrd_reply(xmlNode *reply, const char *attr_name)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     const char *reply_attr;
 
     if (reply == NULL) {
-        rc = -pcmk_err_schema_validation;
+        rc = pcmk_rc_schema_validation;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not query value of %s: reply did not contain valid XML",
                     attr_name);
@@ -317,7 +317,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
 
     reply_attr = crm_element_value(reply, PCMK__XA_ATTR_NAME);
     if (reply_attr == NULL) {
-        rc = -ENXIO;
+        rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not query value of %s: attribute does not exist",
                     attr_name);
@@ -327,13 +327,14 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
     if (!pcmk__str_eq(crm_element_value(reply, F_TYPE), T_ATTRD, pcmk__str_casei)
         || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
         || strcmp(reply_attr, attr_name)) {
-            rc = -pcmk_err_schema_validation;
+            rc = pcmk_rc_schema_validation;
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not query value of %s: reply did not contain expected identification",
                         attr_name);
             return rc;
     }
-    return pcmk_ok;
+
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -342,14 +343,14 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
  * \param[in] reply     Root of XML tree with query reply
  * \param[in] attr_name Name of attribute that was queried
  *
- * \return TRUE if any values were printed
+ * \return true if any values were printed
  */
-static gboolean
+static bool
 print_attrd_values(xmlNode *reply, const char *attr_name)
 {
     xmlNode *child;
     const char *reply_host, *reply_value;
-    gboolean have_values = FALSE;
+    bool have_values = false;
 
     /* Iterate through reply's XML tags (a node tag for each host-value pair) */
     for (child = pcmk__xml_first_child(reply); child != NULL;
@@ -368,10 +369,11 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
             } else {
                 printf("name=\"%s\" host=\"%s\" value=\"%s\"\n",
                        attr_name, reply_host, (reply_value? reply_value : ""));
-                have_values = TRUE;
+                have_values = true;
             }
         }
     }
+
     return have_values;
 }
 
@@ -382,13 +384,13 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
  * \param[in] attr_node  Name of host to query for (or NULL for localhost)
  * \param[in] query_all  If TRUE, ignore attr_node and query all nodes instead
  *
- * \return pcmk_ok on success, -errno on error
+ * \return Standard Pacemaker return code
  */
 static int
 do_query(const char *attr_name, const char *attr_node, gboolean query_all)
 {
     xmlNode *reply = NULL;
-    int rc;
+    int rc = pcmk_rc_ok;
 
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
@@ -402,7 +404,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
 
     /* Build and send pacemaker-attrd request, and get XML reply */
     rc = send_attrd_query(attr_name, attr_node, &reply);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
                     attr_name, pcmk_strerror(rc), rc);
         return rc;
@@ -410,7 +412,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
 
     /* Validate the XML reply */
     rc = validate_attrd_reply(reply, attr_name);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         if (reply != NULL) {
             free_xml(reply);
         }
@@ -418,15 +420,15 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     }
 
     /* Print the values from the reply */
-    if (print_attrd_values(reply, attr_name) == FALSE) {
+    if (!print_attrd_values(reply, attr_name)) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not query value of %s: reply had attribute name but no host values",
                     attr_name);
         free_xml(reply);
-        return -pcmk_err_schema_validation;
+        return pcmk_rc_schema_validation;
     }
 
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 static int
