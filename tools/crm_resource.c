@@ -1739,6 +1739,18 @@ main(int argc, char **argv)
                         "Resource '%s' not found", options.rsc_id);
             goto done;
         }
+
+        /* The --ban, --clear, --move, and --restart commands do not work with
+         * instances of clone resourcs.
+         */
+        if (strchr(options.rsc_id, ':') != NULL && pe_rsc_is_clone(rsc->parent) &&
+            (options.rsc_cmd == cmd_ban || options.rsc_cmd == cmd_clear ||
+             options.rsc_cmd == cmd_move || options.rsc_cmd == cmd_restart)) {
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Cannot operate on clone resource instance '%s'", options.rsc_id);
+            goto done;
+        }
     }
 
     // If user supplied a node name, check whether it exists
