@@ -183,17 +183,6 @@ build_arg_context(pcmk__common_args_t *args) {
     return context;
 }
 
-// Free memory at exit to make analyzers happy
-#define cleanup_memory() \
-    g_strfreev(processed_args); \
-    pcmk__free_arg_context(context); \
-    free(options.attr_dampen); \
-    free(options.attr_name); \
-    free(options.attr_node); \
-    free(options.attr_section); \
-    free(options.attr_set); \
-    free(options.attr_value);
-
 int
 main(int argc, char **argv)
 {
@@ -205,23 +194,20 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
-        cleanup_memory();
-        crm_exit(exit_code);
+        goto done;
     }
 
     pcmk__cli_init_logging("attrd_updater", args->verbosity);
 
     if (args->version) {
-        cleanup_memory();
-
         /* FIXME:  When attrd_updater is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_OK);
     }
 
     if (options.command != 'R' && options.attr_name == NULL) {
         exit_code = CRM_EX_USAGE;
-        cleanup_memory();
-        crm_exit(exit_code);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name argument");
+        goto done;
     }
 
     if (options.command == 'Q') {
@@ -242,7 +228,18 @@ main(int argc, char **argv)
                                             options.attr_dampen, options.attr_options));
     }
 
-    cleanup_memory();
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+    free(options.attr_dampen);
+    free(options.attr_name);
+    free(options.attr_node);
+    free(options.attr_section);
+    free(options.attr_set);
+    free(options.attr_value);
+
+    pcmk__output_and_clear_error(error, NULL);
+
     crm_exit(exit_code);
 }
 
@@ -306,29 +303,35 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
 static int
 validate_attrd_reply(xmlNode *reply, const char *attr_name)
 {
+    int rc;
     const char *reply_attr;
 
     if (reply == NULL) {
-        fprintf(stderr, "Could not query value of %s: reply did not contain valid XML\n",
-                attr_name);
-        return -pcmk_err_schema_validation;
+        rc = -pcmk_err_schema_validation;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not query value of %s: reply did not contain valid XML",
+                    attr_name);
+        return rc;
     }
     crm_log_xml_trace(reply, "Reply");
 
     reply_attr = crm_element_value(reply, PCMK__XA_ATTR_NAME);
     if (reply_attr == NULL) {
-        fprintf(stderr, "Could not query value of %s: attribute does not exist\n",
-                attr_name);
-        return -ENXIO;
+        rc = -ENXIO;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not query value of %s: attribute does not exist",
+                    attr_name);
+        return rc;
     }
 
     if (!pcmk__str_eq(crm_element_value(reply, F_TYPE), T_ATTRD, pcmk__str_casei)
         || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
         || strcmp(reply_attr, attr_name)) {
-            fprintf(stderr,
-                    "Could not query value of %s: reply did not contain expected identification\n",
-                    attr_name);
-            return -pcmk_err_schema_validation;
+            rc = -pcmk_err_schema_validation;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Could not query value of %s: reply did not contain expected identification",
+                        attr_name);
+            return rc;
     }
     return pcmk_ok;
 }
@@ -400,7 +403,8 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     /* Build and send pacemaker-attrd request, and get XML reply */
     rc = send_attrd_query(attr_name, attr_node, &reply);
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not query value of %s: %s (%d)\n", attr_name, pcmk_strerror(rc), rc);
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
+                    attr_name, pcmk_strerror(rc), rc);
         return rc;
     }
 
@@ -415,9 +419,9 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
 
     /* Print the values from the reply */
     if (print_attrd_values(reply, attr_name) == FALSE) {
-        fprintf(stderr,
-                "Could not query value of %s: reply had attribute name but no host values\n",
-                attr_name);
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not query value of %s: reply had attribute name but no host values",
+                    attr_name);
         free_xml(reply);
         return -pcmk_err_schema_validation;
     }
@@ -434,8 +438,8 @@ do_update(char command, const char *attr_node, const char *attr_name,
                                      attr_value, attr_section, attr_set,
                                      attr_dampen, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not update %s=%s: %s (%d)\n",
-                attr_name, attr_value, pcmk_rc_str(rc), rc);
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not update %s=%s: %s (%d)",
+                    attr_name, attr_value, pcmk_rc_str(rc), rc);
     }
     return rc;
 }
