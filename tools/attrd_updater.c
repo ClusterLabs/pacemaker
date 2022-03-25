@@ -31,11 +31,11 @@ GError *error = NULL;
 
 struct {
     char command;
-    char *attr_dampen;
-    char *attr_name;
-    char *attr_node;
-    char *attr_section;
-    char *attr_set;
+    gchar *attr_dampen;
+    gchar *attr_name;
+    gchar *attr_node;
+    gchar *attr_section;
+    gchar *attr_set;
     char *attr_value;
     int attr_options;
     gboolean query_all;
@@ -231,11 +231,11 @@ main(int argc, char **argv)
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
-    free(options.attr_dampen);
-    free(options.attr_name);
-    free(options.attr_node);
-    free(options.attr_section);
-    free(options.attr_set);
+    g_free(options.attr_dampen);
+    g_free(options.attr_name);
+    g_free(options.attr_node);
+    g_free(options.attr_section);
+    g_free(options.attr_set);
     free(options.attr_value);
 
     pcmk__output_and_clear_error(error, NULL);
