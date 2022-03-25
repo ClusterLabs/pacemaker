@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2021 the Pacemaker project contributors
+# Copyright 2009-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -41,9 +41,8 @@ ATTRDUP=/usr/sbin/attrd_updater
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="HealthSMART" version="0.1">
-<version>1.0</version>
+<resource-agent name="HealthSMART" version="1.0">
+<version>1.1</version>
 
 <longdesc lang="en">
 System health agent that checks the S.M.A.R.T. status of the given drives and
@@ -52,7 +51,7 @@ updates the #health-smart attribute.
 <shortdesc lang="en">SMART health status</shortdesc>
 
 <parameters>
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
@@ -60,7 +59,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="drives" unique="0">
+<parameter name="drives">
 <longdesc lang="en">
 The drive(s) to check as a SPACE separated list. Enter the full path to the device, e.g. "/dev/sda".
 </longdesc>
@@ -68,7 +67,7 @@ The drive(s) to check as a SPACE separated list. Enter the full path to the devi
 <content type="string" default="/dev/sda" />
 </parameter>
 
-<parameter name="devices" unique="0">
+<parameter name="devices">
 <longdesc lang="en">
 The device type(s) to assume for the drive(s) being tested as a SPACE separated list.
 </longdesc>
@@ -76,7 +75,7 @@ The device type(s) to assume for the drive(s) being tested as a SPACE separated 
 <content type="string" />
 </parameter>
 
-<parameter name="temp_lower_limit" unique="0">
+<parameter name="temp_lower_limit">
 <longdesc lang="en">
 Lower limit of the temperature in deg C of the drive(s). Below this limit the status will be red.
 </longdesc>
@@ -84,7 +83,7 @@ Lower limit of the temperature in deg C of the drive(s). Below this limit the st
 <content type="string" default="0"/>
 </parameter>
 
-<parameter name="temp_upper_limit" unique="0">
+<parameter name="temp_upper_limit">
 <longdesc lang="en">
 Upper limit of the temperature if deg C of the drives(s). If the drive reports
 a temperature higher than this value the status of #health-smart will be red.
@@ -93,7 +92,7 @@ a temperature higher than this value the status of #health-smart will be red.
 <content type="string" default="60"/>
 </parameter>
 
-<parameter name="temp_warning" unique="0">
+<parameter name="temp_warning">
 <longdesc lang="en">
 Number of deg C below/above the upper/lower temp limits at which point the status of #health-smart will change to yellow.
 </longdesc>
@@ -278,13 +277,16 @@ HealthSMART_validate() {
 
     init_smart
 
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    touch "$state_dir/$$"
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_ARGS
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        touch "$state_dir/$$"
+        if [ $? -ne 0 ]; then
+            return $OCF_ERR_ARGS
+        fi
+        rm "$state_dir/$$"
     fi
-    rm "$state_dir/$$"
 
     return $OCF_SUCCESS
 }
