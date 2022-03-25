@@ -106,8 +106,9 @@ static GOptionEntry command_entries[] = {
       NULL },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Delete attribute from pacemaker-attrd. If a value was previously\n"
-      INDENT "set, it will also be removed from the cluster configuration",
+      "Unset attribute from pacemaker-attrd. At the moment, there is no way\n"
+      INDENT "to remove an attribute. This option will instead set its value\n"
+      INDENT "to the empty string.",
       NULL },
 
     { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
@@ -121,7 +122,7 @@ static GOptionEntry command_entries[] = {
 static GOptionEntry addl_entries[] = {
     { "delay", 'd', 0, G_OPTION_ARG_STRING, &options.attr_dampen,
       "The time to wait (dampening) in seconds for further changes\n"
-      INDENT "before writing",
+      INDENT "before sending to the CIB",
       "SECONDS" },
 
     { "set", 's', 0, G_OPTION_ARG_STRING, &options.attr_set,
