@@ -61,7 +61,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="drives">
+<parameter name="drives" reloadable="1">
 <longdesc lang="en">
 The drive(s) to check as a SPACE separated list. Enter the full path to the device, e.g. "/dev/sda".
 </longdesc>
@@ -69,7 +69,7 @@ The drive(s) to check as a SPACE separated list. Enter the full path to the devi
 <content type="string" default="/dev/sda" />
 </parameter>
 
-<parameter name="devices">
+<parameter name="devices" reloadable="1">
 <longdesc lang="en">
 The device type(s) to assume for the drive(s) being tested as a SPACE separated list.
 </longdesc>
@@ -77,7 +77,7 @@ The device type(s) to assume for the drive(s) being tested as a SPACE separated 
 <content type="string" />
 </parameter>
 
-<parameter name="temp_lower_limit">
+<parameter name="temp_lower_limit" reloadable="1">
 <longdesc lang="en">
 Lower limit of the temperature in deg C of the drive(s). Below this limit the status will be red.
 </longdesc>
@@ -85,7 +85,7 @@ Lower limit of the temperature in deg C of the drive(s). Below this limit the st
 <content type="string" default="0"/>
 </parameter>
 
-<parameter name="temp_upper_limit">
+<parameter name="temp_upper_limit" reloadable="1">
 <longdesc lang="en">
 Upper limit of the temperature if deg C of the drives(s). If the drive reports
 a temperature higher than this value the status of #health-smart will be red.
@@ -94,7 +94,7 @@ a temperature higher than this value the status of #health-smart will be red.
 <content type="string" default="60"/>
 </parameter>
 
-<parameter name="temp_warning">
+<parameter name="temp_warning" reloadable="1">
 <longdesc lang="en">
 Number of deg C below/above the upper/lower temp limits at which point the status of #health-smart will change to yellow.
 </longdesc>
@@ -102,7 +102,7 @@ Number of deg C below/above the upper/lower temp limits at which point the statu
 <content type="string" default="5"/>
 </parameter>
 
-<parameter name="smartctl">
+<parameter name="smartctl" reloadable="1">
 <longdesc lang="en">
 The path to the smartctl program, used for querying device health.
 </longdesc>
@@ -118,6 +118,7 @@ The path to the smartctl program, used for querying device health.
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all"   timeout="10s" />
+<action name="reload-agent"   timeout="20s" />
 </actions>
 </resource-agent>
 END
@@ -215,7 +216,7 @@ init_smart() {
 
 HealthSMART_usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|meta-data|reload-agent}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -308,6 +309,10 @@ HealthSMART_validate() {
     return $OCF_SUCCESS
 }
 
+HealthSMART_reload_agent() {
+    return $OCF_SUCCESS
+}
+
 
 if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
@@ -325,6 +330,7 @@ case "$__OCF_ACTION" in
     stop)         HealthSMART_stop;;
     monitor)      HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
+    reload-agent) HealthSMART_reload_agent;;
     meta-data)
         meta_data
         exit $OCF_SUCCESS
