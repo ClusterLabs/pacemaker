@@ -1045,7 +1045,8 @@ To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= End test: Require a destination when migrating a resource that is stopped - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
-crm_resource: Error performing operation: No such object
+crm_resource: Node 'i.do.not.exist' not found
+Error performing operation: No such object
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
 <cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1781,7 +1782,8 @@ true
 =#=#=#= End test: Delete ticket standby state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Delete ticket standby state
 =#=#=#= Begin test: Ban a resource on unknown node =#=#=#=
-crm_resource: Error performing operation: No such object
+crm_resource: Node 'host1' not found
+Error performing operation: No such object
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
 <cib epoch="21" num_updates="5" admin_epoch="0">
   <configuration>

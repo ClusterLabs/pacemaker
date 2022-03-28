@@ -1739,11 +1739,30 @@ main(int argc, char **argv)
                         "Resource '%s' not found", options.rsc_id);
             goto done;
         }
+
+        /* The --ban, --clear, --move, and --restart commands do not work with
+         * instances of clone resourcs.
+         */
+        if (strchr(options.rsc_id, ':') != NULL && pe_rsc_is_clone(rsc->parent) &&
+            (options.rsc_cmd == cmd_ban || options.rsc_cmd == cmd_clear ||
+             options.rsc_cmd == cmd_move || options.rsc_cmd == cmd_restart)) {
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Cannot operate on clone resource instance '%s'", options.rsc_id);
+            goto done;
+        }
     }
 
     // If user supplied a node name, check whether it exists
     if ((options.host_uname != NULL) && (data_set != NULL)) {
         node = pe_find_node(data_set->nodes, options.host_uname);
+
+        if (node == NULL) {
+            exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Node '%s' not found", options.host_uname);
+            goto done;
+        }
     }
 
     // Establish a connection to the controller if needed
@@ -1814,10 +1833,9 @@ main(int argc, char **argv)
              * update the working set multiple times, so it needs to use its own
              * copy.
              */
-            rc = cli_resource_restart(out, rsc, options.host_uname,
-                                      options.move_lifetime, options.timeout_ms,
-                                      cib_conn, options.cib_options,
-                                      options.promoted_role_only,
+            rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                      options.timeout_ms, cib_conn,
+                                      options.cib_options, options.promoted_role_only,
                                       options.force);
             break;
 
