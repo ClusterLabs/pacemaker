@@ -24,7 +24,6 @@
 : ${__OCF_ACTION:="$1"}
 #
 SMARTCTL=/usr/sbin/smartctl
-ATTRDUP=/usr/sbin/attrd_updater
 
 # Explicitly list all environment variables used, to make static analysis happy
 : ${OCF_RESKEY_CRM_meta_interval:=0}
@@ -119,25 +118,25 @@ check_temperature() {
 
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "5s"
         return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "5s"
         return 1
     fi
 
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "5s"
         return 1
     fi
 
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "5s"
         return 1
     fi
 }
@@ -237,14 +236,14 @@ HealthSMART_monitor() {
                 for DEVICE in ${OCF_RESKEY_devices}; do
                     "$SMARTCTL" -d "$DEVICE" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                     if [ $? -ne 0 ]; then
-                        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+                        attrd_updater -n "#health-smart" -U "red" -d "5s"
                         return $OCF_SUCCESS
                     fi
                 done
             else
                 "$SMARTCTL" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+                    attrd_updater -n "#health-smart" -U "red" -d "5s"
                     return $OCF_SUCCESS
                 fi
             fi
@@ -265,7 +264,7 @@ HealthSMART_monitor() {
             fi
         done
 
-        "$ATTRDUP" -n "#health-smart" -U "green" -d "5s"
+        attrd_updater -n "#health-smart" -U "green" -d "5s"
         return $OCF_SUCCESS
     fi
 
@@ -274,11 +273,10 @@ HealthSMART_monitor() {
 }
 
 HealthSMART_validate() {
-
-    init_smart
-
     # Host-specific checks
     if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        init_smart
+
         # Is the state directory writable?
         state_dir=$(dirname "$OCF_RESKEY_state")
         touch "$state_dir/$$"
