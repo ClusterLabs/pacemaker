@@ -220,11 +220,15 @@ HealthSMART_start() {
 }
 
 HealthSMART_stop() {
-    HealthSMART_monitor
-    if [ $? -eq $OCF_SUCCESS ]; then
-        rm "${OCF_RESKEY_state}"
+    attrd_updater -D -n "#health-smart" -d "5s"
+
+    rm "${OCF_RESKEY_state}"
+
+    if [ $? -eq 0 ]; then
+        return $OCF_SUCCESS
+    else
+        return $OCF_ERR_GENERIC
     fi
-    return $OCF_SUCCESS
 }
 
 HealthSMART_monitor() {
