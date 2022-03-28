@@ -33,6 +33,7 @@
 : ${OCF_RESKEY_devices:=""}
 : ${OCF_RESKEY_state:=""}
 : ${OCF_RESKEY_smartctl:="/usr/sbin/smartctl"}
+: ${OCF_RESKEY_dampen:="5s"}
 
 # Turn these into arrays so we can iterate them later.
 DRIVES=(${OCF_RESKEY_drives})
@@ -110,6 +111,14 @@ The path to the smartctl program, used for querying device health.
 <contest type="string" default="/usr/sbin/smartctl"/>
 </parameter>
 
+<parameter name="dampen" reloadable="1">
+<longdesc lang="en">
+The time to wait (dampening) for further changes to occur
+</longdesc>
+<shortdesc lang="en">Dampening interval</shortdesc>
+<content type="integer" default="5s"/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -130,25 +139,25 @@ check_temperature() {
 
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        attrd_updater -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 }
@@ -231,7 +240,7 @@ HealthSMART_start() {
 }
 
 HealthSMART_stop() {
-    attrd_updater -D -n "#health-smart" -d "5s"
+    attrd_updater -D -n "#health-smart" -d "${OCF_RESKEY_dampen}"
 
     rm "${OCF_RESKEY_state}"
 
@@ -261,7 +270,7 @@ HealthSMART_monitor() {
                 # Check overall S.M.A.R.T. status
                 "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    attrd_updater -n "#health-smart" -U "red" -d "5s"
+                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
                     return $OCF_SUCCESS
                 fi
 
@@ -273,7 +282,7 @@ HealthSMART_monitor() {
             else
                 "${OCF_RESKEY_smartctl}" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    attrd_updater -n "#health-smart" -U "red" -d "5s"
+                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
                     return $OCF_SUCCESS
                 fi
 
@@ -284,7 +293,7 @@ HealthSMART_monitor() {
             fi
         done
 
-        attrd_updater -n "#health-smart" -U "green" -d "5s"
+        attrd_updater -n "#health-smart" -U "green" -d "${OCF_RESKEY_dampen}"
         return $OCF_SUCCESS
     fi
 
