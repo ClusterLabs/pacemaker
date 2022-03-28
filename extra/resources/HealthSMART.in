@@ -29,10 +29,14 @@
 : ${OCF_RESKEY_temp_warning:=""}
 : ${OCF_RESKEY_temp_lower_limit:=""}
 : ${OCF_RESKEY_temp_upper_limit:=""}
-: ${OCF_RESKEY_drives:=""}
+: ${OCF_RESKEY_drives:="/dev/sda"}
 : ${OCF_RESKEY_devices:=""}
 : ${OCF_RESKEY_state:=""}
 : ${OCF_RESKEY_smartctl:="/usr/sbin/smartctl"}
+
+# Turn these into arrays so we can iterate them later.
+DRIVES=(${OCF_RESKEY_drives})
+DEVICES=(${OCF_RESKEY_devices})
 
 #######################################################################
 
@@ -171,28 +175,34 @@ init_smart() {
     fi
     upper_yellow_limit=$((${upper_red_limit}-${yellow_threshold}))
 
-    #Set disk defaults
-    if [ -z "${OCF_RESKEY_drives}" ] ; then
-        DRIVES="/dev/sda"
-    else
-        DRIVES=${OCF_RESKEY_drives}
-    fi
-
     #Test for presence of smartctl
     if [ ! -x "${OCF_RESKEY_smartctl}" ] ; then
         ocf_log err "${OCF_RESKEY_smartctl} not installed."
         exit $OCF_ERR_INSTALLED
     fi
 
-    for DRIVE in $DRIVES; do
+    # Each item in $OCF_RESKEY_drives must have a corresponding item in
+    # $OCF_RESKEY_devices with the device type.  Alternately,
+    # $OCF_RESKEY_devices can be empty.  First, check that this is the case.
+    drives_len=${#DRIVES[@]}
+    devices_len=${#DEVICES[@]}
+
+    if [ "${drives_len}" -ne "${devices_len}" ] && [ "${devices_len}" -gt 0 ]; then
+        ocf_log err "OCF_RESKEY_devices must be empty or the same length as OCF_RESKEY_drives."
+        exit $OCF_ERR_ARGS
+    fi
+
+    for ndx in ${!DRIVES[*]}; do
+        DRIVE=${DRIVES[$ndx]}
+
         if [ -n "${OCF_RESKEY_devices}" ]; then
-            for DEVICE in ${OCF_RESKEY_devices}; do
-                "${OCF_RESKEY_smartctl}" -d "$DEVICE" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
-                if [ $? -ne 0 ] ; then
-                    ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
-                    exit $OCF_ERR_INSTALLED
-                fi
-            done
+            DEVICE=${DEVICES[$ndx]}
+
+            "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
+            if [ $? -ne 0 ] ; then
+                ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
+                exit $OCF_ERR_INSTALLED
+            fi
         else
             "${OCF_RESKEY_smartctl}" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
             if [ $? -ne 0 ] ; then
