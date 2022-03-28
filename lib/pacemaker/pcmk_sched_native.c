@@ -1997,7 +1997,6 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
     GList *gIter = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s", rsc->id);
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *current = (pe_node_t *) gIter->data;
@@ -2005,16 +2004,23 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
 
         if (rsc->partial_migration_target) {
             if (rsc->partial_migration_target->details == current->details) {
-                pe_rsc_trace(rsc, "Filtered %s -> %s %s", current->details->uname,
-                             next->details->uname, rsc->id);
+                pe_rsc_trace(rsc,
+                             "Skipping stop of %s on %s "
+                             "because migration to %s in progress",
+                             rsc->id, current->details->uname,
+                             next->details->uname);
                 continue;
             } else {
-                pe_rsc_trace(rsc, "Forced on %s %s", current->details->uname, rsc->id);
+                pe_rsc_trace(rsc,
+                             "Forcing stop of %s on %s "
+                             "because migration target changed",
+                             rsc->id, current->details->uname);
                 optional = FALSE;
             }
         }
 
-        pe_rsc_trace(rsc, "%s on %s", rsc->id, current->details->uname);
+        pe_rsc_trace(rsc, "Scheduling stop of %s on %s",
+                     rsc->id, current->details->uname);
         stop = stop_action(rsc, current, optional);
 
         if(rsc->allocated_to == NULL) {
@@ -2048,7 +2054,11 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
     pe_action_t *start = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
+
+    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (weight=%d)",
+                 (optional? "optional" : "required"), rsc->id,
+                 ((next == NULL)? "N/A" : next->details->uname),
+                 ((next == NULL)? 0 : next->weight));
     start = start_action(rsc, next, TRUE);
 
     pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
