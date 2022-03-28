@@ -283,8 +283,6 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     pe_node_t *next = NULL;
     pe_node_t *current = NULL;
 
-    gboolean moving = FALSE;
-
     if (rsc->children != NULL) {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *) iter->data;
@@ -311,7 +309,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
         return;
     }
 
-    out->message(out, "rsc-action", rsc, current, next, moving);
+    out->message(out, "rsc-action", rsc, current, next);
 }
 
 /*!
