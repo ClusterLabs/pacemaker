@@ -251,33 +251,31 @@ HealthSMART_monitor() {
 
     if [ -f "${OCF_RESKEY_state}" ]; then
 
-        # Check overall S.M.A.R.T. status
-        for DRIVE in $DRIVES; do
+        for ndx in ${!DRIVES[*]}; do
+            DRIVE=${DRIVES[$ndx]}
+
             if [ -n "${OCF_RESKEY_devices}" ]; then
-                for DEVICE in ${OCF_RESKEY_devices}; do
-                    "${OCF_RESKEY_smartctl}" -d "$DEVICE" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-                    if [ $? -ne 0 ]; then
-                        attrd_updater -n "#health-smart" -U "red" -d "5s"
-                        return $OCF_SUCCESS
-                    fi
-                done
+                DEVICE=${DEVICES[$ndx]}
+
+                # Check overall S.M.A.R.T. status
+                "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
+                if [ $? -ne 0 ]; then
+                    attrd_updater -n "#health-smart" -U "red" -d "5s"
+                    return $OCF_SUCCESS
+                fi
+
+                # Check drive temperature(s)
+                check_temperature "$("${OCF_RESKEY_smartctl}" -d "${DEVICE}" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+                if [ $? -ne 0 ]; then
+                    return $OCF_SUCCESS
+                fi
             else
                 "${OCF_RESKEY_smartctl}" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
                     attrd_updater -n "#health-smart" -U "red" -d "5s"
                     return $OCF_SUCCESS
                 fi
-            fi
 
-            # Check drive temperature(s)
-            if [ -n "${OCF_RESKEY_devices}" ]; then
-                for DEVICE in ${OCF_RESKEY_devices}; do
-                    check_temperature "$("${OCF_RESKEY_smartctl}" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
-                    if [ $? -ne 0 ]; then
-                        return $OCF_SUCCESS
-                    fi
-                done
-            else
                 check_temperature "$("${OCF_RESKEY_smartctl}" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
                 if [ $? -ne 0 ]; then
                     return $OCF_SUCCESS
