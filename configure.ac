@@ -1240,11 +1240,13 @@ dnl Check for printw() prototype compatibility
 AS_IF([test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    cc_temp_flags "-Wcast-qual $WERROR"
+
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
-    AS_IF([cc_supports_flag -fPIC], [CFLAGS="$CFLAGS -fPIC"])
+    AS_IF([cc_supports_flag -fPIC],
+	  [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
+	  [cc_temp_flags "-Wcast-qual $WERROR"])
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
