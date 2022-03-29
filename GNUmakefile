@@ -129,42 +129,6 @@ coverity-clean:
 		"$(abs_builddir)"/*.coverity
 
 
-## Change log generation
-
-summary:
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
-	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:\n"
-	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
-
-rc-changes:
-	@$(MAKE) $(AM_MAKEFLAGS) NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
-
-changes: summary
-	@printf "\n- Features added since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *Feature: */  + /p' | sort -uf
-	@printf "\n- Fixes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */  + /p' | sed			\
-			-e 's@\(cib\|pacemaker-based\|based\):@CIB:@' \
-			-e 's@\(crmd\|pacemaker-controld\|controld\):@controller:@' \
-			-e 's@\(lrmd\|pacemaker-execd\|execd\):@executor:@' \
-			-e 's@\(Fencing\|stonithd\|stonith\|pacemaker-fenced\|fenced\):@fencing:@' \
-			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
-		| sort -uf
-	@printf "\n- Public API changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *API: */  + /p' | sort -uf
-
-authors:
-	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
-
-changelog:
-	@$(MAKE) $(AM_MAKEFLAGS) changes > ChangeLog
-	@printf "\n">> ChangeLog
-	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
-
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
