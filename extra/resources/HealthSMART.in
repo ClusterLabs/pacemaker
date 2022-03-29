@@ -162,6 +162,27 @@ check_temperature() {
     fi
 }
 
+common_checks() {
+    # Each item in $OCF_RESKEY_drives must have a corresponding item in
+    # $OCF_RESKEY_devices with the device type.  Alternately,
+    # $OCF_RESKEY_devices can be empty.
+    drives_len=${#DRIVES[@]}
+    devices_len=${#DEVICES[@]}
+
+    if [ "${drives_len}" -ne "${devices_len}" ] && [ "${devices_len}" -gt 0 ]; then
+        ocf_log err "OCF_RESKEY_devices must be empty or the same length as OCF_RESKEY_drives."
+        exit $OCF_ERR_ARGS
+    fi
+
+    # Each item in $OCF_RESKEY_drives must look like a device node.
+    for d in "${DRIVES[@]}"; do
+        if [[ "$d" != /dev/* ]]; then
+            ocf_log err "Device in OCF_RESKEY_devices does not look like a device node: $d"
+            exit $OCF_ERR_ARGS
+        fi
+    done
+}
+
 
 init_smart() {
     #Set temperature defaults
@@ -184,23 +205,6 @@ init_smart() {
         upper_red_limit=${OCF_RESKEY_temp_upper_limit}
     fi
     upper_yellow_limit=$((${upper_red_limit}-${yellow_threshold}))
-
-    #Test for presence of smartctl
-    if [ ! -x "${OCF_RESKEY_smartctl}" ] ; then
-        ocf_log err "${OCF_RESKEY_smartctl} not installed."
-        exit $OCF_ERR_INSTALLED
-    fi
-
-    # Each item in $OCF_RESKEY_drives must have a corresponding item in
-    # $OCF_RESKEY_devices with the device type.  Alternately,
-    # $OCF_RESKEY_devices can be empty.  First, check that this is the case.
-    drives_len=${#DRIVES[@]}
-    devices_len=${#DEVICES[@]}
-
-    if [ "${drives_len}" -ne "${devices_len}" ] && [ "${devices_len}" -gt 0 ]; then
-        ocf_log err "OCF_RESKEY_devices must be empty or the same length as OCF_RESKEY_drives."
-        exit $OCF_ERR_ARGS
-    fi
 
     for ndx in ${!DRIVES[*]}; do
         DRIVE=${DRIVES[$ndx]}
@@ -252,6 +256,10 @@ HealthSMART_stop() {
 }
 
 HealthSMART_monitor() {
+    common_checks
+
+    # Test for presence of smartctl
+    check_binary smartctl
 
     init_smart
 
@@ -302,8 +310,13 @@ HealthSMART_monitor() {
 }
 
 HealthSMART_validate() {
+    common_checks
+
     # Host-specific checks
     if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        # Test for presence of smartctl
+        check_binary smartctl
+
         init_smart
 
         # Is the state directory writable?
