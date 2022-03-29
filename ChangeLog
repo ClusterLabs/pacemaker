@@ -94,6 +94,9 @@
            argument (regression introduced in 2.1.0)
   + tools: avoid crm_mon memory leaks when filtering by resource or node
            (regressions introduced in 2.0.4 and 2.0.5)
+  + tools: exit with status 0 (not 64) for --version argument to crm_rule,
+           crm_error, crm_diff, and crm_node (regression introduced in 2.0.4)
+	   and crm_attribute (regression introduced in 2.1.0)
   + tools: crm_mon should show active unmanaged resources on offline nodes
            without requiring -r/--inactive
   + tools: better crm_resource error messages for unsupported resource types
@@ -191,6 +194,9 @@
   + tools: correctly treat unspecified node as all nodes instead of local node
            when attrd_updater --query or crm_resource --cleanup is run on a
            Pacemaker Remote node (regressions introduced in 1.1.14 and 1.1.17)
+  + tools: exit with status 0 (not 64) for --version argument to crm_simulate
+           (regression introduced in 2.0.4) and crm_resource and crmadmin
+	   (regression introduced in 2.0.5)
   + pacemaker-attrd: avoid race condition where transient attributes for a
                      leaving node could be reinstated when the node rejoins,
                      potentially causing a node that was just rebooted to exit
