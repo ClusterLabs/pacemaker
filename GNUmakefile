@@ -155,28 +155,6 @@ clang:
 		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
 	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
 
-# V3	= scandir unsetenv alphasort xalloc
-# V2	= setenv strerror strchrnul strndup
-# https://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
-# previously, this was crypto/md5, but got spoiled with streams/kernel crypto
-GNU_MODS	= crypto/md5-buffer
-# stdint appears to be surrogate only for C99-lacking environments
-GNU_MODS_AVOID	= stdint
-# only for plain crypto/md5: we make do without kernel-assisted crypto
-# GNU_MODS_AVOID	+= crypto/af_alg
-.PHONY: gnulib-update
-gnulib-update:
-	-test -e maint/gnulib \
-	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
-	cd maint/gnulib && git pull
-	maint/gnulib/gnulib-tool --libtool \
-	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
-	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
-	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = $(date +'%Y%m%d')/"	\
-		rpm/pacemaker.spec.in
-	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" \
-		lib/gnu/md5.c
-
 ## Coverage/profiling
 
 .PHONY: coverage

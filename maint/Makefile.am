@@ -167,3 +167,31 @@ changelog:
 	@$(MAKE) $(AM_MAKEFLAGS) changes > ../ChangeLog
 	@printf "\n">> ../ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ../ChangeLog
+
+#
+# gnulib updates
+#
+# See https://www.gnu.org/software/gnulib/manual/html_node/
+#
+
+# V3	= scandir unsetenv alphasort xalloc
+# V2	= setenv strerror strchrnul strndup
+GNU_MODS	= crypto/md5-buffer
+# stdint appears to be surrogate only for C99-lacking environments
+GNU_MODS_AVOID	= stdint
+
+.PHONY: gnulib-update
+gnulib-update:
+	if test -e gnulib; then							\
+		cd gnulib && git pull;						\
+	else									\
+		git clone https://git.savannah.gnu.org/git/gnulib.git gnulib	\
+			&& cd gnulib && git config pull.rebase false;		\
+	fi
+	cd $(top_srcdir) && maint/gnulib/gnulib-tool --source-base=lib/gnu 	\
+		--lgpl=2 --no-vc-files --no-conditional-dependencies --libtool	\
+		$(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
+	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = `date +'%Y%m%d'`/"	\
+		../rpm/pacemaker.spec.in
+	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/"				\
+		../lib/gnu/md5.c
