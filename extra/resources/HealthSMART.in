@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2021 the Pacemaker project contributors
+# Copyright 2009-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,9 +22,6 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
-#
-SMARTCTL=/usr/sbin/smartctl
-ATTRDUP=/usr/sbin/attrd_updater
 
 # Explicitly list all environment variables used, to make static analysis happy
 : ${OCF_RESKEY_CRM_meta_interval:=0}
@@ -32,18 +29,23 @@ ATTRDUP=/usr/sbin/attrd_updater
 : ${OCF_RESKEY_temp_warning:=""}
 : ${OCF_RESKEY_temp_lower_limit:=""}
 : ${OCF_RESKEY_temp_upper_limit:=""}
-: ${OCF_RESKEY_drives:=""}
+: ${OCF_RESKEY_drives:="/dev/sda"}
 : ${OCF_RESKEY_devices:=""}
 : ${OCF_RESKEY_state:=""}
+: ${OCF_RESKEY_smartctl:="/usr/sbin/smartctl"}
+: ${OCF_RESKEY_dampen:="5s"}
+
+# Turn these into arrays so we can iterate them later.
+DRIVES=(${OCF_RESKEY_drives})
+DEVICES=(${OCF_RESKEY_devices})
 
 #######################################################################
 
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="HealthSMART" version="0.1">
-<version>1.0</version>
+<resource-agent name="HealthSMART" version="1.0">
+<version>1.1</version>
 
 <longdesc lang="en">
 System health agent that checks the S.M.A.R.T. status of the given drives and
@@ -52,7 +54,7 @@ updates the #health-smart attribute.
 <shortdesc lang="en">SMART health status</shortdesc>
 
 <parameters>
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
@@ -60,7 +62,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/HealthSMART-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="drives" unique="0">
+<parameter name="drives" reloadable="1">
 <longdesc lang="en">
 The drive(s) to check as a SPACE separated list. Enter the full path to the device, e.g. "/dev/sda".
 </longdesc>
@@ -68,7 +70,7 @@ The drive(s) to check as a SPACE separated list. Enter the full path to the devi
 <content type="string" default="/dev/sda" />
 </parameter>
 
-<parameter name="devices" unique="0">
+<parameter name="devices" reloadable="1">
 <longdesc lang="en">
 The device type(s) to assume for the drive(s) being tested as a SPACE separated list.
 </longdesc>
@@ -76,7 +78,7 @@ The device type(s) to assume for the drive(s) being tested as a SPACE separated 
 <content type="string" />
 </parameter>
 
-<parameter name="temp_lower_limit" unique="0">
+<parameter name="temp_lower_limit" reloadable="1">
 <longdesc lang="en">
 Lower limit of the temperature in deg C of the drive(s). Below this limit the status will be red.
 </longdesc>
@@ -84,7 +86,7 @@ Lower limit of the temperature in deg C of the drive(s). Below this limit the st
 <content type="string" default="0"/>
 </parameter>
 
-<parameter name="temp_upper_limit" unique="0">
+<parameter name="temp_upper_limit" reloadable="1">
 <longdesc lang="en">
 Upper limit of the temperature if deg C of the drives(s). If the drive reports
 a temperature higher than this value the status of #health-smart will be red.
@@ -93,12 +95,28 @@ a temperature higher than this value the status of #health-smart will be red.
 <content type="string" default="60"/>
 </parameter>
 
-<parameter name="temp_warning" unique="0">
+<parameter name="temp_warning" reloadable="1">
 <longdesc lang="en">
 Number of deg C below/above the upper/lower temp limits at which point the status of #health-smart will change to yellow.
 </longdesc>
 <shortdesc lang="en">Deg C below/above the upper limits for yellow smart attribute</shortdesc>
 <content type="string" default="5"/>
+</parameter>
+
+<parameter name="smartctl" reloadable="1">
+<longdesc lang="en">
+The path to the smartctl program, used for querying device health.
+</longdesc>
+<shortdesc lang="en">The path to the smartctl program</shortdesc>
+<contest type="string" default="/usr/sbin/smartctl"/>
+</parameter>
+
+<parameter name="dampen" reloadable="1">
+<longdesc lang="en">
+The time to wait (dampening) for further changes to occur
+</longdesc>
+<shortdesc lang="en">Dampening interval</shortdesc>
+<content type="integer" default="5s"/>
 </parameter>
 
 </parameters>
@@ -109,6 +127,7 @@ Number of deg C below/above the upper/lower temp limits at which point the statu
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all"   timeout="10s" />
+<action name="reload-agent"   timeout="20s" />
 </actions>
 </resource-agent>
 END
@@ -120,27 +139,48 @@ check_temperature() {
 
     if [ $1 -lt ${lower_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_red_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+        attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -lt ${lower_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
 
     if [ $1 -gt ${upper_yellow_limit} ] ; then
         ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
-        "$ATTRDUP" -n "#health-smart" -U "yellow" -d "5s"
+        attrd_updater -n "#health-smart" -U "yellow" -d "${OCF_RESKEY_dampen}"
         return 1
     fi
+}
+
+common_checks() {
+    # Each item in $OCF_RESKEY_drives must have a corresponding item in
+    # $OCF_RESKEY_devices with the device type.  Alternately,
+    # $OCF_RESKEY_devices can be empty.
+    drives_len=${#DRIVES[@]}
+    devices_len=${#DEVICES[@]}
+
+    if [ "${drives_len}" -ne "${devices_len}" ] && [ "${devices_len}" -gt 0 ]; then
+        ocf_log err "OCF_RESKEY_devices must be empty or the same length as OCF_RESKEY_drives."
+        exit $OCF_ERR_ARGS
+    fi
+
+    # Each item in $OCF_RESKEY_drives must look like a device node.
+    for d in "${DRIVES[@]}"; do
+        if [[ "$d" != /dev/* ]]; then
+            ocf_log err "Device in OCF_RESKEY_devices does not look like a device node: $d"
+            exit $OCF_ERR_ARGS
+        fi
+    done
 }
 
 
@@ -166,30 +206,19 @@ init_smart() {
     fi
     upper_yellow_limit=$((${upper_red_limit}-${yellow_threshold}))
 
-    #Set disk defaults
-    if [ -z "${OCF_RESKEY_drives}" ] ; then
-        DRIVES="/dev/sda"
-    else
-        DRIVES=${OCF_RESKEY_drives}
-    fi
+    for ndx in ${!DRIVES[*]}; do
+        DRIVE=${DRIVES[$ndx]}
 
-    #Test for presence of smartctl
-    if [ ! -x "$SMARTCTL" ] ; then
-        ocf_log err "${SMARTCTL} not installed."
-        exit $OCF_ERR_INSTALLED
-    fi
-
-    for DRIVE in $DRIVES; do
         if [ -n "${OCF_RESKEY_devices}" ]; then
-            for DEVICE in ${OCF_RESKEY_devices}; do
-                "$SMARTCTL" -d "$DEVICE" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
-                if [ $? -ne 0 ] ; then
-                    ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
-                    exit $OCF_ERR_INSTALLED
-                fi
-            done
+            DEVICE=${DEVICES[$ndx]}
+
+            "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
+            if [ $? -ne 0 ] ; then
+                ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
+                exit $OCF_ERR_INSTALLED
+            fi
         else
-            "$SMARTCTL" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
+            "${OCF_RESKEY_smartctl}" -i "${DRIVE}" | grep -q "SMART support is: Enabled"
             if [ $? -ne 0 ] ; then
                 ocf_log err "S.M.A.R.T. not enabled for drive "${DRIVE}
                 exit $OCF_ERR_INSTALLED
@@ -200,7 +229,7 @@ init_smart() {
 
 HealthSMART_usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|meta-data|reload-agent}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -215,14 +244,22 @@ HealthSMART_start() {
 }
 
 HealthSMART_stop() {
-    HealthSMART_monitor
-    if [ $? -eq $OCF_SUCCESS ]; then
-        rm "${OCF_RESKEY_state}"
+    attrd_updater -D -n "#health-smart" -d "${OCF_RESKEY_dampen}"
+
+    rm "${OCF_RESKEY_state}"
+
+    if [ $? -eq 0 ]; then
+        return $OCF_SUCCESS
+    else
+        return $OCF_ERR_GENERIC
     fi
-    return $OCF_SUCCESS
 }
 
 HealthSMART_monitor() {
+    common_checks
+
+    # Test for presence of smartctl
+    check_binary smartctl
 
     init_smart
 
@@ -232,41 +269,39 @@ HealthSMART_monitor() {
 
     if [ -f "${OCF_RESKEY_state}" ]; then
 
-        # Check overall S.M.A.R.T. status
-        for DRIVE in $DRIVES; do
+        for ndx in ${!DRIVES[*]}; do
+            DRIVE=${DRIVES[$ndx]}
+
             if [ -n "${OCF_RESKEY_devices}" ]; then
-                for DEVICE in ${OCF_RESKEY_devices}; do
-                    "$SMARTCTL" -d "$DEVICE" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
-                    if [ $? -ne 0 ]; then
-                        "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
-                        return $OCF_SUCCESS
-                    fi
-                done
-            else
-                "$SMARTCTL" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
+                DEVICE=${DEVICES[$ndx]}
+
+                # Check overall S.M.A.R.T. status
+                "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
-                    "$ATTRDUP" -n "#health-smart" -U "red" -d "5s"
+                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
                     return $OCF_SUCCESS
                 fi
-            fi
 
-            # Check drive temperature(s)
-            if [ -n "${OCF_RESKEY_devices}" ]; then
-                for DEVICE in ${OCF_RESKEY_devices}; do
-                    check_temperature "$("$SMARTCTL" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
-                    if [ $? -ne 0 ]; then
-                        return $OCF_SUCCESS
-                    fi
-                done
+                # Check drive temperature(s)
+                check_temperature "$("${OCF_RESKEY_smartctl}" -d "${DEVICE}" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+                if [ $? -ne 0 ]; then
+                    return $OCF_SUCCESS
+                fi
             else
-                check_temperature "$("$SMARTCTL" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+                "${OCF_RESKEY_smartctl}" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
+                if [ $? -ne 0 ]; then
+                    attrd_updater -n "#health-smart" -U "red" -d "${OCF_RESKEY_dampen}"
+                    return $OCF_SUCCESS
+                fi
+
+                check_temperature "$("${OCF_RESKEY_smartctl}" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
                 if [ $? -ne 0 ]; then
                     return $OCF_SUCCESS
                 fi
             fi
         done
 
-        "$ATTRDUP" -n "#health-smart" -U "green" -d "5s"
+        attrd_updater -n "#health-smart" -U "green" -d "${OCF_RESKEY_dampen}"
         return $OCF_SUCCESS
     fi
 
@@ -275,17 +310,28 @@ HealthSMART_monitor() {
 }
 
 HealthSMART_validate() {
+    common_checks
 
-    init_smart
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        # Test for presence of smartctl
+        check_binary smartctl
 
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    touch "$state_dir/$$"
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_ARGS
+        init_smart
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        touch "$state_dir/$$"
+        if [ $? -ne 0 ]; then
+            return $OCF_ERR_ARGS
+        fi
+        rm "$state_dir/$$"
     fi
-    rm "$state_dir/$$"
 
+    return $OCF_SUCCESS
+}
+
+HealthSMART_reload_agent() {
     return $OCF_SUCCESS
 }
 
@@ -306,6 +352,7 @@ case "$__OCF_ACTION" in
     stop)         HealthSMART_stop;;
     monitor)      HealthSMART_monitor;;
     validate-all) HealthSMART_validate;;
+    reload-agent) HealthSMART_reload_agent;;
     meta-data)
         meta_data
         exit $OCF_SUCCESS
