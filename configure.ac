@@ -418,12 +418,14 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
-dnl @TODO This should be a corosync pkgconfig variable
-PCMK__COROSYNC_CONF=""
+dnl Get default from corosync if possible.
+PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir], [],
+              [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
 AC_ARG_WITH([corosync-conf],
     [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
         location of Corosync configuration file
-        @<:@SYSCONFDIR/corosync/corosync.conf@:>@]))],
+        @<:@value from Corosync package if available otherwise
+        SYSCONFDIR/corosync/corosync.conf@:>@]))],
     [ PCMK__COROSYNC_CONF="$withval" ]
 )
 
