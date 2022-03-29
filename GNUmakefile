@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -35,12 +35,6 @@ GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
 
 PACKAGE		?= pacemaker
 
-# indent target: Limit indent to these directories
-INDENT_DIRS	?= .
-
-# indent target: Extra options to pass to indent
-INDENT_OPTS	?=
-
 .PHONY: init
 init:
 	test -e $(top_srcdir)/configure || ./autogen.sh
@@ -62,6 +56,13 @@ $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
 .PHONY: mock-% rpm-% spec-% srpm-%
 mock-% rpm-% spec-% srpm-%:
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
+
+## indent-related targets (deprecated; use targets in devel subdir instead)
+
+.PHONY: indent
+indent:
+	@echo 'Deprecated: Use "make -C devel $@" instead'
+	$(MAKE) $(AM_MAKEFLAGS) -C devel "$@"
 
 ## Static analysis via coverity
 
@@ -163,47 +164,6 @@ changelog:
 	@$(MAKE) $(AM_MAKEFLAGS) changes > ChangeLog
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
-
-INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
-			  lib/gnu/*
-INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
-			  --blank-lines-after-procedures		\
-			  --braces-after-func-def-line			\
-			  --braces-on-if-line				\
-			  --braces-on-struct-decl-line			\
-			  --break-before-boolean-operator		\
-			  --case-brace-indentation4			\
-			  --case-indentation4				\
-			  --comment-indentation0			\
-			  --continuation-indentation4			\
-			  --continue-at-parentheses			\
-			  --cuddle-do-while				\
-			  --cuddle-else					\
-			  --declaration-comment-column0			\
-			  --declaration-indentation1			\
-			  --else-endif-column0				\
-			  --honour-newlines				\
-			  --indent-label0				\
-			  --indent-level4				\
-			  --line-comments-indentation0			\
-			  --line-length80				\
-			  --no-blank-lines-after-commas			\
-			  --no-comment-delimiters-on-blank-lines	\
-			  --no-space-after-function-call-names		\
-			  --no-space-after-parentheses			\
-			  --no-tabs					\
-			  --preprocessor-indentation2			\
-			  --procnames-start-lines			\
-			  --space-after-cast				\
-			  --start-left-side-of-comments			\
-			  --swallow-optional-blank-lines		\
-			  --tab-size8
-
-indent:
-	VERSION_CONTROL=none					\
-		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
-		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
-		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
