@@ -56,7 +56,7 @@ command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
         options.command = 'Q';
     } else if (pcmk__str_any_of(option_name, "--refresh", "-R", NULL)) {
         options.command = 'R';
-    } else if (pcmk__str_any_of(option_name, "--update", "-U", NULL)) {
+    } else if (pcmk__str_any_of(option_name, "--update", "-U", "-v", NULL)) {
         options.command = 'U';
     }
 
@@ -150,7 +150,7 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
-    { NULL, 'v', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
+    { "update", 'v', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
       NULL,
       NULL },
 
