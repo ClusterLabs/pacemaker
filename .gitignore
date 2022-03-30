@@ -155,8 +155,6 @@ configure
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /devel/scratch
-/lib/common/md5.c
-/lib/gnu/libgnu.a
 /lib/gnu/stdalign.h
 /tools/attrd_updater
 /tools/cibadmin
@@ -293,6 +291,7 @@ pacemaker_*.info
 /fencing
 /include/stamp-*
 /install-sh
+/lib/common/md5.c
 /lib/common/tests/flags/pcmk__clear_flags_as
 /lib/common/tests/flags/pcmk__set_flags_as
 /lib/common/tests/flags/pcmk_all_flags_set
@@ -306,6 +305,7 @@ pacemaker_*.info
 /lib/common/tests/strings/pcmk__char_in_any_str
 /lib/common/tests/utils/pcmk_str_is_infinity
 /lib/common/tests/utils/pcmk_str_is_minus_infinity
+/lib/gnu/libgnu.a
 /lib/pengine/tests/rules/pe_cron_range_satisfied
 /lrmd
 /ltmain.sh

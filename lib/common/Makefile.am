@@ -10,8 +10,6 @@ include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
 
-MOSTLYCLEANFILES	= md5.c
-
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
 check_LTLIBRARIES = libcrmcommon_test.la
@@ -38,7 +36,7 @@ libcrmcommon_la_LDFLAGS	= -version-info 42:0:8
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmcommon_la_LIBADD	= @LIBADD_DL@
+libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(top_builddir)/lib/gnu/libgnu.la
 
 # If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
 # be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
@@ -95,11 +93,6 @@ libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
-# It's possible to build the library adding ../gnu/md5.c directly to SOURCES,
-# but distclean chokes on that because it tries to include the source's .Plo
-# file, which may have already been cleaned.
-nodist_libcrmcommon_la_SOURCES	= md5.c
-
 WRAPPED = calloc getenv getpwnam_r uname
 WRAPPED_FLAGS = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))
 
@@ -109,9 +102,6 @@ libcrmcommon_test_la_LDFLAGS	= $(LDFLAGS_HARDENED_LIB) $(WRAPPED_FLAGS)
 libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS)
 libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
-
-md5.c: ../gnu/md5.c
-	cp "$<" "$@"
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

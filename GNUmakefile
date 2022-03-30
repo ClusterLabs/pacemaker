@@ -240,11 +240,12 @@ GNU_MODS	= crypto/md5-buffer
 GNU_MODS_AVOID	= stdint
 # only for plain crypto/md5: we make do without kernel-assisted crypto
 # GNU_MODS_AVOID	+= crypto/af_alg
+.PHONY: gnulib-update
 gnulib-update:
 	-test -e maint/gnulib \
 	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
 	cd maint/gnulib && git pull
-	maint/gnulib/gnulib-tool \
+	maint/gnulib/gnulib-tool --libtool \
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = $(date +'%Y%m%d')/"	\
