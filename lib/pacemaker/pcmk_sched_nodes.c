@@ -315,9 +315,25 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                  node->details->uname, health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *rsc = data_set->resources; rsc != NULL; rsc = rsc->next) {
-            pcmk__new_location(strategy_str, (pe_resource_t *) rsc->data,
-                               health, NULL, node, data_set);
+        for (GList *r = data_set->resources; r != NULL; r = r->next) {
+            pe_resource_t *rsc = (pe_resource_t *) r->data;
+
+            bool constrain = true;
+
+            if (health < 0) {
+                /* Negative health scores do not apply to resources with
+                 * allow-unhealthy-nodes=true.
+                 */
+                constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
+                                         PCMK__META_ALLOW_UNHEALTHY_NODES));
+            }
+            if (constrain) {
+                pcmk__new_location(strategy_str, rsc, health, NULL, node,
+                                   data_set);
+            } else {
+                pe_rsc_trace(rsc, "%s is immune from health ban on %s",
+                             rsc->id, node->details->uname);
+            }
         }
     }
 }

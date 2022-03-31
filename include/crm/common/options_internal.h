@@ -140,6 +140,9 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__OPT_NODE_HEALTH_STRATEGY      "node-health-strategy"
 #define PCMK__OPT_NODE_HEALTH_YELLOW        "node-health-yellow"
 
+// Constants for meta-attribute names
+#define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"
+
 // Constants for enumerated values for various options
 #define PCMK__VALUE_CUSTOM                  "custom"
 #define PCMK__VALUE_GREEN                   "green"
