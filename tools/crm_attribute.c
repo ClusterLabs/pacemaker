@@ -42,10 +42,39 @@
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+static int
+attribute_text(pcmk__output_t *out, va_list args)
+{
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
+    char *host G_GNUC_UNUSED = va_arg(args, char *);
+
+    if (out->quiet) {
+        pcmk__formatted_printf(out, "%s\n", value);
+    } else {
+        out->info(out, "%s%s %s%s %s%s value=%s",
+                  scope ? "scope=" : "", scope ? scope : "",
+                  instance ? "id=" : "", instance ? instance : "",
+                  name ? "name=" : "", name ? name : "",
+                  value ? value : "(null)");
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "attribute", "text", attribute_text },
+
     { NULL, NULL, NULL }
 };
 
@@ -337,6 +366,7 @@ main(int argc, char **argv)
     }
 
     pcmk__register_lib_messages(out);
+    pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
         out->version(out, false);
