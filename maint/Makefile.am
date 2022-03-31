@@ -182,6 +182,9 @@ GNU_MODS_AVOID	= stdint
 
 .PHONY: gnulib-update
 gnulib-update:
+	@echo 'Newer versions of gnulib require automake 1.14'
+	@echo 'Pacemaker cannot update until minimum supported automake is 1.14'
+	@exit 1
 	if test -e gnulib; then							\
 		cd gnulib && git pull;						\
 	else									\
