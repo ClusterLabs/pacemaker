@@ -193,5 +193,7 @@ gnulib-update:
 		$(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = `date +'%Y%m%d'`/"	\
 		../rpm/pacemaker.spec.in
-	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/"				\
+	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" 				\
+		-e "s#left_over -= 64;#left_over \&= 63; /* helps static analysis */#"	\
+		-e "s#&ctx->buffer\[16\]#\&(((char *) ctx->buffer)[64]) /* helps static analysis */#"	\
 		../lib/gnu/md5.c
