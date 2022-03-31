@@ -8,7 +8,9 @@
 
     <define name="element-crm_attribute">
         <choice>
-            <ref name="element-attribute" />
+            <zeroOrMore>
+                <ref name="element-attribute" />
+            </zeroOrMore>
         </choice>
     </define>
 
@@ -20,11 +22,10 @@
             <optional>
                 <attribute name="id"> <text /> </attribute>
             </optional>
+            <attribute name="name"> <text /> </attribute>
+            <attribute name="value"> <text /> </attribute>
             <optional>
-                <attribute name="name"> <text /> </attribute>
-            </optional>
-            <optional>
-                <attribute name="value"> <text /> </attribute>
+                <attribute name="host"> <text /> </attribute>
             </optional>
         </element>
     </define>
