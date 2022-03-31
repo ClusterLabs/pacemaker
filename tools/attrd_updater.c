@@ -26,6 +26,8 @@
 
 #include <crm/common/attrd_internal.h>
 
+#include <pcmki/pcmki_output.h>
+
 #define SUMMARY "query and update Pacemaker node attributes"
 
 static pcmk__supported_format_t formats[] = {
@@ -169,7 +171,8 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 
-static int do_query(const char *attr_name, const char *attr_node, gboolean query_all);
+static int do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node,
+                    gboolean query_all);
 static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
@@ -232,8 +235,10 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_lib_messages(out);
+
     if (options.command == 'Q') {
-        int rc = do_query(options.attr_name, options.attr_node, options.query_all);
+        int rc = do_query(out, options.attr_name, options.attr_node, options.query_all);
         exit_code = pcmk_rc2exitc(rc);
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
@@ -373,7 +378,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
  * \return true if any values were printed
  */
 static bool
-print_attrd_values(xmlNode *reply, const char *attr_name)
+print_attrd_values(pcmk__output_t *out, xmlNode *reply, const char *attr_name)
 {
     xmlNode *child;
     const char *reply_host, *reply_value;
@@ -394,8 +399,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
                 crm_warn("Ignoring %s tag without %s attribute in query reply",
                          XML_CIB_TAG_NODE, PCMK__XA_ATTR_NODE_NAME);
             } else {
-                printf("name=\"%s\" host=\"%s\" value=\"%s\"\n",
-                       attr_name, reply_host, (reply_value? reply_value : ""));
+                out->message(out, "attribute", NULL, NULL, attr_name, reply_value, reply_host);
                 have_values = true;
             }
         }
@@ -414,7 +418,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
  * \return Standard Pacemaker return code
  */
 static int
-do_query(const char *attr_name, const char *attr_node, gboolean query_all)
+do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
 {
     xmlNode *reply = NULL;
     int rc = pcmk_rc_ok;
@@ -447,7 +451,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     }
 
     /* Print the values from the reply */
-    if (!print_attrd_values(reply, attr_name)) {
+    if (!print_attrd_values(out, reply, attr_name)) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not query value of %s: reply had attribute name but no host values",
                     attr_name);
