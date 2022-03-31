@@ -265,6 +265,7 @@ struct pe_node_s {
 #  define pe_rsc_provisional                0x00000100ULL
 #  define pe_rsc_allocating                 0x00000200ULL
 #  define pe_rsc_merging                    0x00000400ULL
+#  define pe_rsc_restarting                 0x00000800ULL
 
 #  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL

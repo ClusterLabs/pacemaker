@@ -1204,6 +1204,8 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
     enum rsc_role_e role = rsc->role;
     enum rsc_role_e next_role;
 
+    pe__set_resource_flags(rsc, pe_rsc_restarting);
+
     // Bring resource down to a stop on its current node
     while (role != RSC_ROLE_STOPPED) {
         next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
@@ -1235,6 +1237,8 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         }
         role = next_role;
     }
+
+    pe__clear_resource_flags(rsc, pe_rsc_restarting);
 }
 
 void
