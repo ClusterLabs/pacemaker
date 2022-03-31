@@ -418,12 +418,14 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
-dnl @TODO This should be a corosync pkgconfig variable
-PCMK__COROSYNC_CONF=""
+dnl Get default from corosync if possible.
+PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir], [],
+              [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
 AC_ARG_WITH([corosync-conf],
     [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
         location of Corosync configuration file
-        @<:@SYSCONFDIR/corosync/corosync.conf@:>@]))],
+        @<:@value from Corosync package if available otherwise
+        SYSCONFDIR/corosync/corosync.conf@:>@]))],
     [ PCMK__COROSYNC_CONF="$withval" ]
 )
 
@@ -1240,11 +1242,13 @@ dnl Check for printw() prototype compatibility
 AS_IF([test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    cc_temp_flags "-Wcast-qual $WERROR"
+
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
-    AS_IF([cc_supports_flag -fPIC], [CFLAGS="$CFLAGS -fPIC"])
+    AS_IF([cc_supports_flag -fPIC],
+	  [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
+	  [cc_temp_flags "-Wcast-qual $WERROR"])
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
@@ -1330,7 +1334,7 @@ PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
-dnl libqb libqb-2.0.3 + ipc-connect-async-API (2022-01)
+dnl libqb 2.0.5+ (2022-03)
 AC_CHECK_FUNCS([qb_ipcc_connect_async])
 
 dnl libqb 2.0.2+ (2020-10)

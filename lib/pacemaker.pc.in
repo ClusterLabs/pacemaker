@@ -8,6 +8,7 @@ daemon_group=@CRM_DAEMON_GROUP@
 daemon_user=@CRM_DAEMON_USER@
 daemondir=@CRM_DAEMON_DIR@
 blackboxdir=@CRM_BLACKBOX_DIR@
+initdir=@INITDIR@
 coredir=@CRM_CORE_DIR@
 statedir=@CRM_STATE_DIR@
 features=@PCMK_FEATURES@

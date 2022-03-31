@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -35,12 +35,6 @@ GLIB_CFLAGS	?= $(pkg-config --cflags glib-2.0)
 
 PACKAGE		?= pacemaker
 
-# indent target: Limit indent to these directories
-INDENT_DIRS	?= .
-
-# indent target: Extra options to pass to indent
-INDENT_OPTS	?=
-
 .PHONY: init
 init:
 	test -e $(top_srcdir)/configure || ./autogen.sh
@@ -62,6 +56,13 @@ $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
 .PHONY: mock-% rpm-% spec-% srpm-%
 mock-% rpm-% spec-% srpm-%:
 	$(MAKE) $(AM_MAKEFLAGS) -C rpm $(USE_FILE) "$@"
+
+## indent-related targets (deprecated; use targets in devel subdir instead)
+
+.PHONY: indent
+indent:
+	@echo 'Deprecated: Use "make -C devel $@" instead'
+	$(MAKE) $(AM_MAKEFLAGS) -C devel "$@"
 
 ## Static analysis via coverity
 
@@ -128,83 +129,6 @@ coverity-clean:
 		"$(abs_builddir)"/*.coverity
 
 
-## Change log generation
-
-summary:
-	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)"
-	@printf "\n- Changesets: `git log --pretty=oneline --no-merges $(LAST_RELEASE)..HEAD | wc -l`"
-	@printf "\n- Diff:\n"
-	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
-
-rc-changes:
-	@$(MAKE) $(AM_MAKEFLAGS) NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
-
-changes: summary
-	@printf "\n- Features added since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *Feature: */  + /p' | sort -uf
-	@printf "\n- Fixes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */  + /p' | sed			\
-			-e 's@\(cib\|pacemaker-based\|based\):@CIB:@' \
-			-e 's@\(crmd\|pacemaker-controld\|controld\):@controller:@' \
-			-e 's@\(lrmd\|pacemaker-execd\|execd\):@executor:@' \
-			-e 's@\(Fencing\|stonithd\|stonith\|pacemaker-fenced\|fenced\):@fencing:@' \
-			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
-		| sort -uf
-	@printf "\n- Public API changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| sed -n -e 's/^ *API: */  + /p' | sort -uf
-
-authors:
-	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
-
-changelog:
-	@$(MAKE) $(AM_MAKEFLAGS) changes > ChangeLog
-	@printf "\n">> ChangeLog
-	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
-
-INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
-			  lib/gnu/*
-INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
-			  --blank-lines-after-procedures		\
-			  --braces-after-func-def-line			\
-			  --braces-on-if-line				\
-			  --braces-on-struct-decl-line			\
-			  --break-before-boolean-operator		\
-			  --case-brace-indentation4			\
-			  --case-indentation4				\
-			  --comment-indentation0			\
-			  --continuation-indentation4			\
-			  --continue-at-parentheses			\
-			  --cuddle-do-while				\
-			  --cuddle-else					\
-			  --declaration-comment-column0			\
-			  --declaration-indentation1			\
-			  --else-endif-column0				\
-			  --honour-newlines				\
-			  --indent-label0				\
-			  --indent-level4				\
-			  --line-comments-indentation0			\
-			  --line-length80				\
-			  --no-blank-lines-after-commas			\
-			  --no-comment-delimiters-on-blank-lines	\
-			  --no-space-after-function-call-names		\
-			  --no-space-after-parentheses			\
-			  --no-tabs					\
-			  --preprocessor-indentation2			\
-			  --procnames-start-lines			\
-			  --space-after-cast				\
-			  --start-left-side-of-comments			\
-			  --swallow-optional-blank-lines		\
-			  --tab-size8
-
-indent:
-	VERSION_CONTROL=none					\
-		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
-		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
-		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
-
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
@@ -230,28 +154,6 @@ clang:
 	REPORT=$$(echo "$$OUT"						\
 		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
 	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
-
-# V3	= scandir unsetenv alphasort xalloc
-# V2	= setenv strerror strchrnul strndup
-# https://www.gnu.org/software/gnulib/manual/html_node/Initial-import.html#Initial-import
-# previously, this was crypto/md5, but got spoiled with streams/kernel crypto
-GNU_MODS	= crypto/md5-buffer
-# stdint appears to be surrogate only for C99-lacking environments
-GNU_MODS_AVOID	= stdint
-# only for plain crypto/md5: we make do without kernel-assisted crypto
-# GNU_MODS_AVOID	+= crypto/af_alg
-.PHONY: gnulib-update
-gnulib-update:
-	-test -e maint/gnulib \
-	  || git clone https://git.savannah.gnu.org/git/gnulib.git maint/gnulib
-	cd maint/gnulib && git pull
-	maint/gnulib/gnulib-tool --libtool \
-	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
-	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
-	sed -i -e "s/bundled(gnulib).*/bundled(gnulib) = $(date +'%Y%m%d')/"	\
-		rpm/pacemaker.spec.in
-	sed -i -e "s/_GL_EXTERN_INLINE/_GL_INLINE/" \
-		lib/gnu/md5.c
 
 ## Coverage/profiling
 

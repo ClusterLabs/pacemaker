@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2021 the Pacemaker project contributors
+# Copyright 2020-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -66,7 +66,61 @@ cocci-test:
 		coccinelle/test/testrunner.sh $$f; \
 	done
 
+#
+# indent cannot cope with all our exceptions and needs heavy manual editing
+#
+
+# indent target: Limit indent to these directories
+INDENT_DIRS	?= .
+
+# indent target: Extra options to pass to indent
+INDENT_OPTS	?=
+
+INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
+			  lib/gnu/*
+INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
+			  --blank-lines-after-procedures		\
+			  --braces-after-func-def-line			\
+			  --braces-on-if-line				\
+			  --braces-on-struct-decl-line			\
+			  --break-before-boolean-operator		\
+			  --case-brace-indentation4			\
+			  --case-indentation4				\
+			  --comment-indentation0			\
+			  --continuation-indentation4			\
+			  --continue-at-parentheses			\
+			  --cuddle-do-while				\
+			  --cuddle-else					\
+			  --declaration-comment-column0			\
+			  --declaration-indentation1			\
+			  --else-endif-column0				\
+			  --honour-newlines				\
+			  --indent-label0				\
+			  --indent-level4				\
+			  --line-comments-indentation0			\
+			  --line-length80				\
+			  --no-blank-lines-after-commas			\
+			  --no-comment-delimiters-on-blank-lines	\
+			  --no-space-after-function-call-names		\
+			  --no-space-after-parentheses			\
+			  --no-tabs					\
+			  --preprocessor-indentation2			\
+			  --procnames-start-lines			\
+			  --space-after-cast				\
+			  --start-left-side-of-comments			\
+			  --swallow-optional-blank-lines		\
+			  --tab-size8
+
+indent:
+	VERSION_CONTROL=none					\
+		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
+		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
+		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
+
+#
 # Scratch file for ad-hoc testing
+#
+
 EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
