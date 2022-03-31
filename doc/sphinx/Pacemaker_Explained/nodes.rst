@@ -371,6 +371,23 @@ Allowed values are:
    +----------------+----------------------------------------------------------+
 
 
+Exempting a Resource from Health Restrictions
+#############################################
+
+If you want a resource to be able to run on a node even if its health score
+would otherwise prevent it, set the resource's ``allow-unhealthy-nodes``
+meta-attribute to ``true`` *(available since 2.1.3)*.
+
+This is particularly useful for node health agents, to allow them to detect
+when the node becomes healthy again. If you configure a health agent without
+this setting, then the health agent will be banned from an unhealthy node,
+and you will have to investigate and clear the health attribute manually once
+it is healthy to allow resources on the node again.
+
+If you want the meta-attribute to apply to a clone, it must be set on the clone
+itself, not on the resource being cloned.
+
+
 Configuring Node Health Agents
 ##############################
 
