@@ -457,6 +457,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->rsc_discovery_enabled = TRUE;
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
+    new_node->details->data_set = data_set;
 
     if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;
