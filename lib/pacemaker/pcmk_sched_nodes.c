@@ -284,7 +284,7 @@ void
 pcmk__apply_node_health(pe_working_set_t *data_set)
 {
     const char *health_strategy = pe_pref(data_set->config_hash,
-                                          "node-health-strategy");
+                                          PCMK__OPT_NODE_HEALTH_STRATEGY);
     int base_health = 0;
 
     if (pcmk__str_eq(health_strategy, "none",
@@ -296,7 +296,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
     // The progressive strategy can use a base health score
     if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
         base_health = char2score(pe_pref(data_set->config_hash,
-                                         "node-health-base"));
+                                         PCMK__OPT_NODE_HEALTH_BASE));
     }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {

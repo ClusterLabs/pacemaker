@@ -202,7 +202,7 @@ static void
 unpack_node_health_values(pe_working_set_t *data_set)
 {
     const char *health_strategy = pe_pref(data_set->config_hash,
-                                          "node-health-strategy");
+                                          PCMK__OPT_NODE_HEALTH_STRATEGY);
 
     if (pcmk__str_eq(health_strategy, "none",
                      pcmk__str_null_matches|pcmk__str_casei)) {
@@ -223,11 +223,11 @@ unpack_node_health_values(pe_working_set_t *data_set)
 
     } else { // "progressive" or "custom"
         pcmk__score_red = char2score(pe_pref(data_set->config_hash,
-                                             "node-health-red"));
+                                             PCMK__OPT_NODE_HEALTH_RED));
         pcmk__score_green = char2score(pe_pref(data_set->config_hash,
-                                               "node-health-green"));
+                                               PCMK__OPT_NODE_HEALTH_GREEN));
         pcmk__score_yellow = char2score(pe_pref(data_set->config_hash,
-                                                "node-health-yellow"));
+                                                PCMK__OPT_NODE_HEALTH_YELLOW));
     }
 
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)

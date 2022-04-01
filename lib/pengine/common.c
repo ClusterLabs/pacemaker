@@ -239,7 +239,7 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Node health */
     {
-        "node-health-strategy", NULL, "select",
+        PCMK__OPT_NODE_HEALTH_STRATEGY, NULL, "select",
         "none, migrate-on-red, only-green, progressive, custom",
         "none", check_health,
         "How cluster should react to node health attributes",
@@ -248,28 +248,32 @@ static pcmk__cluster_option_t pe_opts[] = {
             "\"green\"."
     },
     {
-        "node-health-base", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         "Base health score assigned to a node",
-        "Only used when node-health-strategy is set to progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            "progressive."
     },
     {
-        "node-health-green", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         "The score to use for a node health attribute whose value is \"green\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            "custom or progressive."
     },
     {
-        "node-health-yellow", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         "The score to use for a node health attribute whose value is \"yellow\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            "custom or progressive."
     },
     {
-        "node-health-red", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
         "-INFINITY", pcmk__valid_number,
         "The score to use for a node health attribute whose value is \"red\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            "custom or progressive."
     },
 
     /*Placement Strategy*/
