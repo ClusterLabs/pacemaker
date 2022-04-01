@@ -1,0 +1,7 @@
+ digraph "g" {
+"dummy_monitor_10000 rhel8-3" [ style=bold color="green" fontcolor="black"]
+"dummy_start_0 rhel8-3" -> "dummy_monitor_10000 rhel8-3" [ style = bold]
+"dummy_start_0 rhel8-3" [ style=bold color="green" fontcolor="black"]
+"dummy_stop_0 rhel8-5" -> "dummy_start_0 rhel8-3" [ style = bold]
+"dummy_stop_0 rhel8-5" [ style=bold color="green" fontcolor="black"]
+}
