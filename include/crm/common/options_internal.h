@@ -140,4 +140,14 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__OPT_NODE_HEALTH_STRATEGY      "node-health-strategy"
 #define PCMK__OPT_NODE_HEALTH_YELLOW        "node-health-yellow"
 
+// Constants for enumerated values for various options
+#define PCMK__VALUE_CUSTOM                  "custom"
+#define PCMK__VALUE_GREEN                   "green"
+#define PCMK__VALUE_MIGRATE_ON_RED          "migrate-on-red"
+#define PCMK__VALUE_NONE                    "none"
+#define PCMK__VALUE_ONLY_GREEN              "only-green"
+#define PCMK__VALUE_PROGRESSIVE             "progressive"
+#define PCMK__VALUE_RED                     "red"
+#define PCMK__VALUE_YELLOW                  "yellow"
+
 #endif // PCMK__OPTIONS_INTERNAL__H

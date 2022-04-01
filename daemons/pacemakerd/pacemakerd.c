@@ -360,7 +360,8 @@ main(int argc, char **argv)
     {
         const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
-        if (facility && !pcmk__str_eq(facility, "none", pcmk__str_casei)) {
+        if (!pcmk__str_eq(facility, PCMK__VALUE_NONE,
+                          pcmk__str_casei|pcmk__str_null_matches)) {
             setenv("HA_LOGFACILITY", facility, 1);
         }
     }

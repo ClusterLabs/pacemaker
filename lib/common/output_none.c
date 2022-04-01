@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -119,7 +119,7 @@ pcmk__mk_none_output(char **argv) {
         return NULL;
     }
 
-    retval->fmt_name = "none";
+    retval->fmt_name = PCMK__VALUE_NONE;
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
 
     retval->init = none_init;

@@ -204,19 +204,20 @@ unpack_node_health_values(pe_working_set_t *data_set)
     const char *health_strategy = pe_pref(data_set->config_hash,
                                           PCMK__OPT_NODE_HEALTH_STRATEGY);
 
-    if (pcmk__str_eq(health_strategy, "none",
+    if (pcmk__str_eq(health_strategy, PCMK__VALUE_NONE,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         pcmk__score_red = 0;
         pcmk__score_yellow = 0;
         pcmk__score_green = 0;
 
-    } else if (pcmk__str_eq(health_strategy, "migrate-on-red",
+    } else if (pcmk__str_eq(health_strategy, PCMK__VALUE_MIGRATE_ON_RED,
                             pcmk__str_casei)) {
         pcmk__score_red = -INFINITY;
         pcmk__score_yellow = 0;
         pcmk__score_green = 0;
 
-    } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(health_strategy, PCMK__VALUE_ONLY_GREEN,
+                            pcmk__str_casei)) {
         pcmk__score_red = -INFINITY;
         pcmk__score_yellow = -INFINITY;
         pcmk__score_green = 0;
@@ -232,7 +233,10 @@ unpack_node_health_values(pe_working_set_t *data_set)
 
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
-        crm_debug("Values of node health scores: red=%d yellow=%d green=%d",
+        crm_debug("Values of node health scores: "
+                  PCMK__VALUE_RED "=%d "
+                  PCMK__VALUE_YELLOW "=%d "
+                  PCMK__VALUE_GREEN "=%d",
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }

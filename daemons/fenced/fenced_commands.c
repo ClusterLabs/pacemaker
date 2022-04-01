@@ -992,7 +992,7 @@ target_list_type(stonith_device_t * dev)
         } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
             check_type = "status";
         } else {
-            check_type = "none";
+            check_type = PCMK__VALUE_NONE;
         }
     }
 
@@ -2007,7 +2007,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
     check_type = target_list_type(dev);
 
-    if (pcmk__str_eq(check_type, "none", pcmk__str_casei)) {
+    if (pcmk__str_eq(check_type, PCMK__VALUE_NONE, pcmk__str_casei)) {
         can = TRUE;
 
     } else if (pcmk__str_eq(check_type, "static-list", pcmk__str_casei)) {

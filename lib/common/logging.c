@@ -186,7 +186,7 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 static bool
 logfile_disabled(const char *filename)
 {
-    return pcmk__str_eq(filename, "none", pcmk__str_casei)
+    return pcmk__str_eq(filename, PCMK__VALUE_NONE, pcmk__str_casei)
            || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
 }
 
@@ -869,12 +869,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pcmk__is_daemon) {
             facility = "daemon";
         } else {
-            facility = "none";
+            facility = PCMK__VALUE_NONE;
         }
         pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility);
     }
 
-    if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
+    if (pcmk__str_eq(facility, PCMK__VALUE_NONE, pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -911,7 +911,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     {
         const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
-        if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
+        if (!pcmk__str_eq(PCMK__VALUE_NONE, logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
             // Daemons always get a log file, unless explicitly set to "none"
             pcmk__add_logfile(logfile);

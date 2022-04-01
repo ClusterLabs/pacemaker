@@ -224,7 +224,7 @@ apply_exclude(const gchar *excludes, GError **error) {
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
@@ -233,8 +233,8 @@ apply_exclude(const gchar *excludes, GError **error) {
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, maint-mode, nodes, "
-                        "none, operations, options, resources, stack, summary, "
-                        "tickets, times");
+                        PCMK__VALUE_NONE ", operations, options, resources, "
+                        "stack, summary, tickets, times");
             result = FALSE;
             break;
         }
@@ -266,7 +266,7 @@ apply_include(const gchar *includes, GError **error) {
             }
         } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
             show |= default_includes(output_format);
-        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
+        } else if (pcmk__str_eq(*s, PCMK__VALUE_NONE, pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;
@@ -274,8 +274,9 @@ apply_include(const gchar *includes, GError **error) {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         "default, failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, maint-mode, nodes, none, "
-                        "operations, options, resources, stack, summary, tickets, times");
+                        "fencing-pending, fencing-succeeded, maint-mode, nodes, "
+                        PCMK__VALUE_NONE ", operations, options, resources, "
+                        "stack, summary, tickets, times");
             result = FALSE;
             break;
         }

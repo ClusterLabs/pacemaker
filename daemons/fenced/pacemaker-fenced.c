@@ -1482,13 +1482,15 @@ main(int argc, char **argv)
         printf
             ("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
              "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
-             "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+             "A value of '" PCMK__VALUE_NONE "' can be used to tell the "
+             "cluster not to supply any additional parameters.\n"
              "     </longdesc>\n");
 #ifdef ENABLE_NLS 
         printf
             (_("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
              "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
-             "A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+             "A value of '" PCMK__VALUE_NONE "' can be used to tell the "
+             "cluster not to supply any additional parameters.\n"
              "     </longdesc>\n"));
 #endif
         printf
@@ -1531,8 +1533,9 @@ main(int argc, char **argv)
         printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
                "(query the device via the 'list' command), static-list "
                "(check the " PCMK_STONITH_HOST_LIST " attribute), status "
-               "(query the device via the 'status' command), none (assume "
-               "every device can fence every machine)</longdesc>\n");
+               "(query the device via the 'status' command), "
+               PCMK__VALUE_NONE " (assume every device can fence every "
+               "machine)</longdesc>\n");
         printf
             ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");

@@ -287,14 +287,15 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                                           PCMK__OPT_NODE_HEALTH_STRATEGY);
     int base_health = 0;
 
-    if (pcmk__str_eq(health_strategy, "none",
+    if (pcmk__str_eq(health_strategy, PCMK__VALUE_NONE,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         return;
     }
     crm_info("Applying node health strategy '%s'", health_strategy);
 
     // The progressive strategy can use a base health score
-    if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
+    if (pcmk__str_eq(health_strategy, PCMK__VALUE_PROGRESSIVE,
+                     pcmk__str_casei)) {
         base_health = char2score(pe_pref(data_set->config_hash,
                                          PCMK__OPT_NODE_HEALTH_BASE));
     }
