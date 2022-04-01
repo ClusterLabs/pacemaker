@@ -1789,7 +1789,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
 static int
 attribute_default(pcmk__output_t *out, va_list args)
 {
@@ -1797,21 +1797,33 @@ attribute_default(pcmk__output_t *out, va_list args)
     char *instance = va_arg(args, char *);
     char *name = va_arg(args, char *);
     char *value = va_arg(args, char *);
+    char *host = va_arg(args, char *);
 
-    if (out->quiet) {
-        pcmk__formatted_printf(out, "%s\n", value);
-    } else {
-        out->info(out, "%s%s %s%s %s%s value=%s",
-                  scope ? "scope=" : "", scope ? scope : "",
-                  instance ? "id=" : "", instance ? instance : "",
-                  name ? "name=" : "", name ? name : "",
-                  value ? value : "(null)");
+    GString *s = g_string_sized_new(50);
+
+    if (scope) {
+        g_string_append_printf(s, "scope=\"%s\" ", scope);
     }
+
+    if (instance) {
+        g_string_append_printf(s, "id=\"%s\" ", instance);
+    }
+
+    g_string_append_printf(s, "name=\"%s\" ", name);
+
+    if (host) {
+        g_string_append_printf(s, "host=\"%s\" ", host);
+    }
+
+    g_string_append_printf(s, "value=\"%s\"", value ? value : "");
+
+    out->info(out, "%s", s->str);
+    g_string_free(s, TRUE);
 
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
 static int
 attribute_xml(pcmk__output_t *out, va_list args)
 {
@@ -1819,10 +1831,14 @@ attribute_xml(pcmk__output_t *out, va_list args)
     char *instance = va_arg(args, char *);
     char *name = va_arg(args, char *);
     char *value = va_arg(args, char *);
+    char *host = va_arg(args, char *);
 
     xmlNodePtr node = NULL;
 
-    node = pcmk__output_create_xml_node(out, "attribute", NULL);
+    node = pcmk__output_create_xml_node(out, "attribute",
+                                        "name", name,
+                                        "value", value ? value : "",
+                                        NULL);
 
     if (scope) {
         crm_xml_add(node, "scope", scope);
@@ -1832,12 +1848,8 @@ attribute_xml(pcmk__output_t *out, va_list args)
         crm_xml_add(node, "id", instance);
     }
 
-    if (name) {
-        crm_xml_add(node, "name", name);
-    }
-
-    if (value) {
-        crm_xml_add(node, "value", value);
+    if (host) {
+        crm_xml_add(node, "host", host);
     }
 
     return pcmk_rc_ok;
