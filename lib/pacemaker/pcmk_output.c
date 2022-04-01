@@ -1801,17 +1801,17 @@ attribute_default(pcmk__output_t *out, va_list args)
 
     GString *s = g_string_sized_new(50);
 
-    if (scope) {
+    if (!pcmk__str_empty(scope)) {
         g_string_append_printf(s, "scope=\"%s\" ", scope);
     }
 
-    if (instance) {
+    if (!pcmk__str_empty(instance)) {
         g_string_append_printf(s, "id=\"%s\" ", instance);
     }
 
     g_string_append_printf(s, "name=\"%s\" ", name);
 
-    if (host) {
+    if (!pcmk__str_empty(host)) {
         g_string_append_printf(s, "host=\"%s\" ", host);
     }
 
@@ -1840,15 +1840,15 @@ attribute_xml(pcmk__output_t *out, va_list args)
                                         "value", value ? value : "",
                                         NULL);
 
-    if (scope) {
+    if (!pcmk__str_empty(scope)) {
         crm_xml_add(node, "scope", scope);
     }
 
-    if (instance) {
+    if (!pcmk__str_empty(instance)) {
         crm_xml_add(node, "id", instance);
     }
 
-    if (host) {
+    if (!pcmk__str_empty(host)) {
         crm_xml_add(node, "host", host);
     }
 
