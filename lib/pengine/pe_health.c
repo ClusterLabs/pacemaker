@@ -60,3 +60,41 @@ pe__unpack_node_health_scores(pe_working_set_t *data_set)
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
+
+/*!
+ * \internal
+ * \brief Add node attribute value to an integer, if it is a health attribute
+ *
+ * \param[in] key        Name of node attribute
+ * \param[in] value      String value of node attribute
+ * \param[in] user_data  Address of integer to which \p value should be added
+ *                       if \p key is a node health attribute
+ */
+static void
+add_node_health_value(gpointer key, gpointer value, gpointer user_data)
+{
+    if (pcmk__starts_with((const char *) key, "#health")) {
+        int score = char2score((const char *) value);
+        int *health = (int *) user_data;
+
+        *health = pcmk__add_scores(score, *health);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Sum a node's health attribute scores
+ *
+ * \param[in] node         Node whose health attributes should be added
+ * \param[in] base_health  Add this number to the total
+ *
+ * \return Sum of all health attribute scores of \p node plus \p base_health
+ */
+int
+pe__sum_node_health_scores(const pe_node_t *node, int base_health)
+{
+    CRM_ASSERT(node != NULL);
+    g_hash_table_foreach(node->details->attrs, add_node_health_value,
+                         &base_health);
+    return base_health;
+}

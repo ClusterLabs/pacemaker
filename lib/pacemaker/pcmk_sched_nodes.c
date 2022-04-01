@@ -256,26 +256,6 @@ pcmk__any_node_available(GHashTable *nodes)
 
 /*!
  * \internal
- * \brief Add node attribute value to an integer, if it is a health attribute
- *
- * \param[in] key        Name of node attribute
- * \param[in] value      String value of node attribute
- * \param[in] user_data  Address of integer to which \p value should be added
- *                       if \p key is a node health attribute
- */
-static void
-add_node_health_value(gpointer key, gpointer value, gpointer user_data)
-{
-    if (pcmk__starts_with((const char *) key, "#health")) {
-        int score = char2score((const char *) value);
-        int *health = (int *) user_data;
-
-        *health = pcmk__add_scores(score, *health);
-    }
-}
-
-/*!
- * \internal
  * \brief Apply node health values for all nodes in cluster
  *
  * \param[in] data_set  Cluster working set
@@ -301,13 +281,9 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
         pe_node_t *node = (pe_node_t *) iter->data;
-        int health = base_health;
+        int health = pe__sum_node_health_scores(node, base_health);
 
-        // Calculate overall node health score as sum of all health values
-        g_hash_table_foreach(node->details->attrs, add_node_health_value,
-                             &health);
-
-        // A health score of 0 has no effect
+        // An overall health score of 0 has no effect
         if (health == 0) {
             continue;
         }
