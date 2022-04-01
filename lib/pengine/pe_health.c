@@ -98,3 +98,58 @@ pe__sum_node_health_scores(const pe_node_t *node, int base_health)
                          &base_health);
     return base_health;
 }
+
+/*!
+ * \internal
+ * \brief Check the general health status for a node
+ *
+ * \param[in] node      Node to check
+ *
+ * \return  A negative value if any health attribute for \p node is red,
+ *          otherwise 0 if any attribute is yellow, otherwise a positive value.
+ */
+int
+pe__node_health(pe_node_t *node)
+{
+    GHashTableIter iter;
+    const char *name = NULL;
+    const char *value = NULL;
+    enum pcmk__health_strategy strategy;
+    int score = 0;
+    int rc = 1;
+
+    CRM_ASSERT(node != NULL);
+
+    strategy = pe__health_strategy(node->details->data_set);
+    if (strategy == pcmk__health_strategy_none) {
+        return rc;
+    }
+
+    g_hash_table_iter_init(&iter, node->details->attrs);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &name,
+                                  (gpointer *) &value)) {
+        if (pcmk__starts_with(name, "#health")) {
+            /* It's possible that pcmk__score_red equals pcmk__score_yellow,
+             * or pcmk__score_yellow equals pcmk__score_green, so check the
+             * textual value first to be able to distinguish those.
+             */
+            if (pcmk__str_eq(value, PCMK__VALUE_RED, pcmk__str_casei)) {
+                return -1;
+            } else if (pcmk__str_eq(value, PCMK__VALUE_YELLOW,
+                                    pcmk__str_casei)) {
+                rc = 0;
+                continue;
+            }
+
+            // The value is an integer, so compare numerically
+            score = char2score(value);
+            if (score <= pcmk__score_red) {
+                return -1;
+            } else if ((score <= pcmk__score_yellow)
+                       && (pcmk__score_yellow != pcmk__score_green)) {
+                rc = 0;
+            }
+        }
+    }
+    return rc;
+}
