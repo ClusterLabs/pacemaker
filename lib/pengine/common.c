@@ -21,18 +21,6 @@ gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
 
 static bool
-check_health(const char *value)
-{
-    return pcmk__strcase_any_of(value,
-                                PCMK__VALUE_NONE,
-                                PCMK__VALUE_CUSTOM,
-                                PCMK__VALUE_ONLY_GREEN,
-                                PCMK__VALUE_PROGRESSIVE,
-                                PCMK__VALUE_MIGRATE_ON_RED,
-                                NULL);
-}
-
-static bool
 check_placement_strategy(const char *value)
 {
     return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
@@ -248,7 +236,7 @@ static pcmk__cluster_option_t pe_opts[] = {
         PCMK__VALUE_NONE ", " PCMK__VALUE_MIGRATE_ON_RED ", "
             PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
             PCMK__VALUE_CUSTOM,
-        PCMK__VALUE_NONE, check_health,
+        PCMK__VALUE_NONE, pcmk__validate_health_strategy,
         "How cluster should react to node health attributes",
         "Requires external entities to create node attributes (named with "
             "the prefix \"#health\") with values \"" PCMK__VALUE_RED "\", "

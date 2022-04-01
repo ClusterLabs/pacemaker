@@ -29,6 +29,8 @@ enum pcmk__health_strategy {
     pcmk__health_strategy_custom,
 };
 
+bool pcmk__validate_health_strategy(const char *value);
+
 enum pcmk__health_strategy pcmk__parse_health_strategy(const char *value);
 
 #ifdef __cplusplus

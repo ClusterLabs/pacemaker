@@ -11,6 +11,26 @@
 
 /*!
  * \internal
+ * \brief Ensure a health strategy value is allowed
+ *
+ * \param[in] value  Configured health strategy
+ *
+ * \return true if \p value is an allowed health strategy value, otherwise false
+ */
+bool
+pcmk__validate_health_strategy(const char *value)
+{
+    return pcmk__strcase_any_of(value,
+                                PCMK__VALUE_NONE,
+                                PCMK__VALUE_CUSTOM,
+                                PCMK__VALUE_ONLY_GREEN,
+                                PCMK__VALUE_PROGRESSIVE,
+                                PCMK__VALUE_MIGRATE_ON_RED,
+                                NULL);
+}
+
+/*!
+ * \internal
  * \brief Parse node health strategy from a user-provided string
  *
  * \param[in] value  User-provided configuration value for node-health-strategy
