@@ -283,21 +283,20 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 void
 pcmk__apply_node_health(pe_working_set_t *data_set)
 {
-    const char *health_strategy = pe_pref(data_set->config_hash,
-                                          PCMK__OPT_NODE_HEALTH_STRATEGY);
     int base_health = 0;
+    enum pcmk__health_strategy strategy;
+    const char *strategy_str = pe_pref(data_set->config_hash,
+                                       PCMK__OPT_NODE_HEALTH_STRATEGY);
 
-    if (pcmk__str_eq(health_strategy, PCMK__VALUE_NONE,
-                     pcmk__str_null_matches|pcmk__str_casei)) {
+    strategy = pcmk__parse_health_strategy(strategy_str);
+    if (strategy == pcmk__health_strategy_none) {
         return;
     }
-    crm_info("Applying node health strategy '%s'", health_strategy);
+    crm_info("Applying node health strategy '%s'", strategy_str);
 
     // The progressive strategy can use a base health score
-    if (pcmk__str_eq(health_strategy, PCMK__VALUE_PROGRESSIVE,
-                     pcmk__str_casei)) {
-        base_health = char2score(pe_pref(data_set->config_hash,
-                                         PCMK__OPT_NODE_HEALTH_BASE));
+    if (strategy == pcmk__health_strategy_progressive) {
+        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, data_set);
     }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
@@ -317,7 +316,7 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
 
         // Use node health as a location score for each resource on the node
         for (GList *rsc = data_set->resources; rsc != NULL; rsc = rsc->next) {
-            pcmk__new_location(health_strategy, (pe_resource_t *) rsc->data,
+            pcmk__new_location(strategy_str, (pe_resource_t *) rsc->data,
                                health, NULL, node, data_set);
         }
     }

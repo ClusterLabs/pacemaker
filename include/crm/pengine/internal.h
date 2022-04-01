@@ -14,6 +14,7 @@
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/internal.h>
+#  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -577,5 +578,18 @@ gboolean pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean ch
 xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 
 const char *pe__clone_child_id(pe_resource_t *rsc);
+
+static inline enum pcmk__health_strategy
+pe__health_strategy(pe_working_set_t *data_set)
+{
+    return pcmk__parse_health_strategy(pe_pref(data_set->config_hash,
+                                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+}
+
+static inline int
+pe__health_score(const char *option, pe_working_set_t *data_set)
+{
+    return char2score(pe_pref(data_set->config_hash, option));
+}
 
 #endif
