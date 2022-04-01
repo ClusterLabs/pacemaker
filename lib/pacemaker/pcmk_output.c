@@ -1793,19 +1793,19 @@ PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
 static int
 attribute_default(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *attr_id = va_arg(args, char *);
-    char *attr_name = va_arg(args, char *);
-    char *read_value = va_arg(args, char *);
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
 
     if (out->quiet) {
-        pcmk__formatted_printf(out, "%s\n", read_value);
+        pcmk__formatted_printf(out, "%s\n", value);
     } else {
         out->info(out, "%s%s %s%s %s%s value=%s",
-                  type ? "scope=" : "", type ? type : "",
-                  attr_id ? "id=" : "", attr_id ? attr_id : "",
-                  attr_name ? "name=" : "", attr_name ? attr_name : "",
-                  read_value ? read_value : "(null)");
+                  scope ? "scope=" : "", scope ? scope : "",
+                  instance ? "id=" : "", instance ? instance : "",
+                  name ? "name=" : "", name ? name : "",
+                  value ? value : "(null)");
     }
 
     return pcmk_rc_ok;
@@ -1815,29 +1815,29 @@ PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
 static int
 attribute_xml(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *attr_id = va_arg(args, char *);
-    char *attr_name = va_arg(args, char *);
-    char *read_value = va_arg(args, char *);
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
 
     xmlNodePtr node = NULL;
 
     node = pcmk__output_create_xml_node(out, "attribute", NULL);
 
-    if (type) {
-        crm_xml_add(node, "scope", type);
+    if (scope) {
+        crm_xml_add(node, "scope", scope);
     }
 
-    if (attr_id) {
-        crm_xml_add(node, "id", attr_id);
+    if (instance) {
+        crm_xml_add(node, "id", instance);
     }
 
-    if (attr_name) {
-        crm_xml_add(node, "name", attr_name);
+    if (name) {
+        crm_xml_add(node, "name", name);
     }
 
-    if (read_value) {
-        crm_xml_add(node, "value", read_value);
+    if (value) {
+        crm_xml_add(node, "value", value);
     }
 
     return pcmk_rc_ok;
