@@ -33,17 +33,22 @@
 
 #include <pacemaker-internal.h>
 
-gboolean do_force = FALSE;
-gboolean BE_QUIET = FALSE;
-const char *ticket_id = NULL;
-const char *get_attr_name = NULL;
-const char *attr_name = NULL;
-const char *attr_value = NULL;
-const char *attr_id = NULL;
-const char *set_name = NULL;
-const char *attr_default = NULL;
-const char *xml_file = NULL;
-char ticket_cmd = 'S';
+struct {
+    const char *attr_default;
+    const char *attr_id;
+    const char *attr_name;
+    const char *attr_value;
+    gboolean force;
+    const char *get_attr_name;
+    gboolean quiet;
+    const char *set_name;
+    char ticket_cmd;
+    const char *ticket_id;
+    const char *xml_file;
+} options = {
+    .ticket_cmd = 'S'
+};
+
 int cib_options = cib_sync_call;
 
 static pe_ticket_t *
@@ -346,7 +351,7 @@ allow_modification(const char *ticket_id, GList *attr_delete,
     const char *value = NULL;
     GList *list_iter = NULL;
 
-    if (do_force) {
+    if (options.force) {
         return TRUE;
     }
 
@@ -756,17 +761,17 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'Q':
-                BE_QUIET = TRUE;
+                options.quiet = TRUE;
                 break;
             case 't':
-                ticket_id = optarg;
+                options.ticket_id = optarg;
                 break;
             case 'l':
             case 'L':
             case 'w':
             case 'q':
             case 'c':
-                ticket_cmd = flag;
+                options.ticket_cmd = flag;
                 break;
             case 'g':
                 g_hash_table_insert(attr_set, strdup("granted"), strdup("true"));
@@ -785,15 +790,15 @@ main(int argc, char **argv)
                 modified++;
                 break;
             case 'G':
-                get_attr_name = optarg;
-                ticket_cmd = flag;
+                options.get_attr_name = optarg;
+                options.ticket_cmd = flag;
                 break;
             case 'S':
-                attr_name = optarg;
-                if (attr_name && attr_value) {
-                    g_hash_table_insert(attr_set, strdup(attr_name), strdup(attr_value));
-                    attr_name = NULL;
-                    attr_value = NULL;
+                options.attr_name = optarg;
+                if (options.attr_name && options.attr_value) {
+                    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+                    options.attr_name = NULL;
+                    options.attr_value = NULL;
                     modified++;
                 }
                 break;
@@ -802,31 +807,31 @@ main(int argc, char **argv)
                 modified++;
                 break;
             case 'C':
-                ticket_cmd = flag;
+                options.ticket_cmd = flag;
                 break;
             case 'v':
-                attr_value = optarg;
-                if (attr_name && attr_value) {
-                    g_hash_table_insert(attr_set, strdup(attr_name), strdup(attr_value));
-                    attr_name = NULL;
-                    attr_value = NULL;
+                options.attr_value = optarg;
+                if (options.attr_name && options.attr_value) {
+                    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+                    options.attr_name = NULL;
+                    options.attr_value = NULL;
                     modified++;
                 }
                 break;
             case 'd':
-                attr_default = optarg;
+                options.attr_default = optarg;
                 break;
             case 'f':
-                do_force = TRUE;
+                options.force = TRUE;
                 break;
             case 'x':
-                xml_file = optarg;
+                options.xml_file = optarg;
                 break;
             case 'n':
-                set_name = optarg;
+                options.set_name = optarg;
                 break;
             case 'i':
-                attr_id = optarg;
+                options.attr_id = optarg;
                 break;
 
             default:
@@ -874,8 +879,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (xml_file != NULL) {
-        cib_xml_copy = filename2xml(xml_file);
+    if (options.xml_file != NULL) {
+        cib_xml_copy = filename2xml(options.xml_file);
 
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
@@ -901,21 +906,21 @@ main(int argc, char **argv)
      * but have never been granted yet. */
     pcmk__unpack_constraints(data_set);
 
-    if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
+    if (options.ticket_cmd == 'l' || options.ticket_cmd == 'L' || options.ticket_cmd == 'w') {
         gboolean raw = FALSE;
         gboolean details = FALSE;
 
-        if (ticket_cmd == 'L') {
+        if (options.ticket_cmd == 'L') {
             details = TRUE;
-        } else if (ticket_cmd == 'w') {
+        } else if (options.ticket_cmd == 'w') {
             raw = TRUE;
         }
 
-        if (ticket_id) {
-            pe_ticket_t *ticket = find_ticket(ticket_id, data_set);
+        if (options.ticket_id) {
+            pe_ticket_t *ticket = find_ticket(options.ticket_id, data_set);
 
             if (ticket == NULL) {
-                CMD_ERR("No such ticket '%s'", ticket_id);
+                CMD_ERR("No such ticket '%s'", options.ticket_id);
                 exit_code = CRM_EX_NOSUCH;
                 goto done;
             }
@@ -929,127 +934,127 @@ main(int argc, char **argv)
         }
         exit_code = crm_errno2exit(rc);
 
-    } else if (ticket_cmd == 'q') {
-        rc = dump_ticket_xml(cib_conn, ticket_id);
+    } else if (options.ticket_cmd == 'q') {
+        rc = dump_ticket_xml(cib_conn, options.ticket_id);
         if (rc != pcmk_ok) {
             CMD_ERR("Could not query ticket XML: %s", pcmk_strerror(rc));
         }
         exit_code = crm_errno2exit(rc);
 
-    } else if (ticket_cmd == 'c') {
-        rc = dump_constraints(cib_conn, ticket_id);
+    } else if (options.ticket_cmd == 'c') {
+        rc = dump_constraints(cib_conn, options.ticket_id);
         if (rc != pcmk_ok) {
             CMD_ERR("Could not show ticket constraints: %s", pcmk_strerror(rc));
         }
         exit_code = crm_errno2exit(rc);
 
-    } else if (ticket_cmd == 'G') {
+    } else if (options.ticket_cmd == 'G') {
         const char *value = NULL;
 
-        if (ticket_id == NULL) {
+        if (options.ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_NOSUCH;
             goto done;
         }
 
-        rc = get_ticket_state_attr(ticket_id, get_attr_name, &value, data_set);
+        rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name, &value, data_set);
         if (rc == pcmk_ok) {
             fprintf(stdout, "%s\n", value);
-        } else if (rc == -ENXIO && attr_default) {
-            fprintf(stdout, "%s\n", attr_default);
+        } else if (rc == -ENXIO && options.attr_default) {
+            fprintf(stdout, "%s\n", options.attr_default);
             rc = pcmk_ok;
         }
         exit_code = crm_errno2exit(rc);
 
-    } else if (ticket_cmd == 'C') {
-        if (ticket_id == NULL) {
+    } else if (options.ticket_cmd == 'C') {
+        if (options.ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (do_force == FALSE) {
+        if (options.force == FALSE) {
             pe_ticket_t *ticket = NULL;
 
-            ticket = find_ticket(ticket_id, data_set);
+            ticket = find_ticket(options.ticket_id, data_set);
             if (ticket == NULL) {
-                CMD_ERR("No such ticket '%s'", ticket_id);
+                CMD_ERR("No such ticket '%s'", options.ticket_id);
                 exit_code = CRM_EX_NOSUCH;
                 goto done;
             }
 
             if (ticket->granted) {
-                ticket_warning(ticket_id, "revoke");
+                ticket_warning(options.ticket_id, "revoke");
                 exit_code = CRM_EX_INSUFFICIENT_PRIV;
                 goto done;
             }
         }
 
-        rc = delete_ticket_state(ticket_id, cib_conn);
+        rc = delete_ticket_state(options.ticket_id, cib_conn);
         if (rc != pcmk_ok) {
             CMD_ERR("Could not clean up ticket: %s", pcmk_strerror(rc));
         }
         exit_code = crm_errno2exit(rc);
 
     } else if (modified) {
-        if (ticket_id == NULL) {
+        if (options.ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (attr_value
-            && (pcmk__str_empty(attr_name))) {
-            CMD_ERR("Must supply attribute name with -S for -v %s", attr_value);
+        if (options.attr_value
+            && (pcmk__str_empty(options.attr_name))) {
+            CMD_ERR("Must supply attribute name with -S for -v %s", options.attr_value);
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (attr_name
-            && (pcmk__str_empty(attr_value))) {
-            CMD_ERR("Must supply attribute value with -v for -S %s", attr_name);
+        if (options.attr_name
+            && (pcmk__str_empty(options.attr_value))) {
+            CMD_ERR("Must supply attribute value with -v for -S %s", options.attr_name);
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (allow_modification(ticket_id, attr_delete, attr_set) == FALSE) {
+        if (allow_modification(options.ticket_id, attr_delete, attr_set) == FALSE) {
             CMD_ERR("Ticket modification not allowed");
             exit_code = CRM_EX_INSUFFICIENT_PRIV;
             goto done;
         }
 
-        rc = modify_ticket_state(ticket_id, attr_delete, attr_set, cib_conn, data_set);
+        rc = modify_ticket_state(options.ticket_id, attr_delete, attr_set, cib_conn, data_set);
         if (rc != pcmk_ok) {
             CMD_ERR("Could not modify ticket: %s", pcmk_strerror(rc));
         }
         exit_code = crm_errno2exit(rc);
 
-    } else if (ticket_cmd == 'S') {
+    } else if (options.ticket_cmd == 'S') {
         /* Correct usage was handled in the "if (modified)" block above, so
          * this is just for reporting usage errors
          */
 
-        if (pcmk__str_empty(attr_name)) {
+        if (pcmk__str_empty(options.attr_name)) {
             // We only get here if ticket_cmd was left as default
             CMD_ERR("Must supply a command");
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (ticket_id == NULL) {
+        if (options.ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
-        if (pcmk__str_empty(attr_value)) {
-            CMD_ERR("Must supply value with -v for -S %s", attr_name);
+        if (pcmk__str_empty(options.attr_value)) {
+            CMD_ERR("Must supply value with -v for -S %s", options.attr_name);
             exit_code = CRM_EX_USAGE;
             goto done;
         }
 
     } else {
-        CMD_ERR("Unknown command: %c", ticket_cmd);
+        CMD_ERR("Unknown command: %c", options.ticket_cmd);
         exit_code = CRM_EX_USAGE;
     }
 
