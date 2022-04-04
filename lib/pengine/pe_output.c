@@ -1401,22 +1401,32 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 static void
 status_node(pe_node_t *node, xmlNodePtr parent)
 {
-    if (node->details->standby_onfail && node->details->online) {
-        pcmk_create_html_node(parent, "span", NULL, "standby", " standby (on-fail)");
-    } else if (node->details->standby && node->details->online) {
-        char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
-        pcmk_create_html_node(parent, "span", NULL, "standby", s);
-        free(s);
-    } else if (node->details->standby) {
-        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE (standby)");
-    } else if (node->details->maintenance && node->details->online) {
-        pcmk_create_html_node(parent, "span", NULL, "maint", " maintenance");
-    } else if (node->details->maintenance) {
-        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE (maintenance)");
-    } else if (node->details->online) {
+    // Cluster membership
+    if (node->details->online) {
         pcmk_create_html_node(parent, "span", NULL, "online", " online");
     } else {
         pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE");
+    }
+
+    // Standby mode
+    if (node->details->standby_onfail && (node->details->running_rsc != NULL)) {
+        pcmk_create_html_node(parent, "span", NULL, "standby",
+                              " (in standby due to on-fail,"
+                              " with active resources)");
+    } else if (node->details->standby_onfail) {
+        pcmk_create_html_node(parent, "span", NULL, "standby",
+                              " (in standby due to on-fail)");
+    } else if (node->details->standby && (node->details->running_rsc != NULL)) {
+        pcmk_create_html_node(parent, "span", NULL, "standby",
+                              " (in standby, with active resources)");
+    } else if (node->details->standby) {
+        pcmk_create_html_node(parent, "span", NULL, "standby", " (in standby)");
+    }
+
+    // Maintenance mode
+    if (node->details->maintenance) {
+        pcmk_create_html_node(parent, "span", NULL, "maint",
+                              " (in maintenance mode)");
     }
 }
 
