@@ -1405,7 +1405,7 @@ status_node(pe_node_t *node, xmlNodePtr parent)
         pcmk_create_html_node(parent, "span", NULL, "standby", " standby (on-fail)");
     } else if (node->details->standby && node->details->online) {
         char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
-        pcmk_create_html_node(parent, "span", NULL, " standby", s);
+        pcmk_create_html_node(parent, "span", NULL, "standby", s);
         free(s);
     } else if (node->details->standby) {
         pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE (standby)");
