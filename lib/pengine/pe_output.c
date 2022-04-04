@@ -1401,6 +1401,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 static void
 status_node(pe_node_t *node, xmlNodePtr parent)
 {
+    int health = pe__node_health(node);
+
     // Cluster membership
     if (node->details->online) {
         pcmk_create_html_node(parent, "span", NULL, "online", " online");
@@ -1427,6 +1429,15 @@ status_node(pe_node_t *node, xmlNodePtr parent)
     if (node->details->maintenance) {
         pcmk_create_html_node(parent, "span", NULL, "maint",
                               " (in maintenance mode)");
+    }
+
+    // Node health
+    if (health < 0) {
+        pcmk_create_html_node(parent, "span", NULL, "health_red",
+                              " (health is RED)");
+    } else if (health == 0) {
+        pcmk_create_html_node(parent, "span", NULL, "health_yellow",
+                              " (health is YELLOW)");
     }
 }
 
@@ -1568,6 +1579,7 @@ node_text(pcmk__output_t *out, va_list args) {
     if (full) {
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
         GString *str = g_string_sized_new(64);
+        int health = pe__node_health(node);
 
         // Create a summary line with node type, name, and status
         if (pe__is_guest_node(node)) {
@@ -1579,6 +1591,11 @@ node_text(pcmk__output_t *out, va_list args) {
         }
         g_string_append_printf(str, " %s: %s",
                                node_name, node_text_status(node));
+        if (health < 0) {
+            g_string_append(str, " (health is RED)");
+        } else if (health == 0) {
+            g_string_append(str, " (health is YELLOW)");
+        }
 
         /* If we're grouping by node, print its resources */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -1643,6 +1660,8 @@ node_xml(pcmk__output_t *out, va_list args) {
     if (full) {
         const char *node_type = "unknown";
         char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
+        int health = pe__node_health(node);
+        const char *health_s = NULL;
 
         switch (node->details->type) {
             case node_member:
@@ -1655,7 +1674,16 @@ node_xml(pcmk__output_t *out, va_list args) {
                 node_type = "ping";
                 break;
         }
-        pe__name_and_nvpairs_xml(out, true, "node", 13,
+
+        if (health < 0) {
+            health_s = "red";
+        } else if (health == 0) {
+            health_s = "yellow";
+        } else {
+            health_s = "green";
+        }
+
+        pe__name_and_nvpairs_xml(out, true, "node", 14,
                                  "name", node->details->uname,
                                  "id", node->details->id,
                                  "online", pcmk__btoa(node->details->online),
@@ -1664,6 +1692,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  "maintenance", pcmk__btoa(node->details->maintenance),
                                  "pending", pcmk__btoa(node->details->pending),
                                  "unclean", pcmk__btoa(node->details->unclean),
+                                 "health", health_s,
                                  "shutdown", pcmk__btoa(node->details->shutdown),
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),
@@ -2146,7 +2175,8 @@ node_list_text(pcmk__output_t *out, va_list args) {
         if (node->details->unclean || node->details->pending
             || (node->details->standby_onfail && node->details->online)
             || node->details->standby || node->details->maintenance
-            || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
+            || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)
+            || (pe__node_health(node) <= 0)) {
             // Display node individually
 
         } else if (node->details->online) {

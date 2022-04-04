@@ -24,6 +24,8 @@ static const char *stylesheet_default =
     ".offline { color: red }\n"
     ".maint { color: blue }\n"
     ".standby { color: blue }\n"
+    ".health_red { color: red }\n"
+    ".health_yellow { color: GoldenRod }\n"
 
     ".rsc-failed { color: red }\n"
     ".rsc-failure-ignored { color: DarkGreen }\n"
