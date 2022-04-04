@@ -1420,14 +1420,13 @@ status_node(pe_node_t *node, xmlNodePtr parent)
     }
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean", "const char *",
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
                   "GList *", "GList *")
 static int
 node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
     gboolean full = va_arg(args, gboolean);
-    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1493,29 +1492,82 @@ node_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean", "const char *",
+/*!
+ * \internal
+ * \brief Get a human-friendly textual description of a node's status
+ *
+ * \param[in] node  Node to check
+ *
+ * \return String representation of node's status
+ */
+static const char *
+node_text_status(pe_node_t *node)
+{
+    if (node->details->unclean) {
+        if (node->details->online) {
+            return "UNCLEAN (online)";
+
+        } else if (node->details->pending) {
+            return "UNCLEAN (pending)";
+
+        } else {
+            return "UNCLEAN (offline)";
+        }
+
+    } else if (node->details->pending) {
+        return "pending";
+
+    } else if (node->details->standby_onfail && node->details->online) {
+        return "standby (on-fail)";
+
+    } else if (node->details->standby) {
+        if (node->details->online) {
+            if (node->details->running_rsc) {
+                return "standby (with active resources)";
+            } else {
+                return "standby";
+            }
+        } else {
+            return "OFFLINE (standby)";
+        }
+
+    } else if (node->details->maintenance) {
+        if (node->details->online) {
+            return "maintenance";
+        } else {
+            return "OFFLINE (maintenance)";
+        }
+
+    } else if (node->details->online) {
+        return "online";
+    }
+
+    return "OFFLINE";
+}
+
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
                   "GList *", "GList *")
 static int
 node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
     gboolean full = va_arg(args, gboolean);
-    const char *node_mode = va_arg(args, const char *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
     if (full) {
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
         char *buf = NULL;
+        const char *node_type = "Node";
 
-        /* Print the node name and status */
+        // Create a summary line with node type, name, and status
         if (pe__is_guest_node(node)) {
-            buf = crm_strdup_printf("GuestNode %s: %s", node_name, node_mode);
+            node_type = "GuestNode";
         } else if (pe__is_remote_node(node)) {
-            buf = crm_strdup_printf("RemoteNode %s: %s", node_name, node_mode);
-        } else {
-            buf = crm_strdup_printf("Node %s: %s", node_name, node_mode);
+            node_type = "RemoteNode";
         }
+        buf = crm_strdup_printf("%s %s: %s",
+                                node_type, node_name, node_text_status(node));
 
         /* If we're grouping by node, print its resources */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -1567,14 +1619,13 @@ node_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean", "const char *",
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
                   "GList *", "GList *")
 static int
 node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
     gboolean full = va_arg(args, gboolean);
-    const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1872,7 +1923,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
 
-        out->message(out, "node", node, show_opts, FALSE, NULL, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, FALSE, only_node, only_rsc);
 
         for (GList *aIter = attr_list; aIter != NULL; aIter = aIter->next) {
             const char *name = aIter->data;
@@ -1986,7 +2037,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
-                out->message(out, "node", node, show_opts, FALSE, NULL, only_node, only_rsc);
+                out->message(out, "node", node, show_opts, FALSE, only_node,
+                             only_rsc);
             }
 
             out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -2002,7 +2054,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
-                out->message(out, "node", node, show_opts, FALSE, NULL, only_node, only_rsc);
+                out->message(out, "node", node, show_opts, FALSE, only_node,
+                             only_rsc);
             }
 
             out->message(out, "resource-operation-list", data_set, rsc, node,
@@ -2035,7 +2088,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
-        out->message(out, "node", node, show_opts, TRUE, NULL, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -2068,7 +2121,6 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
-        const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
         if (!pcmk__str_in_list(node->details->uname, only_node,
@@ -2079,77 +2131,44 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer == TRUE, rc, "Node List");
 
-        /* Get node mode */
-        if (node->details->unclean) {
-            if (node->details->online) {
-                node_mode = "UNCLEAN (online)";
-
-            } else if (node->details->pending) {
-                node_mode = "UNCLEAN (pending)";
-
-            } else {
-                node_mode = "UNCLEAN (offline)";
-            }
-
-        } else if (node->details->pending) {
-            node_mode = "pending";
-
-        } else if (node->details->standby_onfail && node->details->online) {
-            node_mode = "standby (on-fail)";
-
-        } else if (node->details->standby) {
-            if (node->details->online) {
-                if (node->details->running_rsc) {
-                    node_mode = "standby (with active resources)";
-                } else {
-                    node_mode = "standby";
-                }
-            } else {
-                node_mode = "OFFLINE (standby)";
-            }
-
-        } else if (node->details->maintenance) {
-            if (node->details->online) {
-                node_mode = "maintenance";
-            } else {
-                node_mode = "OFFLINE (maintenance)";
-            }
+        // Determine whether to display node individually or in a list
+        if (node->details->unclean || node->details->pending
+            || (node->details->standby_onfail && node->details->online)
+            || node->details->standby || node->details->maintenance
+            || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
+            // Display node individually
 
         } else if (node->details->online) {
-            node_mode = "online";
-            if (!pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
-                if (pe__is_guest_node(node)) {
-                    pcmk__add_word(&online_guest_nodes,
-                                   &online_guest_nodes_len, node_name);
-                } else if (pe__is_remote_node(node)) {
-                    pcmk__add_word(&online_remote_nodes,
-                                   &online_remote_nodes_len, node_name);
-                } else {
-                    pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
-                }
-                free(node_name);
-                continue;
+            // Display online node in a list
+            if (pe__is_guest_node(node)) {
+                pcmk__add_word(&online_guest_nodes,
+                               &online_guest_nodes_len, node_name);
+            } else if (pe__is_remote_node(node)) {
+                pcmk__add_word(&online_remote_nodes,
+                               &online_remote_nodes_len, node_name);
+            } else {
+                pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
             }
+            free(node_name);
+            continue;
 
         } else {
-            node_mode = "OFFLINE";
-            if (!pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
-                if (pe__is_remote_node(node)) {
-                    pcmk__add_word(&offline_remote_nodes,
-                                   &offline_remote_nodes_len, node_name);
-                } else if (pe__is_guest_node(node)) {
-                    /* ignore offline guest nodes */
-                } else {
-                    pcmk__add_word(&offline_nodes,
-                                   &offline_nodes_len, node_name);
-                }
-                free(node_name);
-                continue;
+            // Display offline node in a list
+            if (pe__is_remote_node(node)) {
+                pcmk__add_word(&offline_remote_nodes,
+                               &offline_remote_nodes_len, node_name);
+            } else if (pe__is_guest_node(node)) {
+                /* ignore offline guest nodes */
+            } else {
+                pcmk__add_word(&offline_nodes,
+                               &offline_nodes_len, node_name);
             }
+            free(node_name);
+            continue;
         }
 
         /* If we get here, node is in bad state, or we're grouping by node */
-        out->message(out, "node", node, show_opts, TRUE, node_mode, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
         free(node_name);
     }
 
@@ -2197,7 +2216,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        out->message(out, "node", node, show_opts, TRUE, NULL, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
     }
     out->end_list(out);
 
