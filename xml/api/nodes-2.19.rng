@@ -16,6 +16,15 @@
             <attribute name="maintenance"> <data type="boolean" /> </attribute>
             <attribute name="pending"> <data type="boolean" /> </attribute>
             <attribute name="unclean"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="health">
+                    <choice>
+                        <value>red</value>
+                        <value>yellow</value>
+                        <value>green</value>
+                    </choice>
+                </attribute>
+            </optional>
             <attribute name="shutdown"> <data type="boolean" /> </attribute>
             <attribute name="expected_up"> <data type="boolean" /> </attribute>
             <attribute name="is_dc"> <data type="boolean" /> </attribute>
