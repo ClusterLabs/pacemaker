@@ -15,6 +15,7 @@ LDADD = $(top_builddir)/lib/common/libcrmcommon.la \
 include $(top_srcdir)/mk/tap.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__parse_health_strategy_test
+check_PROGRAMS = pcmk__parse_health_strategy_test	\
+		 pcmk__validate_health_strategy_test
 
 TESTS = $(check_PROGRAMS)
