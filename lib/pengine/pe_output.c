@@ -1567,17 +1567,18 @@ node_text(pcmk__output_t *out, va_list args) {
 
     if (full) {
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
-        char *buf = NULL;
-        const char *node_type = "Node";
+        GString *str = g_string_sized_new(64);
 
         // Create a summary line with node type, name, and status
         if (pe__is_guest_node(node)) {
-            node_type = "GuestNode";
+            g_string_append(str, "GuestNode");
         } else if (pe__is_remote_node(node)) {
-            node_type = "RemoteNode";
+            g_string_append(str, "RemoteNode");
+        } else {
+            g_string_append(str, "Node");
         }
-        buf = crm_strdup_printf("%s %s: %s",
-                                node_type, node_name, node_text_status(node));
+        g_string_append_printf(str, " %s: %s",
+                               node_name, node_text_status(node));
 
         /* If we're grouping by node, print its resources */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -1586,7 +1587,7 @@ node_text(pcmk__output_t *out, va_list args) {
 
                 if (rscs != NULL) {
                     uint32_t new_show_opts = (show_opts | pcmk_show_rsc_only) & ~pcmk_show_inactive_rscs;
-                    out->begin_list(out, NULL, NULL, "%s", buf);
+                    out->begin_list(out, NULL, NULL, "%s", str->str);
                     out->begin_list(out, NULL, NULL, "Resources");
 
                     pe__rscs_brief_output(out, rscs, new_show_opts);
@@ -1600,7 +1601,7 @@ node_text(pcmk__output_t *out, va_list args) {
             } else {
                 GList *gIter2 = NULL;
 
-                out->begin_list(out, NULL, NULL, "%s", buf);
+                out->begin_list(out, NULL, NULL, "%s", str->str);
                 out->begin_list(out, NULL, NULL, "Resources");
 
                 for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
@@ -1615,10 +1616,10 @@ node_text(pcmk__output_t *out, va_list args) {
                 out->end_list(out);
             }
         } else {
-            out->list_item(out, NULL, "%s", buf);
+            out->list_item(out, NULL, "%s", str->str);
         }
 
-        free(buf);
+        g_string_free(str, TRUE);
         free(node_name);
     } else {
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
