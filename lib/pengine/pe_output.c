@@ -1448,7 +1448,7 @@ node_html(pcmk__output_t *out, va_list args) {
         if (pcmk_all_flags_set(show_opts, pcmk_show_brief | pcmk_show_rscs_by_node)) {
             GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
-            out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+            out->begin_list(out, NULL, NULL, "%s:", node_name);
             item_node = pcmk__output_xml_create_parent(out, "li", NULL);
             pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
             status_node(node, item_node);
@@ -1467,7 +1467,7 @@ node_html(pcmk__output_t *out, va_list args) {
             GList *lpc2 = NULL;
             int rc = pcmk_rc_no_output;
 
-            out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+            out->begin_list(out, NULL, NULL, "%s:", node_name);
             item_node = pcmk__output_xml_create_parent(out, "li", NULL);
             pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
             status_node(node, item_node);
@@ -1486,16 +1486,16 @@ node_html(pcmk__output_t *out, va_list args) {
             out->end_list(out);
 
         } else {
-            char *buf = crm_strdup_printf("Node: %s", node_name);
+            char *buf = crm_strdup_printf("%s:", node_name);
 
             item_node = pcmk__output_create_xml_node(out, "li", NULL);
-            pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
+            pcmk_create_html_node(item_node, "span", NULL, "bold", buf);
             status_node(node, item_node);
 
             free(buf);
         }
     } else {
-        out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+        out->begin_list(out, NULL, NULL, "%s:", node_name);
     }
 
     free(node_name);
