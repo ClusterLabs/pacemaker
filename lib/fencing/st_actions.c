@@ -511,12 +511,7 @@ stonith_action_async_done(svc_action_t *svc_action)
     stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
 
     set_result_from_svc_action(action, svc_action);
-
     svc_action->params = NULL;
-
-    crm_debug("Child process %d performing action '%s' exited with rc %d",
-                action->pid, action->action, svc_action->rc);
-
     log_action(action, action->pid);
 
     if (!pcmk__result_ok(&(action->result))

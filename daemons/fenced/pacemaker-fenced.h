@@ -210,6 +210,7 @@ void free_topology_list(void);
 void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
+void fenced_unregister_handlers(void);
 
 uint64_t get_stonith_flag(const char *name);
 
@@ -228,8 +229,8 @@ void fenced_unregister_level(xmlNode *msg, char **desc,
 
 stonith_topology_t *find_topology_for_host(const char *host);
 
-void do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
-                           gboolean from_peer);
+void do_local_reply(xmlNode *notify_src, pcmk__client_t *client,
+                    int call_options);
 
 xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
                                 pcmk__action_result_t *result);

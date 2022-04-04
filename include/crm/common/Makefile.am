@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,4 +24,5 @@ noinst_HEADERS = internal.h alerts_internal.h \
 		 iso8601_internal.h remote_internal.h xml_internal.h \
 		 ipc_internal.h output_internal.h cmdline_internal.h	\
 		 attrd_internal.h options_internal.h results_internal.h	\
-		 strings_internal.h lists_internal.h logging_internal.h
+		 strings_internal.h lists_internal.h logging_internal.h \
+		 messages_internal.h

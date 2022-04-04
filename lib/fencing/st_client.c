@@ -2492,8 +2492,17 @@ stonith__event_exit_reason(stonith_event_t *event)
 char *
 stonith__event_description(stonith_event_t *event)
 {
-    const char *reason;
+    const char *origin = event->client_origin;
+    const char *executioner = event->executioner;
+    const char *reason = stonith__event_exit_reason(event);
     const char *status;
+
+    if (origin == NULL) {
+        origin = "a client";
+    }
+    if (executioner == NULL) {
+        executioner = "the cluster";
+    }
 
     if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
         status = pcmk_exec_status_str(stonith__event_execution_status(event));
@@ -2502,12 +2511,9 @@ stonith__event_description(stonith_event_t *event)
     } else {
         status = crm_exit_str(CRM_EX_OK);
     }
-    reason = stonith__event_exit_reason(event);
 
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
-                             event->action, event->target,
-                             (event->executioner? event->executioner : "the cluster"),
-                             (event->client_origin? event->client_origin : "a client"),
+                             event->action, event->target, executioner, origin,
                              event->origin, status,
                              ((reason == NULL)? "" : " ("),
                              ((reason == NULL)? "" : reason),

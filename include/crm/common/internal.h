@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,6 +25,7 @@
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/results_internal.h>
+#include <crm/common/messages_internal.h>
 #include <crm/common/strings_internal.h>
 
 /* This says whether the current application is a Pacemaker daemon or not,
@@ -117,11 +118,6 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
 guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
-
-
-/* internal messaging utilities (from messages.c) */
-
-const char *pcmk__message_name(const char *name);
 
 
 /* internal name/value utilities (from nvpair.c) */

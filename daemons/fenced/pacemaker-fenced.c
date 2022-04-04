@@ -229,48 +229,28 @@ stonith_peer_cs_destroy(gpointer user_data)
 #endif
 
 void
-do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply, gboolean from_peer)
+do_local_reply(xmlNode *notify_src, pcmk__client_t *client, int call_options)
 {
     /* send callback to originating child */
-    pcmk__client_t *client_obj = NULL;
     int local_rc = pcmk_rc_ok;
+    int rid = 0;
+    uint32_t ipc_flags = crm_ipc_server_event;
 
-    crm_trace("Sending response");
-    client_obj = pcmk__find_client_by_id(client_id);
-
-    crm_trace("Sending callback to request originator");
-    if (client_obj == NULL) {
-        local_rc = EPROTO;
-        crm_trace("No client to sent the response to.  F_STONITH_CLIENTID not set.");
-
-    } else {
-        int rid = 0;
-
-        if (sync_reply) {
-            CRM_LOG_ASSERT(client_obj->request_id);
-
-            rid = client_obj->request_id;
-            client_obj->request_id = 0;
-
-            crm_trace("Sending response %d to client %s%s",
-                      rid, pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-
-        } else {
-            crm_trace("Sending an event to client %s%s",
-                      pcmk__client_name(client_obj),
-                      (from_peer? " (originator of delegated request)" : ""));
-        }
-
-        local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
-                                      (sync_reply? crm_ipc_flags_none
-                                       : crm_ipc_server_event));
+    if (pcmk_is_set(call_options, st_opt_sync_call)) {
+        CRM_LOG_ASSERT(client->request_id);
+        rid = client->request_id;
+        client->request_id = 0;
+        ipc_flags = crm_ipc_flags_none;
     }
 
-    if ((local_rc != pcmk_rc_ok) && (client_obj != NULL)) {
-        crm_warn("%s reply to client %s failed: %s",
-                 (sync_reply? "Synchronous" : "Asynchronous"),
-                 pcmk__client_name(client_obj), pcmk_rc_str(local_rc));
+    local_rc = pcmk__ipc_send_xml(client, rid, notify_src, ipc_flags);
+    if (local_rc == pcmk_rc_ok) {
+        crm_trace("Sent response %d to client %s",
+                  rid, pcmk__client_name(client));
+    } else {
+        crm_warn("%synchronous reply to client %s failed: %s",
+                 (pcmk_is_set(call_options, st_opt_sync_call)? "S" : "As"),
+                 pcmk__client_name(client), pcmk_rc_str(local_rc));
     }
 }
 
@@ -1307,6 +1287,7 @@ stonith_cleanup(void)
     free_topology_list();
     free_device_list();
     free_metadata_cache();
+    fenced_unregister_handlers();
 
     free(stonith_our_uname);
     stonith_our_uname = NULL;
