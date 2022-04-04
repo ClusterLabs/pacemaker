@@ -33,6 +33,8 @@
 
 #include <pacemaker-internal.h>
 
+GError *error = NULL;
+
 struct {
     const char *attr_default;
     const char *attr_id;
@@ -867,15 +869,16 @@ main(int argc, char **argv)
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
-        CMD_ERR("Could not connect to the CIB manager");
         exit_code = CRM_EX_DISCONNECT;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB manager");
         goto done;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB: %s",
+                    pcmk_strerror(rc));
         goto done;
     }
 
@@ -885,15 +888,17 @@ main(int argc, char **argv)
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
         if (rc != pcmk_ok) {
-            CMD_ERR("Could not get local CIB: %s", pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not get local CIB: %s",
+                        pcmk_strerror(rc));
             goto done;
         }
     }
 
     if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        CMD_ERR("Could not update local CIB to latest schema version");
         exit_code = CRM_EX_CONFIG;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not update local CIB to latest schema version");
         goto done;
     }
 
@@ -920,8 +925,9 @@ main(int argc, char **argv)
             pe_ticket_t *ticket = find_ticket(options.ticket_id, data_set);
 
             if (ticket == NULL) {
-                CMD_ERR("No such ticket '%s'", options.ticket_id);
                 exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "No such ticket '%s'", options.ticket_id);
                 goto done;
             }
             rc = print_ticket(ticket, raw, details);
@@ -929,31 +935,39 @@ main(int argc, char **argv)
         } else {
             rc = print_ticket_list(data_set, raw, details);
         }
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not print ticket: %s", pcmk_strerror(rc));
-        }
+
         exit_code = crm_errno2exit(rc);
+
+        if (rc != pcmk_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not print ticket: %s", pcmk_strerror(rc));
+        }
 
     } else if (options.ticket_cmd == 'q') {
         rc = dump_ticket_xml(cib_conn, options.ticket_id);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not query ticket XML: %s", pcmk_strerror(rc));
-        }
         exit_code = crm_errno2exit(rc);
+
+        if (rc != pcmk_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not query ticket XML: %s", pcmk_strerror(rc));
+        }
 
     } else if (options.ticket_cmd == 'c') {
         rc = dump_constraints(cib_conn, options.ticket_id);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not show ticket constraints: %s", pcmk_strerror(rc));
-        }
         exit_code = crm_errno2exit(rc);
+
+        if (rc != pcmk_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not show ticket constraints: %s", pcmk_strerror(rc));
+        }
 
     } else if (options.ticket_cmd == 'G') {
         const char *value = NULL;
 
         if (options.ticket_id == NULL) {
-            CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply ticket ID with -t");
             goto done;
         }
 
@@ -968,8 +982,9 @@ main(int argc, char **argv)
 
     } else if (options.ticket_cmd == 'C') {
         if (options.ticket_id == NULL) {
-            CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply ticket ID with -t");
             goto done;
         }
 
@@ -978,8 +993,9 @@ main(int argc, char **argv)
 
             ticket = find_ticket(options.ticket_id, data_set);
             if (ticket == NULL) {
-                CMD_ERR("No such ticket '%s'", options.ticket_id);
                 exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "No such ticket '%s'", options.ticket_id);
                 goto done;
             }
 
@@ -991,43 +1007,51 @@ main(int argc, char **argv)
         }
 
         rc = delete_ticket_state(options.ticket_id, cib_conn);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not clean up ticket: %s", pcmk_strerror(rc));
-        }
         exit_code = crm_errno2exit(rc);
+
+        if (rc != pcmk_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not clean up ticket: %s", pcmk_strerror(rc));
+        }
 
     } else if (modified) {
         if (options.ticket_id == NULL) {
-            CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply ticket ID with -t");
             goto done;
         }
 
         if (options.attr_value
             && (pcmk__str_empty(options.attr_name))) {
-            CMD_ERR("Must supply attribute name with -S for -v %s", options.attr_value);
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply attribute name with -S for -v %s", options.attr_value);
             goto done;
         }
 
         if (options.attr_name
             && (pcmk__str_empty(options.attr_value))) {
-            CMD_ERR("Must supply attribute value with -v for -S %s", options.attr_name);
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply attribute value with -v for -S %s", options.attr_value);
             goto done;
         }
 
         if (allow_modification(options.ticket_id, attr_delete, attr_set) == FALSE) {
-            CMD_ERR("Ticket modification not allowed");
             exit_code = CRM_EX_INSUFFICIENT_PRIV;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Ticket modification not allowed");
             goto done;
         }
 
         rc = modify_ticket_state(options.ticket_id, attr_delete, attr_set, cib_conn, data_set);
-        if (rc != pcmk_ok) {
-            CMD_ERR("Could not modify ticket: %s", pcmk_strerror(rc));
-        }
         exit_code = crm_errno2exit(rc);
+
+        if (rc != pcmk_ok) {
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not modify ticket: %s", pcmk_strerror(rc));
+        }
 
     } else if (options.ticket_cmd == 'S') {
         /* Correct usage was handled in the "if (modified)" block above, so
@@ -1036,26 +1060,29 @@ main(int argc, char **argv)
 
         if (pcmk__str_empty(options.attr_name)) {
             // We only get here if ticket_cmd was left as default
-            CMD_ERR("Must supply a command");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Must supply a command");
             goto done;
         }
 
         if (options.ticket_id == NULL) {
-            CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply ticket ID with -t");
             goto done;
         }
 
         if (pcmk__str_empty(options.attr_value)) {
-            CMD_ERR("Must supply value with -v for -S %s", options.attr_name);
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Must supply value with -v for -S %s", options.attr_name);
             goto done;
         }
 
     } else {
-        CMD_ERR("Unknown command: %c", options.ticket_cmd);
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Unknown command: %c", options.ticket_cmd);
     }
 
  done:
@@ -1075,8 +1102,10 @@ main(int argc, char **argv)
     cib__clean_up_connection(&cib_conn);
 
     if (rc == -pcmk_err_no_quorum) {
-        CMD_ERR("Use --force to ignore quorum");
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Use --force to ignore quorum");
     }
+
+    pcmk__output_and_clear_error(error, NULL);
 
     crm_exit(exit_code);
 }
