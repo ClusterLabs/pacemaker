@@ -1941,7 +1941,7 @@ main(int argc, char **argv)
             if ((options.host_uname != NULL) && (node == NULL)) {
                 rc = pcmk_rc_node_unknown;
             } else {
-                rc = out->message(out, "resource-reasons-list", cib_conn,
+                rc = out->message(out, "resource-reasons-list",
                                   data_set->resources, rsc, node);
             }
             break;

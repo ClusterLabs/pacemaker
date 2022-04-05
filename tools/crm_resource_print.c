@@ -582,12 +582,11 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-reasons-list", "cib_t *", "GList *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-reasons-list", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
 resource_reasons_list_default(pcmk__output_t *out, va_list args)
 {
-    cib_t *cib_conn G_GNUC_UNUSED = va_arg(args, cib_t *);
     GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -665,12 +664,11 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-reasons-list", "cib_t *", "GList *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-reasons-list", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
 resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 {
-    cib_t *cib_conn G_GNUC_UNUSED = va_arg(args, cib_t *);
     GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
