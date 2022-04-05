@@ -75,7 +75,7 @@ print_date(time_t time)
 }
 
 static void
-print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
+print_ticket(pe_ticket_t * ticket, bool raw, bool details)
 {
     if (raw) {
         fprintf(stdout, "%s\n", ticket->id);
@@ -125,7 +125,7 @@ print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
 }
 
 static void
-print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
+print_ticket_list(pe_working_set_t * data_set, bool raw, bool details)
 {
     GHashTableIter iter;
     pe_ticket_t *ticket = NULL;
@@ -340,7 +340,7 @@ ticket_warning(const char *ticket_id, const char *action)
     free(warning);
 }
 
-static gboolean
+static bool
 allow_modification(const char *ticket_id, GList *attr_delete,
                    GHashTable *attr_set)
 {
@@ -348,17 +348,17 @@ allow_modification(const char *ticket_id, GList *attr_delete,
     GList *list_iter = NULL;
 
     if (options.force) {
-        return TRUE;
+        return true;
     }
 
     if (g_hash_table_lookup_extended(attr_set, "granted", NULL, (gpointer *) & value)) {
         if (crm_is_true(value)) {
             ticket_warning(ticket_id, "grant");
-            return FALSE;
+            return false;
 
         } else {
             ticket_warning(ticket_id, "revoke");
-            return FALSE;
+            return false;
         }
     }
 
@@ -367,11 +367,11 @@ allow_modification(const char *ticket_id, GList *attr_delete,
 
         if (pcmk__str_eq(key, "granted", pcmk__str_casei)) {
             ticket_warning(ticket_id, "revoke");
-            return FALSE;
+            return false;
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 static int
@@ -381,7 +381,7 @@ modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * att
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
-    gboolean found = FALSE;
+    bool found = false;
 
     GList *list_iter = NULL;
     GHashTableIter hash_iter;
@@ -395,7 +395,7 @@ modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * att
     if (rc == pcmk_rc_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
-        found = TRUE;
+        found = true;
 
     } else if (rc != ENXIO) {
         return rc;
@@ -896,7 +896,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
+    if (!cli_config_update(&cib_xml_copy, NULL, FALSE)) {
         exit_code = CRM_EX_CONFIG;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Could not update local CIB to latest schema version");
@@ -913,13 +913,13 @@ main(int argc, char **argv)
     pcmk__unpack_constraints(data_set);
 
     if (options.ticket_cmd == 'l' || options.ticket_cmd == 'L' || options.ticket_cmd == 'w') {
-        gboolean raw = FALSE;
-        gboolean details = FALSE;
+        bool raw = false;
+        bool details = false;
 
         if (options.ticket_cmd == 'L') {
-            details = TRUE;
+            details = true;
         } else if (options.ticket_cmd == 'w') {
-            raw = TRUE;
+            raw = true;
         }
 
         if (options.ticket_id) {
@@ -1032,7 +1032,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (allow_modification(options.ticket_id, attr_delete, attr_set) == FALSE) {
+        if (!allow_modification(options.ticket_id, attr_delete, attr_set)) {
             exit_code = CRM_EX_INSUFFICIENT_PRIV;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Ticket modification not allowed");
