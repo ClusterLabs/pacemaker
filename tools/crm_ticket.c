@@ -25,6 +25,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/cmdline_internal.h>
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
@@ -35,18 +36,21 @@
 
 GError *error = NULL;
 
+#define SUMMARY "Perform tasks related to cluster tickets\n\n" \
+                "Allows ticket attributes to be queried, modified and deleted."
+
 struct {
-    const char *attr_default;
-    const char *attr_id;
-    const char *attr_name;
-    const char *attr_value;
+    gchar *attr_default;
+    gchar *attr_id;
+    char *attr_name;
+    char *attr_value;
     gboolean force;
-    const char *get_attr_name;
+    char *get_attr_name;
     gboolean quiet;
-    const char *set_name;
+    gchar *set_name;
     char ticket_cmd;
-    const char *ticket_id;
-    const char *xml_file;
+    gchar *ticket_id;
+    gchar *xml_file;
 } options = {
     .ticket_cmd = 'S'
 };
@@ -56,8 +60,201 @@ GHashTable *attr_set;
 bool modified = false;
 int cib_options = cib_sync_call;
 
+#define INDENT "                               "
+
+static gboolean
+attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__str_update(&options.attr_value, optarg);
+
+    if (!options.attr_name || !options.attr_value) {
+        return TRUE;
+    }
+
+    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+    pcmk__str_update(&options.attr_name, NULL);
+    pcmk__str_update(&options.attr_value, NULL);
+
+    modified = true;
+
+    return TRUE;
+}
+
+static gboolean
+command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_any_of(option_name, "--info", "-l", NULL)) {
+        options.ticket_cmd = 'l';
+    } else if (pcmk__str_any_of(option_name, "--details", "-L", NULL)) {
+        options.ticket_cmd = 'L';
+    } else if (pcmk__str_any_of(option_name, "--raw", "-w", NULL)) {
+        options.ticket_cmd = 'w';
+    } else if (pcmk__str_any_of(option_name, "--query-xml", "-q", NULL)) {
+        options.ticket_cmd = 'q';
+    } else if (pcmk__str_any_of(option_name, "--constraints", "-c", NULL)) {
+        options.ticket_cmd = 'c';
+    } else if (pcmk__str_any_of(option_name, "--cleanup", "-C", NULL)) {
+        options.ticket_cmd = 'C';
+    }
+
+    return TRUE;
+}
+
+static gboolean
+delete_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    attr_delete = g_list_append(attr_delete, strdup(optarg));
+    modified = true;
+    return TRUE;
+}
+
+static gboolean
+get_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__str_update(&options.get_attr_name, optarg);
+    options.ticket_cmd = 'G';
+    return TRUE;
+}
+
+static gboolean
+grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
+        g_hash_table_insert(attr_set, strdup("granted"), strdup("true"));
+        modified = true;
+    } else if (pcmk__str_any_of(option_name, "--revoke", "-r", NULL)) {
+        g_hash_table_insert(attr_set, strdup("granted"), strdup("false"));
+        modified = true;
+    } else if (pcmk__str_any_of(option_name, "--standby", "-s", NULL)) {
+        g_hash_table_insert(attr_set, strdup("standby"), strdup("true"));
+        modified = true;
+    } else if (pcmk__str_any_of(option_name, "--activate", "-a", NULL)) {
+        g_hash_table_insert(attr_set, strdup("standby"), strdup("false"));
+        modified = true;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+set_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    pcmk__str_update(&options.attr_name, optarg);
+
+    if (!options.attr_name || !options.attr_value) {
+        return TRUE;
+    }
+
+    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
+    pcmk__str_update(&options.attr_name, NULL);
+    pcmk__str_update(&options.attr_value, NULL);
+
+    modified = true;
+
+    return TRUE;
+}
+
+static GOptionEntry query_entries[] = {
+    { "info", 'l', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the information of ticket(s)",
+      NULL },
+
+    { "details", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the details of ticket(s)",
+      NULL },
+
+    { "raw", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the IDs of ticket(s)",
+      NULL },
+
+    { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Query the XML of ticket(s)",
+      NULL },
+
+    { "constraints", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the rsc_ticket constraints that apply to ticket(s)",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry command_entries[] = {
+    { "grant", 'g', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, grant_standby_cb,
+      "Grant a ticket to this cluster site",
+      NULL },
+
+    { "revoke", 'r', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, grant_standby_cb,
+      "Revoke a ticket from this cluster site",
+      NULL },
+
+    { "standby", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, grant_standby_cb,
+      "Tell this cluster site this ticket is standby",
+      NULL },
+
+    { "activate", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, grant_standby_cb,
+      "Tell this cluster site this ticket is active",
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry advanced_entries[] = {
+    { "get-attr", 'G', 0, G_OPTION_ARG_CALLBACK, get_attr_cb,
+      "Display the named attribute for a ticket",
+      "ATTRIBUTE" },
+
+    { "set-attr", 'S', 0, G_OPTION_ARG_CALLBACK, set_attr_cb,
+      "Set the named attribute for a ticket",
+      "ATTRIBUTE" },
+
+    { "delete-attr", 'D', 0, G_OPTION_ARG_CALLBACK, delete_attr_cb,
+      "Delete the named attribute for a ticket",
+      "ATTRIBUTE" },
+
+    { "cleanup", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Delete all state of a ticket at this cluster site",
+      NULL },
+
+    { NULL}
+};
+
+static GOptionEntry addl_entries[] = {
+    { "attr-value", 'v', 0, G_OPTION_ARG_CALLBACK, attr_value_cb,
+      "Attribute value to use with -S",
+      "VALUE" },
+
+    { "default", 'd', 0, G_OPTION_ARG_STRING, &options.attr_default,
+      "(Advanced) Default attribute value to display if none is found\n"
+      INDENT "(for use with -G)",
+      "VALUE" },
+
+    { "force", 'f', 0, G_OPTION_ARG_NONE, &options.force,
+      "(Advanced) Force the action to be performed",
+      NULL },
+
+    { "ticket", 't', 0, G_OPTION_ARG_STRING, &options.ticket_id,
+      "Ticket ID",
+      "ID" },
+
+    { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.xml_file,
+      NULL,
+      NULL },
+
+    { NULL }
+};
+
+static GOptionEntry deprecated_entries[] = {
+    { "set-name", 'n', 0, G_OPTION_ARG_STRING, &options.set_name,
+      "(Advanced) ID of the instance_attributes object to change",
+      "ID" },
+
+    { "nvpair", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
+      "(Advanced) ID of the nvpair object to change/delete",
+      "ID" },
+
+    { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &options.quiet,
+      "Print only the value on stdout",
+      NULL },
+
+    { NULL }
+};
+
 static pe_ticket_t *
-find_ticket(const char *ticket_id, pe_working_set_t * data_set)
+find_ticket(gchar *ticket_id, pe_working_set_t * data_set)
 {
     return g_hash_table_lookup(data_set->tickets, ticket_id);
 }
@@ -143,7 +340,7 @@ print_ticket_list(pe_working_set_t * data_set, bool raw, bool details)
 #define XPATH_MAX 1024
 
 static int
-find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
+find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
     int rc = pcmk_rc_ok;
@@ -187,7 +384,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
 }
 
 static int
-find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
+find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
     int rc = pcmk_rc_ok;
@@ -232,7 +429,7 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
 }
 
 static int
-dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
+dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
 {
     int rc = pcmk_rc_ok;
     xmlNode *state_xml = NULL;
@@ -257,7 +454,7 @@ dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
 }
 
 static int
-dump_constraints(cib_t * the_cib, const char *ticket_id)
+dump_constraints(cib_t * the_cib, gchar *ticket_id)
 {
     int rc = pcmk_rc_ok;
     xmlNode *cons_xml = NULL;
@@ -278,7 +475,7 @@ dump_constraints(cib_t * the_cib, const char *ticket_id)
 }
 
 static int
-get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value,
+get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr_value,
                       pe_working_set_t * data_set)
 {
     pe_ticket_t *ticket = NULL;
@@ -300,7 +497,7 @@ get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char *
 }
 
 static void
-ticket_warning(const char *ticket_id, const char *action)
+ticket_warning(gchar *ticket_id, const char *action)
 {
     int offset = 0;
     static int text_max = 1024;
@@ -344,7 +541,7 @@ ticket_warning(const char *ticket_id, const char *action)
 }
 
 static bool
-allow_modification(const char *ticket_id)
+allow_modification(gchar *ticket_id)
 {
     const char *value = NULL;
     GList *list_iter = NULL;
@@ -377,7 +574,7 @@ allow_modification(const char *ticket_id)
 }
 
 static int
-modify_ticket_state(const char * ticket_id, cib_t * cib, pe_working_set_t * data_set)
+modify_ticket_state(gchar * ticket_id, cib_t * cib, pe_working_set_t * data_set)
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
@@ -451,7 +648,7 @@ modify_ticket_state(const char * ticket_id, cib_t * cib, pe_working_set_t * data
 }
 
 static int
-delete_ticket_state(const char *ticket_id, cib_t * cib)
+delete_ticket_state(gchar *ticket_id, cib_t * cib)
 {
     xmlNode *ticket_state_xml = NULL;
 
@@ -479,245 +676,55 @@ delete_ticket_state(const char *ticket_id, cib_t * cib)
     return rc;
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\t\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\t\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\t\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "quiet", no_argument, NULL, 'Q',
-        "\t\tPrint only the value on stdout\n", pcmk__option_default
-    },
-    {
-        "ticket", required_argument, NULL, 't',
-        "\tTicket ID", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nQueries:", pcmk__option_default
-    },
-    {
-        "info", no_argument, NULL, 'l',
-        "\t\tDisplay the information of ticket(s)", pcmk__option_default
-    },
-    {
-        "details", no_argument, NULL, 'L',
-        "\t\tDisplay the details of ticket(s)", pcmk__option_default
-    },
-    {
-        "raw", no_argument, NULL, 'w',
-        "\t\tDisplay the IDs of ticket(s)", pcmk__option_default
-    },
-    {
-        "query-xml", no_argument, NULL, 'q',
-        "\tQuery the XML of ticket(s)", pcmk__option_default
-    },
-    {
-        "constraints", no_argument, NULL, 'c',
-        "\tDisplay the rsc_ticket constraints that apply to ticket(s)",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nCommands:", pcmk__option_default
-    },
-    {
-        "grant", no_argument, NULL, 'g',
-        "\t\tGrant a ticket to this cluster site", pcmk__option_default
-    },
-    {
-        "revoke", no_argument, NULL, 'r',
-        "\t\tRevoke a ticket from this cluster site", pcmk__option_default
-    },
-    {
-        "standby", no_argument, NULL, 's',
-        "\t\tTell this cluster site this ticket is standby",
-        pcmk__option_default
-    },
-    {
-        "activate", no_argument, NULL, 'a',
-        "\tTell this cluster site this ticket is active", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdvanced Commands:", pcmk__option_default
-    },
-    {
-        "get-attr", required_argument, NULL, 'G',
-        "\tDisplay the named attribute for a ticket", pcmk__option_default
-    },
-    {
-        "set-attr", required_argument, NULL, 'S',
-        "\tSet the named attribute for a ticket", pcmk__option_default
-    },
-    {
-        "delete-attr", required_argument, NULL, 'D',
-        "\tDelete the named attribute for a ticket", pcmk__option_default
-    },
-    {
-        "cleanup", no_argument, NULL, 'C',
-        "\t\tDelete all state of a ticket at this cluster site",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional Options:", pcmk__option_default
-    },
-    {
-        "attr-value", required_argument, NULL, 'v',
-        "\tAttribute value to use with -S", pcmk__option_default
-    },
-    {
-        "default", required_argument, NULL, 'd',
-        "\t(Advanced) Default attribute value to display if none is found "
-            "(for use with -G)",
-        pcmk__option_default
-    },
-    {
-        "force", no_argument, NULL, 'f',
-        "\t\t(Advanced) Force the action to be performed", pcmk__option_default
-    },
-    {
-        "xml-file", required_argument, NULL, 'x',
-        NULL, pcmk__option_hidden
-    },
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
 
-    /* legacy options */
-    {
-        "set-name", required_argument, NULL, 'n',
-        "\t(Advanced) ID of the instance_attributes object to change",
-        pcmk__option_default
-    },
-    {
-        "nvpair", required_argument, NULL, 'i',
-        "\t(Advanced) ID of the nvpair object to change/delete",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nExamples:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Display the info of tickets:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --info", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Display the detailed info of tickets:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --details", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Display the XML of 'ticketA':", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --query-xml", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Display the rsc_ticket constraints that apply to 'ticketA':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --constraints", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Grant 'ticketA' to this cluster site:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --grant", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Revoke 'ticketA' from this cluster site:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --revoke", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Make 'ticketA' standby (the cluster site will treat a granted "
-            "'ticketA' as 'standby', and the dependent resources will be "
-            "stopped or demoted gracefully without triggering loss-policies):",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --standby", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Activate 'ticketA' from being standby:", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --activate", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Get the value of the 'granted' attribute for 'ticketA':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --get-attr granted", pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Set the value of the 'standby' attribute for 'ticketA':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --set-attr standby --attr-value true",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Delete the 'granted' attribute for 'ticketA':", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --delete-attr granted",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Erase the operation history of 'ticketA' at this cluster site:",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "The cluster site will 'forget' the existing ticket state.",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_ticket --ticket ticketA --cleanup", pcmk__option_example
-    },
-    { 0, 0, 0, 0 }
-};
+    const char *description = "Examples:\n\n"
+                              "Display the info of tickets:\n\n"
+                              "\tcrm_ticket --info\n\n"
+                              "Display the detailed info of tickets:\n\n"
+                              "\tcrm_ticket --details\n\n"
+                              "Display the XML of 'ticketA':\n\n"
+                              "\tcrm_ticket --ticket ticketA --query-xml\n\n"
+                              "Display the rsc_ticket constraints that apply to 'ticketA':\n\n"
+                              "\tcrm_ticket --ticket ticketA --constraints\n\n"
+                              "Grant 'ticketA' to this cluster site:\n\n"
+                              "\tcrm_ticket --ticket ticketA --grant\n\n"
+                              "Revoke 'ticketA' from this cluster site:\n\n"
+                              "\tcrm_ticket --ticket ticketA --revoke\n\n"
+                              "Make 'ticketA' standby (the cluster site will treat a granted\n"
+                              "'ticketA' as 'standby', and the dependent resources will be\n"
+                              "stopped or demoted gracefully without triggering loss-policies):\n\n"
+                              "\tcrm_ticket --ticket ticketA --standby\n\n"
+                              "Activate 'ticketA' from being standby:\n\n"
+                              "\tcrm_ticket --ticket ticketA --activate\n\n"
+                              "Get the value of the 'granted' attribute for 'ticketA':\n\n"
+                              "\tcrm_ticket --ticket ticketA --get-attr granted\n\n"
+                              "Set the value of the 'standby' attribute for 'ticketA':\n\n"
+                              "\tcrm_ticket --ticket ticketA --set-attr standby --attr-value true\n\n"
+                              "Delete the 'granted' attribute for 'ticketA':\n\n"
+                              "\tcrm_ticket --ticket ticketA --delete-attr granted\n\n"
+                              "Erase the operation history of 'ticketA' at this cluster site,\n"
+                              "causing the cluster site to 'forget' the existing ticket state:\n\n"
+                              "\tcrm_ticket --ticket ticketA --cleanup\n\n";
+
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "queries", "Queries:",
+                        "Show queries", query_entries);
+    pcmk__add_arg_group(context, "commands", "Commands:",
+                        "Show command options", command_entries);
+    pcmk__add_arg_group(context, "advanced", "Advanced Options:",
+                        "Show advanced options", advanced_entries);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", addl_entries);
+    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
+                        "Show deprecated options", deprecated_entries);
+
+    return context;
+}
 
 int
 main(int argc, char **argv)
@@ -729,131 +736,29 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
 
-    int option_index = 0;
-    int argerr = 0;
-    int flag;
+    pcmk__common_args_t *args = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
 
     attr_set = pcmk__strkey_table(free, free);
     attr_delete = NULL;
 
-    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
-    pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
-                          "perform tasks related to cluster tickets\n\n"
-                          "Allows ticket attributes to be queried, modified "
-                          "and deleted.\n");
+    args = pcmk__new_common_args(SUMMARY);
+    context = build_arg_context(args);
+    processed_args = pcmk__cmdline_preproc(argv, "dintvxCDGS");
 
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1)
-            break;
+    pcmk__cli_init_logging("crm_ticket", args->verbosity);
 
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'Q':
-                options.quiet = TRUE;
-                break;
-            case 't':
-                options.ticket_id = optarg;
-                break;
-            case 'l':
-            case 'L':
-            case 'w':
-            case 'q':
-            case 'c':
-                options.ticket_cmd = flag;
-                break;
-            case 'g':
-                g_hash_table_insert(attr_set, strdup("granted"), strdup("true"));
-                modified = true;
-                break;
-            case 'r':
-                g_hash_table_insert(attr_set, strdup("granted"), strdup("false"));
-                modified = true;
-                break;
-            case 's':
-                g_hash_table_insert(attr_set, strdup("standby"), strdup("true"));
-                modified = true;
-                break;
-            case 'a':
-                g_hash_table_insert(attr_set, strdup("standby"), strdup("false"));
-                modified = true;
-                break;
-            case 'G':
-                options.get_attr_name = optarg;
-                options.ticket_cmd = flag;
-                break;
-            case 'S':
-                options.attr_name = optarg;
-                if (options.attr_name && options.attr_value) {
-                    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
-                    options.attr_name = NULL;
-                    options.attr_value = NULL;
-                    modified = true;
-                }
-                break;
-            case 'D':
-                attr_delete = g_list_append(attr_delete, optarg);
-                modified = true;
-                break;
-            case 'C':
-                options.ticket_cmd = flag;
-                break;
-            case 'v':
-                options.attr_value = optarg;
-                if (options.attr_name && options.attr_value) {
-                    g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
-                    options.attr_name = NULL;
-                    options.attr_value = NULL;
-                    modified = true;
-                }
-                break;
-            case 'd':
-                options.attr_default = optarg;
-                break;
-            case 'f':
-                options.force = TRUE;
-                break;
-            case 'x':
-                options.xml_file = optarg;
-                break;
-            case 'n':
-                options.set_name = optarg;
-                break;
-            case 'i':
-                options.attr_id = optarg;
-                break;
-
-            default:
-                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported", flag, flag);
-                ++argerr;
-                break;
-        }
-    }
-
-    if (optind < argc && argv[optind] != NULL) {
-        CMD_ERR("non-option ARGV-elements:");
-        while (optind < argc && argv[optind] != NULL) {
-            CMD_ERR("%s", argv[optind++]);
-            ++argerr;
-        }
-    }
-
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
+        /* FIXME:  When crm_ticket is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_OK);
     }
 
     data_set = pe_new_working_set();
@@ -1086,7 +991,7 @@ main(int argc, char **argv)
     attr_set = NULL;
 
     if (attr_delete) {
-        g_list_free(attr_delete);
+        g_list_free_full(attr_delete, free);
     }
     attr_delete = NULL;
 
@@ -1098,6 +1003,17 @@ main(int argc, char **argv)
     if (rc == pcmk_rc_no_quorum) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Use --force to ignore quorum");
     }
+
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+    g_free(options.attr_default);
+    g_free(options.attr_id);
+    free(options.attr_name);
+    free(options.attr_value);
+    free(options.get_attr_name);
+    g_free(options.set_name);
+    g_free(options.ticket_id);
+    g_free(options.xml_file);
 
     pcmk__output_and_clear_error(error, NULL);
 
