@@ -117,6 +117,7 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
@@ -143,7 +144,8 @@ iso8601_SOURCES		= iso8601.c
 iso8601_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
+attrd_updater_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_ticket_SOURCES	= crm_ticket.c
 crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\

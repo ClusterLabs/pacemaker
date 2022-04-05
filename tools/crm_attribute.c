@@ -35,60 +35,31 @@
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
 
+#include <pcmki/pcmki_output.h>
+
 #define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
 
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
 static int
-attribute_default(pcmk__output_t *out, va_list args)
+attribute_text(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *attr_id = va_arg(args, char *);
-    char *attr_name = va_arg(args, char *);
-    char *read_value = va_arg(args, char *);
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
+    char *host G_GNUC_UNUSED = va_arg(args, char *);
 
     if (out->quiet) {
-        pcmk__formatted_printf(out, "%s\n", read_value);
+        pcmk__formatted_printf(out, "%s\n", value);
     } else {
         out->info(out, "%s%s %s%s %s%s value=%s",
-                  type ? "scope=" : "", type ? type : "",
-                  attr_id ? "id=" : "", attr_id ? attr_id : "",
-                  attr_name ? "name=" : "", attr_name ? attr_name : "",
-                  read_value ? read_value : "(null)");
-    }
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *")
-static int
-attribute_xml(pcmk__output_t *out, va_list args)
-{
-    char *type = va_arg(args, char *);
-    char *attr_id = va_arg(args, char *);
-    char *attr_name = va_arg(args, char *);
-    char *read_value = va_arg(args, char *);
-
-    xmlNodePtr node = NULL;
-
-    node = pcmk__output_create_xml_node(out, "attribute", NULL);
-
-    if (type) {
-        crm_xml_add(node, "scope", type);
-    }
-
-    if (attr_id) {
-        crm_xml_add(node, "id", attr_id);
-    }
-
-    if (attr_name) {
-        crm_xml_add(node, "name", attr_name);
-    }
-
-    if (read_value) {
-        crm_xml_add(node, "value", read_value);
+                  scope ? "scope=" : "", scope ? scope : "",
+                  instance ? "id=" : "", instance ? instance : "",
+                  name ? "name=" : "", name ? name : "",
+                  value ? value : "(null)");
     }
 
     return pcmk_rc_ok;
@@ -102,8 +73,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "attribute", "default", attribute_default },
-    { "attribute", "xml", attribute_xml },
+    { "attribute", "text", attribute_text },
 
     { NULL, NULL, NULL }
 };
@@ -395,6 +365,7 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_lib_messages(out);
     pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {

@@ -20,12 +20,22 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 
 #include <crm/common/attrd_internal.h>
 
+#include <pcmki/pcmki_output.h>
+
 #define SUMMARY "query and update Pacemaker node attributes"
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 GError *error = NULL;
 
@@ -161,16 +171,17 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 
-static int do_query(const char *attr_name, const char *attr_node, gboolean query_all);
+static int do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node,
+                    gboolean query_all);
 static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
 
     pcmk__add_arg_group(context, "required", "Required Arguments:",
                         "Show required arguments", required_entries);
@@ -187,12 +198,17 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
 
+    pcmk__output_t *out = NULL;
+
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "dlnsvBNUS");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -200,9 +216,17 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("attrd_updater", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (args->version) {
-        /* FIXME:  When attrd_updater is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+        out->version(out, false);
+        goto done;
     }
 
     if (options.command != 'R' && options.attr_name == NULL) {
@@ -211,8 +235,10 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_lib_messages(out);
+
     if (options.command == 'Q') {
-        int rc = do_query(options.attr_name, options.attr_node, options.query_all);
+        int rc = do_query(out, options.attr_name, options.attr_node, options.query_all);
         exit_code = pcmk_rc2exitc(rc);
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
@@ -239,7 +265,12 @@ done:
     g_free(options.attr_set);
     free(options.attr_value);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
 
     crm_exit(exit_code);
 }
@@ -347,7 +378,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
  * \return true if any values were printed
  */
 static bool
-print_attrd_values(xmlNode *reply, const char *attr_name)
+print_attrd_values(pcmk__output_t *out, xmlNode *reply, const char *attr_name)
 {
     xmlNode *child;
     const char *reply_host, *reply_value;
@@ -368,8 +399,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
                 crm_warn("Ignoring %s tag without %s attribute in query reply",
                          XML_CIB_TAG_NODE, PCMK__XA_ATTR_NODE_NAME);
             } else {
-                printf("name=\"%s\" host=\"%s\" value=\"%s\"\n",
-                       attr_name, reply_host, (reply_value? reply_value : ""));
+                out->message(out, "attribute", NULL, NULL, attr_name, reply_value, reply_host);
                 have_values = true;
             }
         }
@@ -388,7 +418,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
  * \return Standard Pacemaker return code
  */
 static int
-do_query(const char *attr_name, const char *attr_node, gboolean query_all)
+do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
 {
     xmlNode *reply = NULL;
     int rc = pcmk_rc_ok;
@@ -421,7 +451,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     }
 
     /* Print the values from the reply */
-    if (!print_attrd_values(reply, attr_name)) {
+    if (!print_attrd_values(out, reply, attr_name)) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not query value of %s: reply had attribute name but no host values",
                     attr_name);

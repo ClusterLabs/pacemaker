@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.13.3"
+#  define CRM_FEATURE_SET		"3.13.4"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
