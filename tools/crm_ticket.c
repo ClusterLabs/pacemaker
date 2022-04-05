@@ -51,6 +51,8 @@ struct {
     .ticket_cmd = 'S'
 };
 
+GList *attr_delete;
+GHashTable *attr_set;
 bool modified = false;
 int cib_options = cib_sync_call;
 
@@ -342,8 +344,7 @@ ticket_warning(const char *ticket_id, const char *action)
 }
 
 static bool
-allow_modification(const char *ticket_id, GList *attr_delete,
-                   GHashTable *attr_set)
+allow_modification(const char *ticket_id)
 {
     const char *value = NULL;
     GList *list_iter = NULL;
@@ -376,8 +377,7 @@ allow_modification(const char *ticket_id, GList *attr_delete,
 }
 
 static int
-modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * attr_set,
-                    cib_t * cib, pe_working_set_t * data_set)
+modify_ticket_state(const char * ticket_id, cib_t * cib, pe_working_set_t * data_set)
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
@@ -733,8 +733,8 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
 
-    GList *attr_delete = NULL;
-    GHashTable *attr_set = pcmk__strkey_table(free, free);
+    attr_set = pcmk__strkey_table(free, free);
+    attr_delete = NULL;
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
@@ -1032,14 +1032,14 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (!allow_modification(options.ticket_id, attr_delete, attr_set)) {
+        if (!allow_modification(options.ticket_id)) {
             exit_code = CRM_EX_INSUFFICIENT_PRIV;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Ticket modification not allowed");
             goto done;
         }
 
-        rc = modify_ticket_state(options.ticket_id, attr_delete, attr_set, cib_conn, data_set);
+        rc = modify_ticket_state(options.ticket_id, cib_conn, data_set);
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc != pcmk_rc_ok) {
