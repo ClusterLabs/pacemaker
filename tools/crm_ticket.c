@@ -56,11 +56,7 @@ int cib_options = cib_sync_call;
 static pe_ticket_t *
 find_ticket(const char *ticket_id, pe_working_set_t * data_set)
 {
-    pe_ticket_t *ticket = NULL;
-
-    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
-
-    return ticket;
+    return g_hash_table_lookup(data_set->tickets, ticket_id);
 }
 
 static void
