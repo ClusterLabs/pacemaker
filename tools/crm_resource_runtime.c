@@ -869,24 +869,22 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
 }
 
 static void
-check_role(pcmk__output_t *out, cib_t *cib_conn, resource_checks_t *checks)
+check_role(resource_checks_t *checks)
 {
-    char *role_s = NULL;
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const char *role_s = g_hash_table_lookup(checks->rsc->meta,
+                                             XML_RSC_ATTR_TARGET_ROLE);
 
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
     if (role_s == NULL) {
         return;
     }
-
     switch (text2role(role_s)) {
         case RSC_ROLE_STOPPED:
             checks->flags |= rsc_remain_stopped;
             break;
 
         case RSC_ROLE_UNPROMOTED:
-            if (pcmk_is_set(parent->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(uber_parent(checks->rsc)->flags,
+                            pe_rsc_promotable)) {
                 checks->flags |= rsc_unpromotable;
             }
             break;
@@ -894,7 +892,6 @@ check_role(pcmk__output_t *out, cib_t *cib_conn, resource_checks_t *checks)
         default:
             break;
     }
-    free(role_s);
 }
 
 static void
@@ -929,7 +926,7 @@ cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
 {
     resource_checks_t checks = { .rsc = rsc };
 
-    check_role(out, cib_conn, &checks);
+    check_role(&checks);
     check_managed(out, cib_conn, &checks);
     check_locked(&checks);
 
