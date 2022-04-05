@@ -78,12 +78,12 @@ print_date(time_t time)
     fprintf(stdout, "'%s'", date_str);
 }
 
-static int
+static void
 print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
 {
     if (raw) {
         fprintf(stdout, "%s\n", ticket->id);
-        return pcmk_ok;
+        return;
     }
 
     fprintf(stdout, "%s\t%s %s",
@@ -125,10 +125,10 @@ print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
         fprintf(stdout, "\n");
     }
 
-    return pcmk_ok;
+    return;
 }
 
-static int
+static void
 print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
 {
     GHashTableIter iter;
@@ -139,8 +139,6 @@ print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
     while (g_hash_table_iter_next(&iter, NULL, (void **)&ticket)) {
         print_ticket(ticket, raw, details);
     }
-
-    return pcmk_ok;
 }
 
 #define XPATH_MAX 1024
@@ -930,17 +928,10 @@ main(int argc, char **argv)
                             "No such ticket '%s'", options.ticket_id);
                 goto done;
             }
-            rc = print_ticket(ticket, raw, details);
+            print_ticket(ticket, raw, details);
 
         } else {
-            rc = print_ticket_list(data_set, raw, details);
-        }
-
-        exit_code = crm_errno2exit(rc);
-
-        if (rc != pcmk_ok) {
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not print ticket: %s", pcmk_strerror(rc));
+            print_ticket_list(data_set, raw, details);
         }
 
     } else if (options.ticket_cmd == 'q') {
