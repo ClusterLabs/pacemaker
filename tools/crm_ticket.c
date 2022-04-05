@@ -51,6 +51,7 @@ struct {
     .ticket_cmd = 'S'
 };
 
+bool modified = false;
 int cib_options = cib_sync_call;
 
 static pe_ticket_t *
@@ -731,7 +732,6 @@ main(int argc, char **argv)
     int option_index = 0;
     int argerr = 0;
     int flag;
-    guint modified = 0;
 
     GList *attr_delete = NULL;
     GHashTable *attr_set = pcmk__strkey_table(free, free);
@@ -774,19 +774,19 @@ main(int argc, char **argv)
                 break;
             case 'g':
                 g_hash_table_insert(attr_set, strdup("granted"), strdup("true"));
-                modified++;
+                modified = true;
                 break;
             case 'r':
                 g_hash_table_insert(attr_set, strdup("granted"), strdup("false"));
-                modified++;
+                modified = true;
                 break;
             case 's':
                 g_hash_table_insert(attr_set, strdup("standby"), strdup("true"));
-                modified++;
+                modified = true;
                 break;
             case 'a':
                 g_hash_table_insert(attr_set, strdup("standby"), strdup("false"));
-                modified++;
+                modified = true;
                 break;
             case 'G':
                 options.get_attr_name = optarg;
@@ -798,12 +798,12 @@ main(int argc, char **argv)
                     g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
                     options.attr_name = NULL;
                     options.attr_value = NULL;
-                    modified++;
+                    modified = true;
                 }
                 break;
             case 'D':
                 attr_delete = g_list_append(attr_delete, optarg);
-                modified++;
+                modified = true;
                 break;
             case 'C':
                 options.ticket_cmd = flag;
@@ -814,7 +814,7 @@ main(int argc, char **argv)
                     g_hash_table_insert(attr_set, strdup(options.attr_name), strdup(options.attr_value));
                     options.attr_name = NULL;
                     options.attr_value = NULL;
-                    modified++;
+                    modified = true;
                 }
                 break;
             case 'd':
