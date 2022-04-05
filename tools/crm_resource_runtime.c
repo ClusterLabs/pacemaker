@@ -895,21 +895,14 @@ check_role(resource_checks_t *checks)
 }
 
 static void
-check_managed(pcmk__output_t *out, cib_t *cib_conn, resource_checks_t *checks)
+check_managed(resource_checks_t *checks)
 {
-    char *managed_s = NULL;
-    pe_resource_t *parent = uber_parent(checks->rsc);
+    const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
+                                                XML_RSC_ATTR_MANAGED);
 
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed_s);
-    if (managed_s == NULL) {
-        return;
-    }
-
-    if (!crm_is_true(managed_s)) {
+    if ((managed_s != NULL) && !crm_is_true(managed_s)) {
         checks->flags |= rsc_unmanaged;
     }
-    free(managed_s);
 }
 
 static void
@@ -927,7 +920,7 @@ cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
     resource_checks_t checks = { .rsc = rsc };
 
     check_role(&checks);
-    check_managed(out, cib_conn, &checks);
+    check_managed(&checks);
     check_locked(&checks);
 
     return out->message(out, "resource-check-list", &checks);
