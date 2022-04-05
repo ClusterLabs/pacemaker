@@ -1019,7 +1019,7 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, cib_conn, rsc);
+        cli_resource_check(out, rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1326,7 +1326,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, cib_conn, rsc);
+        cli_resource_check(out, rsc);
     }
 
     if (rc == pcmk_rc_ok) {
