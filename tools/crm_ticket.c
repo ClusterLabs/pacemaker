@@ -143,7 +143,7 @@ static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -162,8 +162,9 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
+    rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         goto done;
     }
 
@@ -186,7 +187,7 @@ static int
 find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
 
     char *xpath_string = NULL;
@@ -213,8 +214,9 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
     CRM_LOG_ASSERT(offset > 0);
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
+    rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         goto done;
     }
 
@@ -229,7 +231,7 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
 static int
 dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *state_xml = NULL;
 
     rc = find_ticket_state(the_cib, ticket_id, &state_xml);
@@ -248,13 +250,13 @@ dump_ticket_xml(cib_t * the_cib, const char *ticket_id)
         free(state_xml_str);
     }
 
-    return pcmk_ok;
+    return rc;
 }
 
 static int
 dump_constraints(cib_t * the_cib, const char *ticket_id)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *cons_xml = NULL;
     char *cons_xml_str = NULL;
 
@@ -269,7 +271,7 @@ dump_constraints(cib_t * the_cib, const char *ticket_id)
     free_xml(cons_xml);
     free(cons_xml_str);
 
-    return pcmk_ok;
+    return rc;
 }
 
 static int
@@ -283,15 +285,15 @@ get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char *
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
     if (ticket == NULL) {
-        return -ENXIO;
+        return ENXIO;
     }
 
     *attr_value = g_hash_table_lookup(ticket->state, attr_name);
     if (*attr_value == NULL) {
-        return -ENXIO;
+        return ENXIO;
     }
 
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -376,7 +378,7 @@ static int
 modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * attr_set,
                     cib_t * cib, pe_working_set_t * data_set)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
     xmlNode *ticket_state_xml = NULL;
     gboolean found = FALSE;
@@ -390,16 +392,16 @@ modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * att
     pe_ticket_t *ticket = NULL;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         crm_debug("Found a match state for ticket: id=%s", ticket_id);
         xml_top = ticket_state_xml;
         found = TRUE;
 
-    } else if (rc != -ENXIO) {
+    } else if (rc != ENXIO) {
         return rc;
 
     } else if (g_hash_table_size(attr_set) == 0){
-        return pcmk_ok;
+        return pcmk_rc_ok;
 
     } else {
         xmlNode *xml_obj = NULL;
@@ -435,10 +437,12 @@ modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * att
     if (found && (attr_delete != NULL)) {
         crm_log_xml_debug(xml_top, "Replace");
         rc = cib->cmds->replace(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
+        rc = pcmk_legacy2rc(rc);
 
     } else {
         crm_log_xml_debug(xml_top, "Update");
         rc = cib->cmds->modify(cib, XML_CIB_TAG_STATUS, xml_top, cib_options);
+        rc = pcmk_legacy2rc(rc);
     }
 
     free_xml(xml_top);
@@ -450,22 +454,23 @@ delete_ticket_state(const char *ticket_id, cib_t * cib)
 {
     xmlNode *ticket_state_xml = NULL;
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
 
-    if (rc == -ENXIO) {
-        return pcmk_ok;
+    if (rc == ENXIO) {
+        return pcmk_rc_ok;
 
-    } else if (rc != pcmk_ok) {
+    } else if (rc != pcmk_rc_ok) {
         return rc;
     }
 
     crm_log_xml_debug(ticket_state_xml, "Delete");
 
     rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
+    rc = pcmk_legacy2rc(rc);
 
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         fprintf(stdout, "Cleaned up %s\n", ticket_id);
     }
 
@@ -721,7 +726,7 @@ main(int argc, char **argv)
 
     cib_t *cib_conn = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     int option_index = 0;
     int argerr = 0;
@@ -867,10 +872,12 @@ main(int argc, char **argv)
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    if (rc != pcmk_ok) {
-        exit_code = crm_errno2exit(rc);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB: %s",
-                    pcmk_strerror(rc));
+                    pcmk_rc_str(rc));
         goto done;
     }
 
@@ -879,10 +886,12 @@ main(int argc, char **argv)
 
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
-        if (rc != pcmk_ok) {
-            exit_code = crm_errno2exit(rc);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not get local CIB: %s",
-                        pcmk_strerror(rc));
+                        pcmk_rc_str(rc));
             goto done;
         }
     }
@@ -930,20 +939,20 @@ main(int argc, char **argv)
 
     } else if (options.ticket_cmd == 'q') {
         rc = dump_ticket_xml(cib_conn, options.ticket_id);
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not query ticket XML: %s", pcmk_strerror(rc));
+                        "Could not query ticket XML: %s", pcmk_rc_str(rc));
         }
 
     } else if (options.ticket_cmd == 'c') {
         rc = dump_constraints(cib_conn, options.ticket_id);
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not show ticket constraints: %s", pcmk_strerror(rc));
+                        "Could not show ticket constraints: %s", pcmk_rc_str(rc));
         }
 
     } else if (options.ticket_cmd == 'G') {
@@ -957,13 +966,13 @@ main(int argc, char **argv)
         }
 
         rc = get_ticket_state_attr(options.ticket_id, options.get_attr_name, &value, data_set);
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             fprintf(stdout, "%s\n", value);
-        } else if (rc == -ENXIO && options.attr_default) {
+        } else if (rc == ENXIO && options.attr_default) {
             fprintf(stdout, "%s\n", options.attr_default);
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
 
     } else if (options.ticket_cmd == 'C') {
         if (options.ticket_id == NULL) {
@@ -992,11 +1001,11 @@ main(int argc, char **argv)
         }
 
         rc = delete_ticket_state(options.ticket_id, cib_conn);
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not clean up ticket: %s", pcmk_strerror(rc));
+                        "Could not clean up ticket: %s", pcmk_rc_str(rc));
         }
 
     } else if (modified) {
@@ -1031,11 +1040,11 @@ main(int argc, char **argv)
         }
 
         rc = modify_ticket_state(options.ticket_id, attr_delete, attr_set, cib_conn, data_set);
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not modify ticket: %s", pcmk_strerror(rc));
+                        "Could not modify ticket: %s", pcmk_rc_str(rc));
         }
 
     } else if (options.ticket_cmd == 'S') {
@@ -1086,7 +1095,7 @@ main(int argc, char **argv)
 
     cib__clean_up_connection(&cib_conn);
 
-    if (rc == -pcmk_err_no_quorum) {
+    if (rc == pcmk_rc_no_quorum) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Use --force to ignore quorum");
     }
 
