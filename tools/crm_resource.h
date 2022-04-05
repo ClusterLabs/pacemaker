@@ -8,6 +8,10 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <crm/crm.h>
 
 #include <crm/msg_xml.h>
@@ -31,13 +35,14 @@ typedef struct node_info_s {
 enum resource_check_flags {
     rsc_remain_stopped  = (1 << 0),
     rsc_unpromotable    = (1 << 1),
-    rsc_unmanaged       = (1 << 2)
+    rsc_unmanaged       = (1 << 2),
+    rsc_locked          = (1 << 3),
 };
 
 typedef struct resource_checks_s {
-    pe_resource_t *rsc;
-    unsigned int flags;
-    const char *lock_node;
+    pe_resource_t *rsc;     // Resource being checked
+    uint32_t flags;         // Group of enum resource_check_flags
+    const char *lock_node;  // Node that resource is shutdown-locked to, if any
 } resource_checks_t;
 
 resource_checks_t *cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed);

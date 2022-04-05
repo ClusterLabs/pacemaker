@@ -450,13 +450,12 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     pe_resource_t *parent = uber_parent(checks->rsc);
-    int rc = pcmk_rc_no_output;
-    bool printed = false;
 
-    if (checks->flags != 0 || checks->lock_node != NULL) {
-        printed = true;
-        out->begin_list(out, NULL, NULL, "Resource Checks");
+    if (checks->flags == 0) {
+        return pcmk_rc_no_output;
     }
+
+    out->begin_list(out, NULL, NULL, "Resource Checks");
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
         out->list_item(out, "check", "Configuration specifies '%s' should remain stopped",
@@ -473,17 +472,13 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
                        parent->id);
     }
 
-    if (checks->lock_node) {
+    if (pcmk_is_set(checks->flags, rsc_locked)) {
         out->list_item(out, "check", "'%s' is locked to node %s due to shutdown",
                        parent->id, checks->lock_node);
     }
 
-    if (printed) {
-        out->end_list(out);
-        rc = pcmk_rc_ok;
-    }
-
-    return rc;
+    out->end_list(out);
+    return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("resource-check-list", "resource_checks_t *")
@@ -509,7 +504,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
         pcmk__xe_set_bool_attr(node, "unmanaged", true);
     }
 
-    if (checks->lock_node) {
+    if (pcmk_is_set(checks->flags, rsc_locked)) {
         crm_xml_add(node, "locked-to", checks->lock_node);
     }
 

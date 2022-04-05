@@ -36,7 +36,8 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
         rc->flags |= rsc_unmanaged;
     }
 
-    if (rsc->lock_node) {
+    if (rsc->lock_node != NULL) {
+        rc->flags |= rsc_locked;
         rc->lock_node = rsc->lock_node->details->uname;
     }
 
@@ -914,9 +915,7 @@ cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
 
     checks = cli_check_resource(rsc, role_s, managed);
 
-    if (checks->flags != 0 || checks->lock_node != NULL) {
-        rc = out->message(out, "resource-check-list", checks);
-    }
+    rc = out->message(out, "resource-check-list", checks);
 
     free(role_s);
     free(managed);
