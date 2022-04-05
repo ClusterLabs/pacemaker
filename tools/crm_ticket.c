@@ -298,10 +298,9 @@ get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char *
     return pcmk_ok;
 }
 
-static gboolean
+static void
 ticket_warning(const char *ticket_id, const char *action)
 {
-    gboolean rc = FALSE;
     int offset = 0;
     static int text_max = 1024;
 
@@ -341,7 +340,6 @@ ticket_warning(const char *ticket_id, const char *action)
     fprintf(stdout, "%s\n", warning);
 
     free(warning);
-    return rc;
 }
 
 static gboolean
