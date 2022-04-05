@@ -15,36 +15,6 @@
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
 
-resource_checks_t *
-cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
-{
-    pe_resource_t *parent = uber_parent(rsc);
-    resource_checks_t *rc = calloc(1, sizeof(resource_checks_t));
-
-    if (role_s) {
-        enum rsc_role_e role = text2role(role_s);
-
-        if (role == RSC_ROLE_STOPPED) {
-            rc->flags |= rsc_remain_stopped;
-        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
-                   (role == RSC_ROLE_UNPROMOTED)) {
-            rc->flags |= rsc_unpromotable;
-        }
-    }
-
-    if (managed && !crm_is_true(managed)) {
-        rc->flags |= rsc_unmanaged;
-    }
-
-    if (rsc->lock_node != NULL) {
-        rc->flags |= rsc_locked;
-        rc->lock_node = rsc->lock_node->details->uname;
-    }
-
-    rc->rsc = rsc;
-    return rc;
-}
-
 static GList *
 build_node_info_list(pe_resource_t *rsc)
 {
@@ -898,29 +868,72 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     return rc;
 }
 
-int
-cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
+static void
+check_role(pcmk__output_t *out, cib_t *cib_conn, resource_checks_t *checks)
 {
     char *role_s = NULL;
-    char *managed = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
-    int rc = pcmk_rc_no_output;
-    resource_checks_t *checks = NULL;
-
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
+    pe_resource_t *parent = uber_parent(checks->rsc);
 
     find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
                        NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
+    if (role_s == NULL) {
+        return;
+    }
 
-    checks = cli_check_resource(rsc, role_s, managed);
+    switch (text2role(role_s)) {
+        case RSC_ROLE_STOPPED:
+            checks->flags |= rsc_remain_stopped;
+            break;
 
-    rc = out->message(out, "resource-check-list", checks);
+        case RSC_ROLE_UNPROMOTED:
+            if (pcmk_is_set(parent->flags, pe_rsc_promotable)) {
+                checks->flags |= rsc_unpromotable;
+            }
+            break;
 
+        default:
+            break;
+    }
     free(role_s);
-    free(managed);
-    free(checks);
-    return rc;
+}
+
+static void
+check_managed(pcmk__output_t *out, cib_t *cib_conn, resource_checks_t *checks)
+{
+    char *managed_s = NULL;
+    pe_resource_t *parent = uber_parent(checks->rsc);
+
+    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
+                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed_s);
+    if (managed_s == NULL) {
+        return;
+    }
+
+    if (!crm_is_true(managed_s)) {
+        checks->flags |= rsc_unmanaged;
+    }
+    free(managed_s);
+}
+
+static void
+check_locked(resource_checks_t *checks)
+{
+    if (checks->rsc->lock_node != NULL) {
+        checks->flags |= rsc_locked;
+        checks->lock_node = checks->rsc->lock_node->details->uname;
+    }
+}
+
+int
+cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
+{
+    resource_checks_t checks = { .rsc = rsc };
+
+    check_role(out, cib_conn, &checks);
+    check_managed(out, cib_conn, &checks);
+    check_locked(&checks);
+
+    return out->message(out, "resource-check-list", &checks);
 }
 
 // \return Standard Pacemaker return code
