@@ -2278,10 +2278,11 @@ fenced_process_fencing_reply(xmlNode *msg)
                      op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
-            crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: "
+            crm_notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "
                        "%s%s%s%s",
                        op->action, op->target,
-                       ((device == NULL)? "any device" : device),
+                       ((device == NULL)? "" : " using "),
+                       ((device == NULL)? "" : device),
                        op->client_name,
                        op->originator,
                        pcmk_exec_status_str(op->result.execution_status),
