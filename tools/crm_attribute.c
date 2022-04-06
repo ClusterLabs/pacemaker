@@ -515,6 +515,13 @@ main(int argc, char **argv)
 
         char *read_value = NULL;
 
+        if (options.attr_id == NULL && options.attr_name == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: must specify attribute name or pattern to query");
+            goto done;
+        }
+
         rc = cib__read_node_attr(out, the_cib, options.type, options.dest_node,
                                  options.set_type, options.set_name, options.attr_id,
                                  options.attr_name, &read_value, NULL);
