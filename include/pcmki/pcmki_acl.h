@@ -18,7 +18,7 @@ enum pcmk__acl_cred_type {
 };
 
 enum pcmk__acl_render_how {
-    pcmk__acl_render_ns_simple = 1,
+    pcmk__acl_render_namespace = 1,
     pcmk__acl_render_text,
     pcmk__acl_render_color,
 };

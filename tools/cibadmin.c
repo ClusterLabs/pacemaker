@@ -131,7 +131,7 @@ static pcmk__cli_option_t long_options[] = {
     {
         "-spacer-", no_argument, NULL, '-',
         "\n\tThat amounts to one of \"color\" (default for terminal),"
-            " \"text\" (otherwise), \"ns-full\", \"ns-simple\", or \"auto\""
+            " \"text\" (otherwise), \"namespace\", or \"auto\""
             " (per former defaults).",
         pcmk__option_default
     },
@@ -434,8 +434,7 @@ main(int argc, char **argv)
     enum acl_eval_how {
         acl_eval_unused,
         acl_eval_auto,
-        acl_eval_ns_full,
-        acl_eval_ns_simple,
+        acl_eval_namespace,
         acl_eval_text,
         acl_eval_color,
     } acl_eval_how = acl_eval_unused;
@@ -484,10 +483,8 @@ main(int argc, char **argv)
                 if (optarg != NULL) {
                     if (!strcmp(optarg, "auto")) {
                         acl_eval_how = acl_eval_auto;
-                    } else if (!strcmp(optarg, "ns-full")) {
-                        acl_eval_how = acl_eval_ns_full;
-                    } else if (!strcmp(optarg, "ns-simple")) {
-                        acl_eval_how = acl_eval_ns_simple;
+                    } else if (!strcmp(optarg, "namespace")) {
+                        acl_eval_how = acl_eval_namespace;
                     } else if (!strcmp(optarg, "text")) {
                         acl_eval_how = acl_eval_text;
                     } else if (!strcmp(optarg, "color")) {
@@ -788,41 +785,37 @@ main(int argc, char **argv)
         xmlDoc *acl_evaled_doc;
         rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
         if (rc == pcmk_rc_ok) {
+            enum pcmk__acl_render_how how;
+            xmlChar *rendered = NULL;
             free_xml(output);
-            if (acl_eval_how != acl_eval_ns_full) {
-                xmlChar *rendered = NULL;
-                enum pcmk__acl_render_how how;
-                switch(acl_eval_how) {
-                    case acl_eval_ns_simple:
-                        how = pcmk__acl_render_ns_simple;
-                        break;
-                    case acl_eval_text:
-                        how = pcmk__acl_render_text;
-                        break;
-                    case acl_eval_color:
+            switch(acl_eval_how) {
+                case acl_eval_text:
+                    how = pcmk__acl_render_text;
+                    break;
+                case acl_eval_color:
+                    how = pcmk__acl_render_color;
+                    break;
+                case acl_eval_namespace:
+                    how = pcmk__acl_render_namespace;
+                    break;
+                default:
+                    if (/*acl_eval_auto*/ isatty(STDOUT_FILENO)) {
                         how = pcmk__acl_render_color;
-                        break;
-                    default:
-                        if (/*acl_eval_auto*/ isatty(STDOUT_FILENO)) {
-                            how = pcmk__acl_render_color;
-                        } else {
-                            how = pcmk__acl_render_text;
-                        }
-                        break;
-                }
-
-                if (!pcmk__acl_evaled_render(acl_evaled_doc, how,
-                                             &rendered)) {
-                    printf("%s\n", (char *) rendered);
-                    free(rendered);
-                } else {
-                    fprintf(stderr, "Could not render evaluated access\n");
-                    crm_exit(CRM_EX_CONFIG);
-                }
-                output = NULL;
-            } else {
-                output = xmlDocGetRootElement(acl_evaled_doc);
+                    } else {
+                        how = pcmk__acl_render_text;
+                    }
+                    break;
             }
+
+            if (!pcmk__acl_evaled_render(acl_evaled_doc, how,
+                                            &rendered)) {
+                printf("%s\n", (char *) rendered);
+                free(rendered);
+            } else {
+                fprintf(stderr, "Could not render evaluated access\n");
+                crm_exit(CRM_EX_CONFIG);
+            }
+            output = NULL;
         } else {
             fprintf(stderr, "Could not evaluate access per request (%s, error: %s)\n", acl_cred, pcmk_rc_str(rc));
             crm_exit(CRM_EX_CONFIG);

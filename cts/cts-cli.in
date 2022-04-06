@@ -1791,20 +1791,13 @@ export LC_ALL="C"
 test_access_render() {
     local TMPXML
 
-    # while the in-tree config would get picked normally by default,
-    # there's still a risk of artificial influence (pre-existing
-    # $PCMK_config_directory, user's local config), so eforce it here
-    if test -x "$SRCDIR/tools/cibadmin" && test -x "$SRCDIR/xml"; then
-        export PCMK_config_directory="$SRCDIR/xml/base"
-        echo "Using local configuration from: $PCMK_config_directory" >&2
-    fi
-
-    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
     export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
     export CIB_shadow=$shadow
 
+    # Create a test CIB that has ACL roles
     cat <<EOF > "$TMPXML"
     <acls>
       <acl_role id="role-deny-acls">
@@ -1825,16 +1818,24 @@ EOF
     cmd="crm_attribute -n enable-acl -v true"
     test_assert $CRM_EX_OK
 
-    desc="An instance of ACLs render (into color)"
-    cmd="cibadmin --force --access-render=color --user tony"
-    test_assert $CRM_EX_OK
+    unset CIB_user
 
-    desc="An instance of ACLs render (into full namespacing)"
-    cmd="cibadmin --force --access-render=ns-full --user tony"
-    test_assert $CRM_EX_OK
+    # Run cibadmin --show-access on the test CIB with different users (tony here)
+
+    desc="An instance of ACLs render (into color)"
+    cmd="cibadmin --force --show-access=color -Q --user tony"
+    test_assert $CRM_EX_OK 0
+
+    desc="An instance of ACLs render (into namespacing)"
+    cmd="cibadmin --force --show-access=namespace -Q --user tony"
+    test_assert $CRM_EX_OK 0
+
+    desc="An instance of ACLs render (into text)"
+    cmd="cibadmin --force --show-access=text -Q --user tony"
+    test_assert $CRM_EX_OK 0
 
     unset CIB_shadow_dir
-    unset PCMK_config_directory
+    rm -f "$TMPXML"
 }
 
 # Process command-line arguments

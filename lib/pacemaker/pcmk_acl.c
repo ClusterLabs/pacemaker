@@ -221,7 +221,7 @@ pcmk__acl_annotate_permissions(const char *cred, xmlDoc *cib_doc,
     ret = pcmk__acl_annotate_permissions_recursive(target);
 
     if (ret == pcmk_rc_ok) {
-        char* credentials = crm_strdup_printf("%s", cred);
+        char* credentials = crm_strdup_printf("ACLs as evaluated for user %s", cred);
         comment = xmlNewDocComment(target->doc, (pcmkXmlStr) credentials);
         free(credentials);
         if (comment == NULL) {
@@ -246,7 +246,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xsltTransformContext *xslt_ctxt;
     xmlDoc *res;
     char *sfile;
-    static const char *params_ns_simple[] = {
+    static const char *params_namespace[] = {
         "accessrendercfg:c-writable",           ACL_NS_Q_PREFIX "writable:",
         "accessrendercfg:c-readable",           ACL_NS_Q_PREFIX "readable:",
         "accessrendercfg:c-denied",             ACL_NS_Q_PREFIX "denied:",
@@ -313,10 +313,10 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     xslt_ctxt = xsltNewTransformContext(xslt, annotated_doc);
     CRM_ASSERT(xslt_ctxt != NULL);
 
-    if (how == pcmk__acl_render_ns_simple) {
-        params = params_ns_simple;
-    } else if (how == pcmk__acl_render_text) {
+    if (how == pcmk__acl_render_text) {
         params = params_noansi;
+    } else if (how == pcmk__acl_render_namespace) {
+        params = params_namespace;
     } else {
         params = params_useansi;
     }
