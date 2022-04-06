@@ -1236,7 +1236,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_standby;
         value = "node standby";
 
-    } else if (pcmk__strcase_any_of(value, "ignore", "nothing", NULL)) {
+    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+                                    NULL)) {
         action->on_fail = action_fail_ignore;
         value = "ignore";
 
@@ -2068,7 +2069,10 @@ find_unfencing_devices(GList *candidates, GList *matches)
         } else if (!pcmk_is_set(candidate->flags, pe_rsc_fence_device)) {
             continue;
 
-        } else if (pcmk__str_eq(provides, "unfencing", pcmk__str_casei) || pcmk__str_eq(requires, "unfencing", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(provides, PCMK__VALUE_UNFENCING,
+                                pcmk__str_casei)
+                   || pcmk__str_eq(requires, PCMK__VALUE_UNFENCING,
+                                   pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
     }

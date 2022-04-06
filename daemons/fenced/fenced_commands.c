@@ -1060,7 +1060,7 @@ build_device_from_xml(xmlNode *dev)
     }
 
     value = crm_element_value(dev, "rsc_provides");
-    if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         device->automatic_unfencing = TRUE;
     }
 

@@ -737,25 +737,25 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
 
   handle_requires_pref:
-    if (pcmk__str_eq(value, "nothing", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
 
-    } else if (pcmk__str_eq(value, "quorum", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
         pe__set_resource_flags(*rsc, pe_rsc_needs_quorum);
 
-    } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
-                              "to 'quorum' because fencing devices cannot "
-                              "require unfencing", (*rsc)->id);
-            value = "quorum";
+            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+                              "devices cannot require unfencing", (*rsc)->id);
+            value = PCMK__VALUE_QUORUM;
             isdefault = TRUE;
             goto handle_requires_pref;
 
         } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
-                              "to 'quorum' because fencing is disabled",
-                              (*rsc)->id);
-            value = "quorum";
+            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+                              "is disabled", (*rsc)->id);
+            value = PCMK__VALUE_QUORUM;
             isdefault = TRUE;
             goto handle_requires_pref;
 
@@ -764,7 +764,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
                                            |pe_rsc_needs_unfencing);
         }
 
-    } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
         pe__set_resource_flags(*rsc, pe_rsc_needs_fencing);
         if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
@@ -776,26 +776,26 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
         isdefault = TRUE;
         if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            value = "quorum";
+            value = PCMK__VALUE_QUORUM;
 
         } else if (((*rsc)->variant == pe_native)
                    && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)
                    && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker", pcmk__str_casei)
                    && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote", pcmk__str_casei)
             ) {
-            value = "quorum";
+            value = PCMK__VALUE_QUORUM;
 
         } else if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
-            value = "unfencing";
+            value = PCMK__VALUE_UNFENCING;
 
         } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            value = "fencing";
+            value = PCMK__VALUE_FENCING;
 
         } else if (data_set->no_quorum_policy == no_quorum_ignore) {
-            value = "nothing";
+            value = PCMK__VALUE_NOTHING;
 
         } else {
-            value = "quorum";
+            value = PCMK__VALUE_QUORUM;
         }
 
         if (orig_value != NULL) {
