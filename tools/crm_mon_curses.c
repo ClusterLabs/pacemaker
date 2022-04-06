@@ -449,12 +449,12 @@ cluster_status_console(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "const char *")
 static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
-    gboolean later_succeeded = va_arg(args, gboolean);
+    const char *succeeded = va_arg(args, const char *);
 
     crm_time_t *crm_when = crm_time_new(NULL);
     char *buf = NULL;
@@ -466,7 +466,7 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
         case st_failed:
             curses_indented_printf(out,
                                    "%s of %s failed%s%s%s: "
-                                   "delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
+                                   "delegate=%s, client=%s, origin=%s, %s='%s'%s%s%s\n",
                                    stonith_action_str(event->action), event->target,
                                    (event->exit_reason == NULL)? "" : " (",
                                    (event->exit_reason == NULL)? "" : event->exit_reason,
@@ -474,7 +474,10 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
                                    event->delegate ? event->delegate : "",
                                    event->client, event->origin,
                                    full_history ? "completed" : "last-failed", buf,
-                                   later_succeeded ? " (a later attempt succeeded)" : "");
+                                   (succeeded == NULL)? "" : " (a later attempt from ",
+                                   (succeeded == NULL)? "" : succeeded,
+                                   (succeeded == NULL)? "" : " succeeded)");
+
             break;
 
         case st_done:
