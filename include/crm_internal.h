@@ -105,11 +105,4 @@
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 
-/*
- * Environment variables used by Pacemaker
- */
-
-#define PCMK__ENV_PHYSICAL_HOST         "physical_host"
-
-
 #endif                          /* CRM_INTERNAL__H */

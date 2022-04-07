@@ -426,7 +426,8 @@ crm_schema_init(void)
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
                NULL, NULL, FALSE, -1);
 
-    add_schema(schema_validator_none, &zero, "none", NULL, NULL, FALSE, -1);
+    add_schema(schema_validator_none, &zero, PCMK__VALUE_NONE,
+               NULL, NULL, FALSE, -1);
 }
 
 #if 0
@@ -722,7 +723,7 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
     }
 
     version = get_schema_version(validation);
-    if (strcmp(validation, "none") == 0) {
+    if (strcmp(validation, PCMK__VALUE_NONE) == 0) {
         return TRUE;
     } else if (version < xml_schema_max) {
         return validate_with(xml_blob, version, to_logs);
@@ -1025,7 +1026,7 @@ get_schema_version(const char *name)
     int lpc = 0;
 
     if (name == NULL) {
-        name = "none";
+        name = PCMK__VALUE_NONE;
     }
     for (; lpc < xml_schema_max; lpc++) {
         if (pcmk__str_eq(name, known_schemas[lpc].name, pcmk__str_casei)) {
@@ -1270,7 +1271,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
             }
         }
 
-    } else if (version >= get_schema_version("none")) {
+    } else if (version >= get_schema_version(PCMK__VALUE_NONE)) {
         // Schema validation is disabled
         if (to_logs) {
             pcmk__config_warn("Schema validation of configuration is disabled "

@@ -12,6 +12,7 @@ SUBDIRS = \
 	agents		\
 	cmdline		\
 	flags		\
+	health		\
 	io		\
 	iso8601		\
 	lists		\

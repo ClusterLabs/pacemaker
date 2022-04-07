@@ -244,3 +244,194 @@ unset to be false, and anything else to be an error.
    |                            | the epoch). This is managed by the cluster and      |
    |                            | should never be used directly.                      |
    +----------------------------+-----------------------------------------------------+
+
+.. index::
+   single: node; health
+
+.. _node-health:
+
+Tracking Node Health
+____________________
+
+A node may be functioning adequately as far as cluster membership is concerned,
+and yet be "unhealthy" in some respect that makes it an undesirable location
+for resources. For example, a disk drive may be reporting SMART errors, or the
+CPU may be highly loaded.
+
+Pacemaker offers a way to automatically move resources off unhealthy nodes.
+
+.. index::
+   single: node attribute; health
+
+Node Health Attributes
+######################
+
+Pacemaker will treat any node attribute whose name starts with ``#health`` as
+an indicator of node health. Node health attributes may have one of the
+following values:
+
+.. table:: **Allowed Values for Node Health Attributes**
+
+   +------------+--------------------------------------------------------------+
+   | Value      | Intended significance                                        |
+   +============+==============================================================+
+   | ``red``    | .. index::                                                   |
+   |            |    single: red; node health attribute value                  |
+   |            |    single: node attribute; health (red)                      |
+   |            |                                                              |
+   |            | This indicator is unhealthy                                  |
+   +------------+--------------------------------------------------------------+
+   | ``yellow`` | .. index::                                                   |
+   |            |    single: yellow; node health attribute value               |
+   |            |    single: node attribute; health (yellow)                   |
+   |            |                                                              |
+   |            | This indicator is becoming unhealthy                         |
+   +------------+--------------------------------------------------------------+
+   | ``green``  | .. index::                                                   |
+   |            |    single: green; node health attribute value                |
+   |            |    single: node attribute; health (green)                    |
+   |            |                                                              |
+   |            | This indicator is healthy                                    |
+   +------------+--------------------------------------------------------------+
+   | *integer*  | .. index::                                                   |
+   |            |    single: score; node health attribute value                |
+   |            |    single: node attribute; health (score)                    |
+   |            |                                                              |
+   |            | A numeric score to apply to all resources on this node (0 or |
+   |            | positive is healthy, negative is unhealthy)                  |
+   +------------+--------------------------------------------------------------+
+
+
+.. index::
+   pair: cluster option; node-health-strategy
+
+Node Health Strategy
+####################
+
+Pacemaker assigns a node health score to each node, as the sum of the values of
+all its node health attributes. This score will be used as a location
+constraint applied to this node for all resources.
+
+The ``node-health-strategy`` cluster option controls how Pacemaker responds to
+changes in node health attributes, and how it translates ``red``, ``yellow``,
+and ``green`` to scores.
+
+Allowed values are:
+
+.. table:: **Node Health Strategies**
+
+   +----------------+----------------------------------------------------------+
+   | Value          | Effect                                                   |
+   +================+==========================================================+
+   | none           | .. index::                                               |
+   |                |    single: node-health-strategy; none                    |
+   |                |    single: none; node-health-strategy value              |
+   |                |                                                          |
+   |                | Do not track node health attributes at all.              |
+   +----------------+----------------------------------------------------------+
+   | migrate-on-red | .. index::                                               |
+   |                |    single: node-health-strategy; migrate-on-red          |
+   |                |    single: migrate-on-red; node-health-strategy value    |
+   |                |                                                          |
+   |                | Assign the value of ``-INFINITY`` to ``red``, and 0 to   |
+   |                | ``yellow`` and ``green``. This will cause all resources  |
+   |                | to move off the node if any attribute is ``red``.        |
+   +----------------+----------------------------------------------------------+
+   | only-green     | .. index::                                               |
+   |                |    single: node-health-strategy; only-green              |
+   |                |    single: only-green; node-health-strategy value        |
+   |                |                                                          |
+   |                | Assign the value of ``-INFINITY`` to ``red`` and         |
+   |                | ``yellow``, and 0 to ``green``. This will cause all      |
+   |                | resources to move off the node if any attribute is       |
+   |                | ``red`` or ``yellow``.                                   |
+   +----------------+----------------------------------------------------------+
+   | progressive    | .. index::                                               |
+   |                |    single: node-health-strategy; progressive             |
+   |                |    single: progressive; node-health-strategy value       |
+   |                |                                                          |
+   |                | Assign the value of the ``node-health-red`` cluster      |
+   |                | option to ``red``, the value of ``node-health-yellow``   |
+   |                | to ``yellow``, and the value of ``node-health-green`` to |
+   |                | ``green``. Each node is additionally assigned a score of |
+   |                | ``node-health-base`` (this allows resources to start     |
+   |                | even if some attributes are ``yellow``). This strategy   |
+   |                | gives the administrator finer control over how important |
+   |                | each value is.                                           |
+   +----------------+----------------------------------------------------------+
+   | custom         | .. index::                                               |
+   |                |    single: node-health-strategy; custom                  |
+   |                |    single: custom; node-health-strategy value            |
+   |                |                                                          |
+   |                | Track node health attributes using the same values as    |
+   |                | ``progressive`` for ``red``, ``yellow``, and ``green``,  |
+   |                | but do not take them into account. The administrator is  |
+   |                | expected to implement a policy by defining :ref:`rules`  |
+   |                | referencing node health attributes.                      |
+   +----------------+----------------------------------------------------------+
+
+
+Exempting a Resource from Health Restrictions
+#############################################
+
+If you want a resource to be able to run on a node even if its health score
+would otherwise prevent it, set the resource's ``allow-unhealthy-nodes``
+meta-attribute to ``true`` *(available since 2.1.3)*.
+
+This is particularly useful for node health agents, to allow them to detect
+when the node becomes healthy again. If you configure a health agent without
+this setting, then the health agent will be banned from an unhealthy node,
+and you will have to investigate and clear the health attribute manually once
+it is healthy to allow resources on the node again.
+
+If you want the meta-attribute to apply to a clone, it must be set on the clone
+itself, not on the resource being cloned.
+
+
+Configuring Node Health Agents
+##############################
+
+Since Pacemaker calculates node health based on node attributes, any method
+that sets node attributes may be used to measure node health. The most common
+are resource agents and custom daemons.
+
+Pacemaker provides examples that can be used directly or as a basis for custom
+code. The ``ocf:pacemaker:HealthCPU``, ``ocf:pacemaker:HealthIOWait``, and
+``ocf:pacemaker:HealthSMART`` resource agents set node health attributes based
+on CPU and disk status.
+
+To take advantage of this feature, add the resource to your cluster (generally
+as a cloned resource with a recurring monitor action, to continually check the
+health of all nodes). For example:
+
+.. topic:: Example HealthIOWait resource configuration
+
+   .. code-block:: xml
+
+      <clone id="resHealthIOWait-clone">
+        <primitive class="ocf" id="HealthIOWait" provider="pacemaker" type="HealthIOWait">
+          <instance_attributes id="resHealthIOWait-instance_attributes">
+            <nvpair id="resHealthIOWait-instance_attributes-red_limit" name="red_limit" value="30"/>
+            <nvpair id="resHealthIOWait-instance_attributes-yellow_limit" name="yellow_limit" value="10"/>
+          </instance_attributes>
+          <operations>
+            <op id="resHealthIOWait-monitor-interval-5" interval="5" name="monitor" timeout="5"/>
+            <op id="resHealthIOWait-start-interval-0s" interval="0s" name="start" timeout="10s"/>
+            <op id="resHealthIOWait-stop-interval-0s" interval="0s" name="stop" timeout="10s"/>
+          </operations>
+        </primitive>
+      </clone>
+
+The resource agents use ``attrd_updater`` to set proper status for each node
+running this resource, as a node attribute whose name starts with ``#health``
+(for ``HealthIOWait``, the node attribute is named ``#health-iowait``).
+
+When a node is no longer faulty, you can force the cluster to make it available
+to take resources without waiting for the next monitor, by setting the node
+health attribute to green. For example:
+
+.. topic:: **Force node1 to be marked as healthy**
+
+   .. code-block:: none
+
+      # attrd_updater --name "#health-iowait" --update "green" --node "node1"

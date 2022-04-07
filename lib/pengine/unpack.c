@@ -201,38 +201,41 @@ set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
 static void
 unpack_node_health_values(pe_working_set_t *data_set)
 {
-    const char *health_strategy = pe_pref(data_set->config_hash,
-                                          "node-health-strategy");
+    switch (pe__health_strategy(data_set)) {
+        case pcmk__health_strategy_none:
+            pcmk__score_red = 0;
+            pcmk__score_yellow = 0;
+            pcmk__score_green = 0;
+            break;
 
-    if (pcmk__str_eq(health_strategy, "none",
-                     pcmk__str_null_matches|pcmk__str_casei)) {
-        pcmk__score_red = 0;
-        pcmk__score_yellow = 0;
-        pcmk__score_green = 0;
+        case pcmk__health_strategy_no_red:
+            pcmk__score_red = -INFINITY;
+            pcmk__score_yellow = 0;
+            pcmk__score_green = 0;
+            break;
 
-    } else if (pcmk__str_eq(health_strategy, "migrate-on-red",
-                            pcmk__str_casei)) {
-        pcmk__score_red = -INFINITY;
-        pcmk__score_yellow = 0;
-        pcmk__score_green = 0;
+        case pcmk__health_strategy_only_green:
+            pcmk__score_red = -INFINITY;
+            pcmk__score_yellow = -INFINITY;
+            pcmk__score_green = 0;
+            break;
 
-    } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
-        pcmk__score_red = -INFINITY;
-        pcmk__score_yellow = -INFINITY;
-        pcmk__score_green = 0;
-
-    } else { // "progressive" or "custom"
-        pcmk__score_red = char2score(pe_pref(data_set->config_hash,
-                                             "node-health-red"));
-        pcmk__score_green = char2score(pe_pref(data_set->config_hash,
-                                               "node-health-green"));
-        pcmk__score_yellow = char2score(pe_pref(data_set->config_hash,
-                                                "node-health-yellow"));
+        default: // progressive or custom
+            pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
+                                               data_set);
+            pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
+                                                 data_set);
+            pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
+                                                  data_set);
+            break;
     }
 
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
-        crm_debug("Values of node health scores: red=%d yellow=%d green=%d",
+        crm_debug("Values of node health scores: "
+                  PCMK__VALUE_RED "=%d "
+                  PCMK__VALUE_YELLOW "=%d "
+                  PCMK__VALUE_GREEN "=%d",
                   pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }

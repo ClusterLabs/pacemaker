@@ -23,8 +23,13 @@ gboolean was_processing_warning = FALSE;
 static bool
 check_health(const char *value)
 {
-    return pcmk__strcase_any_of(value, "none", "custom", "only-green", "progressive",
-                           "migrate-on-red", NULL);
+    return pcmk__strcase_any_of(value,
+                                PCMK__VALUE_NONE,
+                                PCMK__VALUE_CUSTOM,
+                                PCMK__VALUE_ONLY_GREEN,
+                                PCMK__VALUE_PROGRESSIVE,
+                                PCMK__VALUE_MIGRATE_ON_RED,
+                                NULL);
 }
 
 static bool
@@ -239,37 +244,46 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Node health */
     {
-        "node-health-strategy", NULL, "select",
-        "none, migrate-on-red, only-green, progressive, custom",
-        "none", check_health,
+        PCMK__OPT_NODE_HEALTH_STRATEGY, NULL, "select",
+        PCMK__VALUE_NONE ", " PCMK__VALUE_MIGRATE_ON_RED ", "
+            PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
+            PCMK__VALUE_CUSTOM,
+        PCMK__VALUE_NONE, check_health,
         "How cluster should react to node health attributes",
         "Requires external entities to create node attributes (named with "
-            "the prefix \"#health\") with values \"red\", \"yellow\" or "
-            "\"green\"."
+            "the prefix \"#health\") with values \"" PCMK__VALUE_RED "\", "
+            "\"" PCMK__VALUE_YELLOW "\", or \"" PCMK__VALUE_GREEN "\"."
     },
     {
-        "node-health-base", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         "Base health score assigned to a node",
-        "Only used when node-health-strategy is set to progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-green", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"green\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_GREEN "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-yellow", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"yellow\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_YELLOW "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-red", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
         "-INFINITY", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"red\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_RED "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
 
     /*Placement Strategy*/

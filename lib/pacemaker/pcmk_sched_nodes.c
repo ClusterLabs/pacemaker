@@ -283,20 +283,20 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 void
 pcmk__apply_node_health(pe_working_set_t *data_set)
 {
-    const char *health_strategy = pe_pref(data_set->config_hash,
-                                          "node-health-strategy");
     int base_health = 0;
+    enum pcmk__health_strategy strategy;
+    const char *strategy_str = pe_pref(data_set->config_hash,
+                                       PCMK__OPT_NODE_HEALTH_STRATEGY);
 
-    if (pcmk__str_eq(health_strategy, "none",
-                     pcmk__str_null_matches|pcmk__str_casei)) {
+    strategy = pcmk__parse_health_strategy(strategy_str);
+    if (strategy == pcmk__health_strategy_none) {
         return;
     }
-    crm_info("Applying node health strategy '%s'", health_strategy);
+    crm_info("Applying node health strategy '%s'", strategy_str);
 
     // The progressive strategy can use a base health score
-    if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
-        base_health = char2score(pe_pref(data_set->config_hash,
-                                         "node-health-base"));
+    if (strategy == pcmk__health_strategy_progressive) {
+        base_health = pe__health_score(PCMK__OPT_NODE_HEALTH_BASE, data_set);
     }
 
     for (GList *iter = data_set->nodes; iter != NULL; iter = iter->next) {
@@ -315,9 +315,25 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
                  node->details->uname, health);
 
         // Use node health as a location score for each resource on the node
-        for (GList *rsc = data_set->resources; rsc != NULL; rsc = rsc->next) {
-            pcmk__new_location(health_strategy, (pe_resource_t *) rsc->data,
-                               health, NULL, node, data_set);
+        for (GList *r = data_set->resources; r != NULL; r = r->next) {
+            pe_resource_t *rsc = (pe_resource_t *) r->data;
+
+            bool constrain = true;
+
+            if (health < 0) {
+                /* Negative health scores do not apply to resources with
+                 * allow-unhealthy-nodes=true.
+                 */
+                constrain = !crm_is_true(g_hash_table_lookup(rsc->meta,
+                                         PCMK__META_ALLOW_UNHEALTHY_NODES));
+            }
+            if (constrain) {
+                pcmk__new_location(strategy_str, rsc, health, NULL, node,
+                                   data_set);
+            } else {
+                pe_rsc_trace(rsc, "%s is immune from health ban on %s",
+                             rsc->id, node->details->uname);
+            }
         }
     }
 }

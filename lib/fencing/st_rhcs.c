@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -289,7 +289,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             return -ETIME;
         }
 
-    } else if (pcmk__str_eq(host_arg, "none", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(host_arg, PCMK__VALUE_NONE, pcmk__str_casei)) {
         host_arg = NULL;
     }
 

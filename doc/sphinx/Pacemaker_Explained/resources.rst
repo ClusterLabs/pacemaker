@@ -480,6 +480,10 @@ behave and can be easily set using the ``--meta`` option of the
    |                            | resources, FALSE otherwise       | this resource when it needs to be moved (see         |
    |                            |                                  | :ref:`live-migration`)                               |
    +----------------------------+----------------------------------+------------------------------------------------------+
+   | allow-unhealthy-nodes      | FALSE                            | Whether the resource should be able to run on a node |
+   |                            |                                  | even if the node's health score would otherwise      |
+   |                            |                                  | prevent it (see :ref:`node-health`) *(since 2.1.3)*  |
+   +----------------------------+----------------------------------+------------------------------------------------------+
    | container-attribute-target |                                  | Specific to bundle resources; see                    |
    |                            |                                  | :ref:`s-bundle-attributes`                           |
    +----------------------------+----------------------------------+------------------------------------------------------+

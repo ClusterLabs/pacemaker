@@ -694,6 +694,7 @@ TESTS = [
         [ "systemhealthp1", "System Health (Progessive)     #1" ],
         [ "systemhealthp2", "System Health (Progessive)     #2" ],
         [ "systemhealthp3", "System Health (Progessive)     #3" ],
+        [ "allow-unhealthy-nodes", "System Health (migrate-on-red + allow-unhealth-nodes)" ],
     ],
     [
         [ "utilization", "Placement Strategy - utilization" ],

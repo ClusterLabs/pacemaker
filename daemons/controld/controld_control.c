@@ -521,7 +521,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
      * long description
      */
     {
-        "dc-version", NULL, "string", NULL, "none", NULL,
+        "dc-version", NULL, "string", NULL, PCMK__VALUE_NONE, NULL,
         "Pacemaker version on cluster node elected Designated Controller (DC)",
         "Includes a hash which identifies the exact changeset the code was "
             "built from. Used for diagnostic purposes."
