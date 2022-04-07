@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
+    * Node hs21c: online (health is YELLOW)
     * Node hs21d: UNCLEAN (offline)
-    * Online: [ hs21c ]
 
   * Full List of Resources:
     * stonith-1	(stonith:dummy):	 Stopped
@@ -27,7 +27,7 @@ Executing Cluster Transition:
 
 Revised Cluster Status:
   * Node List:
-    * Online: [ hs21c ]
+    * Node hs21c: online (health is YELLOW)
     * OFFLINE: [ hs21d ]
 
   * Full List of Resources:

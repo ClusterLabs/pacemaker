@@ -1,7 +1,8 @@
 Using the original execution date of: 2022-04-01 17:57:38Z
 Current cluster status:
   * Node List:
-    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * Node rhel8-5: online (health is RED)
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel8-1
@@ -22,7 +23,8 @@ Using the original execution date of: 2022-04-01 17:57:38Z
 
 Revised Cluster Status:
   * Node List:
-    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * Node rhel8-5: online (health is RED)
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel8-1
