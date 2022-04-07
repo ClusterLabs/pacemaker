@@ -3974,6 +3974,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
 done:
+    pe__update_expected_node(rsc, node, status, rc, target_rc);
     pe_rsc_trace(rsc, "Resource %s after %s: role=%s, next=%s",
                  rsc->id, task, role2text(rsc->role),
                  role2text(rsc->next_role));

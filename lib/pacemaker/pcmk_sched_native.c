@@ -1259,7 +1259,10 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-    CRM_ASSERT(rsc);
+    native_variant_data_t *native_data = NULL;
+
+    get_native_variant_data(native_data, rsc);
+
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
     if (next_role == RSC_ROLE_UNKNOWN) {
@@ -1323,6 +1326,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                        "(will stop on both nodes)",
                        rsc->id, rsc->partial_migration_source->details->uname,
                        rsc->partial_migration_target->details->uname);
+            multiply_active = false;
 
         } else {
             const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -1343,6 +1347,11 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
          */
         rsc->partial_migration_source = rsc->partial_migration_target = NULL;
         allow_migrate = FALSE;
+    }
+
+    if (!multiply_active) {
+        native_data->expected_node = NULL;
+        pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
@@ -1995,6 +2004,32 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is a multiply active resource's expected node
+ *
+ * \param[in] rsc  Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p rsc is multiply active with multiple-active set to
+ *         stop_unexpected, and \p node is the node where it will remain active
+ * \note This assumes that the resource's next role cannot be changed to stopped
+ *       after this is called, which should be reasonable if status has already
+ *       been unpacked and resources have been assigned to nodes.
+ */
+static bool
+is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    native_variant_data_t *native_data = NULL;
+
+    get_native_variant_data(native_data, rsc);
+    return pcmk_all_flags_set(rsc->flags,
+                              pe_rsc_stop_unexpected|pe_rsc_restarting)
+           && (rsc->next_role > RSC_ROLE_STOPPED)
+           && (native_data->expected_node != NULL) && (node != NULL)
+           && (native_data->expected_node->details == node->details);
+}
+
 gboolean
 StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
@@ -2005,6 +2040,18 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *current = (pe_node_t *) gIter->data;
         pe_action_t *stop;
+
+        if (is_expected_node(rsc, current)) {
+            /* We are scheduling restart actions for a multiply active resource
+             * with multiple-active=stop_unexpected, and this is where it should
+             * not be stopped.
+             */
+            pe_rsc_trace(rsc,
+                         "Skipping stop of multiply active resource %s "
+                         "on expected node %s",
+                         rsc->id, current->details->uname);
+            continue;
+        }
 
         if (rsc->partial_migration_target) {
             if (rsc->partial_migration_target->details == current->details) {
@@ -2029,6 +2076,17 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
 
         if(rsc->allocated_to == NULL) {
             pe_action_set_reason(stop, "node availability", TRUE);
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_restarting)) {
+            native_variant_data_t *native_data = NULL;
+
+            get_native_variant_data(native_data, rsc);
+            if (native_data->expected_node != NULL) {
+                /* We are stopping a multiply active resource on a node that is
+                 * not its expected node, and we are still scheduling restart
+                 * actions, so the stop is for being multiply active.
+                 */
+                pe_action_set_reason(stop, "being multiply active", TRUE);
+            }
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -2071,6 +2129,16 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
         pe__clear_action_flags(start, pe_action_optional);
     }
 
+    if (is_expected_node(rsc, next)) {
+        /* This could be a problem if the start becomes necessary for other
+         * reasons later.
+         */
+        pe_rsc_trace(rsc,
+                     "Start of multiply active resouce %s "
+                     "on expected node %s will be a pseudo-action",
+                     rsc->id, next->details->uname);
+        pe__set_action_flags(start, pe_action_pseudo);
+    }
 
     return TRUE;
 }
@@ -2084,6 +2152,7 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
 
     CRM_ASSERT(rsc);
     CRM_CHECK(next != NULL, return FALSE);
+
     pe_rsc_trace(rsc, "%s on %s", rsc->id, next->details->uname);
 
     action_list = pe__resource_actions(rsc, next, RSC_START, TRUE);
@@ -2098,7 +2167,19 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
     g_list_free(action_list);
 
     if (runnable) {
-        promote_action(rsc, next, optional);
+        pe_action_t *promote = promote_action(rsc, next, optional);
+
+        if (is_expected_node(rsc, next)) {
+            /* This could be a problem if the promote becomes necessary for
+             * other reasons later.
+             */
+            pe_rsc_trace(rsc,
+                         "Promotion of multiply active resouce %s "
+                         "on expected node %s will be a pseudo-action",
+                         rsc->id, next->details->uname);
+            pe__set_action_flags(promote, pe_action_pseudo);
+        }
+
         return TRUE;
     }
 
@@ -2122,6 +2203,15 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
     GList *gIter = NULL;
 
     CRM_ASSERT(rsc);
+
+    if (is_expected_node(rsc, next)) {
+        pe_rsc_trace(rsc,
+                     "Skipping demote of multiply active resource %s "
+                     "on expected node %s",
+                     rsc->id, next->details->uname);
+        return TRUE;
+    }
+
     pe_rsc_trace(rsc, "%s", rsc->id);
 
     /* CRM_CHECK(rsc->next_role == RSC_ROLE_UNPROMOTED, return FALSE); */
