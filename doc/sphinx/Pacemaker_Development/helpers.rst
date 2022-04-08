@@ -143,7 +143,7 @@ is no test subdirectory, there are no tests for that file yet.
 Finally, under that directory, there is a ``Makefile.am`` and then various source
 files.  Each of these source files tests the single function that it is named
 after.  For instance, ``lib/common/tests/strings/pcmk__btoa_test.c`` tests the
-``pcmk__btoa_test()`` function in ``lib/common/strings.c``.  If there is no test
+``pcmk__btoa()`` function in ``lib/common/strings.c``.  If there is no test
 source file, there are no tests for that function yet.
 
 The ``_test`` suffix on the test source file is important.  All tests have this
