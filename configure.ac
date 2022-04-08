@@ -1153,6 +1153,7 @@ dnl ========================================================================
 REQUIRE_FUNC([getopt])
 REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([unsetenv])
+REQUIRE_FUNC([vasprintf])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
