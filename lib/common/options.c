@@ -196,7 +196,8 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
 
     if (cmd == 'v' || cmd == '$') {
         fprintf(stream, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(stream, "Written by Andrew Beekhof\n");
+        fprintf(stream, "Written by Andrew Beekhof and "
+                        "the Pacemaker project contributors\n");
         goto out;
     }
 

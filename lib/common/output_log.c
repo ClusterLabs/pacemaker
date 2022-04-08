@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -93,7 +93,8 @@ log_version(pcmk__output_t *out, bool extended) {
                    PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
         do_crm_log(priv->log_level, "Pacemaker %s", PACEMAKER_VERSION);
-        do_crm_log(priv->log_level, "Written by Andrew Beekhof");
+        do_crm_log(priv->log_level, "Written by Andrew Beekhof and"
+                                    "the Pacemaker project contributors");
     }
 }
 

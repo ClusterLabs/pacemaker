@@ -108,7 +108,8 @@ text_version(pcmk__output_t *out, bool extended) {
         fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
         fprintf(out->dest, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(out->dest, "Written by Andrew Beekhof\n");
+        fprintf(out->dest, "Written by Andrew Beekhof and "
+                           "the Pacemaker project contributors\n");
     }
 }
 

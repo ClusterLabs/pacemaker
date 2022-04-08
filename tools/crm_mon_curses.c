@@ -119,7 +119,8 @@ curses_ver(pcmk__output_t *out, bool extended) {
         printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
         printf("Pacemaker %s\n", PACEMAKER_VERSION);
-        printf("Written by Andrew Beekhof\n");
+        printf("Written by Andrew Beekhof and the "
+               "Pacemaker project contributors\n");
     }
 }
 

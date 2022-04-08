@@ -78,6 +78,7 @@ Group Properties
 ________________
 
 .. table:: **Properties of a Group Resource**
+   :widths: 1 4
 
    +-------+--------------------------------------+
    | Field | Description                          |
@@ -98,6 +99,8 @@ from primitive resources. See :ref:`resource_options` for information about
 those properties.
    
 .. table:: **Group-specific configuration options**
+   :class: longtable
+   :widths: 1 1 3
 
    +-------------------+-----------------+-------------------------------------------------------+
    | Meta-Attribute    | Default         | Description                                           |
@@ -211,6 +214,7 @@ Clone Properties
 ________________
    
 .. table:: **Properties of a Clone Resource**
+   :widths: 1 4
 
    +-------+--------------------------------------+
    | Field | Description                          |
@@ -233,6 +237,8 @@ _____________
 ``priority, target-role, is-managed``
    
 .. table:: **Clone-specific configuration options**
+   :class: longtable
+   :widths: 1 1 3
 
    +-------------------+-----------------+-------------------------------------------------------+
    | Field             | Default         | Description                                           |
@@ -601,6 +607,7 @@ on the agent to report its status (including role) accurately and does
 not indicate to the agent what role it currently believes it to be in.
    
 .. table:: **Role implications of OCF return codes**
+   :widths: 1 3
 
    +----------------------+--------------------------------------------------+
    | Monitor Return Code  | Description                                      |
@@ -649,6 +656,7 @@ and what is about to happen to it.
    single: notify; environment variables
    
 .. table:: **Environment variables supplied with Clone notify actions**
+   :widths: 1 1
 
    +----------------------------------------------+-------------------------------------------------------------------------------+
    | Variable                                     | Description                                                                   |
@@ -782,6 +790,7 @@ Extra Notifications for Promotable Clones
    single: promotable; environment variables
    
 .. table:: **Extra environment variables supplied for promotable clones**
+   :widths: 1 1
 
    +------------------------------------------------+---------------------------------------------------------------------------------+
    | Variable                                       | Description                                                                     |
@@ -1098,6 +1107,7 @@ Bundle Properties
 _________________
    
 .. table:: **XML Attributes of a bundle Element**
+   :widths: 1 4
 
    +-------------+-----------------------------------------------+
    | Attribute   | Description                                   |
@@ -1129,6 +1139,8 @@ Bundle Container Properties
 ___________________________
    
 .. table:: **XML attributes of a docker, podman, or rkt Element**
+   :class: longtable
+   :widths: 2 3 4
    
    +-------------------+------------------------------------+---------------------------------------------------+
    | Attribute         | Default                            | Description                                       |
@@ -1262,7 +1274,8 @@ A bundle may optionally contain one ``<network>`` element.
    single: resource; bundle
    single: bundle; networking
    
-.. topic:: **XML attributes of a network Element**
+.. table:: **XML attributes of a network Element**
+   :widths: 2 1 5
    
    +----------------+---------+------------------------------------------------------------+
    | Attribute      | Default | Description                                                |
@@ -1342,6 +1355,7 @@ Additionally, a ``network`` element may optionally contain one or more
 ``port-mapping`` elements.
    
 .. table:: **Attributes of a port-mapping Element**
+   :widths: 2 1 5
    
    +---------------+-------------------+------------------------------------------------------+
    | Attribute     | Default           | Description                                          |
@@ -1409,6 +1423,7 @@ has no properties of its own, but may contain one or more ``storage-mapping``
 elements.
    
 .. table:: **Attributes of a storage-mapping Element**
+   :widths: 2 1 5
    
    +-----------------+---------+-------------------------------------------------------------+
    | Attribute       | Default | Description                                                 |

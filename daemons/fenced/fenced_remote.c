@@ -1559,7 +1559,7 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     }
 
     if (pcmk__str_eq(client_node, stonith_our_uname, pcmk__str_casei)) {
-        /* The client is connected to this node, send the update direclty to them */
+        // Client is connected to this node, so send update directly to them
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
         return;
     }

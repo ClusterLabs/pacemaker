@@ -261,6 +261,7 @@ These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
 .. table:: **Properties of a Primitive Resource**
+   :widths: 1 4
 
    +----------+------------------------------------------------------------------+
    | Field    | Description                                                      |
@@ -342,6 +343,8 @@ behave and can be easily set using the ``--meta`` option of the
 **crm_resource** command.
 
 .. table:: **Meta-attributes of a Primitive Resource**
+   :class: longtable
+   :widths: 2 2 3
 
    +----------------------------+----------------------------------+------------------------------------------------------+
    | Field                      | Default                          | Description                                          |
@@ -732,6 +735,8 @@ XML attributes, or in a separate ``meta_attributes`` block as ``nvpair`` element
 XML attributes take precedence over ``nvpair`` elements if both are specified.
 
 .. table:: **Properties of an Operation**
+   :class: longtable
+   :widths: 1 2 3
 
    +----------------+-----------------------------------+-----------------------------------------------------+
    | Field          | Default                           | Description                                         |
