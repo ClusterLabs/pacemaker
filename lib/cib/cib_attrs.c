@@ -151,13 +151,14 @@ find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section
 
     rc = cib_internal_op(cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
                          cib_sync_call | cib_scope_local | cib_xpath, user_name);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
                   attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
                   pcmk_rc_str(rc));
         goto done;
+    } else {
+        rc = pcmk_rc_ok;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -325,12 +326,14 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
                          call_options | cib_quorum_override, user_name);
-    rc = pcmk_legacy2rc(rc);
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_rc_ok) {
         out->err(out, "Error setting %s=%s (section=%s, set=%s): %s",
                  attr_name, attr_value, section, crm_str(set_name), pcmk_rc_str(rc));
         crm_log_xml_info(xml_top, "Update");
+    } else {
+        rc = pcmk_rc_ok;
     }
 
     free(local_set_name);
@@ -391,9 +394,10 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
 
     rc = cib_internal_op(cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
                          options | cib_quorum_override, user_name);
-    rc = pcmk_legacy2rc(rc);
-
-    if (rc == pcmk_rc_ok) {
+    if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
+    } else {
+        rc = pcmk_rc_ok;
         out->info(out, "Deleted %s %s: id=%s%s%s%s%s",
                   section, node_uuid ? "attribute" : "option", local_attr_id,
                   set_name ? " set=" : "", set_name ? set_name : "",
