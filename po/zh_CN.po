@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-03-09 12:11+0800\n"
+"POT-Creation-Date: 2022-04-08 10:34-0500\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -20,13 +20,75 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: daemons/controld/controld_control.c:543
+#: daemons/controld/controld_control.c:551
 msgid ""
 "Zero disables polling, while positive values are an interval in "
 "seconds(unless other units are specified, for example \"5min\")"
 msgstr ""
 "设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
 "如\"5min\"表示5分钟）"
+
+#: daemons/fenced/pacemaker-fenced.c:1462
+#, c-format
+msgid ""
+" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
+"class resources and used by Pacemaker's fence daemon, formerly known as "
+"stonithd</longdesc>\n"
+msgstr ""
+" <longdesc lang=\"zh\">实例属性可用于所有stonith类资源，并由Pacemaker的fence"
+"守护程序使用（以前称为stonithd）</longdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1467
+#, c-format
+msgid ""
+" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
+"class resources</shortdesc>\n"
+msgstr ""
+" <shortdesc lang=\"zh\">可用于所有stonith类资源的实例属性</shortdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1490
+#, fuzzy, c-format
+msgid ""
+"    <longdesc lang=\"en\">Some devices do not support the standard 'port' "
+"parameter or may provide additional ones. Use this to specify an alternate, "
+"device-specific, parameter that should indicate the machine to be fenced. A "
+"value of '%s' can be used to tell the cluster not to supply any additional "
+"parameters.\n"
+"    </longdesc>\n"
+msgstr ""
+"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
+"能会提供额外的端口参数。\n"
+"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
+"数应指出要fence的机器。\n"
+"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
+"     </longdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1502
+#, c-format
+msgid ""
+"    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to "
+"supply instead of 'port'</shortdesc>\n"
+msgstr ""
+"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
+"代'port'</shortdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1513
+#, c-format
+msgid ""
+"    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to "
+"use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n"
+msgstr ""
+"    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群"
+"的节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1519
+#, c-format
+msgid ""
+"    <shortdesc lang=\"en\">A mapping of host names to ports numbers for "
+"devices that do not support host names.</shortdesc>\n"
+msgstr ""
+"    <shortdesc lang=\"zh\">为不支持主机名的设备提供主机名和端口号的映射</"
+"shortdesc>\n"
 
 #: lib/cib/cib_utils.c:558
 msgid "Enable Access Control Lists (ACLs) for the CIB"
@@ -45,7 +107,11 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/pengine/common.c:126
+#: lib/common/options.c:590
+msgid "  Allowed values: "
+msgstr ""
+
+#: lib/pengine/common.c:131
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用看门狗集成设置"
 
@@ -58,62 +124,3 @@ msgstr "，查询%s的元数据失败: %s\n"
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
-
-#: daemons/fenced/pacemaker-fenced.c:1482
-#, c-format
-msgid ""
-" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
-"class resources and used by Pacemaker's fence daemon, formerly known as "
-"stonithd</longdesc>\n"
-msgstr ""
-" <longdesc lang=\"zh\">实例属性可用于所有stonith类资源，并由Pacemaker的fence"
-"守护程序使用（以前称为stonithd）</longdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1484
-#, c-format
-msgid ""
-" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
-"class resources</shortdesc>\n"
-msgstr ""
-" <shortdesc lang=\"zh\">可用于所有stonith类资源的实例属性</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1508
-#, c-format
-msgid ""
-"    <longdesc lang=\"en\">Some devices do not support the standard 'port' "
-"parameter or may provide additional ones.\n"
-"Use this to specify an alternate, device-specific, parameter that should "
-"indicate the machine to be fenced.\n"
-"A value of 'none' can be used to tell the cluster not to supply any "
-"additional parameters.\n"
-"     </longdesc>\n"
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参数应指出要fence的机器。\n"
-"使用值'none'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1513
-#, c-format
-msgid ""
-"    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to "
-"supply instead of 'port'</shortdesc>\n"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1526
-#, c-format
-msgid ""
-"    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to "
-"use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n"
-msgstr ""
-"    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群的"
-"节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1528
-#, c-format
-msgid ""
-"    <shortdesc lang=\"en\">A mapping of host names to ports numbers for "
-"devices that do not support host names.</shortdesc>\n"
-msgstr ""
-"    <shortdesc lang=\"zh\">为不支持主机名的设备提供主机名和端口号的映射</shortdesc>\n"
