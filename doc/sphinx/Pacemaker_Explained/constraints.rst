@@ -82,6 +82,8 @@ Location Properties
 ___________________
 
 .. table:: **Attributes of a rsc_location Element**
+   :class: longtable
+   :widths: 1 1 4
 
    +--------------------+---------+----------------------------------------------------------------------------------------------+
    | Attribute          | Default | Description                                                                                  |
@@ -304,6 +306,8 @@ Ordering Properties
 ___________________
 
 .. table:: **Attributes of a rsc_order Element**
+   :class: longtable
+   :widths: 1 2 4
 
    +--------------+----------------------------+-------------------------------------------------------------------+
    | Field        | Default                    | Description                                                       |
@@ -446,6 +450,8 @@ Colocation Properties
 _____________________
 
 .. table:: **Attributes of a rsc_colocation Constraint**
+   :class: longtable
+   :widths: 2 2 5
 
    +----------------+----------------+--------------------------------------------------------+
    | Field          | Default        | Description                                            |
@@ -678,7 +684,9 @@ have an effect in all contexts.
 .. index::
    pair: XML element; resource_set
 
-.. topic:: **Attributes of a resource_set Element**
+.. table:: **Attributes of a resource_set Element**
+   :class: longtable
+   :widths: 2 2 5
 
    +-------------+------------------+--------------------------------------------------------+
    | Field       | Default          | Description                                            |

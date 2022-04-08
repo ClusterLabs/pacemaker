@@ -33,6 +33,7 @@ Rule Properties
 ###############
 
 .. table:: **Attributes of a rule Element**
+   :widths: 1 1 3
 
    +-----------------+-------------+-------------------------------------------+
    | Attribute       | Default     | Description                               |
@@ -101,6 +102,8 @@ Node Attribute Expressions
 Expressions are rule conditions based on the values of node attributes.
 
 .. table:: **Attributes of an expression Element**
+   :class: longtable
+   :widths: 1 2 3
 
    +--------------+---------------------------------+-------------------------------------------+
    | Attribute    | Default                         | Description                               |
@@ -184,6 +187,7 @@ defines special, built-in node attributes for each node that can also be used
 in rule expressions.
 
 .. table:: **Built-in Node Attributes**
+   :widths: 1 4
 
    +---------------+-----------------------------------------------------------+
    | Name          | Value                                                     |
@@ -236,6 +240,7 @@ A ``date_expression`` element may optionally contain a ``date_spec`` or
 ``duration`` element depending on the context.
 
 .. table:: **Attributes of a date_expression Element**
+   :widths: 1 4
 
    +---------------+-----------------------------------------------------------+
    | Attribute     | Description                                               |
@@ -300,6 +305,7 @@ to time. Each field can contain a single number or range. Any field not
 supplied is ignored.
 
 .. table:: **Attributes of a date_spec Element**
+   :widths: 1 3
 
    +---------------+-----------------------------------------------------------+
    | Attribute     | Description                                               |
@@ -397,6 +403,7 @@ supplied to ``in_range`` operations. It contains one or more attributes each
 containing a single number. Any attribute not supplied is ignored.
 
 .. table:: **Attributes of a duration Element**
+   :widths: 1 3
 
    +---------------+-----------------------------------------------------------+
    | Attribute     | Description                                               |
@@ -551,6 +558,7 @@ attribute will match.  For instance, omitting ``type`` means every type will
 match.
 
 .. table:: **Attributes of a rsc_expression Element**
+   :widths: 1 3
 
    +---------------+-----------------------------------------------------------+
    | Attribute     | Description                                               |
@@ -612,6 +620,7 @@ An ``op_expression`` *(since 2.0.5)* is a rule condition based on an action of
 some resource agent. This rule is only valid within an ``op_defaults`` context.
 
 .. table:: **Attributes of an op_expression Element**
+   :widths: 1 3
 
    +---------------+-----------------------------------------------------------+
    | Attribute     | Description                                               |

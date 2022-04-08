@@ -35,6 +35,7 @@ section from authoritative sources, so any changes should be done
 with the tools appropriate to those sources.
          
 .. table:: **Authoritative Sources for State Information**
+   :widths: 1 1
 
    +----------------------+----------------------+
    | CIB Object           | Authoritative Source |
@@ -52,6 +53,7 @@ as the resource manager for the older Heartbeat project. They have remained
 unchanged to preserve compatibility with older versions.
          
 .. table:: **Node Status Fields**
+   :widths: 1 3
 
    +------------------+----------------------------------------------------------+
    | Field            | Description                                              |
@@ -162,6 +164,8 @@ Additionally, we store the last job for every combination of
 this tuple are used to create the id of the ``lrm_rsc_op`` object.
 
 .. table:: **Contents of an lrm_rsc_op job**
+   :class: longtable
+   :widths: 1 3
 
    +------------------+----------------------------------------------------------+
    | Field            | Description                                              |

@@ -318,6 +318,7 @@ you'll need to create a clone. A template for this can be found below, along
 with a description of the most interesting parameters.
 
 .. table:: **Commonly Used ocf:pacemaker:ping Resource Parameters**
+   :widths: 1 4
 
    +--------------------+--------------------------------------------------------------+
    | Resource Parameter | Description                                                  |
