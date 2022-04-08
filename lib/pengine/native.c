@@ -149,8 +149,6 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     }
                 }
                 break;
-            case recovery_stop_start:
-                break;
             case recovery_block:
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
@@ -170,6 +168,11 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                         pe__set_resource_flags(child, pe_rsc_block);
                     }
                 }
+                break;
+            default: // recovery_stop_start, recovery_stop_unexpected
+                /* The scheduler will do the right thing because the relevant
+                 * variables and flags are set when unpacking the history.
+                 */
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
@@ -1372,4 +1375,42 @@ pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     }
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Set a resource's expected node if appropriate for a history result
+ *
+ * \param[in] rsc               Resource to set expected node for
+ * \param[in] node              Node to set as expected node
+ * \param[in] execution_status  History entry's execution status
+ * \param[in] exit_status       History entry's actual exit status
+ * \param[in] expected_status   History entry's expected exit status
+ */
+void
+pe__update_expected_node(pe_resource_t *rsc, pe_node_t *node,
+                         int execution_status, int exit_status,
+                         int expected_exit_status)
+{
+    native_variant_data_t *native_data = NULL;
+
+    get_native_variant_data(native_data, rsc);
+
+    if ((rsc->recovery_type == recovery_stop_unexpected)
+        && (rsc->role > RSC_ROLE_STOPPED)
+        && (execution_status == PCMK_EXEC_DONE)
+        && (exit_status == expected_exit_status)) {
+        // Resource is active and was expected on this node
+        pe_rsc_trace(rsc, "Found expected node %s for %s",
+                     node->details->uname, rsc->id);
+        native_data->expected_node = node;
+        pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
+
+    } else if ((native_data->expected_node != NULL)
+               && (native_data->expected_node->details == node->details)) {
+        // Resource is not cleanly active here
+        pe_rsc_trace(rsc, "Clearing expected node for %s", rsc->id);
+        native_data->expected_node = NULL;
+        pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
+    }
 }

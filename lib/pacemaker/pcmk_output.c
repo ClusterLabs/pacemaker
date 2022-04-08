@@ -873,19 +873,18 @@ digests_xml(pcmk__output_t *out, va_list args)
         }                                                               \
     } while(0)
 
-PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *",
-                  "gboolean")
+PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *")
 static int
 rsc_action_default(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *current = va_arg(args, pe_node_t *);
     pe_node_t *next = va_arg(args, pe_node_t *);
-    gboolean moving = va_arg(args, gboolean);
 
     GList *possible_matches = NULL;
     char *key = NULL;
     int rc = pcmk_rc_no_output;
+    bool moving = false;
 
     pe_node_t *start_node = NULL;
     pe_action_t *start = NULL;
@@ -901,9 +900,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
-        moving = TRUE;
-    }
+    moving = (current != NULL) && (next != NULL)
+             && (current->details != next->details);
 
     possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
     if (possible_matches) {
@@ -920,6 +918,16 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_stop_unexpected)) {
+        /* The resource is multiply active with multiple-active set to
+         * stop_unexpected, and not stopping on its current node, but it should
+         * be stopping elsewhere.
+         */
+        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, FALSE);
+        if (possible_matches != NULL) {
+            stop = possible_matches->data;
+            g_list_free(possible_matches);
+        }
     }
 
     possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);

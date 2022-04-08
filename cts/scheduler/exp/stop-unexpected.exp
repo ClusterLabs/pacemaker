@@ -1,0 +1,201 @@
+<transition_graph cluster-delay="60s" stonith-timeout="90" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="15" operation="stopped" operation_key="dgroup_stopped_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="stop" operation_key="dummy_stop_0" on_node="node3" on_node_uuid="node3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="dummy2_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="stop" operation_key="dummy3_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dgroup_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="14" operation="stop" operation_key="dgroup_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="13" operation="running" operation_key="dgroup_running_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="7" operation="start" operation_key="dummy_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="start" operation_key="dummy2_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="dummy3_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="12" operation="start" operation_key="dgroup_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="12" operation="start" operation_key="dgroup_start_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="15" operation="stopped" operation_key="dgroup_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="7" operation="start" operation_key="dummy_start_0">
+        <attributes CRM_meta_name="start" CRM_meta_record_pending="false" CRM_meta_timeout="300000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="stop" operation_key="dummy_stop_0" on_node="node3" on_node_uuid="node3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="12" operation="start" operation_key="dgroup_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="4" operation="stop" operation_key="dummy_stop_0" on_node="node3" on_node_uuid="node3">
+        <primitive id="dummy" class="ocf" provider="heartbeat" type="DummyTimeout"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node3" CRM_meta_on_node_uuid="node3" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="dummy2_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dgroup_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="dummy_monitor_10000" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy" class="ocf" provider="heartbeat" type="DummyTimeout"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="7" operation="start" operation_key="dummy_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="9" operation="start" operation_key="dummy2_start_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="7" operation="start" operation_key="dummy_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="stop" operation_key="dummy2_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="12" operation="start" operation_key="dgroup_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="8" operation="stop" operation_key="dummy2_stop_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="stop" operation_key="dummy3_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dgroup_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="dummy2_monitor_10000" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="start" operation_key="dummy2_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="11" operation="start" operation_key="dummy3_start_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy3" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="start" operation_key="dummy2_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="stop" operation_key="dummy3_stop_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="12" operation="start" operation_key="dgroup_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="10" operation="stop" operation_key="dummy3_stop_0" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy3" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="14" operation="stop" operation_key="dgroup_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="1" operation="monitor" operation_key="dummy3_monitor_10000" on_node="node2" on_node_uuid="node2">
+        <primitive id="dummy3" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="node2" CRM_meta_record_pending="false" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="dummy3_start_0" on_node="node2" on_node_uuid="node2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

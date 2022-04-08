@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,7 +78,8 @@ enum action_tasks {
 enum rsc_recovery_type {
     recovery_stop_start,
     recovery_stop_only,
-    recovery_block
+    recovery_block,
+    recovery_stop_unexpected,
 };
 
 enum rsc_start_requirement {
@@ -143,6 +144,13 @@ const char *fail2text(enum action_fail_response fail);
 const char *pe_pref(GHashTable * options, const char *name);
 void calculate_active_ops(GList * sorted_op_list, int *start_index, int *stop_index);
 
+/*!
+ * \brief Get readable description of a recovery type
+ *
+ * \param[in] type  Recovery type
+ *
+ * \return Static string describing \p type
+ */
 static inline const char *
 recovery2text(enum rsc_recovery_type type)
 {
@@ -153,6 +161,8 @@ recovery2text(enum rsc_recovery_type type)
             return "attempting recovery";
         case recovery_block:
             return "waiting for an administrator";
+        case recovery_stop_unexpected:
+            return "stopping unexpected instances";
     }
     return "Unknown";
 }
