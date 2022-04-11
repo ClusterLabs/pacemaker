@@ -322,6 +322,21 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     pcmk__str_update(&options.dest_uname, reply->data.node_info.uname);
 }
 
+static void
+get_node_name_from_local(void)
+{
+    char *hostname = pcmk_hostname();
+
+    g_free(options.dest_uname);
+
+    /* This silliness is so that dest_uname is always a glib-managed
+     * string so we know how to free it later.  pcmk_hostname returns
+     * a newly allocated string via strdup.
+     */
+    options.dest_uname = g_strdup(hostname);
+    free(hostname);
+}
+
 static int
 get_node_name_from_controller(void)
 {
@@ -512,6 +527,8 @@ main(int argc, char **argv)
         if (target != NULL) {
             g_free(options.dest_uname);
             options.dest_uname = g_strdup(target);
+        } else if (getenv("CIB_file") != NULL && options.dest_uname == NULL) {
+            get_node_name_from_local();
         }
 
         if (options.dest_uname == NULL) {
