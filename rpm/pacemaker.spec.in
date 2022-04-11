@@ -62,8 +62,7 @@
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
-## Add option to skip (or enable, on RHEL) generating documentation
-## (the build tools aren't available everywhere)
+## Allow deprecated option to skip (or enable, on RHEL) documentation
 %if 0%{?rhel}
 %bcond_with doc
 %else
@@ -350,7 +349,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets doc hardening nls pre_release profiling
+  --with(out) : cibsecrets hardening nls pre_release profiling
                 stonithd upstart_job
 
 %package cli
