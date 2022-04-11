@@ -724,7 +724,6 @@ exit 0
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
-%{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
 %{_sbindir}/fence_legacy
 %{_sbindir}/fence_watchdog
@@ -735,7 +734,6 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
-%doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/fence_watchdog.*
@@ -776,6 +774,7 @@ exit 0
 %if %{with cibsecrets}
 %{_sbindir}/cibsecret
 %endif
+%{_sbindir}/crm_attribute
 %{_sbindir}/crm_diff
 %{_sbindir}/crm_error
 %{_sbindir}/crm_failcount
@@ -814,7 +813,6 @@ exit 0
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
-%exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/fence_watchdog.*
