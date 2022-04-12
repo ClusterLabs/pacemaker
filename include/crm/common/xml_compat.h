@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,6 +31,13 @@ xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 
 //!  \deprecated Use xml_apply_patchset() instead
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
+
+//!  \deprecated Use crm_xml_add() with "true" or "false" instead
+static inline const char *
+crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
+{
+    return crm_xml_add(node, name, (value? "true" : "false"));
+}
 
 #ifdef __cplusplus
 }
