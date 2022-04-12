@@ -167,3 +167,43 @@ pcmk__output_and_clear_error(GError *error, pcmk__output_t *out)
 
     g_clear_error(&error);
 }
+
+/*!
+ * \internal
+ * \brief Create an XML-only output object
+ *
+ * \param[out]  out  Where to put newly created output object
+ * \param[in]   xml  If non-NULL, this will be freed
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
+    pcmk__supported_format_t xml_format[] = {
+        PCMK__SUPPORTED_FORMAT_XML,
+        { NULL, NULL, NULL }
+    };
+
+    if (*xml != NULL) {
+        xmlFreeNode(*xml);
+        *xml = NULL;
+    }
+    pcmk__register_formats(NULL, xml_format);
+    return pcmk__output_new(out, "xml", NULL, NULL);
+}
+
+/*!
+ * \internal
+ * \brief  Free an XML-only output object
+ *
+ * \param[in]  out     Output object to free
+ * \param[out] xml     Where to store XML output if needed
+ * \param[in]  retval  Store XML output if this is pcmk_rc_ok
+ */
+void
+pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
+    if (retval == pcmk_rc_ok) {
+        out->finish(out, 0, FALSE, (void **) xml);
+    }
+    pcmk__output_free(out);
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,11 +15,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern pcmk__supported_format_t pcmk__out_formats[];
-
-int pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml);
-void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
 
 /* This function registers only the formatted output messages that are a part
  * of libpacemaker.  It is not to be confused with pcmk__register_messages,
