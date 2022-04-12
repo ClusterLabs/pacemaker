@@ -885,6 +885,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                 rc = pcmk_rc_error;
                 goto simulate_done;
             }
+            pe__register_messages(logger_out);
+            pcmk__register_lib_messages(logger_out);
             data_set->priv = logger_out;
         }
 

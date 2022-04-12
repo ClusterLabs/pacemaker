@@ -860,6 +860,7 @@ void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
+pcmk__output_t *pcmk__new_logger(void);
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \
