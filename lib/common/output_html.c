@@ -19,15 +19,20 @@
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
-    ".maint { color: blue }\n"
-    ".offline { color: red }\n"
+
     ".online { color: green }\n"
+    ".offline { color: red }\n"
+    ".maint { color: blue }\n"
+    ".standby { color: blue }\n"
+    ".health_red { color: red }\n"
+    ".health_yellow { color: GoldenRod }\n"
+
     ".rsc-failed { color: red }\n"
-    ".rsc-failure-ignored { color: yellow }\n"
-    ".rsc-managed { color: yellow }\n"
+    ".rsc-failure-ignored { color: DarkGreen }\n"
+    ".rsc-managed { color: blue }\n"
     ".rsc-multiple { color: orange }\n"
     ".rsc-ok { color: green }\n"
-    ".standby { color: orange }\n"
+
     ".warning { color: red, font-weight: bold }";
 
 static gboolean cgi_output = FALSE;

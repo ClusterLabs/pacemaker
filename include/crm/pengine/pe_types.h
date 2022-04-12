@@ -242,6 +242,7 @@ struct pe_node_shared_s {
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
     int priority; // calculated based on the priority of resources running on the node
+    pe_working_set_t *data_set; //!< Cluster that this node is part of
 };
 
 struct pe_node_s {

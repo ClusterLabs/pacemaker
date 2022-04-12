@@ -4115,11 +4115,11 @@ Resources colocated with clone:
 <pacemaker-result api-version="X" request="crm_mon.xml --show-scores --output-as=xml">
   <cluster_status>
     <nodes>
-      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
-      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
-      <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-      <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+      <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+      <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
     </nodes>
     <resources>
       <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">

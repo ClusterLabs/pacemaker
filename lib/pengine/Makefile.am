@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -38,6 +38,7 @@ libpe_status_la_SOURCES	+= common.c
 libpe_status_la_SOURCES	+= complex.c
 libpe_status_la_SOURCES	+= failcounts.c
 libpe_status_la_SOURCES	+= group.c
+libpe_status_la_SOURCES	+= pe_health.c
 libpe_status_la_SOURCES	+= native.c
 libpe_status_la_SOURCES	+= pe_digest.c
 libpe_status_la_SOURCES	+= remote.c

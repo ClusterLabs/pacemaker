@@ -192,54 +192,6 @@ set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
     }
 }
 
-/*!
- * \internal
- * \brief Set the node health values to use for "red", "yellow", and "green"
- *
- * \param[in] data_set  Cluster working set
- */
-static void
-unpack_node_health_values(pe_working_set_t *data_set)
-{
-    switch (pe__health_strategy(data_set)) {
-        case pcmk__health_strategy_none:
-            pcmk__score_red = 0;
-            pcmk__score_yellow = 0;
-            pcmk__score_green = 0;
-            break;
-
-        case pcmk__health_strategy_no_red:
-            pcmk__score_red = -INFINITY;
-            pcmk__score_yellow = 0;
-            pcmk__score_green = 0;
-            break;
-
-        case pcmk__health_strategy_only_green:
-            pcmk__score_red = -INFINITY;
-            pcmk__score_yellow = -INFINITY;
-            pcmk__score_green = 0;
-            break;
-
-        default: // progressive or custom
-            pcmk__score_red = pe__health_score(PCMK__OPT_NODE_HEALTH_RED,
-                                               data_set);
-            pcmk__score_green = pe__health_score(PCMK__OPT_NODE_HEALTH_GREEN,
-                                                 data_set);
-            pcmk__score_yellow = pe__health_score(PCMK__OPT_NODE_HEALTH_YELLOW,
-                                                  data_set);
-            break;
-    }
-
-    if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
-        || (pcmk__score_green != 0)) {
-        crm_debug("Values of node health scores: "
-                  PCMK__VALUE_RED "=%d "
-                  PCMK__VALUE_YELLOW "=%d "
-                  PCMK__VALUE_GREEN "=%d",
-                  pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
-    }
-}
-
 gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
@@ -407,7 +359,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
-    unpack_node_health_values(data_set);
+    pe__unpack_node_health_scores(data_set);
 
     data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
     crm_trace("Placement strategy: %s", data_set->placement_strategy);
@@ -457,6 +409,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->rsc_discovery_enabled = TRUE;
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
+    new_node->details->data_set = data_set;
 
     if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;

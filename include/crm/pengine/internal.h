@@ -583,6 +583,9 @@ void pe__update_expected_node(pe_resource_t *rsc, pe_node_t *node,
                               int execution_status, int exit_status,
                               int expected_exit_status);
 
+int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
+int pe__node_health(pe_node_t *node);
+
 static inline enum pcmk__health_strategy
 pe__health_strategy(pe_working_set_t *data_set)
 {
