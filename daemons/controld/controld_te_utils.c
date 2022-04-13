@@ -54,7 +54,7 @@ te_graph_trigger(gpointer user_data)
             break;
     }
 
-    if (transition_graph->complete == FALSE) {
+    if (!transition_graph->complete) {
         enum transition_status graph_rc;
         int limit = transition_graph->batch_limit;
 
@@ -79,7 +79,7 @@ te_graph_trigger(gpointer user_data)
     }
 
     crm_debug("Transition %d is now complete", transition_graph->id);
-    transition_graph->complete = TRUE;
+    transition_graph->complete = true;
     notify_crmd(transition_graph);
 
     return TRUE;
@@ -198,8 +198,9 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         case S_ILLEGAL:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort %s suppressed: state=%s (complete=%d)",
-                     abort_text, fsa_state2string(fsa_state), transition_graph->complete);
+            crm_info("Abort %s suppressed: state=%s (%scomplete)",
+                     abort_text, fsa_state2string(fsa_state),
+                     (transition_graph->complete? "" : "in"));
             return;
         default:
             break;
@@ -208,7 +209,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     abort_timer.aborted = TRUE;
     controld_expect_sched_reply(NULL);
 
-    if (transition_graph->complete == FALSE) {
+    if (!transition_graph->complete) {
         if(update_abort_priority(transition_graph, abort_priority, abort_action, abort_text)) {
             level = LOG_NOTICE;
         }

@@ -529,8 +529,7 @@ te_update_diff(const char *event, xmlNode * msg)
                && fsa_state != S_IDLE
                && fsa_state != S_TRANSITION_ENGINE
                && fsa_state != S_POLICY_ENGINE) {
-        crm_trace("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
-                  transition_graph->complete);
+        crm_trace("Filter state=%s (complete)", fsa_state2string(fsa_state));
         return;
     }
 

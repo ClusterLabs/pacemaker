@@ -106,7 +106,7 @@ typedef struct {
     char *source;
     int abort_priority;
 
-    gboolean complete;
+    bool complete;
     const char *abort_reason;
     enum transition_action completion_action;
 

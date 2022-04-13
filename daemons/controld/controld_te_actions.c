@@ -628,7 +628,7 @@ notify_crmd(pcmk__graph_t *graph)
 
     crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
 
-    CRM_CHECK(graph->complete, graph->complete = TRUE);
+    CRM_CHECK(graph->complete, graph->complete = true);
 
     switch (graph->completion_action) {
         case tg_stop:

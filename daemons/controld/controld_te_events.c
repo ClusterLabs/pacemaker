@@ -387,7 +387,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 
     } else if ((transition_graph->id != transition_num)
-               || (transition_graph->complete)) {
+               || transition_graph->complete) {
 
         // Action is not from currently active transition
 

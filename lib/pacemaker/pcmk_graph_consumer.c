@@ -416,7 +416,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
     }
 
     if ((graph->pending == 0) && (graph->fired == 0)) {
-        graph->complete = TRUE;
+        graph->complete = true;
 
         if ((graph->incomplete != 0) && (graph->abort_priority <= 0)) {
             log_level = LOG_WARNING;
