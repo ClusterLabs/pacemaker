@@ -169,6 +169,32 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+/*!
+ * \internal
+ * \brief Check whether colocation's left-hand preferences should be considered
+ *
+ * \param[in] colocation  Colocation constraint
+ * \param[in] rsc         Right-hand instance (normally this will be
+ *                        colocation->primary, which NULL will be treated as,
+ *                        but for clones or bundles with multiple instances
+ *                        this can be a particular instance)
+ *
+ * \return true if colocation influence should be effective, otherwise false
+ */
+static inline bool
+pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                               const pe_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        rsc = colocation->primary;
+    }
+
+    /* The left hand of a colocation influences the right hand's location
+     * if the influence option is true, or the right hand is not yet active.
+     */
+    return colocation->influence || (rsc->running_on == NULL);
+}
+
 
 // Ordering constraints (pcmk_sched_ordering.c)
 
