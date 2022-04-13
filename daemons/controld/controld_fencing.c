@@ -169,7 +169,8 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
 }
 
 static void
-send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
+send_stonith_update(pcmk__graph_action_t *action, const char *target,
+                    const char *uuid)
 {
     int rc = pcmk_ok;
     crm_node_t *peer = NULL;
@@ -378,7 +379,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
         }
 
         for (lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
-            crm_action_t *action = (crm_action_t *) lpc2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc2->data;
 
             if ((action->type != pcmk__cluster_graph_action)
                 || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
@@ -738,7 +739,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     char *uuid = NULL;
     int stonith_id = -1;
     int transition_id = -1;
-    crm_action_t *action = NULL;
+    pcmk__graph_action_t *action = NULL;
     const char *target = NULL;
 
     if ((data == NULL) || (data->userdata == NULL)) {
@@ -894,7 +895,7 @@ fence_with_delay(const char *target, const char *type, const char *delay)
 }
 
 gboolean
-te_fence_node(crm_graph_t *graph, crm_action_t *action)
+te_fence_node(crm_graph_t *graph, pcmk__graph_action_t *action)
 {
     int rc = 0;
     const char *id = NULL;

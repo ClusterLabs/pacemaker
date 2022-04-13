@@ -40,8 +40,8 @@ typedef struct synapse_s {
 
     uint32_t flags; // Group of pcmk__synapse_flags
 
-    GList *actions;           /* crm_action_t* */
-    GList *inputs;            /* crm_action_t* */
+    GList *actions;           /* pcmk__graph_action_t* */
+    GList *inputs;            /* pcmk__graph_action_t* */
 } synapse_t;
 
 const char *synapse_state_str(synapse_t *synapse);
@@ -81,7 +81,7 @@ typedef struct crm_action_s {
 
     xmlNode *xml;
 
-} crm_action_t;
+} pcmk__graph_action_t;
 
 #define crm__set_graph_action_flags(action, flags_to_set) do {             \
         (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
@@ -133,11 +133,11 @@ struct crm_graph_s {
 };
 
 typedef struct crm_graph_functions_s {
-    gboolean(*pseudo) (crm_graph_t * graph, crm_action_t * action);
-    gboolean(*rsc) (crm_graph_t * graph, crm_action_t * action);
-    gboolean(*crmd) (crm_graph_t * graph, crm_action_t * action);
-    gboolean(*stonith) (crm_graph_t * graph, crm_action_t * action);
-    gboolean(*allowed) (crm_graph_t * graph, crm_action_t * action);
+    gboolean (*pseudo) (crm_graph_t * graph, pcmk__graph_action_t *action);
+    gboolean (*rsc) (crm_graph_t * graph, pcmk__graph_action_t *action);
+    gboolean (*crmd) (crm_graph_t * graph, pcmk__graph_action_t *action);
+    gboolean (*stonith) (crm_graph_t * graph, pcmk__graph_action_t *action);
+    gboolean (*allowed) (crm_graph_t * graph, pcmk__graph_action_t *action);
 } crm_graph_functions_t;
 
 enum transition_status {
@@ -150,13 +150,13 @@ enum transition_status {
 void pcmk__set_graph_functions(crm_graph_functions_t *fns);
 crm_graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
 enum transition_status pcmk__execute_graph(crm_graph_t *graph);
-void pcmk__update_graph(crm_graph_t *graph, crm_action_t *action);
+void pcmk__update_graph(crm_graph_t *graph, pcmk__graph_action_t *action);
 void pcmk__free_graph(crm_graph_t *graph);
 const char *pcmk__graph_status2text(enum transition_status state);
 void pcmk__log_graph(unsigned int log_level, crm_graph_t *graph);
-void pcmk__log_graph_action(int log_level, crm_action_t *action);
+void pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action);
 lrmd_event_data_t *pcmk__event_from_graph_action(xmlNode *resource,
-                                                 crm_action_t *action,
+                                                 pcmk__graph_action_t *action,
                                                  int status, int rc,
                                                  const char *exit_reason);
 

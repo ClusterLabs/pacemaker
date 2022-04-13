@@ -61,7 +61,7 @@ actiontype2text(enum pcmk__graph_action_type type)
  *
  * \return Transition graph action corresponding to \p id, or NULL if none
  */
-static crm_action_t *
+static pcmk__graph_action_t *
 find_graph_action_by_id(crm_graph_t *graph, int id)
 {
     if (graph == NULL) {
@@ -74,7 +74,7 @@ find_graph_action_by_id(crm_graph_t *graph, int id)
         for (GList *aIter = synapse->actions; aIter != NULL;
              aIter = aIter->next) {
 
-            crm_action_t *action = (crm_action_t *) aIter->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) aIter->data;
 
             if (action->id == id) {
                 return action;
@@ -110,7 +110,7 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
     size_t pending_len = 0;
 
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *input = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
 
         if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
             pcmk__add_word(&pending, &pending_len, ID(input->xml));
@@ -135,7 +135,7 @@ log_unresolved_inputs(unsigned int log_level, crm_graph_t *graph,
                       synapse_t *synapse)
 {
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *input = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
         const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
         const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
 
@@ -150,7 +150,7 @@ log_unresolved_inputs(unsigned int log_level, crm_graph_t *graph,
 
 static void
 log_synapse_action(unsigned int log_level, synapse_t *synapse,
-                   crm_action_t *action, const char *pending_inputs)
+                   pcmk__graph_action_t *action, const char *pending_inputs)
 {
     const char *key = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     const char *host = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -174,8 +174,8 @@ log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
         pending = synapse_pending_inputs(graph, synapse);
     }
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-        log_synapse_action(log_level, synapse, (crm_action_t *) lpc->data,
-                           pending);
+        log_synapse_action(log_level, synapse,
+                           (pcmk__graph_action_t *) lpc->data, pending);
     }
     free(pending);
     if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
@@ -184,7 +184,7 @@ log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
 }
 
 void
-pcmk__log_graph_action(int log_level, crm_action_t *action)
+pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action)
 {
     log_synapse(log_level, NULL, action->synapse);
 }

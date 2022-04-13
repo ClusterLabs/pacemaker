@@ -170,7 +170,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         if (numXpathResults(op_match) == 0) {
             /* Prevent false positives by matching cancelations too */
             const char *node = get_node_id(match);
-            crm_action_t *cancelled = get_cancel_action(op_id, node);
+            pcmk__graph_action_t *cancelled = get_cancel_action(op_id, node);
 
             if (cancelled == NULL) {
                 crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
@@ -283,7 +283,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
                   const char *reason)
 {
     char *node_uuid = NULL;
-    crm_action_t *down = NULL;
+    pcmk__graph_action_t *down = NULL;
 
     if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
         abort_transition(INFINITY, tg_restart, reason, change);
@@ -630,14 +630,13 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 gboolean
 action_timer_callback(gpointer data)
 {
-    crm_action_t *action = NULL;
+    pcmk__graph_action_t *action = (pcmk__graph_action_t *) data;
     const char *task = NULL;
     const char *on_node = NULL;
     const char *via_node = NULL;
 
     CRM_CHECK(data != NULL, return FALSE);
 
-    action = (crm_action_t *) data;
     stop_te_timer(action);
 
     task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);

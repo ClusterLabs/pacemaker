@@ -464,7 +464,7 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \return TRUE
  */
 static gboolean
-simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
+simulate_pseudo_action(crm_graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
@@ -486,7 +486,7 @@ simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
  * \return TRUE if action is validly specified, otherwise FALSE
  */
 static gboolean
-simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
+simulate_resource_action(crm_graph_t *graph, pcmk__graph_action_t *action)
 {
     int rc;
     lrmd_event_data_t *op = NULL;
@@ -655,7 +655,7 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
  * \return TRUE
  */
 static gboolean
-simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
+simulate_cluster_action(crm_graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -677,7 +677,7 @@ simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
  * \return TRUE
  */
 static gboolean
-simulate_fencing_action(crm_graph_t *graph, crm_action_t *action)
+simulate_fencing_action(crm_graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, "stonith_action");
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);

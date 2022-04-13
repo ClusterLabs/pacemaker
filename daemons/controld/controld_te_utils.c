@@ -15,7 +15,7 @@
 #include <pacemaker-controld.h>
 
 gboolean
-stop_te_timer(crm_action_t *action)
+stop_te_timer(pcmk__graph_action_t *action)
 {
     if (action == NULL) {
         return FALSE;

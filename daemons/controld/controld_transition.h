@@ -14,17 +14,17 @@
 #  include <pacemaker-internal.h>
 
 /* tengine */
-extern crm_action_t *match_down_event(const char *target);
-extern crm_action_t *get_cancel_action(const char *id, const char *node);
+pcmk__graph_action_t *match_down_event(const char *target);
+pcmk__graph_action_t *get_cancel_action(const char *id, const char *node);
 bool confirm_cancel_action(const char *id, const char *node_id);
 
-void controld_record_action_timeout(crm_action_t *action);
+void controld_record_action_timeout(pcmk__graph_action_t *action);
 extern gboolean fail_incompletable_actions(crm_graph_t * graph, const char *down_node);
 void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
-crm_action_t *controld_get_action(int id);
-gboolean stop_te_timer(crm_action_t *action);
+pcmk__graph_action_t *controld_get_action(int id);
+gboolean stop_te_timer(pcmk__graph_action_t *action);
 const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 
 /* unpack */
@@ -59,7 +59,7 @@ extern crm_trigger_t *transition_trigger;
 extern char *failed_stop_offset;
 extern char *failed_start_offset;
 
-void te_action_confirmed(crm_action_t *action, crm_graph_t *graph);
+void te_action_confirmed(pcmk__graph_action_t *action, crm_graph_t *graph);
 void te_reset_job_counts(void);
 
 #endif

@@ -46,7 +46,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 
         gIter2 = synapse->actions;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             if ((action->type == pcmk__pseudo_graph_action)
                 || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
@@ -197,14 +197,14 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     return TRUE;
 }
 
-crm_action_t *
+pcmk__graph_action_t *
 controld_get_action(int id)
 {
     for (GList *item = transition_graph->synapses; item; item = item->next) {
         synapse_t *synapse = (synapse_t *) item->data;
 
         for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
-            crm_action_t *action = (crm_action_t *) item2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) item2->data;
 
             if (action->id == id) {
                 return action;
@@ -214,7 +214,7 @@ controld_get_action(int id)
     return NULL;
 }
 
-crm_action_t *
+pcmk__graph_action_t *
 get_cancel_action(const char *id, const char *node)
 {
     GList *gIter = NULL;
@@ -228,7 +228,7 @@ get_cancel_action(const char *id, const char *node)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             const char *task = NULL;
             const char *target = NULL;
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
             if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
@@ -260,7 +260,7 @@ confirm_cancel_action(const char *id, const char *node_id)
 {
     const char *op_key = NULL;
     const char *node_name = NULL;
-    crm_action_t *cancel = get_cancel_action(id, node_id);
+    pcmk__graph_action_t *cancel = get_cancel_action(id, node_id);
 
     if (cancel == NULL) {
         return FALSE;
@@ -287,10 +287,10 @@ confirm_cancel_action(const char *id, const char *node_id)
  *
  * \return Matching event if found, NULL otherwise
  */
-crm_action_t *
+pcmk__graph_action_t *
 match_down_event(const char *target)
 {
-    crm_action_t *match = NULL;
+    pcmk__graph_action_t *match = NULL;
     xmlXPathObjectPtr xpath_ret = NULL;
     GList *gIter, *gIter2;
 
@@ -304,7 +304,7 @@ match_down_event(const char *target)
              gIter2 != NULL && match == NULL;
              gIter2 = gIter2->next) {
 
-            match = (crm_action_t*)gIter2->data;
+            match = (pcmk__graph_action_t *) gIter2->data;
             if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
                 xpath_ret = xpath_search(match->xml, xpath);
                 if (numXpathResults(xpath_ret) < 1) {
@@ -418,7 +418,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     } else {
         // Event is result of an action from currently active transition
-        crm_action_t *action = controld_get_action(action_num);
+        pcmk__graph_action_t *action = controld_get_action(action_num);
 
         if (action == NULL) {
             // Should never happen

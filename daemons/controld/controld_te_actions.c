@@ -22,11 +22,11 @@
 
 char *te_uuid = NULL;
 GHashTable *te_targets = NULL;
-void send_rsc_command(crm_action_t * action);
-static void te_update_job_count(crm_action_t * action, int offset);
+void send_rsc_command(pcmk__graph_action_t *action);
+static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
 static void
-te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
+te_start_action_timer(crm_graph_t * graph, pcmk__graph_action_t *action)
 {
     action->timer = g_timeout_add(action->timeout + graph->network_delay,
                                   action_timer_callback, (void *) action);
@@ -34,7 +34,7 @@ te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 }
 
 static gboolean
-te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
+te_pseudo_action(crm_graph_t * graph, pcmk__graph_action_t *pseudo)
 {
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
@@ -70,7 +70,7 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 }
 
 static int
-get_target_rc(crm_action_t * action)
+get_target_rc(pcmk__graph_action_t *action)
 {
     int exit_status;
 
@@ -80,7 +80,7 @@ get_target_rc(crm_action_t * action)
 }
 
 static gboolean
-te_crm_command(crm_graph_t * graph, crm_action_t * action)
+te_crm_command(crm_graph_t * graph, pcmk__graph_action_t *action)
 {
     char *counter = NULL;
     xmlNode *cmd = NULL;
@@ -191,7 +191,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
  *       lrmd_free_event().
  */
 static lrmd_event_data_t *
-synthesize_timeout_event(crm_action_t *action, int target_rc)
+synthesize_timeout_event(pcmk__graph_action_t *action, int target_rc)
 {
     lrmd_event_data_t *op = NULL;
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -222,7 +222,8 @@ synthesize_timeout_event(crm_action_t *action, int target_rc)
 }
 
 static void
-controld_record_action_event(crm_action_t *action, lrmd_event_data_t *op)
+controld_record_action_event(pcmk__graph_action_t *action,
+                             lrmd_event_data_t *op)
 {
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
@@ -286,7 +287,7 @@ controld_record_action_event(crm_action_t *action, lrmd_event_data_t *op)
 }
 
 void
-controld_record_action_timeout(crm_action_t *action)
+controld_record_action_timeout(pcmk__graph_action_t *action)
 {
     lrmd_event_data_t *op = NULL;
 
@@ -304,7 +305,7 @@ controld_record_action_timeout(crm_action_t *action)
 }
 
 static gboolean
-te_rsc_command(crm_graph_t * graph, crm_action_t * action)
+te_rsc_command(crm_graph_t * graph, pcmk__graph_action_t *action)
 {
     /* never overwrite stop actions in the CIB with
      *   anything other than completed results
@@ -478,7 +479,7 @@ te_update_job_count_on(const char *target, int offset, bool migrate)
 }
 
 static void
-te_update_job_count(crm_action_t * action, int offset)
+te_update_job_count(pcmk__graph_action_t *action, int offset)
 {
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -511,7 +512,8 @@ te_update_job_count(crm_action_t * action, int offset)
 }
 
 static gboolean
-te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const char *target)
+te_should_perform_action_on(crm_graph_t * graph, pcmk__graph_action_t *action,
+                            const char *target)
 {
     int limit = 0;
     struct te_peer_s *r = NULL;
@@ -554,7 +556,7 @@ te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const ch
 }
 
 static gboolean
-te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
+te_should_perform_action(crm_graph_t * graph, pcmk__graph_action_t *action)
 {
     const char *target = NULL;
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -593,7 +595,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
  * \param[in] graph   Update and trigger this graph (if non-NULL)
  */
 void
-te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
+te_action_confirmed(pcmk__graph_action_t *action, crm_graph_t *graph)
 {
     if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
         if ((action->type == pcmk__rsc_graph_action)
