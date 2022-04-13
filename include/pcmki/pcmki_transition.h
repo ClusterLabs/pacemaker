@@ -25,7 +25,6 @@ enum pcmk__graph_action_type {
     pcmk__cluster_graph_action,
 };
 
-typedef struct te_timer_s crm_action_timer_t;
 typedef struct crm_graph_s crm_graph_t;
 
 enum pcmk__synapse_flags {
@@ -72,11 +71,10 @@ enum pcmk__graph_action_flags {
 typedef struct crm_action_s {
     int id;
     int timeout;
+    int timer;
     guint interval_ms;
     GHashTable *params;
     enum pcmk__graph_action_type type;
-
-    crm_action_timer_t *timer;
     synapse_t *synapse;
 
     uint32_t flags; // Group of pcmk__graph_action_flags
@@ -98,12 +96,6 @@ typedef struct crm_action_s {
             "Action", "action",                                       \
             (action)->flags, (flags_to_clear), #flags_to_clear);      \
     } while (0)
-
-struct te_timer_s {
-    int source_id;
-    int timeout;
-    crm_action_t *action;
-};
 
 /* order matters here */
 enum transition_action {

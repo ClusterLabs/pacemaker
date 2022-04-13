@@ -72,7 +72,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
                 crm__set_graph_action_flags(action, pcmk__graph_action_failed);
                 pcmk__set_synapse_flags(synapse, pcmk__synapse_failed);
                 last_action = action->xml;
-                stop_te_timer(action->timer);
+                stop_te_timer(action);
                 pcmk__update_graph(graph, action);
 
                 if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
@@ -268,7 +268,7 @@ confirm_cancel_action(const char *id, const char *node_id)
     op_key = crm_element_value(cancel->xml, XML_LRM_ATTR_TASK_KEY);
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
-    stop_te_timer(cancel->timer);
+    stop_te_timer(cancel);
     te_action_confirmed(cancel, transition_graph);
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
@@ -447,7 +447,7 @@ process_graph_event(xmlNode *event, const char *event_node)
                 crm__set_graph_action_flags(action, pcmk__graph_action_failed);
             }
 
-            stop_te_timer(action->timer);
+            stop_te_timer(action);
             te_action_confirmed(action, transition_graph);
 
             if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {

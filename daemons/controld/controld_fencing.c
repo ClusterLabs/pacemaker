@@ -791,7 +791,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    stop_te_timer(action->timer);
+    stop_te_timer(action);
     if (stonith__exit_status(data) == CRM_EX_OK) {
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action");

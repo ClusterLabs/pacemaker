@@ -28,13 +28,9 @@ static void te_update_job_count(crm_action_t * action, int offset);
 static void
 te_start_action_timer(crm_graph_t * graph, crm_action_t * action)
 {
-    action->timer = calloc(1, sizeof(crm_action_timer_t));
-    action->timer->timeout = action->timeout;
-    action->timer->action = action;
-    action->timer->source_id = g_timeout_add(action->timer->timeout + graph->network_delay,
-                                             action_timer_callback, (void *)action->timer);
-
-    CRM_ASSERT(action->timer->source_id != 0);
+    action->timer = g_timeout_add(action->timeout + graph->network_delay,
+                                  action_timer_callback, (void *) action);
+    CRM_ASSERT(action->timer != 0);
 }
 
 static gboolean

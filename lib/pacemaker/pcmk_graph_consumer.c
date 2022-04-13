@@ -747,15 +747,14 @@ free_graph_action(gpointer user_data)
 {
     crm_action_t *action = user_data;
 
-    if ((action->timer != NULL) && (action->timer->source_id != 0)) {
+    if (action->timer != 0) {
         crm_warn("Cancelling timer for graph action %d", action->id);
-        g_source_remove(action->timer->source_id);
+        g_source_remove(action->timer);
     }
     if (action->params != NULL) {
         g_hash_table_destroy(action->params);
     }
     free_xml(action->xml);
-    free(action->timer);
     free(action);
 }
 

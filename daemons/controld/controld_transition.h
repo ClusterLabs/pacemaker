@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -24,7 +24,7 @@ void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
 crm_action_t *controld_get_action(int id);
-extern gboolean stop_te_timer(crm_action_timer_t * timer);
+gboolean stop_te_timer(crm_action_t *action);
 const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 
 /* unpack */

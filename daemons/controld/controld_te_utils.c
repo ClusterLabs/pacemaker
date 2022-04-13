@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,15 +15,15 @@
 #include <pacemaker-controld.h>
 
 gboolean
-stop_te_timer(crm_action_timer_t * timer)
+stop_te_timer(crm_action_t *action)
 {
-    if (timer == NULL) {
+    if (action == NULL) {
         return FALSE;
     }
-    if (timer->source_id != 0) {
+    if (action->timer != 0) {
         crm_trace("Stopping action timer");
-        g_source_remove(timer->source_id);
-        timer->source_id = 0;
+        g_source_remove(action->timer);
+        action->timer = 0;
     } else {
         crm_trace("Action timer was already stopped");
         return FALSE;

@@ -623,34 +623,32 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 /*!
  * \brief Handle a timeout in node-to-node communication
  *
- * \param[in] data  Pointer to action timer
+ * \param[in] data  Pointer to graph action
  *
  * \return FALSE (indicating that source should be not be re-added)
  */
 gboolean
 action_timer_callback(gpointer data)
 {
-    crm_action_timer_t *timer = NULL;
+    crm_action_t *action = NULL;
     const char *task = NULL;
     const char *on_node = NULL;
     const char *via_node = NULL;
 
     CRM_CHECK(data != NULL, return FALSE);
 
-    timer = (crm_action_timer_t *) data;
-    stop_te_timer(timer);
+    action = (crm_action_t *) data;
+    stop_te_timer(action);
 
-    CRM_CHECK(timer->action != NULL, return FALSE);
-
-    task = crm_element_value(timer->action->xml, XML_LRM_ATTR_TASK);
-    on_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_TARGET);
-    via_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "
                    "(ignoring because transition not in progress)",
                    (on_node? on_node : ""), (task? task : "unknown action"),
-                   (via_node? via_node : "controller"), timer->timeout);
+                   (via_node? via_node : "controller"), action->timeout);
     } else {
         /* fail the action */
 
@@ -658,18 +656,18 @@ action_timer_callback(gpointer data)
                 "(action timeout plus cluster-delay)",
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
-                timer->timeout + transition_graph->network_delay);
-        pcmk__log_graph_action(LOG_ERR, timer->action);
+                action->timeout + transition_graph->network_delay);
+        pcmk__log_graph_action(LOG_ERR, action);
 
-        crm__set_graph_action_flags(timer->action, pcmk__graph_action_failed);
+        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
 
-        te_action_confirmed(timer->action, transition_graph);
+        te_action_confirmed(action, transition_graph);
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
 
         // Record timeout in the CIB if appropriate
-        if ((timer->action->type == pcmk__rsc_graph_action)
+        if ((action->type == pcmk__rsc_graph_action)
             && controld_action_is_recordable(task)) {
-            controld_record_action_timeout(timer->action);
+            controld_record_action_timeout(action);
         }
     }
 
