@@ -21,7 +21,7 @@ char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
 gboolean
-fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
+fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 {
     const char *target_uuid = NULL;
     const char *router = NULL;

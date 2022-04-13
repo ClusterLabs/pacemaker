@@ -108,7 +108,7 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
  * \param[in]     action  Action that completed
  */
 void
-pcmk__update_graph(crm_graph_t *graph, pcmk__graph_action_t *action)
+pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
@@ -165,7 +165,7 @@ pcmk__set_graph_functions(crm_graph_functions_t *fns)
  * \return true if synapse is ready, false otherwise
  */
 static bool
-should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
+should_fire_synapse(pcmk__graph_t *graph, synapse_t *synapse)
 {
     GList *lpc = NULL;
 
@@ -224,7 +224,7 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \return Standard Pacemaker return code
  */
 static int
-initiate_action(crm_graph_t *graph, pcmk__graph_action_t *action)
+initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *id = ID(action->xml);
 
@@ -269,7 +269,7 @@ initiate_action(crm_graph_t *graph, pcmk__graph_action_t *action)
  * \return Standard Pacemaker return value
  */
 static int
-fire_synapse(crm_graph_t *graph, synapse_t *synapse)
+fire_synapse(pcmk__graph_t *graph, synapse_t *synapse)
 {
     pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
@@ -298,7 +298,7 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  *                PE_fail environment variable being set to the action ID)
  */
 static gboolean
-pseudo_action_dummy(crm_graph_t * graph, pcmk__graph_action_t *action)
+pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
 {
     static int fail = -1;
 
@@ -341,7 +341,7 @@ static crm_graph_functions_t default_fns = {
  * \return Status of transition after execution
  */
 enum transition_status
-pcmk__execute_graph(crm_graph_t *graph)
+pcmk__execute_graph(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     int log_level = LOG_DEBUG;
@@ -557,7 +557,7 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
  * \return Newly allocated synapse on success, or NULL otherwise
  */
 static synapse_t *
-unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
+unpack_synapse(pcmk__graph_t *new_graph, xmlNode *xml_synapse)
 {
     const char *value = NULL;
     xmlNode *action_set = NULL;
@@ -659,14 +659,14 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
            ...
          </transition_graph>
  */
-crm_graph_t *
+pcmk__graph_t *
 pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 {
-    crm_graph_t *new_graph = NULL;
+    pcmk__graph_t *new_graph = NULL;
     const char *t_id = NULL;
     const char *time = NULL;
 
-    new_graph = calloc(1, sizeof(crm_graph_t));
+    new_graph = calloc(1, sizeof(pcmk__graph_t));
     if (new_graph == NULL) {
         return NULL;
     }
@@ -783,7 +783,7 @@ free_graph_synapse(gpointer user_data)
  * \param[in] graph  Transition graph to free
  */
 void
-pcmk__free_graph(crm_graph_t *graph)
+pcmk__free_graph(pcmk__graph_t *graph)
 {
     if (graph != NULL) {
         g_list_free_full(graph->synapses, free_graph_synapse);

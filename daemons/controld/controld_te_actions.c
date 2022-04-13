@@ -26,7 +26,7 @@ void send_rsc_command(pcmk__graph_action_t *action);
 static void te_update_job_count(pcmk__graph_action_t *action, int offset);
 
 static void
-te_start_action_timer(crm_graph_t * graph, pcmk__graph_action_t *action)
+te_start_action_timer(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     action->timer = g_timeout_add(action->timeout + graph->network_delay,
                                   action_timer_callback, (void *) action);
@@ -34,7 +34,7 @@ te_start_action_timer(crm_graph_t * graph, pcmk__graph_action_t *action)
 }
 
 static gboolean
-te_pseudo_action(crm_graph_t * graph, pcmk__graph_action_t *pseudo)
+te_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
 {
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
@@ -80,7 +80,7 @@ get_target_rc(pcmk__graph_action_t *action)
 }
 
 static gboolean
-te_crm_command(crm_graph_t * graph, pcmk__graph_action_t *action)
+te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     char *counter = NULL;
     xmlNode *cmd = NULL;
@@ -305,7 +305,7 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
 }
 
 static gboolean
-te_rsc_command(crm_graph_t * graph, pcmk__graph_action_t *action)
+te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     /* never overwrite stop actions in the CIB with
      *   anything other than completed results
@@ -512,7 +512,7 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
 }
 
 static gboolean
-te_should_perform_action_on(crm_graph_t * graph, pcmk__graph_action_t *action,
+te_should_perform_action_on(pcmk__graph_t *graph, pcmk__graph_action_t *action,
                             const char *target)
 {
     int limit = 0;
@@ -556,7 +556,7 @@ te_should_perform_action_on(crm_graph_t * graph, pcmk__graph_action_t *action,
 }
 
 static gboolean
-te_should_perform_action(crm_graph_t * graph, pcmk__graph_action_t *action)
+te_should_perform_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *target = NULL;
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -595,7 +595,7 @@ te_should_perform_action(crm_graph_t * graph, pcmk__graph_action_t *action)
  * \param[in] graph   Update and trigger this graph (if non-NULL)
  */
 void
-te_action_confirmed(pcmk__graph_action_t *action, crm_graph_t *graph)
+te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 {
     if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
         if ((action->type == pcmk__rsc_graph_action)
@@ -620,7 +620,7 @@ crm_graph_functions_t te_graph_fns = {
 };
 
 void
-notify_crmd(crm_graph_t * graph)
+notify_crmd(pcmk__graph_t *graph)
 {
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;

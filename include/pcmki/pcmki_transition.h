@@ -25,8 +25,6 @@ enum pcmk__graph_action_type {
     pcmk__cluster_graph_action,
 };
 
-typedef struct crm_graph_s crm_graph_t;
-
 enum pcmk__synapse_flags {
     pcmk__synapse_ready       = (1 << 0),
     pcmk__synapse_failed      = (1 << 1),
@@ -68,7 +66,7 @@ enum pcmk__graph_action_flags {
     pcmk__graph_action_can_fail      = (1 << 4),     //! \deprecated Will be removed in a future release
 };
 
-typedef struct crm_action_s {
+typedef struct {
     int id;
     int timeout;
     int timer;
@@ -105,7 +103,7 @@ enum transition_action {
     tg_shutdown,
 };
 
-struct crm_graph_s {
+typedef struct {
     int id;
     char *source;
     int abort_priority;
@@ -130,14 +128,15 @@ struct crm_graph_s {
     GList *synapses;          /* synapse_t* */
 
     int migration_limit;
-};
+} pcmk__graph_t;
+
 
 typedef struct crm_graph_functions_s {
-    gboolean (*pseudo) (crm_graph_t * graph, pcmk__graph_action_t *action);
-    gboolean (*rsc) (crm_graph_t * graph, pcmk__graph_action_t *action);
-    gboolean (*crmd) (crm_graph_t * graph, pcmk__graph_action_t *action);
-    gboolean (*stonith) (crm_graph_t * graph, pcmk__graph_action_t *action);
-    gboolean (*allowed) (crm_graph_t * graph, pcmk__graph_action_t *action);
+    gboolean (*pseudo) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    gboolean (*rsc) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    gboolean (*crmd) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    gboolean (*stonith) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    gboolean (*allowed) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
 } crm_graph_functions_t;
 
 enum transition_status {
@@ -148,12 +147,12 @@ enum transition_status {
 };
 
 void pcmk__set_graph_functions(crm_graph_functions_t *fns);
-crm_graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
-enum transition_status pcmk__execute_graph(crm_graph_t *graph);
-void pcmk__update_graph(crm_graph_t *graph, pcmk__graph_action_t *action);
-void pcmk__free_graph(crm_graph_t *graph);
+pcmk__graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
+enum transition_status pcmk__execute_graph(pcmk__graph_t *graph);
+void pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action);
+void pcmk__free_graph(pcmk__graph_t *graph);
 const char *pcmk__graph_status2text(enum transition_status state);
-void pcmk__log_graph(unsigned int log_level, crm_graph_t *graph);
+void pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph);
 void pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action);
 lrmd_event_data_t *pcmk__event_from_graph_action(xmlNode *resource,
                                                  pcmk__graph_action_t *action,

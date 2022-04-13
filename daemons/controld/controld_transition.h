@@ -19,7 +19,7 @@ pcmk__graph_action_t *get_cancel_action(const char *id, const char *node);
 bool confirm_cancel_action(const char *id, const char *node_id);
 
 void controld_record_action_timeout(pcmk__graph_action_t *action);
-extern gboolean fail_incompletable_actions(crm_graph_t * graph, const char *down_node);
+gboolean fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node);
 void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
@@ -30,12 +30,12 @@ const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 /* unpack */
 extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);
 
-extern crm_graph_t *transition_graph;
+extern pcmk__graph_t *transition_graph;
 extern crm_trigger_t *transition_trigger;
 
 extern char *te_uuid;
 
-extern void notify_crmd(crm_graph_t * graph);
+void notify_crmd(pcmk__graph_t * graph);
 
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data);
@@ -59,7 +59,7 @@ extern crm_trigger_t *transition_trigger;
 extern char *failed_stop_offset;
 extern char *failed_start_offset;
 
-void te_action_confirmed(pcmk__graph_action_t *action, crm_graph_t *graph);
+void te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph);
 void te_reset_job_counts(void);
 
 #endif

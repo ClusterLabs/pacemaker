@@ -22,10 +22,10 @@ global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
 {
 }
 
-static crm_graph_t *
+static pcmk__graph_t *
 create_blank_graph(void)
 {
-    crm_graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
+    pcmk__graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
 
     a_graph->complete = TRUE;
     a_graph->abort_reason = "DC Takeover";

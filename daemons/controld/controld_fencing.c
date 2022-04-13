@@ -360,7 +360,7 @@ static crm_trigger_t *stonith_reconnect = NULL;
 static char *te_client_id = NULL;
 
 static gboolean
-fail_incompletable_stonith(crm_graph_t *graph)
+fail_incompletable_stonith(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     const char *task = NULL;
@@ -895,7 +895,7 @@ fence_with_delay(const char *target, const char *type, const char *delay)
 }
 
 gboolean
-te_fence_node(crm_graph_t *graph, pcmk__graph_action_t *action)
+te_fence_node(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     int rc = 0;
     const char *id = NULL;

@@ -62,7 +62,7 @@ actiontype2text(enum pcmk__graph_action_type type)
  * \return Transition graph action corresponding to \p id, or NULL if none
  */
 static pcmk__graph_action_t *
-find_graph_action_by_id(crm_graph_t *graph, int id)
+find_graph_action_by_id(pcmk__graph_t *graph, int id)
 {
     if (graph == NULL) {
         return NULL;
@@ -104,7 +104,7 @@ synapse_state_str(synapse_t *synapse)
 
 // List action IDs of inputs in graph that haven't completed successfully
 static char *
-synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
+synapse_pending_inputs(pcmk__graph_t *graph, synapse_t *synapse)
 {
     char *pending = NULL;
     size_t pending_len = 0;
@@ -131,7 +131,7 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
 
 // Log synapse inputs that aren't in graph
 static void
-log_unresolved_inputs(unsigned int log_level, crm_graph_t *graph,
+log_unresolved_inputs(unsigned int log_level, pcmk__graph_t *graph,
                       synapse_t *synapse)
 {
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
@@ -166,7 +166,7 @@ log_synapse_action(unsigned int log_level, synapse_t *synapse,
 }
 
 static void
-log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
+log_synapse(unsigned int log_level, pcmk__graph_t *graph, synapse_t *synapse)
 {
     char *pending = NULL;
 
@@ -190,7 +190,7 @@ pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action)
 }
 
 void
-pcmk__log_graph(unsigned int log_level, crm_graph_t *graph)
+pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph)
 {
     if ((graph == NULL) || (graph->num_actions == 0)) {
         if (log_level == LOG_TRACE) {

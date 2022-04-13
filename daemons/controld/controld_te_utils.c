@@ -149,7 +149,7 @@ abort2text(enum transition_action abort_action)
 }
 
 static bool
-update_abort_priority(crm_graph_t *graph, int priority,
+update_abort_priority(pcmk__graph_t *graph, int priority,
                       enum transition_action action, const char *abort_reason)
 {
     bool change = FALSE;

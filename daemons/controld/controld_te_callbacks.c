@@ -23,7 +23,7 @@ void te_update_confirm(const char *event, xmlNode * msg);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
-crm_graph_t *transition_graph;
+pcmk__graph_t *transition_graph;
 crm_trigger_t *transition_trigger = NULL;
 
 /* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
