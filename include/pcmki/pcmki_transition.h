@@ -129,13 +129,13 @@ typedef struct {
 } pcmk__graph_t;
 
 
-typedef struct crm_graph_functions_s {
+typedef struct {
     gboolean (*pseudo) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*rsc) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*crmd) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*stonith) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*allowed) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
-} crm_graph_functions_t;
+} pcmk__graph_functions_t;
 
 enum transition_status {
     transition_active,
@@ -144,7 +144,7 @@ enum transition_status {
     transition_terminated,
 };
 
-void pcmk__set_graph_functions(crm_graph_functions_t *fns);
+void pcmk__set_graph_functions(pcmk__graph_functions_t *fns);
 pcmk__graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
 enum transition_status pcmk__execute_graph(pcmk__graph_t *graph);
 void pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action);

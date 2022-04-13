@@ -134,7 +134,7 @@ pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * registers execution functions for each action type, which will be stored
  * here.
  */
-static crm_graph_functions_t *graph_fns = NULL;
+static pcmk__graph_functions_t *graph_fns = NULL;
 
 /*!
  * \internal
@@ -143,7 +143,7 @@ static crm_graph_functions_t *graph_fns = NULL;
  * \param[in]  Execution functions to use
  */
 void
-pcmk__set_graph_functions(crm_graph_functions_t *fns)
+pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
 {
     crm_debug("Setting custom functions for executing transition graphs");
     graph_fns = fns;
@@ -325,7 +325,7 @@ pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
     return TRUE;
 }
 
-static crm_graph_functions_t default_fns = {
+static pcmk__graph_functions_t default_fns = {
     pseudo_action_dummy,
     pseudo_action_dummy,
     pseudo_action_dummy,

@@ -15,7 +15,7 @@
 
 #include <pacemaker-controld.h>
 
-extern crm_graph_functions_t te_graph_fns;
+extern pcmk__graph_functions_t te_graph_fns;
 
 static void
 global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)

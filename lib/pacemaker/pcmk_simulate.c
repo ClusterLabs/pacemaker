@@ -725,7 +725,7 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
     pcmk__graph_t *transition = NULL;
     enum transition_status graph_rc;
 
-    crm_graph_functions_t simulation_fns = {
+    pcmk__graph_functions_t simulation_fns = {
         simulate_pseudo_action,
         simulate_resource_action,
         simulate_cluster_action,

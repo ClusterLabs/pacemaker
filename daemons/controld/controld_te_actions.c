@@ -611,7 +611,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 }
 
 
-crm_graph_functions_t te_graph_fns = {
+pcmk__graph_functions_t te_graph_fns = {
     te_pseudo_action,
     te_rsc_command,
     te_crm_command,
