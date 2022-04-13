@@ -10,8 +10,6 @@
 #ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
 #  define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
-typedef struct rsc_ticket_s rsc_ticket_t;
-
 #  include <glib.h>
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
@@ -41,22 +39,6 @@ typedef struct {
     int score;
     bool influence; // Whether dependent influences active primary placement
 } pcmk__colocation_t;
-
-enum loss_ticket_policy_e {
-    loss_ticket_stop,
-    loss_ticket_demote,
-    loss_ticket_fence,
-    loss_ticket_freeze
-};
-
-struct rsc_ticket_s {
-    const char *id;
-    pe_resource_t *rsc_lh;
-    pe_ticket_t *ticket;
-    enum loss_ticket_policy_e loss_policy;
-
-    int role_lh;
-};
 
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 

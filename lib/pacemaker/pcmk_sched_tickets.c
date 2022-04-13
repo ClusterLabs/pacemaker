@@ -18,6 +18,21 @@
 
 #include "libpacemaker_private.h"
 
+enum loss_ticket_policy {
+    loss_ticket_stop,
+    loss_ticket_demote,
+    loss_ticket_fence,
+    loss_ticket_freeze
+};
+
+typedef struct {
+    const char *id;
+    pe_resource_t *rsc_lh;
+    pe_ticket_t *ticket;
+    enum loss_ticket_policy loss_policy;
+    int role_lh;
+} rsc_ticket_t;
+
 /*!
  * \brief Check whether a ticket constraint matches a resource by role
  *
