@@ -377,15 +377,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    gIter = rsc->rsc_tickets;
-    for (; gIter != NULL; gIter = gIter->next) {
-        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
-
-        if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
-            && (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby)) {
-            resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
-        }
-    }
+    // Ban resource from all nodes if it needs a ticket but doesn't have it
+    pcmk__require_promotion_tickets(rsc);
 
     pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
 
