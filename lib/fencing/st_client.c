@@ -2200,6 +2200,8 @@ stonith__parse_targets(const char *target_spec)
 const char *
 stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
 {
+    const char *other = NULL;
+
      for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
         if (prev_hp == event) {
             break;
@@ -2209,10 +2211,20 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
             ((event->completed < prev_hp->completed) ||
              ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
-            return (prev_hp->delegate == NULL)? "some node" : prev_hp->delegate;
+
+            if ((event->delegate == NULL)
+                || pcmk__str_eq(event->delegate, prev_hp->delegate,
+                                pcmk__str_casei)) {
+                // Prefer equivalent fencing by same executioner
+                return prev_hp->delegate;
+
+            } else if (other == NULL) {
+                // Otherwise remember first successful executioner
+                other = (prev_hp->delegate == NULL)? "some node" : prev_hp->delegate;
+            }
         }
     }
-    return NULL;
+    return other;
 }
 
 /*!
