@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,14 +39,14 @@ pcmk__graph_status2text(enum transition_status state)
 }
 
 static const char *
-actiontype2text(action_type_e type)
+actiontype2text(enum pcmk__graph_action_type type)
 {
     switch (type) {
-        case action_type_pseudo:
+        case pcmk__pseudo_graph_action:
             return "pseudo";
-        case action_type_rsc:
+        case pcmk__rsc_graph_action:
             return "resource";
-        case action_type_crm:
+        case pcmk__cluster_graph_action:
             return "cluster";
     }
     return "invalid";

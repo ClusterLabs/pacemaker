@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,9 +48,10 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
-            if (action->type == action_type_pseudo || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+            if ((action->type == pcmk__pseudo_graph_action)
+                || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
-            } else if (action->type == action_type_crm) {
+            } else if (action->type == pcmk__cluster_graph_action) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
                 if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {

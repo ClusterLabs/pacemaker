@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -195,7 +195,7 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
     for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *a = (crm_action_t *) lpc->data;
 
-        if (a->type == action_type_pseudo) {
+        if (a->type == pcmk__pseudo_graph_action) {
             /* None of the below applies to pseudo ops */
 
         } else if (synapse->priority < graph->abort_priority) {
@@ -234,15 +234,15 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
 
     crm__set_graph_action_flags(action, pcmk__graph_action_executed);
     switch (action->type) {
-        case action_type_pseudo:
+        case pcmk__pseudo_graph_action:
             crm_trace("Executing pseudo-action %d (%s)", action->id, id);
             return graph_fns->pseudo(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
-        case action_type_rsc:
+        case pcmk__rsc_graph_action:
             crm_trace("Executing resource action %d (%s)", action->id, id);
             return graph_fns->rsc(graph, action)? pcmk_rc_ok : pcmk_rc_error;
 
-        case action_type_crm:
+        case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                              CRM_OP_FENCE, pcmk__str_casei)) {
                 crm_trace("Executing fencing action %d (%s)",
@@ -462,7 +462,7 @@ pcmk__execute_graph(crm_graph_t *graph)
 static crm_action_t *
 unpack_action(synapse_t *parent, xmlNode *xml_action)
 {
-    action_type_e action_type;
+    enum pcmk__graph_action_type action_type;
     crm_action_t *action = NULL;
     const char *element = TYPE(xml_action);
     const char *value = ID(xml_action);
@@ -474,15 +474,15 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
     }
 
     if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
-        action_type = action_type_rsc;
+        action_type = pcmk__rsc_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
                             pcmk__str_casei)) {
-        action_type = action_type_pseudo;
+        action_type = pcmk__pseudo_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT,
                             pcmk__str_casei)) {
-        action_type = action_type_crm;
+        action_type = pcmk__cluster_graph_action;
 
     } else {
         crm_err("Ignoring transition graph action of unknown type '%s' (bug?)",
@@ -499,7 +499,7 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
     }
 
     pcmk__scan_min_int(value, &(action->id), -1);
-    action->type = action_type_rsc;
+    action->type = pcmk__rsc_graph_action;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
     action->type = action_type;
@@ -819,7 +819,7 @@ pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
     xmlNode *action_resource = NULL;
 
     CRM_CHECK(action != NULL, return NULL);
-    CRM_CHECK(action->type == action_type_rsc, return NULL);
+    CRM_CHECK(action->type == pcmk__rsc_graph_action, return NULL);
 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");

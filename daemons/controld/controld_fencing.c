@@ -380,7 +380,8 @@ fail_incompletable_stonith(crm_graph_t *graph)
         for (lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
             crm_action_t *action = (crm_action_t *) lpc2->data;
 
-            if (action->type != action_type_crm || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+            if ((action->type != pcmk__cluster_graph_action)
+                || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             }
 

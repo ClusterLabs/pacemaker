@@ -667,7 +667,7 @@ action_timer_callback(gpointer data)
         abort_transition(INFINITY, tg_restart, "Action lost", NULL);
 
         // Record timeout in the CIB if appropriate
-        if ((timer->action->type == action_type_rsc)
+        if ((timer->action->type == pcmk__rsc_graph_action)
             && controld_action_is_recordable(task)) {
             controld_record_action_timeout(timer->action);
         }

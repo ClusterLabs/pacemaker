@@ -487,7 +487,7 @@ te_update_job_count(crm_action_t * action, int offset)
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-    if (action->type != action_type_rsc || target == NULL) {
+    if ((action->type != pcmk__rsc_graph_action) || (target == NULL)) {
         /* No limit on these */
         return;
     }
@@ -563,7 +563,7 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
     const char *target = NULL;
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
-    if (action->type != action_type_rsc) {
+    if (action->type != pcmk__rsc_graph_action) {
         /* No limit on these */
         return TRUE;
     }
@@ -600,7 +600,7 @@ void
 te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
 {
     if (!pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
-        if ((action->type == action_type_rsc)
+        if ((action->type == pcmk__rsc_graph_action)
             && (crm_element_value(action->xml, XML_LRM_ATTR_TARGET) != NULL)) {
             te_update_job_count(action, -1);
         }

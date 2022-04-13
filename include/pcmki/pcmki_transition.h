@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,11 +19,11 @@
 extern "C" {
 #endif
 
-typedef enum {
-    action_type_pseudo,
-    action_type_rsc,
-    action_type_crm
-} action_type_e;
+enum pcmk__graph_action_type {
+    pcmk__pseudo_graph_action,
+    pcmk__rsc_graph_action,
+    pcmk__cluster_graph_action,
+};
 
 typedef struct te_timer_s crm_action_timer_t;
 typedef struct crm_graph_s crm_graph_t;
@@ -74,7 +74,7 @@ typedef struct crm_action_s {
     int timeout;
     guint interval_ms;
     GHashTable *params;
-    action_type_e type;
+    enum pcmk__graph_action_type type;
 
     crm_action_timer_t *timer;
     synapse_t *synapse;
