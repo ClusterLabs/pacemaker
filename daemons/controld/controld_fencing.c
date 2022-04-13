@@ -388,7 +388,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
             if (task && pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
-                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
                 pcmk__update_graph(graph, action);
                 crm_notice("Failing action %d (%s): fencer terminated",
@@ -830,7 +830,8 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
             } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
                 send_stonith_update(action, target, uuid);
-                crm__set_graph_action_flags(action, pcmk__graph_action_sent_update);
+                pcmk__set_graph_action_flags(action,
+                                             pcmk__graph_action_sent_update);
             }
         }
         st_fail_count_reset(target);
@@ -847,7 +848,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                 reason = pcmk_exec_status_str(status);
             }
         }
-        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
 
         /* If no fence devices were available, there's no use in immediately
          * checking again, so don't start a new transition in that case.

@@ -283,7 +283,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
               rc, action->id, task_uuid, target);
-    crm__set_graph_action_flags(action, pcmk__graph_action_sent_update);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_sent_update);
 }
 
 void
@@ -330,7 +330,7 @@ te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     CRM_ASSERT(action != NULL);
     CRM_ASSERT(action->xml != NULL);
 
-    crm__clear_graph_action_flags(action, pcmk__graph_action_executed);
+    pcmk__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
     if (pcmk__str_empty(on_node)) {
@@ -394,17 +394,18 @@ te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     free(counter);
     free_xml(cmd);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_executed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
 
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
         return FALSE;
 
     } else if (no_wait) {
+        /* Just mark confirmed. Don't bump the job count only to immediately
+         * decrement it.
+         */
         crm_info("Action %d confirmed - no wait", action->id);
-        crm__set_graph_action_flags(action, pcmk__graph_action_confirmed); /* Just mark confirmed.
-                                   * Don't bump the job count only to immediately decrement it
-                                   */
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
         pcmk__update_graph(transition_graph, action);
         trigger_graph();
 
@@ -602,7 +603,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
             && (crm_element_value(action->xml, XML_LRM_ATTR_TARGET) != NULL)) {
             te_update_job_count(action, -1);
         }
-        crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     }
     if (graph) {
         pcmk__update_graph(graph, action);

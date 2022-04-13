@@ -469,7 +469,7 @@ simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
 
     pcmk__update_graph(graph, action);
@@ -624,7 +624,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         out->info(out, "Pretending action %d failed with rc=%d",
                   action->id, op->rc);
-        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = INFINITY;
         pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
                                op->interval_ms, op->rc);
@@ -640,7 +640,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
   done:
     free(node);
     free_xml(cib_node);
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     return TRUE;
 }
@@ -661,7 +661,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
     pcmk__update_graph(graph, action);
     return TRUE;
@@ -712,7 +712,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         free_xml(cib_node);
     }
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     free(target);
     return TRUE;

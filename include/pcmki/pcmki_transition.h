@@ -79,14 +79,14 @@ typedef struct {
 
 } pcmk__graph_action_t;
 
-#define crm__set_graph_action_flags(action, flags_to_set) do {             \
+#define pcmk__set_graph_action_flags(action, flags_to_set) do {       \
         (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
             LOG_TRACE,                                                \
             "Action", "action",                                       \
             (action)->flags, (flags_to_set), #flags_to_set);          \
     } while (0)
 
-#define crm__clear_graph_action_flags(action, flags_to_clear) do {         \
+#define pcmk__clear_graph_action_flags(action, flags_to_clear) do {   \
         (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
             LOG_TRACE,                                                \
             "Action", "action",                                       \

@@ -69,7 +69,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
             }
 
             if (pcmk__str_eq(target_uuid, down_node, pcmk__str_casei) || pcmk__str_eq(router_uuid, down_node, pcmk__str_casei)) {
-                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 pcmk__set_synapse_flags(synapse, pcmk__synapse_failed);
                 last_action = action->xml;
                 stop_te_timer(action);
@@ -444,7 +444,7 @@ process_graph_event(xmlNode *event, const char *event_node)
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {
-                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
             }
 
             stop_te_timer(action);
