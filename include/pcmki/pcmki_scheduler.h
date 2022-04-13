@@ -64,8 +64,6 @@ extern void add_maintenance_update(pe_working_set_t *data_set);
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                             pe_working_set_t *data_set);
 
-extern const char *transition_idle_timeout;
-
 /*!
  * \internal
  * \brief Check whether colocation's left-hand preferences should be considered

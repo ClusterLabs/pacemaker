@@ -32,14 +32,8 @@ pcmk__graph_status2text(enum transition_status state)
             return "pending";
         case transition_complete:
             return "complete";
-        case transition_stopped:
-            return "stopped";
         case transition_terminated:
             return "terminated";
-        case transition_action_failed:
-            return "failed (action)";
-        case transition_failed:
-            return "failed";
     }
     return "unknown";
 }

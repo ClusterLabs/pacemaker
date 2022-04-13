@@ -85,8 +85,6 @@ typedef struct crm_action_s {
 
 } crm_action_t;
 
-const char *action_state_str(crm_action_t *action);
-
 #define crm__set_graph_action_flags(action, flags_to_set) do {             \
         (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
             LOG_TRACE,                                                \
@@ -154,10 +152,7 @@ enum transition_status {
     transition_active,
     transition_pending,         /* active but no actions performed this time */
     transition_complete,
-    transition_stopped,
     transition_terminated,
-    transition_action_failed,
-    transition_failed,
 };
 
 void pcmk__set_graph_functions(crm_graph_functions_t *fns);
