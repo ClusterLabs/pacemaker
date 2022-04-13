@@ -84,7 +84,7 @@ find_graph_action_by_id(pcmk__graph_t *graph, int id)
     return NULL;
 }
 
-const char *
+static const char *
 synapse_state_str(pcmk__graph_synapse_t *synapse)
 {
     if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {

@@ -42,8 +42,6 @@ typedef struct {
     GList *inputs;            /* pcmk__graph_action_t* */
 } pcmk__graph_synapse_t;
 
-const char *synapse_state_str(pcmk__graph_synapse_t *synapse);
-
 #define pcmk__set_synapse_flags(synapse, flags_to_set) do {             \
         (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
             LOG_TRACE,                                                  \
