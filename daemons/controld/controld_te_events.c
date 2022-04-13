@@ -37,7 +37,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 
     gIter = graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
         if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
@@ -201,7 +201,7 @@ pcmk__graph_action_t *
 controld_get_action(int id)
 {
     for (GList *item = transition_graph->synapses; item; item = item->next) {
-        synapse_t *synapse = (synapse_t *) item->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) item->data;
 
         for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) item2->data;
@@ -222,7 +222,7 @@ get_cancel_action(const char *id, const char *node)
 
     gIter = transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
         gIter2 = synapse->actions;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
@@ -300,7 +300,7 @@ match_down_event(const char *target)
          gIter != NULL && match == NULL;
          gIter = gIter->next) {
 
-        for (gIter2 = ((synapse_t*)gIter->data)->actions;
+        for (gIter2 = ((pcmk__graph_synapse_t * ) gIter->data)->actions;
              gIter2 != NULL && match == NULL;
              gIter2 = gIter2->next) {
 

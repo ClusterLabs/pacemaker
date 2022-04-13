@@ -372,7 +372,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         GList *lpc2 = NULL;
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             continue;

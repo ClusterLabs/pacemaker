@@ -42,7 +42,7 @@
  *       synapse_state_str().
  */
 static void
-update_synapse_ready(synapse_t *synapse, int action_id)
+update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
 {
     if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return; // All inputs have already been confirmed
@@ -75,7 +75,7 @@ update_synapse_ready(synapse_t *synapse, int action_id)
  * \param[in] action_id  ID of action that completed
  */
 static void
-update_synapse_confirmed(synapse_t *synapse, int action_id)
+update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
 {
     bool all_confirmed = true;
 
@@ -111,7 +111,7 @@ void
 pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
@@ -165,7 +165,7 @@ pcmk__set_graph_functions(crm_graph_functions_t *fns)
  * \return true if synapse is ready, false otherwise
  */
 static bool
-should_fire_synapse(pcmk__graph_t *graph, synapse_t *synapse)
+should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
 {
     GList *lpc = NULL;
 
@@ -269,7 +269,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \return Standard Pacemaker return value
  */
 static int
-fire_synapse(pcmk__graph_t *graph, synapse_t *synapse)
+fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
 {
     pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
@@ -363,7 +363,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
 
     // Count completed and in-flight synapses
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             graph->completed++;
@@ -377,7 +377,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
 
     // Execute any synapses that are ready
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if ((graph->batch_limit > 0)
             && (graph->pending >= graph->batch_limit)) {
@@ -460,7 +460,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
  * \return Newly allocated action on success, or NULL otherwise
  */
 static pcmk__graph_action_t *
-unpack_action(synapse_t *parent, xmlNode *xml_action)
+unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 {
     enum pcmk__graph_action_type action_type;
     pcmk__graph_action_t *action = NULL;
@@ -556,16 +556,16 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
  *
  * \return Newly allocated synapse on success, or NULL otherwise
  */
-static synapse_t *
+static pcmk__graph_synapse_t *
 unpack_synapse(pcmk__graph_t *new_graph, xmlNode *xml_synapse)
 {
     const char *value = NULL;
     xmlNode *action_set = NULL;
-    synapse_t *new_synapse = NULL;
+    pcmk__graph_synapse_t *new_synapse = NULL;
 
     crm_trace("Unpacking synapse %s", ID(xml_synapse));
 
-    new_synapse = calloc(1, sizeof(synapse_t));
+    new_synapse = calloc(1, sizeof(pcmk__graph_synapse_t));
     if (new_synapse == NULL) {
         return NULL;
     }
@@ -718,7 +718,8 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
     for (xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
          synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
 
-        synapse_t *new_synapse = unpack_synapse(new_graph, synapse_xml);
+        pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
+                                                            synapse_xml);
 
         if (new_synapse != NULL) {
             new_graph->synapses = g_list_append(new_graph->synapses,
@@ -769,7 +770,7 @@ free_graph_action(gpointer user_data)
 static void
 free_graph_synapse(gpointer user_data)
 {
-    synapse_t *synapse = user_data;
+    pcmk__graph_synapse_t *synapse = user_data;
 
     g_list_free_full(synapse->actions, free_graph_action);
     g_list_free_full(synapse->inputs, free_graph_action);

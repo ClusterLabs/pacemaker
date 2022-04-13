@@ -32,7 +32,7 @@ enum pcmk__synapse_flags {
     pcmk__synapse_confirmed   = (1 << 3),
 };
 
-typedef struct synapse_s {
+typedef struct {
     int id;
     int priority;
 
@@ -40,9 +40,9 @@ typedef struct synapse_s {
 
     GList *actions;           /* pcmk__graph_action_t* */
     GList *inputs;            /* pcmk__graph_action_t* */
-} synapse_t;
+} pcmk__graph_synapse_t;
 
-const char *synapse_state_str(synapse_t *synapse);
+const char *synapse_state_str(pcmk__graph_synapse_t *synapse);
 
 #define pcmk__set_synapse_flags(synapse, flags_to_set) do {             \
         (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
@@ -73,7 +73,7 @@ typedef struct {
     guint interval_ms;
     GHashTable *params;
     enum pcmk__graph_action_type type;
-    synapse_t *synapse;
+    pcmk__graph_synapse_t *synapse;
 
     uint32_t flags; // Group of pcmk__graph_action_flags
 
@@ -125,7 +125,7 @@ typedef struct {
     int completed;
     int incomplete;
 
-    GList *synapses;          /* synapse_t* */
+    GList *synapses;          /* pcmk__graph_synapse_t* */
 
     int migration_limit;
 } pcmk__graph_t;
