@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -430,9 +430,11 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
              * nodes are joining around the same time, so the one that brings us
              * to quorum doesn't cause all the remaining ones to be fenced.
              */
-            abort_after_delay(INFINITY, tg_restart, "Quorum gained", 5000);
+            abort_after_delay(INFINITY, pcmk__graph_restart, "Quorum gained",
+                              5000);
         } else {
-            abort_transition(INFINITY, tg_restart, "Quorum lost", NULL);
+            abort_transition(INFINITY, pcmk__graph_restart, "Quorum lost",
+                             NULL);
         }
     }
     fsa_has_quorum = quorum;

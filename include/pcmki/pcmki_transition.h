@@ -93,12 +93,13 @@ typedef struct {
             (action)->flags, (flags_to_clear), #flags_to_clear);      \
     } while (0)
 
-/* order matters here */
-enum transition_action {
-    tg_done,
-    tg_stop,
-    tg_restart,
-    tg_shutdown,
+// What to do after finished processing a transition graph
+enum pcmk__graph_next {
+    // Order matters: lowest priority to highest
+    pcmk__graph_done,       // Transition complete, nothing further needed
+    pcmk__graph_wait,       // Transition interrupted, wait for further changes
+    pcmk__graph_restart,    // Transition interrupted, start a new one
+    pcmk__graph_shutdown,   // Transition interrupted, local shutdown needed
 };
 
 typedef struct {
@@ -108,7 +109,7 @@ typedef struct {
 
     bool complete;
     const char *abort_reason;
-    enum transition_action completion_action;
+    enum pcmk__graph_next completion_action;
 
     int num_actions;
     int num_synapses;

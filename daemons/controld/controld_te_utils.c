@@ -96,7 +96,7 @@ static struct abort_timer_s {
     bool aborted;
     guint id;
     int priority;
-    enum transition_action action;
+    enum pcmk__graph_next action;
     const char *text;
 } abort_timer = { 0, };
 
@@ -118,7 +118,7 @@ abort_timer_popped(gpointer data)
  * \param[in] abort_text  Must be literal string
  */
 void
-abort_after_delay(int abort_priority, enum transition_action abort_action,
+abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                   const char *abort_text, guint delay_ms)
 {
     if (abort_timer.id) {
@@ -133,24 +133,20 @@ abort_after_delay(int abort_priority, enum transition_action abort_action,
 }
 
 static const char *
-abort2text(enum transition_action abort_action)
+abort2text(enum pcmk__graph_next abort_action)
 {
     switch (abort_action) {
-        case tg_done:
-            return "done";
-        case tg_stop:
-            return "stop";
-        case tg_restart:
-            return "restart";
-        case tg_shutdown:
-            return "shutdown";
+        case pcmk__graph_done:      return "done";
+        case pcmk__graph_wait:      return "stop";
+        case pcmk__graph_restart:   return "restart";
+        case pcmk__graph_shutdown:  return "shutdown";
     }
     return "unknown";
 }
 
 static bool
 update_abort_priority(pcmk__graph_t *graph, int priority,
-                      enum transition_action action, const char *abort_reason)
+                      enum pcmk__graph_next action, const char *abort_reason)
 {
     bool change = FALSE;
 
@@ -179,7 +175,7 @@ update_abort_priority(pcmk__graph_t *graph, int priority,
 }
 
 void
-abort_transition_graph(int abort_priority, enum transition_action abort_action,
+abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
 {
     int add[] = { 0, 0, 0 };

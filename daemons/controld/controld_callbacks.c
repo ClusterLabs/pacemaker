@@ -295,7 +295,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 crm_update_peer_join(__func__, node, crm_join_none);
                 check_join_state(fsa_state, __func__);
             }
-            abort_transition(INFINITY, tg_restart, "Node failure", NULL);
+            abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
+                             NULL);
             fail_incompletable_actions(transition_graph, node->uuid);
 
         } else {
@@ -311,7 +312,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             /* Trigger resource placement on newly integrated nodes */
             if (appeared) {
-                abort_transition(INFINITY, tg_restart,
+                abort_transition(INFINITY, pcmk__graph_restart,
                                  "Pacemaker Remote node integrated", NULL);
             }
         }

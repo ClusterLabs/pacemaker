@@ -685,7 +685,7 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
     new_graph->abort_priority = 0;
     new_graph->network_delay = 0;
     new_graph->stonith_timeout = 0;
-    new_graph->completion_action = tg_done;
+    new_graph->completion_action = pcmk__graph_done;
 
     // Parse top-level attributes from <transition_graph>
     if (xml_graph != NULL) {

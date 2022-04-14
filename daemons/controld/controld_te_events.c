@@ -88,7 +88,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 
     if (last_action != NULL) {
         crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
-        abort_transition(INFINITY, tg_restart, "Node failure", last_action);
+        abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
+                         last_action);
         return TRUE;
     }
 
@@ -373,18 +374,19 @@ process_graph_event(xmlNode *event, const char *event_node)
         // decode_transition_key() already logged the bad key
         crm_err("Can't process action %s result: Incompatible versions? "
                 CRM_XS " call-id=%d", id, callid);
-        abort_transition(INFINITY, tg_restart, "Bad event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Bad event", event);
         return;
     }
 
     if (transition_num == -1) {
         // E.g. crm_resource --fail
         desc = "initiated outside of the cluster";
-        abort_transition(INFINITY, tg_restart, "Unexpected event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
+                         event);
 
     } else if ((action_num < 0) || !pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none)) {
         desc = "initiated by a different DC";
-        abort_transition(INFINITY, tg_restart, "Foreign event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
 
     } else if ((transition_graph->id != transition_num)
                || transition_graph->complete) {
@@ -405,15 +407,16 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             desc = "arrived after initial scheduling";
-            abort_transition(INFINITY, tg_restart, "Change in recurring result",
-                             event);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Change in recurring result", event);
 
         } else if (transition_graph->id != transition_num) {
             desc = "arrived really late";
-            abort_transition(INFINITY, tg_restart, "Old event", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
         } else {
             desc = "arrived late";
-            abort_transition(INFINITY, tg_restart, "Inactive graph", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Inactive graph",
+                             event);
         }
 
     } else {
@@ -423,7 +426,8 @@ process_graph_event(xmlNode *event, const char *event_node)
         if (action == NULL) {
             // Should never happen
             desc = "unknown";
-            abort_transition(INFINITY, tg_restart, "Unknown event", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Unknown event",
+                             event);
 
         } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been
@@ -451,8 +455,8 @@ process_graph_event(xmlNode *event, const char *event_node)
             te_action_confirmed(action, transition_graph);
 
             if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
-                abort_transition(action->synapse->priority + 1, tg_restart,
-                                 "Event failed", event);
+                abort_transition(action->synapse->priority + 1,
+                                 pcmk__graph_restart, "Event failed", event);
             }
         }
     }

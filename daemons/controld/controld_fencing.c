@@ -161,7 +161,8 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
         crm_err("Fencing update %d for %s: failed - %s (%d)",
                 call_id, (char *)user_data, pcmk_strerror(rc), rc);
         crm_log_xml_warn(msg, "Failed update");
-        abort_transition(INFINITY, tg_shutdown, "CIB update failed", NULL);
+        abort_transition(INFINITY, pcmk__graph_shutdown, "CIB update failed",
+                         NULL);
 
     } else {
         crm_info("Fencing update %d for %s: complete", call_id, (char *)user_data);
@@ -246,14 +247,14 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
  * \param[in] reason  Log this stonith action XML as abort reason (or NULL)
  */
 static void
-abort_for_stonith_failure(enum transition_action abort_action,
+abort_for_stonith_failure(enum pcmk__graph_next abort_action,
                           const char *target, xmlNode *reason)
 {
     /* If stonith repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
-    if ((abort_action != tg_stop) && too_many_st_failures(target)) {
-        abort_action = tg_stop;
+    if ((abort_action != pcmk__graph_wait) && too_many_st_failures(target)) {
+        abort_action = pcmk__graph_wait;
     }
     abort_transition(INFINITY, abort_action, "Stonith failed", reason);
 }
@@ -399,7 +400,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
 
     if (last_action != NULL) {
         crm_warn("Fencer failure resulted in unrunnable actions");
-        abort_for_stonith_failure(tg_restart, NULL, last_action);
+        abort_for_stonith_failure(pcmk__graph_restart, NULL, last_action);
         return TRUE;
     }
 
@@ -568,7 +569,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                  */
                 crm_info("External fencing operation from %s fenced %s",
                          client, event->target);
-                abort_transition(INFINITY, tg_restart,
+                abort_transition(INFINITY, pcmk__graph_restart,
                                  "External Fencing Operation", NULL);
             }
 
@@ -837,7 +838,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         st_fail_count_reset(target);
 
     } else {
-        enum transition_action abort_action = tg_restart;
+        enum pcmk__graph_next abort_action = pcmk__graph_restart;
         int status = stonith__execution_status(data);
         const char *reason = stonith__exit_reason(data);
 
@@ -857,7 +858,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
             crm_warn("Fence operation %d for %s failed: %s "
                      "(aborting transition and giving up for now)",
                      data->call_id, target, reason);
-            abort_action = tg_stop;
+            abort_action = pcmk__graph_wait;
         } else {
             crm_notice("Fence operation %d for %s failed: %s "
                        "(aborting transition)", data->call_id, target, reason);

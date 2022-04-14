@@ -44,11 +44,12 @@ gboolean te_graph_trigger(gpointer user_data);
 void te_update_diff(const char *event, xmlNode *msg);
 
 extern void trigger_graph_processing(const char *fn, int line);
-void abort_after_delay(int abort_priority, enum transition_action abort_action,
+void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, guint delay_ms);
-extern void abort_transition_graph(int abort_priority, enum transition_action abort_action,
-                                   const char *abort_text, xmlNode * reason, const char *fn,
-                                   int line);
+void abort_transition_graph(int abort_priority,
+                            enum pcmk__graph_next abort_action,
+                            const char *abort_text, xmlNode *reason,
+                            const char *fn, int line);
 
 #  define trigger_graph()	trigger_graph_processing(__func__, __LINE__)
 #  define abort_transition(pri, action, text, reason)			\

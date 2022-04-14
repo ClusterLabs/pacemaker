@@ -50,7 +50,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     xml_log_patchset(LOG_TRACE, __func__, diff);
     if (cib_config_changed(NULL, NULL, &diff)) {
-        abort_transition(INFINITY, tg_restart, "Non-status change", diff);
+        abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
+                         diff);
         goto bail;              /* configuration changed */
     }
 
@@ -61,7 +62,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Ticket attribute: update", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Ticket attribute: update", aborted);
         goto bail;
 
     }
@@ -74,7 +76,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Ticket attribute: removal", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Ticket attribute: removal", aborted);
         goto bail;
     }
     freeXpathObject(xpathObj);
@@ -87,7 +90,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Transient attribute: removal", aborted);
         goto bail;
 
     }
@@ -114,7 +118,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
                   max);
         crm_log_xml_trace(diff, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
+        abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
+                         NULL);
         goto bail;
     }
 
@@ -123,8 +128,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
         if (shutdown_lock_cleared(lrm_resource)) {
             // @TODO would be more efficient to abort once after transition done
-            abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
-                             lrm_resource);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Shutdown lock cleared", lrm_resource);
             // Still process results, so we stop timers and update failcounts
         }
     }
@@ -175,7 +180,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
             if (cancelled == NULL) {
                 crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
                           node);
-                abort_transition(INFINITY, tg_restart, "Resource op removal", match);
+                abort_transition(INFINITY, pcmk__graph_restart,
+                                 "Resource op removal", match);
                 freeXpathObject(op_match);
                 free(rsc_op_xpath);
                 goto bail;
@@ -203,7 +209,7 @@ process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
     }
     if (shutdown_lock_cleared(lrm_resource)) {
         // @TODO would be more efficient to abort once after transition done
-        abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
+        abort_transition(INFINITY, pcmk__graph_restart, "Shutdown lock cleared",
                          lrm_resource);
     }
 }
@@ -241,7 +247,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         && xml->children && xml->children->next) {
 
         crm_log_xml_trace(change, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
+        abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
+                         NULL);
         return;
     }
 
@@ -286,21 +293,21 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     pcmk__graph_action_t *down = NULL;
 
     if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
 
     node_uuid = extract_node_uuid(xpath);
     if(node_uuid == NULL) {
         crm_err("Could not extract node ID from %s", xpath);
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
 
     down = match_down_event(node_uuid);
     if (down == NULL) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
     } else {
         crm_trace("Expecting changes to %s (%s)", node_uuid, xpath);
     }
@@ -330,8 +337,8 @@ process_op_deletion(const char *xpath, xmlNode *change)
 
     node_uuid = extract_node_uuid(xpath);
     if (confirm_cancel_action(key, node_uuid) == FALSE) {
-        abort_transition(INFINITY, tg_restart, "Resource operation removal",
-                         change);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Resource operation removal", change);
     }
     free(mutable_key);
     free(node_uuid);
@@ -384,7 +391,7 @@ process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
         process_status_diff(status, change, op, xpath);
     }
     if (config) {
-        abort_transition(INFINITY, tg_restart,
+        abort_transition(INFINITY, pcmk__graph_restart,
                          "Non-status-only change", change);
     }
 }
@@ -446,13 +453,14 @@ te_update_diff_v2(xmlNode *diff)
                   (name? " matched by " : ""), (name? name : ""));
 
         if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION)) {
-            abort_transition(INFINITY, tg_restart, "Configuration change",
-                             change);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
                    || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-            abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
@@ -660,7 +668,7 @@ action_timer_callback(gpointer data)
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
 
         te_action_confirmed(action, transition_graph);
-        abort_transition(INFINITY, tg_restart, "Action lost", NULL);
+        abort_transition(INFINITY, pcmk__graph_restart, "Action lost", NULL);
 
         // Record timeout in the CIB if appropriate
         if ((action->type == pcmk__rsc_graph_action)

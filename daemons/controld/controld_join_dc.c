@@ -255,7 +255,7 @@ do_dc_join_offer_one(long long action,
     /* This was a genuine join request; cancel any existing transition and
      * invoke the scheduler.
      */
-    abort_transition(INFINITY, tg_restart, "Node join", NULL);
+    abort_transition(INFINITY, pcmk__graph_restart, "Node join", NULL);
 
     count = crmd_join_phase_count(crm_join_welcomed);
     crm_info("Waiting on join-%d requests from %d outstanding node%s",

@@ -151,7 +151,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         /* defer until everything else completes */
         crm_info("crm-event (%s) is a local shutdown", pcmk__s(id, "<null>"));
-        graph->completion_action = tg_shutdown;
+        graph->completion_action = pcmk__graph_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
         return pcmk_rc_ok;
@@ -675,20 +675,20 @@ notify_crmd(pcmk__graph_t *graph)
     CRM_CHECK(graph->complete, graph->complete = true);
 
     switch (graph->completion_action) {
-        case tg_stop:
+        case pcmk__graph_wait:
             type = "stop";
             if (fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
-        case tg_done:
+        case pcmk__graph_done:
             type = "done";
             if (fsa_state == S_TRANSITION_ENGINE) {
                 event = I_TE_SUCCESS;
             }
             break;
 
-        case tg_restart:
+        case pcmk__graph_restart:
             type = "restart";
             if (fsa_state == S_TRANSITION_ENGINE) {
                 if (transition_timer->period_ms > 0) {
@@ -704,7 +704,7 @@ notify_crmd(pcmk__graph_t *graph)
             }
             break;
 
-        case tg_shutdown:
+        case pcmk__graph_shutdown:
             type = "shutdown";
             if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
                 event = I_STOP;
@@ -719,7 +719,7 @@ notify_crmd(pcmk__graph_t *graph)
               pcmk__s(graph->abort_reason, "unspecified reason"));
 
     graph->abort_reason = NULL;
-    graph->completion_action = tg_done;
+    graph->completion_action = pcmk__graph_done;
     controld_clear_fsa_input_flags(R_IN_TRANSITION);
 
     if (event != I_NULL) {
