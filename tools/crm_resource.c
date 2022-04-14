@@ -132,7 +132,12 @@ struct {
         options.rsc_cmd = (cmd);                                            \
     } while (0)
 #else
-#define SET_COMMAND(cmd) do { options.rsc_cmd = (cmd); } while (0)
+#define SET_COMMAND(cmd) do {                                               \
+        if (options.rsc_cmd != cmd_none) {                                  \
+            reset_options();                                                \
+        }                                                                   \
+        options.rsc_cmd = (cmd);                                            \
+    } while (0)
 #endif
 
 gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -626,6 +631,18 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+static void
+reset_options(void) {
+    options.require_crmd = FALSE;
+    options.require_node = FALSE;
+
+    options.require_cib = TRUE,
+    options.require_dataset = TRUE,
+    options.require_resource = TRUE,
+
+    options.find_flags = 0;
+}
+
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.cmdline_config = TRUE;
@@ -677,8 +694,8 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_dataset = FALSE;
     SET_COMMAND(cmd_delete);
+    options.require_dataset = FALSE;
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -765,38 +782,38 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    SET_COMMAND(cmd_fail);
     options.require_crmd = TRUE;
     options.require_node = TRUE;
-    SET_COMMAND(cmd_fail);
     return TRUE;
 }
 
 gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_clear);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_ban);
-    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
+    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         SET_COMMAND(cmd_move);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
         SET_COMMAND(cmd_query_xml);
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_any;
         SET_COMMAND(cmd_query_raw_xml);
+        options.find_flags = pe_find_renamed|pe_find_any;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_locate);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_colocations_deep);
-    } else {
         options.find_flags = pe_find_renamed|pe_find_anon;
+    } else {
         SET_COMMAND(cmd_colocations);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     }
 
     return TRUE;
@@ -848,9 +865,9 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
 
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    SET_COMMAND(cmd_set_property);
     options.require_dataset = FALSE;
     pcmk__str_update(&options.prop_name, optarg);
-    SET_COMMAND(cmd_set_property);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -919,8 +936,8 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_resource = FALSE;
     SET_COMMAND(cmd_why);
+    options.require_resource = FALSE;
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
 }
