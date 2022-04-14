@@ -132,7 +132,12 @@ struct {
         options.rsc_cmd = (cmd);                                            \
     } while (0)
 #else
-#define SET_COMMAND(cmd) do { options.rsc_cmd = (cmd); } while (0)
+#define SET_COMMAND(cmd) do {                                               \
+        if (options.rsc_cmd != cmd_none) {                                  \
+            reset_options();                                                \
+        }                                                                   \
+        options.rsc_cmd = (cmd);                                            \
+    } while (0)
 #endif
 
 gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -625,6 +630,18 @@ static GOptionEntry addl_entries[] = {
 
     { NULL }
 };
+
+static void
+reset_options(void) {
+    options.require_crmd = FALSE;
+    options.require_node = FALSE;
+
+    options.require_cib = TRUE,
+    options.require_dataset = TRUE,
+    options.require_resource = TRUE,
+
+    options.find_flags = 0;
+}
 
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
