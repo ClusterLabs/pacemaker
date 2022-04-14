@@ -461,9 +461,9 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \param[in] graph   Graph to update with pseudo-action result
  * \param[in] action  Pseudo-action to simulate executing
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -473,7 +473,7 @@ simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     out->message(out, "inject-pseudo-action", node, task);
 
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!

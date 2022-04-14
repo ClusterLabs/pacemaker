@@ -236,7 +236,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     switch (action->type) {
         case pcmk__pseudo_graph_action:
             crm_trace("Executing pseudo-action %d (%s)", action->id, id);
-            return graph_fns->pseudo(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            return graph_fns->pseudo(graph, action);
 
         case pcmk__rsc_graph_action:
             crm_trace("Executing resource action %d (%s)", action->id, id);
@@ -293,13 +293,13 @@ fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
  * \brief Dummy graph method that can be used with simulations
  *
  * \param[in] graph   Transition graph containing action
- * \param[in] action  Action to be initiated
+ * \param[in] action  Graph action to be initiated
  *
- * \retval TRUE   Action initiation was (simulated to be) successful
- * \retval FALSE  Action initiation was (simulated to be) failed (due to the
- *                PE_fail environment variable being set to the action ID)
+ * \return Standard Pacemaker return code
+ * \note If the PE_fail environment variable is set to the action ID,
+ *       then the graph action will be marked as failed.
  */
-static gboolean
+static int
 pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
 {
     static int fail = -1;
@@ -324,7 +324,7 @@ pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
     }
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static pcmk__graph_functions_t default_fns = {

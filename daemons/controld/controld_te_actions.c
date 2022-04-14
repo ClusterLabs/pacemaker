@@ -33,8 +33,17 @@ te_start_action_timer(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     CRM_ASSERT(action->timer != 0);
 }
 
-static gboolean
-te_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
+/*!
+ * \internal
+ * \brief Execute a graph pseudo-action
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] pseudo  Pseudo-action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
 {
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
@@ -66,7 +75,7 @@ te_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
     crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
               crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK_KEY));
     te_action_confirmed(pseudo, graph);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -613,7 +622,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 
 
 pcmk__graph_functions_t te_graph_fns = {
-    te_pseudo_action,
+    execute_pseudo_action,
     te_rsc_command,
     te_crm_command,
     te_fence_node,

@@ -130,7 +130,7 @@ typedef struct {
 
 
 typedef struct {
-    gboolean (*pseudo) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    int (*pseudo) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*rsc) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*crmd) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*stonith) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
