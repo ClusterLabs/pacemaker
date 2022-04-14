@@ -240,7 +240,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
         case pcmk__rsc_graph_action:
             crm_trace("Executing resource action %d (%s)", action->id, id);
-            return graph_fns->rsc(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            return graph_fns->rsc(graph, action);
 
         case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),

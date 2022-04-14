@@ -313,8 +313,17 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
     lrmd_free_event(op);
 }
 
-static gboolean
-te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+/*!
+ * \internal
+ * \brief Execute a resource action from a transition graph
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] action  Resource action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     /* never overwrite stop actions in the CIB with
      *   anything other than completed results
@@ -342,11 +351,10 @@ te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-    if (pcmk__str_empty(on_node)) {
-        crm_err("Corrupted command(id=%s) %s: no node",
-                ID(action->xml), pcmk__s(task, "without task"));
-        return FALSE;
-    }
+    CRM_CHECK(!pcmk__str_empty(on_node),
+              crm_err("Corrupted command(id=%s) %s: no node",
+                      ID(action->xml), pcmk__s(task, "without task"));
+              return pcmk_rc_node_unknown);
 
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
@@ -407,7 +415,7 @@ te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
-        return FALSE;
+        return ECOMM;
 
     } else if (no_wait) {
         /* Just mark confirmed. Don't bump the job count only to immediately
@@ -431,7 +439,7 @@ te_rsc_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         te_start_action_timer(graph, action);
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 struct te_peer_s
@@ -623,7 +631,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 
 pcmk__graph_functions_t te_graph_fns = {
     execute_pseudo_action,
-    te_rsc_command,
+    execute_rsc_action,
     te_crm_command,
     te_fence_node,
     te_should_perform_action,

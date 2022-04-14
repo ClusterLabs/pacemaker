@@ -483,9 +483,9 @@ simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \param[in] graph   Graph to update with resource action result
  * \param[in] action  Resource action to simulate executing
  *
- * \return TRUE if action is validly specified, otherwise FALSE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     int rc;
@@ -519,7 +519,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if (action_rsc == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "Bad");
         free(node);
-        return FALSE;
+        return EPROTO;
     }
 
     /* A resource might be known by different names in the configuration and in
@@ -531,7 +531,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if (resource_config_name == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "No ID");
         free(node);
-        return FALSE;
+        return EPROTO;
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
@@ -575,7 +575,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                 action->id, resource);
         free(node);
         free_xml(cib_node);
-        return FALSE;
+        return EINVAL;
     }
 
     // Simulate and display an executor event for the action result
@@ -642,7 +642,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     free_xml(cib_node);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
