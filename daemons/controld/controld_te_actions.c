@@ -537,9 +537,19 @@ te_update_job_count(pcmk__graph_action_t *action, int offset)
     te_update_job_count_on(target, offset, FALSE);
 }
 
-static gboolean
-te_should_perform_action_on(pcmk__graph_t *graph, pcmk__graph_action_t *action,
-                            const char *target)
+/*!
+ * \internal
+ * \brief Check whether a graph action is allowed to be executed on a node
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] action  Graph action being executed
+ * \param[in] target  Name of node where action should be executed
+ *
+ * \return true if action is allowed, otherwise false
+ */
+static bool
+allowed_on_node(pcmk__graph_t *graph, pcmk__graph_action_t *action,
+                const char *target)
 {
     int limit = 0;
     struct te_peer_s *r = NULL;
@@ -548,10 +558,10 @@ te_should_perform_action_on(pcmk__graph_t *graph, pcmk__graph_action_t *action,
 
     if(target == NULL) {
         /* No limit on these */
-        return TRUE;
+        return true;
 
     } else if(te_targets == NULL) {
-        return FALSE;
+        return false;
     }
 
     r = g_hash_table_lookup(te_targets, target);
@@ -566,30 +576,39 @@ te_should_perform_action_on(pcmk__graph_t *graph, pcmk__graph_action_t *action,
     if(limit <= r->jobs) {
         crm_trace("Peer %s is over their job limit of %d (%d): deferring %s",
                   target, limit, r->jobs, id);
-        return FALSE;
+        return false;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
         if (pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
             crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
                       target, graph->migration_limit, r->migrate_jobs, id);
-            return FALSE;
+            return false;
         }
     }
 
     crm_trace("Peer %s has not hit their limit yet. current jobs = %d limit= %d limit", target, r->jobs, limit);
 
-    return TRUE;
+    return true;
 }
 
-static gboolean
-te_should_perform_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+/*!
+ * \internal
+ * \brief Check whether a graph action is allowed to be executed
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] action  Graph action being executed
+ *
+ * \return true if action is allowed, otherwise false
+ */
+static bool
+graph_action_allowed(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *target = NULL;
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
     if (action->type != pcmk__rsc_graph_action) {
         /* No limit on these */
-        return TRUE;
+        return true;
     }
 
     /* if we have a router node, this means the action is performing
@@ -601,8 +620,8 @@ te_should_perform_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     if ((target == NULL) && pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE,
                                                  CRMD_ACTION_MIGRATED, NULL)) {
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
-        if(te_should_perform_action_on(graph, action, target) == FALSE) {
-            return FALSE;
+        if (!allowed_on_node(graph, action, target)) {
+            return false;
         }
 
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
@@ -611,7 +630,7 @@ te_should_perform_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     }
 
-    return te_should_perform_action_on(graph, action, target);
+    return allowed_on_node(graph, action, target);
 }
 
 /*!
@@ -642,7 +661,7 @@ pcmk__graph_functions_t te_graph_fns = {
     execute_rsc_action,
     execute_cluster_action,
     controld_execute_fence_action,
-    te_should_perform_action,
+    graph_action_allowed,
 };
 
 void
