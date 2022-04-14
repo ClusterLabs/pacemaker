@@ -247,6 +247,7 @@ typedef enum crm_exit_e {
     CRM_EX_NOT_CONFIGURED       =   6, //!< Parameter invalid (inherently)
     CRM_EX_NOT_RUNNING          =   7, //!< Service safely stopped
     CRM_EX_PROMOTED             =   8, //!< Service active and promoted
+    CRM_EX_FAILED_PROMOTED      =   9, //!< Service failed and possibly promoted
 
     // sysexits.h
     CRM_EX_USAGE                =  64, //!< Command line usage error
