@@ -895,8 +895,18 @@ fence_with_delay(const char *target, const char *type, const char *delay)
                                                type, timeout_sec, 0, delay_i);
 }
 
-gboolean
-te_fence_node(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+/*!
+ * \internal
+ * \brief Execute a fencing action from a transition graph
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] action  Fencing action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+controld_execute_fence_action(pcmk__graph_t *graph,
+                              pcmk__graph_action_t *action)
 {
     int rc = 0;
     const char *id = NULL;
@@ -919,7 +929,7 @@ te_fence_node(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     if (invalid_action) {
         crm_log_xml_warn(action->xml, "BadAction");
-        return FALSE;
+        return EPROTO;
     }
 
     priority_delay = crm_meta_value(action->params, XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
@@ -940,8 +950,7 @@ te_fence_node(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                          (int) (transition_graph->stonith_timeout / 1000),
                                          st_opt_timeout_updates, transition_key,
                                          "tengine_stonith_callback", tengine_stonith_callback);
-
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 bool

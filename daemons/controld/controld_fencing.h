@@ -23,7 +23,8 @@ void update_stonith_max_attempts(const char* value);
 // stonith API client
 void controld_trigger_fencer_connect(void);
 void controld_disconnect_fencer(bool destroy);
-gboolean te_fence_node(pcmk__graph_t *graph, pcmk__graph_action_t *action);
+int controld_execute_fence_action(pcmk__graph_t *graph,
+                                  pcmk__graph_action_t *action);
 bool controld_verify_stonith_watchdog_timeout(const char *value);
 
 // stonith cleanup list

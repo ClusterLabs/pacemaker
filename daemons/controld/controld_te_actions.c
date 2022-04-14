@@ -641,7 +641,7 @@ pcmk__graph_functions_t te_graph_fns = {
     execute_pseudo_action,
     execute_rsc_action,
     execute_cluster_action,
-    te_fence_node,
+    controld_execute_fence_action,
     te_should_perform_action,
 };
 

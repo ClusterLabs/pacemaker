@@ -133,7 +133,7 @@ typedef struct {
     int (*pseudo) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     int (*rsc) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     int (*cluster) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
-    gboolean (*stonith) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
+    int (*fence) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
     gboolean (*allowed) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
 } pcmk__graph_functions_t;
 

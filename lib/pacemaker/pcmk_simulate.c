@@ -674,9 +674,9 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \param[in] graph   Graph to update with action result
  * \param[in] action  Fencing action to simulate
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, "stonith_action");
@@ -715,7 +715,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     free(target);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 enum transition_status

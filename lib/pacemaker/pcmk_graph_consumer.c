@@ -152,7 +152,7 @@ pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
     CRM_ASSERT(graph_fns->rsc != NULL);
     CRM_ASSERT(graph_fns->cluster != NULL);
     CRM_ASSERT(graph_fns->pseudo != NULL);
-    CRM_ASSERT(graph_fns->stonith != NULL);
+    CRM_ASSERT(graph_fns->fence != NULL);
 }
 
 /*!
@@ -247,7 +247,7 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                              CRM_OP_FENCE, pcmk__str_casei)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
-                return graph_fns->stonith(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+                return graph_fns->fence(graph, action);
             }
             crm_trace("Executing cluster action %d (%s)", action->id, id);
             return graph_fns->cluster(graph, action);
@@ -274,10 +274,12 @@ fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
     pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc->data;
+        int rc = initiate_action(graph, action);
 
-        if (initiate_action(graph, action) != pcmk_rc_ok) {
-            crm_err("Failed initiating <%s id=%d> in synapse %d",
-                    crm_element_name(action->xml), action->id, synapse->id);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Failed initiating <%s id=%d> in synapse %d: %s",
+                    crm_element_name(action->xml), action->id, synapse->id,
+                    pcmk_rc_str(rc));
             pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
             pcmk__set_graph_action_flags(action,
                                          pcmk__graph_action_confirmed
