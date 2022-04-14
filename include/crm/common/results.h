@@ -176,13 +176,6 @@ enum ocf_exitcode {
      * controller records PCMK_OCF_UNKNOWN for pending actions.
      * PCMK_OCF_CONNECTION_DIED is used only with older DCs that don't support
      * PCMK_EXEC_NOT_CONNECTED.
-     *
-     * @TODO PCMK_OCF_UNKNOWN should be deprecated, and an execution status of
-     * PCMK_EXEC_PENDING relied on instead (though it might be worthwhile to
-     * keep PCMK_OCF_UNKNOWN as an invalid value for initializing new action
-     * objects). However, backward compatibility must be considered (processing
-     * old saved CIB files, rolling upgrades with older DCs, older
-     * Pacemaker Remote nodes or connection hosts, and older bundles).
      */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
@@ -293,6 +286,13 @@ typedef enum crm_exit_e {
     // OCF Resource Agent API 1.1
     CRM_EX_DEGRADED             = 190, //!< Service active but more likely to fail soon
     CRM_EX_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
+
+    /* Custom
+     *
+     * This can be used to initialize exit status variables or to indicate that
+     * a command is pending (which is what the controller uses it for).
+     */
+    CRM_EX_NONE                 = 193, //!< No exit status available
 
     CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;

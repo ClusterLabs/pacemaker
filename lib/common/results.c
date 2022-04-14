@@ -499,6 +499,7 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
         case CRM_EX_DEGRADED: return "CRM_EX_DEGRADED";
         case CRM_EX_DEGRADED_PROMOTED: return "CRM_EX_DEGRADED_PROMOTED";
+        case CRM_EX_NONE: return "CRM_EX_NONE";
         case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
     }
     return "CRM_EX_UNKNOWN";
@@ -550,6 +551,7 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_TIMEOUT: return "Timeout occurred";
         case CRM_EX_DEGRADED: return "Service is active but might fail soon";
         case CRM_EX_DEGRADED_PROMOTED: return "Service is promoted but might fail soon";
+        case CRM_EX_NONE: return "No exit status available";
         case CRM_EX_MAX: return "Error occurred";
     }
     if ((exit_code > 128) && (exit_code < CRM_EX_MAX)) {
