@@ -800,8 +800,8 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         SET_COMMAND(cmd_move);
         options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_any;
         SET_COMMAND(cmd_query_xml);
+        options.find_flags = pe_find_renamed|pe_find_any;
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         SET_COMMAND(cmd_query_raw_xml);
         options.find_flags = pe_find_renamed|pe_find_any;
