@@ -150,7 +150,7 @@ pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
 
     CRM_ASSERT(graph_fns != NULL);
     CRM_ASSERT(graph_fns->rsc != NULL);
-    CRM_ASSERT(graph_fns->crmd != NULL);
+    CRM_ASSERT(graph_fns->cluster != NULL);
     CRM_ASSERT(graph_fns->pseudo != NULL);
     CRM_ASSERT(graph_fns->stonith != NULL);
 }
@@ -249,8 +249,8 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                           action->id, id);
                 return graph_fns->stonith(graph, action)? pcmk_rc_ok : pcmk_rc_error;
             }
-            crm_trace("Executing control action %d (%s)", action->id, id);
-            return graph_fns->crmd(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            crm_trace("Executing cluster action %d (%s)", action->id, id);
+            return graph_fns->cluster(graph, action);
 
         default:
             crm_err("Unsupported graph action type <%s id='%s'> (bug?)",

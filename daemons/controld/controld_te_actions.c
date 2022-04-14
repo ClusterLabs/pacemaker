@@ -88,8 +88,17 @@ get_target_rc(pcmk__graph_action_t *action)
     return exit_status;
 }
 
-static gboolean
-te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
+/*!
+ * \internal
+ * \brief Execute a cluster action from a transition graph
+ *
+ * \param[in] graph   Transition graph being executed
+ * \param[in] action  Cluster action to execute
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     char *counter = NULL;
     xmlNode *cmd = NULL;
@@ -120,11 +129,10 @@ te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         }
     }
 
-    if (pcmk__str_empty(on_node)) {
-        crm_err("Corrupted command (id=%s) %s: no node",
-                pcmk__s(id, "<null>"), pcmk__s(task, "without task"));
-        return FALSE;
-    }
+    CRM_CHECK(!pcmk__str_empty(on_node),
+              crm_err("Corrupted command (id=%s) %s: no node",
+                      pcmk__s(id, "<null>"), pcmk__s(task, "without task"));
+              return pcmk_rc_node_unknown);
 
     if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
         is_local = TRUE;
@@ -146,7 +154,7 @@ te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
-        return TRUE;
+        return pcmk_rc_ok;
 
     } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
@@ -166,7 +174,7 @@ te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     if (rc == FALSE) {
         crm_err("Action %d failed: send", action->id);
-        return FALSE;
+        return ECOMM;
 
     } else if (no_wait) {
         te_action_confirmed(action, graph);
@@ -180,7 +188,7 @@ te_crm_command(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         te_start_action_timer(graph, action);
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -632,7 +640,7 @@ te_action_confirmed(pcmk__graph_action_t *action, pcmk__graph_t *graph)
 pcmk__graph_functions_t te_graph_fns = {
     execute_pseudo_action,
     execute_rsc_action,
-    te_crm_command,
+    execute_cluster_action,
     te_fence_node,
     te_should_perform_action,
 };

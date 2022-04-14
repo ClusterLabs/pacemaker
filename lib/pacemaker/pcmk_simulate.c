@@ -652,9 +652,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
  * \param[in] graph   Graph to update with action result
  * \param[in] action  Cluster action to simulate
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
+static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -664,7 +664,7 @@ simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
