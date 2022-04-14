@@ -465,6 +465,7 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_NOT_INSTALLED: return "CRM_EX_NOT_INSTALLED";
         case CRM_EX_NOT_CONFIGURED: return "CRM_EX_NOT_CONFIGURED";
         case CRM_EX_NOT_RUNNING: return "CRM_EX_NOT_RUNNING";
+        case CRM_EX_PROMOTED: return "CRM_EX_PROMOTED";
         case CRM_EX_USAGE: return "CRM_EX_USAGE";
         case CRM_EX_DATAERR: return "CRM_EX_DATAERR";
         case CRM_EX_NOINPUT: return "CRM_EX_NOINPUT";
@@ -514,6 +515,7 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_NOT_INSTALLED: return "Not installed";
         case CRM_EX_NOT_CONFIGURED: return "Not configured";
         case CRM_EX_NOT_RUNNING: return "Not running";
+        case CRM_EX_PROMOTED: return "Promoted";
         case CRM_EX_USAGE: return "Incorrect usage";
         case CRM_EX_DATAERR: return "Invalid data given";
         case CRM_EX_NOINPUT: return "Input file not available";

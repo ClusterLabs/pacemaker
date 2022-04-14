@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -246,6 +246,7 @@ typedef enum crm_exit_e {
     CRM_EX_NOT_INSTALLED        =   5, //!< Dependencies not available locally
     CRM_EX_NOT_CONFIGURED       =   6, //!< Parameter invalid (inherently)
     CRM_EX_NOT_RUNNING          =   7, //!< Service safely stopped
+    CRM_EX_PROMOTED             =   8, //!< Service active and promoted
 
     // sysexits.h
     CRM_EX_USAGE                =  64, //!< Command line usage error
