@@ -930,8 +930,9 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
             if (calculated_addr) {
                 /* Since this is for the bundle as a resource, and not any
                  * particular action, replace the value in the default
-                 * parameters (not evaluated for node). action2xml() will grab
-                 * it from there to replace it in node-evaluated parameters.
+                 * parameters (not evaluated for node). create_graph_action()
+                 * will grab it from there to replace it in node-evaluated
+                 * parameters.
                  */
                 GHashTable *params = pe_rsc_params(replica->remote,
                                                    NULL, data_set);
