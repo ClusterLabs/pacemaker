@@ -69,7 +69,7 @@ enum pe_quorum_policy {
 };
 
 enum node_type {
-    node_ping,
+    node_ping,      //! \deprecated Do not use
     node_member,
     node_remote
 };

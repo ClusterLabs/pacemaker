@@ -408,14 +408,28 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->shutdown = FALSE;
     new_node->details->rsc_discovery_enabled = TRUE;
     new_node->details->running_rsc = NULL;
-    new_node->details->type = node_ping;
     new_node->details->data_set = data_set;
 
-    if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
+    if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
+        new_node->details->type = node_member;
+
+    } else if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;
         pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
-    } else if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
-        new_node->details->type = node_member;
+
+    } else {
+        /* @COMPAT 'ping' is the default for backward compatibility, but it
+         * should be changed to 'member' at a compatibility break
+         */
+        if (!pcmk__str_eq(type, "ping", pcmk__str_casei)) {
+            pcmk__config_warn("Node %s has unrecognized type '%s', "
+                              "assuming 'ping'", crm_str(uname), type);
+        }
+        pe_warn_once(pe_wo_ping_node,
+                     "Support for nodes of type 'ping' (such as %s) is "
+                     "deprecated and will be removed in a future release",
+                     crm_str(uname));
+        new_node->details->type = node_ping;
     }
 
     new_node->details->attrs = pcmk__strkey_table(free, free);
