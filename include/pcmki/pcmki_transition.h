@@ -137,19 +137,19 @@ typedef struct {
     bool (*allowed) (pcmk__graph_t *graph, pcmk__graph_action_t *action);
 } pcmk__graph_functions_t;
 
-enum transition_status {
-    transition_active,
-    transition_pending,         /* active but no actions performed this time */
-    transition_complete,
-    transition_terminated,
+enum pcmk__graph_status {
+    pcmk__graph_active,     // Some actions have been performed
+    pcmk__graph_pending,    // No actions performed yet
+    pcmk__graph_complete,
+    pcmk__graph_terminated,
 };
 
 void pcmk__set_graph_functions(pcmk__graph_functions_t *fns);
 pcmk__graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
-enum transition_status pcmk__execute_graph(pcmk__graph_t *graph);
+enum pcmk__graph_status pcmk__execute_graph(pcmk__graph_t *graph);
 void pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action);
 void pcmk__free_graph(pcmk__graph_t *graph);
-const char *pcmk__graph_status2text(enum transition_status state);
+const char *pcmk__graph_status2text(enum pcmk__graph_status state);
 void pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph);
 void pcmk__log_graph_action(int log_level, pcmk__graph_action_t *action);
 lrmd_event_data_t *pcmk__event_from_graph_action(xmlNode *resource,

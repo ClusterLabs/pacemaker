@@ -344,19 +344,19 @@ static pcmk__graph_functions_t default_fns = {
  *
  * \return Status of transition after execution
  */
-enum transition_status
+enum pcmk__graph_status
 pcmk__execute_graph(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     int log_level = LOG_DEBUG;
-    enum transition_status pass_result = transition_active;
+    enum pcmk__graph_status pass_result = pcmk__graph_active;
     const char *status = "In progress";
 
     if (graph_fns == NULL) {
         graph_fns = &default_fns;
     }
     if (graph == NULL) {
-        return transition_complete;
+        return pcmk__graph_complete;
     }
 
     graph->fired = 0;
@@ -422,22 +422,22 @@ pcmk__execute_graph(pcmk__graph_t *graph)
 
         if ((graph->incomplete != 0) && (graph->abort_priority <= 0)) {
             log_level = LOG_WARNING;
-            pass_result = transition_terminated;
+            pass_result = pcmk__graph_terminated;
             status = "Terminated";
 
         } else if (graph->skipped != 0) {
             log_level = LOG_NOTICE;
-            pass_result = transition_complete;
+            pass_result = pcmk__graph_complete;
             status = "Stopped";
 
         } else {
             log_level = LOG_NOTICE;
-            pass_result = transition_complete;
+            pass_result = pcmk__graph_complete;
             status = "Complete";
         }
 
     } else if (graph->fired == 0) {
-        pass_result = transition_pending;
+        pass_result = pcmk__graph_pending;
     }
 
     do_crm_log(log_level,

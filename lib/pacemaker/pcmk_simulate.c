@@ -718,12 +718,12 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     return pcmk_rc_ok;
 }
 
-enum transition_status
+enum pcmk__graph_status
 pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
                           GList *op_fail_list)
 {
     pcmk__graph_t *transition = NULL;
-    enum transition_status graph_rc;
+    enum pcmk__graph_status graph_rc;
 
     pcmk__graph_functions_t simulation_fns = {
         simulate_pseudo_action,
@@ -748,10 +748,10 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
     fake_resource_list = data_set->resources;
     do {
         graph_rc = pcmk__execute_graph(transition);
-    } while (graph_rc == transition_active);
+    } while (graph_rc == pcmk__graph_active);
     fake_resource_list = NULL;
 
-    if (graph_rc != transition_complete) {
+    if (graph_rc != pcmk__graph_complete) {
         out->err(out, "Transition failed: %s",
                  pcmk__graph_status2text(graph_rc));
         pcmk__log_graph(LOG_ERR, transition);
@@ -932,7 +932,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
 
     PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
     if (pcmk__simulate_transition(data_set, cib,
-                                  injections->op_fail) != transition_complete) {
+                                  injections->op_fail) != pcmk__graph_complete) {
         rc = pcmk_rc_invalid_transition;
     }
 

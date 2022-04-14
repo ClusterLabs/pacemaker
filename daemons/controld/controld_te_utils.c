@@ -55,23 +55,23 @@ te_graph_trigger(gpointer user_data)
     }
 
     if (!transition_graph->complete) {
-        enum transition_status graph_rc;
+        enum pcmk__graph_status graph_rc;
         int limit = transition_graph->batch_limit;
 
         transition_graph->batch_limit = throttle_get_total_job_limit(limit);
         graph_rc = pcmk__execute_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
-        if (graph_rc == transition_active) {
+        if (graph_rc == pcmk__graph_active) {
             crm_trace("Transition not yet complete");
             return TRUE;
 
-        } else if (graph_rc == transition_pending) {
+        } else if (graph_rc == pcmk__graph_pending) {
             crm_trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
-        if (graph_rc != transition_complete) {
+        if (graph_rc != pcmk__graph_complete) {
             crm_warn("Transition failed: %s",
                      pcmk__graph_status2text(graph_rc));
             pcmk__log_graph(LOG_NOTICE, transition_graph);

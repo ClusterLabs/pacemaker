@@ -16,23 +16,23 @@
 
 /*!
  * \internal
- * \brief Return text equivalent of an enum transition_status for logging
+ * \brief Return text equivalent of an enum pcmk__graph_status for logging
  *
  * \param[in] state  Transition status
  *
  * \return Human-readable text equivalent of \p state
  */
 const char *
-pcmk__graph_status2text(enum transition_status state)
+pcmk__graph_status2text(enum pcmk__graph_status state)
 {
     switch (state) {
-        case transition_active:
+        case pcmk__graph_active:
             return "active";
-        case transition_pending:
+        case pcmk__graph_pending:
             return "pending";
-        case transition_complete:
+        case pcmk__graph_complete:
             return "complete";
-        case transition_terminated:
+        case pcmk__graph_terminated:
             return "terminated";
     }
     return "unknown";
