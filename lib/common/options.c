@@ -553,78 +553,95 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Add a description element to a meta-data string
+ *
+ * \param[in] s       Meta-data string to add to
+ * \param[in] tag     Name of element to add ("longdesc" or "shortdesc")
+ * \param[in] desc    Textual description to add
+ * \param[in] values  If not NULL, the allowed values for the parameter
+ */
+static void
+add_desc(GString *s, const char *tag, const char *desc, const char *values)
+{
+    char *escaped_en = crm_xml_escape(desc);
+
+    g_string_append_printf(s, "<%s lang=\"en\">%s",
+                           tag, escaped_en);
+    if (values != NULL) {
+        g_string_append_printf(s, "  Allowed values: %s", values);
+    }
+    g_string_append_printf(s, "</%s>\n", tag);
+
+#ifdef ENABLE_NLS
+    {
+        static const char *locale = NULL;
+
+        char *localized = crm_xml_escape(_(desc));
+
+        if (strcmp(escaped_en, localized) != 0) {
+            if (locale == NULL) {
+                locale = strtok(setlocale(LC_ALL, NULL), "_");
+            }
+
+            g_string_append_printf(s, "<%s lang=\"%s\">%s",
+                                   tag, locale, localized);
+            if (values != NULL) {
+                g_string_append(s, _("  Allowed values: "));
+                g_string_append_printf(s, "%s", _(values));
+            }
+            g_string_append_printf(s, "</%s>\n", tag);
+        }
+        free(localized);
+    }
+#endif
+
+    free(escaped_en);
+}
+
 char *
 pcmk__format_option_metadata(const char *name, const char *desc_short,
                              const char *desc_long,
                              pcmk__cluster_option_t *option_list, int len)
 {
-#ifdef ENABLE_NLS
-    char *locale = NULL;
-#endif
-    char *escaped_long = NULL;
-    char *escaped_short = NULL;
     char *retval;
     /* big enough to hold "pacemaker-schedulerd metadata" output */
     GString *s = g_string_sized_new(13000);
     int lpc = 0;
 
-    escaped_long = crm_xml_escape(desc_long);
-    escaped_short = crm_xml_escape(desc_short);
-
     g_string_append_printf(s, "<?xml version=\"1.0\"?>"
                               "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
                               "<resource-agent name=\"%s\">\n"
-                              "  <version>%s</version>\n"
-                              "  <longdesc lang=\"en\">%s</longdesc>\n"
-                              "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-                              "  <parameters>\n",
-                              name, PCMK_OCF_VERSION, escaped_long, escaped_short);
-    free(escaped_long);
-    free(escaped_short);
+                              "  <version>%s</version>\n",
+                              name, PCMK_OCF_VERSION);
+
+    g_string_append(s, "  ");
+    add_desc(s, "longdesc", desc_long, NULL);
+
+    g_string_append(s, "  ");
+    add_desc(s, "shortdesc", desc_short, NULL);
+
+    g_string_append(s, "  <parameters>\n");
 
     for (lpc = 0; lpc < len; lpc++) {
-        if ((option_list[lpc].description_long == NULL)
-            && (option_list[lpc].description_short == NULL)) {
-            continue;
+        const char *long_desc = option_list[lpc].description_long;
+
+        if (long_desc == NULL) {
+            long_desc = option_list[lpc].description_short;
+            if (long_desc == NULL) {
+                continue; // The standard requires a parameter description
+            }
         }
 
         g_string_append_printf(s, "    <parameter name=\"%s\">\n",
-                                  option_list[lpc].name);
+                               option_list[lpc].name);
 
-        escaped_long = crm_xml_escape(option_list[lpc].description_long?
-                                         option_list[lpc].description_long :
-                                          option_list[lpc].description_short);
-        escaped_short = crm_xml_escape(option_list[lpc].description_short);
+        g_string_append(s, "      ");
+        add_desc(s, "longdesc", long_desc, option_list[lpc].values);
 
-        g_string_append_printf(s,
-                                  "      <longdesc lang=\"en\">%s%s%s</longdesc>\n"
-                                  "      <shortdesc lang=\"en\">%s</shortdesc>\n",
-                                  escaped_long,
-                                  (option_list[lpc].values? "  Allowed values: " : ""),
-                                  (option_list[lpc].values? option_list[lpc].values : ""),
-                                  escaped_short);
-
-	free(escaped_long);
-	free(escaped_short);
-#ifdef ENABLE_NLS
-        escaped_long = crm_xml_escape(option_list[lpc].description_long?
-                                         _(option_list[lpc].description_long) :
-                                          _(option_list[lpc].description_short));
-        escaped_short = crm_xml_escape(_(option_list[lpc].description_short));
-
-	locale=strtok(setlocale(LC_ALL,NULL),"_");
-	g_string_append_printf(s,
-                                  "      <longdesc lang=\"%s\">%s%s%s</longdesc>\n"
-                                  "      <shortdesc lang=\"%s\">%s</shortdesc>\n",
-                                  locale,
-				  escaped_long,
-                                  (option_list[lpc].values? "  Allowed values: " : ""),
-                                  (option_list[lpc].values? option_list[lpc].values : ""),
-                                  locale,
-				  escaped_short);
-        free(escaped_long);
-        free(escaped_short);
-#endif
+        g_string_append(s, "      ");
+        add_desc(s, "shortdesc", option_list[lpc].description_short, NULL);
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);

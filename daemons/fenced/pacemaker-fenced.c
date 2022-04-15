@@ -1479,19 +1479,21 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_ARGUMENT);
-        printf
-            ("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
-             "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
-             "A value of '" PCMK__VALUE_NONE "' can be used to tell the "
-             "cluster not to supply any additional parameters.\n"
-             "     </longdesc>\n");
-#ifdef ENABLE_NLS 
-        printf
-            (_("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
-             "Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
-             "A value of '" PCMK__VALUE_NONE "' can be used to tell the "
-             "cluster not to supply any additional parameters.\n"
-             "     </longdesc>\n"));
+        printf("    <longdesc lang=\"en\">Some devices do not support the "
+               "standard 'port' parameter or may provide additional ones. Use "
+               "this to specify an alternate, device-specific, parameter "
+               "that should indicate the machine to be fenced. A value of "
+               "'%s' can be used to tell the cluster not to supply any "
+               "additional parameters.\n"
+               "    </longdesc>\n", PCMK__VALUE_NONE);
+#ifdef ENABLE_NLS
+        printf(_("    <longdesc lang=\"en\">Some devices do not support the "
+               "standard 'port' parameter or may provide additional ones. Use "
+               "this to specify an alternate, device-specific, parameter "
+               "that should indicate the machine to be fenced. A value of "
+               "'%s' can be used to tell the cluster not to supply any "
+               "additional parameters.\n"
+               "    </longdesc>\n"), PCMK__VALUE_NONE);
 #endif
         printf
             ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
