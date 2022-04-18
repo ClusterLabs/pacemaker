@@ -12,7 +12,7 @@ Current cluster status:
 Transition Summary:
   * Demote     state1:0     ( Promoted -> Unpromoted sle12sp2-1 )
   * Promote    state1:1     ( Unpromoted -> Promoted sle12sp2-2 )
-  * Move       dummy1       (   sle12sp2-1 -> sle12sp2-2 )
+  * Move       dummy1       (          sle12sp2-1 -> sle12sp2-2 )
 
 Executing Cluster Transition:
   * Resource action: dummy1          stop on sle12sp2-1

@@ -15,9 +15,9 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
-  * Start      container1     (     rhel7-1 )
+  * Start      container1     (       rhel7-1 )
   * Recover    lxc-ms:1       ( Promoted lxc1 )
-  * Restart    lxc1           (     rhel7-1 )  due to required container1 start
+  * Restart    lxc1           (       rhel7-1 )  due to required container1 start
 
 Executing Cluster Transition:
   * Resource action: container1      monitor on rhel7-1

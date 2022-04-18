@@ -10,10 +10,10 @@ Current cluster status:
     * testip	(ocf:heartbeat:IPaddr2):	 Started dktest2sles10
 
 Transition Summary:
-  * Start      stonith-1     (        dktest1sles10 )
+  * Start      stonith-1     (          dktest1sles10 )
   * Stop       drbd1:0       ( Promoted dktest2sles10 )  due to node availability
-  * Start      drbd1:1       (        dktest1sles10 )
-  * Stop       testip        (        dktest2sles10 )  due to node availability
+  * Start      drbd1:1       (          dktest1sles10 )
+  * Stop       testip        (          dktest2sles10 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: stonith-1       monitor on dktest2sles10

@@ -71,7 +71,7 @@ Transition Summary:
   * Start      bundle11-1     (            rhel7-5 )  due to unrunnable bundle11-docker-1 start (blocked)
   * Start      bundle11a:1    (         bundle11-1 )  due to unrunnable bundle11-docker-1 start (blocked)
   * Stop       rsc13a         (            rhel7-3 )  due to node availability
-  * Stop       rsc14a:1       (     Promoted rhel7-4 )  due to node availability
+  * Stop       rsc14a:1       (   Promoted rhel7-4 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: rsc1a           stop on rhel7-2

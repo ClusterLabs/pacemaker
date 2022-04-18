@@ -12,8 +12,8 @@ Current cluster status:
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted node-a
 
 Transition Summary:
-  * Restart    stateful-2:0     (  Unpromoted node-b )  due to resource definition change
-  * Restart    stateful-2:1     ( Promoted node-a )  due to resource definition change
+  * Restart    stateful-2:0     ( Unpromoted node-b )  due to resource definition change
+  * Restart    stateful-2:1     (   Promoted node-a )  due to resource definition change
 
 Executing Cluster Transition:
   * Pseudo action:   ms-sf_demote_0

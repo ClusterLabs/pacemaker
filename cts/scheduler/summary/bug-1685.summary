@@ -9,7 +9,7 @@ Current cluster status:
 
 Transition Summary:
   * Promote    prim_shared_storage:0     ( Unpromoted -> Promoted redun2 )
-  * Start      shared_filesystem         (                 redun2 )
+  * Start      shared_filesystem         (                        redun2 )
 
 Executing Cluster Transition:
   * Pseudo action:   shared_storage_pre_notify_promote_0

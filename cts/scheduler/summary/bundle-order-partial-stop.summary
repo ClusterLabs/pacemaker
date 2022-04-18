@@ -22,23 +22,23 @@ Current cluster status:
       * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started undercloud
 
 Transition Summary:
-  * Stop       rabbitmq-bundle-docker-0             (             undercloud )  due to node availability
-  * Stop       rabbitmq-bundle-0                    (             undercloud )  due to node availability
-  * Stop       rabbitmq:0                           (      rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-0 start
-  * Stop       galera-bundle-docker-0               (             undercloud )  due to node availability
-  * Stop       galera-bundle-0                      (             undercloud )  due to node availability
+  * Stop       rabbitmq-bundle-docker-0             (               undercloud )  due to node availability
+  * Stop       rabbitmq-bundle-0                    (               undercloud )  due to node availability
+  * Stop       rabbitmq:0                           (        rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-0 start
+  * Stop       galera-bundle-docker-0               (               undercloud )  due to node availability
+  * Stop       galera-bundle-0                      (               undercloud )  due to node availability
   * Stop       galera:0                             ( Promoted galera-bundle-0 )  due to unrunnable galera-bundle-0 start
-  * Stop       redis-bundle-docker-0                (             undercloud )  due to node availability
-  * Stop       redis-bundle-0                       (             undercloud )  due to node availability
+  * Stop       redis-bundle-docker-0                (               undercloud )  due to node availability
+  * Stop       redis-bundle-0                       (               undercloud )  due to node availability
   * Stop       redis:0                              (  Promoted redis-bundle-0 )  due to unrunnable redis-bundle-0 start
-  * Stop       ip-192.168.122.254                   (             undercloud )  due to node availability
-  * Stop       ip-192.168.122.250                   (             undercloud )  due to node availability
-  * Stop       ip-192.168.122.249                   (             undercloud )  due to node availability
-  * Stop       ip-192.168.122.253                   (             undercloud )  due to node availability
-  * Stop       ip-192.168.122.247                   (             undercloud )  due to node availability
-  * Stop       ip-192.168.122.248                   (             undercloud )  due to node availability
-  * Stop       haproxy-bundle-docker-0              (             undercloud )  due to node availability
-  * Stop       openstack-cinder-volume-docker-0     (             undercloud )  due to node availability
+  * Stop       ip-192.168.122.254                   (               undercloud )  due to node availability
+  * Stop       ip-192.168.122.250                   (               undercloud )  due to node availability
+  * Stop       ip-192.168.122.249                   (               undercloud )  due to node availability
+  * Stop       ip-192.168.122.253                   (               undercloud )  due to node availability
+  * Stop       ip-192.168.122.247                   (               undercloud )  due to node availability
+  * Stop       ip-192.168.122.248                   (               undercloud )  due to node availability
+  * Stop       haproxy-bundle-docker-0              (               undercloud )  due to node availability
+  * Stop       openstack-cinder-volume-docker-0     (               undercloud )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0

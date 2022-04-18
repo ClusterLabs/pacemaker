@@ -20,27 +20,27 @@ Current cluster status:
     * stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)
 
 Transition Summary:
-  * Stop       rabbitmq-bundle-docker-0        (                  node1 )  due to no quorum
-  * Stop       rabbitmq-bundle-0               (                  node1 )  due to no quorum
-  * Stop       rabbitmq:0                      (      rabbitmq-bundle-0 )  due to no quorum
-  * Stop       rabbitmq-bundle-docker-1        (                  node2 )  due to node availability (blocked)
-  * Stop       rabbitmq-bundle-1               (                  node2 )  due to no quorum (blocked)
-  * Stop       rabbitmq:1                      (      rabbitmq-bundle-1 )  due to no quorum (blocked)
-  * Stop       rabbitmq-bundle-docker-2        (                  node3 )  due to node availability (blocked)
-  * Stop       rabbitmq-bundle-2               (                  node3 )  due to no quorum (blocked)
-  * Stop       rabbitmq:2                      (      rabbitmq-bundle-2 )  due to no quorum (blocked)
-  * Stop       galera-bundle-docker-0          (                  node1 )  due to no quorum
-  * Stop       galera-bundle-0                 (                  node1 )  due to no quorum
+  * Stop       rabbitmq-bundle-docker-0        (                    node1 )  due to no quorum
+  * Stop       rabbitmq-bundle-0               (                    node1 )  due to no quorum
+  * Stop       rabbitmq:0                      (        rabbitmq-bundle-0 )  due to no quorum
+  * Stop       rabbitmq-bundle-docker-1        (                    node2 )  due to node availability (blocked)
+  * Stop       rabbitmq-bundle-1               (                    node2 )  due to no quorum (blocked)
+  * Stop       rabbitmq:1                      (        rabbitmq-bundle-1 )  due to no quorum (blocked)
+  * Stop       rabbitmq-bundle-docker-2        (                    node3 )  due to node availability (blocked)
+  * Stop       rabbitmq-bundle-2               (                    node3 )  due to no quorum (blocked)
+  * Stop       rabbitmq:2                      (        rabbitmq-bundle-2 )  due to no quorum (blocked)
+  * Stop       galera-bundle-docker-0          (                    node1 )  due to no quorum
+  * Stop       galera-bundle-0                 (                    node1 )  due to no quorum
   * Stop       galera:0                        ( Promoted galera-bundle-0 )  due to no quorum
-  * Stop       galera-bundle-docker-1          (                  node2 )  due to node availability (blocked)
-  * Stop       galera-bundle-1                 (                  node2 )  due to no quorum (blocked)
+  * Stop       galera-bundle-docker-1          (                    node2 )  due to node availability (blocked)
+  * Stop       galera-bundle-1                 (                    node2 )  due to no quorum (blocked)
   * Stop       galera:1                        ( Promoted galera-bundle-1 )  due to no quorum (blocked)
-  * Stop       galera-bundle-docker-2          (                  node3 )  due to node availability (blocked)
-  * Stop       galera-bundle-2                 (                  node3 )  due to no quorum (blocked)
+  * Stop       galera-bundle-docker-2          (                    node3 )  due to node availability (blocked)
+  * Stop       galera-bundle-2                 (                    node3 )  due to no quorum (blocked)
   * Stop       galera:2                        ( Promoted galera-bundle-2 )  due to no quorum (blocked)
-  * Stop       stonith-fence_ipmilan-node1     (                  node2 )  due to node availability (blocked)
-  * Stop       stonith-fence_ipmilan-node3     (                  node2 )  due to no quorum (blocked)
-  * Stop       stonith-fence_ipmilan-node2     (                  node3 )  due to no quorum (blocked)
+  * Stop       stonith-fence_ipmilan-node1     (                    node2 )  due to node availability (blocked)
+  * Stop       stonith-fence_ipmilan-node3     (                    node2 )  due to no quorum (blocked)
+  * Stop       stonith-fence_ipmilan-node2     (                    node3 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0

@@ -12,8 +12,8 @@ Current cluster status:
 
 Transition Summary:
   * Promote    child_rsc1:0     ( Stopped -> Promoted node1 )
-  * Start      child_rsc1:1     (                   node2 )
-  * Start      child_rsc1:2     (                   node1 )
+  * Start      child_rsc1:1     (                     node2 )
+  * Start      child_rsc1:2     (                     node1 )
   * Promote    child_rsc1:3     ( Stopped -> Promoted node2 )
 
 Executing Cluster Transition:

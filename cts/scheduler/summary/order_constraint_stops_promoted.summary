@@ -11,7 +11,7 @@ Current cluster status:
 
 Transition Summary:
   * Stop       NATIVE_RSC_A:0     ( Promoted fc16-builder )  due to required NATIVE_RSC_B start
-  * Stop       NATIVE_RSC_B       (       fc16-builder2 )  due to node availability
+  * Stop       NATIVE_RSC_B       (         fc16-builder2 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   MASTER_RSC_A_pre_notify_demote_0

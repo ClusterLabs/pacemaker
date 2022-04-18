@@ -12,11 +12,11 @@ Current cluster status:
     * rsc3	(ocf:pacemaker:Dummy):	 Started node1
 
 Transition Summary:
-  * Stop       rsc:0   (          Promoted node1 )  due to node availability
+  * Stop       rsc:0   (               Promoted node1 )  due to node availability
   * Promote    rsc:1   ( Unpromoted -> Promoted node2 )
-  * Move       rsc1    (        node1 -> node2 )
-  * Move       rsc2    (        node1 -> node2 )
-  * Move       rsc3    (        node1 -> node2 )
+  * Move       rsc1    (               node1 -> node2 )
+  * Move       rsc2    (               node1 -> node2 )
+  * Move       rsc3    (               node1 -> node2 )
 
 Executing Cluster Transition:
   * Resource action: rsc1            stop on node1

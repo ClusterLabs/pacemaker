@@ -19,7 +19,7 @@ Transition Summary:
   * Stop       remote1     (            node1 )  due to node availability
   * Restart    killer      (            node2 )  due to resource definition change
   * Move       rsc1        ( remote1 -> node2 )
-  * Stop       rsc2:0      (     Promoted node1 )  due to node availability
+  * Stop       rsc2:0      (   Promoted node1 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   remote1_stop_0

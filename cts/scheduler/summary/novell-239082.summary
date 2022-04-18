@@ -9,9 +9,9 @@ Current cluster status:
       * Unpromoted: [ xen-2 ]
 
 Transition Summary:
-  * Move       fs_1        (        xen-1 -> xen-2 )
+  * Move       fs_1        (               xen-1 -> xen-2 )
   * Promote    drbd0:0     ( Unpromoted -> Promoted xen-2 )
-  * Stop       drbd0:1     (          Promoted xen-1 )  due to node availability
+  * Stop       drbd0:1     (               Promoted xen-1 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: fs_1            stop on xen-1

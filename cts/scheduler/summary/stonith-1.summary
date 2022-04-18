@@ -30,15 +30,15 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) sles-3 'peer is no longer part of the cluster'
-  * Start      r192.168.100.183     (                 sles-1 )
-  * Move       migrator             (       sles-3 -> sles-4 )
-  * Move       rsc_sles-3           (       sles-3 -> sles-4 )
-  * Move       child_DoFencing:2    (       sles-3 -> sles-4 )
-  * Start      ocf_msdummy:0        (                 sles-4 )
-  * Start      ocf_msdummy:1        (                 sles-1 )
+  * Start      r192.168.100.183     (                      sles-1 )
+  * Move       migrator             (            sles-3 -> sles-4 )
+  * Move       rsc_sles-3           (            sles-3 -> sles-4 )
+  * Move       child_DoFencing:2    (            sles-3 -> sles-4 )
+  * Start      ocf_msdummy:0        (                      sles-4 )
+  * Start      ocf_msdummy:1        (                      sles-1 )
   * Move       ocf_msdummy:2        ( sles-3 -> sles-2 Unpromoted )
-  * Start      ocf_msdummy:3        (                 sles-4 )
-  * Start      ocf_msdummy:4        (                 sles-1 )
+  * Start      ocf_msdummy:3        (                      sles-4 )
+  * Start      ocf_msdummy:4        (                      sles-1 )
   * Move       ocf_msdummy:5        ( sles-3 -> sles-2 Unpromoted )
 
 Executing Cluster Transition:

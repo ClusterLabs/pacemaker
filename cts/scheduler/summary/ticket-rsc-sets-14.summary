@@ -15,11 +15,11 @@ Current cluster status:
       * Unpromoted: [ node2 ]
 
 Transition Summary:
-  * Stop       rsc1       (                 node2 )  due to node availability
-  * Stop       rsc2       (                 node1 )  due to node availability
-  * Stop       rsc3       (                 node1 )  due to node availability
-  * Stop       rsc4:0     (                 node1 )  due to node availability
-  * Stop       rsc4:1     (                 node2 )  due to node availability
+  * Stop       rsc1       (                        node2 )  due to node availability
+  * Stop       rsc2       (                        node1 )  due to node availability
+  * Stop       rsc3       (                        node1 )  due to node availability
+  * Stop       rsc4:0     (                        node1 )  due to node availability
+  * Stop       rsc4:1     (                        node2 )  due to node availability
   * Demote     rsc5:0     ( Promoted -> Unpromoted node1 )
 
 Executing Cluster Transition:

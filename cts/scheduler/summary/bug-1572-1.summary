@@ -12,11 +12,11 @@ Current cluster status:
       * IPaddr_147_81_84_133	(ocf:heartbeat:IPaddr):	 Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
-  * Stop       rsc_drbd_7788:0          (               Unpromoted arc-dknightlx )  due to node availability
+  * Stop       rsc_drbd_7788:0          (            Unpromoted arc-dknightlx )  due to node availability
   * Restart    rsc_drbd_7788:1          ( Promoted arc-tkincaidlx.wsicorp.com )  due to resource definition change
-  * Restart    fs_mirror                (        arc-tkincaidlx.wsicorp.com )  due to required ms_drbd_7788 notified
-  * Restart    pgsql_5555               (        arc-tkincaidlx.wsicorp.com )  due to required fs_mirror start
-  * Restart    IPaddr_147_81_84_133     (        arc-tkincaidlx.wsicorp.com )  due to required pgsql_5555 start
+  * Restart    fs_mirror                (          arc-tkincaidlx.wsicorp.com )  due to required ms_drbd_7788 notified
+  * Restart    pgsql_5555               (          arc-tkincaidlx.wsicorp.com )  due to required fs_mirror start
+  * Restart    IPaddr_147_81_84_133     (          arc-tkincaidlx.wsicorp.com )  due to required pgsql_5555 start
 
 Executing Cluster Transition:
   * Pseudo action:   ms_drbd_7788_pre_notify_demote_0

@@ -20,7 +20,7 @@ Current cluster status:
 
 Transition Summary:
   * Stop       res_drbd_iscsivg01:0     ( Unpromoted bob )  due to node availability
-  * Stop       res_tgtd:0               (       bob )  due to node availability
+  * Stop       res_tgtd:0               (            bob )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   ms_drbd_iscsivg01_pre_notify_stop_0

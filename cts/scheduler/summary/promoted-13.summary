@@ -13,8 +13,8 @@ Current cluster status:
 Transition Summary:
   * Promote    drbd0:0     (  Unpromoted -> Promoted odin )
   * Demote     drbd0:1     ( Promoted -> Unpromoted frigg )
-  * Start      IPaddr0     (                  odin )
-  * Start      MailTo      (                  odin )
+  * Start      IPaddr0     (                         odin )
+  * Start      MailTo      (                         odin )
 
 Executing Cluster Transition:
   * Resource action: drbd0:1         cancel=12000 on odin

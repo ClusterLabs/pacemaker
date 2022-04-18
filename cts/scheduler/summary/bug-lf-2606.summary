@@ -17,7 +17,7 @@ Transition Summary:
   * Fence (reboot) node2 'rsc1 failed there'
   * Stop       rsc1       (          node2 )  due to node availability
   * Move       rsc2       ( node2 -> node1 )
-  * Stop       rsc3:1     (   Promoted node2 )  due to node availability
+  * Stop       rsc3:1     ( Promoted node2 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   ms3_demote_0

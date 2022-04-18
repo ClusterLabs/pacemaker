@@ -29,12 +29,12 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) rhel7-1 'petulant failed there'
-  * Stop       stateful-1:0         (  Unpromoted rhel7-5 )  due to node availability
-  * Stop       stateful-1:1         ( Promoted rhel7-1 )  due to node availability
-  * Stop       stateful-1:2         (  Unpromoted rhel7-2 )  due to node availability
-  * Stop       stateful-1:3         (  Unpromoted rhel7-4 )  due to node availability
-  * Stop       r192.168.122.207     (        rhel7-1 )  due to node availability
-  * Stop       petulant             (        rhel7-1 )  due to node availability
+  * Stop       stateful-1:0         ( Unpromoted rhel7-5 )  due to node availability
+  * Stop       stateful-1:1         (   Promoted rhel7-1 )  due to node availability
+  * Stop       stateful-1:2         ( Unpromoted rhel7-2 )  due to node availability
+  * Stop       stateful-1:3         ( Unpromoted rhel7-4 )  due to node availability
+  * Stop       r192.168.122.207     (            rhel7-1 )  due to node availability
+  * Stop       petulant             (            rhel7-1 )  due to node availability
 
 Executing Cluster Transition:
   * Fencing rhel7-1 (reboot)

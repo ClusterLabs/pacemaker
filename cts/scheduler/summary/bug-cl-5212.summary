@@ -21,13 +21,13 @@ Current cluster status:
       * Started: [ srv03 ]
 
 Transition Summary:
-  * Stop       prmStonith1-1     (        srv02 )  blocked
-  * Stop       prmStonith2-1     (        srv01 )  blocked
-  * Stop       prmStonith3-1     (        srv01 )  due to node availability (blocked)
-  * Stop       pgsql:0           (  Unpromoted srv02 )  due to node availability (blocked)
-  * Stop       pgsql:1           ( Promoted srv01 )  due to node availability (blocked)
-  * Stop       prmPingd:0        (        srv02 )  due to node availability (blocked)
-  * Stop       prmPingd:1        (        srv01 )  due to node availability (blocked)
+  * Stop       prmStonith1-1     (            srv02 )  blocked
+  * Stop       prmStonith2-1     (            srv01 )  blocked
+  * Stop       prmStonith3-1     (            srv01 )  due to node availability (blocked)
+  * Stop       pgsql:0           ( Unpromoted srv02 )  due to node availability (blocked)
+  * Stop       pgsql:1           (   Promoted srv01 )  due to node availability (blocked)
+  * Stop       prmPingd:0        (            srv02 )  due to node availability (blocked)
+  * Stop       prmPingd:1        (            srv01 )  due to node availability (blocked)
 
 Executing Cluster Transition:
   * Pseudo action:   grpStonith1_stop_0

@@ -19,8 +19,8 @@ Transition Summary:
   * Move       rsc_rhel7-1     ( rhel7-1 -> rhel7-5 )
   * Recover    container1      ( rhel7-1 -> rhel7-2 )
   * Recover    container2      ( rhel7-1 -> rhel7-3 )
-  * Recover    lxc-ms:0        (        Promoted lxc1 )
-  * Recover    lxc-ms:1        (         Unpromoted lxc2 )
+  * Recover    lxc-ms:0        (      Promoted lxc1 )
+  * Recover    lxc-ms:1        (    Unpromoted lxc2 )
   * Move       lxc1            ( rhel7-1 -> rhel7-2 )
   * Move       lxc2            ( rhel7-1 -> rhel7-3 )
 
