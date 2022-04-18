@@ -1,3 +1,86 @@
+* Mon Apr 18 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3-rc1
+- Changesets: 779
+- Diff: 330 files changed, 22740 insertions(+), 12103 deletions(-)
+
+- Features added since Pacemaker-2.1.2
+  + Internal failures of resource actions (such as an OCF agent not being
+    found) are shown with a detailed exit reason in logs, crm_mon output, etc.
+  + Support for CIB <node> entries with type="ping" is deprecated (this was an
+    undocumented means of defining a quorum-only node)
+  + build: configure script supports experimental --enable-nls option to
+           enable native language translations (currently only Chinese
+           translations of certain help text are available)
+  + CIB: resources support allow-unhealthy-nodes meta-attribute to exempt
+         the resource from bans due to node health checks (particularly useful
+         for health monitoring resources themselves)
+  + CIB: multiple-active cluster property can be set to "stop_unexpected" to
+         leave the expected instance running and stop only any unexpected ones
+  + CIB: bundles support resource utilization
+  + pacemakerd: regularly check that subdaemons are active and accepting IPC
+                connections so sbd can self-fence a node with a malfunctioning
+                subdaemon
+  + pacemaker-schedulerd: support --output-as/--output-to options including
+                          XML output with interactive options
+  + tools: cibadmin --show-access option to show CIB colorized for ACLs
+  + tools: crm_attribute supports standard --output-as/--output-to options
+  + tools: crm_mon output indicates if a node's health is yellow or red
+  + tools: for probes that failed because the service is not installed or
+           locally configured, crm_mon displays the resource as stopped rather
+           than failed
+  + tools: crm_rule supports standard --output-as/--output-to options,
+           allows passing multiple -r options, and is no longer experimental
+  + tools: stonith_admin fencing commands display reasons for failures
+  + resource agents: HealthSMART supports OCF 1.1 standard and new
+                     OCF_RESKEY_dampen and OCF_RESKEY_smartctl parameters
+
+- Fixes since Pacemaker-2.1.2
+  + build: avoid circular library dependency (regression introduced in 2.1.0)
+  + systemd: if pacemakerd exits immediately after starting, wait 1 second
+             before trying to respawn, and allow 5 attempts
+  + fencer: get fencing completion time correctly
+            (regression introduced in 2.1.2)
+  + fencer: avoid memory leak when broadcasting history differences
+            (regression introduced in 2.1.0)
+  + controller: correctly match "node down" events so remote nodes don't get
+                fenced when connection is stopped
+                (regression introduced in 2.1.2)
+  + executor: avoid possible double free during notify operation
+              (regression introduced in 2.1.1)
+  + tools: get stonith_admin -T/--tag option working again
+           (regression introduced in 2.0.3)
+  + resources: use correct syntax in Stateful meta-data
+               (regression introduced in 2.1.0)
+  + corosync: repeat corosync_cfg_trackstart if first attempt fails
+  + executor,scheduler: treat "no secrets" fence results as a hard error
+  + fencing: handle dynamic target query failures better
+  + fencing: don't set stonith action to pending if fork fails
+  + pacemakerd: avoid race condition when subdaemaon is checked while exiting
+  + scheduler: avoid memory leak when displaying clones in certain conditions
+  + scheduler: properly set data set flags when scheduling actions
+  + tools: prevent possible crm_resource crashes if multiple commands specified
+
+- Public API changes since Pacemaker-2.1.2
+  + libcrmcommon: pcmk_ipc_api_t supports scheduler IPC
+  + libpacemaker: add pcmk_status() (equivalent to crm_mon)
+  + libcib: deprecate get_object_parent()
+  + libcib: deprecate get_object_path()
+  + libcib: deprecate get_object_root()
+  + libcrmcommon: add pcmk_cib_parent_name_for()
+  + libcrmcommon: add pcmk_cib_xpath_for()
+  + libcrmcommon: add pcmk_find_cib_element()
+  + libcrmcommon: deprecate crm_xml_add_boolean()
+  + libpe_status: add pe_flag_check_config
+  + libpe_status: add pe_node_shared_s:data_set
+  + libpe_status: add pe_rsc_restarting flag
+  + libpe_status: add pe_rsc_stop_unexpected flag
+  + libpe_status: add recovery_stop_unexpected to enum rsc_recovery_type
+  + libpe_status: deprecate node_ping
+  + libpe_status: deprecate pe_order_stonith_stop
+  + libpe_status: deprecate pe_rsc_starting and pe_rsc_stopping
+  + libstonithd: add exit_reason member to stonith_history_t
+  + libstonithd: stonith_api_del_notification() with NULL second argument
+                 removes all notifications
+
 * Tue Nov 23 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.2
 - Changesets: 462
 - Diff: 223 files changed, 16518 insertions(+), 11743 deletions(-)
@@ -96,7 +179,7 @@
            (regressions introduced in 2.0.4 and 2.0.5)
   + tools: exit with status 0 (not 64) for --version argument to crm_rule,
            crm_error, crm_diff, and crm_node (regression introduced in 2.0.4)
-	   and crm_attribute (regression introduced in 2.1.0)
+           and crm_attribute (regression introduced in 2.1.0)
   + tools: crm_mon should show active unmanaged resources on offline nodes
            without requiring -r/--inactive
   + tools: better crm_resource error messages for unsupported resource types
@@ -196,7 +279,7 @@
            Pacemaker Remote node (regressions introduced in 1.1.14 and 1.1.17)
   + tools: exit with status 0 (not 64) for --version argument to crm_simulate
            (regression introduced in 2.0.4) and crm_resource and crmadmin
-	   (regression introduced in 2.0.5)
+           (regression introduced in 2.0.5)
   + pacemaker-attrd: avoid race condition where transient attributes for a
                      leaving node could be reinstated when the node rejoins,
                      potentially causing a node that was just rebooted to exit
