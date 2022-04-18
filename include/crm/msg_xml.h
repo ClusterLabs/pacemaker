@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef XML_TAGS__H
-#  define XML_TAGS__H
+#ifndef PCMK__CRM_MSG_XML__H
+#  define PCMK__CRM_MSG_XML__H
+
+#  include <crm/common/xml.h>
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/msg_xml_compat.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -451,15 +457,8 @@ extern "C" {
 #  define XML_DIFF_PATH                 "path"
 #  define XML_DIFF_POSITION             "position"
 
-#  include <crm/common/xml.h>
-
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
 #  define TYPE(x) crm_element_name(x)
-
-
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/msg_xml_compat.h>
-#endif
 
 #ifdef __cplusplus
 }

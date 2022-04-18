@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,8 +207,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     list1 = g_hash_table_get_values(hash1);
     list2 = g_hash_table_get_values(hash2);
 
-    list1 = sort_nodes_by_weight(list1, current_node1, data_set);
-    list2 = sort_nodes_by_weight(list2, current_node2, data_set);
+    list1 = pcmk__sort_nodes(list1, current_node1, data_set);
+    list2 = pcmk__sort_nodes(list2, current_node2, data_set);
 
     for (GList *gIter1 = list1, *gIter2 = list2;
          (gIter1 != NULL) && (gIter2 != NULL);
@@ -353,8 +353,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     /* Instance whose current node can run resources sorts first */
-    can1 = can_run_resources(node1);
-    can2 = can_run_resources(node2);
+    can1 = pcmk__node_available(node1);
+    can2 = pcmk__node_available(node2);
     if (can1 && !can2) {
         crm_trace("%s < %s: can", resource1->id, resource2->id);
         return -1;
@@ -434,7 +434,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         /* make clang analyzer happy */
         goto bail;
 
-    } else if (can_run_resources(node) == FALSE) {
+    } else if (!pcmk__node_available(node)) {
         goto bail;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -514,7 +514,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
                  rsc->id, prefer->details->uname, chosen->details->uname);
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = backup;
-        native_deallocate(rsc);
+        pcmk__unassign_resource(rsc);
         chosen = NULL;
         backup = NULL;
     }
@@ -585,7 +585,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_node_t *node = nIter->data;
 
         node->count = 0;
-        if (can_run_resources(node)) {
+        if (pcmk__node_available(node)) {
             available_nodes++;
         }
     }
@@ -623,7 +623,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                      child->id, child_node->details->uname, max - allocated,
                      max);
 
-        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
+        if (!pcmk__node_available(child_node) || (child_node->weight < 0)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
                          child_node->details->uname, child->id);
             continue;
@@ -727,7 +727,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                           rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
     rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
@@ -914,8 +914,9 @@ clone_create_pseudo_actions(
     }
 
     /* start */
-    start = create_pseudo_resource_op(rsc, RSC_START, !child_starting, TRUE, data_set);
-    started = create_pseudo_resource_op(rsc, RSC_STARTED, !child_starting, FALSE, data_set);
+    start = pcmk__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
+    started = pcmk__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
+                                          false);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
@@ -923,19 +924,22 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                     started);
     }
 
     /* stop */
-    stop = create_pseudo_resource_op(rsc, RSC_STOP, !child_stopping, TRUE, data_set);
-    stopped = create_pseudo_resource_op(rsc, RSC_STOPPED, !child_stopping, TRUE, data_set);
+    stop = pcmk__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
+    stopped = pcmk__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
+                                          true);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
+                                                    stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
@@ -1001,30 +1005,6 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 }
 
-bool
-assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
-{
-    bool changed = FALSE;
-
-    if (rsc->children) {
-
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            changed |= assign_node(child_rsc, node, force);
-        }
-
-        return changed;
-    }
-
-    if (rsc->allocated_to != NULL) {
-        changed = true;
-    }
-
-    native_assign_node(rsc, node, force);
-    return changed;
-}
-
 gboolean
 is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
 {
@@ -1071,7 +1051,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1171,7 +1151,7 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
-            assign_node(dependent, NULL, TRUE);
+            pcmk__assign_resource(dependent, NULL, true);
 
         } else {
             pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
@@ -1330,29 +1310,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    if (clone_data->start_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
-        pcmk__create_notification_keys(rsc, clone_data->start_notify, data_set);
-        create_notifications(rsc, clone_data->start_notify, data_set);
-    }
-
-    if (clone_data->stop_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
-        pcmk__create_notification_keys(rsc, clone_data->stop_notify, data_set);
-        create_notifications(rsc, clone_data->stop_notify, data_set);
-    }
-
-    if (clone_data->promote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->promote_notify, data_set);
-        create_notifications(rsc, clone_data->promote_notify, data_set);
-    }
-
-    if (clone_data->demote_notify) {
-        collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
-        pcmk__create_notification_keys(rsc, clone_data->demote_notify, data_set);
-        create_notifications(rsc, clone_data->demote_notify, data_set);
-    }
+    pcmk__create_notifications(rsc, clone_data->start_notify);
+    pcmk__create_notifications(rsc, clone_data->stop_notify);
+    pcmk__create_notifications(rsc, clone_data->promote_notify);
+    pcmk__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -1366,13 +1327,13 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    free_notification_data(clone_data->demote_notify);
+    pcmk__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    free_notification_data(clone_data->stop_notify);
+    pcmk__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    free_notification_data(clone_data->start_notify);
+    pcmk__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    free_notification_data(clone_data->promote_notify);
+    pcmk__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
@@ -1555,4 +1516,54 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
     }
+}
+
+// Clone implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization)
+{
+    bool existing = false;
+    pe_resource_t *child = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    // Look for any child already existing in the list
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        child = (pe_resource_t *) iter->data;
+        if (g_list_find(all_rscs, child)) {
+            existing = true; // Keep checking remaining children
+        } else {
+            // If this is a clone of a group, look for group's members
+            for (GList *member_iter = child->children; member_iter != NULL;
+                 member_iter = member_iter->next) {
+
+                pe_resource_t *member = (pe_resource_t *) member_iter->data;
+
+                if (g_list_find(all_rscs, member) != NULL) {
+                    // Add *child's* utilization, not group member's
+                    child->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                                 utilization);
+                    existing = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!existing && (rsc->children != NULL)) {
+        // If nothing was found, still add first child's utilization
+        child = (pe_resource_t *) rsc->children->data;
+
+        child->cmds->add_utilization(child, orig_rsc, all_rscs, utilization);
+    }
+}
+
+// Clone implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__clone_shutdown_lock(pe_resource_t *rsc)
+{
+    return; // Clones currently don't support shutdown locks
 }

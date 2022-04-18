@@ -255,10 +255,10 @@ Call failed: File exists
 =#=#=#= End test: Set duplicate cluster option - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set duplicate cluster option
 =#=#=#= Begin test: Setting multiply defined cluster option should fail =#=#=#=
+crm_attribute: Please choose from one of the matches below and supply the 'id' with --attr-id
 Multiple attributes match name=cluster-delay
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
-Please choose from one of the matches above and supply the 'id' with --attr-id
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
 <cib epoch="6" num_updates="0" admin_epoch="0">
   <configuration>
@@ -302,7 +302,6 @@ Please choose from one of the matches above and supply the 'id' with --attr-id
 * Passed: crm_attribute  - Set cluster option with -s
 =#=#=#= Begin test: Delete cluster option with -i =#=#=#=
 Deleted crm_config option: id=(null) name=cluster-delay
-
 =#=#=#= Current cib after: Delete cluster option with -i =#=#=#=
 <cib epoch="8" num_updates="0" admin_epoch="0">
   <configuration>
@@ -504,7 +503,6 @@ Current cluster status:
 * Passed: crm_simulate   - Show node attributes with crm_simulate
 =#=#=#= Begin test: Delete a transient (fail-count) node attribute =#=#=#=
 Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
-
 =#=#=#= Current cib after: Delete a transient (fail-count) node attribute =#=#=#=
 <cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
@@ -703,7 +701,6 @@ scope=nodes  name=standby value=true
 * Passed: crm_standby    - Query standby value
 =#=#=#= Begin test: Delete standby value =#=#=#=
 Deleted nodes attribute: id=nodes-node1-standby name=standby
-
 =#=#=#= Current cib after: Delete standby value =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1048,7 +1045,8 @@ To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= End test: Require a destination when migrating a resource that is stopped - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
-crm_resource: Error performing operation: No such object
+crm_resource: Node 'i.do.not.exist' not found
+Error performing operation: No such object
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
 <cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1784,7 +1782,8 @@ true
 =#=#=#= End test: Delete ticket standby state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Delete ticket standby state
 =#=#=#= Begin test: Ban a resource on unknown node =#=#=#=
-crm_resource: Error performing operation: No such object
+crm_resource: Node 'host1' not found
+Error performing operation: No such object
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
 <cib epoch="21" num_updates="5" admin_epoch="0">
   <configuration>
@@ -4116,11 +4115,11 @@ Resources colocated with clone:
 <pacemaker-result api-version="X" request="crm_mon.xml --show-scores --output-as=xml">
   <cluster_status>
     <nodes>
-      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
-      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
-      <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-      <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
-      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
+      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+      <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+      <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+      <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
     </nodes>
     <resources>
       <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -4446,32 +4445,32 @@ Started: [ cluster01 cluster02 ]
 Promoted: [ cluster02 ]
 Unpromoted: [ cluster01 ]
 
-Only 'private' parameters to dummy_monitor_60000 on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
+Only 'private' parameters to 60s-interval monitor for dummy on cluster02 changed: 0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4
 Original: cluster01 capacity:
 Original: cluster02 capacity:
 Original: httpd-bundle-0 capacity:
 Original: httpd-bundle-1 capacity:
 Original: httpd-bundle-2 capacity:
-native_assign_node: ping:0 utilization on cluster02:
-native_assign_node: ping:1 utilization on cluster01:
-native_assign_node: Fencing utilization on cluster01:
-native_assign_node: dummy utilization on cluster02:
-native_assign_node: httpd-bundle-docker-0 utilization on cluster01:
-native_assign_node: httpd-bundle-docker-1 utilization on cluster02:
-native_assign_node: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
-native_assign_node: httpd-bundle-0 utilization on cluster01:
-native_assign_node: httpd:0 utilization on httpd-bundle-0:
-native_assign_node: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
-native_assign_node: httpd-bundle-1 utilization on cluster02:
-native_assign_node: httpd:1 utilization on httpd-bundle-1:
-native_assign_node: httpd-bundle-2 utilization on cluster01:
-native_assign_node: httpd:2 utilization on httpd-bundle-2:
-native_assign_node: Public-IP utilization on cluster02:
-native_assign_node: Email utilization on cluster02:
-native_assign_node: mysql-proxy:0 utilization on cluster02:
-native_assign_node: mysql-proxy:1 utilization on cluster01:
-native_assign_node: promotable-rsc:0 utilization on cluster02:
-native_assign_node: promotable-rsc:1 utilization on cluster01:
+pcmk__assign_primitive: ping:0 utilization on cluster02:
+pcmk__assign_primitive: ping:1 utilization on cluster01:
+pcmk__assign_primitive: Fencing utilization on cluster01:
+pcmk__assign_primitive: dummy utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-docker-0 utilization on cluster01:
+pcmk__assign_primitive: httpd-bundle-docker-1 utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-ip-192.168.122.131 utilization on cluster01:
+pcmk__assign_primitive: httpd-bundle-0 utilization on cluster01:
+pcmk__assign_primitive: httpd:0 utilization on httpd-bundle-0:
+pcmk__assign_primitive: httpd-bundle-ip-192.168.122.132 utilization on cluster02:
+pcmk__assign_primitive: httpd-bundle-1 utilization on cluster02:
+pcmk__assign_primitive: httpd:1 utilization on httpd-bundle-1:
+pcmk__assign_primitive: httpd-bundle-2 utilization on cluster01:
+pcmk__assign_primitive: httpd:2 utilization on httpd-bundle-2:
+pcmk__assign_primitive: Public-IP utilization on cluster02:
+pcmk__assign_primitive: Email utilization on cluster02:
+pcmk__assign_primitive: mysql-proxy:0 utilization on cluster02:
+pcmk__assign_primitive: mysql-proxy:1 utilization on cluster01:
+pcmk__assign_primitive: promotable-rsc:0 utilization on cluster02:
+pcmk__assign_primitive: promotable-rsc:1 utilization on cluster01:
 Remaining: cluster01 capacity:
 Remaining: cluster02 capacity:
 Remaining: httpd-bundle-0 capacity:

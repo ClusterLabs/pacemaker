@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,15 +19,20 @@
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
-    ".maint { color: blue }\n"
-    ".offline { color: red }\n"
+
     ".online { color: green }\n"
+    ".offline { color: red }\n"
+    ".maint { color: blue }\n"
+    ".standby { color: blue }\n"
+    ".health_red { color: red }\n"
+    ".health_yellow { color: GoldenRod }\n"
+
     ".rsc-failed { color: red }\n"
-    ".rsc-failure-ignored { color: yellow }\n"
-    ".rsc-managed { color: yellow }\n"
+    ".rsc-failure-ignored { color: DarkGreen }\n"
+    ".rsc-managed { color: blue }\n"
     ".rsc-multiple { color: orange }\n"
     ".rsc-ok { color: green }\n"
-    ".standby { color: orange }\n"
+
     ".warning { color: red, font-weight: bold }";
 
 static gboolean cgi_output = FALSE;
@@ -231,7 +236,9 @@ html_version(pcmk__output_t *out, bool extended) {
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
     pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
     pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Version: %s", PACEMAKER_VERSION));
-    pcmk__output_create_html_node(out, "div", NULL, NULL, "Author: Andrew Beekhof");
+    pcmk__output_create_html_node(out, "div", NULL, NULL,
+                                  "Author: Andrew Beekhof and "
+                                  "the Pacemaker project contributors");
     pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Build: %s", BUILD_VERSION));
     pcmk__output_create_html_node(out, "div", NULL, NULL, crm_strdup_printf("Features: %s", CRM_FEATURES));
 }

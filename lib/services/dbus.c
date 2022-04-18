@@ -112,7 +112,7 @@ dispatch_fd_data(gpointer userdata)
     bool enabled = dbus_watch_get_enabled (watch);
 
     crm_trace("Dispatching DBus watch for file descriptor %d "
-              "with flags 0x%x (%s)",
+              "with flags %#x (%s)",
               dbus_watch_get_unix_fd(watch), flags,
               dbus_watch_flags_to_string(flags));
 
@@ -125,7 +125,7 @@ dispatch_fd_data(gpointer userdata)
 
     if (flags != dbus_watch_get_flags(watch)) {
         flags = dbus_watch_get_flags(watch);
-        crm_trace("Dispatched DBus file descriptor watch: now 0x%x (%s)",
+        crm_trace("Dispatched DBus file descriptor watch: now %#x (%s)",
                   flags, dbus_watch_flags_to_string(flags));
     }
 

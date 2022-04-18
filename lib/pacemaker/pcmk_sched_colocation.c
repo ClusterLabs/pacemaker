@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,9 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
+#include "crm/common/util.h"
+#include "crm/common/xml_internal.h"
+#include "crm/msg_xml.h"
 #include "libpacemaker_private.h"
 
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
@@ -291,9 +294,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     pe_resource_t *resource = NULL;
     const char *set_id = ID(set);
     const char *role = crm_element_value(set, "role");
-    const char *sequential = crm_element_value(set, "sequential");
     const char *ordering = crm_element_value(set, "ordering");
     int local_score = score;
+    bool sequential = false;
 
     const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
@@ -310,7 +313,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         ordering = "group";
     }
 
-    if ((sequential != NULL) && !crm_is_true(sequential)) {
+    if (pcmk__xe_get_bool_attr(set, "sequential", &sequential) == pcmk_rc_ok && !sequential) {
         return;
 
     } else if ((local_score > 0)
@@ -393,15 +396,17 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     const char *role_1 = crm_element_value(set1, "role");
     const char *role_2 = crm_element_value(set2, "role");
 
-    const char *sequential_1 = crm_element_value(set1, "sequential");
-    const char *sequential_2 = crm_element_value(set2, "sequential");
+    int rc = pcmk_rc_ok;
+    bool sequential = false;
 
     if (score == 0) {
         crm_trace("Ignoring colocation '%s' between sets because score is 0",
                   id);
         return;
     }
-    if ((sequential_1 == NULL) || crm_is_true(sequential_1)) {
+
+    rc = pcmk__xe_get_bool_attr(set1, "sequential", &sequential);
+    if (rc != pcmk_rc_ok || sequential) {
         // Get the first one
         xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
         if (xml_rsc != NULL) {
@@ -409,7 +414,8 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
         }
     }
 
-    if ((sequential_2 == NULL) || crm_is_true(sequential_2)) {
+    rc = pcmk__xe_get_bool_attr(set2, "sequential", &sequential);
+    if (rc != pcmk_rc_ok || sequential) {
         // Get the last one
         const char *rid = NULL;
 
@@ -486,7 +492,6 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
     const char *primary_role = crm_element_value(xml_obj,
                                                  XML_COLOC_ATTR_TARGET_ROLE);
     const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
-    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
     // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
     const char *dependent_instance = crm_element_value(xml_obj,
@@ -542,7 +547,7 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
         }
     }
 
-    if (crm_is_true(symmetrical)) {
+    if (pcmk__xe_attr_is_true(xml_obj, XML_CONS_ATTR_SYMMETRICAL)) {
         pcmk__config_warn("The colocation constraint '"
                           XML_CONS_ATTR_SYMMETRICAL
                           "' attribute has been removed");
@@ -756,7 +761,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
             pe__clear_action_flags(action, pe_action_runnable);
             pe_action_set_reason(action, reason_text, false);
             pcmk__block_colocated_starts(action, data_set);
-            update_action(action, data_set);
+            pcmk__update_action_for_orderings(action, data_set);
         }
     }
     free(reason_text);
@@ -969,7 +974,7 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s inactive)",
                          constraint->id, dependent->id, node->details->uname,
                          constraint->score, primary->id);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
+            node->weight = pcmk__add_scores(-constraint->score, node->weight);
 
         } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value,
                                 pcmk__str_casei)) {
@@ -977,19 +982,20 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
                 pe_rsc_trace(dependent, "%s: %s@%s += %d",
                              constraint->id, dependent->id,
                              node->details->uname, constraint->score);
-                node->weight = pe__add_scores(constraint->score, node->weight);
+                node->weight = pcmk__add_scores(constraint->score,
+                                                node->weight);
             }
 
         } else if (constraint->score >= CRM_SCORE_INFINITY) {
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s mismatch)",
                          constraint->id, dependent->id, node->details->uname,
                          constraint->score, attribute);
-            node->weight = pe__add_scores(-constraint->score, node->weight);
+            node->weight = pcmk__add_scores(-constraint->score, node->weight);
         }
     }
 
-    if (can_run_any(work) || (constraint->score <= -INFINITY)
-        || (constraint->score >= INFINITY)) {
+    if ((constraint->score <= -INFINITY) || (constraint->score >= INFINITY)
+        || pcmk__any_node_available(work)) {
 
         g_hash_table_destroy(dependent->allowed_nodes);
         dependent->allowed_nodes = work;
@@ -1054,6 +1060,6 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
         score_multiplier = -1;
     }
 
-    dependent->priority = pe__add_scores(score_multiplier * constraint->score,
-                                         dependent->priority);
+    dependent->priority = pcmk__add_scores(score_multiplier * constraint->score,
+                                           dependent->priority);
 }

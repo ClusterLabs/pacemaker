@@ -67,6 +67,48 @@ Probably the easiest way to learn how to use coccinelle is by following other
 people's scripts.  In addition to the ones in the Pacemaker source directory,
 there's several others on the `coccinelle website <https://coccinelle.gitlabpages.inria.fr/website/rules/>`_.
 
+Sanitizers
+##########
+
+gcc supports a variety of run-time checks called sanitizers.  These can be used to
+catch programming errors with memory, race conditions, various undefined behavior
+conditions, and more.  Because these are run-time checks, they should only be used
+during development and not in compiled packages or production code.
+
+Certain sanitizers cannot be combined with others because their run-time checks
+cause interfere.  Instead of trying to figure out which combinations work, it is
+simplest to just enable one at a time.
+
+Each supported sanitizer requires an installed libray.  In addition to just
+enabling the sanitizer, their use can be configured with environment variables.
+For example:
+
+.. code-block:: none
+
+   $ ASAN_OPTIONS=verbosity=1:replace_str=true crm_mon -1R
+
+Pacemaker supports the following subset of gcc's sanitizers:
+
++--------------------+-------------------------+----------+----------------------+
+| Sanitizer          | Configure Option        | Library  | Environment Variable |
++====================+=========================+==========+======================+
+| Address            | --with-sanitizers=asan  | libasan  | ASAN_OPTIONS         |
++--------------------+-------------------------+----------+----------------------+
+| Threads            | --with-sanitizers=tsan  | libtsan  | TSAN_OPTIONS         |
++--------------------+-------------------------+----------+----------------------+
+| Undefined behavior | --with-sanitizers=ubsan | libubsan | UBSAN_OPTIONS        |
++--------------------+-------------------------+----------+----------------------+
+
+The undefined behavior sanitizer further supports suboptions that need to be
+given as CFLAGS when configuring pacemaker:
+
+.. code-block:: none
+
+   $ CFLAGS=-fsanitize=integer-divide-by-zero ./configure --with-sanitizers=ubsan
+
+For more information, see the `gcc documentation <https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html>`_
+which also provides links to more information on each sanitizer.
+
 Unit Testing
 ############
 
@@ -101,7 +143,7 @@ is no test subdirectory, there are no tests for that file yet.
 Finally, under that directory, there is a ``Makefile.am`` and then various source
 files.  Each of these source files tests the single function that it is named
 after.  For instance, ``lib/common/tests/strings/pcmk__btoa_test.c`` tests the
-``pcmk__btoa_test()`` function in ``lib/common/strings.c``.  If there is no test
+``pcmk__btoa()`` function in ``lib/common/strings.c``.  If there is no test
 source file, there are no tests for that function yet.
 
 The ``_test`` suffix on the test source file is important.  All tests have this

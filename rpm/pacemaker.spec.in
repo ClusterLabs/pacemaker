@@ -56,14 +56,13 @@
 %bcond_without cibsecrets
 %endif
 
+## Add option to enable Native Language Support (experimental)
+%bcond_with nls
+
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
 
-## Add option to create binaries with coverage analysis
-%bcond_with coverage
-
-## Add option to skip (or enable, on RHEL) generating documentation
-## (the build tools aren't available everywhere)
+## Allow deprecated option to skip (or enable, on RHEL) documentation
 %if 0%{?rhel}
 %bcond_with doc
 %else
@@ -158,6 +157,7 @@
 %if 0%{?suse_version} > 0
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
+%global pkgname_gettext gettext-tools
 %global pkgname_gnutls_devel libgnutls-devel
 %global pkgname_shadow_utils shadow
 %global pkgname_procps procps
@@ -169,6 +169,7 @@
 %global pkgname_libtool_devel_arch libtool-ltdl-devel%{?_isa}
 %global pkgname_bzip2_devel bzip2-devel
 %global pkgname_docbook_xsl docbook-style-xsl
+%global pkgname_gettext gettext-devel
 %global pkgname_gnutls_devel gnutls-devel
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
@@ -305,6 +306,7 @@ BuildRequires: %{pkgname_gnutls_devel}
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
+BuildRequires: %{pkgname_gettext} >= 0.18
 
 # Required for "make check"
 BuildRequires: libcmocka-devel
@@ -347,8 +349,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets coverage doc hardening pre_release profiling stonithd
-                upstart_job
+  --with(out) : cibsecrets hardening nls pre_release profiling
+                stonithd upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -518,8 +520,8 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_hardening:    --disable-hardening}                             \
         %{?with_legacy_links:  --enable-legacy-links}                           \
         %{?with_profiling:     --with-profiling}                                \
-        %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
+        %{?with_nls:           --enable-nls}                                    \
         %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?bug_url:            --with-bug-url=%{bug_url}}                       \
@@ -570,6 +572,10 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
 
+%if %{with nls}
+%find_lang %{name}
+%endif
+
 # Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
@@ -585,16 +591,6 @@ rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
 %if !%{defined _python_bytecompile_extra}
 %{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
 %endif
-%endif
-
-%if %{with coverage}
-GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
-mkdir -p $GCOV_BASE
-find . -name '*.gcno' -type f | while read F ; do
-        D=`dirname $F`
-        mkdir -p ${GCOV_BASE}/$D
-        cp $F ${GCOV_BASE}/$D
-done
 %endif
 
 %post
@@ -835,7 +831,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files -n %{pkgname_pcmk_libs}
+%files -n %{pkgname_pcmk_libs} %{?with_nls:-f %{name}.lang}
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
@@ -891,9 +887,6 @@ exit 0
 %files -n %{pkgname_pcmk_libs}-devel
 %{_includedir}/pacemaker
 %{_libdir}/*.so
-%if %{with coverage}
-%{_var}/lib/pacemaker/gcov
-%endif
 %{_libdir}/pkgconfig/*.pc
 %license licenses/LGPLv2.1
 %doc COPYING
@@ -905,6 +898,7 @@ exit 0
 %{_datadir}/pacemaker/*.rng
 %{_datadir}/pacemaker/*.xsl
 %{_datadir}/pacemaker/api
+%{_datadir}/pacemaker/base
 %{_datadir}/pkgconfig/pacemaker-schemas.pc
 
 %changelog

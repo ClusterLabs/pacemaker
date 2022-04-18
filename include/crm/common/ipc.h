@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_IPC__H
-#  define CRM_COMMON_IPC__H
+#ifndef PCMK__CRM_COMMON_IPC__H
+#  define PCMK__CRM_COMMON_IPC__H
+
+
+#include <sys/uio.h>
+#include <qb/qbipcc.h>
+#include <crm/common/xml.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,10 +25,6 @@ extern "C" {
  *
  * \ingroup core
  */
-
-#include <sys/uio.h>
-#include <qb/qbipcc.h>
-#include <crm/common/xml.h>
 
 /*
  * Message creation utilities

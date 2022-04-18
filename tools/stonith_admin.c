@@ -331,6 +331,38 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+// \return Standard Pacemaker return code
+static int
+request_fencing(stonith_t *st, const char *target, const char *command,
+                GError **error)
+{
+    char *reason = NULL;
+    int rc = pcmk__request_fencing(st, target, command, name,
+                                   options.timeout * 1000,
+                                   options.tolerance * 1000,
+                                   options.delay, &reason);
+
+    if (rc != pcmk_rc_ok) {
+        const char *rc_str = pcmk_rc_str(rc);
+        const char *what = (strcmp(command, "on") == 0)? "unfence" : "fence";
+
+        // If reason is identical to return code string, don't display it twice
+        if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
+            free(reason);
+            reason = NULL;
+        }
+
+        g_set_error(error, PCMK__RC_ERROR, rc,
+                    "Couldn't %s %s: %s%s%s%s",
+                    what, target, rc_str,
+                    ((reason == NULL)? "" : " ("),
+                    ((reason == NULL)? "" : reason),
+                    ((reason == NULL)? "" : ")"));
+    }
+    free(reason);
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -360,7 +392,9 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("stonith_admin", args->verbosity);
 
-    name = strdup(crm_system_name);
+    if (name == NULL) {
+        name = strdup(crm_system_name);
+    }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
@@ -570,18 +604,15 @@ main(int argc, char **argv)
             break;
 
         case 'B':
-            rc = pcmk__fence_action(st, target, "reboot", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay);
+            rc = request_fencing(st, target, "reboot", &error);
             break;
 
         case 'F':
-            rc = pcmk__fence_action(st, target, "off", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay);
+            rc = request_fencing(st, target, "off", &error);
             break;
 
         case 'U':
-            rc = pcmk__fence_action(st, target, "on", name, options.timeout*1000,
-                                    options.tolerance*1000, options.delay);
+            rc = request_fencing(st, target, "on", &error);
             break;
 
         case 'h':

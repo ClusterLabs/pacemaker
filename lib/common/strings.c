@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1102,33 +1102,31 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 {
     /* If this flag is set, the second string is a regex. */
     if (pcmk_is_set(flags, pcmk__str_regex)) {
-        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        regex_t r_patt;
         int reg_flags = REG_EXTENDED | REG_NOSUB;
         int regcomp_rc = 0;
         int rc = 0;
 
         if (s1 == NULL || s2 == NULL) {
-            free(r_patt);
             return 1;
         }
 
         if (pcmk_is_set(flags, pcmk__str_casei)) {
             reg_flags |= REG_ICASE;
         }
-        regcomp_rc = regcomp(r_patt, s2, reg_flags);
+        regcomp_rc = regcomp(&r_patt, s2, reg_flags);
         if (regcomp_rc != 0) {
             rc = 1;
             crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
         } else {
-            rc = regexec(r_patt, s1, 0, NULL, 0);
+            rc = regexec(&r_patt, s1, 0, NULL, 0);
 
             if (rc != 0) {
                 rc = 1;
             }
         }
 
-        regfree(r_patt);
-        free(r_patt);
+        regfree(&r_patt);
         return rc;
     }
 
@@ -1170,6 +1168,33 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         return strcasecmp(s1, s2);
     } else {
         return strcmp(s1, s2);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a dynamically allocated string with a new value
+ *
+ * Given a dynamically allocated string and a new value for it, if the string
+ * is different from the new value, free the string and replace it with either a
+ * newly allocated duplicate of the value or NULL as appropriate.
+ *
+ * \param[in] str    Pointer to dynamically allocated string
+ * \param[in] value  New value to duplicate (or NULL)
+ *
+ * \note The caller remains responsibile for freeing \p *str.
+ */
+void
+pcmk__str_update(char **str, const char *value)
+{
+    if ((str != NULL) && !pcmk__str_eq(*str, value, pcmk__str_none)) {
+        free(*str);
+        if (value == NULL) {
+            *str = NULL;
+        } else {
+            *str = strdup(value);
+            CRM_ASSERT(*str != NULL);
+        }
     }
 }
 
@@ -1300,5 +1325,5 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
     return pcmk__numeric_strcasecmp(s1, s2);
 }
 
-// LCOV_EXCL_END
+// LCOV_EXCL_STOP
 // End deprecated API

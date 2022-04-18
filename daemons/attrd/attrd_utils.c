@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,26 +215,32 @@ attrd_cib_disconnect()
 {
     CRM_CHECK(the_cib != NULL, return);
     the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
-    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb); 
-    the_cib->cmds->signoff(the_cib);
-    cib_delete(the_cib);
-    the_cib = NULL;
+    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    cib__clean_up_connection(&the_cib);
 }
 
 void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
+    int change_section = cib_change_section_nodes | cib_change_section_status | cib_change_section_alerts;
+
     if (attrd_requesting_shutdown() || attrd_shutting_down()) {
         return;
     }
 
+    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
+
     if (attrd_election_won()) {
-        crm_notice("Updating all attributes after %s event", event);
-        write_attributes(TRUE, FALSE);
+        if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
+            crm_notice("Updating all attributes after %s event", event);
+            write_attributes(TRUE, FALSE);
+        }
     }
 
-    // Check for changes in alerts
-    mainloop_set_trigger(attrd_config_read);
+    if (change_section & cib_change_section_alerts) {
+        // Check for changes in alerts
+        mainloop_set_trigger(attrd_config_read);
+    }
 }
 
 /* strlen("value") */

@@ -56,7 +56,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="3" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+      <rsc_op id="4" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="OpenVPN_IP" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="ops.ds9" CRM_meta_on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -65,7 +65,7 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="1" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+      <rsc_op id="2" operation="delete" operation_key="OpenVPN_IP_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
         <primitive id="OpenVPN_IP" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="heartbeat.ds9" CRM_meta_on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -74,27 +74,27 @@
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="5" operation="delete" operation_key="Apache_delete_0" on_node="biggame.ds9" on_node_uuid="de2a634c-e405-42bb-9df2-292e36ad5970">
-        <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
-        <attributes CRM_meta_on_node="biggame.ds9" CRM_meta_on_node_uuid="de2a634c-e405-42bb-9df2-292e36ad5970" CRM_meta_timeout="20000" />
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="7">
-    <action_set>
-      <rsc_op id="4" operation="delete" operation_key="Apache_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
+      <rsc_op id="5" operation="delete" operation_key="Apache_delete_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
         <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
         <attributes CRM_meta_on_node="ops.ds9" CRM_meta_on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="8">
+  <synapse id="7">
     <action_set>
-      <rsc_op id="2" operation="delete" operation_key="Apache_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
+      <rsc_op id="3" operation="delete" operation_key="Apache_delete_0" on_node="heartbeat.ds9" on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57">
         <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
         <attributes CRM_meta_on_node="heartbeat.ds9" CRM_meta_on_node_uuid="d9fea871-5fc2-4c5d-b3bd-c830fc5a5d57" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="1" operation="delete" operation_key="Apache_delete_0" on_node="biggame.ds9" on_node_uuid="de2a634c-e405-42bb-9df2-292e36ad5970">
+        <primitive id="Apache" class="ocf" provider="heartbeat" type="apache13"/>
+        <attributes CRM_meta_on_node="biggame.ds9" CRM_meta_on_node_uuid="de2a634c-e405-42bb-9df2-292e36ad5970" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>

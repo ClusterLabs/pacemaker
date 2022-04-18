@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,16 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PE_TYPES__H
-#  define PE_TYPES__H
+#ifndef PCMK__CRM_PENGINE_PE_TYPES__H
+#  define PCMK__CRM_PENGINE_PE_TYPES__H
+
+
+#  include <stdbool.h>              // bool
+#  include <sys/types.h>            // time_t
+#  include <libxml/tree.h>          // xmlNode
+#  include <glib.h>                 // gboolean, guint, GList, GHashTable
+#  include <crm/common/iso8601.h>
+#  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,13 +27,6 @@ extern "C" {
  * \brief Data types for cluster status
  * \ingroup pengine
  */
-
-#  include <stdbool.h>              // bool
-#  include <sys/types.h>            // time_t
-#  include <libxml/tree.h>          // xmlNode
-#  include <glib.h>                 // gboolean, guint, GList, GHashTable
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/common.h>
 
 typedef struct pe_node_s pe_node_t;
 typedef struct pe_action_s pe_action_t;
@@ -133,6 +134,12 @@ enum pe_find {
 #  define pe_flag_show_scores           0x02000000ULL
 #  define pe_flag_show_utilization      0x04000000ULL
 
+/*!
+ * When scheduling, only unpack the CIB (including constraints), calculate
+ * as much cluster status as possible, and apply node health.
+ */
+#  define pe_flag_check_config          0x08000000ULL
+
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
@@ -235,6 +242,7 @@ struct pe_node_shared_s {
     GHashTable *utilization;
     GHashTable *digest_cache;   //!< cache of calculated resource digests
     int priority; // calculated based on the priority of resources running on the node
+    pe_working_set_t *data_set; //!< Cluster that this node is part of
 };
 
 struct pe_node_s {
@@ -258,6 +266,7 @@ struct pe_node_s {
 #  define pe_rsc_provisional                0x00000100ULL
 #  define pe_rsc_allocating                 0x00000200ULL
 #  define pe_rsc_merging                    0x00000400ULL
+#  define pe_rsc_restarting                 0x00000800ULL
 
 #  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
@@ -270,6 +279,7 @@ struct pe_node_s {
 
 #  define pe_rsc_starting                   0x00100000ULL
 #  define pe_rsc_stopping                   0x00200000ULL
+#  define pe_rsc_stop_unexpected            0x00400000ULL
 #  define pe_rsc_allow_migrate              0x00800000ULL
 
 #  define pe_rsc_failure_ignored            0x01000000ULL
@@ -505,7 +515,7 @@ enum pe_ordering {
                                                  */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
-    pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
+    pe_order_stonith_stop          = 0x2000,    //<! \deprecated Will be removed in future release
     pe_order_serialize_only        = 0x4000,    /* serialize */
     pe_order_same_node             = 0x8000,    /* applies only if 'first' and 'then' are on same node */
 
@@ -542,4 +552,4 @@ typedef struct pe_action_wrapper_s {
 }
 #endif
 
-#endif // PE_TYPES__H
+#endif // PCMK__CRM_PENGINE_PE_TYPES__H

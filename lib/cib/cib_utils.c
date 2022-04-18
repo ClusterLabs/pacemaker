@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2021 the Pacemaker project contributors
+ * Later changes copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,37 +23,6 @@
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
-
-struct config_root_s {
-    const char *name;
-    const char *parent;
-    const char *path;
-};
-
- /*
-  * "//crm_config" will also work in place of "/cib/configuration/crm_config"
-  * The / prefix means find starting from the root, whereas the // prefix means
-  * find anywhere and risks multiple matches
-  */
-/* *INDENT-OFF* */
-static struct config_root_s known_paths[] = {
-    { NULL,                         NULL,                 "//cib" },
-    { XML_TAG_CIB,                  NULL,                 "//cib" },
-    { XML_CIB_TAG_STATUS,           "/cib",               "//cib/status" },
-    { XML_CIB_TAG_CONFIGURATION,    "/cib",               "//cib/configuration" },
-    { XML_CIB_TAG_CRMCONFIG,        "/cib/configuration", "//cib/configuration/crm_config" },
-    { XML_CIB_TAG_NODES,            "/cib/configuration", "//cib/configuration/nodes" },
-    { XML_CIB_TAG_RESOURCES,        "/cib/configuration", "//cib/configuration/resources" },
-    { XML_CIB_TAG_CONSTRAINTS,      "/cib/configuration", "//cib/configuration/constraints" },
-    { XML_CIB_TAG_OPCONFIG,         "/cib/configuration", "//cib/configuration/op_defaults" },
-    { XML_CIB_TAG_RSCCONFIG,        "/cib/configuration", "//cib/configuration/rsc_defaults" },
-    { XML_CIB_TAG_ACLS,             "/cib/configuration", "//cib/configuration/acls" },
-    { XML_TAG_FENCING_TOPOLOGY,     "/cib/configuration", "//cib/configuration/fencing-topology" },
-    { XML_CIB_TAG_TAGS,             "/cib/configuration", "//cib/configuration/tags" },
-    { XML_CIB_TAG_ALERTS,           "/cib/configuration", "//cib/configuration/alerts" },
-    { XML_CIB_TAG_SECTION_ALL,      NULL,                 "//cib" },
-};
-/* *INDENT-ON* */
 
 xmlNode *
 cib_get_generation(cib_t * cib)
@@ -106,51 +75,6 @@ cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *upda
     *_updates = del[2];
 
     return TRUE;
-}
-
-/*
- * The caller should never free the return value
- */
-
-const char *
-get_object_path(const char *object_type)
-{
-    int lpc = 0;
-    int max = PCMK__NELEM(known_paths);
-
-    for (; lpc < max; lpc++) {
-        if ((object_type == NULL && known_paths[lpc].name == NULL)
-            || pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
-            return known_paths[lpc].path;
-        }
-    }
-    return NULL;
-}
-
-const char *
-get_object_parent(const char *object_type)
-{
-    int lpc = 0;
-    int max = PCMK__NELEM(known_paths);
-
-    for (; lpc < max; lpc++) {
-        if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
-            return known_paths[lpc].parent;
-        }
-    }
-    return NULL;
-}
-
-xmlNode *
-get_object_root(const char *object_type, xmlNode * the_root)
-{
-    const char *xpath = get_object_path(object_type);
-
-    if (xpath == NULL) {
-        return the_root;        /* or return NULL? */
-    }
-
-    return get_xpath_object(xpath, the_root, LOG_TRACE);
 }
 
 /*!
@@ -353,7 +277,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
 
         if (old > new) {
-            crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+            crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                     XML_ATTR_GENERATION_ADMIN, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
@@ -363,7 +287,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
             crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
             if (old > new) {
-                crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+                crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         XML_ATTR_GENERATION, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
@@ -631,27 +555,29 @@ static pcmk__cluster_option_t cib_opts[] = {
     {
         "enable-acl", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Enable Access Control Lists (ACLs) for the CIB",
+        N_("Enable Access Control Lists (ACLs) for the CIB"),
         NULL
     },
     {
         "cluster-ipc-limit", NULL, "integer", NULL,
         "500", pcmk__valid_positive_number,
-        "Maximum IPC message backlog before disconnecting a cluster daemon",
-        "Raise this if log has \"Evicting client\" messages for cluster daemon"
+        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
+        N_("Raise this if log has \"Evicting client\" messages for cluster daemon"
             " PIDs (a good value is the number of resources in the cluster"
-            " multiplied by the number of nodes)."
+            " multiplied by the number of nodes).")
     },
 };
 
 void
 cib_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-based",
-                                "Cluster Information Base manager options",
-                                "Cluster options used by Pacemaker's "
-                                    "Cluster Information Base manager",
-                                cib_opts, PCMK__NELEM(cib_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-based",
+                                           "Cluster Information Base manager options",
+                                           "Cluster options used by Pacemaker's "
+                                               "Cluster Information Base manager",
+                                           cib_opts, PCMK__NELEM(cib_opts));
+    printf("%s", s);
+    free(s);
 }
 
 void
@@ -681,7 +607,7 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
 
     g_hash_table_remove_all(options);
 
-    config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
+    config = pcmk_find_cib_element(current_cib, XML_CIB_TAG_CRMCONFIG);
     if (config) {
         pe_unpack_nvpairs(current_cib, config, XML_CIB_TAG_PROPSET, NULL,
                           options, CIB_OPTIONS_FIRST, TRUE, now, NULL);
@@ -812,9 +738,7 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     }
 
     if (cib == NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-        cib_conn = NULL;
+        cib__clean_up_connection(&cib_conn);
     }
 
     if (cib_object == NULL) {
@@ -823,3 +747,44 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
         return rc;
     }
 }
+
+int
+cib__clean_up_connection(cib_t **cib)
+{
+    int rc;
+
+    if (*cib == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    rc = (*cib)->cmds->signoff(*cib);
+    cib_delete(*cib);
+    *cib = NULL;
+    return pcmk_legacy2rc(rc);
+}
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib/util_compat.h>
+
+const char *
+get_object_path(const char *object_type)
+{
+    return pcmk_cib_xpath_for(object_type);
+}
+
+const char *
+get_object_parent(const char *object_type)
+{
+    return pcmk_cib_parent_name_for(object_type);
+}
+
+xmlNode *
+get_object_root(const char *object_type, xmlNode *the_root)
+{
+    return pcmk_find_cib_element(the_root, object_type);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

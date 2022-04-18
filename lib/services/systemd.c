@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,17 +206,45 @@ systemd_unit_extension(const char *name)
 }
 
 static char *
-systemd_service_name(const char *name)
+systemd_service_name(const char *name, bool add_instance_name)
 {
-    if (name == NULL) {
+    const char *dot = NULL;
+
+    if (pcmk__str_empty(name)) {
         return NULL;
     }
 
-    if (systemd_unit_extension(name)) {
-        return strdup(name);
-    }
+    /* Services that end with an @ sign are systemd templates.  They expect an
+     * instance name to follow the service name.  If no instance name was
+     * provided, just add "pacemaker" to the string as the instance name.  It
+     * doesn't seem to matter for purposes of looking up whether a service
+     * exists or not.
+     *
+     * A template can be specified either with or without the unit extension,
+     * so this block handles both cases.
+     */
+    dot = systemd_unit_extension(name);
 
-    return crm_strdup_printf("%s.service", name);
+    if (dot) {
+        if (dot != name && *(dot-1) == '@') {
+            char *s = NULL;
+
+            if (asprintf(&s, "%.*spacemaker%s", (int) (dot-name), name, dot) == -1) {
+                /* If asprintf fails, just return name. */
+                return strdup(name);
+            }
+
+            return s;
+        } else {
+            return strdup(name);
+        }
+
+    } else if (add_instance_name && *(name+strlen(name)-1) == '@') {
+        return crm_strdup_printf("%spacemaker.service", name);
+
+    } else {
+        return crm_strdup_printf("%s.service", name);
+    }
 }
 
 static void
@@ -232,7 +260,8 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
     }
 
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-        crm_err("Could not issue systemd reload %d: %s", reload_count, error.message);
+        crm_warn("Could not issue systemd reload %d: %s",
+                 reload_count, error.message);
         dbus_error_free(&error);
 
     } else {
@@ -287,12 +316,13 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
             return;
         }
 
-        services__set_result(op, PCMK_OCF_NOT_INSTALLED,
-                             PCMK_EXEC_NOT_INSTALLED, "systemd unit not found");
+        services__format_result(op, PCMK_OCF_NOT_INSTALLED,
+                               PCMK_EXEC_NOT_INSTALLED,
+                               "systemd unit %s not found", op->agent);
     }
 
-    crm_err("DBus request for %s of systemd unit %s for resource %s failed: %s",
-            op->action, op->agent, crm_str(op->rsc), error->message);
+    crm_info("DBus request for %s of systemd unit %s for resource %s failed: %s",
+             op->action, op->agent, crm_str(op->rsc), error->message);
 }
 
 /*!
@@ -325,11 +355,11 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  "systemd DBus method had unexpected reply");
-            crm_err("Could not load systemd unit %s for %s: "
-                    "DBus reply has unexpected type", op->agent, op->id);
+            crm_info("Could not load systemd unit %s for %s: "
+                     "DBus reply has unexpected type", op->agent, op->id);
         } else {
-            crm_err("Could not load systemd unit: "
-                    "DBus reply has unexpected type");
+            crm_info("Could not load systemd unit: "
+                     "DBus reply has unexpected type");
         }
 
     } else {
@@ -343,8 +373,9 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
             invoke_unit_by_path(op, path);
 
         } else if (!(op->synchronous)) {
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 "No DBus object found for systemd unit");
+            services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                    "No DBus object found for systemd unit %s",
+                                    op->agent);
             services__finalize_async_op(op);
         }
     }
@@ -426,7 +457,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     CRM_ASSERT(msg != NULL);
 
     // Add the (expanded) unit name as the argument
-    name = systemd_service_name(arg_name);
+    name = systemd_service_name(arg_name, op == NULL || pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name,
                                             DBUS_TYPE_INVALID));
     free(name);
@@ -653,6 +684,8 @@ systemd_unit_metadata(const char *name, int timeout)
     char *desc = NULL;
     char *path = NULL;
 
+    char *escaped = NULL;
+
     if (invoke_unit_by_name(name, NULL, &path) == pcmk_rc_ok) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
         desc = systemd_get_property(path, "Description", NULL, NULL, NULL,
@@ -661,9 +694,12 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = crm_strdup_printf("Systemd unit file for %s", name);
     }
 
-    meta = crm_strdup_printf(METADATA_FORMAT, name, desc, name);
+    escaped = crm_xml_escape(desc);
+
+    meta = crm_strdup_printf(METADATA_FORMAT, name, escaped, name);
     free(desc);
     free(path);
+    free(escaped);
     return meta;
 }
 
@@ -688,7 +724,7 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
-        crm_warn("DBus request for %s of %s succeeded but "
+        crm_info("DBus request for %s of %s succeeded but "
                  "return type was unexpected", op->action, crm_str(op->rsc));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE,
                              "systemd DBus method had unexpected reply");
@@ -905,8 +941,9 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
             free(state);
 
         } else if (pending == NULL) { // Could not get ActiveState property
-            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 "Could not get unit state from DBus");
+            services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                    "Could not get state for unit %s from DBus",
+                                    op->agent);
             services__finalize_async_op(op);
 
         } else {
@@ -926,8 +963,10 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         method = "RestartUnit";
 
     } else {
-        services__set_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                             "Action not implemented for systemd resources");
+        services__format_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                PCMK_EXEC_ERROR,
+                                "Action %s not implemented "
+                                "for systemd resources", crm_str(op->action));
         if (!(op->synchronous)) {
             services__finalize_async_op(op);
         }
@@ -943,7 +982,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     /* (ss) */
     {
         const char *replace_s = "replace";
-        char *name = systemd_service_name(op->agent);
+        char *name = systemd_service_name(op->agent, pcmk__str_eq(op->action, "meta-data", pcmk__str_none));
 
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID));
         CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &replace_s, DBUS_TYPE_INVALID));
@@ -981,9 +1020,11 @@ systemd_timeout_callback(gpointer p)
     svc_action_t * op = p;
 
     op->opaque->timerid = 0;
-    crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
-                         "Systemd action did not complete within specified timeout");
+    crm_info("%s action for systemd unit %s named '%s' timed out",
+             op->action, op->agent, op->rsc);
+    services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
+                            "%s action for systemd unit %s "
+                            "did not complete in time", op->action, op->agent);
     services__finalize_async_op(op);
     return FALSE;
 }
@@ -998,8 +1039,8 @@ systemd_timeout_callback(gpointer p)
  * \retval EBUSY          Recurring operation could not be initiated
  * \retval pcmk_rc_error  Synchronous action failed
  * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
- *                        should not be freed (because it already was or is
- *                        pending)
+ *                        should not be freed (because it's pending or because
+ *                        it failed to execute and was already freed)
  *
  * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
  *       caller is responsible for freeing the action.

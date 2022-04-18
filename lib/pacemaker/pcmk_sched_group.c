@@ -641,3 +641,54 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
     return colocated_rscs;
 }
+
+// Group implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization)
+{
+    group_variant_data_t *group_data = NULL;
+    pe_resource_t *child = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    pe_rsc_trace(orig_rsc, "%s: Adding group %s as colocated utilization",
+                 orig_rsc->id, rsc->id);
+    get_group_variant_data(group_data, rsc);
+    if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
+        // Every group member will be on same node, so sum all members
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            child = (pe_resource_t *) iter->data;
+
+            if (pcmk_is_set(child->flags, pe_rsc_provisional)
+                && (g_list_find(all_rscs, child) == NULL)) {
+                child->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                             utilization);
+            }
+        }
+
+    } else {
+        // Just add first child's utilization
+        child = group_data->first_child;
+        if ((child != NULL)
+            && pcmk_is_set(child->flags, pe_rsc_provisional)
+            && (g_list_find(all_rscs, child) == NULL)) {
+
+            child->cmds->add_utilization(child, orig_rsc, all_rscs,
+                                         utilization);
+        }
+    }
+}
+
+// Group implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__group_shutdown_lock(pe_resource_t *rsc)
+{
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
+
+        child->cmds->shutdown_lock(child);
+    }
+}

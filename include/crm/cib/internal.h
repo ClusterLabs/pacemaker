@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,6 +58,7 @@
 #  define F_CIB_LOCAL_NOTIFY_ID	"cib_local_notify_id"
 #  define F_CIB_PING_ID         "cib_ping_id"
 #  define F_CIB_SCHEMA_MAX      "cib_schema_max"
+#  define F_CIB_CHANGE_SECTION  "cib_change_section"
 
 #  define T_CIB			"cib"
 #  define T_CIB_NOTIFY		"cib_notify"
@@ -66,6 +67,14 @@
 #  define T_CIB_POST_NOTIFY	"cib_post_notify"
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
+
+enum cib_change_section_info {
+    cib_change_section_none     = 0x00000000,
+    cib_change_section_nodes    = 0x00000001,
+    cib_change_section_alerts   = 0x00000002,
+    cib_change_section_status   = 0x00000004
+};
+
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
@@ -229,5 +238,23 @@ cib_callback_client_t* cib__lookup_id (int call_id);
  * \return A standard Pacemaker return code
  */
 int cib__signon_query(cib_t **cib, xmlNode **cib_object);
+
+int cib__clean_up_connection(cib_t **cib);
+
+int cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options,
+                          const char *section, const char *node_uuid, const char *set_type,
+                          const char *set_name, const char *attr_id, const char *attr_name,
+                          const char *attr_value, const char *user_name,
+                          const char *node_type);
+
+int cib__read_node_attr(pcmk__output_t *out, cib_t *cib, const char *section,
+                        const char *node_uuid, const char *set_type, const char *set_name,
+                        const char *attr_id, const char *attr_name, char **attr_value,
+                        const char *user_name);
+
+int cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options,
+                          const char *section, const char *node_uuid, const char *set_type,
+                          const char *set_name, const char *attr_id, const char *attr_name,
+                          const char *attr_value, const char *user_name);
 
 #endif

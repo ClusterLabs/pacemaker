@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,7 +260,7 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
     sys_user = getpwnam(CRM_DAEMON_USER);
     if (sys_user == NULL) {
         crm_notice("Could not find user %s: %s",
-                   CRM_DAEMON_USER, pcmk_strerror(errno));
+                   CRM_DAEMON_USER, pcmk_rc_str(errno));
         return FALSE;
     }
     if (target_stat->st_uid != sys_user->pw_uid) {
@@ -288,7 +288,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
     sys_grp = getgrnam(CRM_DAEMON_GROUP);
     if (sys_grp == NULL) {
         crm_notice("Could not find group %s: %s",
-                   CRM_DAEMON_GROUP, pcmk_strerror(errno));
+                   CRM_DAEMON_GROUP, pcmk_rc_str(errno));
         return FALSE;
     }
 
@@ -341,7 +341,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
         s_res = stat(full_file, &buf);
         if (s_res < 0) {
-            crm_notice("%s not found: %s", target, pcmk_strerror(errno));
+            crm_notice("%s not found: %s", target, pcmk_rc_str(errno));
             free(full_file);
             full_file = NULL;
             target = NULL;
@@ -359,7 +359,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         target = dir;
         s_res = stat(dir, &buf);
         if (s_res < 0) {
-            crm_err("%s not found: %s", dir, pcmk_strerror(errno));
+            crm_err("%s not found: %s", dir, pcmk_rc_str(errno));
             return false;
 
         } else if (S_ISDIR(buf.st_mode) == FALSE) {

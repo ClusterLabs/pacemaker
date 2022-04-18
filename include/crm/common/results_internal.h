@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,13 +30,50 @@ typedef struct {
     char *action_stderr;    // Action error output
 } pcmk__action_result_t;
 
+/*!
+ * \internal
+ * \brief Static initialization for an action result
+ *
+ * \note Importantly, this ensures pcmk__reset_result() won't try to free
+ *       garbage.
+ */
+#define PCMK__UNKNOWN_RESULT {                  \
+        .exit_status = CRM_EX_OK,               \
+        .execution_status = PCMK_EXEC_UNKNOWN,  \
+        .exit_reason = NULL,                    \
+        .action_stdout = NULL,                  \
+        .action_stderr = NULL,                  \
+    }
+
 void pcmk__set_result(pcmk__action_result_t *result, int exit_status,
                       enum pcmk_exec_status exec_status,
                       const char *exit_reason);
+
+void pcmk__format_result(pcmk__action_result_t *result, int exit_status,
+                         enum pcmk_exec_status exec_status,
+                         const char *format, ...) G_GNUC_PRINTF(4, 5);
 
 void pcmk__set_result_output(pcmk__action_result_t *result,
                              char *out, char *err);
 
 void pcmk__reset_result(pcmk__action_result_t *result);
+
+void pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst);
+
+/*!
+ * \internal
+ * \brief Check whether a result is OK
+ *
+ * \param[in] result
+ *
+ * \return true if the result's exit status is CRM_EX_OK and its
+ *         execution status is PCMK_EXEC_DONE, otherwise false
+ */
+static inline bool
+pcmk__result_ok(const pcmk__action_result_t *result)
+{
+    return (result != NULL) && (result->exit_status == CRM_EX_OK)
+            && (result->execution_status == PCMK_EXEC_DONE);
+}
 
 #endif // PCMK__COMMON_RESULTS_INTERNAL__H

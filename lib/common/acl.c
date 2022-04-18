@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -303,8 +303,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
                                          source, LOG_NEVER);
 
-        free(p->user);
-        p->user = strdup(user);
+        pcmk__str_update(&p->user, user);
 
         if (acls) {
             xmlNode *child = NULL;
@@ -325,6 +324,22 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             }
         }
     }
+}
+
+/*!
+ * \internal
+ * \brief Copy source to target and set xf_acl_enabled flag in target
+ *
+ * \param[in]     acl_source    XML with ACL definitions
+ * \param[in,out] target        XML that ACLs will be applied to
+ * \param[in]     user          Username whose ACLs need to be set
+ */
+void
+pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
+{
+    pcmk__unpack_acl(acl_source, target, user);
+    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
+    pcmk__apply_acl(target);
 }
 
 static inline bool
@@ -388,7 +403,6 @@ purge_xml_attributes(xmlNode *xml)
 }
 
 /*!
- * \internal
  * \brief Copy ACL-allowed portions of specified XML
  *
  * \param[in]  user        Username whose ACLs should be used
@@ -420,9 +434,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    pcmk__unpack_acl(acl_source, target, user);
-    pcmk__set_xml_doc_flag(target, pcmk__xf_acl_enabled);
-    pcmk__apply_acl(target);
+    pcmk__enable_acl(acl_source, target, user);
 
     doc = target->doc->_private;
     for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {

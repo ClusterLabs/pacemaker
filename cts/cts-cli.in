@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2021 the Pacemaker project contributors
+# Copyright 2008-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -420,7 +420,7 @@ function test_crm_mon() {
     export CIB_file="$test_home/cli/crm_mon-partial.xml"
 
     desc="Text output of partially active resources"
-    cmd="crm_mon -1"
+    cmd="crm_mon -1 --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="XML output of partially active resources"
@@ -428,13 +428,13 @@ function test_crm_mon() {
     test_assert_validate $CRM_EX_OK 0
 
     desc="Text output of partially active resources, with inactive resources"
-    cmd="crm_mon -1 -r"
+    cmd="crm_mon -1 -r --show-detail"
     test_assert $CRM_EX_OK 0
 
     # XML already includes inactive resources
 
     desc="Complete brief text output, with inactive resources"
-    cmd="crm_mon -1 -r --include=all --brief"
+    cmd="crm_mon -1 -r --include=all --brief --show-detail"
     test_assert $CRM_EX_OK 0
 
     # XML does not have a brief output option
@@ -452,11 +452,11 @@ function test_crm_mon() {
     test_assert $CRM_EX_OK 0
 
     desc="Text output of inactive member of partially active group"
-    cmd="crm_mon -1 --resource=dummy-2"
+    cmd="crm_mon -1 --resource=dummy-2 --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="Complete brief text output grouped by node, with inactive resources"
-    cmd="crm_mon -1 -r --include=all --group-by-node --brief"
+    cmd="crm_mon -1 -r --include=all --group-by-node --brief --show-detail"
     test_assert $CRM_EX_OK 0
 
     desc="Text output of partially active resources, with inactive resources, filtered by node"
@@ -1627,7 +1627,8 @@ test_rules() {
 
     create_shadow_cib
 
-    cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
+    cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'
+    cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     cat <<EOF > "$TMPXML"
@@ -1730,44 +1731,63 @@ EOF
     cmd="crm_rule -c -r blahblah"
     test_assert $CRM_EX_NOSUCH
 
+    desc="Try to check a rule that doesn't exist, with XML output"
+    cmd="crm_rule -c -r blahblah --output-as=xml"
+    test_assert $CRM_EX_NOSUCH 0
+
     desc="Try to check a rule that has too many date_expressions"
     cmd="crm_rule -c -r cli-rule-too-many-date-expressions"
-    test_assert $CRM_EX_UNIMPLEMENT_FEATURE
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Verify basic rule is expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
-    test_assert $CRM_EX_EXPIRED
+    test_assert $CRM_EX_EXPIRED 0
+
+    desc="Verify basic rule is expired, with XML output"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml"
+    test_assert $CRM_EX_EXPIRED 0
 
     desc="Verify basic rule worked in the past"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101"
-    test_assert $CRM_EX_OK
+    test_assert $CRM_EX_OK 0
 
     desc="Verify basic rule is not yet in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
-    test_assert $CRM_EX_NOT_YET_IN_EFFECT
+    test_assert $CRM_EX_NOT_YET_IN_EFFECT 0
 
     desc="Verify date_spec rule with years has expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years"
-    test_assert $CRM_EX_EXPIRED
+    test_assert $CRM_EX_EXPIRED 0
+
+    desc="Verify multiple rules at once"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years"
+    test_assert $CRM_EX_EXPIRED 0
+
+    desc="Verify multiple rules at once, with XML output"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
+    test_assert $CRM_EX_EXPIRED 0
 
     desc="Verify date_spec rule with years is in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"
-    test_assert $CRM_EX_OK
+    test_assert $CRM_EX_OK 0
 
     desc="Try to check a rule whose date_spec does not contain years="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years"
-    test_assert $CRM_EX_NOSUCH
+    test_assert $CRM_EX_NOSUCH 0
 
     desc="Try to check a rule whose date_spec contains years= and moon="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
-    test_assert $CRM_EX_NOSUCH
+    test_assert $CRM_EX_NOSUCH 0
 
     desc="Try to check a rule with no date_expression"
     cmd="crm_rule -c -r cli-no-date_expression-rule"
-    test_assert $CRM_EX_UNIMPLEMENT_FEATURE
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     unset CIB_shadow_dir
 }
+
+# Ensure all command output is in portable locale for comparison
+export LC_ALL="C"
 
 # Process command-line arguments
 while [ $# -gt 0 ]; do
@@ -1870,7 +1890,7 @@ for t in $tests; do
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
-        -e 's/ last-rc-change=\"[A-Za-z0-9: ]*\"//'\
+        -e "s/ last-rc-change=['\"][-+A-Za-z0-9: ]*['\"],\{0,1\}//" \
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \

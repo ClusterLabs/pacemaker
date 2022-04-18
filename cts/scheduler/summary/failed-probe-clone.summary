@@ -1,0 +1,48 @@
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * Clone Set: ping-1-clone [ping-1]:
+      * Stopped (not installed): [ cluster01 cluster02 ]
+    * Clone Set: ping-2-clone [ping-2]:
+      * Stopped: [ cluster02 ]
+      * Stopped (not installed): [ cluster01 ]
+    * Clone Set: ping-3-clone [ping-3]:
+      * ping-3	(ocf:pacemaker:ping):	 FAILED cluster01
+      * Stopped (not installed): [ cluster02 ]
+
+Transition Summary:
+  * Start      ping-2:0     ( cluster02 )
+  * Stop       ping-3:0     ( cluster01 )  due to node availability
+
+Executing Cluster Transition:
+  * Cluster action:  clear_failcount for ping-1 on cluster02
+  * Cluster action:  clear_failcount for ping-1 on cluster01
+  * Cluster action:  clear_failcount for ping-2 on cluster02
+  * Cluster action:  clear_failcount for ping-2 on cluster01
+  * Pseudo action:   ping-2-clone_start_0
+  * Cluster action:  clear_failcount for ping-3 on cluster01
+  * Cluster action:  clear_failcount for ping-3 on cluster02
+  * Pseudo action:   ping-3-clone_stop_0
+  * Resource action: ping-2          start on cluster02
+  * Pseudo action:   ping-2-clone_running_0
+  * Resource action: ping-3          stop on cluster01
+  * Pseudo action:   ping-3-clone_stopped_0
+  * Resource action: ping-2          monitor=10000 on cluster02
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started cluster01
+    * Clone Set: ping-1-clone [ping-1]:
+      * Stopped (not installed): [ cluster01 cluster02 ]
+    * Clone Set: ping-2-clone [ping-2]:
+      * Started: [ cluster02 ]
+      * Stopped (not installed): [ cluster01 ]
+    * Clone Set: ping-3-clone [ping-3]:
+      * Stopped: [ cluster01 ]
+      * Stopped (not installed): [ cluster02 ]

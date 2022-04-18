@@ -89,8 +89,6 @@ post_connect(pcmk_ipc_api_t *api)
     return rc;
 }
 
-#define xml_true(xml, field) crm_is_true(crm_element_value(xml, field))
-
 static void
 set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
 {
@@ -98,8 +96,8 @@ set_node_info_data(pcmk_controld_api_reply_t *data, xmlNode *msg_data)
     if (msg_data == NULL) {
         return;
     }
-    data->data.node_info.have_quorum = xml_true(msg_data, XML_ATTR_HAVE_QUORUM);
-    data->data.node_info.is_remote = xml_true(msg_data, XML_NODE_IS_REMOTE);
+    data->data.node_info.have_quorum = pcmk__xe_attr_is_true(msg_data, XML_ATTR_HAVE_QUORUM);
+    data->data.node_info.is_remote = pcmk__xe_attr_is_true(msg_data, XML_NODE_IS_REMOTE);
     crm_element_value_int(msg_data, XML_ATTR_ID, &(data->data.node_info.id));
     data->data.node_info.uuid = crm_element_value(msg_data, XML_ATTR_UUID);
     data->data.node_info.uname = crm_element_value(msg_data, XML_ATTR_UNAME);
@@ -159,7 +157,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
            || !strcmp(command, CRM_OP_LRM_DELETE);
 }
 
-static void
+static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     struct controld_api_private_s *private = api->api_data;
@@ -238,6 +236,8 @@ done:
     if (pcmk__str_eq(value, PCMK__CONTROLD_CMD_NODES, pcmk__str_casei)) {
         g_list_free_full(reply_data.data.nodes, free);
     }
+
+    return false;
 }
 
 pcmk__ipc_methods_t *

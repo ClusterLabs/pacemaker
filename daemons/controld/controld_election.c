@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,8 @@
 #include <crm/crm.h>
 
 #include <pacemaker-controld.h>
+
+extern pcmk__output_t *logger_out;
 
 static election_t *fsa_election = NULL;
 
@@ -206,23 +208,26 @@ do_dc_takeover(long long action,
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
-    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL,
-                         NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
-                         pcmk__btoa(watchdog), FALSE, NULL, NULL);
+    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                          NULL, NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
+                          pcmk__btoa(watchdog), NULL, NULL);
 
-    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         "dc-version", PACEMAKER_VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
+    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                          NULL, NULL, NULL, NULL, "dc-version",
+                          PACEMAKER_VERSION "-" BUILD_VERSION, NULL, NULL);
 
-    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         "cluster-infrastructure", cluster_type, FALSE, NULL, NULL);
+    cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                          NULL, NULL, NULL, NULL, "cluster-infrastructure",
+                          cluster_type, NULL, NULL);
 
 #if SUPPORT_COROSYNC
     if (fsa_cluster_name == NULL && is_corosync_cluster()) {
         char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name) {
-            update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                 "cluster-name", cluster_name, FALSE, NULL, NULL);
+            cib__update_node_attr(logger_out, fsa_cib_conn, cib_none,
+                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
+                                  "cluster-name", cluster_name, NULL, NULL);
         }
         free(cluster_name);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2021 the Pacemaker project contributors
+ * Copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,21 +29,19 @@
 #include <crm/common/output_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
+
 #  include <gnutls/gnutls.h>
-gnutls_anon_client_credentials_t anon_cred_c;
 
-#define TLS_HANDSHAKE_TIMEOUT_MS 5000
+#  define TLS_HANDSHAKE_TIMEOUT_MS 5000
 
-const int kx_prio[] = {
-    GNUTLS_KX_ANON_DH,
-    0
-};
-
+static gnutls_anon_client_credentials_t anon_cred_c;
 static gboolean remote_gnutls_credentials_init = FALSE;
+
 #else
+
 typedef void gnutls_session_t;
-#endif
+
+#endif // HAVE_GNUTLS_GNUTLS_H
 
 #include <arpa/inet.h>
 
@@ -123,17 +121,9 @@ cib_remote_new(const char *server, const char *user, const char *passwd, int por
     cib->variant = cib_remote;
     cib->variant_opaque = private;
 
-    if (server) {
-        private->server = strdup(server);
-    }
-
-    if (user) {
-        private->user = strdup(user);
-    }
-
-    if (passwd) {
-        private->passwd = strdup(passwd);
-    }
+    pcmk__str_update(&private->server, server);
+    pcmk__str_update(&private->user, user);
+    pcmk__str_update(&private->passwd, passwd);
 
     private->port = port;
     private->encrypted = encrypted;

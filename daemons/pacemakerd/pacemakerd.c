@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,6 +47,7 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features(pcmk__output_t *out, va_list args) {
     out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
@@ -54,6 +55,7 @@ pacemakerd_features(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
@@ -133,7 +135,7 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
 
     if (rc < 0) {
         crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
+                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
     }
 }
 
@@ -259,6 +261,10 @@ main(int argc, char **argv)
     pcmk_ipc_api_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
+    subdaemon_check_progress = time(NULL);
+
+    setenv("LC_ALL", "C", 1); // Ensure logs are in a common language
+
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);
@@ -291,8 +297,6 @@ main(int argc, char **argv)
         out->version(out, false);
         goto done;
     }
-
-    setenv("LC_ALL", "C", 1);
 
     pcmk__set_env_option("mcp", "true");
 
@@ -356,7 +360,8 @@ main(int argc, char **argv)
     {
         const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
-        if (facility && !pcmk__str_eq(facility, "none", pcmk__str_casei)) {
+        if (!pcmk__str_eq(facility, PCMK__VALUE_NONE,
+                          pcmk__str_casei|pcmk__str_null_matches)) {
             setenv("HA_LOGFACILITY", facility, 1);
         }
     }

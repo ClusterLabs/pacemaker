@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__SERVICES_COMPAT__H
-#  define PCMK__SERVICES_COMPAT__H
+#ifndef PCMK__CRM_SERVICES_COMPAT__H
+#  define PCMK__CRM_SERVICES_COMPAT__H
+
+
+#include <crm/common/results.h>
+#include <crm/services.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,8 +27,6 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
-
-#include <crm/common/results.h>
 
 #  ifndef LSB_ROOT_DIR
      //! \deprecated Do not use

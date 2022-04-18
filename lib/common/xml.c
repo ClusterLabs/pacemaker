@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -975,6 +975,7 @@ decompress_file(const char *filename)
         crm_err("Could not prepare to read compressed %s: %s "
                 CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         BZ2_bzReadClose(&rc, bz_file);
+        fclose(input);
         return NULL;
     }
 
@@ -1369,6 +1370,10 @@ crm_xml_escape(const char *text)
     copy = strdup(text);
     CRM_ASSERT(copy != NULL);
     for (size_t index = 0; index < length; index++) {
+        if(copy[index] & 0x80 && copy[index+1] & 0x80){
+            index++;
+            break;
+        }
         switch (copy[index]) {
             case 0:
                 break;
@@ -2516,8 +2521,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                *object_href_val = NULL;
 
 #if XML_PARSER_DEBUG
-    crm_log_xml_trace("update:", update);
-    crm_log_xml_trace("target:", target);
+    crm_log_xml_trace(update, "update:");
+    crm_log_xml_trace(target, "target:");
 #endif
 
     CRM_CHECK(update != NULL, return);

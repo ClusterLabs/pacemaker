@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,15 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PACEMAKER__H
-#  define PACEMAKER__H
+#ifndef PCMK__PACEMAKER__H
+#  define PCMK__PACEMAKER__H
+
+#  include <glib.h>
+#  include <libxml/tree.h>
+#  include <crm/cib/cib_types.h>
+#  include <crm/pengine/pe_types.h>
+
+#  include <crm/stonith-ng.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,11 +27,6 @@ extern "C" {
  * \ingroup pacemaker
  */
 
-#  include <glib.h>
-#  include <libxml/tree.h>
-#  include <crm/pengine/pe_types.h>
-
-#  include <crm/stonith-ng.h>
 
 /*!
  * \brief Modify operation of running a cluster simulation.
@@ -174,27 +176,42 @@ int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
  */
 int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
-
 /*!
- * \brief Perform a STONITH action.
+ * \brief Output the current status of the cluster, formatted in the same way
+ *        that `crm_mon --output-as=xml` would.
  *
- * \param[in] st        A connection to the STONITH API.
- * \param[in] target    The node receiving the action.
- * \param[in] action    The action to perform.
- * \param[in] name      Who requested the fence action?
- * \param[in] timeout   How long to wait for the operation to complete (in ms).
- * \param[in] tolerance If a successful action for \p target happened within
- *                      this many ms, return 0 without performing the action
- *                      again.
- * \param[in] delay     Apply a fencing delay. Value -1 means disable also any
- *                      static/random fencing delays from pcmk_delay_base/max.
+ * \param[in,out] xml The destination for the result, as an XML tree.
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_fence_action(stonith_t *st, const char *target, const char *action,
-                      const char *name, unsigned int timeout, unsigned int tolerance,
-                      int delay);
+int pcmk_status(xmlNodePtr *xml);
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
+
+/*!
+ * \brief Ask the cluster to perform fencing
+ *
+ * \param[in] st        A connection to the fencer API
+ * \param[in] target    The node that should be fenced
+ * \param[in] action    The fencing action (on, off, reboot) to perform
+ * \param[in] name      Who requested the fence action?
+ * \param[in] timeout   How long to wait for the operation to complete (in ms)
+ * \param[in] tolerance If a successful action for \p target happened within
+ *                      this many ms, return 0 without performing the action
+ *                      again
+ * \param[in] delay     Apply this delay (in milliseconds) before initiating the
+ *                      fencing action (a value of -1 applies no delay and also
+ *                      disables any fencing delay from pcmk_delay_base and
+ *                      pcmk_delay_max)
+ * \param[out] reason   If not NULL, where to put descriptive failure reason
+ *
+ * \return Standard Pacemaker return code
+ * \note If \p reason is not NULL, the caller is responsible for freeing its
+ *       returned value.
+ */
+int pcmk_request_fencing(stonith_t *st, const char *target, const char *action,
+                         const char *name, unsigned int timeout,
+                         unsigned int tolerance, int delay, char **reason);
 
 /*!
  * \brief List the fencing operations that have occurred for a specific node.

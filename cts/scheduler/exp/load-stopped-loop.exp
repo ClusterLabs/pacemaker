@@ -23,7 +23,7 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="113" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-0-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="116" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-0-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="v03-b" CRM_meta_on_node_uuid="v03-b" CRM_meta_timeout="20000" backing_iosched="noop" cmds_max="128"  discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
@@ -39,13 +39,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="113" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-0-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b"/>
+        <rsc_op id="116" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-0-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="116" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a">
+      <rsc_op id="113" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-0-iscsi" long-id="vds-ok-pool-0-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="v03-a" CRM_meta_on_node_uuid="v03-a" CRM_meta_timeout="20000" backing_iosched="noop" cmds_max="128"  discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.235 10.5.4.236" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.0" udev="yes" username="****"/>
       </rsc_op>
@@ -61,7 +61,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="116" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a"/>
+        <rsc_op id="113" operation="reload-agent" operation_key="vds-ok-pool-0-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a"/>
       </trigger>
     </inputs>
   </synapse>
@@ -89,7 +89,7 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="111" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-1-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="114" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-1-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:0" class="ocf" provider="vds-ok" type="iscsi"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="v03-b" CRM_meta_on_node_uuid="v03-b" CRM_meta_timeout="20000" backing_iosched="noop" cmds_max="128"  discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
@@ -105,13 +105,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="111" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-1-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b"/>
+        <rsc_op id="114" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:0_reload-agent_0" internal_operation_key="vds-ok-pool-1-iscsi:1_reload-agent_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="114" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a">
+      <rsc_op id="111" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="vds-ok-pool-1-iscsi" long-id="vds-ok-pool-1-iscsi:2" class="ocf" provider="vds-ok" type="iscsi"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="v03-a" CRM_meta_on_node_uuid="v03-a" CRM_meta_timeout="20000" backing_iosched="noop" cmds_max="128"  discovery_type="sendtargets" first_burst_size="131072" iosched="deadline" iosched_tunables="front_merges=0 read_expire=150 write_expire=1500" is_lvm_pv="1" max_burst_size="262144" max_recv_size="65536" max_xmit_size="65536" mpath_failback="5" mpath_no_path_retry="queue" mpath_policy="multibus" mpath_rr_min_io="1" noop_out_interval="3" noop_out_timeout="2" password="****" portals="10.5.4.237 10.5.4.238" queue_depth="128" readahead="256" replacement_timeout="15" target="iqn.2010-01.com.vds-ok:storage.vds-ok.s01.1" udev="yes" username="****"/>
       </rsc_op>
@@ -127,7 +127,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="114" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a"/>
+        <rsc_op id="111" operation="reload-agent" operation_key="vds-ok-pool-1-iscsi:2_reload-agent_0" on_node="v03-a" on_node_uuid="v03-a"/>
       </trigger>
     </inputs>
   </synapse>
@@ -142,7 +142,7 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="115" operation="start" operation_key="stonith-v03-b_start_0" on_node="v03-a" on_node_uuid="v03-a">
+      <rsc_op id="112" operation="start" operation_key="stonith-v03-b_start_0" on_node="v03-a" on_node_uuid="v03-a">
         <primitive id="stonith-v03-b" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="v03-a" CRM_meta_on_node_uuid="v03-a" CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-b-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-b" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
@@ -162,7 +162,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="115" operation="start" operation_key="stonith-v03-b_start_0" on_node="v03-a" on_node_uuid="v03-a"/>
+        <rsc_op id="112" operation="start" operation_key="stonith-v03-b_start_0" on_node="v03-a" on_node_uuid="v03-a"/>
       </trigger>
     </inputs>
   </synapse>
@@ -177,7 +177,7 @@
   </synapse>
   <synapse id="16">
     <action_set>
-      <rsc_op id="112" operation="start" operation_key="stonith-v03-a_start_0" on_node="v03-b" on_node_uuid="v03-b">
+      <rsc_op id="115" operation="start" operation_key="stonith-v03-a_start_0" on_node="v03-b" on_node_uuid="v03-b">
         <primitive id="stonith-v03-a" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="v03-b" CRM_meta_on_node_uuid="v03-b" CRM_meta_timeout="20000" auth="md5"  ipaddr="v03-a-control" lanplus="true" login="****" method="onoff" passwd="****" pcmk_host_argument="none" pcmk_host_check="static-list" pcmk_host_list="v03-a" power_wait="5" priority="0" recheck_wait="1" rechecks="5"/>
       </rsc_op>
@@ -197,7 +197,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="112" operation="start" operation_key="stonith-v03-a_start_0" on_node="v03-b" on_node_uuid="v03-b"/>
+        <rsc_op id="115" operation="start" operation_key="stonith-v03-a_start_0" on_node="v03-b" on_node_uuid="v03-b"/>
       </trigger>
     </inputs>
   </synapse>

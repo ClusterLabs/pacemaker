@@ -261,6 +261,7 @@ These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
 .. table:: **Properties of a Primitive Resource**
+   :widths: 1 4
 
    +----------+------------------------------------------------------------------+
    | Field    | Description                                                      |
@@ -342,6 +343,8 @@ behave and can be easily set using the ``--meta`` option of the
 **crm_resource** command.
 
 .. table:: **Meta-attributes of a Primitive Resource**
+   :class: longtable
+   :widths: 2 2 3
 
    +----------------------------+----------------------------------+------------------------------------------------------+
    | Field                      | Default                          | Description                                          |
@@ -475,10 +478,22 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  |   leave them that way                                |
    |                            |                                  | * ``stop_start``: stop all active instances and      |
    |                            |                                  |   start the resource in one location only            |
+   |                            |                                  | * ``stop_unexpected``: stop all active instances     |
+   |                            |                                  |   except where the resource should be active (this   |
+   |                            |                                  |   should be used only when extra instances are not   |
+   |                            |                                  |   expected to disrupt existing instances, and the    |
+   |                            |                                  |   resource agent's monitor of an existing instance   |
+   |                            |                                  |   is capable of detecting any problems that could be |
+   |                            |                                  |   caused; note that any resources ordered after this |
+   |                            |                                  |   will still need to be restarted)                   |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | allow-migrate              | TRUE for ocf:pacemaker:remote    | Whether the cluster should try to "live migrate"     |
    |                            | resources, FALSE otherwise       | this resource when it needs to be moved (see         |
    |                            |                                  | :ref:`live-migration`)                               |
+   +----------------------------+----------------------------------+------------------------------------------------------+
+   | allow-unhealthy-nodes      | FALSE                            | Whether the resource should be able to run on a node |
+   |                            |                                  | even if the node's health score would otherwise      |
+   |                            |                                  | prevent it (see :ref:`node-health`) *(since 2.1.3)*  |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | container-attribute-target |                                  | Specific to bundle resources; see                    |
    |                            |                                  | :ref:`s-bundle-attributes`                           |
@@ -720,6 +735,8 @@ XML attributes, or in a separate ``meta_attributes`` block as ``nvpair`` element
 XML attributes take precedence over ``nvpair`` elements if both are specified.
 
 .. table:: **Properties of an Operation**
+   :class: longtable
+   :widths: 1 2 3
 
    +----------------+-----------------------------------+-----------------------------------------------------+
    | Field          | Default                           | Description                                         |
@@ -1043,7 +1060,7 @@ Once you've done whatever you needed to do, you can then re-enable it with
 
    # cibadmin --modify --xml-text '<op id="public-ip-check" enabled="true"/>'
 
-.. [#] See https://github.com/ClusterLabs/OCF-spec/tree/master/ra. The
+.. [#] See https://github.com/ClusterLabs/OCF-spec/tree/main/ra. The
        Pacemaker implementation has been somewhat extended from the OCF specs.
 
 .. [#] The resource-agents source code includes the **ocf-tester** script,

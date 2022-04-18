@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
@@ -27,6 +29,55 @@
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
+
+static GList *
+sorted_hash_table_values(GHashTable *table)
+{
+    GList *retval = NULL;
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init(&iter, table);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        if (!g_list_find_custom(retval, value, (GCompareFunc) strcmp)) {
+            retval = g_list_prepend(retval, (char *) value);
+        }
+    }
+
+    retval = g_list_sort(retval, (GCompareFunc) strcmp);
+    return retval;
+}
+
+static GList *
+nodes_with_status(GHashTable *table, const char *status)
+{
+    GList *retval = NULL;
+    GHashTableIter iter;
+    gpointer key, value;
+
+    g_hash_table_iter_init(&iter, table);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        if (!strcmp((char *) value, status)) {
+            retval = g_list_prepend(retval, key);
+        }
+    }
+
+    retval = g_list_sort(retval, (GCompareFunc) pcmk__numeric_strcasecmp);
+    return retval;
+}
+
+static char *
+node_list_to_str(GList *list)
+{
+    char *retval = NULL;
+    size_t len = 0;
+
+    for (GList *iter = list; iter != NULL; iter = iter->next) {
+        pcmk__add_word(&retval, &len, (char *) iter->data);
+    }
+
+    return retval;
+}
 
 static void
 clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
@@ -639,11 +690,11 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("clone", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -701,19 +752,19 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("clone", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_default(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    GHashTable *stopped = NULL;
+
     char *list_text = NULL;
-    char *stopped_list = NULL;
     size_t list_text_len = 0;
-    size_t stopped_list_len = 0;
 
     GList *promoted_list = NULL;
     GList *started_list = NULL;
@@ -767,8 +818,12 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+                && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-                pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
+                if (stopped == NULL) {
+                    stopped = pcmk__strkey_table(free, free);
+                }
+                g_hash_table_insert(stopped, strdup(child_rsc->id), strdup("Stopped"));
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -822,7 +877,6 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
-        free(stopped_list);
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
         return pcmk_rc_ok;
     }
@@ -890,23 +944,17 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        const char *state = "Stopped";
-        enum rsc_role_e role = configured_role(rsc);
-
-        if (role == RSC_ROLE_STOPPED) {
-            state = "Stopped (disabled)";
-        }
-
         if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;
             GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
-            /* Custom stopped list for non-unique clones */
-            free(stopped_list);
-            stopped_list = NULL;
-            stopped_list_len = 0;
+            /* Custom stopped table for non-unique clones */
+            if (stopped != NULL) {
+                g_hash_table_destroy(stopped);
+                stopped = NULL;
+            }
 
             if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
@@ -922,19 +970,51 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
                     pcmk__str_in_list(node->details->uname, only_node,
                                       pcmk__str_star_matches|pcmk__str_casei)) {
-                    pcmk__add_word(&stopped_list, &stopped_list_len,
-                                   node->details->uname);
+                    xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node->details->uname);
+                    const char *state = "Stopped";
+
+                    if (configured_role(rsc) == RSC_ROLE_STOPPED) {
+                        state = "Stopped (disabled)";
+                    }
+
+                    if (stopped == NULL) {
+                        stopped = pcmk__strkey_table(free, free);
+                    }
+                    if (probe_op != NULL) {
+                        int rc;
+
+                        pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+                        g_hash_table_insert(stopped, strdup(node->details->uname),
+                                            crm_strdup_printf("Stopped (%s)", services_ocf_exitcode_str(rc)));
+                    } else {
+                        g_hash_table_insert(stopped, strdup(node->details->uname),
+                                            strdup(state));
+                    }
                 }
             }
             g_list_free(list);
         }
 
-        if (stopped_list != NULL) {
+        if (stopped != NULL) {
+            GList *list = sorted_hash_table_values(stopped);
+
             clone_header(out, &rc, rsc, clone_data);
 
-            out->list_item(out, NULL, "%s: [ %s ]", state, stopped_list);
-            free(stopped_list);
-            stopped_list_len = 0;
+            for (GList *status_iter = list; status_iter != NULL; status_iter = status_iter->next) {
+                const char *status = status_iter->data;
+                GList *nodes = nodes_with_status(stopped, status);
+                char *str = node_list_to_str(nodes);
+
+                if (str != NULL) {
+                    out->list_item(out, NULL, "%s: [ %s ]", status, str);
+                    free(str);
+                }
+
+                g_list_free(nodes);
+            }
+
+            g_list_free(list);
+            g_hash_table_destroy(stopped);
 
         /* If there are no instances of this clone (perhaps because there are no
          * nodes configured), simply output the clone header by itself.  This can
@@ -1051,4 +1131,12 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
     }
 
     return !passes;
+}
+
+const char *
+pe__clone_child_id(pe_resource_t *rsc)
+{
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+    return ID(clone_data->xml_obj_child);
 }

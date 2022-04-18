@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -773,9 +773,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         v = calloc(1, sizeof(attribute_value_t));
         CRM_ASSERT(v != NULL);
 
-        v->nodename = strdup(host);
-        CRM_ASSERT(v->nodename != NULL);
-
+        pcmk__str_update(&v->nodename, host);
         v->is_remote = is_remote;
         g_hash_table_replace(values, v->nodename, v);
     }
@@ -941,8 +939,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
                    attr, host, v->current? v->current : "(unset)", value? value : "(unset)", peer->uname);
-        free(v->current);
-        v->current = (value? strdup(value) : NULL);
+        pcmk__str_update(&v->current, value);
         a->changed = TRUE;
 
         if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
@@ -1230,10 +1227,7 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
 
     a_v->nodeid = v->nodeid;
     a_v->nodename = strdup(v->nodename);
-
-    if (v->current != NULL) {
-        a_v->current = strdup(v->current);
-    }
+    pcmk__str_update(&a_v->current, v->current);
 
     g_hash_table_replace(t, a_v->nodename, a_v);
 }

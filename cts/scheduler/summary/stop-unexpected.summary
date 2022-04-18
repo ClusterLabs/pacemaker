@@ -1,0 +1,41 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node2 node3 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node2
+    * Resource Group: dgroup:
+      * dummy	(ocf:heartbeat:DummyTimeout):	 FAILED [ node2 node3 ]
+      * dummy2	(ocf:heartbeat:Dummy):	 Started node2
+      * dummy3	(ocf:heartbeat:Dummy):	 Started node2
+
+Transition Summary:
+  * Recover    dummy      ( node2 )  due to being multiply active
+  * Restart    dummy2     ( node2 )  due to required dummy start
+  * Restart    dummy3     ( node2 )  due to required dummy2 start
+
+Executing Cluster Transition:
+  * Pseudo action:   dgroup_stop_0
+  * Resource action: dummy3          stop on node2
+  * Resource action: dummy2          stop on node2
+  * Resource action: dummy           stop on node3
+  * Pseudo action:   dgroup_stopped_0
+  * Pseudo action:   dgroup_start_0
+  * Pseudo action:   dummy_start_0
+  * Resource action: dummy           monitor=10000 on node2
+  * Resource action: dummy2          start on node2
+  * Resource action: dummy2          monitor=10000 on node2
+  * Resource action: dummy3          start on node2
+  * Resource action: dummy3          monitor=10000 on node2
+  * Pseudo action:   dgroup_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node2 node3 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node2
+    * Resource Group: dgroup:
+      * dummy	(ocf:heartbeat:DummyTimeout):	 Started node2
+      * dummy2	(ocf:heartbeat:Dummy):	 Started node2
+      * dummy3	(ocf:heartbeat:Dummy):	 Started node2

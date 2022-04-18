@@ -22,7 +22,7 @@
 #include <config.h>
 
 #if HAVE_OPENSSL_MD5
-# define GL_OPENSSL_INLINE _GL_EXTERN_INLINE
+# define GL_OPENSSL_INLINE _GL_INLINE
 #endif
 #include "md5.h"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -186,7 +186,7 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 static bool
 logfile_disabled(const char *filename)
 {
-    return pcmk__str_eq(filename, "none", pcmk__str_casei)
+    return pcmk__str_eq(filename, PCMK__VALUE_NONE, pcmk__str_casei)
            || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
 }
 
@@ -771,57 +771,79 @@ crm_log_preinit(const char *entity, int argc, char **argv)
     int32_t qb_facility = 0;
     pid_t pid = getpid();
     const char *nodename = "localhost";
-    static bool have_logging = FALSE;
+    static bool have_logging = false;
 
-    if(have_logging == FALSE) {
-        have_logging = TRUE;
-
-        crm_xml_init(); /* Sets buffer allocation strategy */
-
-        if (crm_trace_nonlog == 0) {
-            crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
-        }
-
-        umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-        /* Redirect messages from glib functions to our handler */
-        glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
-
-        /* and for good measure... - this enum is a bit field (!) */
-        g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
-
-        /* Set crm_system_name, which is used as the logging name. It may also
-         * be used for other purposes such as an IPC client name.
-         */
-        set_identity(entity, argc, argv);
-
-        qb_facility = qb_log_facility2int("local0");
-        qb_log_init(crm_system_name, qb_facility, LOG_ERR);
-        crm_log_level = LOG_CRIT;
-
-        /* Nuke any syslog activity until it's asked for */
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
-        // Shorter than default, generous for what we *should* send to syslog
-        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
-#endif
-        if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
-            nodename = res.nodename;
-        }
-
-        /* Set format strings and disable threading
-         * Pacemaker and threads do not mix well (due to the amount of forking)
-         */
-        qb_log_tags_stringify_fn_set(crm_quark_to_string);
-        for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
-#ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
-            // End truncated lines with '...'
-            qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
-#endif
-            set_format_string(lpc, crm_system_name, pid, nodename);
-        }
+    if (have_logging) {
+        return;
     }
+
+    have_logging = true;
+
+    crm_xml_init(); /* Sets buffer allocation strategy */
+
+    if (crm_trace_nonlog == 0) {
+        crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
+    }
+
+    umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+    /* Redirect messages from glib functions to our handler */
+    glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
+
+    /* and for good measure... - this enum is a bit field (!) */
+    g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
+
+    /* Set crm_system_name, which is used as the logging name. It may also
+     * be used for other purposes such as an IPC client name.
+     */
+    set_identity(entity, argc, argv);
+
+    qb_facility = qb_log_facility2int("local0");
+    qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+    crm_log_level = LOG_CRIT;
+
+    /* Nuke any syslog activity until it's asked for */
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
+    // Shorter than default, generous for what we *should* send to syslog
+    qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
+#endif
+    if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+        nodename = res.nodename;
+    }
+
+    /* Set format strings and disable threading
+     * Pacemaker and threads do not mix well (due to the amount of forking)
+     */
+    qb_log_tags_stringify_fn_set(crm_quark_to_string);
+    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
+        qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
+        // End truncated lines with '...'
+        qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
+#endif
+        set_format_string(lpc, crm_system_name, pid, nodename);
+    }
+
+#ifdef ENABLE_NLS
+    /* Enable translations (experimental). Currently we only have a few
+     * proof-of-concept translations for some option help. The goal would be to
+     * offer translations for option help and man pages rather than logs or
+     * documentation, to reduce the burden of maintaining them.
+     */
+
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
+
+    // Tell gettext where to find Pacemaker message catalogs
+    CRM_ASSERT(bindtextdomain(PACKAGE, PCMK__LOCALE_DIR) != NULL);
+
+    // Tell gettext to use the Pacemaker message catalogs
+    CRM_ASSERT(textdomain(PACKAGE) != NULL);
+
+    // Tell gettext that the translated strings are stored in UTF-8
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
+#endif
 }
 
 gboolean
@@ -847,12 +869,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pcmk__is_daemon) {
             facility = "daemon";
         } else {
-            facility = "none";
+            facility = PCMK__VALUE_NONE;
         }
         pcmk__set_env_option(PCMK__ENV_LOGFACILITY, facility);
     }
 
-    if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
+    if (pcmk__str_eq(facility, PCMK__VALUE_NONE, pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -889,7 +911,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     {
         const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
-        if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
+        if (!pcmk__str_eq(PCMK__VALUE_NONE, logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
             // Daemons always get a log file, unless explicitly set to "none"
             pcmk__add_logfile(logfile);
@@ -922,7 +944,6 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     if (pcmk__is_daemon) {
         int user = getuid();
-        const char *base = CRM_CORE_DIR;
         struct passwd *pwent = getpwuid(user);
 
         if (pwent == NULL) {
@@ -931,21 +952,11 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
-        } else if (chdir(base) < 0) {
-            crm_perror(LOG_INFO, "Cannot change active directory to %s", base);
+        } else if (chdir(CRM_CORE_DIR) < 0) {
+            crm_perror(LOG_INFO, "Cannot change active directory to " CRM_CORE_DIR);
 
         } else {
-            crm_info("Changed active directory to %s", base);
-#if 0
-            {
-                char path[512];
-
-                snprintf(path, 512, "%s-%lu", crm_system_name, (unsigned long) getpid());
-                mkdir(path, 0750);
-                chdir(path);
-                crm_info("Changed active directory to %s/%s/%s", base, pwent->pw_name, path);
-            }
-#endif
+            crm_info("Changed active directory to " CRM_CORE_DIR);
         }
 
         /* Original meanings from signal(7)

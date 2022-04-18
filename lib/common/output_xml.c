@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -242,7 +242,8 @@ xml_version(pcmk__output_t *out, bool extended) {
     pcmk__output_create_xml_node(out, "version",
                                  "program", "Pacemaker",
                                  "version", PACEMAKER_VERSION,
-                                 "author", "Andrew Beekhof",
+                                 "author", "Andrew Beekhof and the "
+                                           "Pacemaker project contributors",
                                  "build", BUILD_VERSION,
                                  "features", CRM_FEATURES,
                                  NULL);

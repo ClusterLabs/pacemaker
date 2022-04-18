@@ -1,0 +1,148 @@
+Using the original execution date of: 2022-01-05 22:04:47Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * GuestOnline: [ httpd-bundle-0@rhel8-2 ]
+
+  * Full List of Resources:
+    * dummy3	(ocf:pacemaker:Dummy):	 Started rhel8-1
+    * dummy5	(ocf:pacemaker:Dummy):	 Started rhel8-2
+    * Container bundle set: httpd-bundle [localhost/pcmktest:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel8-2
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * dummy4	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * dummy1	(ocf:pacemaker:Dummy):	 Started rhel8-1
+    * dummy2	(ocf:pacemaker:Dummy):	 Started rhel8-1
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-3
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-5
+    * Resource Group: g1:
+      * g1m1	(ocf:pacemaker:Dummy):	 Started rhel8-5
+      * g1m2	(ocf:pacemaker:Dummy):	 Started rhel8-5
+      * g1m3	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Clone Set: clone1-clone [clone1]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+      * Stopped: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+    * Clone Set: clone2-clone [clone2]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+      * Stopped: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
+
+Transition Summary:
+  * Stop       dummy3                              (            rhel8-1 )  due to node availability
+  * Move       dummy5                              ( rhel8-2 -> rhel8-5 )
+  * Move       httpd-bundle-ip-192.168.122.131     ( rhel8-2 -> rhel8-5 )
+  * Move       httpd-bundle-podman-0               ( rhel8-2 -> rhel8-5 )
+  * Move       httpd-bundle-0                      ( rhel8-2 -> rhel8-5 )
+  * Restart    httpd:0                             (     httpd-bundle-0 )  due to required httpd-bundle-podman-0 start
+  * Start      httpd-bundle-1                      (            rhel8-1 )  due to unrunnable httpd-bundle-podman-1 start (blocked)
+  * Start      httpd:1                             (     httpd-bundle-1 )  due to unrunnable httpd-bundle-podman-1 start (blocked)
+  * Start      httpd-bundle-2                      (            rhel8-2 )  due to unrunnable httpd-bundle-podman-2 start (blocked)
+  * Start      httpd:2                             (     httpd-bundle-2 )  due to unrunnable httpd-bundle-podman-2 start (blocked)
+  * Move       dummy4                              ( rhel8-5 -> rhel8-4 )
+  * Move       dummy1                              ( rhel8-1 -> rhel8-3 )
+  * Move       dummy2                              ( rhel8-1 -> rhel8-3 )
+  * Move       Fencing                             ( rhel8-3 -> rhel8-1 )
+  * Move       FencingFail                         ( rhel8-5 -> rhel8-2 )
+  * Move       g1m1                                ( rhel8-5 -> rhel8-4 )
+  * Move       g1m2                                ( rhel8-5 -> rhel8-4 )
+  * Move       g1m3                                ( rhel8-5 -> rhel8-4 )
+  * Stop       clone1:3                            (            rhel8-5 )  due to node availability
+  * Stop       clone2:3                            (            rhel8-5 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: dummy3          stop on rhel8-1
+  * Resource action: dummy5          stop on rhel8-2
+  * Resource action: dummy4          stop on rhel8-5
+  * Resource action: dummy1          stop on rhel8-1
+  * Resource action: dummy2          stop on rhel8-1
+  * Resource action: Fencing         stop on rhel8-3
+  * Resource action: FencingFail     stop on rhel8-5
+  * Pseudo action:   g1_stop_0
+  * Resource action: g1m3            stop on rhel8-5
+  * Pseudo action:   clone1-clone_stop_0
+  * Pseudo action:   clone2-clone_stop_0
+  * Pseudo action:   httpd-bundle_stop_0
+  * Pseudo action:   httpd-bundle_start_0
+  * Pseudo action:   load_stopped_rhel8-4
+  * Pseudo action:   load_stopped_rhel8-3
+  * Pseudo action:   load_stopped_httpd-bundle-2
+  * Pseudo action:   load_stopped_httpd-bundle-1
+  * Pseudo action:   load_stopped_httpd-bundle-0
+  * Pseudo action:   load_stopped_rhel8-1
+  * Pseudo action:   httpd-bundle-clone_stop_0
+  * Resource action: dummy4          start on rhel8-4
+  * Resource action: dummy1          start on rhel8-3
+  * Resource action: dummy2          start on rhel8-3
+  * Resource action: Fencing         start on rhel8-1
+  * Resource action: FencingFail     start on rhel8-2
+  * Resource action: g1m2            stop on rhel8-5
+  * Resource action: clone1          stop on rhel8-5
+  * Pseudo action:   clone1-clone_stopped_0
+  * Resource action: clone2          stop on rhel8-5
+  * Pseudo action:   clone2-clone_stopped_0
+  * Resource action: httpd           stop on httpd-bundle-0
+  * Pseudo action:   httpd-bundle-clone_stopped_0
+  * Pseudo action:   httpd-bundle-clone_start_0
+  * Resource action: httpd-bundle-0  stop on rhel8-2
+  * Resource action: dummy4          monitor=10000 on rhel8-4
+  * Resource action: dummy1          monitor=10000 on rhel8-3
+  * Resource action: dummy2          monitor=10000 on rhel8-3
+  * Resource action: Fencing         monitor=120000 on rhel8-1
+  * Resource action: g1m1            stop on rhel8-5
+  * Pseudo action:   load_stopped_rhel8-5
+  * Resource action: dummy5          start on rhel8-5
+  * Resource action: httpd-bundle-podman-0 stop on rhel8-2
+  * Pseudo action:   g1_stopped_0
+  * Pseudo action:   g1_start_0
+  * Resource action: g1m1            start on rhel8-4
+  * Resource action: g1m2            start on rhel8-4
+  * Resource action: g1m3            start on rhel8-4
+  * Pseudo action:   httpd-bundle_stopped_0
+  * Pseudo action:   load_stopped_rhel8-2
+  * Resource action: dummy5          monitor=10000 on rhel8-5
+  * Resource action: httpd-bundle-ip-192.168.122.131 stop on rhel8-2
+  * Pseudo action:   g1_running_0
+  * Resource action: g1m1            monitor=10000 on rhel8-4
+  * Resource action: g1m2            monitor=10000 on rhel8-4
+  * Resource action: g1m3            monitor=10000 on rhel8-4
+  * Resource action: httpd-bundle-ip-192.168.122.131 start on rhel8-5
+  * Resource action: httpd-bundle-podman-0 start on rhel8-5
+  * Resource action: httpd-bundle-0  start on rhel8-5
+  * Resource action: httpd           start on httpd-bundle-0
+  * Resource action: httpd           monitor=15000 on httpd-bundle-0
+  * Pseudo action:   httpd-bundle-clone_running_0
+  * Resource action: httpd-bundle-ip-192.168.122.131 monitor=60000 on rhel8-5
+  * Resource action: httpd-bundle-podman-0 monitor=60000 on rhel8-5
+  * Resource action: httpd-bundle-0  monitor=30000 on rhel8-5
+  * Pseudo action:   httpd-bundle_running_0
+Using the original execution date of: 2022-01-05 22:04:47Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+    * GuestOnline: [ httpd-bundle-0@rhel8-5 ]
+
+  * Full List of Resources:
+    * dummy3	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy5	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Container bundle set: httpd-bundle [localhost/pcmktest:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel8-5
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+    * dummy4	(ocf:pacemaker:Dummy):	 Started rhel8-4
+    * dummy1	(ocf:pacemaker:Dummy):	 Started rhel8-3
+    * dummy2	(ocf:pacemaker:Dummy):	 Started rhel8-3
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-2
+    * Resource Group: g1:
+      * g1m1	(ocf:pacemaker:Dummy):	 Started rhel8-4
+      * g1m2	(ocf:pacemaker:Dummy):	 Started rhel8-4
+      * g1m3	(ocf:pacemaker:Dummy):	 Started rhel8-4
+    * Clone Set: clone1-clone [clone1]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
+      * Stopped: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 rhel8-5 ]
+    * Clone Set: clone2-clone [clone2]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
+      * Stopped: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 rhel8-5 ]

@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,7 +24,8 @@ sbin_SCRIPTS		+= cibsecret
 endif
 noinst_SCRIPTS		= pcmk_simtimes
 
-EXTRA_DIST		= crm_attribute.8.inc \
+EXTRA_DIST		= attrd_updater.8.inc \
+				  crm_attribute.8.inc \
 				  crm_diff.8.inc \
 				  crm_error.8.inc \
 			  crm_mon.8.inc			\
@@ -32,6 +33,7 @@ EXTRA_DIST		= crm_attribute.8.inc \
 			  crm_resource.8.inc \
 			  crm_rule.8.inc \
 			  crm_simulate.8.inc \
+			  crm_ticket.8.inc \
 			  crm_verify.8.inc \
 			  crmadmin.8.inc \
 			  fix-manpages \
@@ -78,8 +80,9 @@ crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/common/libcrmcommon.la
+cibadmin_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la		\
+			  	$(top_builddir)/lib/cib/libcib.la		\
+				$(top_builddir)/lib/common/libcrmcommon.la
 
 crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
@@ -115,6 +118,7 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
@@ -141,7 +145,8 @@ iso8601_SOURCES		= iso8601.c
 iso8601_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
+attrd_updater_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_ticket_SOURCES	= crm_ticket.c
 crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\

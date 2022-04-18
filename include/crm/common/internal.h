@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,10 @@
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/health_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/results_internal.h>
+#include <crm/common/messages_internal.h>
 #include <crm/common/strings_internal.h>
 
 /* This says whether the current application is a Pacemaker daemon or not,
@@ -39,7 +41,7 @@ extern bool pcmk__is_daemon;
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
-// Internal ACL-related utilities (from acl.c)
+/* internal ACL-related utilities */
 
 char *pcmk__uid2username(uid_t uid);
 const char *pcmk__update_acl_user(xmlNode *request, const char *field,
@@ -51,8 +53,13 @@ pcmk__is_privileged(const char *user)
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 
+void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
+
+bool pcmk__check_acl(xmlNode *xml, const char *name,
+                     enum xml_private_flags mode);
+
 #if SUPPORT_CIBSECRETS
-// Internal CIB utilities (from cib_secrets.c) */
+/* internal CIB utilities (from cib_secrets.c) */
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
@@ -114,17 +121,54 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
 guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
 
 
-/* internal messaging utilities (from messages.c) */
-
-const char *pcmk__message_name(const char *name);
-
-
 /* internal name/value utilities (from nvpair.c) */
 
 int pcmk__scan_nvpair(const char *input, char **name, char **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 char *pcmk__format_named_time(const char *name, time_t epoch_time);
+
+/*!
+ * \internal
+ * \brief Add a boolean attribute to an XML node.
+ *
+ * \param[in,out] node  XML node to add attributes to
+ * \param[in]     name  XML attribute to create
+ * \param[in]     value Value to give to the attribute
+ */
+void
+pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
+
+/*!
+ * \internal
+ * \brief Extract a boolean attribute's value from an XML element
+ *
+ * \param[in] node XML node to get attribute from
+ * \param[in] name XML attribute to get
+ *
+ * \return True if the given \p name is an attribute on \p node and has
+ *         the value "true", False in all other cases
+ */
+bool
+pcmk__xe_attr_is_true(xmlNodePtr node, const char *name);
+
+/*!
+ * \internal
+ * \brief Extract a boolean attribute's value from an XML element, with
+ *        error checking
+ *
+ * \param[in]  node  XML node to get attribute from
+ * \param[in]  name  XML attribute to get
+ * \param[out] value Destination for the value of the attribute
+ *
+ * \return EINVAL if \p name or \p value are NULL, ENODATA if \p node is
+ *         NULL or the attribute does not exist, pcmk_rc_unknown_format
+ *         if the attribute is not a boolean, and pcmk_rc_ok otherwise.
+ *
+ * \note \p value only has any meaning if the return value is pcmk_rc_ok.
+ */
+int
+pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value);
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -176,6 +220,7 @@ char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
 char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
                            const char *node);
 void pcmk__filter_op_for_digest(xmlNode *param_set);
+bool pcmk__is_fencing_action(const char *action);
 
 
 // bitwise arithmetic utilities
@@ -204,7 +249,7 @@ pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags 0x%.8llx (%s) for %s set by %s:%d",
+                            "%s flags %#.8llx (%s) for %s set by %s:%d",
                             ((flag_type == NULL)? "Group of" : flag_type),
                             (unsigned long long) flags,
                             ((flags_str == NULL)? "flags" : flags_str),
@@ -238,7 +283,7 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags 0x%.8llx (%s) for %s cleared by %s:%d",
+                            "%s flags %#.8llx (%s) for %s cleared by %s:%d",
                             ((flag_type == NULL)? "Group of" : flag_type),
                             (unsigned long long) flags,
                             ((flags_str == NULL)? "flags" : flags_str),

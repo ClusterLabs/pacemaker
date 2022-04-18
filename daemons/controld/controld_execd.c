@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,8 @@ struct delete_event_s {
     const char *rsc;
     lrm_state_t *lrm_state;
 };
+
+extern pcmk__output_t *logger_out;
 
 static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
@@ -186,11 +188,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->rsc.id = entry->id;
         entry->rsc.type = strdup(rsc->type);
         entry->rsc.standard = strdup(rsc->standard);
-        if (rsc->provider) {
-            entry->rsc.provider = strdup(rsc->provider);
-        } else {
-            entry->rsc.provider = NULL;
-        }
+        pcmk__str_update(&entry->rsc.provider, rsc->provider);
 
     } else if (entry == NULL) {
         crm_info("Resource %s no longer exists, not updating cache", op->rsc_id);
@@ -693,9 +691,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         caller_version = CRM_FEATURE_SET;
     }
 
-    crm_trace("Building %s operation update with originator version: %s", op->rsc_id, caller_version);
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
-                                      fsa_our_uname, src, LOG_DEBUG);
+                                      fsa_our_uname, src);
     if (xml_op == NULL) {
         return TRUE;
     }
@@ -902,9 +899,8 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
-        update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-                             NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s,
-                             FALSE, NULL, NULL);
+        cib__update_node_attr(logger_out, fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+                              NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, NULL, NULL);
         free(now_s);
     }
 }
@@ -1423,9 +1419,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     controld_delete_node_state(lrm_state->node_name, controld_section_lrm,
                                cib_scope_local);
 
-    /* Finally, _delete_ the value in pacemaker-attrd -- setting it to FALSE
-     * would result in the scheduler sending us back here again
-     */
+    // @COMPAT DCs < 1.1.14 need this deleted (in case it was explicitly false)
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
@@ -1798,6 +1792,7 @@ do_lrm_invoke(long long action,
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_casei)) {
         handle_query_op(input->msg, lrm_state);
 
+    // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_casei)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
@@ -2366,7 +2361,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
-        pending->user_data = op->user_data? strdup(op->user_data) : NULL;
+        pcmk__str_update(&pending->user_data, op->user_data);
         if (crm_element_value_epoch(msg, XML_CONFIG_ATTR_SHUTDOWN_LOCK,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
@@ -2476,7 +2471,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     } else {
         /* remote nodes uuid and uname are equal */
         uuid = node_name;
-        crm_xml_add(iter, XML_NODE_IS_REMOTE, "true");
+        pcmk__xe_set_bool_attr(iter, XML_NODE_IS_REMOTE, true);
     }
 
     CRM_LOG_ASSERT(uuid != NULL);
@@ -2684,16 +2679,15 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
     do_crm_log(log_level, "%s", str->str);
     g_string_free(str, TRUE);
 
-    if (op->output != NULL) {
-        char *prefix = crm_strdup_printf("%s-" PCMK__OP_FMT ":%d", node_name,
+    /* The services library has already logged the output at info or debug
+     * level, so just raise to notice if it looks like a failure.
+     */
+    if ((op->output != NULL) && (op->rc != PCMK_OCF_OK)) {
+        char *prefix = crm_strdup_printf(PCMK__OP_FMT "@%s output",
                                          op->rsc_id, op->op_type,
-                                         op->interval_ms, op->call_id);
+                                         op->interval_ms, node_name);
 
-        if (op->rc) {
-            crm_log_output(LOG_NOTICE, prefix, op->output);
-        } else {
-            crm_log_output(LOG_DEBUG, prefix, op->output);
-        }
+        crm_log_output(LOG_NOTICE, prefix, op->output);
         free(prefix);
     }
 }

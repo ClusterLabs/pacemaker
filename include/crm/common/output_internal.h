@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,14 @@
 #ifndef PCMK__OUTPUT_INTERNAL__H
 #  define PCMK__OUTPUT_INTERNAL__H
 
+#  include <stdbool.h>
+#  include <stdio.h>
+#  include <libxml/tree.h>
+#  include <libxml/HTMLtree.h>
+
+#  include <glib.h>
+#  include <crm/common/results.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,15 +27,8 @@ extern "C" {
  * \brief Formatted output for pacemaker tools
  */
 
-#  include <stdbool.h>
-#  include <stdio.h>
-#  include <libxml/tree.h>
-#  include <libxml/HTMLtree.h>
 
-#  include <glib.h>
-#  include <crm/common/results.h>
-
-#  define PCMK__API_VERSION "2.14"
+#  define PCMK__API_VERSION "2.19"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
@@ -154,7 +155,8 @@ pcmk__output_t *pcmk__mk_xml_output(char **argv);
 
 #define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
 #define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, pcmk__log_output_entries }
-#define PCMK__SUPPORTED_FORMAT_NONE { "none", pcmk__mk_none_output, pcmk__none_output_entries }
+#define PCMK__SUPPORTED_FORMAT_NONE { PCMK__VALUE_NONE, pcmk__mk_none_output,   \
+                                      pcmk__none_output_entries }
 #define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, pcmk__text_output_entries }
 #define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, pcmk__xml_output_entries }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,7 +59,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
     }
 
-    /* crm_log_xml_trace("HA[inbound]", msg); */
+    /* crm_log_xml_trace(msg, "HA[inbound]"); */
     route_message(C_HA_MESSAGE, msg);
 
   done:
@@ -172,7 +172,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             old = *(const uint32_t *)data;
             appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
 
-            crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=0x%07x new=0x%07x",
+            crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=%#07x new=%#07x",
                      node->uname, (appeared? "now" : "no longer"),
                      (AM_I_DC? "true" : (fsa_our_dc? fsa_our_dc : "<none>")),
                      old, node->processes);
@@ -181,7 +181,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* Peer status did not change. This should not be possible,
                  * since we don't track process flags other than peer status.
                  */
-                crm_trace("Process flag 0x%7x did not change from 0x%7x to 0x%7x",
+                crm_trace("Process flag %#7x did not change from %#7x to %#7x",
                           crm_get_cluster_proc(), old, node->processes);
                 return;
 
@@ -332,7 +332,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 void
 crmd_cib_connection_destroy(gpointer user_data)
 {
-    CRM_CHECK(user_data == fsa_cib_conn,;);
+    CRM_LOG_ASSERT(user_data == fsa_cib_conn);
 
     crm_trace("Invoked");
     trigger_fsa();

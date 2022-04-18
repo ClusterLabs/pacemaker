@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,8 @@
 #include <crm/pengine/internal.h>
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>
+
+#include <stdint.h>
 
 static char *
 colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
@@ -342,7 +344,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         crm_xml_add(xml, "reason", source->reason);
 
     } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
-        crm_xml_add(xml, "blocked", "true");
+        pcmk__xe_set_bool_attr(xml, "blocked", true);
 
     }
 
@@ -871,19 +873,18 @@ digests_xml(pcmk__output_t *out, va_list args)
         }                                                               \
     } while(0)
 
-PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *",
-                  "gboolean")
+PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *")
 static int
 rsc_action_default(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *current = va_arg(args, pe_node_t *);
     pe_node_t *next = va_arg(args, pe_node_t *);
-    gboolean moving = va_arg(args, gboolean);
 
     GList *possible_matches = NULL;
     char *key = NULL;
     int rc = pcmk_rc_no_output;
+    bool moving = false;
 
     pe_node_t *start_node = NULL;
     pe_action_t *start = NULL;
@@ -899,9 +900,8 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
-        moving = TRUE;
-    }
+    moving = (current != NULL) && (next != NULL)
+             && (current->details != next->details);
 
     possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
     if (possible_matches) {
@@ -918,6 +918,16 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_stop_unexpected)) {
+        /* The resource is multiply active with multiple-active set to
+         * stop_unexpected, and not stopping on its current node, but it should
+         * be stopping elsewhere.
+         */
+        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, FALSE);
+        if (possible_matches != NULL) {
+            stop = possible_matches->data;
+            g_list_free(possible_matches);
+        }
     }
 
     possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);
@@ -935,14 +945,14 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (rsc->role == rsc->next_role) {
         pe_action_t *migrate_op = NULL;
 
+        CRM_CHECK(next != NULL, return rc);
+
         possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }
 
-        CRM_CHECK(next != NULL,);
-        if (next == NULL) {
-        } else if ((migrate_op != NULL) && (current != NULL)
+        if ((migrate_op != NULL) && (current != NULL)
                    && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);
@@ -1067,7 +1077,7 @@ node_action(pcmk__output_t *out, va_list args)
     } else if (reason) {
         out->list_item(out, NULL, "%s %s '%s'", task, node_name, reason);
     } else {
-        crm_notice(" * %s %s\n", task, node_name);
+        crm_notice(" * %s %s", task, node_name);
     }
 
     return pcmk_rc_ok;
@@ -1090,7 +1100,7 @@ node_action_xml(pcmk__output_t *out, va_list args)
                                      "reason", reason,
                                      NULL);
     } else {
-        crm_notice(" * %s %s\n", task, node_name);
+        crm_notice(" * %s %s", task, node_name);
     }
 
     return pcmk_rc_ok;
@@ -1225,11 +1235,11 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1239,11 +1249,11 @@ inject_spec(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-spec", "char *")
+PCMK__OUTPUT_ARGS("inject-spec", "const char *")
 static int
 inject_spec_xml(pcmk__output_t *out, va_list args)
 {
-    char *spec = va_arg(args, char *);
+    const char *spec = va_arg(args, const char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1255,12 +1265,12 @@ inject_spec_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1279,12 +1289,12 @@ inject_modify_config(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+PCMK__OUTPUT_ARGS("inject-modify-config", "char *", "char *")
 static int
 inject_modify_config_xml(pcmk__output_t *out, va_list args)
 {
-    const char *quorum = va_arg(args, const char *);
-    const char *watchdog = va_arg(args, const char *);
+    char *quorum = va_arg(args, char *);
+    char *watchdog = va_arg(args, char *);
 
     xmlNodePtr node = NULL;
 
@@ -1486,8 +1496,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
-                  "GList *")
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
@@ -1495,8 +1504,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
@@ -1604,8 +1613,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
-                  "GList *")
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
@@ -1613,8 +1621,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
@@ -1630,7 +1638,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
         /* XML output always displays full details. */
-        unsigned int full_show_opts = show_opts & ~pcmk_show_brief;
+        uint32_t full_show_opts = show_opts & ~pcmk_show_brief;
 
         out->message(out, "resource-list", data_set, full_show_opts,
                      FALSE, unames, resources, FALSE);
@@ -1679,7 +1687,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "unsigned int", "unsigned int", "const char *", "GList *",
+                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *",
                   "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
@@ -1688,8 +1696,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
     gboolean fence_history = va_arg(args, gboolean);
-    unsigned int section_opts = va_arg(args, unsigned int);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t section_opts = va_arg(args, uint32_t);
+    uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
     GList *unames = va_arg(args, GList *);
     GList *resources = va_arg(args, GList *);
@@ -1789,7 +1797,75 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+static int
+attribute_default(pcmk__output_t *out, va_list args)
+{
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
+    char *host = va_arg(args, char *);
+
+    GString *s = g_string_sized_new(50);
+
+    if (!pcmk__str_empty(scope)) {
+        g_string_append_printf(s, "scope=\"%s\" ", scope);
+    }
+
+    if (!pcmk__str_empty(instance)) {
+        g_string_append_printf(s, "id=\"%s\" ", instance);
+    }
+
+    g_string_append_printf(s, "name=\"%s\" ", name);
+
+    if (!pcmk__str_empty(host)) {
+        g_string_append_printf(s, "host=\"%s\" ", host);
+    }
+
+    g_string_append_printf(s, "value=\"%s\"", value ? value : "");
+
+    out->info(out, "%s", s->str);
+    g_string_free(s, TRUE);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+static int
+attribute_xml(pcmk__output_t *out, va_list args)
+{
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
+    char *host = va_arg(args, char *);
+
+    xmlNodePtr node = NULL;
+
+    node = pcmk__output_create_xml_node(out, "attribute",
+                                        "name", name,
+                                        "value", value ? value : "",
+                                        NULL);
+
+    if (!pcmk__str_empty(scope)) {
+        crm_xml_add(node, "scope", scope);
+    }
+
+    if (!pcmk__str_empty(instance)) {
+        crm_xml_add(node, "id", instance);
+    }
+
+    if (!pcmk__str_empty(host)) {
+        crm_xml_add(node, "host", host);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
+    { "attribute", "default", attribute_default },
+    { "attribute", "xml", attribute_xml },
     { "cluster-status", "default", pcmk__cluster_status_text },
     { "cluster-status", "html", cluster_status_html },
     { "cluster-status", "xml", cluster_status_xml },

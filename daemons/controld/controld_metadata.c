@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -145,7 +145,6 @@ static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {
     const char *param_name = crm_element_value(param_xml, "name");
-    const char *value;
     struct ra_param_s *p;
 
     p = calloc(1, sizeof(struct ra_param_s));
@@ -161,18 +160,15 @@ ra_param_from_xml(xmlNode *param_xml)
         return NULL;
     }
 
-    value = crm_element_value(param_xml, "reloadable");
-    if (crm_is_true(value)) {
+    if (pcmk__xe_attr_is_true(param_xml, "reloadable")) {
         controld_set_ra_param_flags(p, ra_param_reloadable);
     }
 
-    value = crm_element_value(param_xml, "unique");
-    if (crm_is_true(value)) {
+    if (pcmk__xe_attr_is_true(param_xml, "unique")) {
         controld_set_ra_param_flags(p, ra_param_unique);
     }
 
-    value = crm_element_value(param_xml, "private");
-    if (crm_is_true(value)) {
+    if (pcmk__xe_attr_is_true(param_xml, "private")) {
         controld_set_ra_param_flags(p, ra_param_private);
     }
     return p;
@@ -373,9 +369,11 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {
-        crm_warn("Failed to get metadata for %s (%s:%s:%s): %s",
-                 rsc->id, rsc->standard, rsc->provider, rsc->type,
-                 pcmk_strerror(rc));
+        crm_warn("Failed to get metadata for %s (%s%s%s:%s): %s",
+                 rsc->id, rsc->standard,
+                 ((rsc->provider == NULL)? "" : ":"),
+                 ((rsc->provider == NULL)? "" : rsc->provider),
+                 rsc->type, pcmk_strerror(rc));
         return NULL;
     }
 
@@ -383,8 +381,9 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                                      metadata_str);
     free(metadata_str);
     if (metadata == NULL) {
-        crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                 rsc->id, rsc->standard, rsc->provider, rsc->type);
+        crm_warn("Failed to update metadata for %s (%s%s%s:%s)",
+                 rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+                 ((rsc->provider == NULL)? "" : rsc->provider), rsc->type);
     }
     return metadata;
 }

@@ -1,0 +1,35 @@
+Using the original execution date of: 2022-04-01 17:57:38Z
+Current cluster status:
+  * Node List:
+    * Node rhel8-5: online (health is RED)
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-3
+    * dummy	(ocf:pacemaker:Dummy):	 Started rhel8-5
+    * Clone Set: health-clone [health]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+
+Transition Summary:
+  * Move       dummy   ( rhel8-5 -> rhel8-3 )
+
+Executing Cluster Transition:
+  * Resource action: dummy           stop on rhel8-5
+  * Resource action: dummy           start on rhel8-3
+  * Resource action: dummy           monitor=10000 on rhel8-3
+Using the original execution date of: 2022-04-01 17:57:38Z
+
+Revised Cluster Status:
+  * Node List:
+    * Node rhel8-5: online (health is RED)
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-3
+    * dummy	(ocf:pacemaker:Dummy):	 Started rhel8-3
+    * Clone Set: health-clone [health]:
+      * Started: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]

@@ -54,12 +54,24 @@
       </bundle>
       <group id="partially-active-group">
         <primitive class="ocf" id="dummy-1" provider="pacemaker" type="Dummy"/>
-        <primitive class="ocf" id="dummy-2" provider="pacemaker" type="Dummy">
+        <primitive class="ocf" id="dummy-2" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="dummy-3" provider="pacemaker" type="Dummy">
           <meta_attributes id="inactive-dummy-meta_attributes">
             <nvpair id="inactive-dummy-meta_attributes-target-role" name="target-role" value="Stopped"/>
           </meta_attributes>
         </primitive>
+        <primitive class="ocf" id="dummy-4" provider="pacemaker" type="Dummy"/>
       </group>
+      <primitive class="ocf" id="smart-mon" provider="pacemaker" type="HealthSMART">
+        <operations>
+          <op id="smart-mon-monitor-interval-10s" interval="10s" name="monitor" start-delay="0s" timeout="10s"/>
+          <op id="smart-mon-start-interval-0s" interval="0s" name="start" timeout="10s"/>
+          <op id="smart-mon-stop-interval-0s" interval="0s" name="stop" timeout="10s"/>
+        </operations>
+        <instance_attributes id="smart-mon-instance_attributes">
+          <nvpair id="smart-mon-instance_attributes-drives" name="drives" value="/dev/nonexistent"/>
+        </instance_attributes>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
@@ -93,6 +105,18 @@
           </lrm_resource>
           <lrm_resource id="dummy-1" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="dummy-1_last_0" operation_key="dummy-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.6.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1599063458" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-2_last_failure_0" operation_key="dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:3;2:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="2" rc-code="3" op-status="0" interval="0" last-rc-change="1599063458" exec-time="33" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-4" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy-4_last_failure_0" operation_key="dummy-4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="21:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;21:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="2" rc-code="5" op-status="0" interval="0" last-rc-change="1599063458" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
+          </lrm_resource>
+          <lrm_resource id="ping" class="ocf" provider="pacemaker" type="ping">
+            <lrm_rsc_op id="ping_last_failure_0" operation_key="ping_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;6:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster02" call-id="6" rc-code="5" op-status="0" interval="0" last-rc-change="1637259102" exec-time="0" queue-time="0"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -135,6 +159,9 @@
             <lrm_rsc_op id="httpd-bundle-1_monitor_30000" operation_key="httpd-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="7592cb10fa1499772a031adfd385f558"/>
           </lrm_resource>
         </lrm_resources>
+        <lrm_resource id="smart-mon" type="HealthSMART" class="ocf" provider="pacemaker">
+          <lrm_rsc_op id="smart-mon_last_failure_0" operation_key="smart-mon_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.11.0" transition-key="3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:5;3:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" on_node="cluster01" call-id="9" rc-code="5" op-status="0" interval="0" last-rc-change="1636490335" exec-time="33" queue-time="0" op-digest="b368e619fcd06788c996f6a2ef2efb6a"/>
+        </lrm_resource>
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
@@ -147,6 +174,15 @@
         <lrm_resources>
           <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="httpd_last_0" operation_key="httpd_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="httpd-bundle-1" uname="httpd-bundle-1">
+      <lrm id="httpd-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
+            <lrm_rsc_op id="httpd_last_failure_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:2;1:1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="2" op-status="0" interval="0" last-rc-change="1590608589" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

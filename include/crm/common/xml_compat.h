@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_XML_COMPAT__H
-#  define PCMK__COMMON_XML_COMPAT__H
+#ifndef PCMK__CRM_COMMON_XML_COMPAT__H
+#  define PCMK__CRM_COMMON_XML_COMPAT__H
+
+#include <libxml/tree.h>        // xmlNode
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +32,15 @@ xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 //!  \deprecated Use xml_apply_patchset() instead
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
+//!  \deprecated Use crm_xml_add() with "true" or "false" instead
+static inline const char *
+crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
+{
+    return crm_xml_add(node, name, (value? "true" : "false"));
+}
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif // PCMK__COMMON_XML_COMPAT__H
+#endif // PCMK__CRM_COMMON_XML_COMPAT__H

@@ -22,7 +22,7 @@ cib=0
 anywhere=0
 add_clone=0
 verify=0
-working_dir="@CRM_CONFIG_CTS@/lxc"
+working_dir="@CRM_PACEMAKER_DIR@/cts/lxc"
 run_dirs="/run /var/run /usr/var/run"
 
 # must be on one line b/c used inside quotes

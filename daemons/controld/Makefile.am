@@ -43,6 +43,7 @@ pacemaker_controld_LDADD = $(top_builddir)/lib/fencing/libstonithd.la		\
 			   $(CLUSTERLIBS)
 
 pacemaker_controld_SOURCES = pacemaker-controld.c	\
+			     controld_alerts.c		\
 			     controld_attrd.c		\
 			     controld_callbacks.c	\
 			     controld_based.c		\

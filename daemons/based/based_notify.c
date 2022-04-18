@@ -105,7 +105,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                 break;
             default:
                 crm_err("Unknown transport for client %s "
-                        CRM_XS " flags=0x%016" PRIx64,
+                        CRM_XS " flags=%#016" PRIx64,
                         pcmk__client_name(client), client->flags);
         }
     }
@@ -234,7 +234,7 @@ attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib)
 }
 
 void
-cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff)
+cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * diff, int change_section)
 {
     xmlNode *replace_msg = NULL;
 
@@ -271,6 +271,7 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
     crm_xml_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
     crm_xml_add_int(replace_msg, F_CIB_RC, result);
+    crm_xml_add_int(replace_msg, F_CIB_CHANGE_SECTION, change_section);
     attach_cib_generation(replace_msg, "cib-replace-generation", update);
 
     crm_log_xml_trace(replace_msg, "CIB Replaced");

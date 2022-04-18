@@ -7,8 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CIB_TYPES__H
-#  define CIB_TYPES__H
+#ifndef PCMK__CRM_CIB_CIB_TYPES__H
+#  define PCMK__CRM_CIB_CIB_TYPES__H
+
+#  include <glib.h>             // gboolean, GList
+#  include <libxml/tree.h>      // xmlNode
+#  include <crm/common/ipc.h>
+#  include <crm/common/xml.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,11 +24,6 @@ extern "C" {
  * \brief Data types for Cluster Information Base access
  * \ingroup cib
  */
-
-#  include <glib.h>             // gboolean, GList
-#  include <libxml/tree.h>      // xmlNode
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
 
 enum cib_variant {
     cib_undefined,
@@ -151,4 +151,4 @@ struct cib_s {
 }
 #endif
 
-#endif // CIB_TYPES__H
+#endif // PCMK__CRM_CIB_CIB_TYPES__H

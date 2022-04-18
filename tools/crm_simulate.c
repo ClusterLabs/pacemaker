@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -50,9 +51,8 @@ struct {
     .repeat = 1
 };
 
-unsigned int section_opts = 0;
+uint32_t section_opts = 0;
 char *temp_shadow = NULL;
-extern gboolean bringing_nodes_online;
 crm_exit_t exit_code = CRM_EX_OK;
 
 #define INDENT "                                   "
@@ -114,7 +114,7 @@ node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    bringing_nodes_online = TRUE;
+    pcmk__simulate_node_config = true;
     options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
 }
@@ -146,33 +146,21 @@ process_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.injections->quorum) {
-        free(options.injections->quorum);
-    }
-
-    options.injections->quorum = strdup(optarg);
+    pcmk__str_update(&options.injections->quorum, optarg);
     return TRUE;
 }
 
 static gboolean
 save_dotfile_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.dot_file) {
-        free(options.dot_file);
-    }
-
     options.flags |= pcmk_sim_process;
-    options.dot_file = strdup(optarg);
+    pcmk__str_update(&options.dot_file, optarg);
     return TRUE;
 }
 
 static gboolean
 save_graph_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.graph_file) {
-        free(options.graph_file);
-    }
-
     options.flags |= pcmk_sim_process;
-    options.graph_file = strdup(optarg);
+    pcmk__str_update(&options.graph_file, optarg);
     return TRUE;
 }
 
@@ -220,32 +208,20 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 static gboolean
 watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.injections->watchdog) {
-        free(options.injections->watchdog);
-    }
-
-    options.injections->watchdog = strdup(optarg);
+    pcmk__str_update(&options.injections->watchdog, optarg);
     return TRUE;
 }
 
 static gboolean
 xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.xml_file) {
-        free(options.xml_file);
-    }
-
-    options.xml_file = strdup(optarg);
+    pcmk__str_update(&options.xml_file, optarg);
     options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
 
 static gboolean
 xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.xml_file) {
-        free(options.xml_file);
-    }
-
-    options.xml_file = strdup("-");
+    pcmk__str_update(&options.xml_file, "-");
     options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
@@ -388,7 +364,7 @@ setup_input(const char *input, const char *output, GError **error)
         cib_object = filename2xml(input);
     }
 
-    if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
+    if (pcmk_find_cib_element(cib_object, XML_CIB_TAG_STATUS) == NULL) {
         create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
 

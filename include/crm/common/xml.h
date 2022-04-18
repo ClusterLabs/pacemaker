@@ -7,18 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_XML__H
-#  define CRM_COMMON_XML__H
+#ifndef PCMK__CRM_COMMON_XML__H
+#  define PCMK__CRM_COMMON_XML__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \file
- * \brief Wrappers for and extensions to libxml2
- * \ingroup core
- */
 
 #  include <stdio.h>
 #  include <sys/types.h>
@@ -33,6 +24,16 @@ extern "C" {
 
 #  include <crm/crm.h>
 #  include <crm/common/nvpair.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \file
+ * \brief Wrappers for and extensions to libxml2
+ * \ingroup core
+ */
 
 /* Define compression parameters for IPC messages
  *

@@ -24,7 +24,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
       <trigger>
         <rsc_op id="18" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
@@ -183,7 +183,7 @@
   </synapse>
   <synapse id="10">
     <action_set>
-      <rsc_op id="5" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+      <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163">
         <primitive id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-0:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-0:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.20.188:80:80 -p 192.168.20.188:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
       </rsc_op>
@@ -206,7 +206,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
     </inputs>
   </synapse>
@@ -219,7 +219,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
       <trigger>
         <rsc_op id="17" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
@@ -502,7 +502,7 @@
   </synapse>
   <synapse id="34">
     <action_set>
-      <rsc_op id="6" operation="delete" operation_key="httpd_delete_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+      <rsc_op id="5" operation="delete" operation_key="httpd_delete_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
         <primitive id="httpd" class="ocf" provider="heartbeat" type="apache"/>
         <attributes CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -550,7 +550,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
       </trigger>
       <trigger>
         <rsc_op id="21" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>

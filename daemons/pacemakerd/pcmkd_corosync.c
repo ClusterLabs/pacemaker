@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,7 +86,7 @@ cluster_reconnect_cb(gpointer data)
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
-        crm_info("Cluster reconnect failed"
+        crm_info("Cluster reconnect failed "
                  "(connection will be reattempted once per second)");
     }
     /*
@@ -186,7 +186,8 @@ cluster_connect_cfg(void)
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
 
 #ifdef HAVE_COROSYNC_CFG_TRACKSTART
-    rc = corosync_cfg_trackstart(cfg_handle, 0);
+    retries = 0;
+    cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
         crm_crit("Could not enable Corosync CFG shutdown tracker: %s " CRM_XS " rc=%d",
                  cs_strerror(rc), rc);
@@ -252,11 +253,7 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
     cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
     if (rc != CS_OK) {
         crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
-        if (fallback) {
-            *value = strdup(fallback);
-        } else {
-            *value = NULL;
-        }
+        pcmk__str_update(value, fallback);
     }
     crm_trace("%s: %s", key, *value);
     return rc;

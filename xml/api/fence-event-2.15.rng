@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="fencing-history-event"/>
+    </start>
+
+    <define name="fencing-history-event">
+        <element name="fence_event">
+            <attribute name="status">
+                <choice>
+                    <value>failed</value>
+                    <value>success</value>
+                    <value>pending</value>
+                </choice>
+            </attribute>
+            <optional>
+                <attribute name="extended-status"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="exit-reason"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="delegate"> <text /> </attribute>
+            </optional>
+            <attribute name="action"> <text /> </attribute>
+            <attribute name="target"> <text /> </attribute>
+            <attribute name="client"> <text /> </attribute>
+            <attribute name="origin"> <text /> </attribute>
+            <optional>
+                <attribute name="completed"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+</grammar>

@@ -1,0 +1,20 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="5" operation="start" operation_key="dummy-2_start_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="dummy-2" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="2" operation="stop" operation_key="dummy-3_stop_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="dummy-3" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

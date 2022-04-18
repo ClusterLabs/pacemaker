@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -319,13 +319,13 @@ services__create_resource_action(const char *name, const char *standard,
         rc = services__nagios_prepare(op);
 #endif
     } else {
-        crm_err("Unknown resource standard: %s", op->standard);
+        crm_info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Cannot prepare %s operation for %s: %s",
-                action, name, strerror(rc));
+        crm_info("Cannot prepare %s operation for %s: %s",
+                 action, name, strerror(rc));
         services__handle_exec_error(op, rc);
     }
     return op;
@@ -415,8 +415,11 @@ services_alert_create(const char *id, const char *exec, int timeout,
 {
     svc_action_t *action = services_action_create_generic(exec, NULL);
 
-    action->timeout = timeout;
     action->id = strdup(id);
+    action->standard = strdup(PCMK_RESOURCE_CLASS_ALERT);
+    CRM_ASSERT((action->id != NULL) && (action->standard != NULL));
+
+    action->timeout = timeout;
     action->params = params;
     action->sequence = sequence;
     action->cb_data = cb_data;
@@ -454,7 +457,9 @@ services_action_user(svc_action_t *op, const char *user)
  * \return TRUE if the library will free action, FALSE otherwise
  *
  * \note If this function returns FALSE, it is the caller's responsibility to
- *       free the action with services_action_free().
+ *       free the action with services_action_free(). However, unless someone
+ *       intentionally creates a recurring alert action, this will never return
+ *       FALSE.
  */
 gboolean
 services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
@@ -800,8 +805,8 @@ handle_duplicate_recurring(svc_action_t * op)
  * \retval EBUSY          Recurring operation could not be initiated
  * \retval pcmk_rc_error  Synchronous action failed
  * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
- *                        should not be freed (because it already was or is
- *                        pending)
+ *                        should not be freed (because it's pending or because
+ *                        it failed to execute and was already freed)
  *
  * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
  *       caller is responsible for freeing the action.
@@ -863,17 +868,19 @@ services_action_async_fork_notify(svc_action_t * op,
                                   void (*action_callback) (svc_action_t *),
                                   void (*action_fork_callback) (svc_action_t *))
 {
+    CRM_CHECK(op != NULL, return TRUE);
+
     op->synchronous = false;
-    if (action_callback) {
+    if (action_callback != NULL) {
         op->opaque->callback = action_callback;
     }
-    if (action_fork_callback) {
+    if (action_fork_callback != NULL) {
         op->opaque->fork_callback = action_fork_callback;
     }
 
     if (op->interval_ms > 0) {
         init_recurring_actions();
-        if (handle_duplicate_recurring(op) == TRUE) {
+        if (handle_duplicate_recurring(op)) {
             /* entry rescheduled, dup freed */
             /* exit early */
             return TRUE;
@@ -967,14 +974,14 @@ execute_metadata_action(svc_action_t *op)
     const char *class = op->standard;
 
     if (op->agent == NULL) {
-        crm_err("meta-data requested without specifying agent");
+        crm_info("Meta-data requested without specifying agent");
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
     if (class == NULL) {
-        crm_err("meta-data requested for agent %s without specifying class",
+        crm_info("Meta-data requested for agent %s without specifying class",
                 op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL,
@@ -986,8 +993,8 @@ execute_metadata_action(svc_action_t *op)
         class = resources_find_service_class(op->agent);
     }
     if (class == NULL) {
-        crm_err("meta-data requested for %s, but could not determine class",
-                op->agent);
+        crm_info("Meta-data requested for %s, but could not determine class",
+                 op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_HARD,
                              "Agent standard could not be determined");
@@ -1280,6 +1287,43 @@ services__set_result(svc_action_t *action, int agent_status,
 
 /*!
  * \internal
+ * \brief Set the result of an action, with a formatted exit reason
+ *
+ * \param[out] action        Where to set action result
+ * \param[in]  agent_status  Exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  format        printf-style format for a human-friendly
+ *                           description of reason for result
+ * \param[in]  ...           arguments for \p format
+ */
+void
+services__format_result(svc_action_t *action, int agent_status,
+                        enum pcmk_exec_status exec_status,
+                        const char *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *reason = NULL;
+
+    if (action == NULL) {
+        return;
+    }
+
+    action->rc = agent_status;
+    action->status = exec_status;
+
+    if (format != NULL) {
+        va_start(ap, format);
+        len = vasprintf(&reason, format, ap);
+        CRM_ASSERT(len > 0);
+        va_end(ap);
+    }
+    free(action->opaque->exit_reason);
+    action->opaque->exit_reason = reason;
+}
+
+/*!
+ * \internal
  * \brief Set the result of an action to cancelled
  *
  * \param[out] action        Where to set action result
@@ -1293,6 +1337,30 @@ services__set_cancelled(svc_action_t *action)
         action->status = PCMK_EXEC_CANCELLED;
         free(action->opaque->exit_reason);
         action->opaque->exit_reason = NULL;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get a readable description of what an action is for
+ *
+ * \param[in] action  Action to check
+ *
+ * \return Readable name for the kind of \p action
+ */
+const char *
+services__action_kind(svc_action_t *action)
+{
+    if ((action == NULL) || (action->standard == NULL)) {
+        return "Process";
+    } else if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_STONITH,
+                            pcmk__str_none)) {
+        return "Fence agent";
+    } else if (pcmk__str_eq(action->standard, PCMK_RESOURCE_CLASS_ALERT,
+                            pcmk__str_none)) {
+        return "Alert agent";
+    } else {
+        return "Resource agent";
     }
 }
 

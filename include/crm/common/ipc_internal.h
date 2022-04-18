@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -203,6 +203,11 @@ void pcmk__free_client(pcmk__client_t *c);
 void pcmk__drop_all_clients(qb_ipcs_service_t *s);
 bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
+xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
+                                 const char *tag, crm_exit_t status);
+#define pcmk__ipc_create_ack(flags, tag, st) \
+    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (tag), (st))
+
 int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
                           uint32_t request, uint32_t flags, const char *tag,
                           crm_exit_t status);
@@ -226,6 +231,7 @@ void pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                             struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                                 struct qb_ipcs_service_handlers *cb);
+qb_ipcs_service_t *pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb);
 qb_ipcs_service_t *pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb);
 
 void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
@@ -237,6 +243,12 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
 void pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
         qb_ipcs_service_t *ipcs_rw,
         qb_ipcs_service_t *ipcs_shm);
+
+static inline const char *
+pcmk__ipc_sys_name(const char *ipc_name, const char *fallback)
+{
+    return ipc_name ? ipc_name : ((crm_system_name ? crm_system_name : fallback));
+}
 
 #ifdef __cplusplus
 }

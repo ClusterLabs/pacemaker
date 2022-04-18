@@ -498,7 +498,7 @@ entity_change(enum ipmi_update_e op, ipmi_domain_t * domain, ipmi_entity_t * ent
            sensor changes, sensor_change is called */
         rv = ipmi_entity_add_sensor_update_handler(entity, sensor_change, entity);
         if (rv) {
-            crm_err("ipmi_entity_set_sensor_update_handler: 0x%x", rv);
+            crm_err("ipmi_entity_set_sensor_update_handler: %#x", rv);
             crm_exit(CRM_EX_ERROR);
         }
     }

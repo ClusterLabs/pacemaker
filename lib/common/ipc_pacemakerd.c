@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,7 +133,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
     return pcmk__str_any_of(command, CRM_OP_PING, CRM_OP_QUIT, NULL);
 }
 
-static void
+static bool
 dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 {
     crm_exit_t status = CRM_EX_OK;
@@ -145,7 +145,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     long long value_ll = 0;
 
     if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_casei)) {
-        return;
+        long long int ack_status = 0;
+        pcmk__scan_ll(crm_element_value(reply, "status"), &ack_status, CRM_EX_OK);
+        return ack_status == CRM_EX_INDETERMINATE;
     }
 
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
@@ -190,6 +192,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
 done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
+    return false;
 }
 
 pcmk__ipc_methods_t *
@@ -215,20 +218,22 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     xmlNode *cmd;
     int rc;
 
-    CRM_CHECK(api != NULL, return -EINVAL);
+    if (api == NULL) {
+        return EINVAL;
+    }
+
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
     cmd = create_request(task, NULL, NULL, CRM_SYSTEM_MCP,
-        ipc_name?ipc_name:((crm_system_name? crm_system_name : "client")),
-        private->client_uuid);
+                         pcmk__ipc_sys_name(ipc_name, "client"),
+                         private->client_uuid);
 
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't ping pacemakerd: %s rc=%d",
-                pcmk_rc_str(rc), rc);
-            rc = ECOMM;
+            crm_debug("Couldn't send request to pacemakerd: %s rc=%d",
+                      pcmk_rc_str(rc), rc);
         }
         free_xml(cmd);
     } else {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,10 +9,12 @@
 
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
+#  include <stdint.h>
 #  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
 #  include <crm/common/internal.h>
+#  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -212,14 +214,13 @@ typedef struct notify_data_s {
 
 bool pe_can_fence(pe_working_set_t *data_set, pe_node_t *node);
 
-int pe__add_scores(int score1, int score2);
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
 char *native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
 pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 
-void pe_metadata(void);
+void pe_metadata(pcmk__output_t *out);
 void verify_pe_options(GHashTable * options);
 
 void common_update_score(pe_resource_t * rsc, const char *id, int score);
@@ -245,7 +246,7 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
 gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                                   unsigned long show_opts, const char *target_role, bool show_nodes);
+                                   uint32_t show_opts, const char *target_role, bool show_nodes);
 
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
@@ -454,7 +455,7 @@ pe_base_name_eq(pe_resource_t *rsc, const char *id)
 
         return (strlen(id) == base_len) && !strncmp(id, rsc->id, base_len);
     }
-    return FALSE;
+    return false;
 }
 
 int pe__target_rc_from_xml(xmlNode *xml_op);
@@ -573,5 +574,29 @@ gboolean pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean ch
 gboolean pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
 gboolean pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
 gboolean pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
+
+xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
+
+const char *pe__clone_child_id(pe_resource_t *rsc);
+
+void pe__update_expected_node(pe_resource_t *rsc, pe_node_t *node,
+                              int execution_status, int exit_status,
+                              int expected_exit_status);
+
+int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
+int pe__node_health(pe_node_t *node);
+
+static inline enum pcmk__health_strategy
+pe__health_strategy(pe_working_set_t *data_set)
+{
+    return pcmk__parse_health_strategy(pe_pref(data_set->config_hash,
+                                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+}
+
+static inline int
+pe__health_score(const char *option, pe_working_set_t *data_set)
+{
+    return char2score(pe_pref(data_set->config_hash, option));
+}
 
 #endif

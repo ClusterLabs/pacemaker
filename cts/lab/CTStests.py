@@ -28,7 +28,7 @@ from cts.CTSaudits import *
 from cts.CTSvars   import *
 from cts.patterns  import PatternSelector
 from cts.logging   import LogFactory
-from cts.remote    import RemoteFactory, input_wrapper
+from cts.remote    import RemoteFactory
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
 
@@ -1601,7 +1601,7 @@ class SplitBrainTest(CTSTest):
                 answer = "Y"
             else:
                 try:
-                    answer = input_wrapper('Continue? [nY]')
+                    answer = input('Continue? [nY]')
                 except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":
@@ -1703,7 +1703,7 @@ class Reattach(CTSTest):
         pats = []
         # Conveniently, the scheduler will display this message when disabling
         # management, even if fencing is not enabled, so we can rely on it.
-        managed = self.create_watch(["Delaying fencing operations"], 60)
+        managed = self.create_watch(["No fencing will be done"], 60)
         managed.setwatch()
 
         self._set_unmanaged(node)
@@ -3055,7 +3055,7 @@ class RemoteStonithd(RemoteDriver):
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
-            r"error: Result of monitor operation for .* on remote-.*: No executor connection",
+            r"error: Result of monitor operation for .* on remote-.*: Internal communication failure",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))

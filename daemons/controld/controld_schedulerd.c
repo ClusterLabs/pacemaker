@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,25 +17,28 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_schedulerd.h>
 
 #include <pacemaker-controld.h>
 
-static mainloop_io_t *pe_subsystem = NULL;
+static void handle_disconnect(void);
+
+static pcmk_ipc_api_t *schedulerd_api = NULL;
 
 /*!
  * \internal
  * \brief Close any scheduler connection and free associated memory
  */
 void
-pe_subsystem_free(void)
+controld_shutdown_schedulerd_ipc(void)
 {
     controld_clear_fsa_input_flags(R_PE_REQUIRED);
-    if (pe_subsystem) {
-        controld_expect_sched_reply(NULL);
-        mainloop_del_ipc_client(pe_subsystem);
-        pe_subsystem = NULL;
-        controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    }
+    pcmk_disconnect_ipc(schedulerd_api);
+    handle_disconnect();
+
+    pcmk_free_ipc_api(schedulerd_api);
+    schedulerd_api = NULL;
 }
 
 /*!
@@ -76,11 +79,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 /*!
  * \internal
  * \brief Respond to scheduler connection failure
- *
- * \param[in] user_data  Ignored
  */
 static void
-pe_ipc_destroy(gpointer user_data)
+handle_disconnect(void)
 {
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
@@ -110,92 +111,99 @@ pe_ipc_destroy(gpointer user_data)
     }
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
-    pe_subsystem = NULL;
     mainloop_set_trigger(fsa_source);
     return;
 }
 
-/*!
- * \internal
- * \brief Handle message from scheduler connection
- *
- * \param[in] buffer    XML message (will be freed)
- * \param[in] length    Ignored
- * \param[in] userdata  Ignored
- *
- * \return 0
- */
-static int
-pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+static void
+handle_reply(pcmk_schedulerd_api_reply_t *reply)
 {
-    xmlNode *msg = string2xml(buffer);
+    const char *msg_ref = NULL;
 
-    if (msg) {
-        route_message(C_IPC_MESSAGE, msg);
+    if (!AM_I_DC) {
+        return;
     }
-    free_xml(msg);
-    return 0;
+
+    msg_ref = reply->data.graph.reference;
+
+    if (msg_ref == NULL) {
+        crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
+
+    } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_none)) {
+        ha_msg_input_t fsa_input;
+        xmlNode *crm_data_node;
+
+        controld_stop_sched_timer();
+
+        /* do_te_invoke (which will eventually process the fsa_input we are constructing
+         * here) requires that fsa_input.xml be non-NULL.  That will only happen if
+         * copy_ha_msg_input (which is called by register_fsa_input_adv) sees the
+         * fsa_input.msg that it is expecting. The scheduler's IPC dispatch function
+         * gave us the values we need, we just need to put them into XML.
+         *
+         * The name of the top level element here is irrelevant.  Nothing checks it.
+         */
+        fsa_input.msg = create_xml_node(NULL, "dummy-reply");
+        crm_xml_add(fsa_input.msg, XML_ATTR_REFERENCE, msg_ref);
+        crm_xml_add(fsa_input.msg, F_CRM_TGRAPH_INPUT, reply->data.graph.input);
+
+        crm_data_node = create_xml_node(fsa_input.msg, F_CRM_DATA);
+        add_node_copy(crm_data_node, reply->data.graph.tgraph);
+        register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
+
+        free_xml(fsa_input.msg);
+
+    } else {
+        crm_info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);
+    }
 }
 
-/*!
- * \internal
- * \brief Make new connection to scheduler
- *
- * \return TRUE on success, FALSE otherwise
- */
-static bool
-pe_subsystem_new(void)
+static void
+scheduler_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
+                         crm_exit_t status, void *event_data, void *user_data)
 {
-    struct ipc_client_callbacks pe_callbacks = {
-        .dispatch = pe_ipc_dispatch,
-        .destroy = pe_ipc_destroy
-    };
-    static bool retry_one = TRUE;
+    pcmk_schedulerd_api_reply_t *reply = event_data;
+
+    switch (event_type) {
+        case pcmk_ipc_event_disconnect:
+            handle_disconnect();
+            break;
+
+        case pcmk_ipc_event_reply:
+            handle_reply(reply);
+            break;
+
+        default:
+            break;
+    }
+}
+
+static bool
+new_schedulerd_ipc_connection(void)
+{
+    int rc;
 
     controld_set_fsa_input_flags(R_PE_REQUIRED);
-retry:
-    pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
-                                           G_PRIORITY_DEFAULT,
-                                           5 * 1024 * 1024 /* 5MB */,
-                                           NULL, &pe_callbacks);
-    if (pe_subsystem == NULL) {
-        crm_debug("Could not connect to scheduler : %s(%d)", pcmk_rc_str(errno), errno);
-        if (errno == EAGAIN && retry_one) {
-            /* In rare cases, a SIGTERM may be received and the connection may fail when the cluster shuts down. */
-            /* At this time, the connection will be retried only once. */
-            crm_debug("Scheduler connection attempt.");
-            retry_one = FALSE;
-            goto retry;
+
+    if (schedulerd_api == NULL) {
+        rc = pcmk_new_ipc_api(&schedulerd_api, pcmk_ipc_schedulerd);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
+            return false;
         }
-        return FALSE;
     }
+
+    pcmk_register_ipc_callback(schedulerd_api, scheduler_event_callback, NULL);
+
+    rc = pcmk_connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
+        return false;
+    }
+
     controld_set_fsa_input_flags(R_PE_CONNECTED);
-    return TRUE;
-}
-
-/*!
- * \internal
- * \brief Send an XML message to the scheduler
- *
- * \param[in] cmd  XML message to send
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-static int
-pe_subsystem_send(xmlNode *cmd)
-{
-    if (pe_subsystem) {
-        int sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem), cmd,
-                                0, 0, NULL);
-
-        if (sent == 0) {
-            sent = -ENODATA;
-        } else if (sent > 0) {
-            sent = pcmk_ok;
-        }
-        return sent;
-    }
-    return -ENOTCONN;
+    return true;
 }
 
 static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
@@ -209,7 +217,9 @@ do_pe_control(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_PE_STOP) {
-        pe_subsystem_free();
+        controld_clear_fsa_input_flags(R_PE_REQUIRED);
+        pcmk_disconnect_ipc(schedulerd_api);
+        handle_disconnect();
     }
     if ((action & A_PE_START)
         && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
@@ -217,7 +227,7 @@ do_pe_control(long long action,
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
 
-        } else if (!pe_subsystem_new()) {
+        } else if (!new_schedulerd_ipc_connection()) {
             crm_warn("Could not connect to scheduler");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
@@ -270,17 +280,12 @@ controld_stop_sched_timer(void)
  * \internal
  * \brief Set the scheduler request currently being waited on
  *
- * \param[in] msg  Request to expect reply to (or NULL for none)
+ * \param[in] ref  Request to expect reply to (or NULL for none)
  */
 void
-controld_expect_sched_reply(xmlNode *msg)
+controld_expect_sched_reply(char *ref)
 {
-    char *ref = NULL;
-
-    if (msg) {
-        ref = crm_element_value_copy(msg, XML_ATTR_REFERENCE);
-        CRM_ASSERT(ref != NULL);
-
+    if (ref) {
         if (controld_sched_timer == NULL) {
             controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
                                                       SCHED_TIMEOUT_MS, FALSE,
@@ -362,12 +367,19 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 {
     int max = 0;
     int lpc = 0;
+    const char *xpath_base = NULL;
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_string = crm_strdup_printf("%.128s//%s//nvpair[@name='%.128s']",
-                                     get_object_path(XML_CIB_TAG_CRMCONFIG),
-                                     XML_CIB_TAG_PROPSET, attr_name);
+    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_CRMCONFIG);
+    if (xpath_base == NULL) {
+        crm_err(XML_CIB_TAG_CRMCONFIG " CIB element not known (bug?)");
+        return;
+    }
+
+    xpath_string = crm_strdup_printf("%s//%s//nvpair[@name='%s']",
+                                     xpath_base, XML_CIB_TAG_PROPSET,
+                                     attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);
@@ -417,7 +429,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    xmlNode *cmd = NULL;
+    char *ref = NULL;
     pid_t watchdog = pcmk__locate_sbd();
 
     if (rc != pcmk_ok) {
@@ -464,17 +476,16 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
     }
 
-    cmd = create_request(CRM_OP_PECALC, output, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
+    rc = pcmk_rc2legacy(pcmk_schedulerd_api_graph(schedulerd_api, output, &ref));
 
-    rc = pe_subsystem_send(cmd);
     if (rc < 0) {
         crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
-        controld_expect_sched_reply(cmd);
+        CRM_ASSERT(ref != NULL);
+        controld_expect_sched_reply(ref);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
                   fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     }
-    free_xml(cmd);
 }

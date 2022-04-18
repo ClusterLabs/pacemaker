@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,12 +32,51 @@
 #include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <sys/utsname.h>
+
+#include <pcmki/pcmki_output.h>
 
 #define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
 
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
+
+PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+static int
+attribute_text(pcmk__output_t *out, va_list args)
+{
+    char *scope = va_arg(args, char *);
+    char *instance = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *value = va_arg(args, char *);
+    char *host G_GNUC_UNUSED = va_arg(args, char *);
+
+    if (out->quiet) {
+        pcmk__formatted_printf(out, "%s\n", value);
+    } else {
+        out->info(out, "%s%s %s%s %s%s value=%s",
+                  scope ? "scope=" : "", scope ? scope : "",
+                  instance ? "id=" : "", instance ? instance : "",
+                  name ? "name=" : "", name ? name : "",
+                  value ? value : "(null)");
+    }
+
+    return pcmk_rc_ok;
+}
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "attribute", "text", attribute_text },
+
+    { NULL, NULL, NULL }
+};
 
 struct {
     char command;
@@ -58,9 +97,7 @@ struct {
     .promotion_score = FALSE
 };
 
-gboolean BE_QUIET = FALSE;
-
-#define INDENT "                              "
+#define INDENT "                               "
 
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
@@ -98,12 +135,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 static gboolean
 update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'v';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = strdup(optarg);
+    pcmk__str_update(&options.attr_value, optarg);
     return TRUE;
 }
 
@@ -283,7 +315,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Query value of the 'cluster-delay' cluster option and print only the value:\n\n"
                               "\tcrm_attribute --type crm_config --name cluster-delay --query --quiet\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, group, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -307,14 +339,17 @@ main(int argc, char **argv)
     bool try_attrd = true;
     int attrd_opts = pcmk__node_attr_none;
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GError *error = NULL;
+
+    pcmk__output_t *out = NULL;
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "NPUdilnpstv");
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -322,18 +357,29 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_attribute", 0);
 
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_attribute is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
     }
 
+    pcmk__register_lib_messages(out);
+    pcmk__register_messages(out, fmt_functions);
+
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
+
+    out->quiet = args->quiet;
+
     if (options.promotion_score && options.attr_name == NULL) {
-        fprintf(stderr, "-p/--promotion must be called from an "
-                        " OCF resource agent or with a resource ID "
-                        " specified\n\n");
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "-p/--promotion must be called from an OCF resource agent "
+                    "or with a resource ID specified");
         goto done;
     }
 
@@ -342,17 +388,14 @@ main(int argc, char **argv)
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
-    if (args->quiet) {
-        BE_QUIET = TRUE;
-    }
-
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    rc = pcmk_legacy2rc(rc);
 
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
-        exit_code = crm_errno2exit(rc);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -396,16 +439,20 @@ main(int argc, char **argv)
         }
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
-        if (pcmk_ok != rc) {
-            fprintf(stderr, "Could not map name=%s to a UUID\n", options.dest_uname);
-            exit_code = crm_errno2exit(rc);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not map name=%s to a UUID", options.dest_uname);
             goto done;
         }
     }
 
     if ((options.command == 'D') && (options.attr_name == NULL) && (options.attr_pattern == NULL)) {
-        fprintf(stderr, "Error: must specify attribute name or pattern to delete\n");
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error: must specify attribute name or pattern to delete");
         goto done;
     }
 
@@ -413,8 +460,9 @@ main(int argc, char **argv)
         if (((options.command != 'v') && (options.command != 'D'))
             || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
 
-            fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
             exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: pattern can only be used with till-reboot update or delete");
             goto done;
         }
         options.command = 'u';
@@ -427,7 +475,7 @@ main(int argc, char **argv)
 
     // Don't try to contact attribute manager if we're using a file as CIB
     if (getenv("CIB_file") || getenv("CIB_shadow")) {
-        try_attrd = FALSE;
+        try_attrd = false;
     }
 
     if (is_remote_node) {
@@ -441,15 +489,16 @@ main(int argc, char **argv)
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
     } else if (options.command == 'D') {
-        rc = delete_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
-                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL);
+        rc = cib__delete_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
+                                   options.set_type, options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value, NULL);
 
-        if (rc == -ENXIO) {
+        if (rc == ENXIO) {
             /* Nothing to delete...
              * which means it's not there...
              * which is what the admin wanted
              */
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
     } else if (options.command == 'v') {
@@ -457,48 +506,54 @@ main(int argc, char **argv)
         CRM_LOG_ASSERT(options.attr_name != NULL);
         CRM_LOG_ASSERT(options.attr_value != NULL);
 
-        rc = update_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
-                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
+        rc = cib__update_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
+                                   options.set_type, options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value, NULL,
+                                   is_remote_node ? "remote" : NULL);
 
     } else {                    /* query */
 
         char *read_value = NULL;
 
-        rc = read_attr_delegate(the_cib, options.type, options.dest_node, options.set_type, options.set_name,
-                                options.attr_id, options.attr_name, &read_value, TRUE, NULL);
+        if (options.attr_id == NULL && options.attr_name == NULL) {
+            exit_code = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error: must specify attribute name or pattern to query");
+            goto done;
+        }
 
-        if (rc == -ENXIO && options.attr_default) {
+        rc = cib__read_node_attr(out, the_cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, options.attr_id,
+                                 options.attr_name, &read_value, NULL);
+
+        if (rc == ENXIO && options.attr_default) {
             read_value = strdup(options.attr_default);
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
         crm_info("Read %s=%s %s%s",
                  options.attr_name, crm_str(read_value), options.set_name ? "in " : "", options.set_name ? options.set_name : "");
 
-        if (rc == -ENOTUNIQ) {
+        if (rc == ENOTUNIQ) {
             // Multiple matches (already displayed) are not error for queries
-            rc = pcmk_ok;
-
-        } else if (BE_QUIET == FALSE) {
-            fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
-                    options.type ? "scope=" : "", options.type ? options.type : "",
-                    options.attr_id ? "id=" : "", options.attr_id ? options.attr_id : "",
-                    options.attr_name ? "name=" : "", options.attr_name ? options.attr_name : "",
-                    read_value ? read_value : "(null)");
-
-        } else if (read_value != NULL) {
-            fprintf(stdout, "%s\n", read_value);
+            rc = pcmk_rc_ok;
+        } else {
+            out->message(out, "attribute", options.type, options.attr_id,
+                         options.attr_name, read_value);
         }
+
         free(read_value);
     }
 
-    if (rc == -ENOTUNIQ) {
-        printf("Please choose from one of the matches above and supply the 'id' with --attr-id\n");
-        exit_code = crm_errno2exit(rc);
+    if (rc == ENOTUNIQ) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Please choose from one of the matches below and supply the 'id' with --attr-id");
 
-    } else if (rc != pcmk_ok) {
-        fprintf(stderr, "Error performing operation: %s\n", pcmk_strerror(rc));
-        exit_code = crm_errno2exit(rc);
+    } else if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error performing operation: %s", pcmk_strerror(rc));
     }
 
 done:
@@ -515,11 +570,14 @@ done:
     free(options.set_type);
     g_free(options.type);
 
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
+    cib__clean_up_connection(&the_cib);
+
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
     }
 
-    pcmk__output_and_clear_error(error, NULL);
     return crm_exit(exit_code);
 }

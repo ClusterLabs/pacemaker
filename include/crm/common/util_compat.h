@@ -7,8 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_UTIL_COMPAT__H
-#  define PCMK__COMMON_UTIL_COMPAT__H
+#ifndef PCMK__CRM_COMMON_UTIL_COMPAT__H
+#  define PCMK__CRM_COMMON_UTIL_COMPAT__H
+
+#  include <glib.h>
+#  include <crm/common/util.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,4 +155,4 @@ void crm_build_path(const char *path_c, mode_t mode);
 }
 #endif
 
-#endif // PCMK__COMMON_UTIL_COMPAT__H
+#endif // PCMK__CRM_COMMON_UTIL_COMPAT__H

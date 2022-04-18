@@ -87,7 +87,7 @@ request via IPC or messaging layer callback, which calls:
 
     * ``stonith_query()``, which calls
 
-      * ``get_capable_devices()`` with ``stonith_query_capable_device_db()`` to add
+      * ``get_capable_devices()`` with ``stonith_query_capable_device_cb()`` to add
         device information to an XML reply and send it. (A message is
         considered a reply if it contains ``T_STONITH_REPLY``, which is only
         set by fencer peers, not clients.)
@@ -106,7 +106,7 @@ or messaging layer callback, which calls:
       the number of active peers), and if this is the last expected reply,
       calls
 
-      * ``call_remote_stonith()``, which calculates the timeout and sends
+      * ``request_peer_fencing()``, which calculates the timeout and sends
         ``STONITH_OP_FENCE`` request(s) to carry out the fencing. If the target
 	node has a fencing "topology" (which allows specifications such as
 	"this node can be fenced either with device A, or devices B and C in
@@ -156,7 +156,7 @@ returns, and calls
   * done callback (``st_child_done()``), which calls ``schedule_stonith_command()``
     for a new device if there are further required actions to execute or if the
     original action failed, then builds and sends an XML reply to the original
-    fencer (via ``stonith_send_async_reply()``), then checks whether any
+    fencer (via ``send_async_reply()``), then checks whether any
     pending actions are the same as the one just executed and merges them if so.
 
 Fencing replies
@@ -169,18 +169,33 @@ messaging layer callback, which calls:
 
   * ``handle_reply()``, which calls
 
-    * ``process_remote_stonith_exec()``, which calls either
-      ``call_remote_stonith()`` (to retry a failed operation, or try the next
-       device in a topology is appropriate, which issues a new
+    * ``fenced_process_fencing_reply()``, which calls either
+      ``request_peer_fencing()`` (to retry a failed operation, or try the next
+      device in a topology if appropriate, which issues a new
       ``STONITH_OP_FENCE`` request, proceeding as before) or
-      ``remote_op_done()`` (if the operation is definitively failed or
+      ``finalize_op()`` (if the operation is definitively failed or
       successful).
 
-      * remote_op_done() broadcasts the result to all peers.
+      * ``finalize_op()`` broadcasts the result to all peers.
 
 Finally, all peers receive the broadcast result and call
 
-* ``remote_op_done()``, which sends the result to all local clients.
+* ``finalize_op()``, which sends the result to all local clients.
+
+
+.. index::
+   single: fence history
+
+Fencing History
+_______________
+
+The fencer keeps a running history of all fencing operations. The bulk of the
+relevant code is in `fenced_history.c` and ensures the history is synchronized
+across all nodes even if a node leaves and rejoins the cluster.
+
+In libstonithd, this information is represented by `stonith_history_t` and is
+queryable by the `stonith_api_operations_t:history()` method. `crm_mon` and
+`stonith_admin` use this API to display the history.
 
 
 .. index::
@@ -208,30 +223,26 @@ directly. This allows them to run using a ``CIB_file`` without the cluster
 needing to be active.
 
 The main entry point for the scheduler code is
-``lib/pacemaker/pcmk_sched_messages.c:pcmk__schedule_actions()``. It sets
-defaults and calls a bunch of "stage *N*" functions. Yes, there is a stage 0
-and no stage 1. :) The code has evolved over time to where splitting the stages
-up differently and renumbering them would make sense.
+``lib/pacemaker/pcmk_sched_allocate.c:pcmk__schedule_actions()``. It sets
+defaults and calls a series of functions for the scheduling. Some key steps:
 
-* ``stage0()`` "unpacks" most of the CIB XML into data structures, and
-  determines the current cluster status. It also creates implicit location
-  constraints for the node health feature.
-* ``stage2()`` applies factors that make resources prefer certain nodes (such
-  as shutdown locks, location constraints, and stickiness).
-* ``stage3()`` creates internal constraints (such as the implicit ordering for
-  group members, or start actions being implicitly ordered before promote
-  actions).
-* ``stage4()`` "checks actions", which means processing resource history
-  entries in the CIB status section. This is used to decide whether certain
+* ``unpack_cib()`` parses most of the CIB XML into data structures, and
+  determines the current cluster status.
+* ``apply_node_criteria()`` applies factors that make resources prefer certain
+  nodes, such as shutdown locks, location constraints, and stickiness.
+* ``pcmk__create_internal_constraints()`` creates internal constraints, such as
+  the implicit ordering for group members, or start actions being implicitly
+  ordered before promote actions.
+* ``pcmk__handle_rsc_config_changes()`` processes resource history entries in
+  the CIB status section. This is used to decide whether certain
   actions need to be done, such as deleting orphan resources, forcing a restart
   when a resource definition changes, etc.
-* ``stage5()`` allocates resources to nodes and creates actions (which might or
-  might not end up in the final graph).
-* ``stage6()`` creates implicit ordering constraints for resources running
-  across remote connections, and schedules fencing actions and shutdowns.
-* ``stage7()`` "updates actions", which means applying ordering constraints in
-  order to modify action attributes such as optional or required.
-* ``stage8()`` creates the transition graph.
+* ``allocate_resources()`` assigns resources to nodes.
+* ``schedule_resource_actions()`` schedules resource-specific actions (which
+  might or might not end up in the final graph).
+* ``pcmk__apply_orderings()`` processes ordering constraints in order to modify
+  action attributes such as optional or required.
+* ``pcmk__create_graph()`` creates the transition graph.
 
 Challenges
 __________
@@ -250,8 +261,8 @@ Working with the scheduler is difficult. Challenges include:
   different points in the scheduling process, so you have to keep in mind
   whether information you're using at one point of the code can possibly change
   later. For example, data unpacked from the CIB can safely be used anytime
-  after stage0(), but actions may become optional or required anytime before
-  stage8(). There's no easy way to deal with this.
+  after ``unpack_cib(),`` but actions may become optional or required anytime
+  before ``pcmk__create_graph()``. There's no easy way to deal with this.
 * Many names of struct members, functions, etc., are suboptimal, but are part
   of the public API and cannot be changed until an API backward compatibility
   break.
@@ -287,9 +298,8 @@ XML, and determining the current or planned location of the resource.
 
 The allocation functions have more obscure capabilities needed for scheduling,
 such as processing location and ordering constraints. For example,
-``stage3()``, which creates internal constraints, simply calls the
-``internal_constraints()`` method for each top-level resource in the working
-set.
+``pcmk__create_internal_constraints()`` simply calls the
+``internal_constraints()`` method for each top-level resource in the cluster.
 
 .. index::
    single: pe_node_t

@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef DOXYGEN__H
-#  define DOXYGEN__H
+#ifndef PCMK__DOXYGEN__H
+#  define PCMK__DOXYGEN__H
 
 /**
  * \file
@@ -50,4 +50,4 @@
  *   href="https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Development/html/">Pacemaker Development</a>
  */
 
-#endif                          /* DOXYGEN__H */
+#endif                          /* PCMK__DOXYGEN__H */

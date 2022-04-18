@@ -52,7 +52,7 @@ cib_prepare_common(xmlNode * root, const char *section)
 
     /* grab the section specified for the command */
     if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
-        data = get_object_root(section, data);
+        data = pcmk_find_cib_element(data, section);
     }
 
     /* crm_log_xml_trace(root, "cib:input"); */
@@ -90,14 +90,12 @@ static int
 cib_prepare_diff(xmlNode * request, xmlNode ** data, const char **section)
 {
     xmlNode *input_fragment = NULL;
-    const char *update = crm_element_value(request, F_CIB_GLOBAL_UPDATE);
 
     *data = NULL;
     *section = NULL;
 
-    if (crm_is_true(update)) {
+    if (pcmk__xe_attr_is_true(request, F_CIB_GLOBAL_UPDATE)) {
         input_fragment = get_message_xml(request, F_CIB_UPDATE_DIFF);
-
     } else {
         input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }

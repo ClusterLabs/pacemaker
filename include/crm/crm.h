@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM__H
-#  define CRM__H
+#ifndef PCMK__CRM_CRM__H
+#  define PCMK__CRM_CRM__H
+
+#  include <crm_config.h>
+#  include <stdlib.h>
+#  include <glib.h>
+#  include <stdbool.h>
+
+#  include <string.h>
+
+#  include <libxml/tree.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,15 +28,6 @@ extern "C" {
  * \brief A dumping ground
  * \ingroup core
  */
-
-#  include <crm_config.h>
-#  include <stdlib.h>
-#  include <glib.h>
-#  include <stdbool.h>
-
-#  include <string.h>
-
-#  include <libxml/tree.h>
 
 #ifndef PCMK_ALLOW_DEPRECATED
 /*!
@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.11.0"
+#  define CRM_FEATURE_SET		"3.15.0"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -216,6 +216,7 @@ extern char *crm_system_name;
 #  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
+#  include <crm/common/cib.h>
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 

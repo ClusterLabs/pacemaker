@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -272,7 +272,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 #endif
     if (res == EOF) {
         crm_err("Could not decode transition information '%s': %s",
-                magic, pcmk_strerror(errno));
+                magic, pcmk_rc_str(errno));
         result = FALSE;
     } else if (res < 3) {
         crm_warn("Transition information '%s' incomplete (%d of 3 expected items)",
@@ -522,4 +522,56 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
                             CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
                             CRMD_ACTION_NOTIFY, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Check whether an action name is for a fencing action
+ *
+ * \param[in] action  Action name to check
+ *
+ * \return true if \p action is "off", "reboot", or "poweroff", otherwise false
+ */
+bool
+pcmk__is_fencing_action(const char *action)
+{
+    return pcmk__str_any_of(action, "off", "reboot", "poweroff", NULL);
+}
+
+bool
+pcmk_is_probe(const char *task, guint interval)
+{
+    if (task == NULL) {
+        return false;
+    }
+
+    return (interval == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_none);
+}
+
+bool
+pcmk_xe_is_probe(xmlNode *xml_op)
+{
+    const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+    int interval_ms;
+
+    pcmk__scan_min_int(interval_ms_s, &interval_ms, 0);
+    return pcmk_is_probe(task, interval_ms);
+}
+
+bool
+pcmk_xe_mask_probe_failure(xmlNode *xml_op)
+{
+    int status = PCMK_EXEC_UNKNOWN;
+    int rc = PCMK_OCF_OK;
+
+    if (!pcmk_xe_is_probe(xml_op)) {
+        return false;
+    }
+
+    crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
+    crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
+
+    return rc == PCMK_OCF_NOT_INSTALLED || rc == PCMK_OCF_INVALID_PARAM ||
+           status == PCMK_EXEC_NOT_INSTALLED;
 }

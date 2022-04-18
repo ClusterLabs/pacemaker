@@ -86,6 +86,8 @@ As with resource agents, meta-attributes can be configured for alert agents
 to affect how Pacemaker calls them.
    
 .. table:: **Meta-Attributes of an Alert**
+   :class: longtable
+   :widths: 1 1 3
    
    +------------------+---------------+-----------------------------------------------------+
    | Meta-Attribute   | Default       | Description                                         |
@@ -299,6 +301,8 @@ Writing an Alert Agent
    single: environment variable; alert agents
 
 .. table:: **Environment variables passed to alert agents**
+   :class: longtable
+   :widths: 1 3
    
    +---------------------------+----------------------------------------------------------------+
    | Environment Variable      | Description                                                    |

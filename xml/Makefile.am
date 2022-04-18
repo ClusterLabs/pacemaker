@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2021 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -21,6 +21,9 @@ noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
 APIdir	= $(CRM_SCHEMA_DIRECTORY)/api
 CIBdir	= $(CRM_SCHEMA_DIRECTORY)
 MONdir	= $(CRM_SCHEMA_DIRECTORY)
+
+basexsltdir		= $(CRM_SCHEMA_DIRECTORY)/base
+dist_basexslt_DATA	= $(srcdir)/base/access-render-2.xsl
 
 # Extract a sorted list of available numeric schema versions
 # from filenames like NAME-MAJOR[.MINOR][.MINOR-MINOR].rng
@@ -51,8 +54,10 @@ version_pairs_last = $(wordlist \
 
 # Names of API schemas that form the choices for pacemaker-result content
 API_request_base	= command-output	\
+			  crm_attribute 	\
 			  crm_mon		\
 			  crm_resource		\
+			  crm_rule \
 			  crm_simulate		\
 			  crmadmin		\
 			  digests		\

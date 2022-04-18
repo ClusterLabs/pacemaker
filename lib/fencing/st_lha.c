@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,15 +142,6 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
     return count;
 }
 
-static inline char *
-strdup_null(const char *val)
-{
-    if (val) {
-        return strdup(val);
-    }
-    return NULL;
-}
-
 static void
 stonith_plugin(int priority, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 
@@ -213,19 +204,22 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
         stonith_obj = (*st_new_fn) (agent);
         if (stonith_obj) {
             (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
-            meta_longdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
+            pcmk__str_update(&meta_longdesc,
+                             (*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
             if (meta_longdesc == NULL) {
                 crm_warn("no long description in %s's metadata.", agent);
                 meta_longdesc = strdup(no_parameter_info);
             }
 
-            meta_shortdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEID));
+            pcmk__str_update(&meta_shortdesc,
+                             (*st_info_fn) (stonith_obj, ST_DEVICEID));
             if (meta_shortdesc == NULL) {
                 crm_warn("no short description in %s's metadata.", agent);
                 meta_shortdesc = strdup(no_parameter_info);
             }
 
-            meta_param = strdup_null((*st_info_fn) (stonith_obj, ST_CONF_XML));
+            pcmk__str_update(&meta_param,
+                             (*st_info_fn) (stonith_obj, ST_CONF_XML));
             if (meta_param == NULL) {
                 crm_warn("no list of parameters in %s's metadata.", agent);
                 meta_param = strdup(no_parameter_info);

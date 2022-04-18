@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,8 +53,8 @@ pcmk__new_nvpair(const char *name, const char *value)
     nvpair = calloc(1, sizeof(pcmk_nvpair_t));
     CRM_ASSERT(nvpair);
 
-    nvpair->name = strdup(name);
-    nvpair->value = value? strdup(value) : NULL;
+    pcmk__str_update(&nvpair->name, name);
+    pcmk__str_update(&nvpair->value, value);
     return nvpair;
 }
 
@@ -726,11 +726,8 @@ char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
     char *value_copy = NULL;
-    const char *value = crm_element_value(data, name);
 
-    if (value != NULL) {
-        value_copy = strdup(value);
-    }
+    pcmk__str_update(&value_copy, crm_element_value(data, name));
     return value_copy;
 }
 
@@ -951,6 +948,48 @@ xml2list(xmlNode *parent)
     }
 
     return nvpair_hash;
+}
+
+void
+pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
+{
+    crm_xml_add(node, name, value ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
+}
+
+int
+pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value) {
+    const char *xml_value = NULL;
+    int ret, rc;
+
+    if (node == NULL) {
+        return ENODATA;
+    } else if (name == NULL || value == NULL) {
+        return EINVAL;
+    }
+
+    xml_value = crm_element_value(node, name);
+
+    if (xml_value == NULL) {
+        return ENODATA;
+    }
+
+    rc = crm_str_to_boolean(xml_value, &ret);
+    if (rc == 1) {
+        *value = ret;
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_unknown_format;
+    }
+}
+
+bool
+pcmk__xe_attr_is_true(xmlNodePtr node, const char *name)
+{
+    bool value = false;
+    int rc;
+
+    rc = pcmk__xe_get_bool_attr(node, name, &value);
+    return rc == pcmk_rc_ok && value == true;
 }
 
 // Deprecated functions kept only for backward API compatibility

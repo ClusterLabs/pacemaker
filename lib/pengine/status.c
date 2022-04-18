@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,22 +70,18 @@ pe_free_working_set(pe_working_set_t *data_set)
 gboolean
 cluster_status(pe_working_set_t * data_set)
 {
-    xmlNode *config = get_xpath_object("//"XML_CIB_TAG_CRMCONFIG, data_set->input, LOG_TRACE);
-    xmlNode *cib_nodes = get_xpath_object("//"XML_CIB_TAG_NODES, data_set->input, LOG_TRACE);
-    xmlNode *cib_resources = get_xpath_object("//"XML_CIB_TAG_RESOURCES, data_set->input, LOG_TRACE);
-    xmlNode *cib_status = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input, LOG_TRACE);
-    xmlNode *cib_tags = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
-                                         LOG_NEVER);
-    const char *value = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+    xmlNode *section = NULL;
+
+    if ((data_set == NULL) || (data_set->input == NULL)) {
+        return FALSE;
+    }
 
     crm_trace("Beginning unpack");
 
-    /* reset remaining global variables */
-    data_set->failed = create_xml_node(NULL, "failed-ops");
-
-    if (data_set->input == NULL) {
-        return FALSE;
+    if (data_set->failed != NULL) {
+        free_xml(data_set->failed);
     }
+    data_set->failed = create_xml_node(NULL, "failed-ops");
 
     if (data_set->now == NULL) {
         data_set->now = crm_time_new(NULL);
@@ -96,7 +92,7 @@ cluster_status(pe_working_set_t * data_set)
                                                    XML_ATTR_DC_UUID);
     }
 
-    if (crm_is_true(value)) {
+    if (pcmk__xe_attr_is_true(data_set->input, XML_ATTR_HAVE_QUORUM)) {
         pe__set_working_set_flags(data_set, pe_flag_have_quorum);
     } else {
         pe__clear_working_set_flags(data_set, pe_flag_have_quorum);
@@ -107,7 +103,9 @@ cluster_status(pe_working_set_t * data_set)
     data_set->rsc_defaults = get_xpath_object("//" XML_CIB_TAG_RSCCONFIG,
                                               data_set->input, LOG_NEVER);
 
-    unpack_config(config, data_set);
+    section = get_xpath_object("//" XML_CIB_TAG_CRMCONFIG, data_set->input,
+                               LOG_TRACE);
+    unpack_config(section, data_set);
 
    if (!pcmk_any_flags_set(data_set->flags,
                            pe_flag_quick_location|pe_flag_have_quorum)
@@ -115,17 +113,25 @@ cluster_status(pe_working_set_t * data_set)
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 
-    unpack_nodes(cib_nodes, data_set);
+    section = get_xpath_object("//" XML_CIB_TAG_NODES, data_set->input,
+                               LOG_TRACE);
+    unpack_nodes(section, data_set);
 
+    section = get_xpath_object("//" XML_CIB_TAG_RESOURCES, data_set->input,
+                               LOG_TRACE);
     if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
-        unpack_remote_nodes(cib_resources, data_set);
+        unpack_remote_nodes(section, data_set);
     }
+    unpack_resources(section, data_set);
 
-    unpack_resources(cib_resources, data_set);
-    unpack_tags(cib_tags, data_set);
+    section = get_xpath_object("//" XML_CIB_TAG_TAGS, data_set->input,
+                               LOG_NEVER);
+    unpack_tags(section, data_set);
 
     if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
-        unpack_status(cib_status, data_set);
+        section = get_xpath_object("//"XML_CIB_TAG_STATUS, data_set->input,
+                                   LOG_TRACE);
+        unpack_status(section, data_set);
     }
 
     if (!pcmk_is_set(data_set->flags, pe_flag_no_counts)) {
@@ -133,6 +139,9 @@ cluster_status(pe_working_set_t * data_set)
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);
         }
+        crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
+                  data_set->ninstances, data_set->disabled_resources,
+                  data_set->blocked_resources);
     }
 
     pe__set_working_set_flags(data_set, pe_flag_have_status);

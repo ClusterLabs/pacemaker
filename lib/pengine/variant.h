@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,7 +139,11 @@ typedef struct group_variant_data_s {
 #  elif VARIANT_NATIVE
 
 typedef struct native_variant_data_s {
-    int dummy;
+    /* If the resource is multiply active, and has multiple-active set to
+     * stop_unexpected, this will be set to the node where the resource was
+     * found active by an operation with a expected result.
+     */
+    pe_node_t *expected_node;
 } native_variant_data_t;
 
 #    define get_native_variant_data(data, rsc)				\

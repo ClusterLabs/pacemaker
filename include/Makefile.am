@@ -14,7 +14,27 @@ noinst_HEADERS	        = config.h 			\
 			  doxygen.h			\
 			  pacemaker.h \
 			  pacemaker-internal.h		\
-			  portability.h
+			  portability.h                 \
+			  gettext.h
 pkginclude_HEADERS	= crm_config.h
 
 SUBDIRS                 =  crm pcmki
+
+# gettext.h is supplied by the gettext project
+
+GETTEXT_H		?= $(datadir)/gettext/gettext.h
+
+update-gettext:
+	@if [ ! -e "$(GETTEXT_H)" ]; then				\
+		echo "$(GETTEXT_H) not found";				\
+	else								\
+		cp "$(GETTEXT_H)" gettext.h;				\
+		git diff --quiet gettext.h 2>/dev/null;			\
+		if [ $$? -eq 0 ]; then					\
+			echo "No update needed";			\
+		else							\
+			git add gettext.h;				\
+			echo 'Review changes then run:';		\
+			echo 'git commit -m "Low: NLS: update gettext.h from upstream"'; \
+		fi							\
+	fi

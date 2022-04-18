@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,7 @@
  *
  * \note The caller is responsible for freeing *api using pcmk_free_ipc_api().
  * \note This is intended to supersede crm_ipc_new() but currently only
- *       supports the controller & pacemakerd IPC API.
+ *       supports the controller, pacemakerd, and schedulerd IPC API.
  */
 int
 pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
@@ -88,6 +88,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         case pcmk_ipc_schedulerd:
+            (*api)->cmds = pcmk__schedulerd_api_methods();
             // @TODO max_size could vary by client, maybe take as argument?
             (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
@@ -263,7 +264,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
             return for_log? "launcher" : CRM_SYSTEM_MCP;
 
         case pcmk_ipc_schedulerd:
-            return for_log? "scheduler" : NULL /* CRM_SYSTEM_PENGINE */;
+            return for_log? "scheduler" : CRM_SYSTEM_PENGINE;
 
         default:
             return for_log? "Pacemaker" : NULL;
@@ -293,13 +294,15 @@ pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
  *
  * \param[in] api  IPC API connection
  */
-static void
+static bool
 call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
 {
     crm_log_xml_trace(message, "ipc-received");
     if ((api->cmds != NULL) && (api->cmds->dispatch != NULL)) {
-        api->cmds->dispatch(api, message);
+        return api->cmds->dispatch(api, message);
     }
+
+    return false;
 }
 
 /*!
@@ -611,8 +614,21 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
 
     // With synchronous dispatch, we dispatch any reply now
     if (reply != NULL) {
-        call_api_dispatch(api, reply);
+        bool more = call_api_dispatch(api, reply);
+
         free_xml(reply);
+
+        while (more) {
+            rc = crm_ipc_read(api->ipc);
+
+            if (rc == -ENOMSG || rc == pcmk_ok) {
+                return pcmk_rc_ok;
+            } else if (rc < 0) {
+                return -rc;
+            }
+
+            dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
+        }
     }
     return pcmk_rc_ok;
 }
@@ -801,7 +817,7 @@ crm_ipc_connect(crm_ipc_t * client)
 
     if (client->ipc == NULL) {
         crm_debug("Could not establish %s IPC connection: %s (%d)",
-                  client->server_name, pcmk_strerror(errno), errno);
+                  client->server_name, pcmk_rc_str(errno), errno);
         return FALSE;
     }
 
@@ -1406,13 +1422,35 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     int32_t qb_rc;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
     qb_ipcc_connection_t *c;
+#ifdef HAVE_QB_IPCC_CONNECT_ASYNC
+    struct pollfd pollfd = { 0, };
+    int poll_rc;
 
+    c = qb_ipcc_connect_async(name, 0,
+                              &(pollfd.fd));
+#else
     c = qb_ipcc_connect(name, 0);
+#endif
     if (c == NULL) {
         crm_info("Could not connect to %s IPC: %s", name, strerror(errno));
         rc = pcmk_rc_ipc_unresponsive;
         goto bail;
     }
+#ifdef HAVE_QB_IPCC_CONNECT_ASYNC
+    pollfd.events = POLLIN;
+    do {
+        poll_rc = poll(&pollfd, 1, 2000);
+    } while ((poll_rc == -1) && (errno == EINTR));
+    if ((poll_rc <= 0) || (qb_ipcc_connect_continue(c) != 0)) {
+        crm_info("Could not connect to %s IPC: %s", name,
+                 (poll_rc == 0)?"timeout":strerror(errno));
+        rc = pcmk_rc_ipc_unresponsive;
+        if (poll_rc > 0) {
+            c = NULL; // qb_ipcc_connect_continue cleaned up for us
+        }
+        goto bail;
+    }
+#endif
 
     qb_rc = qb_ipcc_fd_get(c, &fd);
     if (qb_rc != 0) {

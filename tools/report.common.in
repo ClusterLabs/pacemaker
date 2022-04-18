@@ -1,7 +1,7 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
-# Later changes copyright 2010-2021 the Pacemaker project contributors
+# Later changes copyright 2010-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -882,5 +882,9 @@ t=`get_time "12:00"`
 if [ "$t" = "" ]; then
 	fatal "please install the perl Date::Parse module (perl-DateTime-Format-DateParse on Fedora/Red Hat)"
 fi
+
+# Override any locale settings so collected output is in a common language
+LC_ALL="C"
+export LC_ALL
 
 # vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:

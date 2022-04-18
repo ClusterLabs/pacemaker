@@ -7,8 +7,10 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__COMMON_LOGGING_COMPAT__H
-#  define PCMK__COMMON_LOGGING_COMPAT__H
+#ifndef PCMK__CRM_COMMON_LOGGING_COMPAT__H
+#  define PCMK__CRM_COMMON_LOGGING_COMPAT__H
+
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,4 +57,4 @@ gboolean crm_add_logfile(const char *filename);
 }
 #endif
 
-#endif // PCMK__COMMON_LOGGING_COMPAT__H
+#endif // PCMK__CRM_COMMON_LOGGING_COMPAT__H

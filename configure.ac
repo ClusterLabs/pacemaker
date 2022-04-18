@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2021 the Pacemaker project contributors
+dnl Copyright 2009-2022 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -286,6 +286,24 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
+# AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
+# to enabled. We override the definition of AM_NLS to flip the default and mark
+# it as experimental in the help text.
+AC_DEFUN([AM_NLS],
+    [AC_MSG_CHECKING([whether NLS is requested])
+    AC_ARG_ENABLE([nls],
+        [AS_HELP_STRING([--enable-nls],
+            [use Native Language Support (experimental)])],
+        USE_NLS=$enableval, USE_NLS=no)
+    AC_MSG_RESULT([$USE_NLS])
+    AC_SUBST([USE_NLS])]
+)
+
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.18])
+
+AS_IF([test "$enable_nls" = "yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+
 dnl --with-* options: external software support, and custom locations
 
 dnl This argument is defined via an M4 macro so default can be a variable
@@ -400,12 +418,14 @@ AC_ARG_WITH([corosync],
 yes_no_try "$with_corosync" "try"
 with_corosync=$?
 
-dnl @TODO This should be a corosync pkgconfig variable
-PCMK__COROSYNC_CONF=""
+dnl Get default from corosync if possible.
+PKG_CHECK_VAR([PCMK__COROSYNC_CONF], [corosync], [corosysconfdir], [],
+              [PCMK__COROSYNC_CONF="${sysconfdir}/corosync/corosync.conf"])
 AC_ARG_WITH([corosync-conf],
     [AS_HELP_STRING([--with-corosync-conf], m4_normalize([
         location of Corosync configuration file
-        @<:@SYSCONFDIR/corosync/corosync.conf@:>@]))],
+        @<:@value from Corosync package if available otherwise
+        SYSCONFDIR/corosync/corosync.conf@:>@]))],
     [ PCMK__COROSYNC_CONF="$withval" ]
 )
 
@@ -655,6 +675,9 @@ expand_path_option mandir
 
 dnl Home-grown variables
 
+expand_path_option localedir "${datadir}/locale"
+AC_DEFINE_UNQUOTED([PCMK__LOCALE_DIR],["$localedir"], [Base directory for message catalogs])
+
 AS_IF([test x"${runstatedir}" = x""], [runstatedir="${pcmk_runstatedir}"])
 expand_path_option runstatedir "${localstatedir}/run"
 AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
@@ -702,7 +725,7 @@ AC_SUBST(BUG_URL)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
-    mandir INITDIR docdir CONFIGDIR
+    mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
     if
@@ -1130,6 +1153,7 @@ dnl ========================================================================
 REQUIRE_FUNC([getopt])
 REQUIRE_FUNC([setenv])
 REQUIRE_FUNC([unsetenv])
+REQUIRE_FUNC([vasprintf])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
@@ -1219,11 +1243,13 @@ dnl Check for printw() prototype compatibility
 AS_IF([test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    cc_temp_flags "-Wcast-qual $WERROR"
+
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
-    AS_IF([cc_supports_flag -fPIC], [CFLAGS="$CFLAGS -fPIC"])
+    AS_IF([cc_supports_flag -fPIC],
+	  [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
+	  [cc_temp_flags "-Wcast-qual $WERROR"])
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
@@ -1309,10 +1335,11 @@ PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
+dnl libqb 2.0.5+ (2022-03)
+AC_CHECK_FUNCS([qb_ipcc_connect_async])
+
 dnl libqb 2.0.2+ (2020-10)
-AC_CHECK_FUNCS(qb_ipcc_auth_get,
-               AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
-                         [Have qb_ipcc_auth_get function]))
+AC_CHECK_FUNCS([qb_ipcc_auth_get])
 
 dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
@@ -1338,7 +1365,8 @@ AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for th
 AC_SUBST(CRM_SCHEMA_DIRECTORY)
 
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
-AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
+AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
+		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
 if test x"${CRM_DAEMON_USER}" = x""; then
@@ -1368,10 +1396,6 @@ AC_SUBST(PE_STATE_DIR)
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
-
-CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
-AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
-AC_SUBST(CRM_CONFIG_CTS)
 
 CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
@@ -1576,6 +1600,7 @@ AS_IF([test $with_corosync -ne $DISABLED],
           AC_MSG_CHECKING([for Corosync 2 or later])
           AC_MSG_RESULT([yes])
           CFLAGS="$CFLAGS $libqb_CFLAGS $cpg_CFLAGS $cfg_CFLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
+          CPPFLAGS="$CPPFLAGS `$PKG_CONFIG --cflags-only-I corosync`"
           COROSYNC_LIBS="$COROSYNC_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
           CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
           PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
@@ -1584,9 +1609,7 @@ AS_IF([test $with_corosync -ne $DISABLED],
           dnl Shutdown tracking added (back) to corosync Jan 2021
           saved_LIBS="$LIBS"
           LIBS="$LIBS $COROSYNC_LIBS"
-          AC_CHECK_FUNCS(corosync_cfg_trackstart,
-          AC_DEFINE(HAVE_COROSYNC_CFG_TRACKSTART, 1,
-                         [Have corosync_cfg_trackstart function]))
+          AC_CHECK_FUNCS([corosync_cfg_trackstart])
           LIBS="$saved_LIBS"
       ]
 )
@@ -2023,7 +2046,6 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
 CONFIG_FILES_EXEC([cts/cts-cli],
-                  [cts/cts-coverage],
                   [cts/cts-exec],
                   [cts/cts-fencing],
                   [cts/cts-regression],
@@ -2059,8 +2081,8 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
-                cts/lab/Makefile                                    \
                 cts/lab/CTSvars.py                                  \
+                cts/lab/Makefile                                    \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \
@@ -2079,9 +2101,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
+                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
-                daemons/pacemakerd/pacemaker.combined.upstart       \
                 daemons/schedulerd/Makefile                         \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
@@ -2101,47 +2123,55 @@ AC_CONFIG_FILES(Makefile                                            \
                 include/crm/fencing/Makefile                        \
                 include/crm/pengine/Makefile                        \
                 include/pcmki/Makefile                              \
-                replace/Makefile                                    \
                 lib/Makefile                                        \
+                lib/cib/Makefile                                    \
+                lib/cluster/Makefile                                \
+                lib/common/Makefile                                 \
+                lib/common/tests/Makefile                           \
+                lib/common/tests/acl/Makefile                       \
+                lib/common/tests/agents/Makefile                    \
+                lib/common/tests/cmdline/Makefile                   \
+                lib/common/tests/flags/Makefile                     \
+                lib/common/tests/health/Makefile                    \
+                lib/common/tests/io/Makefile                        \
+                lib/common/tests/iso8601/Makefile                   \
+                lib/common/tests/lists/Makefile                     \
+                lib/common/tests/nvpair/Makefile                    \
+                lib/common/tests/operations/Makefile                \
+                lib/common/tests/results/Makefile                   \
+                lib/common/tests/scores/Makefile                    \
+                lib/common/tests/strings/Makefile                   \
+                lib/common/tests/utils/Makefile                     \
+                lib/common/tests/xpath/Makefile                     \
+                lib/fencing/Makefile                                \
+                lib/gnu/Makefile                                    \
                 lib/libpacemaker.pc                                 \
+                lib/lrmd/Makefile                                   \
+                lib/pacemaker/Makefile                              \
                 lib/pacemaker.pc                                    \
                 lib/pacemaker-cib.pc                                \
+                lib/pacemaker-cluster.pc                            \
+                lib/pacemaker-fencing.pc                            \
                 lib/pacemaker-lrmd.pc                               \
                 lib/pacemaker-service.pc                            \
                 lib/pacemaker-pe_rules.pc                           \
                 lib/pacemaker-pe_status.pc                          \
-                lib/pacemaker-fencing.pc                            \
-                lib/pacemaker-cluster.pc                            \
-                lib/common/Makefile                                 \
-                lib/common/tests/Makefile                           \
-                lib/common/tests/agents/Makefile                    \
-                lib/common/tests/cmdline/Makefile                   \
-                lib/common/tests/flags/Makefile                     \
-                lib/common/tests/io/Makefile                        \
-                lib/common/tests/iso8601/Makefile                   \
-                lib/common/tests/operations/Makefile                \
-                lib/common/tests/results/Makefile                   \
-                lib/common/tests/strings/Makefile                   \
-                lib/common/tests/utils/Makefile                     \
-                lib/common/tests/xpath/Makefile                     \
-                lib/cluster/Makefile                                \
-                lib/cib/Makefile                                    \
-                lib/gnu/Makefile                                    \
-                lib/pacemaker/Makefile                              \
                 lib/pengine/Makefile                                \
                 lib/pengine/tests/Makefile                          \
+                lib/pengine/tests/native/Makefile                   \
                 lib/pengine/tests/rules/Makefile                    \
-                lib/fencing/Makefile                                \
-                lib/lrmd/Makefile                                   \
+                lib/pengine/tests/unpack/Makefile                   \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
+                po/Makefile.in                                      \
+                replace/Makefile                                    \
                 rpm/Makefile                                        \
                 tests/Makefile                                      \
                 tools/Makefile                                      \
-                tools/report.collector                              \
-                tools/report.common                                 \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
+                tools/report.collector                              \
+                tools/report.common                                 \
                 xml/Makefile                                        \
                 xml/pacemaker-schemas.pc                            \
 )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -34,22 +34,11 @@
 static GMainLoop *mainloop = NULL;
 static crm_trigger_t *trig = NULL;
 static int mainloop_iter = 0;
-static int callback_rc = 0;
+static pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
 typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 #define MAINLOOP_DEFAULT_TIMEOUT 2
-
-#define mainloop_test_done(pass) \
-    if (pass) { \
-        crm_info("SUCCESS - %s", __func__); \
-        mainloop_iter++;   \
-        mainloop_set_trigger(trig);  \
-    } else { \
-        crm_err("FAILURE = %s async_callback %d", __func__, callback_rc); \
-        crm_exit(CRM_EX_ERROR); \
-    } \
-    callback_rc = 0; \
-
 
 enum test_modes {
     test_standard = 0,  // test using a specific developer environment
@@ -94,6 +83,23 @@ static int expected_notifications = 0;
 static int verbose = 0;
 
 static void
+mainloop_test_done(const char *origin, bool pass)
+{
+    if (pass) {
+        crm_info("SUCCESS - %s", origin);
+        mainloop_iter++;
+        mainloop_set_trigger(trig);
+        result.execution_status = PCMK_EXEC_DONE;
+        result.exit_status = CRM_EX_OK;
+    } else {
+        crm_err("FAILURE - %s (%d: %s)", origin, result.exit_status,
+                pcmk_exec_status_str(result.execution_status));
+        crm_exit(CRM_EX_ERROR);
+    }
+}
+
+
+static void
 dispatch_helper(int timeout)
 {
     int rc;
@@ -119,10 +125,14 @@ st_callback(stonith_t * st, stonith_event_t * e)
         crm_exit(CRM_EX_DISCONNECT);
     }
 
-    crm_notice("Operation %s requested by %s %s for peer %s.  %s reported: %s (ref=%s)",
-               e->operation, e->origin, e->result == pcmk_ok ? "completed" : "failed",
-               e->target, e->executioner ? e->executioner : "<none>",
-               pcmk_strerror(e->result), e->id);
+    crm_notice("Operation '%s' targeting %s by %s for %s: %s (exit=%d, ref=%s)",
+               ((e->operation == NULL)? "unknown" : e->operation),
+               ((e->target == NULL)? "no node" : e->target),
+               ((e->executioner == NULL)? "any node" : e->executioner),
+               ((e->origin == NULL)? "unknown client" : e->origin),
+               pcmk_exec_status_str(stonith__event_execution_status(e)),
+               stonith__event_exit_status(e),
+               ((e->id == NULL)? "none" : e->id));
 
     if (expected_notifications) {
         expected_notifications--;
@@ -132,7 +142,10 @@ st_callback(stonith_t * st, stonith_event_t * e)
 static void
 st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    crm_notice("Call id %d completed with rc %d", data->call_id, data->rc);
+    crm_notice("Call %d exited %d: %s (%s)",
+               data->call_id, stonith__exit_status(data),
+               stonith__execution_status(data),
+               crm_str(stonith__exit_reason(data)));
 }
 
 static void
@@ -194,10 +207,10 @@ run_fence_failure_test(void)
                 "Register device1 for failure test", 1, 0);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "off", 3, 0),
-                "Fence failure results off", 1, -pcmk_err_generic);
+                "Fence failure results off", 1, -ENODATA);
 
     single_test(st->cmds->fence(st, st_opts, "false_1_node2", "reboot", 3, 0),
-                "Fence failure results reboot", 1, -pcmk_err_generic);
+                "Fence failure results reboot", 1, -ENODATA);
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for failure test", 1, 0);
@@ -382,7 +395,9 @@ static void
 static void
 mainloop_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    callback_rc = data->rc;
+    pcmk__set_result(&result, stonith__exit_status(data),
+                     stonith__execution_status(data),
+                     stonith__exit_reason(data));
     iterate_mainloop_tests(TRUE);
 }
 
@@ -401,18 +416,14 @@ test_async_fence_pass(int check_event)
     int rc = 0;
 
     if (check_event) {
-        if (callback_rc != 0) {
-            mainloop_test_done(FALSE);
-        } else {
-            mainloop_test_done(TRUE);
-        }
+        mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
 
     rc = st->cmds->fence(st, 0, "true_1_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
-        mainloop_test_done(FALSE);
+        mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
     /* wait for event */
@@ -428,15 +439,15 @@ test_async_fence_custom_timeout(int check_event)
     if (check_event) {
         uint32_t diff = (time(NULL) - begin);
 
-        if (callback_rc != -ETIME) {
-            mainloop_test_done(FALSE);
+        if (result.execution_status != PCMK_EXEC_TIMEOUT) {
+            mainloop_test_done(__func__, false);
         } else if (diff < CUSTOM_TIMEOUT_ADDITION + MAINLOOP_DEFAULT_TIMEOUT) {
             crm_err
                 ("Custom timeout test failed, callback expiration should be updated to %d, actual timeout was %d",
                  CUSTOM_TIMEOUT_ADDITION + MAINLOOP_DEFAULT_TIMEOUT, diff);
-            mainloop_test_done(FALSE);
+            mainloop_test_done(__func__, false);
         } else {
-            mainloop_test_done(TRUE);
+            mainloop_test_done(__func__, true);
         }
         return;
     }
@@ -445,7 +456,7 @@ test_async_fence_custom_timeout(int check_event)
     rc = st->cmds->fence(st, 0, "custom_timeout_node1", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
-        mainloop_test_done(FALSE);
+        mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
     /* wait for event */
@@ -457,18 +468,15 @@ test_async_fence_timeout(int check_event)
     int rc = 0;
 
     if (check_event) {
-        if (callback_rc != -ENODEV) {
-            mainloop_test_done(FALSE);
-        } else {
-            mainloop_test_done(TRUE);
-        }
+        mainloop_test_done(__func__,
+                           (result.execution_status == PCMK_EXEC_NO_FENCE_DEVICE));
         return;
     }
 
     rc = st->cmds->fence(st, 0, "false_1_node2", "off", MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
         crm_err("fence failed with rc %d", rc);
-        mainloop_test_done(FALSE);
+        mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
     /* wait for event */
@@ -480,18 +488,14 @@ test_async_monitor(int check_event)
     int rc = 0;
 
     if (check_event) {
-        if (callback_rc) {
-            mainloop_test_done(FALSE);
-        } else {
-            mainloop_test_done(TRUE);
-        }
+        mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
 
     rc = st->cmds->monitor(st, 0, "false_1", MAINLOOP_DEFAULT_TIMEOUT);
     if (rc < 0) {
         crm_err("monitor failed with rc %d", rc);
-        mainloop_test_done(FALSE);
+        mainloop_test_done(__func__, false);
     }
 
     register_callback_helper(rc);
@@ -528,7 +532,7 @@ test_register_async_devices(int check_event)
                               params);
     stonith_key_value_freeall(params, 1, 1);
 
-    mainloop_test_done(TRUE);
+    mainloop_test_done(__func__, true);
 }
 
 static void
@@ -537,11 +541,11 @@ try_mainloop_connect(int check_event)
     int rc = stonith_api_connect_retry(st, crm_system_name, 10);
 
     if (rc == pcmk_ok) {
-        mainloop_test_done(TRUE);
+        mainloop_test_done(__func__, true);
         return;
     }
     crm_err("API CONNECTION FAILURE");
-    mainloop_test_done(FALSE);
+    mainloop_test_done(__func__, false);
 }
 
 static void

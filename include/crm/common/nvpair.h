@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_NVPAIR__H
-#  define CRM_COMMON_NVPAIR__H
+#ifndef PCMK__CRM_COMMON_NVPAIR__H
+#  define PCMK__CRM_COMMON_NVPAIR__H
+
+#  include <sys/time.h>     // struct timeval
+#  include <glib.h>         // gpointer, gboolean, guint
+#  include <libxml/tree.h>  // xmlNode
+#  include <crm/crm.h>
+
 
 #  ifdef __cplusplus
 extern "C" {
@@ -19,11 +25,6 @@ extern "C" {
  * \brief Functionality for manipulating name/value pairs
  * \ingroup core
  */
-
-#  include <sys/time.h>     // struct timeval
-#  include <glib.h>         // gpointer, gboolean, guint
-#  include <libxml/tree.h>  // xmlNode
-#  include <crm/crm.h>
 
 typedef struct pcmk_nvpair_s {
     char *name;
@@ -80,26 +81,8 @@ crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
     return value;
 }
 
-/*!
- * \brief Add a boolean attribute to an XML object
- *
- * Add an attribute with the value \c XML_BOOLEAN_TRUE or \c XML_BOOLEAN_FALSE
- * as appropriate to an XML object.
- *
- * \param[in,out] node   XML object to add attribute to
- * \param[in]     name   Name of attribute to add
- * \param[in]     value  Boolean whose value will be tested
- *
- * \return Pointer to newly created XML attribute's content, or \c NULL on error
- */
-static inline const char *
-crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
-{
-    return crm_xml_add(node, name, (value? "true" : "false"));
-}
-
 #  ifdef __cplusplus
 }
 #  endif
 
-#endif // CRM_COMMON_NVPAIR__H
+#endif // PCMK__CRM_COMMON_NVPAIR__H

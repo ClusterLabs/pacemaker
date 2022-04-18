@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,6 @@
 #  include <crm/stonith-ng.h>
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
-#    undef KEYFILE
 #    include <gnutls/gnutls.h>
 #  endif
 
@@ -42,7 +41,14 @@ typedef struct lrmd_rsc_s {
      * that have been handed off from the pending ops list. */
     GList *recurring_ops;
 
-    int st_probe_rc; // What value should be returned for a probe if stonith
+    /* If this resource is a fence device, probes are handled internally by the
+     * executor, and this value indicates the result that should currently be
+     * returned for probes. It should be one of:
+     * PCMK_EXEC_DONE (to indicate "running"),
+     * PCMK_EXEC_NO_FENCE_DEVICE ("not running"), or
+     * PCMK_EXEC_NOT_CONNECTED ("unknown because fencer connection was lost").
+     */
+    pcmk__action_result_t fence_probe_result;
 
     crm_trigger_t *work;
 } lrmd_rsc_t;

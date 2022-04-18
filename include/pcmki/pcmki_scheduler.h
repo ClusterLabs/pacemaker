@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the Pacemaker project contributors
+ * Copyright 2014-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,11 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE__H
-#  define PENGINE__H
+#ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
+#  define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
 typedef struct rsc_ticket_s rsc_ticket_t;
-typedef struct lrm_agent_s lrm_agent_t;
 
 #  include <glib.h>
 #  include <crm/crm.h>
@@ -21,12 +20,6 @@ typedef struct lrm_agent_s lrm_agent_t;
 #  include <crm/pengine/status.h>
 
 #  include <crm/pengine/complex.h>
-
-enum pe_stop_fail {
-    pesf_block,
-    pesf_stonith,
-    pesf_ignore
-};
 
 enum pe_weights {
     pe_weights_none = 0x0,
@@ -65,20 +58,11 @@ struct rsc_ticket_s {
     int role_lh;
 };
 
-extern gboolean stage0(pe_working_set_t * data_set);
-extern gboolean probe_resources(pe_working_set_t * data_set);
-extern gboolean stage2(pe_working_set_t * data_set);
-extern gboolean stage4(pe_working_set_t * data_set);
-extern gboolean stage5(pe_working_set_t * data_set);
-extern gboolean stage6(pe_working_set_t * data_set);
-extern gboolean stage8(pe_working_set_t * data_set);
-
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
-extern void graph_element_from_action(pe_action_t * action, pe_working_set_t * data_set);
 extern void add_maintenance_update(pe_working_set_t *data_set);
-xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
-                                crm_time_t *now);
+void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
+                            pe_working_set_t *data_set);
 
 extern const char *transition_idle_timeout;
 

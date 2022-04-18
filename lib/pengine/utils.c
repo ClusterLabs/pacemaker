@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,6 @@
 
 extern bool pcmk__is_daemon;
 
-extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 static void unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * container,
@@ -174,7 +173,7 @@ node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
         if (other_node == NULL) {
             node->weight = -INFINITY;
         } else if (merge_scores) {
-            node->weight = pe__add_scores(node->weight, other_node->weight);
+            node->weight = pcmk__add_scores(node->weight, other_node->weight);
         }
     }
 
@@ -778,7 +777,6 @@ unpack_operation_on_fail(pe_action_t * action)
     const char *role = NULL;
     const char *on_fail = NULL;
     const char *interval_spec = NULL;
-    const char *enabled = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
     if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
@@ -798,6 +796,7 @@ unpack_operation_on_fail(pe_action_t * action)
         for (operation = pcmk__xe_first_child(action->rsc->ops_xml);
              (operation != NULL) && (value == NULL);
              operation = pcmk__xe_next(operation)) {
+            bool enabled = false;
 
             if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 continue;
@@ -805,11 +804,10 @@ unpack_operation_on_fail(pe_action_t * action)
             name = crm_element_value(operation, "name");
             role = crm_element_value(operation, "role");
             on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
-            enabled = crm_element_value(operation, "enabled");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             if (!on_fail) {
                 continue;
-            } else if (enabled && !crm_is_true(enabled)) {
+            } else if (pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok && !enabled) {
                 continue;
             } else if (!pcmk__str_eq(name, "monitor", pcmk__str_casei)
                        || !pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
@@ -854,7 +852,6 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
     guint interval_ms = 0;
     guint min_interval_ms = G_MAXUINT;
     const char *name = NULL;
-    const char *value = NULL;
     const char *interval_spec = NULL;
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
@@ -864,10 +861,12 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
          operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            bool enabled = false;
+
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            value = crm_element_value(operation, "enabled");
-            if (!include_disabled && value && crm_is_true(value) == FALSE) {
+            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
+                !enabled) {
                 continue;
             }
 
@@ -1067,8 +1066,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 {
     int timeout_ms = 0;
     const char *value = NULL;
-    bool is_probe = pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
-                    && (interval_ms == 0);
+    bool is_probe = false;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -1094,6 +1092,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     };
 
     CRM_CHECK(action && action->rsc, return);
+
+    is_probe = pcmk_is_probe(action->task, interval_ms);
 
     // Cluster-wide <op_defaults> <meta_attributes>
     pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS, &rule_data,
@@ -1375,7 +1375,6 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
     gboolean do_retry = TRUE;
     char *local_key = NULL;
     const char *name = NULL;
-    const char *value = NULL;
     const char *interval_spec = NULL;
     char *match_key = NULL;
     xmlNode *op = NULL;
@@ -1386,10 +1385,12 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
          operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
+            bool enabled = false;
+
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            value = crm_element_value(operation, "enabled");
-            if (!include_disabled && value && crm_is_true(value) == FALSE) {
+            if (!include_disabled && pcmk__xe_get_bool_attr(operation, "enabled", &enabled) == pcmk_rc_ok &&
+                !enabled) {
                 continue;
             }
 
@@ -1684,7 +1685,7 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
         match = pe__copy_node(node);
         g_hash_table_insert(rsc->allowed_nodes, (gpointer) match->details->id, match);
     }
-    match->weight = pe__add_scores(match->weight, score);
+    match->weight = pcmk__add_scores(match->weight, score);
 }
 
 void
@@ -2157,7 +2158,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
             /* Extra work to detect device changes on remotes
              *
              * We may do this for all nodes in the future, but for now
-             * the check_action_definition() based stuff works fine.
+             * the pcmk__check_action_config() based stuff works fine.
              */
             long max = 1024;
             long digests_all_offset = 0;
@@ -2210,9 +2211,10 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
              * At least add `priority-fencing-delay` field as an indicator. */
         && (priority_delay
 
-            /* Re-calculate priority delay for the suitable case when
-             * pe_fence_op() is called again by stage6() after node priority has
-             * been actually calculated with native_add_running() */
+            /* The priority delay needs to be recalculated if this function has
+             * been called by schedule_fencing_and_shutdowns() after node
+             * priority has already been calculated by native_add_running().
+             */
             || g_hash_table_lookup(stonith_op->meta,
                                    XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY) != NULL)) {
 
@@ -2349,7 +2351,6 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
                      action->uuid, action->reason, crm_str(reason));
-        free(action->reason);
     } else if (action->reason == NULL) {
         pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
                      action->uuid, crm_str(reason));
@@ -2358,11 +2359,7 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
         return;
     }
 
-    if (reason != NULL) {
-        action->reason = strdup(reason);
-    } else {
-        action->reason = NULL;
-    }
+    pcmk__str_update(&action->reason, reason);
 }
 
 /*!
@@ -2567,4 +2564,53 @@ pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
     }
 
     return resources;
+}
+
+xmlNode *
+pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name)
+{
+    pe_resource_t *parent = uber_parent(rsc);
+    const char *rsc_id = rsc->id;
+
+    if (rsc->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(rsc);
+    } else if (parent->variant == pe_clone) {
+        rsc_id = pe__clone_child_id(parent);
+    }
+
+    for (xmlNode *xml_op = pcmk__xml_first_child(rsc->cluster->failed); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
+        const char *value = NULL;
+        char *op_id = NULL;
+
+        /* This resource operation is not a failed probe. */
+        if (!pcmk_xe_mask_probe_failure(xml_op)) {
+            continue;
+        }
+
+        /* This resource operation was not run on the given node.  Note that if name is
+         * NULL, this will always succeed.
+         */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
+        if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
+            continue;
+        }
+
+        /* This resource operation has no operation_key. */
+        value = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (!parse_op_key(value ? value : ID(xml_op), &op_id, NULL, NULL)) {
+            continue;
+        }
+
+        /* This resource operation's ID does not match the rsc_id we are looking for. */
+        if (!pcmk__str_eq(op_id, rsc_id, pcmk__str_none)) {
+            free(op_id);
+            continue;
+        }
+
+        free(op_id);
+        return xml_op;
+    }
+
+    return NULL;
 }

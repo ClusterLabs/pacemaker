@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the Pacemaker project contributors
+ * Copyright 2016-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/alerts_internal.h>
@@ -70,9 +71,29 @@ alert_complete(svc_action_t *action)
 {
     struct alert_cb_s *cb_data = (struct alert_cb_s *) (action->cb_data);
 
+    CRM_CHECK(cb_data != NULL, return);
+
     remove_inflight_alert(cb_data->call_id);
-    crm_debug("Alert pid %d for %s completed with rc=%d",
-              action->pid, cb_data->client_id, action->rc);
+
+    if (action->status != PCMK_EXEC_DONE) {
+        const char *reason = services__exit_reason(action);
+
+        crm_notice("Could not send alert: %s%s%s%s " CRM_XS " client=%s",
+                   pcmk_exec_status_str(action->status),
+                   (reason == NULL)? "" : " (",
+                   (reason == NULL)? "" : reason,
+                   (reason == NULL)? "" : ")",
+                   cb_data->client_id);
+
+    } else if (action->rc != 0) {
+        crm_notice("Alert [%d] completed but exited with status %d "
+                   CRM_XS " client=%s",
+                   action->pid, action->rc, cb_data->client_id);
+
+    } else {
+        crm_debug("Alert [%d] completed " CRM_XS " client=%s",
+                  action->pid, cb_data->client_id);
+    }
 
     free(cb_data->client_id);
     free(action->cb_data);

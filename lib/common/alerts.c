@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -137,12 +137,8 @@ pcmk__dup_alert(pcmk__alert_t *entry)
     new_entry->timeout = entry->timeout;
     new_entry->flags = entry->flags;
     new_entry->envvars = pcmk__str_table_dup(entry->envvars);
-    if (entry->tstamp_format) {
-        new_entry->tstamp_format = strdup(entry->tstamp_format);
-    }
-    if (entry->recipient) {
-        new_entry->recipient = strdup(entry->recipient);
-    }
+    pcmk__str_update(&new_entry->tstamp_format, entry->tstamp_format);
+    pcmk__str_update(&new_entry->recipient, entry->recipient);
     if (entry->select_attribute_name) {
         new_entry->select_attribute_name = g_strdupv(entry->select_attribute_name);
     }

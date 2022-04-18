@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -132,7 +132,12 @@ struct {
         options.rsc_cmd = (cmd);                                            \
     } while (0)
 #else
-#define SET_COMMAND(cmd) do { options.rsc_cmd = (cmd); } while (0)
+#define SET_COMMAND(cmd) do {                                               \
+        if (options.rsc_cmd != cmd_none) {                                  \
+            reset_options();                                                \
+        }                                                                   \
+        options.rsc_cmd = (cmd);                                            \
+    } while (0)
 #endif
 
 gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -206,8 +211,7 @@ bye(crm_exit_t ec)
         cib_t *save_cib_conn = cib_conn;
 
         cib_conn = NULL; // Ensure we can't free this twice
-        save_cib_conn->cmds->signoff(save_cib_conn);
-        cib_delete(save_cib_conn);
+        cib__clean_up_connection(&save_cib_conn);
     }
     if (controld_api != NULL) {
         pcmk_ipc_api_t *save_controld_api = controld_api;
@@ -318,7 +322,7 @@ build_constraint_list(xmlNode *root)
     xmlXPathObjectPtr xpathObj = NULL;
     int ndx = 0;
 
-    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, root);
+    cib_constraints = pcmk_find_cib_element(root, XML_CIB_TAG_CONSTRAINTS);
     xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
 
     for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
@@ -627,21 +631,27 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+static void
+reset_options(void) {
+    options.require_crmd = FALSE;
+    options.require_node = FALSE;
+
+    options.require_cib = TRUE,
+    options.require_dataset = TRUE,
+    options.require_resource = TRUE,
+
+    options.find_flags = 0;
+}
+
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.cmdline_config = TRUE;
     options.require_resource = FALSE;
 
     if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
-        if (options.v_provider) {
-           free(options.v_provider);
-        }
-        options.v_provider = strdup(optarg);
+        pcmk__str_update(&options.v_provider, optarg);
     } else {
-        if (options.v_agent) {
-           free(options.v_agent);
-        }
-        options.v_agent = strdup(optarg);
+        pcmk__str_update(&options.v_agent, optarg);
     }
 
     return TRUE;
@@ -660,12 +670,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.v_class != NULL) {
-        free(options.v_class);
-    }
-
-    options.v_class = strdup(optarg);
-
+    pcmk__str_update(&options.v_class, optarg);
     options.cmdline_config = TRUE;
     options.require_resource = FALSE;
     return TRUE;
@@ -689,8 +694,8 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_dataset = FALSE;
     SET_COMMAND(cmd_delete);
+    options.require_dataset = FALSE;
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -708,13 +713,7 @@ get_agent_spec(const gchar *optarg)
     options.require_cib = FALSE;
     options.require_dataset = FALSE;
     options.require_resource = FALSE;
-    if (options.agent_spec != NULL) {
-        free(options.agent_spec);
-        options.agent_spec = NULL;
-    }
-    if (optarg != NULL) {
-        options.agent_spec = strdup(optarg);
-    }
+    pcmk__str_update(&options.agent_spec, optarg);
 }
 
 gboolean
@@ -783,38 +782,38 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    SET_COMMAND(cmd_fail);
     options.require_crmd = TRUE;
     options.require_node = TRUE;
-    SET_COMMAND(cmd_fail);
     return TRUE;
 }
 
 gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_clear);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_ban);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_move);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_any;
         SET_COMMAND(cmd_query_xml);
-    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
+    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         SET_COMMAND(cmd_query_raw_xml);
+        options.find_flags = pe_find_renamed|pe_find_any;
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_locate);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
-        options.find_flags = pe_find_renamed|pe_find_anon;
         SET_COMMAND(cmd_colocations_deep);
-    } else {
         options.find_flags = pe_find_renamed|pe_find_anon;
+    } else {
         SET_COMMAND(cmd_colocations);
+        options.find_flags = pe_find_renamed|pe_find_anon;
     }
 
     return TRUE;
@@ -828,11 +827,7 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
         SET_COMMAND(cmd_get_property);
     }
 
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
+    pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -863,25 +858,16 @@ set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data
         SET_COMMAND(cmd_delete_param);
     }
 
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
+    pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
 
 gboolean
 set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_dataset = FALSE;
-
-    if (options.prop_name) {
-        free(options.prop_name);
-    }
-
-    options.prop_name = strdup(optarg);
     SET_COMMAND(cmd_set_property);
+    options.require_dataset = FALSE;
+    pcmk__str_update(&options.prop_name, optarg);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -950,8 +936,8 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.require_resource = FALSE;
     SET_COMMAND(cmd_why);
+    options.require_resource = FALSE;
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
 }
@@ -1407,6 +1393,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
 
         if (metadata) {
             out->output_xml(out, "metadata", metadata);
+            free(metadata);
         } else {
             /* We were given a validly formatted spec, but it doesn't necessarily
              * match up with anything that exists.  Use ENXIO as the return code
@@ -1415,13 +1402,13 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
              */
             rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Metadata query for %s failed: %s",
+                        _("Metadata query for %s failed: %s"),
                         agent_spec, pcmk_rc_str(rc));
         }
     } else {
         rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "'%s' is not a valid agent specification", agent_spec);
+                    _("'%s' is not a valid agent specification"), agent_spec);
     }
 
     lrmd_api_delete(lrmd_conn);
@@ -1769,11 +1756,30 @@ main(int argc, char **argv)
                         "Resource '%s' not found", options.rsc_id);
             goto done;
         }
+
+        /* The --ban, --clear, --move, and --restart commands do not work with
+         * instances of clone resourcs.
+         */
+        if (strchr(options.rsc_id, ':') != NULL && pe_rsc_is_clone(rsc->parent) &&
+            (options.rsc_cmd == cmd_ban || options.rsc_cmd == cmd_clear ||
+             options.rsc_cmd == cmd_move || options.rsc_cmd == cmd_restart)) {
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Cannot operate on clone resource instance '%s'", options.rsc_id);
+            goto done;
+        }
     }
 
     // If user supplied a node name, check whether it exists
     if ((options.host_uname != NULL) && (data_set != NULL)) {
         node = pe_find_node(data_set->nodes, options.host_uname);
+
+        if (node == NULL) {
+            exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Node '%s' not found", options.host_uname);
+            goto done;
+        }
     }
 
     // Establish a connection to the controller if needed
@@ -1844,10 +1850,9 @@ main(int argc, char **argv)
              * update the working set multiple times, so it needs to use its own
              * copy.
              */
-            rc = cli_resource_restart(out, rsc, options.host_uname,
-                                      options.move_lifetime, options.timeout_ms,
-                                      cib_conn, options.cib_options,
-                                      options.promoted_role_only,
+            rc = cli_resource_restart(out, rsc, node, options.move_lifetime,
+                                      options.timeout_ms, cib_conn,
+                                      options.cib_options, options.promoted_role_only,
                                       options.force);
             break;
 

@@ -7,8 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_COMMON_MAINLOOP__H
-#  define CRM_COMMON_MAINLOOP__H
+#ifndef PCMK__CRM_COMMON_MAINLOOP__H
+#  define PCMK__CRM_COMMON_MAINLOOP__H
+
+#  include <signal.h> // sighandler_t
+#  include <glib.h>
+#  include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,9 +23,6 @@ extern "C" {
  * \brief Wrappers for and extensions to glib mainloop
  * \ingroup core
  */
-
-#  include <signal.h> // sighandler_t
-#  include <glib.h>
 
 enum mainloop_child_flags {
     /* don't kill pid group on timeout, only kill the pid */

@@ -1,12 +1,11 @@
 """ Auditing classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
 from cts.watcher import LogWatcher
-from cts.remote import input_wrapper
 from cts.CTSvars import *
 
 class ClusterAudit(object):
@@ -169,7 +168,7 @@ class DiskAudit(ClusterAudit):
                             answer = "Y"
                         else:
                             try:
-                                answer = input_wrapper('Continue? [nY]')
+                                answer = input('Continue? [nY]')
                             except EOFError as e:
                                 answer = "n"
 

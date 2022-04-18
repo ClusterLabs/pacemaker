@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -131,6 +131,7 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
+extern pcmk__output_t *logger_out;
 
 void
 crmd_fast_exit(crm_exit_t exit_code)
@@ -145,6 +146,13 @@ crmd_fast_exit(crm_exit_t exit_code)
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
+
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, exit_code, true, NULL);
+        pcmk__output_free(logger_out);
+        logger_out = NULL;
+    }
+
     crm_exit(exit_code);
 }
 
@@ -183,7 +191,7 @@ crmd_exit(crm_exit_t exit_code)
     }
 
     controld_close_attrd_ipc();
-    pe_subsystem_free();
+    controld_shutdown_schedulerd_ipc();
     controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
@@ -513,7 +521,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
      * long description
      */
     {
-        "dc-version", NULL, "string", NULL, "none", NULL,
+        "dc-version", NULL, "string", NULL, PCMK__VALUE_NONE, NULL,
         "Pacemaker version on cluster node elected Designated Controller (DC)",
         "Includes a hash which identifies the exact changeset the code was "
             "built from. Used for diagnostic purposes."
@@ -540,8 +548,8 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         XML_CONFIG_ATTR_RECHECK, NULL, "time",
-        "Zero disables polling, while positive values are an interval in seconds"
-            "(unless other units are specified, for example \"5min\")",
+        N_("Zero disables polling, while positive values are an interval in seconds"
+            "(unless other units are specified, for example \"5min\")"),
         "15min", pcmk__valid_interval_spec,
         "Polling interval to recheck cluster state and evaluate rules "
             "with date specifications",
@@ -553,7 +561,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "load-threshold", NULL, "percentage", NULL,
-        "80%", pcmk__valid_utilization,
+        "80%", pcmk__valid_percentage,
         "Maximum amount of system load that should be used by cluster nodes",
         "The cluster will slow down its recovery process when the amount of "
             "system resources used (currently CPU) approaches this limit",
@@ -655,11 +663,13 @@ static pcmk__cluster_option_t crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    pcmk__print_option_metadata("pacemaker-controld",
-                                "Pacemaker controller options",
-                                "Cluster options used by Pacemaker's "
-                                    "controller (formerly called crmd)",
-                                crmd_opts, PCMK__NELEM(crmd_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-controld",
+                                           "Pacemaker controller options",
+                                           "Cluster options used by Pacemaker's "
+                                               "controller",
+                                           crmd_opts, PCMK__NELEM(crmd_opts));
+    printf("%s", s);
+    free(s);
 }
 
 static void

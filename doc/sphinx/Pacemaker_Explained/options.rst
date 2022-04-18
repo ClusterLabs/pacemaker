@@ -74,6 +74,8 @@ configuration database which is, by design, mostly ignorant of the content it
 holds. So the decision was made to place them in an easy-to-find location.
 
 .. table:: **CIB Properties**
+   :class: longtable
+   :widths: 1 3
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -159,6 +161,8 @@ values, by running the ``man pacemaker-schedulerd`` and
 ``man pacemaker-controld`` commands.
 
 .. table:: **Cluster Options**
+   :class: longtable
+   :widths: 2 1 4
 
    +---------------------------+---------+----------------------------------------------------+
    | Option                    | Default | Description                                        |

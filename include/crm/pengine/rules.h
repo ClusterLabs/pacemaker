@@ -7,18 +7,17 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PENGINE_RULES__H
-#  define PENGINE_RULES__H
+#ifndef PCMK__CRM_PENGINE_RULES__H
+#  define PCMK__CRM_PENGINE_RULES__H
+
+#  include <glib.h>
+#  include <crm/crm.h>
+#  include <crm/common/iso8601.h>
+#  include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#  include <glib.h>
-
-#  include <crm/crm.h>
-#  include <crm/common/iso8601.h>
-#  include <crm/pengine/common.h>
 
 enum expression_type {
     not_expr,

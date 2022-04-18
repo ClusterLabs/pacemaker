@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,7 +81,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                           rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
     containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
                         bundle_data->nreplicas_per_host, data_set);
@@ -129,7 +129,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                 if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
                 } else if (!pcmk__threshold_reached(replica->child, node,
-                                                    data_set, NULL)) {
+                                                    NULL)) {
                     node->weight = INFINITY;
                 }
             }
@@ -200,13 +200,13 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
-            create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
-            action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
+            pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
+            action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
             /* demote */
-            create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
-            action = create_pseudo_resource_op(rsc, RSC_DEMOTED, TRUE, TRUE, data_set);
+            pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
+            action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
     }
@@ -391,7 +391,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
 
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -494,7 +494,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
-            assign_node(dependent, NULL, TRUE);
+            pcmk__assign_resource(dependent, NULL, true);
 
         } else {
             pe_rsc_debug(primary, "Cannot pair %s with instance of %s",
@@ -671,7 +671,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
              */
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if(assign_node(then_child, NULL, TRUE)) {
+                if (pcmk__assign_resource(then_child, NULL, true)) {
                     pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
@@ -847,7 +847,9 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 if (then_child_changed & pe_graph_updated_then) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-                        update_action(next->action, data_set);
+
+                        pcmk__update_action_for_orderings(next->action,
+                                                          data_set);
                     }
                 }
             }
@@ -1063,7 +1065,7 @@ pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 }
 
 void
-pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1075,17 +1077,52 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->ip) {
-            LogActions(replica->ip, data_set);
+        if (replica->ip != NULL) {
+            replica->ip->cmds->output_actions(replica->ip);
         }
-        if (replica->container) {
-            LogActions(replica->container, data_set);
+        if (replica->container != NULL) {
+            replica->container->cmds->output_actions(replica->container);
         }
-        if (replica->remote) {
-            LogActions(replica->remote, data_set);
+        if (replica->remote != NULL) {
+            replica->remote->cmds->output_actions(replica->remote);
         }
-        if (replica->child) {
-            LogActions(replica->child, data_set);
+        if (replica->child != NULL) {
+            replica->child->cmds->output_actions(replica->child);
         }
     }
+}
+
+// Bundle implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                             GList *all_rscs, GHashTable *utilization)
+{
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    pe__bundle_replica_t *replica = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    get_bundle_variant_data(bundle_data, rsc);
+    if (bundle_data->replicas == NULL) {
+        return;
+    }
+
+    /* All bundle replicas are identical, so using the utilization of the first
+     * is sufficient for any. Only the implicit container resource can have
+     * utilization values.
+     */
+    replica = (pe__bundle_replica_t *) bundle_data->replicas->data;
+    if (replica->container != NULL) {
+        replica->container->cmds->add_utilization(replica->container, orig_rsc,
+                                                  all_rscs, utilization);
+    }
+}
+
+// Bundle implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__bundle_shutdown_lock(pe_resource_t *rsc)
+{
+    return; // Bundles currently don't support shutdown locks
 }

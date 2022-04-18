@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2021 the Pacemaker project contributors
+# Copyright 2003-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -165,7 +165,7 @@ all-local:
 	done
 
 install-data-local: all-local
-	$(AM_V_AT)for book in $(BOOKS); do				\
+	$(AM_V_at)for book in $(BOOKS); do				\
 		for format in $(BOOK_FORMATS); do			\
 			formatdir="$$book/_build/$$format";		\
 			for f in `find "$$formatdir" -print`; do	\
@@ -181,7 +181,7 @@ install-data-local: all-local
 	done
 
 uninstall-local:
-	$(AM_V_AT)for book in $(BOOKS); do		\
+	$(AM_V_at)for book in $(BOOKS); do		\
 		rm -rf "$(DESTDIR)/$(docdir)/$$book";	\
 	done
 endif

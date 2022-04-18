@@ -44,6 +44,49 @@ config.status
 configure
 /conftest*
 
+# gettext artifacts
+/ABOUT-NLS
+/m4/codeset.m4
+/m4/fcntl-o.m4
+/m4/gettext.m4
+/m4/glibc2.m4
+/m4/glibc21.m4
+/m4/iconv.m4
+/m4/intdiv0.m4
+/m4/intl.m4
+/m4/intldir.m4
+/m4/intlmacosx.m4
+/m4/intmax.m4
+/m4/inttypes-pri.m4
+/m4/inttypes_h.m4
+/m4/lcmessage.m4
+/m4/lib-ld.m4
+/m4/lib-link.m4
+/m4/lib-prefix.m4
+/m4/lock.m4
+/m4/longlong.m4
+/m4/nls.m4
+/m4/po.m4
+/m4/printf-posix.m4
+/m4/progtest.m4
+/m4/size_max.m4
+/m4/stdint_h.m4
+/m4/threadlib.m4
+/m4/uintmax_t.m4
+/m4/visibility.m4
+/m4/wchar_t.m4
+/m4/wint_t.m4
+/m4/xsize.m4
+/po/*.gmo
+/po/*.header
+/po/*.pot
+/po/*.sin
+/po/Makefile.in.in
+/po/Makevars.template
+/po/POTFILES
+/po/Rules-quot
+/po/stamp-po
+
 # configure targets
 /cts/benchmark/clubench
 /cts/cts-cli
@@ -112,8 +155,6 @@ configure
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /devel/scratch
-/lib/common/md5.c
-/lib/gnu/libgnu.a
 /lib/gnu/stdalign.h
 /tools/attrd_updater
 /tools/cibadmin
@@ -186,6 +227,7 @@ pacemaker_*.info
 /xml/assets/*.rng
 /xml/assets/diffview.js
 /xml/assets/xmlcatalog
+/test/_test_file.c
 
 # Packaging artifacts
 *.rpm
@@ -249,6 +291,7 @@ pacemaker_*.info
 /fencing
 /include/stamp-*
 /install-sh
+/lib/common/md5.c
 /lib/common/tests/flags/pcmk__clear_flags_as
 /lib/common/tests/flags/pcmk__set_flags_as
 /lib/common/tests/flags/pcmk_all_flags_set
@@ -262,6 +305,7 @@ pacemaker_*.info
 /lib/common/tests/strings/pcmk__char_in_any_str
 /lib/common/tests/utils/pcmk_str_is_infinity
 /lib/common/tests/utils/pcmk_str_is_minus_infinity
+/lib/gnu/libgnu.a
 /lib/pengine/tests/rules/pe_cron_range_satisfied
 /lrmd
 /ltmain.sh

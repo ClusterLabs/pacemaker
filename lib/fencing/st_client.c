@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,27 +8,20 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include <libgen.h>
 #include <inttypes.h>
-
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-
 #include <glib.h>
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #include <crm/common/mainloop.h>
 
@@ -36,32 +29,7 @@
 
 CRM_TRACE_INIT_DATA(stonith);
 
-struct stonith_action_s {
-    /*! user defined data */
-    char *agent;
-    char *action;
-    char *victim;
-    GHashTable *args;
-    int timeout;
-    int async;
-    void *userdata;
-    void (*done_cb) (int pid, int status, const char *output, void *user_data);
-    void (*fork_cb) (int pid, void *user_data);
-
-    svc_action_t *svc_action;
-
-    /*! internal timing information */
-    time_t initial_start_time;
-    int tries;
-    int remaining_timeout;
-    int max_retries;
-
-    int pid;
-    int rc;
-    char *output;
-    char *error;
-};
-
+// Used as stonith_t:st_private
 typedef struct stonith_private_s {
     char *token;
     crm_ipc_t *ipc;
@@ -74,6 +42,11 @@ typedef struct stonith_private_s {
     void (*op_callback) (stonith_t * st, stonith_callback_data_t * data);
 
 } stonith_private_t;
+
+// Used as stonith_event_t:opaque
+struct event_private {
+    pcmk__action_result_t result;
+};
 
 typedef struct stonith_notify_client_s {
     const char *event;
@@ -118,9 +91,8 @@ static int stonith_send_command(stonith_t *stonith, const char *op,
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
-static int internal_stonith_action_execute(stonith_action_t * action);
-static void log_action(stonith_action_t *action, pid_t pid);
-
+static int stonith_api_del_notification(stonith_t *stonith,
+                                        const char *event);
 /*!
  * \brief Get agent namespace by name
  *
@@ -222,7 +194,12 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  * we drop in here - so as not to make remote nodes
                  * panic on that answer
                  */
-                crm_warn("watchdog-fencing-query failed");
+                if (rc == -ENODEV) {
+                    crm_notice("Cluster does not have watchdog fencing device");
+                } else {
+                    crm_warn("Could not check for watchdog fencing device: %s",
+                             pcmk_strerror(rc));
+                }
             } else if (list[0] == '\0') {
                 rv = TRUE;
             } else {
@@ -254,26 +231,6 @@ gboolean
 stonith__watchdog_fencing_enabled_for_node(const char *node)
 {
     return stonith__watchdog_fencing_enabled_for_node_api(NULL, node);
-}
-
-static void
-log_action(stonith_action_t *action, pid_t pid)
-{
-    if (action->output) {
-        /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s[%d] stdout:", action->agent, pid);
-
-        crm_log_output(LOG_TRACE, prefix, action->output);
-        free(prefix);
-    }
-
-    if (action->error) {
-        /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s[%d] stderr:", action->agent, pid);
-
-        crm_log_output(LOG_WARNING, prefix, action->error);
-        free(prefix);
-    }
 }
 
 /* when cycling through the list we don't want to delete items
@@ -518,451 +475,6 @@ stonith_api_register_level(stonith_t * st, int options, const char *node, int le
                                            level, device_list);
 }
 
-static void
-append_config_arg(gpointer key, gpointer value, gpointer user_data)
-{
-    /* The fencer will filter "action" out when it registers the device,
-     * but ignore it here in case any external API users don't.
-     *
-     * Also filter out parameters handled directly by Pacemaker.
-     */
-    if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
-        && !pcmk_stonith_param(key)
-        && (strstr(key, CRM_META) == NULL)
-        && !pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
-
-        crm_trace("Passing %s=%s with fence action",
-                  (const char *) key, (const char *) (value? value : ""));
-        g_hash_table_insert((GHashTable *) user_data,
-                            strdup(key), strdup(value? value : ""));
-    }
-}
-
-static GHashTable *
-make_args(const char *agent, const char *action, const char *victim,
-          uint32_t victim_nodeid, GHashTable * device_args,
-          GHashTable * port_map, const char *host_arg)
-{
-    GHashTable *arg_list = NULL;
-    const char *value = NULL;
-
-    CRM_CHECK(action != NULL, return NULL);
-
-    arg_list = pcmk__strkey_table(free, free);
-
-    // Add action to arguments (using an alias if requested)
-    if (device_args) {
-        char buffer[512];
-
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
-        value = g_hash_table_lookup(device_args, buffer);
-        if (value) {
-            crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, victim);
-            action = value;
-        }
-    }
-    g_hash_table_insert(arg_list, strdup(STONITH_ATTR_ACTION_OP),
-                        strdup(action));
-
-    /* If this is a fencing operation against another node, add more standard
-     * arguments.
-     */
-    if (victim && device_args) {
-        const char *param = NULL;
-
-        /* Always pass the target's name, per
-         * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
-         */
-        g_hash_table_insert(arg_list, strdup("nodename"), strdup(victim));
-
-        // If the target's node ID was specified, pass it, too
-        if (victim_nodeid) {
-            char *nodeid = crm_strdup_printf("%" PRIu32, victim_nodeid);
-
-            // cts-fencing looks for this log message
-            crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, victim);
-            g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
-        }
-
-        // Check whether target must be specified in some other way
-        param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
-        if (!pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
-            && !pcmk__str_eq(param, "none", pcmk__str_casei)) {
-
-            if (param == NULL) {
-                /* Use the caller's default for pcmk_host_argument, or "port" if
-                 * none was given
-                 */
-                param = (host_arg == NULL)? "port" : host_arg;
-            }
-            value = g_hash_table_lookup(device_args, param);
-
-            if (pcmk__str_eq(value, "dynamic",
-                             pcmk__str_casei|pcmk__str_null_matches)) {
-                /* If the host argument was "dynamic" or not explicitly specified,
-                 * add it with the target
-                 */
-                const char *alias = NULL;
-
-                if (port_map) {
-                    alias = g_hash_table_lookup(port_map, victim);
-                }
-                if (alias == NULL) {
-                    alias = victim;
-                }
-                crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, victim);
-                g_hash_table_insert(arg_list, strdup(param), strdup(alias));
-            }
-        }
-    }
-
-    if (device_args) {
-        g_hash_table_foreach(device_args, append_config_arg, arg_list);
-    }
-
-    return arg_list;
-}
-
-/*!
- * \internal
- * \brief Free all memory used by a stonith action
- *
- * \param[in,out] action  Action to free
- */
-void
-stonith__destroy_action(stonith_action_t *action)
-{
-    if (action) {
-        free(action->agent);
-        if (action->args) {
-            g_hash_table_destroy(action->args);
-        }
-        free(action->action);
-        free(action->victim);
-        if (action->svc_action) {
-            services_action_free(action->svc_action);
-        }
-        free(action->output);
-        free(action->error);
-        free(action);
-    }
-}
-
-/*!
- * \internal
- * \brief Get the result of an executed stonith action
- *
- * \param[in,out] action        Executed action
- * \param[out]    rc            Where to store result code (or NULL)
- * \param[out]    output        Where to store standard output (or NULL)
- * \param[out]    error_output  Where to store standard error output (or NULL)
- *
- * \note If output or error_output is not NULL, the caller is responsible for
- *       freeing the memory.
- */
-void
-stonith__action_result(stonith_action_t *action, int *rc, char **output,
-                       char **error_output)
-{
-    if (rc) {
-        *rc = pcmk_ok;
-    }
-    if (output) {
-        *output = NULL;
-    }
-    if (error_output) {
-        *error_output = NULL;
-    }
-    if (action != NULL) {
-        if (rc) {
-            *rc = action->rc;
-        }
-        if (output && action->output) {
-            *output = action->output;
-            action->output = NULL; // hand off memory management to caller
-        }
-        if (error_output && action->error) {
-            *error_output = action->error;
-            action->error = NULL; // hand off memory management to caller
-        }
-    }
-}
-
-#define FAILURE_MAX_RETRIES 2
-stonith_action_t *
-stonith_action_create(const char *agent,
-                      const char *_action,
-                      const char *victim,
-                      uint32_t victim_nodeid,
-                      int timeout, GHashTable * device_args,
-                      GHashTable * port_map, const char *host_arg)
-{
-    stonith_action_t *action;
-
-    action = calloc(1, sizeof(stonith_action_t));
-    action->args = make_args(agent, _action, victim, victim_nodeid,
-                             device_args, port_map, host_arg);
-    crm_debug("Preparing '%s' action for %s using agent %s",
-              _action, (victim? victim : "no target"), agent);
-    action->agent = strdup(agent);
-    action->action = strdup(_action);
-    if (victim) {
-        action->victim = strdup(victim);
-    }
-    action->timeout = action->remaining_timeout = timeout;
-    action->max_retries = FAILURE_MAX_RETRIES;
-
-    if (device_args) {
-        char buffer[512];
-        const char *value = NULL;
-
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", _action);
-        value = g_hash_table_lookup(device_args, buffer);
-
-        if (value) {
-            action->max_retries = atoi(value);
-        }
-    }
-
-    return action;
-}
-
-static gboolean
-update_remaining_timeout(stonith_action_t * action)
-{
-    int diff = time(NULL) - action->initial_start_time;
-
-    if (action->tries >= action->max_retries) {
-        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-                 action->agent, action->action, action->max_retries);
-        action->remaining_timeout = 0;
-    } else if ((action->rc != -ETIME) && diff < (action->timeout * 0.7)) {
-        /* only set remaining timeout period if there is 30%
-         * or greater of the original timeout period left */
-        action->remaining_timeout = action->timeout - diff;
-    } else {
-        action->remaining_timeout = 0;
-    }
-    return action->remaining_timeout ? TRUE : FALSE;
-}
-
-static int
-svc_action_to_errno(svc_action_t *svc_action) {
-    int rv = pcmk_ok;
-
-    if (svc_action->status == PCMK_EXEC_TIMEOUT) {
-            rv = -ETIME;
-
-    } else if (svc_action->rc != PCMK_OCF_OK) {
-        /* Try to provide a useful error code based on the fence agent's
-         * error output.
-         */
-        if (svc_action->stderr_data == NULL) {
-            rv = -ENODATA;
-
-        } else if (strstr(svc_action->stderr_data, "imed out")) {
-            /* Some agents have their own internal timeouts */
-            rv = -ETIME;
-
-        } else if (strstr(svc_action->stderr_data, "Unrecognised action")) {
-            rv = -EOPNOTSUPP;
-
-        } else {
-            rv = -pcmk_err_generic;
-        }
-    }
-    return rv;
-}
-
-static void
-stonith_action_async_done(svc_action_t *svc_action)
-{
-    stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
-
-    action->rc = svc_action_to_errno(svc_action);
-    action->output = svc_action->stdout_data;
-    svc_action->stdout_data = NULL;
-    action->error = svc_action->stderr_data;
-    svc_action->stderr_data = NULL;
-
-    svc_action->params = NULL;
-
-    crm_debug("Child process %d performing action '%s' exited with rc %d",
-                action->pid, action->action, svc_action->rc);
-
-    log_action(action, action->pid);
-
-    if (action->rc != pcmk_ok && update_remaining_timeout(action)) {
-        int rc = internal_stonith_action_execute(action);
-        if (rc == pcmk_ok) {
-            return;
-        }
-    }
-
-    if (action->done_cb) {
-        action->done_cb(action->pid, action->rc, action->output, action->userdata);
-    }
-
-    action->svc_action = NULL; // don't remove our caller
-    stonith__destroy_action(action);
-}
-
-static void
-stonith_action_async_forked(svc_action_t *svc_action)
-{
-    stonith_action_t *action = (stonith_action_t *) svc_action->cb_data;
-
-    action->pid = svc_action->pid;
-    action->svc_action = svc_action;
-
-    if (action->fork_cb) {
-        (action->fork_cb) (svc_action->pid, action->userdata);
-    }
-
-    crm_trace("Child process %d performing action '%s' successfully forked",
-              action->pid, action->action);
-}
-
-static int
-internal_stonith_action_execute(stonith_action_t * action)
-{
-    int rc = -EPROTO;
-    int is_retry = 0;
-    svc_action_t *svc_action = NULL;
-    static int stonith_sequence = 0;
-    char *buffer = NULL;
-
-    if ((action == NULL) || (action->action == NULL) || (action->args == NULL)
-        || (action->agent == NULL)) {
-        return -EPROTO;
-    }
-
-    if (!action->tries) {
-        action->initial_start_time = time(NULL);
-    }
-    action->tries++;
-
-    if (action->tries > 1) {
-        crm_info("Attempt %d to execute %s (%s). remaining timeout is %d",
-                 action->tries, action->agent, action->action, action->remaining_timeout);
-        is_retry = 1;
-    }
-
-    buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s",
-                               basename(action->agent));
-    svc_action = services_action_create_generic(buffer, NULL);
-    free(buffer);
-
-    if (svc_action->rc != PCMK_OCF_UNKNOWN) {
-        services_action_free(svc_action);
-        return -E2BIG;
-    }
-
-    svc_action->timeout = 1000 * action->remaining_timeout;
-    svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%d", basename(action->agent),
-                                       action->action, action->tries);
-    svc_action->agent = strdup(action->agent);
-    svc_action->sequence = stonith_sequence++;
-    svc_action->params = action->args;
-    svc_action->cb_data = (void *) action;
-    svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
-                                           LOG_TRACE, "Action",
-                                           svc_action->id, svc_action->flags,
-                                           SVC_ACTION_NON_BLOCKED,
-                                           "SVC_ACTION_NON_BLOCKED");
-
-    /* keep retries from executing out of control and free previous results */
-    if (is_retry) {
-        free(action->output);
-        action->output = NULL;
-        free(action->error);
-        action->error = NULL;
-        sleep(1);
-    }
-
-    if (action->async) {
-        /* async */
-        if (services_action_async_fork_notify(svc_action,
-                                              &stonith_action_async_done,
-                                              &stonith_action_async_forked)) {
-            return pcmk_ok;
-        }
-
-    } else if (services_action_sync(svc_action)) { // sync success
-        rc = pcmk_ok;
-        action->rc = svc_action_to_errno(svc_action);
-        action->output = svc_action->stdout_data;
-        svc_action->stdout_data = NULL;
-        action->error = svc_action->stderr_data;
-        svc_action->stderr_data = NULL;
-
-    } else { // sync failure
-        action->rc = -ECONNABORTED;
-        rc = action->rc;
-    }
-
-    svc_action->params = NULL;
-    services_action_free(svc_action);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Kick off execution of an async stonith action
- *
- * \param[in,out] action        Action to be executed
- * \param[in,out] userdata      Datapointer to be passed to callbacks
- * \param[in]     done          Callback to notify action has failed/succeeded
- * \param[in]     fork_callback Callback to notify successful fork of child
- *
- * \return pcmk_ok if ownership of action has been taken, -errno otherwise
- */
-int
-stonith_action_execute_async(stonith_action_t * action,
-                             void *userdata,
-                             void (*done) (int pid, int rc, const char *output,
-                                           void *user_data),
-                             void (*fork_cb) (int pid, void *user_data))
-{
-    if (!action) {
-        return -EINVAL;
-    }
-
-    action->userdata = userdata;
-    action->done_cb = done;
-    action->fork_cb = fork_cb;
-    action->async = 1;
-
-    return internal_stonith_action_execute(action);
-}
-
-/*!
- * \internal
- * \brief Execute a stonith action
- *
- * \param[in,out] action  Action to execute
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-int
-stonith__execute(stonith_action_t *action)
-{
-    int rc = pcmk_ok;
-
-    CRM_CHECK(action != NULL, return -EINVAL);
-
-    // Keep trying until success, max retries, or timeout
-    do {
-        rc = internal_stonith_action_execute(action);
-    } while ((rc != pcmk_ok) && update_remaining_timeout(action));
-
-    return rc;
-}
-
 static int
 stonith_api_device_list(stonith_t * stonith, int call_options, const char *namespace,
                         stonith_key_value_t ** devices, int timeout)
@@ -1100,7 +612,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     if (output && list_info) {
         const char *list_str;
 
-        list_str = crm_element_value(output, "st_output");
+        list_str = crm_element_value(output, F_STONITH_OUTPUT);
 
         if (list_str) {
             *list_info = strdup(list_str);
@@ -1193,6 +705,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             stonith_history_t *kvp;
             long long completed;
             long long completed_nsec = 0L;
+            pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1205,6 +718,11 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
             kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+
+            stonith__xe_get_result(op, &result);
+            kvp->exit_reason = result.exit_reason;
+            result.exit_reason = NULL;
+            pcmk__reset_result(&result);
 
             if (last) {
                 last->next = kvp;
@@ -1230,6 +748,7 @@ void stonith_history_free(stonith_history_t *history)
         free(hp->origin);
         free(hp->delegate);
         free(hp->client);
+        free(hp->exit_reason);
     }
 }
 
@@ -1347,70 +866,103 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Invoke a (single) specified fence action callback
+ *
+ * \param[in] st        Fencer API connection
+ * \param[in] call_id   If positive, call ID of completed fence action, otherwise
+ *                      legacy return code for early action failure
+ * \param[in] result    Full result for action
+ * \param[in] userdata  User data to pass to callback
+ * \param[in] callback  Fence action callback to invoke
+ */
 static void
-invoke_callback(stonith_t * st, int call_id, int rc, void *userdata,
-                void (*callback) (stonith_t * st, stonith_callback_data_t * data))
+invoke_fence_action_callback(stonith_t *st, int call_id,
+                             pcmk__action_result_t *result,
+                             void *userdata,
+                             void (*callback) (stonith_t *st,
+                                               stonith_callback_data_t *data))
 {
     stonith_callback_data_t data = { 0, };
 
     data.call_id = call_id;
-    data.rc = rc;
+    data.rc = pcmk_rc2legacy(stonith__result2rc(result));
     data.userdata = userdata;
+    data.opaque = (void *) result;
 
     callback(st, &data);
 }
 
+/*!
+ * \internal
+ * \brief Invoke any callbacks registered for a specified fence action result
+ *
+ * Given a fence action result from the fencer, invoke any callback registered
+ * for that action, as well as any global callback registered.
+ *
+ * \param[in] st        Fencer API connection
+ * \param[in] msg       If non-NULL, fencer reply
+ * \param[in] call_id   If \p msg is NULL, call ID of action that timed out
+ */
 static void
-stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc)
+invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
 {
     stonith_private_t *private = NULL;
-    stonith_callback_client_t *blob = NULL;
-    stonith_callback_client_t local_blob;
+    stonith_callback_client_t *cb_info = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(stonith != NULL, return);
     CRM_CHECK(stonith->st_private != NULL, return);
 
     private = stonith->st_private;
 
-    local_blob.id = NULL;
-    local_blob.callback = NULL;
-    local_blob.user_data = NULL;
-    local_blob.only_success = FALSE;
-
-    if (msg != NULL) {
-        crm_element_value_int(msg, F_STONITH_RC, &rc);
-        crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
-    }
-
-    CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
-
-    blob = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
-                                     call_id);
-    if (blob != NULL) {
-        local_blob = *blob;
-        blob = NULL;
-
-        stonith_api_del_callback(stonith, call_id, FALSE);
+    if (msg == NULL) {
+        // Fencer didn't reply in time
+        pcmk__set_result(&result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
+                         "Fencer accepted request but did not reply in time");
+        CRM_LOG_ASSERT(call_id > 0);
 
     } else {
-        crm_trace("No callback found for call %d", call_id);
-        local_blob.callback = NULL;
+        // We have the fencer reply
+        if ((crm_element_value_int(msg, F_STONITH_CALLID, &call_id) != 0)
+            || (call_id <= 0)) {
+            crm_log_xml_warn(msg, "Bad fencer reply");
+        }
+        stonith__xe_get_result(msg, &result);
     }
 
-    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
+    if (call_id > 0) {
+        cb_info = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                            call_id);
+    }
 
-    } else if (private->op_callback == NULL && rc != pcmk_ok) {
-        crm_warn("Fencing command failed: %s", pcmk_strerror(rc));
+    if ((cb_info != NULL) && (cb_info->callback != NULL)
+        && (pcmk__result_ok(&result) || !(cb_info->only_success))) {
+        crm_trace("Invoking callback %s for call %d",
+                  crm_str(cb_info->id), call_id);
+        invoke_fence_action_callback(stonith, call_id, &result,
+                                     cb_info->user_data, cb_info->callback);
+
+    } else if ((private->op_callback == NULL) && !pcmk__result_ok(&result)) {
+        crm_warn("Fencing action without registered callback failed: %d (%s%s%s)",
+                 result.exit_status,
+                 pcmk_exec_status_str(result.execution_status),
+                 ((result.exit_reason == NULL)? "" : ": "),
+                 ((result.exit_reason == NULL)? "" : result.exit_reason));
         crm_log_xml_debug(msg, "Failed fence update");
     }
 
     if (private->op_callback != NULL) {
         crm_trace("Invoking global callback for call %d", call_id);
-        invoke_callback(stonith, call_id, rc, NULL, private->op_callback);
+        invoke_fence_action_callback(stonith, call_id, &result, NULL,
+                                     private->op_callback);
     }
-    crm_trace("OP callback activated.");
+
+    if (cb_info != NULL) {
+        stonith_api_del_callback(stonith, call_id, FALSE);
+    }
+    pcmk__reset_result(&result);
 }
 
 static gboolean
@@ -1419,7 +971,7 @@ stonith_async_timeout_handler(gpointer data)
     struct timer_rec_s *timer = data;
 
     crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
-    stonith_perform_callback(timer->stonith, NULL, timer->call_id, -ETIME);
+    invoke_registered_callbacks(timer->stonith, NULL, timer->call_id);
 
     /* Always return TRUE, never remove the handler
      * We do that in stonith_del_callback()
@@ -1494,7 +1046,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
-        stonith_perform_callback(st, blob.xml, 0, 0);
+        invoke_registered_callbacks(st, blob.xml, 0);
 
     } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
@@ -1673,16 +1225,34 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     return pcmk_ok;
 }
 
+static void
+del_notify_entry(gpointer data, gpointer user_data)
+{
+    stonith_notify_client_t *entry = data;
+    stonith_t * stonith = user_data;
+
+    if (!entry->delete) {
+        crm_debug("Removing callback for %s events", entry->event);
+        stonith_api_del_notification(stonith, entry->event);
+    }
+}
+
 static int
 stonith_api_del_notification(stonith_t * stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
-    stonith_private_t *private = NULL;
+    stonith_private_t *private = stonith->st_private;
+
+    if (event == NULL) {
+        foreach_notify_entry(private, del_notify_entry, stonith);
+        crm_trace("Removed callback");
+
+        return pcmk_ok;
+    }
 
     crm_debug("Removing callback for %s events", event);
 
-    private = stonith->st_private;
     new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
@@ -1723,13 +1293,18 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     CRM_CHECK(stonith->st_private != NULL, return -EINVAL);
     private = stonith->st_private;
 
-    if (call_id == 0) {
+    if (call_id == 0) { // Add global callback
         private->op_callback = callback;
 
-    } else if (call_id < 0) {
+    } else if (call_id < 0) { // Call failed immediately, so call callback now
         if (!(options & st_opt_report_only_success)) {
+            pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
             crm_trace("Call failed, calling %s: %s", callback_name, pcmk_strerror(call_id));
-            invoke_callback(stonith, call_id, call_id, user_data, callback);
+            pcmk__set_result(&result, CRM_EX_ERROR,
+                             stonith__legacy2status(call_id), NULL);
+            invoke_fence_action_callback(stonith, call_id, &result,
+                                         user_data, callback);
         } else {
             crm_warn("Fencer call failed: %s", pcmk_strerror(call_id));
         }
@@ -1774,6 +1349,23 @@ stonith_dump_pending_callbacks(stonith_t * stonith)
     return g_hash_table_foreach(private->stonith_op_callback_table, stonith_dump_pending_op, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Get the data section of a fencer notification
+ *
+ * \param[in] msg    Notification XML
+ * \param[in] ntype  Notification type
+ */
+static xmlNode *
+get_event_data_xml(xmlNode *msg, const char *ntype)
+{
+    char *data_addr = crm_strdup_printf("//%s", ntype);
+    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
+
+    free(data_addr);
+    return data;
+}
+
 /*
  <notify t="st_notify" subt="st_device_register" st_op="st_device_register" st_rc="0" >
    <st_calldata >
@@ -1794,21 +1386,34 @@ stonith_dump_pending_callbacks(stonith_t * stonith)
  </notify>
 */
 static stonith_event_t *
-xml_to_event(xmlNode * msg)
+xml_to_event(xmlNode *msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
     const char *ntype = crm_element_value(msg, F_SUBTYPE);
-    char *data_addr = crm_strdup_printf("//%s", ntype);
-    xmlNode *data = get_xpath_object(data_addr, msg, LOG_DEBUG);
+    struct event_private *event_private = NULL;
+
+    CRM_ASSERT(event != NULL);
+
+    event->opaque = calloc(1, sizeof(struct event_private));
+    CRM_ASSERT(event->opaque != NULL);
+    event_private = (struct event_private *) event->opaque;
 
     crm_log_xml_trace(msg, "stonith_notify");
 
-    crm_element_value_int(msg, F_STONITH_RC, &(event->result));
+    // All notification types have the operation result
+    stonith__xe_get_result(msg, &event_private->result);
 
+    // @COMPAT The API originally provided the result as a legacy return code
+    event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
+
+    // Fence notifications have additional information
     if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
-        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
+        xmlNode *data = get_event_data_xml(msg, ntype);
 
-        if (data) {
+        if (data == NULL) {
+            crm_err("No data for %s event", ntype);
+            crm_log_xml_notice(msg, "BadEvent");
+        } else {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
             event->action = crm_element_value_copy(data, F_STONITH_ACTION);
             event->target = crm_element_value_copy(data, F_STONITH_TARGET);
@@ -1816,20 +1421,18 @@ xml_to_event(xmlNode * msg)
             event->id = crm_element_value_copy(data, F_STONITH_REMOTE_OP_ID);
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
-
-        } else {
-            crm_err("No data for %s event", ntype);
-            crm_log_xml_notice(msg, "BadEvent");
         }
+        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
     }
 
-    free(data_addr);
     return event;
 }
 
 static void
 event_free(stonith_event_t * event)
 {
+    struct event_private *event_private = event->opaque;
+
     free(event->id);
     free(event->type);
     free(event->message);
@@ -1840,6 +1443,8 @@ event_free(stonith_event_t * event)
     free(event->executioner);
     free(event->device);
     free(event->client_origin);
+    pcmk__reset_result(&event_private->result);
+    free(event->opaque);
     free(event);
 }
 
@@ -1975,11 +1580,13 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_element_value_int(op_reply, F_STONITH_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
+        pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
         crm_trace("Synchronous reply %d received", reply_id);
 
-        if (crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
-            rc = -ENOMSG;
-        }
+        stonith__xe_get_result(op_reply, &result);
+        rc = pcmk_rc2legacy(stonith__result2rc(&result));
+        pcmk__reset_result(&result);
 
         if ((call_options & st_opt_discard_reply) || output_data == NULL) {
             crm_trace("Discarding reply");
@@ -2263,12 +1870,8 @@ stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *v
     stonith_key_value_t *p, *end;
 
     p = calloc(1, sizeof(stonith_key_value_t));
-    if (key) {
-        p->key = strdup(key);
-    }
-    if (value) {
-        p->value = strdup(value);
-    }
+    pcmk__str_update(&p->key, key);
+    pcmk__str_update(&p->value, value);
 
     end = head;
     while (end && end->next) {
@@ -2762,6 +2365,162 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     freeXpathObject(xpath);
 }
+
+/*!
+ * \internal
+ * \brief Return the exit status from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Exit status from callback data
+ */
+int
+stonith__exit_status(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return CRM_EX_ERROR;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->exit_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the execution status from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Execution status from callback data
+ */
+int
+stonith__execution_status(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return PCMK_EXEC_UNKNOWN;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->execution_status;
+}
+
+/*!
+ * \internal
+ * \brief Return the exit reason from an async action callback
+ *
+ * \param[in] data  Callback data
+ *
+ * \return Exit reason from callback data
+ */
+const char *
+stonith__exit_reason(stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->opaque == NULL)) {
+        return NULL;
+    }
+    return ((pcmk__action_result_t *) data->opaque)->exit_reason;
+}
+
+/*!
+ * \internal
+ * \brief Return the exit status from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Exit status from event
+ */
+int
+stonith__event_exit_status(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return CRM_EX_ERROR;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.exit_status;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the execution status from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Execution status from event
+ */
+int
+stonith__event_execution_status(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return PCMK_EXEC_UNKNOWN;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.execution_status;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the exit reason from an event notification
+ *
+ * \param[in] event  Event
+ *
+ * \return Exit reason from event
+ */
+const char *
+stonith__event_exit_reason(stonith_event_t *event)
+{
+    if ((event == NULL) || (event->opaque == NULL)) {
+        return NULL;
+    } else {
+        struct event_private *event_private = event->opaque;
+
+        return event_private->result.exit_reason;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return a human-friendly description of a fencing event
+ *
+ * \param[in] event  Event to describe
+ *
+ * \return Newly allocated string with description of \p event
+ * \note The caller is responsible for freeing the return value.
+ *       This function asserts on memory errors and never returns NULL.
+ * \note This currently is useful only for events of type
+ *       T_STONITH_NOTIFY_FENCE.
+ */
+char *
+stonith__event_description(stonith_event_t *event)
+{
+    const char *origin = event->client_origin;
+    const char *executioner = event->executioner;
+    const char *reason = stonith__event_exit_reason(event);
+    const char *status;
+
+    if (origin == NULL) {
+        origin = "a client";
+    }
+    if (executioner == NULL) {
+        executioner = "the cluster";
+    }
+
+    if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
+        status = pcmk_exec_status_str(stonith__event_execution_status(event));
+    } else if (stonith__event_exit_status(event) != CRM_EX_OK) {
+        status = pcmk_exec_status_str(PCMK_EXEC_ERROR);
+    } else {
+        status = crm_exit_str(CRM_EX_OK);
+    }
+
+    return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
+                             event->action, event->target, executioner, origin,
+                             event->origin, status,
+                             ((reason == NULL)? "" : " ("),
+                             ((reason == NULL)? "" : reason),
+                             ((reason == NULL)? "" : ")"),
+                             event->id);
+}
+
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START

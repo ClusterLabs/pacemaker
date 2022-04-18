@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdint.h>
 
 #include <crm/common/output.h>
 #include <crm/pengine/rules.h>
@@ -147,8 +149,6 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     }
                 }
                 break;
-            case recovery_stop_start:
-                break;
             case recovery_block:
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
@@ -168,6 +168,11 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                         pe__set_resource_flags(child, pe_rsc_block);
                     }
                 }
+                break;
+            default: // recovery_stop_start, recovery_stop_unexpected
+                /* The scheduler will do the right thing because the relevant
+                 * variables and flags are set when unpacking the history.
+                 */
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
@@ -246,26 +251,26 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
             pe_node_t *loc = (pe_node_t *) iter->data;
 
             if (loc->details == node->details) {
-                return TRUE;
+                return true;
             }
         }
 
     } else if (pcmk_is_set(flags, pe_find_inactive)
                && (rsc->running_on == NULL)) {
-        return TRUE;
+        return true;
 
     } else if (!pcmk_is_set(flags, pe_find_current) && rsc->allocated_to
                && (rsc->allocated_to->details == node->details)) {
-        return TRUE;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 pe_resource_t *
 native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
                 int flags)
 {
-    bool match = FALSE;
+    bool match = false;
     pe_resource_t *result = NULL;
 
     CRM_CHECK(id && rsc && rsc->id, return NULL);
@@ -274,18 +279,18 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         const char *rid = ID(rsc->xml);
 
         if (!pe_rsc_is_clone(uber_parent(rsc))) {
-            match = FALSE;
+            match = false;
 
-        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_casei)) {
-            match = TRUE;
+        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_none)) {
+            match = true;
         }
 
     } else if (!strcmp(id, rsc->id)) {
-        match = TRUE;
+        match = true;
 
     } else if (pcmk_is_set(flags, pe_find_renamed)
                && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-        match = TRUE;
+        match = true;
 
     } else if (pcmk_is_set(flags, pe_find_any)
                || (pcmk_is_set(flags, pe_find_anon)
@@ -294,10 +299,8 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     }
 
     if (match && on_node) {
-        bool match_node = rsc_is_on_node(rsc, on_node, flags);
-
-        if (match_node == FALSE) {
-            match = FALSE;
+        if (!rsc_is_on_node(rsc, on_node, flags)) {
+            match = false;
         }
     }
 
@@ -335,9 +338,7 @@ native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const c
         /* try meta attributes instead */
         value = g_hash_table_lookup(rsc->meta, name);
     }
-    if (value != NULL) {
-        value_copy = strdup(value);
-    }
+    pcmk__str_update(&value_copy, value);
     return value_copy;
 }
 
@@ -540,7 +541,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  */
 gchar *
 pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                           unsigned long show_opts, const char *target_role, bool show_nodes)
+                           uint32_t show_opts, const char *target_role, bool show_nodes)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
@@ -597,6 +598,17 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     }
     if (node) {
         g_string_append_printf(outstr, " %s", node->details->uname);
+    }
+
+    // Failed probe operation
+    if (native_displayable_role(rsc) == RSC_ROLE_STOPPED) {
+        xmlNode *probe_op = pe__failed_probe_for_rsc(rsc, node ? node->details->uname : NULL);
+        if (probe_op != NULL) {
+            int rc;
+
+            pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
+            g_string_append_printf(outstr, " (%s) ", services_ocf_exitcode_str(rc));
+        }
     }
 
     // Flags, as: (<flag> [...])
@@ -672,7 +684,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
 int
 pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, unsigned int show_opts)
+                       const char *name, pe_node_t *node, uint32_t show_opts)
 {
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
@@ -728,7 +740,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
 int
 pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, unsigned int show_opts)
+                       const char *name, pe_node_t *node, uint32_t show_opts)
 {
     const char *target_role = NULL;
 
@@ -893,11 +905,11 @@ native_print(pe_resource_t * rsc, const char *pre_text, long options, void *prin
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -909,7 +921,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
-    char *priority = NULL;
     int rc = pcmk_rc_no_output;
     const char *target_role = NULL;
 
@@ -929,7 +940,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
             crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
-    priority = pcmk__ftoa(rsc->priority);
 
     rc = pe__name_and_nvpairs_xml(out, true, "resource", 12,
              "id", rsc_printable_id(rsc),
@@ -944,7 +954,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
              "pending", (print_pending? native_pending_task(rsc) : NULL));
-    free(priority);
     free(nodes_running_on);
 
     CRM_ASSERT(rc == pcmk_rc_ok);
@@ -967,11 +976,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -991,11 +1000,11 @@ pe__resource_html(pcmk__output_t *out, va_list args)
     return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
 
-PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
+PCMK__OUTPUT_ARGS("primitive", "uint32_t", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int show_opts = va_arg(args, unsigned int);
+    uint32_t show_opts = va_arg(args, uint32_t);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1257,7 +1266,7 @@ print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
 }
 
 int
-pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_opts)
+pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
 {
     GHashTable *rsc_table = pcmk__strkey_table(free, free);
     GHashTable *active_table = pcmk__strkey_table(free, destroy_node_table);
@@ -1366,4 +1375,42 @@ pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     }
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Set a resource's expected node if appropriate for a history result
+ *
+ * \param[in] rsc               Resource to set expected node for
+ * \param[in] node              Node to set as expected node
+ * \param[in] execution_status  History entry's execution status
+ * \param[in] exit_status       History entry's actual exit status
+ * \param[in] expected_status   History entry's expected exit status
+ */
+void
+pe__update_expected_node(pe_resource_t *rsc, pe_node_t *node,
+                         int execution_status, int exit_status,
+                         int expected_exit_status)
+{
+    native_variant_data_t *native_data = NULL;
+
+    get_native_variant_data(native_data, rsc);
+
+    if ((rsc->recovery_type == recovery_stop_unexpected)
+        && (rsc->role > RSC_ROLE_STOPPED)
+        && (execution_status == PCMK_EXEC_DONE)
+        && (exit_status == expected_exit_status)) {
+        // Resource is active and was expected on this node
+        pe_rsc_trace(rsc, "Found expected node %s for %s",
+                     node->details->uname, rsc->id);
+        native_data->expected_node = node;
+        pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
+
+    } else if ((native_data->expected_node != NULL)
+               && (native_data->expected_node->details == node->details)) {
+        // Resource is not cleanly active here
+        pe_rsc_trace(rsc, "Clearing expected node for %s", rsc->id);
+        native_data->expected_node = NULL;
+        pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
+    }
 }

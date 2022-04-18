@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,6 @@
 #include <crm/cib/internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  undef KEYFILE
 #  include <gnutls/gnutls.h>
 #endif
 
@@ -148,7 +147,7 @@ void cib_diff_notify(int options, const char *client, const char *call_id,
                      const char *op, xmlNode *update, int result,
                      xmlNode *old_cib);
 void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff);
+                        xmlNode *diff, int change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

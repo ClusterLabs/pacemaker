@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@ extern unsigned int shutdown_complete_state_reported_to;
 extern gboolean shutdown_complete_state_reported_client_closed;
 extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
+extern time_t subdaemon_check_progress;
 
 gboolean mcp_read_config(void);
 

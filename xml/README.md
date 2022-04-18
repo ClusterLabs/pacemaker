@@ -113,7 +113,9 @@ itself, allowing for more sophistication down the road.
 
 ### General Procedure
 
-1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng` 
+1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng`,
+   such that the new file name increments the highest number of any schema file,
+   not just the file being edited.
 1. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
    changes"`. This way, the actual change will be obvious in the commit history.
 1. Modify `${base}-${X}.${Y}.rng` as required.

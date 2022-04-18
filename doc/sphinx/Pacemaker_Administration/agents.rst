@@ -97,23 +97,23 @@ All OCF resource agents are required to implement the following actions.
    |              |             | This is *not* required to be performed         |
    |              |             | as root.                                       |
    +--------------+-------------+------------------------------------------------+
-   | validate-all | Verify the  | .. index::                                     |
-   |              | supplied    |    single: OCF resource agent; validate-all    |
-   |              | parameters  |    single: validate-all action                 |
-   |              |             |                                                |
-   |              |             | Return 0 if parameters are valid, 2 if         |
-   |              |             | not valid, and 6 if resource is not            |
-   |              |             | configured.                                    |
-   +--------------+-------------+------------------------------------------------+
 
-Additional requirements (not part of the OCF specification) are placed on
-agents that will be used for advanced concepts such as clone resources.
+OCF resource agents may optionally implement additional actions. Some are used
+only with advanced resource types such as clones.
 
 .. table:: **Optional Actions for OCF Resource Agents**
 
    +--------------+-------------+------------------------------------------------+
    | Action       | Description | Instructions                                   |
    +==============+=============+================================================+
+   | validate-all | This should | .. index::                                     |
+   |              | validate    |    single: OCF resource agent; validate-all    |
+   |              | the         |    single: validate-all action                 |
+   |              | instance    |                                                |
+   |              | parameters  | Return 0 if parameters are valid, 2 if         |
+   |              | provided.   | not valid, and 6 if resource is not            |
+   |              |             | configured.                                    |
+   +--------------+-------------+------------------------------------------------+
    | promote      | Bring the   | .. index::                                     |
    |              | local       |    single: OCF resource agent; promote         |
    |              | instance of |    single: promote action                      |
@@ -147,10 +147,29 @@ agents that will be used for advanced concepts such as clone resources.
    |              | happened and|                                                |
    |              | will happen.|                                                |
    +--------------+-------------+------------------------------------------------+
-
-One action specified in the OCF specs, ``recover``, is not currently used by
-the cluster. It is intended to be a variant of the ``start`` action that tries
-to recover a resource locally.
+   | reload       | Reload the  | .. index::                                     |
+   |              | service's   |    single: OCF resource agent; reload          |
+   |              | own         |    single: reload action                       |
+   |              | config.     |                                                |
+   |              |             | Not used by Pacemaker                          |
+   +--------------+-------------+------------------------------------------------+
+   | reload-agent | Make        | .. index::                                     |
+   |              | effective   |    single: OCF resource agent; reload-agent    |
+   |              | any changes |    single: reload-agent action                 |
+   |              | in instance |                                                |
+   |              | parameters  | This is used when the agent can handle a       |
+   |              | marked as   | change in some of its parameters more          |
+   |              | reloadable  | efficiently than stopping and starting the     |
+   |              | in the      | resource.                                      |
+   |              | agent's     |                                                |
+   |              | meta-data.  |                                                |
+   +--------------+-------------+------------------------------------------------+
+   | recover      | Restart the | .. index::                                     |
+   |              | service.    |    single: OCF resource agent; recover         |
+   |              |             |    single: recover action                      |
+   |              |             |                                                |
+   |              |             | Not used by Pacemaker                          |
+   +--------------+-------------+------------------------------------------------+
 
 .. important::
 
@@ -234,9 +253,9 @@ considered to have failed, if 0 was not the expected return value.
    |       |                       |     single: OCF return code; OCF_ERR_ARGS         |          |
    |       |                       |     pair: OCF return code; 2                      |          |
    |       |                       |                                                   |          |
-   |       |                       | The resource's configuration is not valid on      |          |
-   |       |                       | this machine. E.g. it refers to a location        |          |
-   |       |                       | not found on the node.                            |          |
+   |       |                       | The resource's parameter values are not valid on  |          |
+   |       |                       | this machine (for example, a value refers to a    |          |
+   |       |                       | file not found on the local host).                |          |
    +-------+-----------------------+---------------------------------------------------+----------+
    | 3     | OCF_ERR_UNIMPLEMENTED | .. index::                                        | hard     |
    |       |                       |    single: OCF_ERR_UNIMPLEMENTED                  |          |
@@ -266,17 +285,17 @@ considered to have failed, if 0 was not the expected return value.
    |       |                       |    single: OCF return code; OCF_ERR_CONFIGURED    |          |
    |       |                       |    pair: OCF return code; 6                       |          |
    |       |                       |                                                   |          |
-   |       |                       | The resource's configuration is invalid.          |          |
-   |       |                       | E.g. required parameters are missing.             |          |
+   |       |                       | The resource's parameter values are inherently    |          |
+   |       |                       | invalid (for example, a required parameter was    |          |
+   |       |                       | not given).                                       |          |
    +-------+-----------------------+---------------------------------------------------+----------+
    | 7     | OCF_NOT_RUNNING       | .. index::                                        | N/A      |
    |       |                       |    single: OCF_NOT_RUNNING                        |          |
    |       |                       |    single: OCF return code; OCF_NOT_RUNNING       |          |
    |       |                       |    pair: OCF return code; 7                       |          |
    |       |                       |                                                   |          |
-   |       |                       | The resource is safely stopped. The cluster       |          |
-   |       |                       | will not attempt to stop a resource that          |          |
-   |       |                       | returns this for any action.                      |          |
+   |       |                       | The resource is safely stopped. This should only  |          |
+   |       |                       | be returned by monitor actions, not stop actions. |          |
    +-------+-----------------------+---------------------------------------------------+----------+
    | 8     | OCF_RUNNING_PROMOTED  | .. index::                                        | soft     |
    |       |                       |    single: OCF_RUNNING_PROMOTED                   |          |
@@ -295,6 +314,23 @@ considered to have failed, if 0 was not the expected return value.
    |       |                       | demoted, stopped and then started (and possibly   |          |
    |       |                       | promoted) again.                                  |          |
    +-------+-----------------------+---------------------------------------------------+----------+
+   | 190   | OCF_DEGRADED          | .. index::                                        | none     |
+   |       |                       |    single: OCF_DEGRADED                           |          |
+   |       |                       |    single: OCF return code; OCF_DEGRADED          |          |
+   |       |                       |    pair: OCF return code; 190                     |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource is properly active, but in such a    |          |
+   |       |                       | condition that future failures are more likely.   |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 191   | OCF_DEGRADED_PROMOTED | .. index::                                        | none     |
+   |       |                       |    single: OCF_DEGRADED_PROMOTED                  |          |
+   |       |                       |    single: OCF return code; OCF_DEGRADED_PROMOTED |          |
+   |       |                       |    pair: OCF return code; 191                     |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource is properly active in the promoted   |          |
+   |       |                       | role, but in such a condition that future         |          |
+   |       |                       | failures are more likely.                         |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
    | other | *none*                | Custom error code.                                | soft     |
    +-------+-----------------------+---------------------------------------------------+----------+
 
@@ -307,6 +343,9 @@ Exceptions to the recovery handling described above:
   once is determined by the resource's ``multiple-active`` property.
 * Recurring actions that return ``OCF_ERR_UNIMPLEMENTED``
   do not cause any type of recovery.
+* Actions that return one of the "degraded" codes will be treated the same as
+  if they had returned success, but status output will indicate that the
+  resource is degraded.
 
 
 .. index::

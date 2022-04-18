@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef STONITH_NG__H
-#  define STONITH_NG__H
+#ifndef PCMK__CRM_STONITH_NG__H
+#  define PCMK__CRM_STONITH_NG__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +111,7 @@ typedef struct stonith_history_s {
     time_t completed;
     struct stonith_history_s *next;
     long completed_nsec;
+    char *exit_reason;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
@@ -168,39 +169,38 @@ typedef struct stonith_api_operations_s
     int (*disconnect)(stonith_t *st);
 
     /*!
-     * \brief Remove a registered stonith device with the local stonith daemon.
+     * \brief Unregister a fence device with the local fencer
      *
-     * \note Synchronous, guaranteed to occur in daemon before function returns.
-     *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*remove_device)(
         stonith_t *st, int options, const char *name);
 
     /*!
-     * \brief Register a stonith device with the local stonith daemon.
+     * \brief Register a fence device with the local fencer
      *
-     * \note Synchronous, guaranteed to occur in daemon before function returns.
-     *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*register_device)(
         stonith_t *st, int options, const char *id,
         const char *provider, const char *agent, stonith_key_value_t *params);
 
     /*!
-     * \brief Remove a fencing level for a specific node.
+     * \brief Unregister a fencing level for specified node with local fencer
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*remove_level)(
         stonith_t *st, int options, const char *node, int level);
 
     /*!
-     * \brief Register a fencing level containing the fencing devices to be used
-     *        at that level for a specific node.
+     * \brief Register a fencing level for specified node with local fencer
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*register_level)(
         stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
@@ -230,21 +230,24 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Retrieve string listing hosts and port assignments from a local stonith device.
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*list)(stonith_t *st, int options, const char *id, char **list_output, int timeout);
 
     /*!
      * \brief Check to see if a local stonith device is reachable
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*monitor)(stonith_t *st, int options, const char *id, int timeout);
 
     /*!
      * \brief Check to see if a local stonith device's port is reachable
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*status)(stonith_t *st, int options, const char *id, const char *port, int timeout);
 
@@ -271,7 +274,8 @@ typedef struct stonith_api_operations_s
      * \param timeout, The default per device timeout to use with each device
      *                 capable of fencing the target.
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*fence)(stonith_t *st, int options, const char *node, const char *action,
                  int timeout, int tolerance);
@@ -279,7 +283,8 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Manually confirm that a node is down.
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*confirm)(stonith_t *st, int options, const char *node);
 
@@ -293,6 +298,16 @@ typedef struct stonith_api_operations_s
     int (*register_notification)(
         stonith_t *st, const char *event,
         void (*notify)(stonith_t *st, stonith_event_t *e));
+
+    /*!
+     * \brief Remove a previously registered notification for \c event, or all
+     *        notifications if NULL.
+     *
+     * \param[in] st     Fencer connection to use
+     * \param[in] event  The event to remove notifications for (may be NULL).
+     *
+     * \return Legacy Pacemaker return code
+     */
     int (*remove_notification)(stonith_t *st, const char *event);
 
     /*!
@@ -308,9 +323,6 @@ typedef struct stonith_api_operations_s
      * \param[in] callback       The callback function to register
      *
      * \return \c TRUE on success, \c FALSE if call_id is negative, -errno otherwise
-     *
-     * \todo This function should return \c pcmk_ok on success, and \c call_id
-     *       when negative, but that would break backward compatibility.
      */
     int (*register_callback)(stonith_t *st,
         int call_id,
@@ -321,12 +333,14 @@ typedef struct stonith_api_operations_s
         void (*callback)(stonith_t *st, stonith_callback_data_t *data));
 
     /*!
-     * \brief Remove a registered callback for a given call id.
+     * \brief Remove a registered callback for a given call id
+     *
+     * \return pcmk_ok
      */
     int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
 
     /*!
-     * \brief Remove fencing level for specific node, node regex or attribute
+     * \brief Unregister fencing level for specified node, pattern or attribute
      *
      * \param[in] st      Fencer connection to use
      * \param[in] options Bitmask of stonith_call_options to pass to the fencer
@@ -336,7 +350,8 @@ typedef struct stonith_api_operations_s
      * \param[in] value   If not NULL, target by this node attribute value
      * \param[in] level   Index number of level to remove
      *
-     * \return 0 on success, negative error code otherwise
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      *
      * \note The caller should set only one of node, pattern or attr/value.
      */
@@ -345,7 +360,7 @@ typedef struct stonith_api_operations_s
                              const char *attr, const char *value, int level);
 
     /*!
-     * \brief Register fencing level for specific node, node regex or attribute
+     * \brief Register fencing level for specified node, pattern or attribute
      *
      * \param[in] st          Fencer connection to use
      * \param[in] options     Bitmask of stonith_call_options to pass to fencer
@@ -356,7 +371,8 @@ typedef struct stonith_api_operations_s
      * \param[in] level       Index number of level to add
      * \param[in] device_list Devices to use in level
      *
-     * \return 0 on success, negative error code otherwise
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      *
      * \note The caller should set only one of node, pattern or attr/value.
      */
@@ -402,7 +418,8 @@ typedef struct stonith_api_operations_s
      * \param delay, Apply a fencing delay. Value -1 means disable also any
      *               static/random fencing delays from pcmk_delay_base/max
      *
-     * \return Legacy Pacemaker return code
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
      */
     int (*fence_with_delay)(stonith_t *st, int options, const char *node, const char *action,
                             int timeout, int tolerance, int delay);

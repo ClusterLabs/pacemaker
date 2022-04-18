@@ -310,4 +310,30 @@ pcmk__xe_first_attr(const xmlNode *xe)
 char *
 pcmk__xpath_node_id(const char *xpath, const char *node);
 
+/* internal XML-related utilities */
+
+enum xml_private_flags {
+     pcmk__xf_none        = 0x0000,
+     pcmk__xf_dirty       = 0x0001,
+     pcmk__xf_deleted     = 0x0002,
+     pcmk__xf_created     = 0x0004,
+     pcmk__xf_modified    = 0x0008,
+
+     pcmk__xf_tracking    = 0x0010,
+     pcmk__xf_processed   = 0x0020,
+     pcmk__xf_skip        = 0x0040,
+     pcmk__xf_moved       = 0x0080,
+
+     pcmk__xf_acl_enabled = 0x0100,
+     pcmk__xf_acl_read    = 0x0200,
+     pcmk__xf_acl_write   = 0x0400,
+     pcmk__xf_acl_deny    = 0x0800,
+
+     pcmk__xf_acl_create  = 0x1000,
+     pcmk__xf_acl_denied  = 0x2000,
+     pcmk__xf_lazy        = 0x4000,
+};
+
+void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
+
 #endif // PCMK__XML_INTERNAL__H

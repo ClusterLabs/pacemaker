@@ -6,7 +6,7 @@ Name:             lib${sub}
 URL:              @PACKAGE_URL@
 Version:          @PACKAGE_VERSION@
 Description:      High-level APIs for Pacemaker
-Requires:         pacemaker-pe_status pacemaker-cib pacemaker-lrmd pacemaker
+Requires:         pacemaker-fencing pacemaker-service pacemaker-pe_status pacemaker-cib pacemaker-lrmd pacemaker
 Requires.private: glib-2.0 libxml-2.0
 Conflicts:
 Cflags:           -I${includedir}

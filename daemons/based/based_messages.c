@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -469,7 +469,7 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
 
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
-    update_section = get_object_root(section, *result_cib);
+    update_section = pcmk_find_cib_element(*result_cib, section);
     result = delete_cib_object(update_section, input);
     update_results(failed, input, op, result);
 
@@ -496,10 +496,12 @@ sync_our_cib(xmlNode * request, gboolean all)
     const char *host = crm_element_value(request, F_ORIG);
     const char *op = crm_element_value(request, F_CIB_OPERATION);
 
-    xmlNode *replace_request = cib_msg_copy(request, FALSE);
+    xmlNode *replace_request = NULL;
 
-    CRM_CHECK(the_cib != NULL,;);
-    CRM_CHECK(replace_request != NULL,;);
+    CRM_CHECK(the_cib != NULL, return -EINVAL);
+
+    replace_request = cib_msg_copy(request, FALSE);
+    CRM_CHECK(replace_request != NULL, return -EINVAL);
 
     crm_debug("Syncing CIB to %s", all ? "all peers" : host);
     if (all == FALSE && host == NULL) {
@@ -522,7 +524,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     crm_xml_add(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
-    crm_xml_add(replace_request, F_CIB_GLOBAL_UPDATE, XML_BOOLEAN_TRUE);
+    pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 
     crm_xml_add(replace_request, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     digest = calculate_xml_versioned_digest(the_cib, FALSE, TRUE, CRM_FEATURE_SET);

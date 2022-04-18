@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CIB_UTIL__H
-#  define CIB_UTIL__H
+#ifndef PCMK__CRM_CIB_UTIL__H
+#  define PCMK__CRM_CIB_UTIL__H
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
@@ -19,9 +19,6 @@ extern "C" {
 #endif
 
 /* Utility functions */
-const char *get_object_path(const char *object_type);
-const char *get_object_parent(const char *object_type);
-xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
 xmlNode *createEmptyCib(int cib_epoch);
@@ -67,6 +64,10 @@ const char *cib_pref(GHashTable * options, const char *name);
 
 int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                           int level);
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/cib/util_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

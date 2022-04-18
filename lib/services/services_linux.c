@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,8 +64,8 @@ sigchld_setup(struct sigchld_data_s *data)
 
     // Block SIGCHLD (saving previous set of blocked signals to restore later)
     if (sigprocmask(SIG_BLOCK, &(data->mask), &(data->old_mask)) < 0) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=sigprocmask", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=sigprocmask", pcmk_rc_str(errno));
         return false;
     }
     return true;
@@ -81,8 +81,8 @@ sigchld_open(struct sigchld_data_s *data)
 
     fd = signalfd(-1, &(data->mask), SFD_NONBLOCK);
     if (fd < 0) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=signalfd", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=signalfd", pcmk_rc_str(errno));
     }
     return fd;
 }
@@ -108,8 +108,8 @@ sigchld_received(int fd)
     }
     s = read(fd, &fdsi, sizeof(struct signalfd_siginfo));
     if (s != sizeof(struct signalfd_siginfo)) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=read", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=read", pcmk_rc_str(errno));
 
     } else if (fdsi.ssi_signo == SIGCHLD) {
         return true;
@@ -125,7 +125,7 @@ sigchld_cleanup(struct sigchld_data_s *data)
     if ((sigismember(&(data->old_mask), SIGCHLD) == 0)
         && (sigprocmask(SIG_UNBLOCK, &(data->mask), NULL) < 0)) {
         crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_strerror(errno));
+                 pcmk_rc_str(errno));
     }
 }
 
@@ -149,8 +149,8 @@ sigchld_handler()
     if ((last_sigchld_data != NULL)
         && (last_sigchld_data->pipe_fd[1] >= 0)
         && (write(last_sigchld_data->pipe_fd[1], "", 1) == -1)) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=write", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=write", pcmk_rc_str(errno));
     }
 }
 
@@ -162,19 +162,19 @@ sigchld_setup(struct sigchld_data_s *data)
     data->pipe_fd[0] = data->pipe_fd[1] = -1;
 
     if (pipe(data->pipe_fd) == -1) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=pipe", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=pipe", pcmk_rc_str(errno));
         return false;
     }
 
     rc = pcmk__set_nonblocking(data->pipe_fd[0]);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
+        crm_info("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
     }
     rc = pcmk__set_nonblocking(data->pipe_fd[1]);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
+        crm_info("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
                  pcmk_rc_str(rc), rc);
     }
 
@@ -183,8 +183,8 @@ sigchld_setup(struct sigchld_data_s *data)
     data->sa.sa_flags = 0;
     sigemptyset(&(data->sa.sa_mask));
     if (sigaction(SIGCHLD, &(data->sa), &(data->old_sa)) < 0) {
-        crm_err("Wait for child process completion failed: %s "
-                CRM_XS " source=sigaction", pcmk_strerror(errno));
+        crm_info("Wait for child process completion failed: %s "
+                 CRM_XS " source=sigaction", pcmk_rc_str(errno));
     }
 
     // Remember data for use in signal handler
@@ -226,7 +226,7 @@ sigchld_cleanup(struct sigchld_data_s *data)
     // Restore the previous SIGCHLD handler
     if (sigaction(SIGCHLD, &(data->old_sa), NULL) < 0) {
         crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_strerror(errno));
+                 pcmk_rc_str(errno));
     }
 
     close_pipe(data->pipe_fd);
@@ -467,7 +467,6 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 static void
 pipe_in_action_stdin_parameters(const svc_action_t *op)
 {
-    crm_debug("sending args");
     if (op->params) {
         g_hash_table_foreach(op->params, pipe_in_single_parameter, (gpointer) op);
     }
@@ -585,7 +584,11 @@ log_op_output(svc_action_t *op)
 {
     char *prefix = crm_strdup_printf("%s[%d] error output", op->id, op->pid);
 
-    crm_log_output(LOG_NOTICE, prefix, op->stderr_data);
+    /* The library caller has better context to know how important the output
+     * is, so log it at info and debug severity here. They can log it again at
+     * higher severity if appropriate.
+     */
+    crm_log_output(LOG_INFO, prefix, op->stderr_data);
     strcpy(prefix + strlen(prefix) - strlen("error output"), "output");
     crm_log_output(LOG_DEBUG, prefix, op->stdout_data);
     free(prefix);
@@ -673,9 +676,14 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
-        crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
-                             "Process did not exit within specified timeout");
+        const char *kind = services__action_kind(op);
+
+        crm_info("%s %s[%d] timed out after %s",
+                 kind, op->id, op->pid, pcmk__readable_interval(op->timeout));
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_TIMEOUT,
+                                "%s did not complete within %s",
+                                kind, pcmk__readable_interval(op->timeout));
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
@@ -686,10 +694,11 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_CANCELLED, NULL);
 
     } else {
-        crm_warn("%s[%d] terminated with signal %d (%s)",
+        crm_info("%s[%d] terminated with signal %d (%s)",
                  op->id, op->pid, signo, strsignal(signo));
-        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
+        services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                "%s interrupted by %s signal",
+                                services__action_kind(op), strsignal(signo));
     }
 
     services__finalize_async_op(op);
@@ -849,19 +858,30 @@ services__configuration_error(svc_action_t *op, bool is_fatal)
 void
 services__handle_exec_error(svc_action_t * op, int error)
 {
+    const char *name = op->opaque->exec;
+
+    if (name == NULL) {
+        name = op->agent;
+        if (name == NULL) {
+            name = op->id;
+        }
+    }
+
     switch (error) {   /* see execve(2), stat(2) and fork(2) */
         case ENOENT:   /* No such file or directory */
         case EISDIR:   /* Is a directory */
         case ENOTDIR:  /* Path component is not a directory */
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
-            services__set_result(op, services__not_installed_error(op),
-                                 PCMK_EXEC_NOT_INSTALLED, pcmk_rc_str(error));
+            services__format_result(op, services__not_installed_error(op),
+                                    PCMK_EXEC_NOT_INSTALLED, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
-            services__set_result(op, services__authorization_error(op),
-                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
+            services__format_result(op, services__authorization_error(op),
+                                    PCMK_EXEC_ERROR, "%s: %s",
+                                    name, pcmk_rc_str(error));
             break;
         default:
             services__set_result(op, services__generic_error(op),
@@ -908,12 +928,12 @@ action_launch_child(svc_action_t *op)
         sp.sched_priority = 0;
 
         if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-            crm_warn("Could not reset scheduling policy for %s", op->id);
+            crm_info("Could not reset scheduling policy for %s", op->id);
         }
     }
 #endif
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-        crm_warn("Could not reset process priority for %s", op->id);
+        crm_info("Could not reset process priority for %s", op->id);
     }
 
     /* Man: The call setpgrp() is equivalent to setpgid(0,0)
@@ -941,7 +961,7 @@ action_launch_child(svc_action_t *op)
         } else {
             crm_err("Considering %s unconfigured "
                     "because unable to load CIB secrets: %s",
-                     op->rsc, pcmk_rc_str(rc));
+                    op->rsc, pcmk_rc_str(rc));
             exit_child(op, services__configuration_error(op, false),
                        "Unable to load CIB secrets");
         }
@@ -1043,7 +1063,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
                 } else if (wait_rc < 0) {
                     wait_reason = pcmk_rc_str(errno);
-                    crm_warn("Wait for completion of %s[%d] failed: %s "
+                    crm_info("Wait for completion of %s[%d] failed: %s "
                              CRM_XS " source=waitpid",
                              op->id, op->pid, wait_reason);
                     wait_rc = 0; // Act as if process is still running
@@ -1057,8 +1077,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
         } else if ((poll_rc < 0) && (errno != EINTR)) {
             wait_reason = pcmk_rc_str(errno);
-            crm_err("Wait for completion of %s[%d] failed: %s "
-                    CRM_XS " source=poll", op->id, op->pid, wait_reason);
+            crm_info("Wait for completion of %s[%d] failed: %s "
+                     CRM_XS " source=poll", op->id, op->pid, wait_reason);
             break;
         }
 
@@ -1075,10 +1095,11 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     if (wait_rc <= 0) {
 
         if ((op->timeout > 0) && (timeout <= 0)) {
-            services__set_result(op, services__generic_error(op),
-                                 PCMK_EXEC_TIMEOUT,
-                                 "Process did not exit within specified timeout");
-            crm_warn("%s[%d] timed out after %dms",
+            services__format_result(op, services__generic_error(op),
+                                    PCMK_EXEC_TIMEOUT,
+                                    "%s did not exit within specified timeout",
+                                    services__action_kind(op));
+            crm_info("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
@@ -1091,7 +1112,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
                 crm_warn("Could not kill rogue child %s[%d]: %s",
-                         op->id, op->pid, pcmk_strerror(errno));
+                         op->id, op->pid, pcmk_rc_str(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
             while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
@@ -1108,10 +1129,11 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             "Process interrupted by signal");
-        crm_err("%s[%d] terminated with signal %d (%s)",
-                op->id, op->pid, signo, strsignal(signo));
+        services__format_result(op, services__generic_error(op),
+                                PCMK_EXEC_ERROR, "%s interrupted by %s signal",
+                                services__action_kind(op), strsignal(signo));
+        crm_info("%s[%d] terminated with signal %d (%s)",
+                 op->id, op->pid, signo, strsignal(signo));
 
 #ifdef WCOREDUMP
         if (WCOREDUMP(status)) {
@@ -1136,8 +1158,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
  * \retval EBUSY          Recurring operation could not be initiated
  * \retval pcmk_rc_error  Synchronous action failed
  * \retval pcmk_rc_ok     Synchronous action succeeded, or asynchronous action
- *                        should not be freed (because it already was or is
- *                        pending)
+ *                        should not be freed (because it's pending or because
+ *                        it failed to execute and was already freed)
  *
  * \note If the return value for an asynchronous action is not pcmk_rc_ok, the
  *       caller is responsible for freeing the action.
@@ -1155,7 +1177,7 @@ services__execute_file(svc_action_t *op)
     // Catch common failure conditions early
     if (stat(op->opaque->exec, &st) != 0) {
         rc = errno;
-        crm_warn("Cannot execute '%s': %s " CRM_XS " stat rc=%d",
+        crm_info("Cannot execute '%s': %s " CRM_XS " stat rc=%d",
                  op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
@@ -1163,8 +1185,8 @@ services__execute_file(svc_action_t *op)
 
     if (pipe(stdout_fd) < 0) {
         rc = errno;
-        crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdout) rc=%d",
-                op->opaque->exec, pcmk_strerror(rc), rc);
+        crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stdout) rc=%d",
+                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1174,8 +1196,8 @@ services__execute_file(svc_action_t *op)
 
         close_pipe(stdout_fd);
 
-        crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
-                op->opaque->exec, pcmk_strerror(rc), rc);
+        crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
+                 op->opaque->exec, pcmk_strerror(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1187,8 +1209,8 @@ services__execute_file(svc_action_t *op)
             close_pipe(stdout_fd);
             close_pipe(stderr_fd);
 
-            crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
-                    op->opaque->exec, pcmk_strerror(rc), rc);
+            crm_info("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
+                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
             goto done;
         }
@@ -1212,8 +1234,8 @@ services__execute_file(svc_action_t *op)
             close_pipe(stdout_fd);
             close_pipe(stderr_fd);
 
-            crm_err("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
-                    op->opaque->exec, pcmk_strerror(rc), rc);
+            crm_info("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
+                     op->opaque->exec, pcmk_strerror(rc), rc);
             services__handle_exec_error(op, rc);
             if (op->synchronous) {
                 sigchld_cleanup(&data);
@@ -1231,7 +1253,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
                     crm_warn("Can't redirect output from '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdout_fd[1]);
             }
@@ -1239,7 +1261,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stderr_fd[1], STDERR_FILENO) != STDERR_FILENO) {
                     crm_warn("Can't redirect error output from '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stderr_fd[1]);
             }
@@ -1248,7 +1270,7 @@ services__execute_file(svc_action_t *op)
                 if (dup2(stdin_fd[0], STDIN_FILENO) != STDIN_FILENO) {
                     crm_warn("Can't redirect input to '%s': %s "
                              CRM_XS " errno=%d",
-                             op->opaque->exec, pcmk_strerror(errno), errno);
+                             op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdin_fd[0]);
             }
@@ -1271,7 +1293,7 @@ services__execute_file(svc_action_t *op)
     op->opaque->stdout_fd = stdout_fd[0];
     rc = pcmk__set_nonblocking(op->opaque->stdout_fd);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set '%s' output non-blocking: %s "
+        crm_info("Could not set '%s' output non-blocking: %s "
                  CRM_XS " rc=%d",
                  op->opaque->exec, pcmk_rc_str(rc), rc);
     }
@@ -1279,7 +1301,7 @@ services__execute_file(svc_action_t *op)
     op->opaque->stderr_fd = stderr_fd[0];
     rc = pcmk__set_nonblocking(op->opaque->stderr_fd);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set '%s' error output non-blocking: %s "
+        crm_info("Could not set '%s' error output non-blocking: %s "
                  CRM_XS " rc=%d",
                  op->opaque->exec, pcmk_rc_str(rc), rc);
     }
@@ -1290,7 +1312,7 @@ services__execute_file(svc_action_t *op)
         // as long as no other standard uses stdin_fd assume stonith
         rc = pcmk__set_nonblocking(op->opaque->stdin_fd);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not set '%s' input non-blocking: %s "
+            crm_info("Could not set '%s' input non-blocking: %s "
                     CRM_XS " fd=%d,rc=%d", op->opaque->exec,
                     pcmk_rc_str(rc), op->opaque->stdin_fd, rc);
         }

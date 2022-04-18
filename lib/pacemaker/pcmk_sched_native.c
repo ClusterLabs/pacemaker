@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,7 +38,6 @@ static void Recurring_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_t 
 static void RecurringOp_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                                 xmlNode *operation, pe_working_set_t *data_set);
 
-void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
 gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
 gboolean StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 gboolean StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
@@ -85,7 +84,7 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                                      (flags_to_clear), #flags_to_clear);    \
     } while (0)
 
-static gboolean
+static bool
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
 {
     GList *nodes = NULL;
@@ -93,12 +92,12 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     pe_node_t *best = NULL;
     int multiple = 1;
     int length = 0;
-    gboolean result = FALSE;
+    bool result = false;
 
-    process_utilization(rsc, &prefer, data_set);
+    pcmk__ban_insufficient_capacity(rsc, &prefer, data_set);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to ? TRUE : FALSE;
+        return rsc->allocated_to != NULL;
     }
 
     // Sort allowed nodes by weight
@@ -107,7 +106,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     }
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = sort_nodes_by_weight(nodes, pe__current_node(rsc), data_set);
+        nodes = pcmk__sort_nodes(nodes, pe__current_node(rsc), data_set);
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -131,7 +130,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                          chosen->details->uname, rsc->id);
             chosen = NULL;
 
-        } else if (!can_run_resources(chosen)) {
+        } else if (!pcmk__node_available(chosen)) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
                          chosen->details->uname, rsc->id);
             chosen = NULL;
@@ -153,7 +152,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                      chosen ? chosen->details->uname : "<none>", rsc->id, length);
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
-            && chosen && (chosen->weight > 0) && can_run_resources(chosen)) {
+            && chosen && (chosen->weight > 0) && pcmk__node_available(chosen)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
@@ -165,7 +164,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
              */
             pe_node_t *running = pe__current_node(rsc);
 
-            if (running && (can_run_resources(running) == FALSE)) {
+            if ((running != NULL) && !pcmk__node_available(running)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
             } else if (running) {
@@ -196,7 +195,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                    chosen->details->uname, rsc->id, multiple, score);
     }
 
-    result = native_assign_node(rsc, chosen, FALSE);
+    result = pcmk__assign_primitive(rsc, chosen, false);
     g_list_free(nodes);
     return result;
 }
@@ -222,7 +221,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score) && can_run_resources(node)
+        if ((node->weight > best_score) && pcmk__node_available(node)
             && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;
@@ -314,7 +313,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
             }
         }
 
-        new_score = pe__add_scores(weight, node->weight);
+        new_score = pcmk__add_scores(weight, node->weight);
 
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
@@ -414,7 +413,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
                                       pcmk_is_set(flags, pe_weights_positive));
     }
 
-    if (can_run_any(work)) {
+    if (pcmk__any_node_available(work)) {
         GList *gIter = NULL;
         int multiplier = (factor < 0)? -1 : 1;
 
@@ -532,7 +531,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      constraint->score, role2text(constraint->dependent_role));
         primary->cmds->allocate(primary, NULL, data_set);
         rsc->cmds->rsc_colocation_lh(rsc, primary, constraint, data_set);
-        if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
+        if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
                         rsc->id, primary->id);
             g_hash_table_destroy(rsc->allowed_nodes);
@@ -598,11 +597,11 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        native_assign_node(rsc, assign_to, TRUE);
+        pcmk__assign_primitive(rsc, assign_to, true);
 
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
-        native_assign_node(rsc, NULL, TRUE);
+        pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && native_choose_node(rsc, prefer, data_set)) {
@@ -789,7 +788,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             // It's running, so cancel it
             log_level = LOG_INFO;
             result = "Cancelling";
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             switch (rsc->role) {
                 case RSC_ROLE_UNPROMOTED:
@@ -958,7 +957,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             g_list_free(possible_matches);
 
-            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
+            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
 
             if ((rsc->next_role == RSC_ROLE_STARTED)
                 || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
@@ -981,7 +980,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         gboolean stop_is_optional = TRUE;
         pe_action_t *stopped_mon = NULL;
         char *rc_inactive = NULL;
-        GList *probe_complete_ops = NULL;
         GList *stop_ops = NULL;
         GList *local_gIter = NULL;
 
@@ -1024,10 +1022,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             }
 
             g_list_free(probes);
-        }
-
-        if (probe_complete_ops) {
-            g_list_free(probe_complete_ops);
         }
 
         stop_ops = pe__resource_actions(rsc, stop_node, RSC_STOP, TRUE);
@@ -1191,6 +1185,62 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
     }
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions to bring resource down and back to current role
+ *
+ * \param[in] rsc           Resource to restart
+ * \param[in] current       Node that resource should be brought down on
+ * \param[in] chosen        Node that resource should be brought up on
+ * \param[in] need_stop     Whether the resource must be stopped
+ * \param[in] need_promote  Whether the resource must be promoted
+ *
+ * \return Role that resource would have after scheduled actions are taken
+ */
+static void
+schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
+                         pe_node_t *chosen, bool need_stop, bool need_promote)
+{
+    enum rsc_role_e role = rsc->role;
+    enum rsc_role_e next_role;
+
+    pe__set_resource_flags(rsc, pe_rsc_restarting);
+
+    // Bring resource down to a stop on its current node
+    while (role != RSC_ROLE_STOPPED) {
+        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
+        pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
+                     (need_stop? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, current, !need_stop,
+                                                rsc->cluster)) {
+            break;
+        }
+        role = next_role;
+    }
+
+    // Bring resource up to its next role on its next node
+    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
+           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        bool required = need_stop;
+
+        next_role = rsc_state_matrix[role][rsc->role];
+        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
+            required = true;
+        }
+        pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
+                     (required? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required,
+                                                rsc->cluster)) {
+            break;
+        }
+        role = next_role;
+    }
+
+    pe__clear_resource_flags(rsc, pe_rsc_restarting);
+}
+
 void
 native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1209,7 +1259,10 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-    CRM_ASSERT(rsc);
+    native_variant_data_t *native_data = NULL;
+
+    get_native_variant_data(native_data, rsc);
+
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
     if (next_role == RSC_ROLE_UNKNOWN) {
@@ -1273,6 +1326,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                        "(will stop on both nodes)",
                        rsc->id, rsc->partial_migration_source->details->uname,
                        rsc->partial_migration_target->details->uname);
+            multiply_active = false;
 
         } else {
             const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -1293,6 +1347,11 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
          */
         rsc->partial_migration_source = rsc->partial_migration_target = NULL;
         allow_migrate = FALSE;
+    }
+
+    if (!multiply_active) {
+        native_data->expected_node = NULL;
+        pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
@@ -1338,39 +1397,10 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     /* Create any additional actions required when bringing resource down and
      * back up to same level.
      */
-    role = rsc->role;
-    while (role != RSC_ROLE_STOPPED) {
-        next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
-        pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
-                     (need_stop? "required" : "optional"), rsc->id,
-                     role2text(role), role2text(next_role));
-        if (rsc_action_matrix[role][next_role] (rsc, current, !need_stop, data_set) == FALSE) {
-            break;
-        }
-        role = next_role;
-    }
-
-
-    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
-           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        bool required = need_stop;
-
-        next_role = rsc_state_matrix[role][rsc->role];
-        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
-            required = true;
-        }
-        pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
-                     (required? "required" : "optional"), rsc->id,
-                     role2text(role), role2text(next_role));
-        if (rsc_action_matrix[role][next_role](rsc, chosen, !required,
-                                               data_set) == FALSE) {
-            break;
-        }
-        role = next_role;
-    }
-    role = rsc->role;
+    schedule_restart_actions(rsc, current, chosen, need_stop, need_promote);
 
     /* Required steps from this role to the next */
+    role = rsc->role;
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
@@ -1474,7 +1504,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
     bool check_unfencing = FALSE;
-    bool check_utilization = FALSE;
+    bool check_utilization = false;
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
@@ -1492,8 +1522,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                        && !pcmk__str_eq(data_set->placement_strategy,
-                                         "default", pcmk__str_casei);
+                         && !pcmk__str_eq(data_set->placement_strategy,
+                                          "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1562,49 +1592,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (check_utilization) {
-        GList *gIter = NULL;
-
-        pe_rsc_trace(rsc, "Creating utilization constraints for %s - strategy: %s",
-                     rsc->id, data_set->placement_strategy);
-
-        for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *current = (pe_node_t *) gIter->data;
-
-            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
-                                                        current->details->uname);
-            pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-
-            if (load_stopped->node == NULL) {
-                load_stopped->node = pe__copy_node(current);
-                pe__clear_action_flags(load_stopped, pe_action_optional);
-            }
-
-            pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
-                               load_stopped_task, load_stopped, pe_order_load,
-                               data_set);
-        }
-
-        for (GList *item = allowed_nodes; item; item = item->next) {
-            pe_node_t *next = item->data;
-            char *load_stopped_task = crm_strdup_printf(LOAD_STOPPED "_%s",
-                                                        next->details->uname);
-            pe_action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-
-            if (load_stopped->node == NULL) {
-                load_stopped->node = pe__copy_node(next);
-                pe__clear_action_flags(load_stopped, pe_action_optional);
-            }
-
-            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
-                               rsc, start_key(rsc), NULL, pe_order_load,
-                               data_set);
-
-            pcmk__new_ordering(NULL, strdup(load_stopped_task), load_stopped,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                               NULL, pe_order_load, data_set);
-
-            free(load_stopped_task);
-        }
+        pcmk__create_utilization_constraints(rsc, allowed_nodes);
     }
 
     if (rsc->container) {
@@ -1844,12 +1832,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     }
 }
 
+/* \param[in] flags   Flags from action_flags_for_ordering()
+ */
 enum pe_graph_flags
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                       enum pe_action_flags flags, enum pe_action_flags filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
-    /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
@@ -1962,23 +1951,23 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (then_flags != then->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_then);
         pe_rsc_trace(then->rsc,
-                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
-                     "because of 'first' %s (0x%.6x)",
+                     "%s on %s: flags are now %#.6x (was %#.6x) "
+                     "because of 'first' %s (%#.6x)",
                      then->uuid,
                      then->node? then->node->details->uname : "no node",
                      then->flags, then_flags, first->uuid, first->flags);
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
-            update_action(then, data_set);
+            pcmk__update_action_for_orderings(then, data_set);
         }
     }
 
     if (first_flags != first->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_first);
         pe_rsc_trace(first->rsc,
-                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
-                     "because of 'then' %s (0x%.6x)",
+                     "%s on %s: flags are now %#.6x (was %#.6x) "
+                     "because of 'then' %s (%#.6x)",
                      first->uuid,
                      first->node? first->node->details->uname : "no node",
                      first->flags, first_flags, then->uuid, then->flags);
@@ -2005,7 +1994,7 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         crm_trace("processing action %d for rsc=%s", action->id, rsc->id);
-        graph_element_from_action(action, data_set);
+        pcmk__add_action_to_graph(action, data_set);
     }
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -2015,58 +2004,30 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-#define STOP_SANITY_ASSERT(lineno) do {                                 \
-        if(current && current->details->unclean) {                      \
-            /* It will be a pseudo op */                                \
-        } else if(stop == NULL) {                                       \
-            crm_err("%s:%d: No stop action exists for %s",              \
-                    __func__, lineno, rsc->id);                         \
-            CRM_ASSERT(stop != NULL);                                   \
-        } else if (pcmk_is_set(stop->flags, pe_action_optional)) {      \
-            crm_err("%s:%d: Action %s is still optional",               \
-                    __func__, lineno, stop->uuid);                      \
-            CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional));  \
-        }                                                               \
-    } while(0)
-
-void
-LogActions(pe_resource_t * rsc, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Check whether a node is a multiply active resource's expected node
+ *
+ * \param[in] rsc  Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p rsc is multiply active with multiple-active set to
+ *         stop_unexpected, and \p node is the node where it will remain active
+ * \note This assumes that the resource's next role cannot be changed to stopped
+ *       after this is called, which should be reasonable if status has already
+ *       been unpacked and resources have been assigned to nodes.
+ */
+static bool
+is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
 {
-    pcmk__output_t *out = data_set->priv;
+    native_variant_data_t *native_data = NULL;
 
-    pe_node_t *next = NULL;
-    pe_node_t *current = NULL;
-
-    gboolean moving = FALSE;
-
-    if(rsc->variant == pe_container) {
-        pcmk__bundle_log_actions(rsc, data_set);
-        return;
-    }
-
-    if (rsc->children) {
-        g_list_foreach(rsc->children, (GFunc) LogActions, data_set);
-        return;
-    }
-
-    next = rsc->allocated_to;
-    if (rsc->running_on) {
-        current = pe__current_node(rsc);
-        if (rsc->role == RSC_ROLE_STOPPED) {
-            /*
-             * This can occur when resources are being recovered
-             * We fiddle with the current role in native_create_actions()
-             */
-            rsc->role = RSC_ROLE_STARTED;
-        }
-    }
-
-    if ((current == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        /* Don't log stopped orphans */
-        return;
-    }
-
-    out->message(out, "rsc-action", rsc, current, next, moving);
+    get_native_variant_data(native_data, rsc);
+    return pcmk_all_flags_set(rsc->flags,
+                              pe_rsc_stop_unexpected|pe_rsc_restarting)
+           && (rsc->next_role > RSC_ROLE_STOPPED)
+           && (native_data->expected_node != NULL) && (node != NULL)
+           && (native_data->expected_node->details == node->details);
 }
 
 gboolean
@@ -2075,28 +2036,57 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
     GList *gIter = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s", rsc->id);
 
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *current = (pe_node_t *) gIter->data;
         pe_action_t *stop;
 
+        if (is_expected_node(rsc, current)) {
+            /* We are scheduling restart actions for a multiply active resource
+             * with multiple-active=stop_unexpected, and this is where it should
+             * not be stopped.
+             */
+            pe_rsc_trace(rsc,
+                         "Skipping stop of multiply active resource %s "
+                         "on expected node %s",
+                         rsc->id, current->details->uname);
+            continue;
+        }
+
         if (rsc->partial_migration_target) {
             if (rsc->partial_migration_target->details == current->details) {
-                pe_rsc_trace(rsc, "Filtered %s -> %s %s", current->details->uname,
-                             next->details->uname, rsc->id);
+                pe_rsc_trace(rsc,
+                             "Skipping stop of %s on %s "
+                             "because migration to %s in progress",
+                             rsc->id, current->details->uname,
+                             next->details->uname);
                 continue;
             } else {
-                pe_rsc_trace(rsc, "Forced on %s %s", current->details->uname, rsc->id);
+                pe_rsc_trace(rsc,
+                             "Forcing stop of %s on %s "
+                             "because migration target changed",
+                             rsc->id, current->details->uname);
                 optional = FALSE;
             }
         }
 
-        pe_rsc_trace(rsc, "%s on %s", rsc->id, current->details->uname);
+        pe_rsc_trace(rsc, "Scheduling stop of %s on %s",
+                     rsc->id, current->details->uname);
         stop = stop_action(rsc, current, optional);
 
         if(rsc->allocated_to == NULL) {
             pe_action_set_reason(stop, "node availability", TRUE);
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_restarting)) {
+            native_variant_data_t *native_data = NULL;
+
+            get_native_variant_data(native_data, rsc);
+            if (native_data->expected_node != NULL) {
+                /* We are stopping a multiply active resource on a node that is
+                 * not its expected node, and we are still scheduling restart
+                 * actions, so the stop is for being multiply active.
+                 */
+                pe_action_set_reason(stop, "being multiply active", TRUE);
+            }
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -2126,7 +2116,11 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
     pe_action_t *start = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
+
+    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (weight=%d)",
+                 (optional? "optional" : "required"), rsc->id,
+                 ((next == NULL)? "N/A" : next->details->uname),
+                 ((next == NULL)? 0 : next->weight));
     start = start_action(rsc, next, TRUE);
 
     pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
@@ -2135,6 +2129,16 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
         pe__clear_action_flags(start, pe_action_optional);
     }
 
+    if (is_expected_node(rsc, next)) {
+        /* This could be a problem if the start becomes necessary for other
+         * reasons later.
+         */
+        pe_rsc_trace(rsc,
+                     "Start of multiply active resouce %s "
+                     "on expected node %s will be a pseudo-action",
+                     rsc->id, next->details->uname);
+        pe__set_action_flags(start, pe_action_pseudo);
+    }
 
     return TRUE;
 }
@@ -2148,6 +2152,7 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
 
     CRM_ASSERT(rsc);
     CRM_CHECK(next != NULL, return FALSE);
+
     pe_rsc_trace(rsc, "%s on %s", rsc->id, next->details->uname);
 
     action_list = pe__resource_actions(rsc, next, RSC_START, TRUE);
@@ -2162,7 +2167,19 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
     g_list_free(action_list);
 
     if (runnable) {
-        promote_action(rsc, next, optional);
+        pe_action_t *promote = promote_action(rsc, next, optional);
+
+        if (is_expected_node(rsc, next)) {
+            /* This could be a problem if the promote becomes necessary for
+             * other reasons later.
+             */
+            pe_rsc_trace(rsc,
+                         "Promotion of multiply active resouce %s "
+                         "on expected node %s will be a pseudo-action",
+                         rsc->id, next->details->uname);
+            pe__set_action_flags(promote, pe_action_pseudo);
+        }
+
         return TRUE;
     }
 
@@ -2186,6 +2203,15 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
     GList *gIter = NULL;
 
     CRM_ASSERT(rsc);
+
+    if (is_expected_node(rsc, next)) {
+        pe_rsc_trace(rsc,
+                     "Skipping demote of multiply active resource %s "
+                     "on expected node %s",
+                     rsc->id, next->details->uname);
+        return TRUE;
+    }
+
     pe_rsc_trace(rsc, "%s", rsc->id);
 
     /* CRM_CHECK(rsc->next_role == RSC_ROLE_UNPROMOTED, return FALSE); */
@@ -2460,78 +2486,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
                        pe_order_optional, data_set);
 
-#if 0
-    // complete is always null currently
-    if (!pcmk__is_unfence_device(rsc, data_set)) {
-        /* Normally rsc.start depends on probe complete which depends
-         * on rsc.probe. But this can't be the case for fence devices
-         * with unfencing, as it would create graph loops.
-         *
-         * So instead we explicitly order 'rsc.probe then rsc.start'
-         */
-        order_actions(probe, complete, pe_order_implies_then);
-    }
-#endif
     return TRUE;
-}
-
-void
-ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
-{
-    GList *gIter = NULL;
-    pe_action_t *reload = NULL;
-
-    if (rsc->children) {
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            ReloadRsc(child_rsc, node, data_set);
-        }
-        return;
-
-    } else if (rsc->variant > pe_native) {
-        /* Complex resource with no children */
-        return;
-
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
-        return;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        /* We don't need to specify any particular actions here, normal failure
-         * recovery will apply.
-         */
-        pe_rsc_trace(rsc, "%s: preventing agent reload because failed",
-                     rsc->id);
-        return;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
-        /* If a resource's configuration changed while a start was pending,
-         * force a full restart.
-         */
-        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
-                     rsc->id);
-        stop_action(rsc, node, FALSE);
-        return;
-
-    } else if (node == NULL) {
-        pe_rsc_trace(rsc, "%s: not active", rsc->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Processing %s", rsc->id);
-    pe__set_resource_flags(rsc, pe_rsc_reload);
-
-    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
-                           FALSE, TRUE, data_set);
-    pe_action_set_reason(reload, "resource definition change", FALSE);
-
-    pcmk__new_ordering(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
-                       pe_order_optional|pe_order_then_cancels_first,
-                       data_set);
-    pcmk__new_ordering(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
-                       pe_order_optional|pe_order_then_cancels_first,
-                       data_set);
 }
 
 void
@@ -2560,6 +2515,116 @@ native_append_meta(pe_resource_t * rsc, xmlNode * xml)
     for (parent = rsc; parent != NULL; parent = parent->parent) {
         if (parent->container) {
             crm_xml_add(xml, CRM_META"_"XML_RSC_ATTR_CONTAINER, parent->container->id);
+        }
+    }
+}
+
+// Primitive implementation of resource_alloc_functions_t:add_utilization()
+void
+pcmk__primitive_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                GList *all_rscs, GHashTable *utilization)
+{
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    pe_rsc_trace(orig_rsc, "%s: Adding primitive %s as colocated utilization",
+                 orig_rsc->id, rsc->id);
+    pcmk__release_node_capacity(utilization, rsc);
+}
+
+/*!
+ * \internal
+ * \brief Get epoch time of node's shutdown attribute (or now if none)
+ *
+ * \param[in] node      Node to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Epoch time corresponding to shutdown attribute if set or now if not
+ */
+static time_t
+shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
+{
+    const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
+    time_t result = 0;
+
+    if (shutdown != NULL) {
+        long long result_ll;
+
+        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+            result = (time_t) result_ll;
+        }
+    }
+    return (result == 0)? get_effective_time(data_set) : result;
+}
+
+// Primitive implementation of resource_alloc_functions_t:shutdown_lock()
+void
+pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
+{
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+    // Fence devices and remote connections can't be locked
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_null_matches)
+        || pe__resource_is_remote_conn(rsc, rsc->cluster)) {
+        return;
+    }
+
+    if (rsc->lock_node != NULL) {
+        // The lock was obtained from resource history
+
+        if (rsc->running_on != NULL) {
+            /* The resource was started elsewhere even though it is now
+             * considered locked. This shouldn't be possible, but as a
+             * failsafe, we don't want to disturb the resource now.
+             */
+            pe_rsc_info(rsc,
+                        "Cancelling shutdown lock because %s is already active",
+                        rsc->id);
+            pe__clear_resource_history(rsc, rsc->lock_node, rsc->cluster);
+            rsc->lock_node = NULL;
+            rsc->lock_time = 0;
+        }
+
+    // Only a resource active on exactly one node can be locked
+    } else if (pcmk__list_of_1(rsc->running_on)) {
+        pe_node_t *node = rsc->running_on->data;
+
+        if (node->details->shutdown) {
+            if (node->details->unclean) {
+                pe_rsc_debug(rsc, "Not locking %s to unclean %s for shutdown",
+                             rsc->id, node->details->uname);
+            } else {
+                rsc->lock_node = node;
+                rsc->lock_time = shutdown_time(node, rsc->cluster);
+            }
+        }
+    }
+
+    if (rsc->lock_node == NULL) {
+        // No lock needed
+        return;
+    }
+
+    if (rsc->cluster->shutdown_lock > 0) {
+        time_t lock_expiration = rsc->lock_time + rsc->cluster->shutdown_lock;
+
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
+                    rsc->id, rsc->lock_node->details->uname,
+                    (long long) lock_expiration);
+        pe__update_recheck_time(++lock_expiration, rsc->cluster);
+    } else {
+        pe_rsc_info(rsc, "Locking %s to %s due to shutdown",
+                    rsc->id, rsc->lock_node->details->uname);
+    }
+
+    // If resource is locked to one node, ban it from all other nodes
+    for (GList *item = rsc->cluster->nodes; item != NULL; item = item->next) {
+        pe_node_t *node = item->data;
+
+        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
+            resource_location(rsc, node, -CRM_SCORE_INFINITY,
+                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
         }
     }
 }

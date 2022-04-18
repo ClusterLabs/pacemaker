@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -154,8 +154,8 @@ apply_promoted_location(pe_resource_t *child, GList *location_constraints,
             cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
         }
         if (cons_node != NULL) {
-            int new_priority = pe__add_scores(child->priority,
-                                              cons_node->weight);
+            int new_priority = pcmk__add_scores(child->priority,
+                                                cons_node->weight);
 
             pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)",
                          child->id, cons_node->details->uname, child->priority,
@@ -220,11 +220,11 @@ node_to_be_promoted_on(pe_resource_t *rsc)
                      rsc->id, rsc->priority);
         return NULL;
 
-    } else if (can_run_resources(node) == FALSE) {
+    } else if (!pcmk__node_available(node)) {
         crm_trace("Node can't run any resources: %s", node->details->uname);
         return NULL;
 
-    /* @TODO It's possible this check should be done in can_run_resources()
+    /* @TODO It's possible this check should be done in pcmk__node_available()
      * instead. We should investigate all its callers to figure out whether that
      * would be a good idea.
      */
@@ -329,7 +329,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
-        node->weight = pe__add_scores(child->sort_index, node->weight);
+        node->weight = pcmk__add_scores(child->sort_index, node->weight);
     }
 
     pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
@@ -596,7 +596,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if (can_run_resources(node) == FALSE) {
+            if (!pcmk__node_available(node)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
                  */
@@ -605,7 +605,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
             score = promotion_score(child_rsc, node, 0);
             if (score > 0) {
-                new_score = pe__add_scores(node->weight, score);
+                new_score = pcmk__add_scores(node->weight, score);
                 if (new_score != node->weight) {
                     pe_rsc_trace(rsc, "\t%s: Updating preference for %s (%d->%d)",
                                  child_rsc->id, node->details->uname, node->weight, new_score);
@@ -845,28 +845,35 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* promote */
-    action = create_pseudo_resource_op(rsc, RSC_PROMOTE, !any_promoting, TRUE, data_set);
-    action_complete = create_pseudo_resource_op(rsc, RSC_PROMOTED, !any_promoting, TRUE, data_set);
+    action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting,
+                                         true);
+    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
+                                                  !any_promoting, true);
     action_complete->priority = INFINITY;
 
     child_promoting_constraints(clone_data, pe_order_optional,
                                 rsc, NULL, last_promote_rsc, data_set);
 
     if (clone_data->promote_notify == NULL) {
-        clone_data->promote_notify =
-            create_notification_boundaries(rsc, RSC_PROMOTE, action, action_complete, data_set);
+        clone_data->promote_notify = pcmk__clone_notif_pseudo_ops(rsc,
+                                                                  RSC_PROMOTE,
+                                                                  action,
+                                                                  action_complete);
     }
 
     /* demote */
-    action = create_pseudo_resource_op(rsc, RSC_DEMOTE, !any_demoting, TRUE, data_set);
-    action_complete = create_pseudo_resource_op(rsc, RSC_DEMOTED, !any_demoting, TRUE, data_set);
+    action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
+    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED,
+                                                  !any_demoting, true);
     action_complete->priority = INFINITY;
 
     child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
 
     if (clone_data->demote_notify == NULL) {
-        clone_data->demote_notify =
-            create_notification_boundaries(rsc, RSC_DEMOTE, action, action_complete, data_set);
+        clone_data->demote_notify = pcmk__clone_notif_pseudo_ops(rsc,
+                                                                 RSC_DEMOTE,
+                                                                 action,
+                                                                 action_complete);
 
         if (clone_data->promote_notify) {
             /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
@@ -977,7 +984,7 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
 
         if (pcmk__str_eq(value, tmp, pcmk__str_casei)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
-            node->weight = pe__add_scores(node->weight, score);
+            node->weight = pcmk__add_scores(node->weight, score);
         }
     }
 }
@@ -1035,8 +1042,8 @@ promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
             dependent->priority = -INFINITY;
 
         } else if (primary_instance != NULL) {
-            int new_priority = pe__add_scores(dependent->priority,
-                                              constraint->score);
+            int new_priority = pcmk__add_scores(dependent->priority,
+                                                constraint->score);
 
             pe_rsc_debug(dependent, "Applying %s to %s",
                          constraint->id, dependent->id);

@@ -214,7 +214,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 #endif
         default:
             crm_err("Could not send reply: unknown type for client %s "
-                    CRM_XS " flags=0x%llx",
+                    CRM_XS " flags=%#llx",
                     pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
@@ -243,7 +243,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 #endif
         default:
             crm_err("Could not notify client %s with unknown transport "
-                    CRM_XS " flags=0x%llx",
+                    CRM_XS " flags=%#llx",
                     pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
@@ -476,12 +476,15 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
-    if (option && !pcmk__strcase_any_of(option, "none", "/dev/null", NULL)) {
+    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+                      pcmk__str_casei|pcmk__str_null_matches)
+        && !pcmk__str_eq(option, "/dev/null", pcmk__str_none)) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
     option = pcmk__env_option(PCMK__ENV_LOGFILE);
-    if(option && !pcmk__str_eq(option, "none", pcmk__str_casei)) {
+    if (!pcmk__str_eq(option, PCMK__VALUE_NONE,
+                      pcmk__str_casei|pcmk__str_null_matches)) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
         if (pcmk__env_option_enabled(crm_system_name, PCMK__ENV_DEBUG)) {

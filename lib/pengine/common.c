@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,19 +19,6 @@
 
 gboolean was_processing_error = FALSE;
 gboolean was_processing_warning = FALSE;
-
-static bool
-check_health(const char *value)
-{
-    return pcmk__strcase_any_of(value, "none", "custom", "only-green", "progressive",
-                           "migrate-on-red", NULL);
-}
-
-static bool
-check_stonith_action(const char *value)
-{
-    return pcmk__strcase_any_of(value, "reboot", "poweroff", "off", NULL);
-}
 
 static bool
 check_placement_strategy(const char *value)
@@ -114,7 +101,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "stonith-action", NULL, "select", "reboot, off, poweroff",
-        "reboot", check_stonith_action,
+        "reboot", pcmk__is_fencing_action,
         "Action to send to fence device when a node needs to be fenced "
             "(\"poweroff\" is a deprecated alias for \"off\")",
         NULL
@@ -129,7 +116,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "Whether watchdog integration is enabled",
+        N_("Whether watchdog integration is enabled"),
         "This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
             "The value `true` is meaningful if diskless SBD is used and "
@@ -245,37 +232,46 @@ static pcmk__cluster_option_t pe_opts[] = {
 
     /* Node health */
     {
-        "node-health-strategy", NULL, "select",
-        "none, migrate-on-red, only-green, progressive, custom",
-        "none", check_health,
+        PCMK__OPT_NODE_HEALTH_STRATEGY, NULL, "select",
+        PCMK__VALUE_NONE ", " PCMK__VALUE_MIGRATE_ON_RED ", "
+            PCMK__VALUE_ONLY_GREEN ", " PCMK__VALUE_PROGRESSIVE ", "
+            PCMK__VALUE_CUSTOM,
+        PCMK__VALUE_NONE, pcmk__validate_health_strategy,
         "How cluster should react to node health attributes",
         "Requires external entities to create node attributes (named with "
-            "the prefix \"#health\") with values \"red\", \"yellow\" or "
-            "\"green\"."
+            "the prefix \"#health\") with values \"" PCMK__VALUE_RED "\", "
+            "\"" PCMK__VALUE_YELLOW "\", or \"" PCMK__VALUE_GREEN "\"."
     },
     {
-        "node-health-base", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_BASE, NULL, "integer", NULL,
         "0", pcmk__valid_number,
         "Base health score assigned to a node",
-        "Only used when node-health-strategy is set to progressive."
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-green", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_GREEN, NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"green\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_GREEN "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-yellow", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_YELLOW, NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"yellow\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_YELLOW "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
     {
-        "node-health-red", NULL, "integer", NULL,
+        PCMK__OPT_NODE_HEALTH_RED, NULL, "integer", NULL,
         "-INFINITY", pcmk__valid_number,
-        "The score to use for a node health attribute whose value is \"red\"",
-        "Only used when node-health-strategy is set to custom or progressive."
+        "The score to use for a node health attribute whose value is \""
+            PCMK__VALUE_RED "\"",
+        "Only used when " PCMK__OPT_NODE_HEALTH_STRATEGY " is set to "
+            PCMK__VALUE_CUSTOM " or " PCMK__VALUE_PROGRESSIVE "."
     },
 
     /*Placement Strategy*/
@@ -289,13 +285,14 @@ static pcmk__cluster_option_t pe_opts[] = {
 };
 
 void
-pe_metadata(void)
+pe_metadata(pcmk__output_t *out)
 {
-    pcmk__print_option_metadata("pacemaker-schedulerd",
-                                "Pacemaker scheduler options",
-                                "Cluster options used by Pacemaker's scheduler"
-                                    " (formerly called pengine)",
-                                pe_opts, PCMK__NELEM(pe_opts));
+    char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
+                                           "Pacemaker scheduler options",
+                                           "Cluster options used by Pacemaker's scheduler",
+                                           pe_opts, PCMK__NELEM(pe_opts));
+    out->output_xml(out, "metadata", s);
+    free(s);
 }
 
 void
@@ -386,8 +383,6 @@ text2task(const char *task)
     } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
-        return no_action;
-    } else if (pcmk__str_eq(task, CRM_OP_PROBED, pcmk__str_casei)) {
         return no_action;
     } else if (pcmk__str_eq(task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         return no_action;
@@ -503,76 +498,6 @@ text2role(const char *role)
     }
     crm_err("Unknown role: %s", role);
     return RSC_ROLE_UNKNOWN;
-}
-
-/*!
- * \internal
- * \brief Add two scores (bounding to +/- INFINITY)
- *
- * \param[in] score1  First score to add
- * \param[in] score2  Second score to add
- */
-int
-pe__add_scores(int score1, int score2)
-{
-    int result = score1 + score2;
-
-    // First handle the cases where one or both is infinite
-
-    if (score1 <= -CRM_SCORE_INFINITY) {
-
-        if (score2 <= -CRM_SCORE_INFINITY) {
-            crm_trace("-INFINITY + -INFINITY = -INFINITY");
-        } else if (score2 >= CRM_SCORE_INFINITY) {
-            crm_trace("-INFINITY + +INFINITY = -INFINITY");
-        } else {
-            crm_trace("-INFINITY + %d = -INFINITY", score2);
-        }
-
-        return -CRM_SCORE_INFINITY;
-
-    } else if (score2 <= -CRM_SCORE_INFINITY) {
-
-        if (score1 >= CRM_SCORE_INFINITY) {
-            crm_trace("+INFINITY + -INFINITY = -INFINITY");
-        } else {
-            crm_trace("%d + -INFINITY = -INFINITY", score1);
-        }
-
-        return -CRM_SCORE_INFINITY;
-
-    } else if (score1 >= CRM_SCORE_INFINITY) {
-
-        if (score2 >= CRM_SCORE_INFINITY) {
-            crm_trace("+INFINITY + +INFINITY = +INFINITY");
-        } else {
-            crm_trace("+INFINITY + %d = +INFINITY", score2);
-        }
-
-        return CRM_SCORE_INFINITY;
-
-    } else if (score2 >= CRM_SCORE_INFINITY) {
-        crm_trace("%d + +INFINITY = +INFINITY", score1);
-        return CRM_SCORE_INFINITY;
-    }
-
-    /* As long as CRM_SCORE_INFINITY is less than half of the maximum integer,
-     * we can ignore the possibility of integer overflow
-     */
-
-    // Bound result to infinity
-
-    if (result >= CRM_SCORE_INFINITY) {
-        crm_trace("%d + %d = +INFINITY", score1, score2);
-        return CRM_SCORE_INFINITY;
-
-    } else if (result <= -CRM_SCORE_INFINITY) {
-        crm_trace("%d + %d = -INFINITY", score1, score2);
-        return -CRM_SCORE_INFINITY;
-    }
-
-    crm_trace("%d + %d = %d", score1, score2, result);
-    return result;
 }
 
 void

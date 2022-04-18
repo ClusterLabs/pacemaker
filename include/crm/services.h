@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the Pacemaker project contributors
+ * Copyright 2010-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,18 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
+#ifndef PCMK__CRM_SERVICES__H
+#  define PCMK__CRM_SERVICES__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \file
- * \brief Services API
- * \ingroup core
- */
 
 #  include <glib.h>
 #  include <stdio.h>
@@ -30,6 +21,15 @@ extern "C" {
 #  include <crm_config.h>       // OCF_ROOT_DIR
 #  include "common/results.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \file
+ * \brief Services API
+ * \ingroup core
+ */
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
@@ -43,6 +43,7 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_UPSTART "upstart"
 #define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
+#define PCMK_RESOURCE_CLASS_ALERT   "alert"
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX environment variable.
  * The stderr output that occurs after this prefix is encountered is considered
@@ -286,21 +287,76 @@ gboolean services_action_kick(const char *name, const char *action,
     gboolean services_action_sync(svc_action_t * op);
 
 /**
+ * \brief Run an action asynchronously, with callback after process is forked
+ *
+ * \param[in] op                    Action to run
+ * \param[in] action_callback       Function to call when the action completes
+ *                                  (if NULL, any previously set callback will
+ *                                  continue to be used)
+ * \param[in] action_fork_callback  Function to call after action process forks
+ *                                  (if NULL, any previously set callback will
+ *                                  continue to be used)
+ *
+ * \return Boolean value
+ *
+ * \retval TRUE if the caller should not free or otherwise use \p op again,
+ *         because one of these conditions is true:
+ *
+ *         * \p op is NULL.
+ *         * The action was successfully initiated, in which case
+ *           \p action_fork_callback has been called, but \p action_callback has
+ *           not (it will be called when the action completes).
+ *         * The action's ID matched an existing recurring action. The existing
+ *           action has taken over the callback and callback data from \p op
+ *           and has been re-initiated asynchronously, and \p op has been freed.
+ *         * Another action for the same resource is in flight, and \p op will
+ *           be blocked until it completes.
+ *         * The action could not be initiated, and is either non-recurring or
+ *           being cancelled. \p action_fork_callback has not been called, but
+ *           \p action_callback has, and \p op has been freed.
+ *
+ * \retval FALSE if \op is still valid, because the action cannot be initiated,
+ *         and is a recurring action that is not being cancelled.
+ *         \p action_fork_callback has not been called, but \p action_callback
+ *         has, and a timer has been set for the next invocation of \p op.
+ */
+gboolean services_action_async_fork_notify(svc_action_t *op,
+        void (*action_callback) (svc_action_t *),
+        void (*action_fork_callback) (svc_action_t *));
+
+/**
  * \brief Run an action asynchronously
  *
  * \param[in] op                    Action to run
  * \param[in] action_callback       Function to call when the action completes
- * \param[in] action_fork_callback  Function to call after action process forks
+ *                                  (if NULL, any previously set callback will
+ *                                  continue to be used)
  *
- * \return TRUE if execution was successfully initiated, FALSE otherwise (in
- *              which case the callback will not be called)
+ * \return Boolean value
+ *
+ * \retval TRUE if the caller should not free or otherwise use \p op again,
+ *         because one of these conditions is true:
+ *
+ *         * \p op is NULL.
+ *         * The action was successfully initiated, in which case
+ *           \p action_callback has not been called (it will be called when the
+ *           action completes).
+ *         * The action's ID matched an existing recurring action. The existing
+ *           action has taken over the callback and callback data from \p op
+ *           and has been re-initiated asynchronously, and \p op has been freed.
+ *         * Another action for the same resource is in flight, and \p op will
+ *           be blocked until it completes.
+ *         * The action could not be initiated, and is either non-recurring or
+ *           being cancelled. \p action_callback has been called, and \p op has
+ *           been freed.
+ *
+ * \retval FALSE if \op is still valid, because the action cannot be initiated,
+ *         and is a recurring action that is not being cancelled.
+ *         \p action_callback has been called, and a timer has been set for the
+ *         next invocation of \p op.
  */
-    gboolean services_action_async_fork_notify(svc_action_t * op,
-        void (*action_callback) (svc_action_t *),
-        void (*action_fork_callback) (svc_action_t *));
-
-    gboolean services_action_async(svc_action_t * op,
-                                   void (*action_callback) (svc_action_t *));
+gboolean services_action_async(svc_action_t *op,
+                               void (*action_callback) (svc_action_t *));
 
 gboolean services_action_cancel(const char *name, const char *action,
                                 guint interval_ms);

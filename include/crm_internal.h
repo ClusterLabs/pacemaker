@@ -42,6 +42,16 @@
 #  include <crm/common/output_internal.h>
 #  include <crm/common/xml_internal.h>
 #  include <crm/common/internal.h>
+#  include <locale.h>
+#  include <gettext.h>
+
+#define N_(String) (String)
+
+#ifdef ENABLE_NLS
+#  define _(String) gettext(String)
+#else
+#  define _(String) (String)
+#endif
 
 
 /*
@@ -94,12 +104,5 @@
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
-
-/*
- * Environment variables used by Pacemaker
- */
-
-#define PCMK__ENV_PHYSICAL_HOST         "physical_host"
-
 
 #endif                          /* CRM_INTERNAL__H */

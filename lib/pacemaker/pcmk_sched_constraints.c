@@ -55,8 +55,8 @@ evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
 void
 pcmk__unpack_constraints(pe_working_set_t *data_set)
 {
-    xmlNode *xml_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    xmlNode *xml_constraints = pcmk_find_cib_element(data_set->input,
+                                                     XML_CIB_TAG_CONSTRAINTS);
 
     for (xmlNode *xml_obj = pcmk__xe_first_child(xml_constraints);
          xml_obj != NULL; xml_obj = pcmk__xe_next(xml_obj)) {
@@ -377,7 +377,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         }
 
         /* Set sequential="false" for the resource_set */
-        crm_xml_add(*rsc_set, "sequential", XML_BOOLEAN_FALSE);
+        pcmk__xe_set_bool_attr(*rsc_set, "sequential", false);
 
     } else if ((rsc != NULL) && convert_rsc) {
         /* Even a regular resource is referenced by "attr", convert it into a resource_set.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,6 +110,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
+    const char *xpath_base = NULL;
 
     if(value) {
         *value = NULL;
@@ -119,9 +120,15 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOTCONN;
     }
 
+    xpath_base = pcmk_cib_xpath_for(XML_CIB_TAG_RESOURCES);
+    if (xpath_base == NULL) {
+        crm_err(XML_CIB_TAG_RESOURCES " CIB element not known (bug?)");
+        return ENOMSG;
+    }
+
     xpath_string = calloc(1, XPATH_MAX);
-    offset +=
-        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", get_object_path("resources"));
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s",
+                       xpath_base);
 
     offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
 
@@ -170,11 +177,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         out->spacer(out);
 
     } else if(value) {
-        const char *tmp = crm_element_value(xml_search, attr);
-
-        if (tmp) {
-            *value = strdup(tmp);
-        }
+        pcmk__str_update(value, crm_element_value(xml_search, attr));
     }
 
   done:
@@ -288,7 +291,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
-    static bool need_init = TRUE;
+    static bool need_init = true;
 
     char *local_attr_id = NULL;
     char *local_attr_set = NULL;
@@ -399,7 +402,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
             GList *lpc = NULL;
 
             if(need_init) {
-                need_init = FALSE;
+                need_init = false;
                 pcmk__unpack_constraints(data_set);
                 pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
             }
@@ -967,34 +970,31 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
 
 bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
-    bool found = TRUE;
+    bool found = true;
     GList *hIter = NULL;
     GList *hosts = NULL;
 
-    if(rsc == NULL) {
-        return FALSE;
+    if (rsc == NULL) {
+        return false;
     }
 
     rsc->fns->location(rsc, &hosts, TRUE);
     for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
         pe_node_t *node = (pe_node_t *) hIter->data;
 
-        if(strcmp(host, node->details->uname) == 0) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
-            goto done;
-        } else if(strcmp(host, node->details->id) == 0) {
+        if (pcmk__strcase_any_of(host, node->details->uname, node->details->id, NULL)) {
             crm_trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
         }
     }
 
-    if(host != NULL) {
+    if (host != NULL) {
         crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
-        found = FALSE;
+        found = false;
 
     } else if(host == NULL && hosts == NULL) {
         crm_trace("Resource %s is not running\n", rsc->id);
-        found = FALSE;
+        found = false;
     }
 
   done:
@@ -1128,6 +1128,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     pcmk__output_t *out = data_set->priv;
 
     pe_reset_working_set(data_set);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_working_set_from_cib(out, data_set, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
@@ -1161,14 +1162,15 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
             goto done;
         }
 
-        pcmk__schedule_actions(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set->input,
+                               pe_flag_no_counts|pe_flag_no_compat, data_set);
 
         prev_quiet = out->is_quiet(out);
         out->quiet = true;
-        run_simulation(data_set, shadow_cib, NULL);
+        pcmk__simulate_transition(data_set, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(shadow_cib, data_set, FALSE);
+        rc = update_dataset(shadow_cib, data_set, false);
 
     } else {
         cluster_status(data_set);
@@ -1265,7 +1267,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
+cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
                      const char *move_lifetime, int timeout_ms, cib_t *cib,
                      int cib_options, gboolean promoted_role_only, gboolean force)
 {
@@ -1276,8 +1278,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     int sleep_interval = 2;
     int timeout = timeout_ms / 1000;
 
-    bool stop_via_ban = FALSE;
+    bool stop_via_ban = false;
     char *rsc_id = NULL;
+    char *lookup_id = NULL;
     char *orig_target_role = NULL;
 
     GList *list_delta = NULL;
@@ -1286,10 +1289,35 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     GList *restart_target_active = NULL;
 
     pe_working_set_t *data_set = NULL;
+    pe_resource_t *parent = uber_parent(rsc);
 
-    if (!resource_is_running_on(rsc, host)) {
-        const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
-        if(host) {
+    bool running = false;
+    const char *id = rsc->clone_name ? rsc->clone_name : rsc->id;
+    const char *host = node ? node->details->uname : NULL;
+
+    /* If the implicit resource or primitive resource of a bundle is given, operate on the
+     * bundle itself instead.
+     */
+    if (pe_rsc_is_bundled(rsc)) {
+        rsc = parent->parent;
+    }
+
+    running = resource_is_running_on(rsc, host);
+
+    if (pe_rsc_is_clone(parent) && !running) {
+        if (pe_rsc_is_unique_clone(parent)) {
+            lookup_id = strdup(rsc->id);
+        } else {
+            lookup_id = clone_strip(rsc->id);
+        }
+
+        rsc = parent->fns->find_rsc(parent, lookup_id, node, pe_find_any|pe_find_current);
+        free(lookup_id);
+        running = resource_is_running_on(rsc, host);
+    }
+
+    if (!running) {
+        if (host) {
             out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
         } else {
             out->err(out, "%s is not running anywhere and so cannot be restarted", id);
@@ -1298,8 +1326,21 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     rsc_id = strdup(rsc->id);
-    if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
-        stop_via_ban = TRUE;
+
+    if (pe_rsc_is_unique_clone(parent)) {
+        lookup_id = strdup(rsc->id);
+    } else {
+        lookup_id = clone_strip(rsc->id);
+    }
+
+    if (host) {
+        if (pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) {
+            stop_via_ban = true;
+        } else if (pe_rsc_is_clone(parent)) {
+            stop_via_ban = true;
+            free(lookup_id);
+            lookup_id = strdup(parent->id);
+        }
     }
 
     /*
@@ -1328,8 +1369,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     data_set->priv = out;
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
-    rc = update_dataset(cib, data_set, FALSE);
+    rc = update_dataset(cib, data_set, false);
 
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
@@ -1344,7 +1384,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         out->quiet = true;
-        rc = cli_resource_ban(out, rsc_id, host, move_lifetime, NULL, cib,
+        rc = cli_resource_ban(out, lookup_id, host, move_lifetime, NULL, cib,
                               cib_options, promoted_role_only);
 
     } else {
@@ -1352,11 +1392,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
          * Remember any existing target-role so we can restore it later
          * (though it only makes any difference if it's Unpromoted).
          */
-        char *lookup_id = clone_strip(rsc->id);
 
         find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
-        free(lookup_id);
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            RSC_STOPPED, FALSE, cib, cib_options,
@@ -1364,16 +1402,18 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
-        if (current_active) {
+        if (current_active != NULL) {
             g_list_free_full(current_active, free);
+            current_active = NULL;
         }
-        if (restart_target_active) {
+        if (restart_target_active != NULL) {
             g_list_free_full(restart_target_active, free);
+            restart_target_active = NULL;
         }
         goto done;
     }
 
-    rc = update_dataset(cib, data_set, TRUE);
+    rc = update_dataset(cib, data_set, true);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
@@ -1406,11 +1446,13 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 goto failure;
             }
 
-            if (current_active) {
+            if (current_active != NULL) {
                 g_list_free_full(current_active, free);
+                current_active = NULL;
             }
             current_active = get_active_resources(host, data_set->resources);
             g_list_free(list_delta);
+            list_delta = NULL;
             list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
             dump_list(current_active, "Current");
             dump_list(list_delta, "Delta");
@@ -1428,7 +1470,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     if (stop_via_ban) {
-        rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
+        rc = cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
 
     } else if (orig_target_role) {
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
@@ -1448,8 +1490,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         goto done;
     }
 
-    if (target_active) {
+    if (target_active != NULL) {
         g_list_free_full(target_active, free);
+        target_active = NULL;
     }
     target_active = restart_target_active;
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
@@ -1472,14 +1515,15 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, data_set, FALSE);
+            rc = update_dataset(cib, data_set, false);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
             }
 
-            if (current_active) {
+            if (current_active != NULL) {
                 g_list_free_full(current_active, free);
+                current_active = NULL;
             }
 
             /* It's OK if dependent resources moved to a different node,
@@ -1507,7 +1551,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
   failure:
     if (stop_via_ban) {
-        cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
+        cli_resource_clear(lookup_id, host, NULL, cib, cib_options, true, force);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
@@ -1520,19 +1564,20 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
 done:
-    if (list_delta) {
+    if (list_delta != NULL) {
         g_list_free(list_delta);
     }
-    if (current_active) {
+    if (current_active != NULL) {
         g_list_free_full(current_active, free);
     }
-    if (target_active && (target_active != restart_target_active)) {
+    if (target_active != NULL && (target_active != restart_target_active)) {
         g_list_free_full(target_active, free);
     }
-    if (restart_target_active) {
+    if (restart_target_active != NULL) {
         g_list_free_full(restart_target_active, free);
     }
     free(rsc_id);
+    free(lookup_id);
     pe_free_working_set(data_set);
     return rc;
 }
@@ -1563,11 +1608,11 @@ actions_are_pending(GList *actions)
     for (action = actions; action != NULL; action = action->next) {
         pe_action_t *a = (pe_action_t *)action->data;
         if (action_is_pending(a)) {
-            crm_notice("Waiting for %s (flags=0x%.8x)", a->uuid, a->flags);
-            return TRUE;
+            crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 static void
@@ -1625,7 +1670,6 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     if (data_set == NULL) {
         return ENOMEM;
     }
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     do {
 
@@ -1649,7 +1693,8 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             pe_free_working_set(data_set);
             return rc;
         }
-        pcmk__schedule_actions(data_set, data_set->input, NULL);
+        pcmk__schedule_actions(data_set->input,
+                               pe_flag_no_counts|pe_flag_no_compat, data_set);
 
         if (!printed_version_warning) {
             /* If the DC has a different version than the local node, the two
@@ -1666,7 +1711,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
                 out->info(out, "warning: wait option may not work properly in "
                           "mixed-version cluster");
-                printed_version_warning = TRUE;
+                printed_version_warning = true;
             }
         }
 
@@ -1798,8 +1843,9 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
     if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
                               PCMK_RESOURCE_CLASS_LSB, NULL)) {
-        services__set_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                             "Manual execution of this standard is unsupported");
+        services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
+                                "Manual execution of the %s standard "
+                                "is unsupported", crm_str(class));
     }
 
     if (op->rc != PCMK_OCF_UNKNOWN) {
@@ -1900,7 +1946,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     unsigned int count = 0;
     pe_node_t *current = NULL;
     pe_node_t *dest = pe_find_node(data_set->nodes, host_name);
-    bool cur_is_dest = FALSE;
+    bool cur_is_dest = false;
 
     if (dest == NULL) {
         return pcmk_rc_node_unknown;
@@ -1953,7 +1999,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     if (current && (current->details == dest->details)) {
-        cur_is_dest = TRUE;
+        cur_is_dest = true;
         if (force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                      rsc_id, promoted_role_only?"promoted":"active", dest->details->uname);
@@ -1963,7 +2009,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     /* Clear any previous prefer constraints across all nodes. */
-    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, FALSE, force);
+    cli_resource_clear(rsc_id, NULL, data_set->nodes, cib, cib_options, false, force);
 
     /* Clear any previous ban constraints on 'dest'. */
     cli_resource_clear(rsc_id, dest->details->uname, data_set->nodes, cib,
@@ -1980,7 +2026,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the
      * resource is currently located */
-    if(force && (cur_is_dest == FALSE)) {
+    if (force && !cur_is_dest) {
         /* Ban the original location if possible */
         if(current) {
             (void)cli_resource_ban(out, rsc_id, current->details->uname, move_lifetime,
