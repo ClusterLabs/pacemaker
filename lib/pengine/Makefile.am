@@ -16,7 +16,7 @@ lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 ## SOURCES
 noinst_HEADERS		= variant.h pe_status_private.h
 
-libpe_rules_la_LDFLAGS	= -version-info 29:1:3
+libpe_rules_la_LDFLAGS	= -version-info 29:2:3
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -24,7 +24,7 @@ libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules.c rules_alerts.c common.c
 
-libpe_status_la_LDFLAGS	= -version-info 32:2:4
+libpe_status_la_LDFLAGS	= -version-info 33:0:5
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
