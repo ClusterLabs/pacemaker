@@ -23,6 +23,7 @@ A versioned schema offers transparent backward and forward compatibility.
 
 | Pacemaker | Latest Schema | Changed
 | --------- | ------------- | ----------------------------------------------
+| `2.1.3`   | `3.8`         | `acls`
 | `2.1.0`   | `3.7`         | `constraints`, `resources`
 | `2.0.5`   | `3.5`         | `api`, `resources`, `rule`
 | `2.0.4`   | `3.3`         | `tags`
