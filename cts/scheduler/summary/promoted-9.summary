@@ -31,18 +31,18 @@ Current cluster status:
       * ocf_msdummy:7	(ocf:heartbeat:/usr/lib64/heartbeat/cts/OCFMSDummy):	 Stopped
 
 Transition Summary:
-  * Start      DcIPaddr                 (                   va1 )  due to no quorum (blocked)
-  * Start      ocf_127.0.0.11           (                   va1 )  due to no quorum (blocked)
-  * Start      heartbeat_127.0.0.12     (                   va1 )  due to no quorum (blocked)
-  * Start      ocf_127.0.0.13           (                   va1 )  due to no quorum (blocked)
-  * Start      lsb_dummy                (                   va1 )  due to no quorum (blocked)
-  * Start      rsc_sgi2                 (                   va1 )  due to no quorum (blocked)
-  * Start      rsc_ibm1                 (                   va1 )  due to no quorum (blocked)
-  * Start      rsc_va1                  (                   va1 )  due to no quorum (blocked)
-  * Start      rsc_test02               (                   va1 )  due to no quorum (blocked)
-  * Stop       child_DoFencing:1        (                  ibm1 )  due to node availability
+  * Start      DcIPaddr                 (                     va1 )  due to no quorum (blocked)
+  * Start      ocf_127.0.0.11           (                     va1 )  due to no quorum (blocked)
+  * Start      heartbeat_127.0.0.12     (                     va1 )  due to no quorum (blocked)
+  * Start      ocf_127.0.0.13           (                     va1 )  due to no quorum (blocked)
+  * Start      lsb_dummy                (                     va1 )  due to no quorum (blocked)
+  * Start      rsc_sgi2                 (                     va1 )  due to no quorum (blocked)
+  * Start      rsc_ibm1                 (                     va1 )  due to no quorum (blocked)
+  * Start      rsc_va1                  (                     va1 )  due to no quorum (blocked)
+  * Start      rsc_test02               (                     va1 )  due to no quorum (blocked)
+  * Stop       child_DoFencing:1        (                    ibm1 )  due to node availability
   * Promote    ocf_msdummy:0            ( Stopped -> Promoted va1 )  blocked
-  * Start      ocf_msdummy:1            (                   va1 )  due to no quorum (blocked)
+  * Start      ocf_msdummy:1            (                     va1 )  due to no quorum (blocked)
 
 Executing Cluster Transition:
   * Resource action: child_DoFencing:1 monitor on va1

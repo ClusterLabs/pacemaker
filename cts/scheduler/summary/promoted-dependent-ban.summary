@@ -9,7 +9,7 @@ Current cluster status:
 
 Transition Summary:
   * Promote    p_drbd-dtest1:0     ( Unpromoted -> Promoted c7 )
-  * Start      p_dtest1            (                 c7 )
+  * Start      p_dtest1            (                        c7 )
 
 Executing Cluster Transition:
   * Pseudo action:   ms_drbd-dtest1_pre_notify_promote_0

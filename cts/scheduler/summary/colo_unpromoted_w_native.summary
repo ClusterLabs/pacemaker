@@ -9,7 +9,7 @@ Current cluster status:
       * Unpromoted: [ node1 ]
 
 Transition Summary:
-  * Move       A                   (        node1 -> node2 )
+  * Move       A                   (               node1 -> node2 )
   * Demote     MS_RSC_NATIVE:0     ( Promoted -> Unpromoted node2 )
   * Promote    MS_RSC_NATIVE:1     ( Unpromoted -> Promoted node1 )
 

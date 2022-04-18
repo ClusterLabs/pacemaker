@@ -12,9 +12,9 @@ Current cluster status:
       * Unpromoted: [ bl460g1n14 ]
 
 Transition Summary:
-  * Recover    dummy01     (   bl460g1n13 -> bl460g1n14 )
-  * Move       dummy02     (   bl460g1n13 -> bl460g1n14 )
-  * Start      dummy03     (                 bl460g1n14 )
+  * Recover    dummy01     (          bl460g1n13 -> bl460g1n14 )
+  * Move       dummy02     (          bl460g1n13 -> bl460g1n14 )
+  * Start      dummy03     (                        bl460g1n14 )
   * Demote     prmDRBD:0   ( Promoted -> Unpromoted bl460g1n13 )
   * Promote    prmDRBD:1   ( Unpromoted -> Promoted bl460g1n14 )
 

@@ -56,17 +56,17 @@ Current cluster status:
       * openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-2
 
 Transition Summary:
-  * Start      rabbitmq-bundle-1                      (                     controller-0 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
-  * Start      rabbitmq:1                             (                rabbitmq-bundle-1 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
-  * Start      ovn-dbs-bundle-podman-0                (                     controller-2 )
-  * Start      ovn-dbs-bundle-0                       (                     controller-2 )
-  * Start      ovndb_servers:0                        (                 ovn-dbs-bundle-0 )
-  * Move       ovn-dbs-bundle-podman-1                (     controller-2 -> controller-0 )
-  * Move       ovn-dbs-bundle-1                       (     controller-2 -> controller-0 )
+  * Start      rabbitmq-bundle-1                      (                            controller-0 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
+  * Start      rabbitmq:1                             (                       rabbitmq-bundle-1 )  due to unrunnable rabbitmq-bundle-podman-1 start (blocked)
+  * Start      ovn-dbs-bundle-podman-0                (                            controller-2 )
+  * Start      ovn-dbs-bundle-0                       (                            controller-2 )
+  * Start      ovndb_servers:0                        (                        ovn-dbs-bundle-0 )
+  * Move       ovn-dbs-bundle-podman-1                (            controller-2 -> controller-0 )
+  * Move       ovn-dbs-bundle-1                       (            controller-2 -> controller-0 )
   * Restart    ovndb_servers:1                        ( Unpromoted -> Promoted ovn-dbs-bundle-1 )  due to required ovn-dbs-bundle-podman-1 start
-  * Start      ip-172.17.1.87                         (                     controller-0 )
-  * Move       stonith-fence_ipmilan-52540040bb56     (        messaging-2 -> database-0 )
-  * Move       stonith-fence_ipmilan-525400e1534e     (        database-1 -> messaging-2 )
+  * Start      ip-172.17.1.87                         (                            controller-0 )
+  * Move       stonith-fence_ipmilan-52540040bb56     (               messaging-2 -> database-0 )
+  * Move       stonith-fence_ipmilan-525400e1534e     (               database-1 -> messaging-2 )
 
 Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0

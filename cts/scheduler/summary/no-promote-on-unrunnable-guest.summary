@@ -28,9 +28,9 @@ Current cluster status:
       * openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0
 
 Transition Summary:
-  * Stop       ovn-dbs-bundle-podman-0     (                     controller-0 )  due to node availability
-  * Stop       ovn-dbs-bundle-0            (                     controller-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
-  * Stop       ovndb_servers:0             (           Unpromoted ovn-dbs-bundle-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
+  * Stop       ovn-dbs-bundle-podman-0     (                            controller-0 )  due to node availability
+  * Stop       ovn-dbs-bundle-0            (                            controller-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
+  * Stop       ovndb_servers:0             (             Unpromoted ovn-dbs-bundle-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
   * Promote    ovndb_servers:1             ( Unpromoted -> Promoted ovn-dbs-bundle-1 )
 
 Executing Cluster Transition:

@@ -33,26 +33,26 @@ Transition Summary:
   * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
   * Fence (reboot) remote-rhel7-2 'remote connection is unrecoverable'
   * Fence (reboot) rhel7-4 'peer is no longer part of the cluster'
-  * Move       Fencing                                (       rhel7-4 -> rhel7-5 )
-  * Stop       rsc1:0                                 (           Promoted rhel7-4 )  due to node availability
-  * Promote    rsc1:1                                 (  Unpromoted -> Promoted rhel7-3 )
-  * Stop       rsc1:4                                 (     Unpromoted remote-rhel7-2 )  due to node availability
-  * Recover    rsc1:5                                 (               Unpromoted lxc2 )
-  * Stop       rsc2:0                                 (            Unpromoted rhel7-4 )  due to node availability
-  * Promote    rsc2:1                                 (  Unpromoted -> Promoted rhel7-3 )
-  * Stop       rsc2:4                                 (    Promoted remote-rhel7-2 )  due to node availability
-  * Recover    rsc2:5                                 (               Unpromoted lxc2 )
-  * Recover    remote-rhel7-2                         (                  rhel7-1 )
-  * Recover    container2                             (                  rhel7-3 )
-  * Recover    lxc-ms:0                               (              Promoted lxc2 )
-  * Recover    stateful-bundle-docker-0               (                  rhel7-5 )
-  * Restart    stateful-bundle-0                      (                  rhel7-5 )  due to required stateful-bundle-docker-0 start
-  * Recover    bundled:0                              ( Promoted stateful-bundle-0 )
-  * Move       stateful-bundle-ip-192.168.122.133     (       rhel7-4 -> rhel7-3 )
-  * Recover    stateful-bundle-docker-2               (       rhel7-4 -> rhel7-3 )
-  * Move       stateful-bundle-2                      (       rhel7-4 -> rhel7-3 )
-  * Recover    bundled:2                              (  Unpromoted stateful-bundle-2 )
-  * Restart    lxc2                                   (                  rhel7-3 )  due to required container2 start
+  * Move       Fencing                                (             rhel7-4 -> rhel7-5 )
+  * Stop       rsc1:0                                 (               Promoted rhel7-4 )  due to node availability
+  * Promote    rsc1:1                                 ( Unpromoted -> Promoted rhel7-3 )
+  * Stop       rsc1:4                                 (      Unpromoted remote-rhel7-2 )  due to node availability
+  * Recover    rsc1:5                                 (                Unpromoted lxc2 )
+  * Stop       rsc2:0                                 (             Unpromoted rhel7-4 )  due to node availability
+  * Promote    rsc2:1                                 ( Unpromoted -> Promoted rhel7-3 )
+  * Stop       rsc2:4                                 (        Promoted remote-rhel7-2 )  due to node availability
+  * Recover    rsc2:5                                 (                Unpromoted lxc2 )
+  * Recover    remote-rhel7-2                         (                        rhel7-1 )
+  * Recover    container2                             (                        rhel7-3 )
+  * Recover    lxc-ms:0                               (                  Promoted lxc2 )
+  * Recover    stateful-bundle-docker-0               (                        rhel7-5 )
+  * Restart    stateful-bundle-0                      (                        rhel7-5 )  due to required stateful-bundle-docker-0 start
+  * Recover    bundled:0                              (     Promoted stateful-bundle-0 )
+  * Move       stateful-bundle-ip-192.168.122.133     (             rhel7-4 -> rhel7-3 )
+  * Recover    stateful-bundle-docker-2               (             rhel7-4 -> rhel7-3 )
+  * Move       stateful-bundle-2                      (             rhel7-4 -> rhel7-3 )
+  * Recover    bundled:2                              (   Unpromoted stateful-bundle-2 )
+  * Restart    lxc2                                   (                        rhel7-3 )  due to required container2 start
 
 Executing Cluster Transition:
   * Pseudo action:   Fencing_stop_0

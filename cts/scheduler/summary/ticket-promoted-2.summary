@@ -8,7 +8,7 @@ Current cluster status:
       * Stopped: [ node1 node2 ]
 
 Transition Summary:
-  * Start      rsc1:0     (                   node2 )
+  * Start      rsc1:0     (                     node2 )
   * Promote    rsc1:1     ( Stopped -> Promoted node1 )
 
 Executing Cluster Transition:

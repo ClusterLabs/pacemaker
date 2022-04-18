@@ -12,7 +12,7 @@ Current cluster status:
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
 
 Transition Summary:
-  * Stop       stateful-1:0     (           Unpromoted dl380g5b )  due to node availability
+  * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability
   * Promote    stateful-1:1     ( Unpromoted -> Promoted dl380g5a )
   * Promote    stateful-2:1     ( Unpromoted -> Promoted dl380g5a )
 

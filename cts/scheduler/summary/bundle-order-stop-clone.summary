@@ -22,9 +22,9 @@ Current cluster status:
       * redis-bundle-2	(ocf:heartbeat:redis):	 Promoted metal-3
 
 Transition Summary:
-  * Stop       storage:0                  (               metal-1 )  due to node availability
-  * Stop       galera-bundle-docker-0     (               metal-1 )  due to node availability
-  * Stop       galera-bundle-0            (               metal-1 )  due to unrunnable galera-bundle-docker-0 start
+  * Stop       storage:0                  (                    metal-1 )  due to node availability
+  * Stop       galera-bundle-docker-0     (                    metal-1 )  due to node availability
+  * Stop       galera-bundle-0            (                    metal-1 )  due to unrunnable galera-bundle-docker-0 start
   * Stop       galera:0                   ( Unpromoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
 
 Executing Cluster Transition:

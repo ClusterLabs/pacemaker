@@ -24,7 +24,7 @@ Current cluster status:
       * Started: [ cxa1 cxb1 ]
 
 Transition Summary:
-  * Move       named_address         (         cxa1 -> cxb1 )
+  * Move       named_address         (                cxa1 -> cxb1 )
   * Promote    named_drbd_node:1     ( Unpromoted -> Promoted cxb1 )
 
 Executing Cluster Transition:

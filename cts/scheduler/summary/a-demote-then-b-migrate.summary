@@ -11,7 +11,7 @@ Current cluster status:
 Transition Summary:
   * Demote     rsc1:0     ( Promoted -> Unpromoted node1 )
   * Promote    rsc1:1     ( Unpromoted -> Promoted node2 )
-  * Migrate    rsc2       (        node1 -> node2 )
+  * Migrate    rsc2       (               node1 -> node2 )
 
 Executing Cluster Transition:
   * Resource action: rsc1:1          cancel=5000 on node1

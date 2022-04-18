@@ -23,7 +23,7 @@ Transition Summary:
   * Stop       prmDB2         (        bl460g8n4 )  due to node availability
   * Recover    vip-master     ( pgsr02 -> pgsr01 )
   * Recover    vip-rep        ( pgsr02 -> pgsr01 )
-  * Stop       pgsql:0        (    Promoted pgsr02 )  due to node availability
+  * Stop       pgsql:0        (  Promoted pgsr02 )  due to node availability
   * Stop       pgsr02         (        bl460g8n4 )  due to node availability
 
 Executing Cluster Transition:

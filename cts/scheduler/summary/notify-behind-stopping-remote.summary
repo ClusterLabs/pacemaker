@@ -12,9 +12,9 @@ Current cluster status:
 
 Transition Summary:
   * Promote    redis:0                   ( Unpromoted -> Promoted redis-bundle-0 )
-  * Stop       redis-bundle-docker-1     (                            ra2 )  due to node availability
-  * Stop       redis-bundle-1            (                            ra2 )  due to unrunnable redis-bundle-docker-1 start
-  * Start      redis:1                   (                 redis-bundle-1 )  due to unrunnable redis-bundle-docker-1 start (blocked)
+  * Stop       redis-bundle-docker-1     (                                   ra2 )  due to node availability
+  * Stop       redis-bundle-1            (                                   ra2 )  due to unrunnable redis-bundle-docker-1 start
+  * Start      redis:1                   (                        redis-bundle-1 )  due to unrunnable redis-bundle-docker-1 start (blocked)
 
 Executing Cluster Transition:
   * Resource action: redis           cancel=45000 on redis-bundle-0

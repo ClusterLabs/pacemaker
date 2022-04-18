@@ -14,11 +14,11 @@ Current cluster status:
       * Unpromoted: [ node1 node2 ]
 
 Transition Summary:
-  * Start      rsc1       (                 node2 )
-  * Start      rsc2       (                 node1 )
-  * Start      rsc3       (                 node1 )
-  * Start      rsc4:0     (                 node2 )
-  * Start      rsc4:1     (                 node1 )
+  * Start      rsc1       (                        node2 )
+  * Start      rsc2       (                        node1 )
+  * Start      rsc3       (                        node1 )
+  * Start      rsc4:0     (                        node2 )
+  * Start      rsc4:1     (                        node1 )
   * Promote    rsc5:0     ( Unpromoted -> Promoted node1 )
 
 Executing Cluster Transition:

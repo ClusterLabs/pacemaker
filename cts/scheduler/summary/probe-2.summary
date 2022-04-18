@@ -33,17 +33,17 @@ Current cluster status:
 
 Transition Summary:
   * Promote    drbd_mysql:0          ( Unpromoted -> Promoted wc01 )
-  * Stop       drbd_mysql:1          (          Promoted wc02 )  due to node availability
-  * Move       fs_mysql              (         wc02 -> wc01 )
-  * Move       intip_sql             (         wc02 -> wc01 )
-  * Move       mysql-server          (         wc02 -> wc01 )
-  * Stop       drbd_www:1            (           Unpromoted wc02 )  due to node availability
-  * Stop       nfs-common:1          (                 wc02 )  due to node availability
-  * Stop       mysql-proxy:1         (                 wc02 )  due to node availability
-  * Stop       fs_www:1              (                 wc02 )  due to node availability
-  * Stop       apache2:1             (                 wc02 )  due to node availability
-  * Restart    stonith_rackpdu:0     (                 wc01 )
-  * Stop       stonith_rackpdu:1     (                 wc02 )  due to node availability
+  * Stop       drbd_mysql:1          (               Promoted wc02 )  due to node availability
+  * Move       fs_mysql              (                wc02 -> wc01 )
+  * Move       intip_sql             (                wc02 -> wc01 )
+  * Move       mysql-server          (                wc02 -> wc01 )
+  * Stop       drbd_www:1            (             Unpromoted wc02 )  due to node availability
+  * Stop       nfs-common:1          (                        wc02 )  due to node availability
+  * Stop       mysql-proxy:1         (                        wc02 )  due to node availability
+  * Stop       fs_www:1              (                        wc02 )  due to node availability
+  * Stop       apache2:1             (                        wc02 )  due to node availability
+  * Restart    stonith_rackpdu:0     (                        wc01 )
+  * Stop       stonith_rackpdu:1     (                        wc02 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: drbd_mysql:0    cancel=10000 on wc01

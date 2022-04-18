@@ -13,8 +13,8 @@ Current cluster status:
       * Unpromoted: [ node1 ]
 
 Transition Summary:
-  * Stop       rsc1:0     ( Promoted node1 )  due to node availability
-  * Stop       rsc1:1     (  Unpromoted node2 )  due to node availability
+  * Stop       rsc1:0     (   Promoted node1 )  due to node availability
+  * Stop       rsc1:1     ( Unpromoted node2 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   ms1_demote_0

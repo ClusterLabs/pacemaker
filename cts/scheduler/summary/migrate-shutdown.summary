@@ -23,21 +23,21 @@ Current cluster status:
       * Stopped: [ pcmk-3 ]
 
 Transition Summary:
-  * Stop       Fencing              (        pcmk-1 )  due to node availability
-  * Stop       r192.168.122.105     (        pcmk-2 )  due to node availability
-  * Stop       r192.168.122.106     (        pcmk-2 )  due to node availability
-  * Stop       r192.168.122.107     (        pcmk-2 )  due to node availability
-  * Stop       rsc_pcmk-1           (        pcmk-1 )  due to node availability
-  * Stop       rsc_pcmk-2           (        pcmk-2 )  due to node availability
-  * Stop       rsc_pcmk-4           (        pcmk-4 )  due to node availability
-  * Stop       lsb-dummy            (        pcmk-2 )  due to node availability
-  * Stop       migrator             (        pcmk-1 )  due to node availability
-  * Stop       ping-1:0             (        pcmk-1 )  due to node availability
-  * Stop       ping-1:1             (        pcmk-2 )  due to node availability
-  * Stop       ping-1:2             (        pcmk-4 )  due to node availability
-  * Stop       stateful-1:0         (  Unpromoted pcmk-1 )  due to node availability
-  * Stop       stateful-1:1         ( Promoted pcmk-2 )  due to node availability
-  * Stop       stateful-1:2         (  Unpromoted pcmk-4 )  due to node availability
+  * Stop       Fencing              (            pcmk-1 )  due to node availability
+  * Stop       r192.168.122.105     (            pcmk-2 )  due to node availability
+  * Stop       r192.168.122.106     (            pcmk-2 )  due to node availability
+  * Stop       r192.168.122.107     (            pcmk-2 )  due to node availability
+  * Stop       rsc_pcmk-1           (            pcmk-1 )  due to node availability
+  * Stop       rsc_pcmk-2           (            pcmk-2 )  due to node availability
+  * Stop       rsc_pcmk-4           (            pcmk-4 )  due to node availability
+  * Stop       lsb-dummy            (            pcmk-2 )  due to node availability
+  * Stop       migrator             (            pcmk-1 )  due to node availability
+  * Stop       ping-1:0             (            pcmk-1 )  due to node availability
+  * Stop       ping-1:1             (            pcmk-2 )  due to node availability
+  * Stop       ping-1:2             (            pcmk-4 )  due to node availability
+  * Stop       stateful-1:0         ( Unpromoted pcmk-1 )  due to node availability
+  * Stop       stateful-1:1         (   Promoted pcmk-2 )  due to node availability
+  * Stop       stateful-1:2         ( Unpromoted pcmk-4 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: Fencing         stop on pcmk-1

@@ -31,8 +31,8 @@ Transition Summary:
   * Move       FencingFail     ( 18node3 -> 18node1 )
   * Stop       container2      (            18node1 )  due to node availability
   * Stop       lxc1            (            18node1 )  due to node availability
-  * Stop       lxc-ms          (        Promoted lxc1 )  due to node availability
-  * Stop       lxc-ms          (        Promoted lxc2 )  due to node availability
+  * Stop       lxc-ms          (      Promoted lxc1 )  due to node availability
+  * Stop       lxc-ms          (      Promoted lxc2 )  due to node availability
   * Stop       lxc2            (            18node1 )  due to node availability
   * Stop       container1      (            18node1 )  due to node availability
 

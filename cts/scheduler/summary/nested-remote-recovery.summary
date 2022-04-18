@@ -48,8 +48,8 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) galera-bundle-0 (resource: galera-bundle-docker-0) 'guest is unclean'
-  * Recover    galera-bundle-docker-0     (             database-0 )
-  * Recover    galera-bundle-0            (           controller-0 )
+  * Recover    galera-bundle-docker-0     (               database-0 )
+  * Recover    galera-bundle-0            (             controller-0 )
   * Recover    galera:0                   ( Promoted galera-bundle-0 )
 
 Executing Cluster Transition:

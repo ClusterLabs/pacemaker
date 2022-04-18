@@ -24,15 +24,15 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) pcmk-4 'termination was requested'
-  * Stop       FencingChild:0     (                 pcmk-4 )  due to node availability
-  * Move       r192.168.101.181   (       pcmk-4 -> pcmk-1 )
-  * Move       r192.168.101.182   (       pcmk-4 -> pcmk-1 )
-  * Move       r192.168.101.183   (       pcmk-4 -> pcmk-1 )
-  * Move       rsc_pcmk-4         (       pcmk-4 -> pcmk-2 )
-  * Move       lsb-dummy          (       pcmk-4 -> pcmk-1 )
-  * Migrate    migrator           (       pcmk-1 -> pcmk-3 )
-  * Stop       ping-1:0           (                 pcmk-4 )  due to node availability
-  * Stop       stateful-1:0       (          Promoted pcmk-4 )  due to node availability
+  * Stop       FencingChild:0     (                        pcmk-4 )  due to node availability
+  * Move       r192.168.101.181   (              pcmk-4 -> pcmk-1 )
+  * Move       r192.168.101.182   (              pcmk-4 -> pcmk-1 )
+  * Move       r192.168.101.183   (              pcmk-4 -> pcmk-1 )
+  * Move       rsc_pcmk-4         (              pcmk-4 -> pcmk-2 )
+  * Move       lsb-dummy          (              pcmk-4 -> pcmk-1 )
+  * Migrate    migrator           (              pcmk-1 -> pcmk-3 )
+  * Stop       ping-1:0           (                        pcmk-4 )  due to node availability
+  * Stop       stateful-1:0       (               Promoted pcmk-4 )  due to node availability
   * Promote    stateful-1:1       ( Unpromoted -> Promoted pcmk-1 )
 
 Executing Cluster Transition:
