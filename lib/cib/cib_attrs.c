@@ -599,9 +599,11 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     int rc = pcmk_ok;
     char *xpath_string;
     xmlNode *xml_search = NULL;
-    char *host_lowercase = g_ascii_strdown(uname, -1);
+    char *host_lowercase = NULL;
 
     CRM_ASSERT(uname != NULL);
+
+    host_lowercase = g_ascii_strdown(uname, -1);
 
     if (uuid) {
         *uuid = NULL;
