@@ -13,7 +13,7 @@
       <node id="103" uname="pcmk-3"/>
       <node id="104" uname="pcmk-4"/>
       <node id="105" uname="pcmk-5"/>
-      <node id="106" uname="pcmk-6" type="ping"/>
+      <node id="106" uname="pcmk-6"/>
       <node id="107" uname="pcmk-7"/>
       <node id="108" uname="pcmk-8"/>
       <node id="109" uname="pcmk-9"/>
@@ -62,7 +62,7 @@
     <node_state id="105" uname="pcmk-5" crmd="offline" join="down" crm-debug-origin="post_cache_update"/>
 
     <!-- Ignore - Quorum node -->
-    <node_state id="106" uname="pcmk-6" crmd="offline" join="down" crm-debug-origin="post_cache_update"/>
+    <node_state id="106" uname="pcmk-6" crmd="offline" in_ccm="false" join="down" expected="down" crm-debug-origin="post_cache_update"/>
 
     <!-- Fence - Evicted -->
     <node_state id="107" uname="pcmk-7" crmd="online" join="banned" crm-debug-origin="crmd_proc_update" in_ccm="true"/>
