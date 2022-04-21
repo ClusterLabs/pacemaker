@@ -32,7 +32,6 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
-gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
@@ -82,7 +81,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = pcmk__sort_nodes(nodes, NULL, data_set);
-    containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
+    containers = g_list_sort_with_data(containers, pcmk__cmp_instance,
+                                       data_set);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
                         bundle_data->nreplicas_per_host, data_set);
     g_list_free(nodes);

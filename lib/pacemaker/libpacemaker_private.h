@@ -392,6 +392,9 @@ bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
 G_GNUC_INTERNAL
 void pcmk__sort_resources(pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+gint pcmk__cmp_instance(gconstpointer a, gconstpointer b, gpointer user_data);
+
 
 // Functions related to probes (pcmk_sched_probes.c)
 
