@@ -333,6 +333,10 @@ GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
 G_GNUC_INTERNAL
 void pcmk__apply_node_health(pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
+                                  const pe_node_t *node);
+
 
 // Clone notifictions (pcmk_sched_notif.c)
 

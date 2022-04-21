@@ -44,19 +44,6 @@ sort_rsc_id(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-static pe_node_t *
-parent_node_instance(const pe_resource_t * rsc, pe_node_t * node)
-{
-    pe_node_t *ret = NULL;
-
-    if (node != NULL && rsc->parent) {
-        ret = pe_hash_table_lookup(rsc->parent->allowed_nodes, node->details->id);
-    } else if(node != NULL) {
-        ret = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-    }
-    return ret;
-}
-
 static gboolean
 did_fail(const pe_resource_t * rsc)
 {
@@ -367,8 +354,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     /* Is the parent allowed to run on the instance's current node?
      * Instance with parent allowed sorts first.
      */
-    node1 = parent_node_instance(resource1, node1);
-    node2 = parent_node_instance(resource2, node2);
+    node1 = pcmk__top_allowed_node(resource1, node1);
+    node2 = pcmk__top_allowed_node(resource2, node2);
     if (node1 == NULL && node2 == NULL) {
         crm_trace("%s == %s: not allowed", resource1->id, resource2->id);
         return 0;
@@ -441,7 +428,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         goto bail;
     }
 
-    local_node = parent_node_instance(rsc, node);
+    local_node = pcmk__top_allowed_node(rsc, node);
 
     if (local_node == NULL) {
         crm_warn("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
@@ -519,7 +506,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
         backup = NULL;
     }
     if (chosen) {
-        pe_node_t *local_node = parent_node_instance(rsc, chosen);
+        pe_node_t *local_node = pcmk__top_allowed_node(rsc, chosen);
 
         if (local_node) {
             local_node->count++;
@@ -616,7 +603,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         }
 
         child_node = pe__current_node(child);
-        local_node = parent_node_instance(child, child_node);
+        local_node = pcmk__top_allowed_node(child, child_node);
 
         pe_rsc_trace(rsc,
                      "Checking pre-allocation of %s to %s (%d remaining of %d)",
@@ -651,7 +638,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
         if (child->running_on != NULL) {
             pe_node_t *child_node = pe__current_node(child);
-            pe_node_t *local_node = parent_node_instance(child, child_node);
+            pe_node_t *local_node = pcmk__top_allowed_node(child, child_node);
 
             if (local_node == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
