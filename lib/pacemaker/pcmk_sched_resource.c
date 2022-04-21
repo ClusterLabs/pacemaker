@@ -726,6 +726,38 @@ new_node_table(pe_node_t *node)
 
 /*!
  * \internal
+ * \brief Apply a resource's parent's colocation scores to a node table
+ *
+ * \param[in]     rsc    Resource whose colocations should be applied
+ * \param[in,out] nodes  Node table to apply colocations to
+ */
+static void
+apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
+{
+    GList *iter = NULL;
+    pcmk__colocation_t *colocation = NULL;
+
+    for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
+        colocation = (pcmk__colocation_t *) iter->data;
+        *nodes = pcmk__native_merge_weights(colocation->primary, rsc->id,
+                                            *nodes, colocation->node_attribute,
+                                            colocation->score / (float) INFINITY,
+                                            0);
+    }
+    for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+        colocation = (pcmk__colocation_t *) iter->data;
+        if (!pcmk__colocation_has_influence(colocation, rsc)) {
+            continue;
+        }
+        *nodes = pcmk__native_merge_weights(colocation->dependent, rsc->id,
+                                            *nodes, colocation->node_attribute,
+                                            colocation->score / (float) INFINITY,
+                                            pe_weights_positive);
+    }
+}
+
+/*!
+ * \internal
  * \brief Compare instances based on colocation scores
  *
  * Determine the relative order in which \p rsc1 and \p rsc2 should be
@@ -763,75 +795,9 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     colocated_scores1 = new_node_table(current_node1);
     colocated_scores2 = new_node_table(current_node2);
 
-    /* Apply rsc1's parental colocations */
-    for (GList *gIter = rsc1->parent->rsc_cons; gIter != NULL;
-         gIter = gIter->next) {
-
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
-
-        colocated_scores1 = pcmk__native_merge_weights(constraint->primary,
-                                                       rsc1->id,
-                                                       colocated_scores1,
-                                                       constraint->node_attribute,
-                                                       constraint->score /
-                                                       (float) INFINITY, 0);
-    }
-
-    for (GList *gIter = rsc1->parent->rsc_cons_lhs; gIter != NULL;
-         gIter = gIter->next) {
-
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (!pcmk__colocation_has_influence(constraint, rsc1)) {
-            continue;
-        }
-        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
-
-        colocated_scores1 = pcmk__native_merge_weights(constraint->dependent,
-                                                       rsc1->id,
-                                                       colocated_scores1,
-                                                       constraint->node_attribute,
-                                                       constraint->score /
-                                                       (float) INFINITY,
-                                                       pe_weights_positive);
-    }
-
-    /* Apply rsc2's parental colocations */
-    for (GList *gIter = rsc2->parent->rsc_cons; gIter != NULL;
-         gIter = gIter->next) {
-
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
-
-        colocated_scores2 = pcmk__native_merge_weights(constraint->primary,
-                                                       rsc2->id,
-                                                       colocated_scores2,
-                                                       constraint->node_attribute,
-                                                       constraint->score /
-                                                       (float) INFINITY, 0);
-    }
-
-    for (GList *gIter = rsc2->parent->rsc_cons_lhs; gIter;
-         gIter = gIter->next) {
-
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (!pcmk__colocation_has_influence(constraint, rsc2)) {
-            continue;
-        }
-        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
-
-        colocated_scores2 = pcmk__native_merge_weights(constraint->dependent,
-                                                       rsc2->id,
-                                                       colocated_scores2,
-                                                       constraint->node_attribute,
-                                                       constraint->score /
-                                                       (float) INFINITY,
-                                                       pe_weights_positive);
-    }
+    // Apply parental colocations
+    apply_parent_colocations(rsc1, &colocated_scores1);
+    apply_parent_colocations(rsc2, &colocated_scores2);
 
     /* Current location score */
     node1 = g_hash_table_lookup(colocated_scores1, current_node1->details->id);
