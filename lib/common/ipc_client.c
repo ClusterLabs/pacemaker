@@ -305,6 +305,48 @@ call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
     return false;
 }
 
+#define MORE_MESSAGES -1
+
+/* Do the hard work of dispatch_ipc_data.  This is split out into its own
+ * function so it can be shared with pcmk__send_ipc_request.  The return
+ * value is as follows:
+ *
+ * pcmk_rc_error: Some error occurred.  It's up to the caller to decide
+ *                what to do with that fact.
+ * pcmk_rc_ok: There are no more messages expected from the server.  Quit
+ *             reading.
+ * MORE_MESSAGES: There are more messages expected from the server.  Keep
+ *                reading.
+ */
+static int
+dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
+{
+    bool more = false;
+    xmlNode *msg;
+
+    if (buffer == NULL) {
+        crm_warn("Empty message received from %s IPC",
+                 pcmk_ipc_name(api, true));
+        return pcmk_rc_error;
+    }
+
+    msg = string2xml(buffer);
+    if (msg == NULL) {
+        crm_warn("Malformed message received from %s IPC",
+                 pcmk_ipc_name(api, true));
+        return pcmk_rc_error;
+    }
+
+    more = call_api_dispatch(api, msg);
+    free_xml(msg);
+
+    if (more) {
+        return MORE_MESSAGES;
+    } else {
+        return pcmk_rc_ok;
+    }
+}
+
 /*!
  * \internal
  * \brief Dispatch data read from IPC source
@@ -318,27 +360,12 @@ call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
  * \note This function can be used as a main loop IPC dispatch callback.
  */
 static int
-dispatch_ipc_data(const char *buffer, ssize_t length, gpointer user_data)
+dispatch_ipc_source_data(const char *buffer, ssize_t length, gpointer user_data)
 {
     pcmk_ipc_api_t *api = user_data;
-    xmlNode *msg;
 
     CRM_CHECK(api != NULL, return 0);
-
-    if (buffer == NULL) {
-        crm_warn("Empty message received from %s IPC",
-                 pcmk_ipc_name(api, true));
-        return 0;
-    }
-
-    msg = string2xml(buffer);
-    if (msg == NULL) {
-        crm_warn("Malformed message received from %s IPC",
-                 pcmk_ipc_name(api, true));
-        return 0;
-    }
-    call_api_dispatch(api, msg);
-    free_xml(msg);
+    dispatch_ipc_data(buffer, api);
     return 0;
 }
 
@@ -398,7 +425,7 @@ pcmk_dispatch_ipc(pcmk_ipc_api_t *api)
     }
     while (crm_ipc_ready(api->ipc) > 0) {
         if (crm_ipc_read(api->ipc) > 0) {
-            dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
+            dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
         }
     }
 }
@@ -410,7 +437,7 @@ connect_with_main_loop(pcmk_ipc_api_t *api)
     int rc;
 
     struct ipc_client_callbacks callbacks = {
-        .dispatch = dispatch_ipc_data,
+        .dispatch = dispatch_ipc_source_data,
         .destroy = ipc_post_disconnect,
     };
 
