@@ -758,104 +758,106 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 
 /*!
  * \internal
- * \brief Compare instances based on colocation scores
+ * \brief Compare clone or bundle instances based on colocation scores
  *
- * Determine the relative order in which \p rsc1 and \p rsc2 should be
- * allocated. If one resource compares less than the other, then it
- * should be allocated first.
+ * Determine the relative order in which two clone or bundle instances should be
+ * assigned to nodes, considering the scores of colocation constraints directly
+ * or indirectly involving them.
  *
- * \param[in] rsc1      First instance to compare
- * \param[in] rsc2      Second instance to compare
- * \param[in] data_set  Cluster working set
+ * \param[in] instance1  First instance to compare
+ * \param[in] instance2  Second instance to compare
  *
- * \return A negative number if \p rsc1 should be placed first,
- *         a positive number if \p rsc2 should be placed first,
- *         or 0 if placement order doesn't matter
+ * \return A negative number if \p instance1 should be assigned first,
+ *         a positive number if \p instance2 should be assigned first,
+ *         or 0 if assignment order doesn't matter
  */
 static int
-order_instance_by_colocation(const pe_resource_t *rsc1,
-                             const pe_resource_t *rsc2,
-                             pe_working_set_t *data_set)
+cmp_instance_by_colocation(const pe_resource_t *instance1,
+                           const pe_resource_t *instance2)
 {
     int rc = 0;
     pe_node_t *node1 = NULL;
     pe_node_t *node2 = NULL;
-    pe_node_t *current_node1 = pe__current_node(rsc1);
-    pe_node_t *current_node2 = pe__current_node(rsc2);
+    pe_node_t *current_node1 = pe__current_node(instance1);
+    pe_node_t *current_node2 = pe__current_node(instance2);
     GList *list1 = NULL;
     GList *list2 = NULL;
+    GList *iter = NULL;
+    GList *iter2 = NULL;
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
-    /* Clone instances must have parents */
-    CRM_ASSERT(rsc1->parent != NULL);
-    CRM_ASSERT(rsc2->parent != NULL);
+    CRM_ASSERT((instance1 != NULL) && (instance1->parent != NULL)
+               && (instance2 != NULL) && (instance2->parent != NULL)
+               && (current_node1 != NULL) && (current_node2 != NULL));
 
     // Create node tables initialized with each node
     colocated_scores1 = new_node_table(current_node1);
     colocated_scores2 = new_node_table(current_node2);
 
     // Apply parental colocations
-    apply_parent_colocations(rsc1, &colocated_scores1);
-    apply_parent_colocations(rsc2, &colocated_scores2);
+    apply_parent_colocations(instance1, &colocated_scores1);
+    apply_parent_colocations(instance2, &colocated_scores2);
 
-    /* Current location score */
+    // Find original nodes again, with scores updated for colocations
     node1 = g_hash_table_lookup(colocated_scores1, current_node1->details->id);
     node2 = g_hash_table_lookup(colocated_scores2, current_node2->details->id);
 
+    // Compare nodes by updated scores
     if (node1->weight < node2->weight) {
         if (node1->weight < 0) {
-            crm_trace("%s > %s: current score: %d %d",
-                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            crm_trace("%s (%d on %s) > %s (%d on %s)",
+                      instance1->id, node1->weight, node1->details->uname,
+                      instance2->id, node2->weight, node2->details->uname);
             rc = -1;
-            goto out;
-
         } else {
-            crm_trace("%s < %s: current score: %d %d",
-                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            crm_trace("%s (%d on %s) < %s (%d on %s)",
+                      instance1->id, node1->weight, node1->details->uname,
+                      instance2->id, node2->weight, node2->details->uname);
             rc = 1;
-            goto out;
         }
+        goto out;
 
     } else if (node1->weight > node2->weight) {
-        crm_trace("%s > %s: current score: %d %d",
-                  rsc1->id, rsc2->id, node1->weight, node2->weight);
+        crm_trace("%s (%d on %s) > %s (%d on %s)",
+                  instance1->id, node1->weight, node1->details->uname,
+                  instance2->id, node2->weight, node2->details->uname);
         rc = -1;
         goto out;
     }
 
     /* All location scores */
-    list1 = g_hash_table_get_values(colocated_scores1);
-    list2 = g_hash_table_get_values(colocated_scores2);
+    list1 = pcmk__sort_nodes(g_hash_table_get_values(colocated_scores1),
+                             current_node1, instance1->cluster);
+    list2 = pcmk__sort_nodes(g_hash_table_get_values(colocated_scores2),
+                             current_node2, instance1->cluster);
 
-    list1 = pcmk__sort_nodes(list1, current_node1, data_set);
-    list2 = pcmk__sort_nodes(list2, current_node2, data_set);
+    for (iter = list1, iter2 = list2; (iter != NULL) && (iter2 != NULL);
+         iter = iter->next, iter2 = iter2->next) {
 
-    for (GList *gIter1 = list1, *gIter2 = list2;
-         (gIter1 != NULL) && (gIter2 != NULL);
-         gIter1 = gIter1->next, gIter2 = gIter2->next) {
-
-        node1 = (pe_node_t *) gIter1->data;
-        node2 = (pe_node_t *) gIter2->data;
+        node1 = (pe_node_t *) iter->data;
+        node2 = (pe_node_t *) iter2->data;
 
         if (node1 == NULL) {
-            crm_trace("%s < %s: colocated score NULL", rsc1->id, rsc2->id);
+            crm_trace("%s < %s: colocated score NULL",
+                      instance1->id, instance2->id);
             rc = 1;
             break;
 
         } else if (node2 == NULL) {
-            crm_trace("%s > %s: colocated score NULL", rsc1->id, rsc2->id);
+            crm_trace("%s > %s: colocated score NULL",
+                      instance1->id, instance2->id);
             rc = -1;
             break;
         }
 
         if (node1->weight < node2->weight) {
-            crm_trace("%s < %s: colocated score", rsc1->id, rsc2->id);
+            crm_trace("%s < %s: colocated score", instance1->id, instance2->id);
             rc = 1;
             break;
 
         } else if (node1->weight > node2->weight) {
-            crm_trace("%s > %s: colocated score", rsc1->id, rsc2->id);
+            crm_trace("%s > %s: colocated score", instance1->id, instance2->id);
             rc = -1;
             break;
         }
@@ -866,7 +868,6 @@ out:
     g_hash_table_destroy(colocated_scores2);
     g_list_free(list1);
     g_list_free(list2);
-
     return rc;
 }
 
@@ -1057,8 +1058,7 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b, gpointer user_data)
         return -1;
     }
 
-    rc = order_instance_by_colocation(resource1, resource2,
-                                      (pe_working_set_t *) user_data);
+    rc = cmp_instance_by_colocation(resource1, resource2);
     if (rc != 0) {
         return rc;
     }
