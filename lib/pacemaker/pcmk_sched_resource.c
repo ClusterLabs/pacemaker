@@ -871,23 +871,26 @@ out:
     return rc;
 }
 
-static gboolean
+/*!
+ * \internal
+ * \brief Check whether a resource or any of its children are failed
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return true if \p rsc or any of its children are failed, otherwise false
+ */
+static bool
 did_fail(const pe_resource_t * rsc)
 {
-    GList *gIter = rsc->children;
-
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        return TRUE;
+        return true;
     }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        if (did_fail(child_rsc)) {
-            return TRUE;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        if (did_fail((pe_resource_t *) iter->data)) {
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 /*!
