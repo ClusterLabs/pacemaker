@@ -648,13 +648,23 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
         while (more) {
             rc = crm_ipc_read(api->ipc);
 
-            if (rc == -EAGAIN || rc == -ENOMSG || rc == pcmk_ok) {
+            if (rc == -EAGAIN) {
+                continue;
+            } else if (rc == -ENOMSG || rc == pcmk_ok) {
                 return pcmk_rc_ok;
             } else if (rc < 0) {
                 return -rc;
             }
 
-            dispatch_ipc_data(crm_ipc_buffer(api->ipc), 0, api);
+            rc = dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
+
+            if (rc == pcmk_rc_error) {
+                continue;
+            } else if (rc == pcmk_rc_ok) {
+                more = false;
+            } else {
+                more = true;
+            }
         }
     }
     return pcmk_rc_ok;
