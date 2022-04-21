@@ -921,6 +921,20 @@ node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
  * \internal
  * \brief Compare clone or bundle instances according to assignment order
  *
+ * Compare two clone or bundle instances according to the order they should be
+ * assigned to nodes, preferring (in order):
+ *
+ *  - Active instance that is less multiply active
+ *  - Instance that is not active on a disallowed node
+ *  - Instance with higher configured priority
+ *  - Active instance whose current node can run resources
+ *  - Active instance whose parent is allowed on current node
+ *  - Active instance whose current node has fewer other instances
+ *  - Active instance
+ *  - Failed instance
+ *  - Instance whose colocations result in higher score on current node
+ *  - Instance with lower ID in lexicographic order
+ *
  * \param[in] a          First instance to compare
  * \param[in] b          Second instance to compare
  *
@@ -937,36 +951,31 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     unsigned int nnodes1 = 0;
     unsigned int nnodes2 = 0;
 
-    gboolean can1 = TRUE;
-    gboolean can2 = TRUE;
+    bool can1 = true;
+    bool can2 = true;
 
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
+    const pe_resource_t *instance1 = (const pe_resource_t *) a;
+    const pe_resource_t *instance2 = (const pe_resource_t *) b;
 
-    CRM_ASSERT(resource1 != NULL);
-    CRM_ASSERT(resource2 != NULL);
+    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
 
-    /* allocation order:
-     *  - active instances
-     *  - instances running on nodes with the least copies
-     *  - active instances on nodes that can't support them or are to be fenced
-     *  - failed instances
-     *  - inactive instances
-     */
-
-    node1 = pe__find_active_on(resource1, &nnodes1, NULL);
-    node2 = pe__find_active_on(resource2, &nnodes2, NULL);
+    node1 = pe__find_active_on(instance1, &nnodes1, NULL);
+    node2 = pe__find_active_on(instance2, &nnodes2, NULL);
 
     /* If both instances are running and at least one is multiply
-     * active, give precedence to the one that's running on fewer nodes.
+     * active, prefer instance that's running on fewer nodes.
      */
     if ((nnodes1 > 0) && (nnodes2 > 0)) {
         if (nnodes1 < nnodes2) {
-            crm_trace("%s < %s: running_on", resource1->id, resource2->id);
+            crm_trace("Assign %s (active on %d) before %s (active on %d): "
+                      "less multiply active",
+                      instance1->id, nnodes1, instance2->id, nnodes2);
             return -1;
 
         } else if (nnodes1 > nnodes2) {
-            crm_trace("%s > %s: running_on", resource1->id, resource2->id);
+            crm_trace("Assign %s (active on %d) after %s (active on %d): "
+                      "more multiply active",
+                      instance1->id, nnodes1, instance2->id, nnodes2);
             return 1;
         }
     }
@@ -974,103 +983,115 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     /* An instance that is either inactive or active on an allowed node is
      * preferred over an instance that is active on a no-longer-allowed node.
      */
-    can1 = node_is_allowed(resource1, &node1);
-    can2 = node_is_allowed(resource2, &node2);
+    can1 = node_is_allowed(instance1, &node1);
+    can2 = node_is_allowed(instance2, &node2);
     if (can1 && !can2) {
-        crm_trace("%s < %s: availability of current location", resource1->id,
-                  resource2->id);
+        crm_trace("Assign %s before %s: not active on a disallowed node",
+                  instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("%s > %s: availability of current location", resource1->id,
-                  resource2->id);
+        crm_trace("Assign %s after %s: active on a disallowed node",
+                  instance1->id, instance2->id);
         return 1;
     }
 
-    /* Higher-priority instance sorts first */
-    if (resource1->priority > resource2->priority) {
-        crm_trace("%s < %s: priority", resource1->id, resource2->id);
+    // Prefer instance with higher configured priority
+    if (instance1->priority > instance2->priority) {
+        crm_trace("Assign %s before %s: priority (%d > %d)",
+                  instance1->id, instance2->id,
+                  instance1->priority, instance2->priority);
         return -1;
 
-    } else if (resource1->priority < resource2->priority) {
-        crm_trace("%s > %s: priority", resource1->id, resource2->id);
+    } else if (instance1->priority < instance2->priority) {
+        crm_trace("Assign %s after %s: priority (%d < %d)",
+                  instance1->id, instance2->id,
+                  instance1->priority, instance2->priority);
         return 1;
     }
 
-    /* Active instance sorts first */
-    if (node1 == NULL && node2 == NULL) {
-        crm_trace("%s == %s: not active", resource1->id, resource2->id);
+    // Prefer active instance
+    if ((node1 == NULL) && (node2 == NULL)) {
+        crm_trace("No assignment preference for %s vs. %s: inactive",
+                  instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("%s > %s: active", resource1->id, resource2->id);
+        crm_trace("Assign %s after %s: active", instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("%s < %s: active", resource1->id, resource2->id);
+        crm_trace("Assign %s before %s: active", instance1->id, instance2->id);
         return -1;
     }
 
-    /* Instance whose current node can run resources sorts first */
+    // Prefer instance whose current node can run resources
     can1 = pcmk__node_available(node1);
     can2 = pcmk__node_available(node2);
     if (can1 && !can2) {
-        crm_trace("%s < %s: can", resource1->id, resource2->id);
+        crm_trace("Assign %s before %s: current node can run resources",
+                  instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("%s > %s: can", resource1->id, resource2->id);
+        crm_trace("Assign %s after %s: current node can't run resources",
+                  instance1->id, instance2->id);
         return 1;
     }
 
-    /* Is the parent allowed to run on the instance's current node?
-     * Instance with parent allowed sorts first.
-     */
-    node1 = pcmk__top_allowed_node(resource1, node1);
-    node2 = pcmk__top_allowed_node(resource2, node2);
-    if (node1 == NULL && node2 == NULL) {
-        crm_trace("%s == %s: not allowed", resource1->id, resource2->id);
+    // Prefer instance whose parent is allowed to run on instance's current node
+    node1 = pcmk__top_allowed_node(instance1, node1);
+    node2 = pcmk__top_allowed_node(instance2, node2);
+    if ((node1 == NULL) && (node2 == NULL)) {
+        crm_trace("No assignment preference for %s vs. %s: "
+                  "parent not allowed on either instance's current node",
+                  instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("%s > %s: not allowed", resource1->id, resource2->id);
+        crm_trace("Assign %s after %s: parent not allowed on current node",
+                  instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("%s < %s: not allowed", resource1->id, resource2->id);
+        crm_trace("Assign %s before %s: parent allowed on current node",
+                  instance1->id, instance2->id);
         return -1;
     }
 
-    /* Does one node have more instances allocated?
-     * Instance whose current node has fewer instances sorts first.
-     */
+    // Prefer instance whose current node is running fewer other instances
     if (node1->count < node2->count) {
-        crm_trace("%s < %s: count", resource1->id, resource2->id);
+        crm_trace("Assign %s before %s: fewer active instances on current node",
+                  instance1->id, instance2->id);
         return -1;
 
     } else if (node1->count > node2->count) {
-        crm_trace("%s > %s: count", resource1->id, resource2->id);
+        crm_trace("Assign %s after %s: more active instances on current node",
+                  instance1->id, instance2->id);
         return 1;
     }
 
-    /* Failed instance sorts first */
-    can1 = did_fail(resource1);
-    can2 = did_fail(resource2);
-    if (can1 && !can2) {
-        crm_trace("%s > %s: failed", resource1->id, resource2->id);
-        return 1;
-    } else if (!can1 && can2) {
-        crm_trace("%s < %s: failed", resource1->id, resource2->id);
+    // Prefer failed instance
+    can1 = did_fail(instance1);
+    can2 = did_fail(instance2);
+    if (!can1 && can2) {
+        crm_trace("Assign %s before %s: failed", instance1->id, instance2->id);
         return -1;
+    } else if (can1 && !can2) {
+        crm_trace("Assign %s after %s: not failed",
+                  instance1->id, instance2->id);
+        return 1;
     }
 
-    rc = cmp_instance_by_colocation(resource1, resource2);
+    // Prefer instance with higher cumulative colocation score on current node
+    rc = cmp_instance_by_colocation(instance1, instance2);
     if (rc != 0) {
         return rc;
     }
 
-    /* Default to lexicographic order by ID */
-    rc = strcmp(resource1->id, resource2->id);
-    crm_trace("%s %c %s: default", resource1->id, rc < 0 ? '<' : '>', resource2->id);
+    // Prefer instance with lower ID in lexicographic order
+    rc = strcmp(instance1->id, instance2->id);
+    crm_trace("Assign %s %s %s: default",
+              instance1->id, ((rc < 0)? "before" : "after"), instance2->id);
     return rc;
 }
