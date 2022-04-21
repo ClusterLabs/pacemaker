@@ -621,7 +621,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
         while (more) {
             rc = crm_ipc_read(api->ipc);
 
-            if (rc == -ENOMSG || rc == pcmk_ok) {
+            if (rc == -EAGAIN || rc == -ENOMSG || rc == pcmk_ok) {
                 return pcmk_rc_ok;
             } else if (rc < 0) {
                 return -rc;
@@ -1055,6 +1055,10 @@ crm_ipc_read(crm_ipc_t * client)
     } else {
         crm_trace("No message received from %s IPC: %s",
                   client->server_name, pcmk_strerror(client->msg_size));
+
+        if (client->msg_size == -EAGAIN) {
+            return -EAGAIN;
+        }
     }
 
     if (crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
