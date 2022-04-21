@@ -706,6 +706,26 @@ pcmk__sort_resources(pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Create a hash table with a single node in it
+ *
+ * \param[in] node  Node to copy into new table
+ *
+ * \return Newly created hash table containing a copy of \p node
+ * \note The caller is responsible for freeing the result with
+ *       g_hash_table_destroy().
+ */
+static GHashTable *
+new_node_table(pe_node_t *node)
+{
+    GHashTable *table = pcmk__strkey_table(NULL, free);
+
+    node = pe__copy_node(node);
+    g_hash_table_insert(table, (gpointer) node->details->id, node);
+    return table;
+}
+
+/*!
+ * \internal
  * \brief Compare instances based on colocation scores
  *
  * Determine the relative order in which \p rsc1 and \p rsc2 should be
@@ -726,25 +746,22 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
                              pe_working_set_t *data_set)
 {
     int rc = 0;
-    pe_node_t *n = NULL;
     pe_node_t *node1 = NULL;
     pe_node_t *node2 = NULL;
     pe_node_t *current_node1 = pe__current_node(rsc1);
     pe_node_t *current_node2 = pe__current_node(rsc2);
     GList *list1 = NULL;
     GList *list2 = NULL;
-    GHashTable *hash1 = pcmk__strkey_table(NULL, free);
-    GHashTable *hash2 = pcmk__strkey_table(NULL, free);
+    GHashTable *colocated_scores1 = NULL;
+    GHashTable *colocated_scores2 = NULL;
 
     /* Clone instances must have parents */
     CRM_ASSERT(rsc1->parent != NULL);
     CRM_ASSERT(rsc2->parent != NULL);
 
-    n = pe__copy_node(current_node1);
-    g_hash_table_insert(hash1, (gpointer) n->details->id, n);
-
-    n = pe__copy_node(current_node2);
-    g_hash_table_insert(hash2, (gpointer) n->details->id, n);
+    // Create node tables initialized with each node
+    colocated_scores1 = new_node_table(current_node1);
+    colocated_scores2 = new_node_table(current_node2);
 
     /* Apply rsc1's parental colocations */
     for (GList *gIter = rsc1->parent->rsc_cons; gIter != NULL;
@@ -754,10 +771,12 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
 
         crm_trace("Applying %s to %s", constraint->id, rsc1->id);
 
-        hash1 = pcmk__native_merge_weights(constraint->primary, rsc1->id, hash1,
-                                           constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           0);
+        colocated_scores1 = pcmk__native_merge_weights(constraint->primary,
+                                                       rsc1->id,
+                                                       colocated_scores1,
+                                                       constraint->node_attribute,
+                                                       constraint->score /
+                                                       (float) INFINITY, 0);
     }
 
     for (GList *gIter = rsc1->parent->rsc_cons_lhs; gIter != NULL;
@@ -770,10 +789,13 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
         }
         crm_trace("Applying %s to %s", constraint->id, rsc1->id);
 
-        hash1 = pcmk__native_merge_weights(constraint->dependent, rsc1->id,
-                                           hash1, constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           pe_weights_positive);
+        colocated_scores1 = pcmk__native_merge_weights(constraint->dependent,
+                                                       rsc1->id,
+                                                       colocated_scores1,
+                                                       constraint->node_attribute,
+                                                       constraint->score /
+                                                       (float) INFINITY,
+                                                       pe_weights_positive);
     }
 
     /* Apply rsc2's parental colocations */
@@ -784,10 +806,12 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
 
         crm_trace("Applying %s to %s", constraint->id, rsc2->id);
 
-        hash2 = pcmk__native_merge_weights(constraint->primary, rsc2->id, hash2,
-                                           constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           0);
+        colocated_scores2 = pcmk__native_merge_weights(constraint->primary,
+                                                       rsc2->id,
+                                                       colocated_scores2,
+                                                       constraint->node_attribute,
+                                                       constraint->score /
+                                                       (float) INFINITY, 0);
     }
 
     for (GList *gIter = rsc2->parent->rsc_cons_lhs; gIter;
@@ -800,15 +824,18 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
         }
         crm_trace("Applying %s to %s", constraint->id, rsc2->id);
 
-        hash2 = pcmk__native_merge_weights(constraint->dependent, rsc2->id,
-                                           hash2, constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           pe_weights_positive);
+        colocated_scores2 = pcmk__native_merge_weights(constraint->dependent,
+                                                       rsc2->id,
+                                                       colocated_scores2,
+                                                       constraint->node_attribute,
+                                                       constraint->score /
+                                                       (float) INFINITY,
+                                                       pe_weights_positive);
     }
 
     /* Current location score */
-    node1 = g_hash_table_lookup(hash1, current_node1->details->id);
-    node2 = g_hash_table_lookup(hash2, current_node2->details->id);
+    node1 = g_hash_table_lookup(colocated_scores1, current_node1->details->id);
+    node2 = g_hash_table_lookup(colocated_scores2, current_node2->details->id);
 
     if (node1->weight < node2->weight) {
         if (node1->weight < 0) {
@@ -832,8 +859,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     }
 
     /* All location scores */
-    list1 = g_hash_table_get_values(hash1);
-    list2 = g_hash_table_get_values(hash2);
+    list1 = g_hash_table_get_values(colocated_scores1);
+    list2 = g_hash_table_get_values(colocated_scores2);
 
     list1 = pcmk__sort_nodes(list1, current_node1, data_set);
     list2 = pcmk__sort_nodes(list2, current_node2, data_set);
@@ -869,8 +896,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     }
 
 out:
-    g_hash_table_destroy(hash1);
-    g_hash_table_destroy(hash2);
+    g_hash_table_destroy(colocated_scores1);
+    g_hash_table_destroy(colocated_scores2);
     g_list_free(list1);
     g_list_free(list2);
 
