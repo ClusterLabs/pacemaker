@@ -1,0 +1,29 @@
+Using the original execution date of: 2022-04-22 14:15:37Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-3
+    * test	(ocf:pacemaker:Dummy):	 Started [ rhel8-4 rhel8-3 ]
+
+Transition Summary:
+  * Restart    test    ( rhel8-4 )
+
+Executing Cluster Transition:
+  * Resource action: test            stop on rhel8-3
+  * Pseudo action:   test_start_0
+  * Resource action: test            monitor=10000 on rhel8-4
+Using the original execution date of: 2022-04-22 14:15:37Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 rhel8-3 rhel8-4 rhel8-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-1
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-3
+    * test	(ocf:pacemaker:Dummy):	 Started rhel8-4
