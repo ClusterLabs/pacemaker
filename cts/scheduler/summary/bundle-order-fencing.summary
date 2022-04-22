@@ -38,22 +38,22 @@ Transition Summary:
   * Fence (off) rabbitmq-bundle-0 (resource: rabbitmq-bundle-docker-0) 'guest is unclean'
   * Fence (off) galera-bundle-0 (resource: galera-bundle-docker-0) 'guest is unclean'
   * Fence (reboot) controller-0 'peer is no longer part of the cluster'
-  * Stop       rabbitmq-bundle-docker-0               (                   controller-0 )  due to node availability
-  * Stop       rabbitmq-bundle-0                      (                   controller-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
-  * Stop       rabbitmq:0                             (              rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
-  * Stop       galera-bundle-docker-0                 (                   controller-0 )  due to node availability
-  * Stop       galera-bundle-0                        (                   controller-0 )  due to unrunnable galera-bundle-docker-0 start
-  * Stop       galera:0                               (         Promoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
-  * Stop       redis-bundle-docker-0                  (                   controller-0 )  due to node availability
-  * Stop       redis-bundle-0                         (                   controller-0 )  due to unrunnable redis-bundle-docker-0 start
-  * Stop       redis:0                                (          Promoted redis-bundle-0 )  due to unrunnable redis-bundle-docker-0 start
+  * Stop       rabbitmq-bundle-docker-0               (                          controller-0 )  due to node availability
+  * Stop       rabbitmq-bundle-0                      (                          controller-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
+  * Stop       rabbitmq:0                             (                     rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
+  * Stop       galera-bundle-docker-0                 (                          controller-0 )  due to node availability
+  * Stop       galera-bundle-0                        (                          controller-0 )  due to unrunnable galera-bundle-docker-0 start
+  * Stop       galera:0                               (              Promoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
+  * Stop       redis-bundle-docker-0                  (                          controller-0 )  due to node availability
+  * Stop       redis-bundle-0                         (                          controller-0 )  due to unrunnable redis-bundle-docker-0 start
+  * Stop       redis:0                                (               Promoted redis-bundle-0 )  due to unrunnable redis-bundle-docker-0 start
   * Promote    redis:1                                ( Unpromoted -> Promoted redis-bundle-1 )
-  * Move       ip-192.168.24.7                        (   controller-0 -> controller-2 )
-  * Move       ip-10.0.0.109                          (   controller-0 -> controller-1 )
-  * Move       ip-172.17.4.11                         (   controller-0 -> controller-1 )
-  * Stop       haproxy-bundle-docker-0                (                   controller-0 )  due to node availability
-  * Move       stonith-fence_ipmilan-5254003e8e97     (   controller-0 -> controller-1 )
-  * Move       stonith-fence_ipmilan-5254000dcb3f     (   controller-0 -> controller-2 )
+  * Move       ip-192.168.24.7                        (          controller-0 -> controller-2 )
+  * Move       ip-10.0.0.109                          (          controller-0 -> controller-1 )
+  * Move       ip-172.17.4.11                         (          controller-0 -> controller-1 )
+  * Stop       haproxy-bundle-docker-0                (                          controller-0 )  due to node availability
+  * Move       stonith-fence_ipmilan-5254003e8e97     (          controller-0 -> controller-1 )
+  * Move       stonith-fence_ipmilan-5254000dcb3f     (          controller-0 -> controller-2 )
 
 Executing Cluster Transition:
   * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0

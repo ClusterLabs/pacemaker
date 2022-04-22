@@ -13,9 +13,9 @@ Current cluster status:
     * rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-2
 
 Transition Summary:
-  * Stop       Fencing     (                 rhel7-1 )  due to no quorum
+  * Stop       Fencing     (                        rhel7-1 )  due to no quorum
   * Demote     rsc1:0      ( Promoted -> Unpromoted rhel7-1 )
-  * Stop       rsc2        (                 rhel7-2 )  due to no quorum
+  * Stop       rsc2        (                        rhel7-2 )  due to no quorum
 
 Executing Cluster Transition:
   * Resource action: Fencing         stop on rhel7-1

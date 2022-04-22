@@ -3382,8 +3382,10 @@ fenced_register_handlers(void)
 void
 fenced_unregister_handlers(void)
 {
-    g_hash_table_destroy(fenced_handlers);
-    fenced_handlers = NULL;
+    if (fenced_handlers != NULL) {
+        g_hash_table_destroy(fenced_handlers);
+        fenced_handlers = NULL;
+    }
 }
 
 static void

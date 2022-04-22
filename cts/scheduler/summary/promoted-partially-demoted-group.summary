@@ -23,10 +23,10 @@ Current cluster status:
       * Unpromoted: [ sd01-0 ]
 
 Transition Summary:
-  * Move       vip-164                      (       sd01-1 -> sd01-0 )
-  * Move       vip-165                      (       sd01-1 -> sd01-0 )
-  * Move       cdev-pool-0-iscsi-target     (       sd01-1 -> sd01-0 )
-  * Move       cdev-pool-0-iscsi-lun-1      (       sd01-1 -> sd01-0 )
+  * Move       vip-164                      (              sd01-1 -> sd01-0 )
+  * Move       vip-165                      (              sd01-1 -> sd01-0 )
+  * Move       cdev-pool-0-iscsi-target     (              sd01-1 -> sd01-0 )
+  * Move       cdev-pool-0-iscsi-lun-1      (              sd01-1 -> sd01-0 )
   * Demote     vip-164-fw:0                 ( Promoted -> Unpromoted sd01-1 )
   * Promote    vip-164-fw:1                 ( Unpromoted -> Promoted sd01-0 )
   * Promote    vip-165-fw:1                 ( Unpromoted -> Promoted sd01-0 )

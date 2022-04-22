@@ -11,7 +11,7 @@ Current cluster status:
       * Unpromoted: [ sle12sp2-2 ]
 
 Transition Summary:
-  * Move       dummy1     (   sle12sp2-2 -> sle12sp2-1 )
+  * Move       dummy1     (          sle12sp2-2 -> sle12sp2-1 )
   * Promote    state1:0   ( Unpromoted -> Promoted sle12sp2-2 )
   * Demote     state1:1   ( Promoted -> Unpromoted sle12sp2-1 )
 

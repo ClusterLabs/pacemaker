@@ -12,7 +12,7 @@ Current cluster status:
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Stopped
 
 Transition Summary:
-  * Start      stateful-2:0     (                   node-b )
+  * Start      stateful-2:0     (                     node-b )
   * Promote    stateful-2:1     ( Stopped -> Promoted node-a )
 
 Executing Cluster Transition:

@@ -9,8 +9,8 @@ Current cluster status:
 
 Transition Summary:
   * Promote    pgsqld:0            ( Stopped -> Promoted srv1 )
-  * Start      pgsqld:1            (                   srv2 )
-  * Start      pgsql-master-ip     (                   srv1 )
+  * Start      pgsqld:1            (                     srv2 )
+  * Start      pgsql-master-ip     (                     srv1 )
 
 Executing Cluster Transition:
   * Resource action: pgsqld:0        monitor on srv1

@@ -32,7 +32,7 @@ Current cluster status:
 
 Transition Summary:
   * Move       container1     ( rhel7-1 -> rhel7-2 )
-  * Restart    lxc-ms:0       (        Promoted lxc1 )  due to required container1 start
+  * Restart    lxc-ms:0       (      Promoted lxc1 )  due to required container1 start
   * Move       lxc1           ( rhel7-1 -> rhel7-2 )
 
 Executing Cluster Transition:

@@ -11,10 +11,10 @@ Current cluster status:
       * child_rsc1:4	(ocf:heartbeat:apache):	 Stopped
 
 Transition Summary:
-  * Start      child_rsc1:0     (                   node1 )
+  * Start      child_rsc1:0     (                     node1 )
   * Promote    child_rsc1:1     ( Stopped -> Promoted node2 )
-  * Start      child_rsc1:2     (                   node1 )
-  * Start      child_rsc1:3     (                   node2 )
+  * Start      child_rsc1:2     (                     node1 )
+  * Start      child_rsc1:3     (                     node2 )
 
 Executing Cluster Transition:
   * Resource action: child_rsc1:0    monitor on node2

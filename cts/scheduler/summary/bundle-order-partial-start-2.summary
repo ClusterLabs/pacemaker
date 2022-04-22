@@ -22,12 +22,12 @@ Current cluster status:
       * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started undercloud
 
 Transition Summary:
-  * Start      rabbitmq:0                 (              rabbitmq-bundle-0 )
-  * Restart    galera-bundle-docker-0     (                     undercloud )  due to required haproxy-bundle running
-  * Restart    galera-bundle-0            (                     undercloud )  due to required galera-bundle-docker-0 start
-  * Start      galera:0                   (                galera-bundle-0 )
+  * Start      rabbitmq:0                 (                     rabbitmq-bundle-0 )
+  * Restart    galera-bundle-docker-0     (                            undercloud )  due to required haproxy-bundle running
+  * Restart    galera-bundle-0            (                            undercloud )  due to required galera-bundle-docker-0 start
+  * Start      galera:0                   (                       galera-bundle-0 )
   * Promote    redis:0                    ( Unpromoted -> Promoted redis-bundle-0 )
-  * Start      haproxy-bundle-docker-0    (                     undercloud )
+  * Start      haproxy-bundle-docker-0    (                            undercloud )
 
 Executing Cluster Transition:
   * Resource action: rabbitmq:0      monitor on rabbitmq-bundle-0

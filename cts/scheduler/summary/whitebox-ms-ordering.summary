@@ -12,12 +12,12 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
   * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
-  * Start      container1     (     18node1 )
-  * Start      container2     (     18node1 )
-  * Recover    lxc-ms:0       ( Promoted lxc1 )
-  * Recover    lxc-ms:1       (  Unpromoted lxc2 )
-  * Start      lxc1           (     18node1 )
-  * Start      lxc2           (     18node1 )
+  * Start      container1     (         18node1 )
+  * Start      container2     (         18node1 )
+  * Recover    lxc-ms:0       (   Promoted lxc1 )
+  * Recover    lxc-ms:1       ( Unpromoted lxc2 )
+  * Start      lxc1           (         18node1 )
+  * Start      lxc2           (         18node1 )
 
 Executing Cluster Transition:
   * Resource action: container1      monitor on 18node3

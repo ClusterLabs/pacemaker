@@ -38,8 +38,8 @@ Transition Summary:
   * Move       lsb_dummy                     ( c001n02 -> c001n08 )
   * Move       rsc_c001n01                   ( c001n01 -> c001n03 )
   * Stop       child_DoFencing:0             (            c001n01 )  due to node availability
-  * Stop       ocf_msdummy:0                 (     Promoted c001n01 )  due to node availability
-  * Stop       ocf_msdummy:4                 (      Unpromoted c001n01 )  due to node availability
+  * Stop       ocf_msdummy:0                 (   Promoted c001n01 )  due to node availability
+  * Stop       ocf_msdummy:4                 ( Unpromoted c001n01 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   group-1_stop_0

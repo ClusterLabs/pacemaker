@@ -69,7 +69,7 @@ enum pe_quorum_policy {
 };
 
 enum node_type {
-    node_ping,
+    node_ping,      //! \deprecated Do not use
     node_member,
     node_remote
 };
@@ -277,8 +277,12 @@ struct pe_node_s {
 #  define pe_rsc_runnable                   0x00040000ULL
 #  define pe_rsc_start_pending              0x00080000ULL
 
+//!< \deprecated Do not use
 #  define pe_rsc_starting                   0x00100000ULL
+
+//!< \deprecated Do not use
 #  define pe_rsc_stopping                   0x00200000ULL
+
 #  define pe_rsc_stop_unexpected            0x00400000ULL
 #  define pe_rsc_allow_migrate              0x00800000ULL
 

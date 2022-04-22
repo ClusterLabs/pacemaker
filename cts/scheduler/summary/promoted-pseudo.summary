@@ -12,9 +12,9 @@ Current cluster status:
       * fs_float	(ocf:heartbeat:Filesystem):	 Stopped
 
 Transition Summary:
-  * Start      ip_float_right     (                 sambuca.linbit )
+  * Start      ip_float_right     (                        sambuca.linbit )
   * Restart    drbd_float:0       ( Unpromoted -> Promoted sambuca.linbit )  due to required ip_float_right start
-  * Start      ip_nfs             (                 sambuca.linbit )
+  * Start      ip_nfs             (                        sambuca.linbit )
 
 Executing Cluster Transition:
   * Resource action: ip_float_right  start on sambuca.linbit

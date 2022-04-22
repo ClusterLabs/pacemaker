@@ -10,7 +10,7 @@ Current cluster status:
 
 Transition Summary:
   * Promote    rsc1:1     ( Unpromoted -> Promoted node2 )
-  * Migrate    rsc2       (        node1 -> node2 )
+  * Migrate    rsc2       (               node1 -> node2 )
 
 Executing Cluster Transition:
   * Resource action: rsc1:1          cancel=10000 on node2

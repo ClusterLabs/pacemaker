@@ -11,7 +11,7 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) node1 'deadman ticket was lost'
   * Move       rsc_stonith     ( node1 -> node2 )
-  * Stop       rsc1:0          (   Promoted node1 )  due to node availability
+  * Stop       rsc1:0          ( Promoted node1 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   rsc_stonith_stop_0

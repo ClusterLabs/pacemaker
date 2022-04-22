@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -491,7 +491,7 @@ pcmk__order_remote_connection_actions(pe_working_set_t *data_set)
          * This is somewhat brittle in that we need to make sure the results of
          * this ordering are compatible with the result of get_router_node().
          * It would probably be better to add XML_LRM_ATTR_ROUTER_NODE as part
-         * of this logic rather than action2xml().
+         * of this logic rather than create_graph_action().
          */
         if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);

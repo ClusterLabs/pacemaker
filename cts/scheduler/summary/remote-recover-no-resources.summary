@@ -45,7 +45,7 @@ Transition Summary:
   * Move       galera-0                               ( controller-1 -> controller-2 )
   * Stop       galera-2                               (                 controller-1 )  due to node availability
   * Stop       rabbitmq:2                             (                  messaging-1 )  due to node availability
-  * Stop       redis:0                                (           Unpromoted controller-1 )  due to node availability
+  * Stop       redis:0                                (      Unpromoted controller-1 )  due to node availability
   * Move       ip-172.17.1.14                         ( controller-1 -> controller-2 )
   * Move       ip-172.17.1.17                         ( controller-1 -> controller-2 )
   * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )
