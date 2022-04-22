@@ -1969,7 +1969,10 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             if (g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
                 pe_node_t *n = pe__copy_node(node);
 
-                pe_rsc_trace(rsc, "%s (aka. %s) known on %s", rsc->id, rsc->clone_name,
+                pe_rsc_trace(rsc, "%s%s%s known on %s",
+                             rsc->id,
+                             ((rsc->clone_name == NULL)? "" : " also known as "),
+                             ((rsc->clone_name == NULL)? "" : rsc->clone_name),
                              n->details->uname);
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
@@ -3312,7 +3315,8 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
             break;
     }
 
-    pe_rsc_trace(rsc, "Remapped %s status to %d", key, *status);
+    pe_rsc_trace(rsc, "Remapped %s status to '%s'",
+                 key, pcmk_exec_status_str(*status));
 }
 
 // return TRUE if start or monitor last failure but parameters changed
