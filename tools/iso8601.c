@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2020 the Pacemaker project contributors
+ * Copyright 2005-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,13 @@
 #include <crm/common/util.h>  /* CRM_ASSERT */
 #include <unistd.h>
 
-char command = 0;
+struct {
+    const char *date_time_s;
+    const char *duration_s;
+    const char *expected_s;
+    const char *period_s;
+    int print_options;
+} options;
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -113,14 +119,8 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     int index = 0;
-    int print_options = 0;
     crm_time_t *duration = NULL;
     crm_time_t *date_time = NULL;
-
-    const char *period_s = NULL;
-    const char *duration_s = NULL;
-    const char *date_time_s = NULL;
-    const char *expected_s = NULL;
 
     pcmk__cli_init_logging("iso8601", 0);
     pcmk__set_cli_options(NULL, "<command> [options] ", long_options,
@@ -144,40 +144,40 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'n':
-                date_time_s = "now";
+                options.date_time_s = "now";
                 break;
             case 'd':
-                date_time_s = optarg;
+                options.date_time_s = optarg;
                 break;
             case 'p':
-                period_s = optarg;
+                options.period_s = optarg;
                 break;
             case 'D':
-                duration_s = optarg;
+                options.duration_s = optarg;
                 break;
             case 'E':
-                expected_s = optarg;
+                options.expected_s = optarg;
                 break;
             case 'S':
-                print_options |= crm_time_epoch;
+                options.print_options |= crm_time_epoch;
                 break;
             case 's':
-                print_options |= crm_time_seconds;
+                options.print_options |= crm_time_seconds;
                 break;
             case 'W':
-                print_options |= crm_time_weeks;
+                options.print_options |= crm_time_weeks;
                 break;
             case 'O':
-                print_options |= crm_time_ordinal;
+                options.print_options |= crm_time_ordinal;
                 break;
             case 'L':
-                print_options |= crm_time_log_with_timezone;
+                options.print_options |= crm_time_log_with_timezone;
                 break;
                 break;
         }
     }
 
-    if (pcmk__str_eq("now", date_time_s, pcmk__str_casei)) {
+    if (pcmk__str_eq("now", options.date_time_s, pcmk__str_casei)) {
         date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {
@@ -187,44 +187,44 @@ main(int argc, char **argv)
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Current date/time", date_time,
-                     print_options | crm_time_log_date | crm_time_log_timeofday);
+                     options.print_options | crm_time_log_date | crm_time_log_timeofday);
 
-    } else if (date_time_s) {
-        date_time = crm_time_new(date_time_s);
+    } else if (options.date_time_s) {
+        date_time = crm_time_new(options.date_time_s);
 
         if (date_time == NULL) {
-            fprintf(stderr, "Invalid date/time specified: %s\n", date_time_s);
+            fprintf(stderr, "Invalid date/time specified: %s\n", options.date_time_s);
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Date", date_time,
-                     print_options | crm_time_log_date | crm_time_log_timeofday);
+                     options.print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
-    if (duration_s) {
-        duration = crm_time_parse_duration(duration_s);
+    if (options.duration_s) {
+        duration = crm_time_parse_duration(options.duration_s);
 
         if (duration == NULL) {
-            fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
+            fprintf(stderr, "Invalid duration specified: %s\n", options.duration_s);
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
         crm_time_log(LOG_STDOUT, "Duration", duration,
-                     print_options | crm_time_log_duration);
+                     options.print_options | crm_time_log_duration);
     }
 
-    if (period_s) {
-        crm_time_period_t *period = crm_time_parse_period(period_s);
+    if (options.period_s) {
+        crm_time_period_t *period = crm_time_parse_period(options.period_s);
 
         if (period == NULL) {
-            fprintf(stderr, "Invalid interval specified: %s\n", period_s);
+            fprintf(stderr, "Invalid interval specified: %s\n", options.period_s);
             crm_exit(CRM_EX_INVALID_PARAM);
         }
         log_time_period(LOG_TRACE, period,
-                        print_options | crm_time_log_date | crm_time_log_timeofday);
+                        options.print_options | crm_time_log_date | crm_time_log_timeofday);
         log_time_period(LOG_STDOUT, period,
-                        print_options | crm_time_log_date | crm_time_log_timeofday);
+                        options.print_options | crm_time_log_date | crm_time_log_timeofday);
         crm_time_free_period(period);
     }
 
@@ -233,30 +233,30 @@ main(int argc, char **argv)
 
         if (later == NULL) {
             fprintf(stderr, "Unable to calculate ending time of %s plus %s",
-                    date_time_s, duration_s);
+                    options.date_time_s, options.duration_s);
             crm_exit(CRM_EX_SOFTWARE);
         }
         crm_time_log(LOG_TRACE, "Duration ends at", later,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Duration ends at", later,
-                     print_options | crm_time_log_date | crm_time_log_timeofday |
+                     options.print_options | crm_time_log_date | crm_time_log_timeofday |
                      crm_time_log_with_timezone);
-        if (expected_s) {
+        if (options.expected_s) {
             char *dt_s = crm_time_as_string(later,
-                                            print_options | crm_time_log_date |
+                                            options.print_options | crm_time_log_date |
                                             crm_time_log_timeofday);
-            if (!pcmk__str_eq(expected_s, dt_s, pcmk__str_casei)) {
+            if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {
                 exit_code = CRM_EX_ERROR;
             }
             free(dt_s);
         }
         crm_time_free(later);
 
-    } else if (date_time && expected_s) {
+    } else if (date_time && options.expected_s) {
         char *dt_s = crm_time_as_string(date_time,
-                                        print_options | crm_time_log_date | crm_time_log_timeofday);
+                                        options.print_options | crm_time_log_date | crm_time_log_timeofday);
 
-        if (!pcmk__str_eq(expected_s, dt_s, pcmk__str_casei)) {
+        if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {
             exit_code = CRM_EX_ERROR;
         }
         free(dt_s);
