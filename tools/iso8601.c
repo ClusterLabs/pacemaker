@@ -122,6 +122,8 @@ main(int argc, char **argv)
     crm_time_t *duration = NULL;
     crm_time_t *date_time = NULL;
 
+    GError *error = NULL;
+
     pcmk__cli_init_logging("iso8601", 0);
     pcmk__set_cli_options(NULL, "<command> [options] ", long_options,
                           "display and parse ISO 8601 dates and times");
@@ -181,9 +183,12 @@ main(int argc, char **argv)
         date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {
-            fprintf(stderr, "Internal error: couldn't determine 'now'!\n");
-            crm_exit(CRM_EX_SOFTWARE);
+            exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Internal error: couldn't determine 'now'!");
+            goto done;
         }
+
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Current date/time", date_time,
@@ -193,9 +198,12 @@ main(int argc, char **argv)
         date_time = crm_time_new(options.date_time_s);
 
         if (date_time == NULL) {
-            fprintf(stderr, "Invalid date/time specified: %s\n", options.date_time_s);
-            crm_exit(CRM_EX_INVALID_PARAM);
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Invalid date/time specified: %s", options.date_time_s);
+            goto done;
         }
+
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Date", date_time,
@@ -206,9 +214,12 @@ main(int argc, char **argv)
         duration = crm_time_parse_duration(options.duration_s);
 
         if (duration == NULL) {
-            fprintf(stderr, "Invalid duration specified: %s\n", options.duration_s);
-            crm_exit(CRM_EX_INVALID_PARAM);
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Invalid duration specified: %s", options.duration_s);
+            goto done;
         }
+
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
         crm_time_log(LOG_STDOUT, "Duration", duration,
                      options.print_options | crm_time_log_duration);
@@ -218,9 +229,12 @@ main(int argc, char **argv)
         crm_time_period_t *period = crm_time_parse_period(options.period_s);
 
         if (period == NULL) {
-            fprintf(stderr, "Invalid interval specified: %s\n", options.period_s);
-            crm_exit(CRM_EX_INVALID_PARAM);
+            exit_code = CRM_EX_INVALID_PARAM;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Invalid interval specified: %s", options.period_s);
+            goto done;
         }
+
         log_time_period(LOG_TRACE, period,
                         options.print_options | crm_time_log_date | crm_time_log_timeofday);
         log_time_period(LOG_STDOUT, period,
@@ -232,21 +246,26 @@ main(int argc, char **argv)
         crm_time_t *later = crm_time_add(date_time, duration);
 
         if (later == NULL) {
-            fprintf(stderr, "Unable to calculate ending time of %s plus %s",
-                    options.date_time_s, options.duration_s);
-            crm_exit(CRM_EX_SOFTWARE);
+            exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Unable to calculate ending time of %s plus %s",
+                        options.date_time_s, options.duration_s);
+            goto done;
         }
+
         crm_time_log(LOG_TRACE, "Duration ends at", later,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
         crm_time_log(LOG_STDOUT, "Duration ends at", later,
                      options.print_options | crm_time_log_date | crm_time_log_timeofday |
                      crm_time_log_with_timezone);
+
         if (options.expected_s) {
             char *dt_s = crm_time_as_string(later,
                                             options.print_options | crm_time_log_date |
                                             crm_time_log_timeofday);
             if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {
                 exit_code = CRM_EX_ERROR;
+                goto done;
             }
             free(dt_s);
         }
@@ -258,11 +277,15 @@ main(int argc, char **argv)
 
         if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {
             exit_code = CRM_EX_ERROR;
+            goto done;
         }
         free(dt_s);
     }
 
+done:
     crm_time_free(date_time);
     crm_time_free(duration);
+
+    pcmk__output_and_clear_error(error, NULL);
     crm_exit(exit_code);
 }
