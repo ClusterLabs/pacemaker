@@ -450,7 +450,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cli_init_logging("crm_attribute", 0);
+    pcmk__cli_init_logging("crm_attribute", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
