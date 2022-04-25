@@ -37,6 +37,7 @@ EXTRA_DIST		= attrd_updater.8.inc \
 			  crm_verify.8.inc \
 			  crmadmin.8.inc \
 			  fix-manpages \
+			  iso8601.8.inc \
 			  stonith_admin.8.inc
 
 sbin_PROGRAMS		= attrd_updater \
