@@ -23,6 +23,7 @@
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
@@ -31,6 +32,8 @@
 
 #include <crm/common/attrd_internal.h>
 #include "pacemaker-attrd.h"
+
+#define SUMMARY "daemon for managing Pacemaker node attributes"
 
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
@@ -313,59 +316,40 @@ attrd_cluster_connect(void)
     return pcmk_ok;
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help",     no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "verbose",  no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
-};
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    return pcmk__build_arg_context(args, NULL, NULL, NULL);
+}
 
 int
 main(int argc, char **argv)
 {
-    int flag = 0;
-    int index = 0;
-    int argerr = 0;
     crm_ipc_t *old_instance = NULL;
+
+    GError *error = NULL;
+    bool initialized = false;
+
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
+    GOptionContext *context = build_arg_context(args);
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "daemon for managing Pacemaker node attributes");
-
     mainloop_add_signal(SIGTERM, attrd_shutdown);
 
-     while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 'h':          /* Help message */
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        attrd_exit_status = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (optind > argc) {
-        ++argerr;
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
+        /* FIXME:  When pacemaker-attrd is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_OK);
     }
 
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
-    }
+    initialized = true;
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager");
@@ -417,13 +401,19 @@ main(int argc, char **argv)
     attrd_run_mainloop();
 
   done:
-    crm_info("Shutting down attribute manager");
+    if (initialized) {
+        crm_info("Shutting down attribute manager");
 
-    attrd_election_fini();
-    attrd_ipc_fini();
-    attrd_lrmd_disconnect();
-    attrd_cib_disconnect();
-    g_hash_table_destroy(attributes);
+        attrd_election_fini();
+        attrd_ipc_fini();
+        attrd_lrmd_disconnect();
+        attrd_cib_disconnect();
+        g_hash_table_destroy(attributes);
+    }
 
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
     crm_exit(attrd_exit_status);
 }
