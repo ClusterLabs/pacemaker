@@ -168,6 +168,24 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_controld_reply_unknown, NULL, NULL,
     };
 
+    /* If we got an ACK, return true so the caller knows to expect more responses
+     * from the IPC server.  We do this before decrementing replies_expected because
+     * ACKs are not going to be included in that value.
+     *
+     * Note that we cannot do the same kind of status checking here that we do in
+     * ipc_pacemakerd.c.  The ACK message we receive does not necessarily contain
+     * a status attribute.  That is, we may receive this:
+     *
+     * <ack function="crmd_remote_proxy_cb" line="556"/>
+     *
+     * Instead of this:
+     *
+     * <ack function="dispatch_controller_ipc" line="391" status="112"/>
+     */
+    if (pcmk__str_eq(crm_element_name(reply), "ack", pcmk__str_none)) {
+        return true;
+    }
+
     if (private->replies_expected > 0) {
         private->replies_expected--;
     }
