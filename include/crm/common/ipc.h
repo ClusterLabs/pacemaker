@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -156,7 +156,10 @@ enum crm_ipc_flags
     crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/
 
     crm_ipc_server_info     = 0x00100000, /* Log failures as LOG_INFO */
-    crm_ipc_server_error    = 0x00200000, /* Log failures as LOG_ERR */
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    crm_ipc_server_error    = 0x00200000, //!< \deprecated Unused
+#endif
 };
 /* *INDENT-ON* */
 
