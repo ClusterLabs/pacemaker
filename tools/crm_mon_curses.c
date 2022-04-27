@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <crm/crm.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -340,7 +341,7 @@ crm_mon_mk_curses_output(char **argv) {
     }
 
     retval->fmt_name = "console";
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = curses_init;
     retval->free_priv = curses_free_priv;

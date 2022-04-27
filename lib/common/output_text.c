@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/cmdline_internal.h>
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -293,7 +294,7 @@ pcmk__mk_text_output(char **argv) {
     }
 
     retval->fmt_name = "text";
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = text_init;
     retval->free_priv = text_free_priv;
