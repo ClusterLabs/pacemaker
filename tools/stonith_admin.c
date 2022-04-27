@@ -576,8 +576,8 @@ main(int argc, char **argv)
                                            options.params);
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Can't add device: %s",
-                         pcmk_rc_str(rc));
+                out->err(out, "Can't register device %s using agent %s: %s",
+                         device, options.agent, pcmk_rc_str(rc));
             }
             break;
 
@@ -585,24 +585,24 @@ main(int argc, char **argv)
             rc = st->cmds->remove_device(st, st_opts, device);
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Can't remove device: %s",
-                         pcmk_rc_str(rc));
+                out->err(out, "Can't unregister device %s: %s",
+                         device, pcmk_rc_str(rc));
             }
             break;
 
         case 'd':
             rc = pcmk__fence_unregister_level(st, target, options.fence_level);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Can't remove topology level: %s",
-                         pcmk_rc_str(rc));
+                out->err(out, "Can't unregister topology level %d for %s: %s",
+                         options.fence_level, target, pcmk_rc_str(rc));
             }
             break;
 
         case 'r':
             rc = pcmk__fence_register_level(st, target, options.fence_level, options.devices);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Can't add topology level: %s",
-                         pcmk_rc_str(rc));
+                out->err(out, "Can't register topology level %d for %s: %s",
+                         options.fence_level, target, pcmk_rc_str(rc));
             }
             break;
 
