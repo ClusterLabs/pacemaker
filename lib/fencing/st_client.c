@@ -2188,32 +2188,43 @@ stonith__parse_targets(const char *target_spec)
 
 /*!
  * \internal
- * \brief Determine if a later stonith event succeeded.
+ * \brief Check whether a fencing failure was followed by an equivalent success
  *
- * \note Before calling this function, use stonith__sort_history() to sort the
- *       top_history argument.
+ * \param[in] event        Fencing failure
+ * \param[in] top_history  Complete fencing history (must be sorted by
+ *                         stonith__sort_history() beforehand)
+ *
+ * \return The name of the node that executed the fencing if a later successful
+ *         event exists, or NULL if no such event exists
  */
-gboolean
+const char *
 stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history)
 {
-     gboolean ret = FALSE;
+    const char *other = NULL;
 
      for (stonith_history_t *prev_hp = top_history; prev_hp; prev_hp = prev_hp->next) {
         if (prev_hp == event) {
             break;
         }
-
-         if ((prev_hp->state == st_done) &&
+        if ((prev_hp->state == st_done) &&
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
-            pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
-            ((event->completed < prev_hp->completed) || 
+            ((event->completed < prev_hp->completed) ||
              ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
-            ret = TRUE;
-            break;
+
+            if ((event->delegate == NULL)
+                || pcmk__str_eq(event->delegate, prev_hp->delegate,
+                                pcmk__str_casei)) {
+                // Prefer equivalent fencing by same executioner
+                return prev_hp->delegate;
+
+            } else if (other == NULL) {
+                // Otherwise remember first successful executioner
+                other = (prev_hp->delegate == NULL)? "some node" : prev_hp->delegate;
+            }
         }
     }
-    return ret;
+    return other;
 }
 
 /*!

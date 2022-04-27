@@ -1300,11 +1300,13 @@ static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
     {
         "stand-alone", no_argument, 0, 's',
-        NULL, pcmk__option_default
+        "\tDeprecated (will be removed in a future release)",
+        pcmk__option_default
     },
     {
         "stand-alone-w-cpg", no_argument, 0, 'c',
-        NULL, pcmk__option_default
+        "\tIntended for use in regression testing only",
+        pcmk__option_default
     },
     {
         "logfile", required_argument, 0, 'l',
@@ -1685,6 +1687,8 @@ main(int argc, char **argv)
 
     } else {
         stonith_our_uname = strdup("localhost");
+        crm_warn("Stand-alone mode is deprecated and will be removed "
+                 "in a future release");
     }
 
     init_device_list();

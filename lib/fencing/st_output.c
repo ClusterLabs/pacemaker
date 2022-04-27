@@ -239,12 +239,12 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "const char *")
 static int
 stonith_event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
-    gboolean later_succeeded = va_arg(args, gboolean);
+    const char *succeeded = va_arg(args, const char *);
 
     switch(event->state) {
         case st_done: {
@@ -266,7 +266,7 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
 
             out->list_item(out, "failed-stonith-event",
                            "%s of %s failed%s%s%s: "
-                           "delegate=%s, client=%s, origin=%s, %s='%s' %s",
+                           "delegate=%s, client=%s, origin=%s, %s='%s'%s%s%s",
                            stonith_action_str(event->action), event->target,
                            (event->exit_reason == NULL)? "" : " (",
                            (event->exit_reason == NULL)? "" : event->exit_reason,
@@ -275,7 +275,9 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
                            event->client, event->origin,
                            full_history ? "completed" : "last-failed",
                            failed_s,
-                           later_succeeded ? "(a later attempt succeeded)" : "");
+                           (succeeded == NULL)? "" : " (a later attempt from ",
+                           (succeeded == NULL)? "" : succeeded,
+                           (succeeded == NULL)? "" : " succeeded)");
             free(failed_s);
             break;
         }
@@ -291,20 +293,20 @@ stonith_event_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "const char *")
 static int
 stonith_event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
-    gboolean later_succeeded = va_arg(args, gboolean);
+    const char *succeeded = va_arg(args, const char *);
 
     char *buf = time_t_string(event->completed);
 
     switch (event->state) {
         case st_failed:
             pcmk__indented_printf(out,
-                                  "%s of %s failed%s%s%s: "
-                                  "delegate=%s, client=%s, origin=%s, %s='%s' %s\n",
+                                  "%s of %s failed%s%s%s: delegate=%s, "
+                                  "client=%s, origin=%s, %s='%s'%s%s%s\n",
                                   stonith_action_str(event->action), event->target,
                                   (event->exit_reason == NULL)? "" : " (",
                                   (event->exit_reason == NULL)? "" : event->exit_reason,
@@ -312,7 +314,9 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
                                   event->delegate ? event->delegate : "",
                                   event->client, event->origin,
                                   full_history ? "completed" : "last-failed", buf,
-                                  later_succeeded ? "(a later attempt succeeded)" : "");
+                                  (succeeded == NULL)? "" : " (a later attempt from ",
+                                  (succeeded == NULL)? "" : succeeded,
+                                  (succeeded == NULL)? "" : " succeeded)");
             break;
 
         case st_done:
@@ -334,12 +338,12 @@ stonith_event_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "const char *")
 static int
 stonith_event_xml(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history G_GNUC_UNUSED = va_arg(args, gboolean);
-    gboolean later_succeeded G_GNUC_UNUSED = va_arg(args, gboolean);
+    const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
 
     char *buf = NULL;
 

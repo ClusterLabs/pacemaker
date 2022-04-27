@@ -1641,7 +1641,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring registration for topology level '%s' "
                  "without valid target", crm_str(ID(level)));
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
                             crm_str(ID(level)));
@@ -1653,7 +1653,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
                             crm_str(crm_element_value(level,
@@ -1751,7 +1751,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
                             crm_str(crm_element_value(level,
@@ -2068,13 +2068,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     }
 
     if (pcmk__str_eq(host, alias, pcmk__str_casei)) {
-        crm_notice("%s is%s eligible to fence (%s) %s: %s",
-                   dev->id, (can? "" : " not"), search->action, host,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s: %s",
+                 dev->id, (can? "" : " not"), search->action, host, check_type);
     } else {
-        crm_notice("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                   dev->id, (can? "" : " not"), search->action, host, alias,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
+                 dev->id, (can? "" : " not"), search->action, host, alias,
+                 check_type);
     }
 
   search_report_results:
@@ -2389,7 +2388,9 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     if (cmd->victim != NULL) {
         g_string_append_printf(msg, "targeting %s ", cmd->victim);
     }
-    g_string_append_printf(msg, "using %s ", cmd->device);
+    if (cmd->device != NULL) {
+        g_string_append_printf(msg, "using %s ", cmd->device);
+    }
 
     // Add exit status or execution status as appropriate
     if (result->execution_status == PCMK_EXEC_DONE) {
@@ -3061,7 +3062,7 @@ handle_query_request(pcmk__request_t *request)
         action = crm_element_value(dev, F_STONITH_ACTION);
     }
 
-    crm_log_xml_debug(request->xml, "Query");
+    crm_log_xml_trace(request->xml, "Query");
 
     query = calloc(1, sizeof(struct st_query_data));
     CRM_ASSERT(query != NULL);

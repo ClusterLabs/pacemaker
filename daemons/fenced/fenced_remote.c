@@ -956,9 +956,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return pcmk_rc_ok;
     }
 
-    crm_notice("All fencing options targeting %s for client %s@%s failed "
-               CRM_XS " id=%.8s",
-               op->target, op->client_name, op->originator, op->id);
+    crm_info("All fencing options targeting %s for client %s@%s failed "
+             CRM_XS " id=%.8s",
+             op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
 
@@ -2278,9 +2278,12 @@ fenced_process_fencing_reply(xmlNode *msg)
                      op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
-            crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: "
+            crm_notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "
                        "%s%s%s%s",
-                       op->action, op->target, device, op->client_name,
+                       op->action, op->target,
+                       ((device == NULL)? "" : " using "),
+                       ((device == NULL)? "" : device),
+                       op->client_name,
                        op->originator,
                        pcmk_exec_status_str(op->result.execution_status),
                        (reason == NULL)? "" : " (",

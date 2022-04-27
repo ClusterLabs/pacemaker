@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the Pacemaker project contributors
+ * Copyright 2011-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,7 +87,8 @@ void stonith__register_messages(pcmk__output_t *out);
 
 GList *stonith__parse_targets(const char *hosts);
 
-gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
+const char *stonith__later_succeeded(stonith_history_t *event,
+                                     stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
 void stonith__device_parameter_flags(uint32_t *device_flags,
