@@ -296,6 +296,8 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
     GOptionContext *context = build_arg_context(args);
 
+    int rc = 0;
+
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -352,12 +354,11 @@ main(int argc, char **argv)
     }
 
     if (options.apply) {
-        int ret = apply_patch(object_1, object_2, options.as_cib);
-        exit_code = crm_errno2exit(ret);
+        rc = apply_patch(object_1, object_2, options.as_cib);
     } else {
-        int ret = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
-        exit_code = crm_errno2exit(ret);
+        rc = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
     }
+    exit_code = pcmk_rc2exitc(pcmk_legacy2rc(rc));
 
 done:
     g_strfreev(processed_args);

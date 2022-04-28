@@ -375,7 +375,7 @@ main(int argc, char **argv)
     /* Populate the working set instance */
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        exit_code = crm_errno2exit(ENOMEM);
+        exit_code = pcmk_rc2exitc(ENOMEM);
         goto done;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);

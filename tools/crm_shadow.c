@@ -398,7 +398,7 @@ main(int argc, char **argv)
     if (command == 'D') {
         /* delete the file */
         if ((unlink(shadow_file) < 0) && (errno != ENOENT)) {
-            exit_code = crm_errno2exit(errno);
+            exit_code = pcmk_rc2exitc(errno);
             fprintf(stderr, "Could not remove shadow instance '%s': %s\n",
                     shadow, strerror(errno));
         }
@@ -414,9 +414,9 @@ main(int argc, char **argv)
         real_cib = cib_new_no_shadow();
         rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not connect to CIB: %s\n",
-                    pcmk_strerror(rc));
-            exit_code = crm_errno2exit(rc);
+            rc = pcmk_legacy2rc(rc);
+            fprintf(stderr, "Could not connect to CIB: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
     }
@@ -444,9 +444,10 @@ main(int argc, char **argv)
         if (command == 'c' || command == 'r') {
             rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
             if (rc != pcmk_ok) {
+                rc = pcmk_legacy2rc(rc);
                 fprintf(stderr, "Could not connect to the CIB manager: %s\n",
-                        pcmk_strerror(rc));
-                exit_code = crm_errno2exit(rc);
+                        pcmk_rc_str(rc));
+                exit_code = pcmk_rc2exitc(rc);
                 goto done;
             }
 
@@ -463,10 +464,11 @@ main(int argc, char **argv)
         free_xml(output);
 
         if (rc < 0) {
+            rc = pcmk_legacy2rc(rc);
             fprintf(stderr, "Could not %s the shadow instance '%s': %s\n",
                     command == 'r' ? "reset" : "create",
-                    shadow, pcmk_strerror(rc));
-            exit_code = crm_errno2exit(rc);
+                    shadow, pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
         shadow_setup(shadow, FALSE);
@@ -510,8 +512,9 @@ main(int argc, char **argv)
         rc = real_cib->cmds->query(real_cib, NULL, &old_config, command_options);
 
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not query the CIB: %s\n", pcmk_strerror(rc));
-            exit_code = crm_errno2exit(rc);
+            rc = pcmk_legacy2rc(rc);
+            fprintf(stderr, "Could not query the CIB: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
 
@@ -542,9 +545,10 @@ main(int argc, char **argv)
         rc = real_cib->cmds->replace(real_cib, section, section_xml,
                                      command_options);
         if (rc != pcmk_ok) {
+            rc = pcmk_legacy2rc(rc);
             fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
-                    shadow, pcmk_strerror(rc));
-            exit_code = crm_errno2exit(rc);
+                    shadow, pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
         }
         shadow_teardown(shadow);
         free_xml(input);
