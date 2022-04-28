@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/cmdline_internal.h>
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -272,7 +273,7 @@ pcmk__mk_log_output(char **argv) {
     }
 
     retval->fmt_name = "log";
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = log_init;
     retval->free_priv = log_free_priv;
