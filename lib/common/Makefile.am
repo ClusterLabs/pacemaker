@@ -52,6 +52,7 @@ libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
 libcrmcommon_la_SOURCES	+= agents.c
 libcrmcommon_la_SOURCES	+= alerts.c
+libcrmcommon_la_SOURCES	+= attrs.c
 libcrmcommon_la_SOURCES	+= attrd_client.c
 libcrmcommon_la_SOURCES	+= cib.c
 if BUILD_CIBSECRETS
