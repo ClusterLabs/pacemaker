@@ -31,8 +31,8 @@ empty_input(void **state) {
 
 static void
 no_specials(void **state) {
-    const char *argv[] = { "-a", "-b", "-c", "-d", "-1", NULL };
-    const gchar *expected[] = { "-a", "-b", "-c", "-d", "-1", NULL };
+    const char *argv[] = { "crm_mon", "-a", "-b", "-c", "-d", "-1", NULL };
+    const gchar *expected[] = { "crm_mon", "-a", "-b", "-c", "-d", "-1", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);
@@ -45,8 +45,8 @@ no_specials(void **state) {
 
 static void
 single_dash(void **state) {
-    const char *argv[] = { "-", NULL };
-    const gchar *expected[] = { "-", NULL };
+    const char *argv[] = { "crm_mon", "-", NULL };
+    const gchar *expected[] = { "crm_mon", "-", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);
@@ -55,8 +55,8 @@ single_dash(void **state) {
 
 static void
 double_dash(void **state) {
-    const char *argv[] = { "-a", "--", "-bc", NULL };
-    const gchar *expected[] = { "-a", "--", "-bc", NULL };
+    const char *argv[] = { "crm_mon", "-a", "--", "-bc", NULL };
+    const gchar *expected[] = { "crm_mon", "-a", "--", "-bc", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);
@@ -65,8 +65,8 @@ double_dash(void **state) {
 
 static void
 special_args(void **state) {
-    const char *argv[] = { "-aX", "-Fval", NULL };
-    const gchar *expected[] = { "-a", "X", "-F", "val", NULL };
+    const char *argv[] = { "crm_mon", "-aX", "-Fval", NULL };
+    const gchar *expected[] = { "crm_mon", "-a", "X", "-F", "val", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "aF");
     LISTS_EQ(processed, expected);
@@ -75,8 +75,8 @@ special_args(void **state) {
 
 static void
 special_arg_at_end(void **state) {
-    const char *argv[] = { "-a", NULL };
-    const gchar *expected[] = { "-a", NULL };
+    const char *argv[] = { "crm_mon", "-a", NULL };
+    const gchar *expected[] = { "crm_mon", "-a", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "a");
     LISTS_EQ(processed, expected);
@@ -85,8 +85,8 @@ special_arg_at_end(void **state) {
 
 static void
 long_arg(void **state) {
-    const char *argv[] = { "--blah=foo", NULL };
-    const gchar *expected[] = { "--blah=foo", NULL };
+    const char *argv[] = { "crm_mon", "--blah=foo", NULL };
+    const gchar *expected[] = { "crm_mon", "--blah=foo", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);
@@ -95,8 +95,8 @@ long_arg(void **state) {
 
 static void
 negative_score(void **state) {
-    const char *argv[] = { "-v", "-1000", NULL };
-    const gchar *expected[] = { "-v", "-1000", NULL };
+    const char *argv[] = { "crm_mon", "-v", "-1000", NULL };
+    const gchar *expected[] = { "crm_mon", "-v", "-1000", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
     LISTS_EQ(processed, expected);
@@ -105,8 +105,8 @@ negative_score(void **state) {
 
 static void
 negative_score_2(void **state) {
-    const char *argv[] = { "-1i3", NULL };
-    const gchar *expected[] = { "-1", "-i", "-3", NULL };
+    const char *argv[] = { "crm_mon", "-1i3", NULL };
+    const gchar *expected[] = { "crm_mon", "-1", "-i", "-3", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
     LISTS_EQ(processed, expected);
@@ -115,8 +115,8 @@ negative_score_2(void **state) {
 
 static void
 string_arg_with_dash(void **state) {
-    const char *argv[] = { "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
-    const gchar *expected[] = { "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
+    const char *argv[] = { "crm_mon", "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
+    const gchar *expected[] = { "crm_mon", "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
     LISTS_EQ(processed, expected);
@@ -125,8 +125,8 @@ string_arg_with_dash(void **state) {
 
 static void
 string_arg_with_dash_2(void **state) {
-    const char *argv[] = { "-n", "crm_mon_options", "-v", "-1i3", NULL };
-    const gchar *expected[] = { "-n", "crm_mon_options", "-v", "-1i3", NULL };
+    const char *argv[] = { "crm_mon", "-n", "crm_mon_options", "-v", "-1i3", NULL };
+    const gchar *expected[] = { "crm_mon", "-n", "crm_mon_options", "-v", "-1i3", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
     LISTS_EQ(processed, expected);
@@ -135,8 +135,8 @@ string_arg_with_dash_2(void **state) {
 
 static void
 string_arg_with_dash_3(void **state) {
-    const char *argv[] = { "-abc", "-1i3", NULL };
-    const gchar *expected[] = { "-a", "-b", "-c", "-1i3", NULL };
+    const char *argv[] = { "crm_mon", "-abc", "-1i3", NULL };
+    const gchar *expected[] = { "crm_mon", "-a", "-b", "-c", "-1i3", NULL };
 
     gchar **processed = pcmk__cmdline_preproc((char **) argv, "c");
     LISTS_EQ(processed, expected);
