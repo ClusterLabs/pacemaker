@@ -331,7 +331,6 @@ int pcmk_legacy2rc(int legacy_rc);
 const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);
 const char *bz2_strerror(int rc);
-crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);

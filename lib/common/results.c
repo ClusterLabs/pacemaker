@@ -554,43 +554,6 @@ crm_exit_str(crm_exit_t exit_code)
     return "Unknown exit status";
 }
 
-//! \deprecated Use standard return codes and pcmk_rc2exitc() instead
-crm_exit_t
-crm_errno2exit(int rc)
-{
-    rc = abs(rc); // Convenience for functions that return -errno
-    switch (rc) {
-        case pcmk_ok:
-            return CRM_EX_OK;
-
-        case pcmk_err_no_quorum:
-            return CRM_EX_QUORUM;
-
-        case pcmk_err_old_data:
-            return CRM_EX_OLD;
-
-        case pcmk_err_schema_validation:
-        case pcmk_err_transform_failed:
-            return CRM_EX_CONFIG;
-
-        case pcmk_err_bad_nvpair:
-            return CRM_EX_INVALID_PARAM;
-
-        case pcmk_err_already:
-            return CRM_EX_EXISTS;
-
-        case pcmk_err_multiple:
-            return CRM_EX_MULTIPLE;
-
-        case pcmk_err_node_unknown:
-        case pcmk_err_unknown_format:
-            return CRM_EX_NOSUCH;
-
-        default:
-            return pcmk_rc2exitc(rc); // system errno
-    }
-}
-
 /*!
  * \brief Map a function return code to the most similar exit code
  *
@@ -933,3 +896,17 @@ pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
     pcmk__str_update(&src->action_stdout, dst->action_stdout);
     pcmk__str_update(&src->action_stderr, dst->action_stderr);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/results_compat.h>
+
+crm_exit_t
+crm_errno2exit(int rc)
+{
+    return pcmk_rc2exitc(pcmk_legacy2rc(rc));
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
