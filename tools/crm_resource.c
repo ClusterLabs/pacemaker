@@ -299,7 +299,7 @@ start_mainloop(pcmk_ipc_api_t *capi)
     unsigned int count = pcmk_controld_api_replies_expected(capi);
 
     if (count > 0) {
-        out->info(out, "Waiting for %d %s from the controller",
+        out->info(out, "Waiting for %u %s from the controller",
                   count, pcmk__plural_alt(count, "reply", "replies"));
         exit_code = CRM_EX_DISCONNECT; // For unexpected disconnects
         mainloop = g_main_loop_new(NULL, FALSE);
