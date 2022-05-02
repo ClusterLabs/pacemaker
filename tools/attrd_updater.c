@@ -19,10 +19,10 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml_internal.h>
-#include <crm/common/ipc.h>
 
 #include <crm/common/attrd_internal.h>
 
@@ -38,6 +38,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 GError *error = NULL;
+bool printed_values = false;
 
 struct {
     char command;
@@ -173,7 +174,7 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 
-static int do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node,
+static int send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_node,
                     gboolean query_all);
 static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
@@ -240,7 +241,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     if (options.command == 'Q') {
-        int rc = do_query(out, options.attr_name, options.attr_node, options.query_all);
+        int rc = send_attrd_query(out, options.attr_name, options.attr_node, options.query_all);
         exit_code = pcmk_rc2exitc(rc);
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
@@ -278,136 +279,40 @@ done:
 }
 
 /*!
- * \internal
- * \brief Submit a query request to pacemaker-attrd and wait for reply
- *
- * \param[in] name    Name of attribute to query
- * \param[in] host    Query applies to this host only (or all hosts if NULL)
- * \param[out] reply  On success, will be set to new XML tree with reply
- *
- * \return Standard Pacemaker return code
- * \note On success, caller is responsible for freeing result via free_xml(*reply)
- */
-static int
-send_attrd_query(const char *name, const char *host, xmlNode **reply)
-{
-    int rc = pcmk_rc_ok;
-    crm_ipc_t *ipc;
-    xmlNode *query;
-
-    /* Build the query XML */
-    query = create_xml_node(NULL, __func__);
-    if (query == NULL) {
-        return ENOMEM;
-    }
-    crm_xml_add(query, F_TYPE, T_ATTRD);
-    crm_xml_add(query, F_ORIG, crm_system_name);
-    crm_xml_add(query, PCMK__XA_ATTR_NODE_NAME, host);
-    crm_xml_add(query, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    crm_xml_add(query, PCMK__XA_ATTR_NAME, name);
-
-    /* Connect to pacemaker-attrd, send query XML and get reply */
-    crm_debug("Sending query for value of %s on %s", name, (host? host : "all nodes"));
-    ipc = crm_ipc_new(T_ATTRD, 0);
-    if (!crm_ipc_connect(ipc)) {
-        crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
-        rc = ENOTCONN;
-    } else {
-        rc = crm_ipc_send(ipc, query, crm_ipc_client_response, 0, reply);
-        if (rc > 0) {
-            rc = pcmk_rc_ok;
-        }
-        crm_ipc_close(ipc);
-    }
-    crm_ipc_destroy(ipc);
-
-    free_xml(query);
-    return(rc);
-}
-
-/*!
- * \brief Validate pacemaker-attrd's XML reply to an query
- *
- * param[in] reply      Root of reply XML tree to validate
- * param[in] attr_name  Name of attribute that was queried
- *
- * \return Standard Pacemaker return code
- * \note A return value of ENXIO means the requested attribute does not exist
- */
-static int
-validate_attrd_reply(xmlNode *reply, const char *attr_name)
-{
-    int rc = pcmk_rc_ok;
-    const char *reply_attr;
-
-    if (reply == NULL) {
-        rc = pcmk_rc_schema_validation;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not query value of %s: reply did not contain valid XML",
-                    attr_name);
-        return rc;
-    }
-    crm_log_xml_trace(reply, "Reply");
-
-    reply_attr = crm_element_value(reply, PCMK__XA_ATTR_NAME);
-    if (reply_attr == NULL) {
-        rc = ENXIO;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not query value of %s: attribute does not exist",
-                    attr_name);
-        return rc;
-    }
-
-    if (!pcmk__str_eq(crm_element_value(reply, F_TYPE), T_ATTRD, pcmk__str_casei)
-        || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
-        || strcmp(reply_attr, attr_name)) {
-            rc = pcmk_rc_schema_validation;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Could not query value of %s: reply did not contain expected identification",
-                        attr_name);
-            return rc;
-    }
-
-    return pcmk_rc_ok;
-}
-
-/*!
  * \brief Print the attribute values in a pacemaker-attrd XML query reply
  *
- * \param[in] reply     Root of XML tree with query reply
+ * \param[in] reply     List of attribute name/value pairs
  * \param[in] attr_name Name of attribute that was queried
  *
  * \return true if any values were printed
  */
-static bool
-print_attrd_values(pcmk__output_t *out, xmlNode *reply, const char *attr_name)
+static void
+print_attrd_values(pcmk__output_t *out, GList *reply)
 {
-    xmlNode *child;
-    const char *reply_host, *reply_value;
-    bool have_values = false;
+    for (GList *iter = reply; iter != NULL; iter = iter->next) {
+        pcmk__attrd_query_pair_t *pair = (pcmk__attrd_query_pair_t *) iter->data;
 
-    /* Iterate through reply's XML tags (a node tag for each host-value pair) */
-    for (child = pcmk__xml_first_child(reply); child != NULL;
-         child = pcmk__xml_next(child)) {
+        out->message(out, "attribute", NULL, NULL, pair->name, pair->value,
+                     pair->node);
+        printed_values = true;
+    }
+}
 
-        if (!pcmk__str_eq((const char *)child->name, XML_CIB_TAG_NODE,
-                          pcmk__str_casei)) {
-            crm_warn("Ignoring unexpected %s tag in query reply", child->name);
-        } else {
-            reply_host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
-            reply_value = crm_element_value(child, PCMK__XA_ATTR_VALUE);
+static void
+attrd_event_cb(pcmk_ipc_api_t *attrd_api, enum pcmk_ipc_event event_type,
+               crm_exit_t status, void *event_data, void *user_data)
+{
+    pcmk__output_t *out = (pcmk__output_t *) user_data;
+    pcmk__attrd_api_reply_t *reply = event_data;
 
-            if (reply_host == NULL) {
-                crm_warn("Ignoring %s tag without %s attribute in query reply",
-                         XML_CIB_TAG_NODE, PCMK__XA_ATTR_NODE_NAME);
-            } else {
-                out->message(out, "attribute", NULL, NULL, attr_name, reply_value, reply_host);
-                have_values = true;
-            }
-        }
+    if (event_type != pcmk_ipc_event_reply || status != CRM_EX_OK) {
+        return;
     }
 
-    return have_values;
+    /* Print the values from the reply. */
+    if (reply->reply_type == pcmk__attrd_reply_query) {
+        print_attrd_values(out, reply->data.pairs);
+    }
 }
 
 /*!
@@ -420,10 +325,29 @@ print_attrd_values(pcmk__output_t *out, xmlNode *reply, const char *attr_name)
  * \return Standard Pacemaker return code
  */
 static int
-do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
+send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboolean query_all)
 {
-    xmlNode *reply = NULL;
+    pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
+
+    // Create attrd IPC object
+    rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        return ENOTCONN;
+    }
+
+    pcmk_register_ipc_callback(attrd_api, attrd_event_cb, out);
+
+    // Connect to attrd (without main loop)
+    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        pcmk_free_ipc_api(attrd_api);
+        return rc;
+    }
 
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
@@ -435,33 +359,21 @@ do_query(pcmk__output_t *out, const char *attr_name, const char *attr_node, gboo
         }
     }
 
-    /* Build and send pacemaker-attrd request, and get XML reply */
-    rc = send_attrd_query(attr_name, attr_node, &reply);
+    rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, 0);
+
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not query value of %s: %s (%d)",
                     attr_name, pcmk_strerror(rc), rc);
-        return rc;
-    }
-
-    /* Validate the XML reply */
-    rc = validate_attrd_reply(reply, attr_name);
-    if (rc != pcmk_rc_ok) {
-        if (reply != NULL) {
-            free_xml(reply);
-        }
-        return rc;
-    }
-
-    /* Print the values from the reply */
-    if (!print_attrd_values(out, reply, attr_name)) {
+    } else if (!printed_values) {
+        rc = pcmk_rc_schema_validation;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not query value of %s: reply had attribute name but no host values",
-                    attr_name);
-        free_xml(reply);
-        return pcmk_rc_schema_validation;
+                    "Could not query value of %s: attribute does not exist", attr_name);
     }
 
-    return pcmk_rc_ok;
+    pcmk_disconnect_ipc(attrd_api);
+    pcmk_free_ipc_api(attrd_api);
+
+    return rc;
 }
 
 static int
