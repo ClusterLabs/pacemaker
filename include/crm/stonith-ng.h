@@ -431,7 +431,7 @@ struct stonith_s
     enum stonith_state state;
 
     int call_id;
-    int call_timeout;
+    int call_timeout;   //!< \deprecated Unused
     void *st_private;
 
     stonith_api_operations_t *cmds;
