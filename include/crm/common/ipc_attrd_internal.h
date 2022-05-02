@@ -46,6 +46,21 @@ typedef struct {
     } data;
 } pcmk__attrd_api_reply_t;
 
+/*!
+ * \internal
+ * \brief Get the value of an attribute from pacemaker-attrd
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Look up the attribute for this node
+ *                          (or NULL for all nodes)
+ * \param[in] name          Attribute name
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
+                          uint32_t options);
+
 #ifdef __cplusplus
 }
 #endif

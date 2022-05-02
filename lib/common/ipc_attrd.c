@@ -144,6 +144,43 @@ create_attrd_op(const char *user_name)
     return attrd_op;
 }
 
+static int
+send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+{
+    return pcmk__send_ipc_request(api, request);
+}
+
+int
+pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
+                      uint32_t options)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = NULL;
+
+    if (name == NULL) {
+        return EINVAL;
+    }
+
+    request = create_attrd_op(NULL);
+
+    crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
+    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
+    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+
+    rc = send_attrd_request(api, request);
+    free_xml(request);
+
+    if (node) {
+        crm_debug("Queried pacemaker-attrd for %s on %s: %s (%d)",
+                  name, node, pcmk_rc_str(rc), rc);
+    } else {
+        crm_debug("Queried pacemaker-attrd for %s: %s (%d)",
+                  name, pcmk_rc_str(rc), rc);
+    }
+
+    return rc;
+}
+
 /*!
  * \internal
  * \brief Send an operation to pacemaker-attrd via IPC
