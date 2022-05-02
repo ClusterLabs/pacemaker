@@ -16,8 +16,113 @@
 #include <stdio.h>
 
 #include <crm/crm.h>
-#include <crm/msg_xml.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_attrd_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/attrd_internal.h>
+#include <crm/msg_xml.h>
+#include "crmcommon_private.h"
+
+static void
+set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
+{
+    const char *name = NULL;
+    pcmk__attrd_query_pair_t *pair;
+
+    name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
+
+    for (xmlNode *node = first_named_child(msg_data, XML_CIB_TAG_NODE);
+         node != NULL; node = crm_next_same_xml(node)) {
+        pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+
+        CRM_ASSERT(pair != NULL);
+
+        pair->node = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+        pair->name = name;
+        pair->value = crm_element_value(node, PCMK__XA_ATTR_VALUE);
+        data->data.pairs = g_list_prepend(data->data.pairs, pair);
+    }
+}
+
+static bool
+reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
+{
+    const char *command = crm_element_value(request, PCMK__XA_TASK);
+
+    /* Only the query command gets a reply. */
+    return pcmk__str_any_of(command, PCMK__ATTRD_CMD_QUERY, NULL);
+}
+
+static bool
+dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
+{
+    const char *value = NULL;
+    crm_exit_t status = CRM_EX_OK;
+
+    pcmk__attrd_api_reply_t reply_data = {
+        pcmk__attrd_reply_unknown
+    };
+
+    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
+        return false;
+    }
+
+    /* Do some basic validation of the reply */
+    value = crm_element_value(reply, F_TYPE);
+    if (value == NULL || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
+        crm_debug("Unrecognizable attrd message: invalid message type '%s'",
+                  crm_str(value));
+        status = CRM_EX_PROTOCOL;
+        goto done;
+    }
+
+    /* Only the query command gets a reply for now. */
+    value = crm_element_value(reply, F_SUBTYPE);
+    if (pcmk__str_eq(value, PCMK__ATTRD_CMD_QUERY, pcmk__str_null_matches)) {
+        /* This likely means the client gave us an attribute name that doesn't
+         * exist.
+         */
+        if (!xmlHasProp(reply, (pcmkXmlStr) PCMK__XA_ATTR_NAME)) {
+            crm_debug("Empty attrd message: no attribute name");
+            status = ENXIO;
+            goto done;
+        }
+
+        reply_data.reply_type = pcmk__attrd_reply_query;
+
+        set_pairs_data(&reply_data, reply);
+    } else {
+        crm_debug("Cannot handle a reply from message type '%s'",
+                  crm_str(value));
+        status = CRM_EX_PROTOCOL;
+        goto done;
+    }
+
+done:
+    pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
+
+    /* Free any reply data that was allocated */
+    if (reply_data.data.pairs) {
+        g_list_free_full(reply_data.data.pairs, free);
+    }
+
+    return false;
+}
+
+pcmk__ipc_methods_t *
+pcmk__attrd_api_methods()
+{
+    pcmk__ipc_methods_t *cmds = calloc(1, sizeof(pcmk__ipc_methods_t));
+
+    if (cmds != NULL) {
+        cmds->new_data = NULL;
+        cmds->free_data = NULL;
+        cmds->post_connect = NULL;
+        cmds->reply_expected = reply_expected;
+        cmds->dispatch = dispatch;
+    }
+    return cmds;
+}
 
 /*!
  * \internal

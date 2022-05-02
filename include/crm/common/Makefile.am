@@ -16,6 +16,7 @@ header_HEADERS = acl.h \
 				 agents_compat.h \
 				 cib.h \
 				 ipc.h \
+				 ipc_attrd_internal.h \
 				 ipc_controld.h \
 				 ipc_pacemakerd.h \
 				 ipc_schedulerd.h \
