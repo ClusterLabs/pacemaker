@@ -326,6 +326,28 @@ attrd_cluster_connect(void)
     return pcmk_ok;
 }
 
+static bool
+ipc_already_running(void)
+{
+    pcmk_ipc_api_t *old_instance = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_attrd);
+    if (rc != pcmk_rc_ok) {
+        return false;
+    }
+
+    rc = pcmk_connect_ipc(old_instance, pcmk_ipc_dispatch_sync);
+    if (rc != pcmk_rc_ok) {
+        pcmk_free_ipc_api(old_instance);
+        return false;
+    }
+
+    pcmk_disconnect_ipc(old_instance);
+    pcmk_free_ipc_api(old_instance);
+    return true;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return pcmk__build_arg_context(args, "text (default), xml", group, NULL);
@@ -335,7 +357,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_ipc_t *old_instance = NULL;
 
     GError *error = NULL;
     bool initialized = false;
@@ -374,17 +395,9 @@ main(int argc, char **argv)
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_notice("Starting Pacemaker node attribute manager");
 
-    old_instance = crm_ipc_new(T_ATTRD, 0);
-    if (crm_ipc_connect(old_instance)) {
-        /* IPC end-point already up */
-        crm_ipc_close(old_instance);
-        crm_ipc_destroy(old_instance);
+    if (ipc_already_running()) {
         crm_err("pacemaker-attrd is already active, aborting startup");
         crm_exit(CRM_EX_OK);
-    } else {
-        /* not up or not authentic, we'll proceed either way */
-        crm_ipc_destroy(old_instance);
-        old_instance = NULL;
     }
 
     attributes = pcmk__strkey_table(NULL, free_attribute);
