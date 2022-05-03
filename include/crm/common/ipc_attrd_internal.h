@@ -82,6 +82,17 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
 
 /*!
  * \internal
+ * \brief Purge a node from pacemaker-attrd
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Node to remove
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node);
+
+/*!
+ * \internal
  * \brief Get the value of an attribute from pacemaker-attrd
  *
  * \param[in] api           Connection to pacemaker-attrd

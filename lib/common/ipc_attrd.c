@@ -203,6 +203,27 @@ pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
 }
 
 int
+pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = NULL;
+    const char *display_host = (node ? node : "localhost");
+
+    request = create_attrd_op(NULL);
+
+    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
+    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+
+    rc = send_attrd_request(api, request);
+    free_xml(request);
+
+    crm_debug("Asked pacemaker-attrd to purge %s: %s (%d)",
+              display_host, pcmk_rc_str(rc), rc);
+
+    return rc;
+}
+
+int
 pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
                       uint32_t options)
 {
