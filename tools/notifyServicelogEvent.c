@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2021 the Pacemaker project contributors
+ * Later changes copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,6 +30,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/common/attrd_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -67,6 +68,51 @@ event2status(struct sl_event * event)
     }
 
     return status;
+}
+
+static int
+send_attrd_update(const char *attr_node, const char *attr_name,
+                  const char *attr_value, const char *attr_set,
+                  const char *attr_dampen, uint32_t attr_options)
+{
+    pcmk_ipc_api_t *attrd_api = NULL;
+    int rc = pcmk_rc_ok;
+    const char *target = NULL;
+
+    // Create attrd IPC object
+    rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        return ENOTCONN;
+    }
+
+    // Connect to attrd (without main loop)
+    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        pcmk_free_ipc_api(attrd_api);
+        return rc;
+    }
+
+    target = pcmk__node_attr_target(attr_node);
+    if (target != NULL) {
+        attr_node = target;
+    }
+
+    rc = pcmk__attrd_api_update(attrd_api, attr_node, attr_name, attr_value,
+                                NULL, NULL, NULL, attr_options | pcmk__node_attr_pattern);
+
+    pcmk_disconnect_ipc(attrd_api);
+    pcmk_free_ipc_api(attrd_api);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not update %s=%s: %s (%d)",
+                attr_name, attr_value, pcmk_rc_str(rc), rc);
+    }
+
+    return rc;
 }
 
 static pcmk__cli_option_t long_options[] = {
@@ -180,10 +226,8 @@ main(int argc, char *argv[])
             int attrd_rc;
 
             // @TODO pass pcmk__node_attr_remote when appropriate
-            attrd_rc = pcmk__node_attr_request(NULL, 'v', NULL,
-                                               health_component, health_status,
-                                               NULL, NULL, NULL, NULL,
-                                               pcmk__node_attr_none);
+            attrd_rc = send_attrd_update(NULL, health_component, health_status,
+                                         NULL, NULL, pcmk__node_attr_none);
             crm_debug("Updating attribute ('%s', '%s') = %d",
                       health_component, health_status, attrd_rc);
         } else {

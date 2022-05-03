@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm_resource.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
@@ -705,8 +706,9 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
-                     const char *interval_spec, pe_node_t *node)
+clear_rsc_fail_attrs(pcmk_ipc_api_t *attrd_api, pe_resource_t *rsc,
+                     const char *operation, const char *interval_spec,
+                     pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
@@ -715,19 +717,21 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
     if (pe__is_guest_or_remote_node(node)) {
         attr_options |= pcmk__node_attr_remote;
     }
-    rc = pcmk__node_attr_request_clear(NULL, node->details->uname, rsc_name,
-                                       operation, interval_spec, NULL,
-                                       attr_options);
+
+    rc = pcmk__attrd_api_clear_failures(attrd_api, node->details->uname,
+                                        rsc_name, operation, interval_spec,
+                                        NULL, attr_options);
     free(rsc_name);
     return rc;
 }
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    pe_resource_t *rsc, const char *operation,
-                    const char *interval_spec, bool just_failures,
-                    pe_working_set_t *data_set, gboolean force)
+cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_ipc_api_t *attrd_api,
+                    const char *host_uname, pe_resource_t *rsc,
+                    const char *operation, const char *interval_spec,
+                    bool just_failures, pe_working_set_t *data_set,
+                    gboolean force)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -742,9 +746,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *child = (pe_resource_t *) lpc->data;
 
-            rc = cli_resource_delete(controld_api, host_uname, child, operation,
-                                     interval_spec, just_failures, data_set,
-                                     force);
+            rc = cli_resource_delete(controld_api, attrd_api, host_uname, child,
+                                     operation, interval_spec, just_failures,
+                                     data_set, force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
@@ -777,9 +781,10 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             node = (pe_node_t *) lpc->data;
 
             if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->details->uname,
-                                         rsc, operation, interval_spec,
-                                         just_failures, data_set, force);
+                rc = cli_resource_delete(controld_api, attrd_api,
+                                         node->details->uname, rsc, operation,
+                                         interval_spec, just_failures, data_set,
+                                         force);
             }
             if (rc != pcmk_rc_ok) {
                 g_list_free(nodes);
@@ -811,7 +816,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return pcmk_rc_ok;
     }
 
-    rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
+    rc = clear_rsc_fail_attrs(attrd_api, rsc, operation, interval_spec, node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up %s failures on %s: %s",
                  rsc->id, host_uname, pcmk_rc_str(rc));
@@ -835,9 +840,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
 // \return Standard Pacemaker return code
 int
-cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
-                const char *operation, const char *interval_spec,
-                pe_working_set_t *data_set)
+cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_ipc_api_t *attrd_api,
+                const char *node_name, const char *operation,
+                const char *interval_spec, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_ok;
@@ -862,8 +867,8 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         }
     }
 
-    rc = pcmk__node_attr_request_clear(NULL, node_name, NULL, operation,
-                                       interval_spec, NULL, attr_options);
+    rc = pcmk__attrd_api_clear_failures(attrd_api, node_name, NULL, operation,
+                                        interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up all failures on %s: %s",
                  display_name, pcmk_rc_str(rc));

@@ -32,6 +32,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
@@ -378,6 +379,62 @@ get_node_name_from_controller(void)
 
     pcmk_disconnect_ipc(controld_api);
     pcmk_free_ipc_api(controld_api);
+
+    return rc;
+}
+
+static int
+send_attrd_update(char command, const char *attr_node, const char *attr_name,
+                  const char *attr_value, const char *attr_set,
+                  const char *attr_dampen, uint32_t attr_options)
+{
+    pcmk_ipc_api_t *attrd_api = NULL;
+    int rc = pcmk_rc_ok;
+    uint32_t opts = attr_options;
+
+    // Create attrd IPC object
+    rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        return ENOTCONN;
+    }
+
+    // Connect to attrd (without main loop)
+    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to attrd: %s\n",
+                pcmk_rc_str(rc));
+        pcmk_free_ipc_api(attrd_api);
+        return rc;
+    }
+
+    if (options.attr_pattern) {
+        opts |= pcmk__node_attr_pattern;
+    }
+
+    switch (command) {
+        case 'D':
+            rc = pcmk__attrd_api_delete(attrd_api, attr_node, attr_name,
+                                        opts);
+            break;
+
+        case 'u':
+        case 'v':
+            rc = pcmk__attrd_api_update(attrd_api, attr_node, attr_name,
+                                        attr_value, NULL, attr_set, NULL,
+                                        opts | pcmk__node_attr_value);
+            break;
+    }
+
+    pcmk_disconnect_ipc(attrd_api);
+    pcmk_free_ipc_api(attrd_api);
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not update %s=%s: %s (%d)",
+                    attr_name, attr_value, pcmk_rc_str(rc), rc);
+    }
+
     return rc;
 }
 
@@ -591,10 +648,10 @@ main(int argc, char **argv)
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
-    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u')) && try_attrd
-        && (pcmk__node_attr_request(NULL, options.command, options.dest_uname, options.attr_name,
-                                    options.attr_value, options.type, options.set_name, NULL, NULL,
-                                    attrd_opts) == pcmk_rc_ok)) {
+    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u'))
+        && try_attrd
+        && (send_attrd_update(options.command, options.dest_uname, options.attr_name,
+                              options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
