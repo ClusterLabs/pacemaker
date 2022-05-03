@@ -48,6 +48,20 @@ typedef struct {
 
 /*!
  * \internal
+ * \brief Delete a previously set attribute by setting its value to NULL
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Delete attribute for this node (or NULL for current node)
+ * \param[in] name          Attribute name
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
+                           uint32_t options);
+
+/*!
+ * \internal
  * \brief Get the value of an attribute from pacemaker-attrd
  *
  * \param[in] api           Connection to pacemaker-attrd
@@ -60,6 +74,36 @@ typedef struct {
  */
 int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
                           uint32_t options);
+
+/*!
+ * \internal
+ * \brief Tell pacemaker-attrd to update the CIB with current values
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Affect only this node (or NULL for all nodes)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
+
+/*!
+ * \internal
+ * \brief Update an attribute's value, time to wait, or both
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Affect only this node (or NULL for current node)
+ * \param[in] name          Attribute name
+ * \param[in] value         The attribute's new value, or NULL to unset
+ * \param[in] dampen        The new time to wait value, or NULL to unset
+ * \param[in] set           ID of attribute set to use (or NULL to choose first)
+ * \param[in] user_name     ACL user to pass to pacemaker-attrd
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
+                           const char *value, const char *dampen, const char *set,
+                           const char *user_name, uint32_t options);
 
 #ifdef __cplusplus
 }

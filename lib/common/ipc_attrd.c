@@ -151,6 +151,21 @@ send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 }
 
 int
+pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
+                       uint32_t options)
+{
+    if (name == NULL) {
+        return EINVAL;
+    }
+
+    /* Make sure the right update option is set. */
+    options &= ~pcmk__node_attr_delay;
+    options |= pcmk__node_attr_value;
+
+    return pcmk__attrd_api_update(api, node, name, NULL, NULL, NULL, NULL, options);
+}
+
+int
 pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
                       uint32_t options)
 {
@@ -177,6 +192,74 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         crm_debug("Queried pacemaker-attrd for %s: %s (%d)",
                   name, pcmk_rc_str(rc), rc);
     }
+
+    return rc;
+}
+
+int
+pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = NULL;
+    const char *display_host = (node ? node : "localhost");
+
+    request = create_attrd_op(NULL);
+
+    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
+    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+
+    rc = send_attrd_request(api, request);
+    free_xml(request);
+
+    crm_debug("Asked pacemaker-attrd to refresh %s: %s (%d)",
+              display_host, pcmk_rc_str(rc), rc);
+
+    return rc;
+}
+
+int
+pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
+                       const char *value, const char *dampen, const char *set,
+                       const char *user_name, uint32_t options)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = NULL;
+    const char *display_host = (node ? node : "localhost");
+
+    if (name == NULL) {
+        return EINVAL;
+    }
+
+    request = create_attrd_op(user_name);
+
+    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
+        crm_xml_add(request, PCMK__XA_ATTR_PATTERN, name);
+    } else {
+        crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
+    }
+
+    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
+        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
+        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
+        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
+    }
+
+    crm_xml_add(request, PCMK__XA_ATTR_VALUE, value);
+    crm_xml_add(request, PCMK__XA_ATTR_DAMPENING, dampen);
+    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    crm_xml_add(request, PCMK__XA_ATTR_SET, set);
+    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(options, pcmk__node_attr_remote));
+    crm_xml_add_int(request, PCMK__XA_ATTR_IS_PRIVATE,
+                    pcmk_is_set(options, pcmk__node_attr_private));
+
+    rc = send_attrd_request(api, request);
+    free_xml(request);
+
+    crm_debug("Asked pacemaker-attrd to update %s on %s: %s (%d)",
+              name, display_host, pcmk_rc_str(rc), rc);
 
     return rc;
 }
