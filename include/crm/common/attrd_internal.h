@@ -14,8 +14,6 @@
 extern "C" {
 #endif
 
-#  include <crm/common/ipc.h>
-
 // Options for clients to use with functions below
 enum pcmk__node_attr_opts {
     pcmk__node_attr_none    = 0,
@@ -31,17 +29,6 @@ enum pcmk__node_attr_opts {
             LOG_TRACE, "Node attribute", crm_system_name,               \
             (node_attr_flags), (flags_to_set), #flags_to_set);          \
     } while (0)
-
-int pcmk__node_attr_request(crm_ipc_t * ipc, char command, const char *host,
-                            const char *name, const char *value,
-                            const char *section, const char *set,
-                            const char *dampen, const char *user_name,
-                            int options);
-
-int pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
-                                  const char *resource, const char *operation,
-                                  const char *interval_spec,
-                                  const char *user_name, int options);
 
 const char *pcmk__node_attr_target(const char *name);
 
