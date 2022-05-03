@@ -151,6 +151,43 @@ send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 }
 
 int
+pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
+                               const char *resource, const char *operation,
+                               const char *interval_spec, const char *user_name,
+                               uint32_t options)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = create_attrd_op(user_name);
+    const char *interval_desc = NULL;
+    const char *op_desc = NULL;
+
+    crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
+    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
+    crm_xml_add(request, PCMK__XA_ATTR_OPERATION, operation);
+    crm_xml_add(request, PCMK__XA_ATTR_INTERVAL, interval_spec);
+    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(options, pcmk__node_attr_remote));
+
+    rc = send_attrd_request(api, request);
+    free_xml(request);
+
+    if (operation) {
+        interval_desc = interval_spec? interval_spec : "nonrecurring";
+        op_desc = operation;
+    } else {
+        interval_desc = "all";
+        op_desc = "operations";
+    }
+
+    crm_debug("Asked pacemaker-attrd to clear failure of %s %s for %s on %s: %s (%d)",
+              interval_desc, op_desc, (resource? resource : "all resources"),
+              (node? node : "all nodes"), pcmk_rc_str(rc), rc);
+
+    return rc;
+}
+
+int
 pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
                        uint32_t options)
 {

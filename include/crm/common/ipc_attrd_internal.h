@@ -48,6 +48,26 @@ typedef struct {
 
 /*!
  * \internal
+ * \brief Send a request to pacemaker-attrd to clear resource failure
+ *
+ * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] node          Affect only this node (or NULL for all nodes)
+ * \param[in] resource      Name of resource to clear (or NULL for all)
+ * \param[in] operation     Name of operation to clear (or NULL for all)
+ * \param[in] interval_spec If operation is not NULL, its interval
+ * \param[in] user_name     ACL user to pass to pacemaker-attrd
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
+                                   const char *resource, const char *operation,
+                                   const char *interval_spec, const char *user_name,
+                                   uint32_t options);
+
+/*!
+ * \internal
+ *
  * \brief Delete a previously set attribute by setting its value to NULL
  *
  * \param[in] api           Connection to pacemaker-attrd
