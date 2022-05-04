@@ -241,9 +241,13 @@ lrmd_remote_listen(gpointer data)
 }
 
 static void
-lrmd_remote_connection_destroy(gpointer user_data)
+tls_server_dropped(gpointer user_data)
 {
     crm_notice("TLS server session ended");
+    /* If we are in the process of shutting down, then we should actually exit.
+     * bz#1804259
+     */
+    execd_exit_if_shutting_down();
     return;
 }
 
@@ -338,7 +342,7 @@ lrmd_init_remote_tls_server()
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
-        .destroy = lrmd_remote_connection_destroy,
+        .destroy = tls_server_dropped,
     };
 
     CRM_CHECK(ssock == -1, return ssock);
@@ -407,7 +411,7 @@ lrmd_init_remote_tls_server()
 }
 
 void
-lrmd_tls_server_destroy(void)
+execd_stop_tls_server(void)
 {
     if (psk_cred_s) {
         gnutls_psk_free_server_credentials(psk_cred_s);

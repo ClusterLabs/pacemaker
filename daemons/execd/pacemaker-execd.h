@@ -56,7 +56,7 @@ typedef struct lrmd_rsc_s {
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 // in remoted_tls.c
 int lrmd_init_remote_tls_server(void);
-void lrmd_tls_server_destroy(void);
+void execd_stop_tls_server(void);
 #  endif
 
 int lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply);
@@ -105,5 +105,6 @@ void remoted_spawn_pidone(int argc, char **argv, char **envp);
 int process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id,
                             xmlNode *request);
 void lrmd_drain_alerts(GMainLoop *mloop);
+void execd_exit_if_shutting_down(void);
 
 #endif // PACEMAKER_EXECD__H
