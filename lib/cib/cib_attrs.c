@@ -131,18 +131,17 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", set_type);
     }
 
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair[");
-    if (attr_id) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "@id='%s'", attr_id);
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair");
+
+    if (attr_id && attr_name) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s' and @name='%.128s']",
+                      attr_id, attr_name);
+    } else if (attr_id) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s']", attr_id);
+    } else if (attr_name) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@name='%.128s']", attr_name);
     }
 
-    if (attr_name) {
-        if (attr_id) {
-            attr_snprintf(xpath_string, offset, XPATH_MAX, " and ");
-        }
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "@name='%.128s'", attr_name);
-    }
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = cib_internal_op(cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
