@@ -513,6 +513,41 @@ command_query(pcmk__output_t *out, cib_t *cib)
     return rc;
 }
 
+static void
+set_type(void)
+{
+    if (options.type == NULL) {
+        if (options.promotion_score) {
+            // Updating a promotion score node attribute
+            options.type = g_strdup(XML_CIB_TAG_STATUS);
+
+        } else if (options.dest_uname != NULL) {
+            // Updating some other node attribute
+            options.type = g_strdup(XML_CIB_TAG_NODES);
+
+        } else {
+            // Updating cluster options
+            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
+        }
+
+    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+        options.type = g_strdup(XML_CIB_TAG_STATUS);
+
+    } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
+        options.type = g_strdup(XML_CIB_TAG_NODES);
+    }
+}
+
+static bool
+use_attrd(void)
+{
+    /* Only go through the attribute manager for transient attributes, and
+     * then only if we're not using a file as the CIB.
+     */
+    return pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei) &&
+           getenv("CIB_file") == NULL && getenv("CIB_shadow") == NULL;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -626,26 +661,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    // Use default CIB location if not given
-    if (options.type == NULL) {
-        if (options.promotion_score) {
-            // Updating a promotion score node attribute
-            options.type = g_strdup(XML_CIB_TAG_STATUS);
-
-        } else if (options.dest_uname != NULL) {
-            // Updating some other node attribute
-            options.type = g_strdup(XML_CIB_TAG_NODES);
-
-        } else {
-            // Updating cluster options
-            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
-        }
-    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_STATUS);
-
-    } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_NODES);
-    }
+    set_type();
 
     // Use default node if not given (except for cluster options and tickets)
     if (!pcmk__strcase_any_of(options.type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
@@ -714,13 +730,7 @@ main(int argc, char **argv)
         options.attr_name = options.attr_pattern;
     }
 
-    // Only go through attribute manager for transient attributes
-    try_attrd = pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei);
-
-    // Don't try to contact attribute manager if we're using a file as CIB
-    if (getenv("CIB_file") || getenv("CIB_shadow")) {
-        try_attrd = false;
-    }
+    try_attrd = use_attrd();
 
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
