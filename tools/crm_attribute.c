@@ -178,13 +178,15 @@ static GOptionEntry selecting_entries[] = {
     },
 
     { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
-      "Operate on attribute or option with this name",
+      "Operate on attribute or option with this name.  For queries, this\n"
+      INDENT "is optional, in which case all matching attributes will be\n"
+      INDENT "returned.",
       "NAME"
     },
 
     { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
       "Operate on all attributes matching this pattern\n"
-      INDENT "(with -v/-D and -l reboot)",
+      INDENT "(with -G, or with -v/-D and -l reboot)",
       "PATTERN"
     },
 
@@ -212,7 +214,8 @@ static GOptionEntry command_entries[] = {
     },
 
     { "query", 'G', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
-      "Query the current value of the attribute/option",
+      "Query the current value of the attribute/option.\n"
+      INDENT "See also: -n, -P",
       NULL
     },
 
