@@ -105,12 +105,7 @@ struct {
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'D';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = NULL;
+    pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
 
@@ -149,24 +144,14 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     }
 
     options.type = g_strdup(XML_CIB_TAG_NODES);
-
-    if (options.set_type) {
-        free(options.set_type);
-    }
-
-    options.set_type = strdup(XML_TAG_UTILIZATION);
+    pcmk__str_update(&options.attr_value, XML_TAG_UTILIZATION);
     return TRUE;
 }
 
 static gboolean
 value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'G';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = NULL;
+    pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
 
