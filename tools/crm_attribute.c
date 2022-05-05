@@ -404,6 +404,115 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
     return rc;
 }
 
+static int
+command_delete(pcmk__output_t *out, cib_t *cib)
+{
+    int rc = pcmk_rc_ok;
+
+    rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
+                               options.set_type, options.set_name, options.attr_id,
+                               options.attr_name, options.attr_value, NULL);
+
+    if (rc == ENXIO) {
+        /* Nothing to delete...
+         * which means it's not there...
+         * which is what the admin wanted
+         */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+static int
+command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_LOG_ASSERT(options.type != NULL);
+    CRM_LOG_ASSERT(options.attr_name != NULL);
+    CRM_LOG_ASSERT(options.attr_value != NULL);
+
+    rc = cib__update_node_attr(out, cib, cib_opts, options.type, options.dest_node,
+                               options.set_type, options.set_name, options.attr_id,
+                               options.attr_name, options.attr_value, NULL,
+                               is_remote_node ? "remote" : NULL);
+
+    return rc;
+}
+
+static bool
+output_one_attribute(pcmk__output_t *out, xmlNode *node, bool use_pattern)
+{
+    const char *name = crm_element_value(node, XML_NVPAIR_ATTR_NAME);
+    const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
+    const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+
+    if (use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
+        return false;
+    }
+
+    out->message(out, "attribute", options.type, options.attr_id, name, value, host);
+    crm_info("Read %s=%s %s%s",
+             crm_str(name), crm_str(value),
+             options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+    return true;
+}
+
+static int
+command_query(pcmk__output_t *out, cib_t *cib)
+{
+    int rc = pcmk_rc_ok;
+
+    xmlNode *result = NULL;
+    bool use_pattern = options.attr_pattern != NULL;
+
+    /* libxml2 doesn't support regular expressions in xpath queries (which is how
+     * cib__get_node_attrs -> find_attr finds attributes).  So instead, we'll just
+     * find all the attributes for a given node here by passing NULL for attr_id
+     * and attr_name, and then later see if they match the given pattern.
+     */
+    if (use_pattern) {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, NULL,
+                                 NULL, NULL, &result);
+    } else {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, options.attr_id,
+                                 options.attr_name, NULL, &result);
+    }
+
+    if (rc == ENXIO && options.attr_default) {
+        out->message(out, "attribute", options.type, options.attr_id,
+                     options.attr_name, options.attr_default, options.dest_uname);
+        rc = pcmk_rc_ok;
+
+    } else if (rc != pcmk_rc_ok) {
+        // Don't do anything.
+
+    } else if (xml_has_children(result)) {
+        xmlNode *child = NULL;
+        bool did_output = false;
+
+        for (child = pcmk__xml_first_child(result); child != NULL;
+             child = pcmk__xml_next(child)) {
+            if (output_one_attribute(out, child, use_pattern)) {
+                did_output = true;
+            }
+        }
+
+        if (!did_output) {
+            rc = ENXIO;
+        }
+
+    } else {
+        output_one_attribute(out, result, use_pattern);
+    }
+
+    free_xml(result);
+    return rc;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -616,6 +725,7 @@ main(int argc, char **argv)
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
+
     if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u'))
         && try_attrd
         && (send_attrd_update(options.command, options.dest_uname, options.attr_name,
@@ -624,94 +734,13 @@ main(int argc, char **argv)
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
     } else if (options.command == 'D') {
-        rc = cib__delete_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
-                                   options.set_type, options.set_name, options.attr_id,
-                                   options.attr_name, options.attr_value, NULL);
-
-        if (rc == ENXIO) {
-            /* Nothing to delete...
-             * which means it's not there...
-             * which is what the admin wanted
-             */
-            rc = pcmk_rc_ok;
-        }
+        rc = command_delete(out, the_cib);
 
     } else if (options.command == 'v') {
-        CRM_LOG_ASSERT(options.type != NULL);
-        CRM_LOG_ASSERT(options.attr_name != NULL);
-        CRM_LOG_ASSERT(options.attr_value != NULL);
+        rc = command_update(out, the_cib, is_remote_node);
 
-        rc = cib__update_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
-                                   options.set_type, options.set_name, options.attr_id,
-                                   options.attr_name, options.attr_value, NULL,
-                                   is_remote_node ? "remote" : NULL);
-
-    } else {                    /* query */
-
-        xmlNode *result = NULL;
-        bool use_pattern = options.attr_pattern != NULL;
-
-        /* libxml2 doesn't support regular expressions in xpath queries (which is how
-         * cib__get_node_attrs -> find_attr finds attributes).  So instead, we'll just
-         * find all the attributes for a given node here by passing NULL for attr_id
-         * and attr_name, and then later see if they match the given pattern.
-         */
-        if (use_pattern) {
-            rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
-                                     options.set_type, options.set_name, NULL,
-                                     NULL, NULL, &result);
-        } else {
-            rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
-                                     options.set_type, options.set_name, options.attr_id,
-                                     options.attr_name, NULL, &result);
-        }
-
-        if (rc == ENXIO && options.attr_default) {
-            out->message(out, "attribute", options.type, options.attr_id,
-                         options.attr_name, options.attr_default);
-            free_xml(result);
-            rc = pcmk_rc_ok;
-
-        } else if (rc != pcmk_rc_ok) {
-            // Don't do anything and fall through to the error checking after this block.
-            free_xml(result);
-
-        } else if (xml_has_children(result)) {
-            xmlNode *child = NULL;
-
-            for (child = pcmk__xml_first_child(result); child != NULL;
-                 child = pcmk__xml_next(child)) {
-                const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
-                const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
-
-                if (use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
-                    continue;
-                }
-
-                out->message(out, "attribute", options.type, options.attr_id,
-                             name, value);
-                crm_info("Read %s=%s %s%s",
-                         crm_str(name), crm_str(value),
-                         options.set_name ? "in " : "", options.set_name ? options.set_name : "");
-            }
-
-            free_xml(result);
-
-        } else {
-            const char *name = crm_element_value(result, XML_NVPAIR_ATTR_NAME);
-            const char *value = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
-
-            if (!use_pattern || pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
-                out->message(out, "attribute", options.type, options.attr_id,
-                             name, value);
-                crm_info("Read %s=%s %s%s",
-                         crm_str(name), crm_str(value),
-                         options.set_name ? "in " : "", options.set_name ? options.set_name : "");
-            }
-
-            free_xml(result);
-        }
-
+    } else {
+        rc = command_query(out, the_cib);
     }
 
     if (rc == ENOTUNIQ) {
