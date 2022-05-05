@@ -662,36 +662,52 @@ main(int argc, char **argv)
 
     } else {                    /* query */
 
-        char *read_value = NULL;
+        xmlNode *result = NULL;
 
-        if (options.attr_id == NULL && options.attr_name == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: must specify attribute name or pattern to query");
-            goto done;
-        }
-
-        rc = cib__read_node_attr(out, the_cib, options.type, options.dest_node,
+        rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
                                  options.set_type, options.set_name, options.attr_id,
-                                 options.attr_name, &read_value, NULL);
+                                 options.attr_name, NULL, &result);
 
         if (rc == ENXIO && options.attr_default) {
-            read_value = strdup(options.attr_default);
-            rc = pcmk_rc_ok;
-        }
-
-        crm_info("Read %s=%s %s%s",
-                 options.attr_name, crm_str(read_value), options.set_name ? "in " : "", options.set_name ? options.set_name : "");
-
-        if (rc == ENOTUNIQ) {
-            // Multiple matches (already displayed) are not error for queries
-            rc = pcmk_rc_ok;
-        } else {
             out->message(out, "attribute", options.type, options.attr_id,
-                         options.attr_name, read_value);
+                         options.attr_name, options.attr_default);
+            free_xml(result);
+            rc = pcmk_rc_ok;
+
+        } else if (rc != pcmk_rc_ok) {
+            // Don't do anything and fall through to the error checking after this block.
+            free_xml(result);
+
+        } else if (xml_has_children(result)) {
+            xmlNode *child = NULL;
+
+            for (child = pcmk__xml_first_child(result); child != NULL;
+                 child = pcmk__xml_next(child)) {
+                const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+                const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
+
+                out->message(out, "attribute", options.type, options.attr_id,
+                             name, value);
+                crm_info("Read %s=%s %s%s",
+                         crm_str(name), crm_str(value),
+                         options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+            }
+
+            free_xml(result);
+
+        } else {
+            const char *name = crm_element_value(result, XML_NVPAIR_ATTR_NAME);
+            const char *value = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
+
+            out->message(out, "attribute", options.type, options.attr_id,
+                         name, value);
+            crm_info("Read %s=%s %s%s",
+                     crm_str(name), crm_str(value),
+                     options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+
+            free_xml(result);
         }
 
-        free(read_value);
     }
 
     if (rc == ENOTUNIQ) {

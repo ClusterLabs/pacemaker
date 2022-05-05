@@ -355,31 +355,26 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 }
 
 int
-cib__read_node_attr(pcmk__output_t *out, cib_t *cib, const char *section,
+cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
                     const char *node_uuid, const char *set_type, const char *set_name,
-                    const char *attr_id, const char *attr_name, char **attr_value,
-                    const char *user_name)
+                    const char *attr_id, const char *attr_name, const char *user_name,
+                    xmlNode **result)
 {
-    xmlNode *xml_search = NULL;
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(attr_value != NULL);
+    CRM_ASSERT(result != NULL);
     CRM_CHECK(section != NULL, return EINVAL);
-    CRM_CHECK(attr_name != NULL || attr_id != NULL, return EINVAL);
 
-    *attr_value = NULL;
+    *result = NULL;
 
     rc = find_attr(cib, section, node_uuid, set_type, set_name, attr_id, attr_name,
-                   user_name, &xml_search);
+                   user_name, result);
 
-    if (rc != pcmk_rc_ok || handle_multiples(out, xml_search, attr_name) == ENOTUNIQ) {
+    if (rc != pcmk_rc_ok) {
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
-                  attr_name, section, crm_str(set_name), crm_str(node_uuid), pcmk_strerror(rc));
-    } else {
-        pcmk__str_update(attr_value, crm_element_value(xml_search, XML_NVPAIR_ATTR_VALUE));
+                  crm_str(attr_name), section, crm_str(set_name), crm_str(node_uuid), pcmk_strerror(rc));
     }
 
-    free_xml(xml_search);
     return rc;
 }
 
@@ -492,6 +487,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
                    const char *user_name)
 {
     pcmk__output_t *out = NULL;
+    xmlNode *result = NULL;
     int rc = pcmk_ok;
 
     out = new_output_object(to_console ? "text" : "log");
@@ -499,10 +495,19 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
         return pcmk_err_generic;
     }
 
-    rc = cib__read_node_attr(out, cib, section, node_uuid, set_type, set_name,
-                             attr_id, attr_name, attr_value, user_name);
+    rc = cib__get_node_attrs(out, cib, section, node_uuid, set_type, set_name,
+                             attr_id, attr_name, user_name, &result);
+
+    if (rc == pcmk_rc_ok) {
+        if (!xml_has_children(result)) {
+            pcmk__str_update(attr_value, crm_element_value(result, XML_NVPAIR_ATTR_VALUE));
+        } else {
+            rc = ENOTUNIQ;
+        }
+    }
 
     out->finish(out, CRM_EX_OK, true, NULL);
+    free_xml(result);
     pcmk__output_free(out);
     return pcmk_rc2legacy(rc);
 }
