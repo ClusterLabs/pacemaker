@@ -548,6 +548,31 @@ use_attrd(void)
            getenv("CIB_file") == NULL && getenv("CIB_shadow") == NULL;
 }
 
+static bool
+try_ipc_update(void)
+{
+    return use_attrd() &&
+           (options.command == 'v' || options.command == 'D' || options.command == 'u');
+}
+
+static bool
+pattern_used_correctly(void)
+{
+    /* --pattern can only be used with:
+     * -G (query), or
+     * -v (update) or -D (delete), with till-reboot
+     */
+    return options.command == 'G' ||
+           ((options.command == 'v' || options.command == 'D') &&
+            pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei));
+}
+
+static bool
+delete_used_correctly(void)
+{
+    return options.command != 'D' || options.attr_name != NULL || options.attr_pattern != NULL;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -599,7 +624,6 @@ main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
     int is_remote_node = 0;
-    bool try_attrd = true;
     int attrd_opts = pcmk__node_attr_none;
 
     int rc = pcmk_rc_ok;
@@ -707,7 +731,7 @@ main(int argc, char **argv)
         }
     }
 
-    if ((options.command == 'D') && (options.attr_name == NULL) && (options.attr_pattern == NULL)) {
+    if (!delete_used_correctly()) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error: must specify attribute name or pattern to delete");
@@ -715,10 +739,7 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
-        if (options.command != 'G' &&
-            (((options.command != 'v') && (options.command != 'D'))
-             || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei))) {
-
+        if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Error: pattern can only be used with query, or with "
@@ -730,16 +751,13 @@ main(int argc, char **argv)
         options.attr_name = options.attr_pattern;
     }
 
-    try_attrd = use_attrd();
-
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
 
-    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u'))
-        && try_attrd
-        && (send_attrd_update(options.command, options.dest_uname, options.attr_name,
-                              options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
+    if (try_ipc_update() &&
+        (send_attrd_update(options.command, options.dest_uname, options.attr_name,
+                           options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
