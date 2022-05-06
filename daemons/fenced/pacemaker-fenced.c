@@ -1136,11 +1136,8 @@ static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
-    xmlNode *stonith_enabled_xml = NULL;
-    static gboolean stonith_enabled_saved = TRUE;
     long timeout_ms_saved = stonith_watchdog_timeout_ms;
     gboolean need_full_refresh = FALSE;
-    bool value = false;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1191,32 +1188,18 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
         CRM_ASSERT(local_cib != NULL);
-        stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
+        need_full_refresh = TRUE;
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
-                                           local_cib, LOG_NEVER);
-    if (pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &value) == pcmk_rc_ok && !value) {
-        crm_trace("Ignoring CIB updates while fencing is disabled");
-        stonith_enabled_saved = FALSE;
-
-    } else if (stonith_enabled_saved == FALSE) {
-        crm_info("Updating fencing device and topology lists "
-                 "now that fencing is enabled");
-        stonith_enabled_saved = TRUE;
-        need_full_refresh = TRUE;
-
-    } else {
-        if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
+    if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
             need_full_refresh = TRUE;
-        } else {
+    } else {
             update_fencing_topology(event, msg);
             update_cib_stonith_devices(event, msg);
             watchdog_device_update();
-        }
     }
 
     if (need_full_refresh) {
