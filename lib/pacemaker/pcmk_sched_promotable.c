@@ -68,28 +68,30 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether an instance will be promoted or demoted
+ *
+ * \param[in] rsc        Instance to check
+ * \param[in] demoting   If \p rsc will be demoted, this will be set to true
+ * \param[in] promoting  If \p rsc will be promoted, this will be set to true
+ */
 static void
-check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
-                         gboolean *promoting)
+check_for_role_change(pe_resource_t *rsc, bool *demoting, bool *promoting)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
-    if (rsc->children) {
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            check_promotable_actions(child, demoting, promoting);
+    // If this is a cloned group, check group members recursively
+    if (rsc->children != NULL) {
+        for (iter = rsc->children; iter != NULL; iter = iter->next) {
+            check_for_role_change((pe_resource_t *) iter->data,
+                                  demoting, promoting);
         }
         return;
     }
 
-    CRM_ASSERT(demoting != NULL);
-    CRM_ASSERT(promoting != NULL);
-
-    gIter = rsc->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
 
         if (*promoting && *demoting) {
             return;
@@ -97,11 +99,11 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
         } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
 
-        } else if (pcmk__str_eq(RSC_DEMOTE, action->task, pcmk__str_casei)) {
-            *demoting = TRUE;
+        } else if (pcmk__str_eq(RSC_DEMOTE, action->task, pcmk__str_none)) {
+            *demoting = true;
 
-        } else if (pcmk__str_eq(RSC_PROMOTE, action->task, pcmk__str_casei)) {
-            *promoting = TRUE;
+        } else if (pcmk__str_eq(RSC_PROMOTE, action->task, pcmk__str_none)) {
+            *promoting = true;
         }
     }
 }
@@ -769,8 +771,8 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *action = NULL;
     GList *gIter = rsc->children;
     pe_action_t *action_complete = NULL;
-    gboolean any_promoting = FALSE;
-    gboolean any_demoting = FALSE;
+    bool any_promoting = false;
+    bool any_demoting = false;
 
     clone_variant_data_t *clone_data = NULL;
 
@@ -779,18 +781,11 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        gboolean child_promoting = FALSE;
-        gboolean child_demoting = FALSE;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "Creating actions for %s", child_rsc->id);
         child_rsc->cmds->create_actions(child_rsc, data_set);
-        check_promotable_actions(child_rsc, &child_demoting, &child_promoting);
-
-        any_demoting = any_demoting || child_demoting;
-        any_promoting = any_promoting || child_promoting;
-        pe_rsc_trace(rsc, "Created actions for %s: %d %d", child_rsc->id, child_promoting,
-                     child_demoting);
+        check_for_role_change(child_rsc, &any_demoting, &any_promoting);
     }
 
     /* promote */
