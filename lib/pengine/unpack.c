@@ -2593,6 +2593,41 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return xml;
 }
 
+static xmlNode *
+find_lrm_resource(const char *rsc_id, const char *node_name,
+                  pe_working_set_t *data_set)
+{
+    int offset = 0;
+    char xpath[STATUS_PATH_MAX];
+    xmlNode *xml = NULL;
+
+    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset,
+                       "//node_state[@uname='%s']", node_name);
+    offset +=
+        snprintf(xpath + offset, STATUS_PATH_MAX - offset,
+                 "//" XML_LRM_TAG_RESOURCE "[@id='%s']", rsc_id);
+
+    CRM_LOG_ASSERT(offset > 0);
+    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+
+    return xml;
+}
+
+static bool
+unknown_on_node(const char *rsc_id, const char *node_name,
+                pe_working_set_t *data_set)
+{
+    xmlNode *lrm_resource = NULL;
+
+    lrm_resource = find_lrm_resource(rsc_id, node_name, data_set);
+
+    /* If the resource has no lrm_rsc_op history on the node, that means its
+     * state is unknown there.
+     */
+    return (lrm_resource == NULL
+            || first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP) == NULL);
+}
+
 static int
 pe__call_id(xmlNode *op_xml)
 {
@@ -2764,7 +2799,13 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                                       source, TRUE, data_set);
     target_migrate_from_id = pe__call_id(target_migrate_from);
 
-    if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
+    if (/* If the resource state is unknown on the target, it will likely be
+         * probed there.
+         * Don't just consider it running there. We will get back here anyway in
+         * case the probe detects it's running there.
+         */
+        !unknown_on_node(rsc->id, target, data_set)
+        && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
         /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
          * (if it is up).
