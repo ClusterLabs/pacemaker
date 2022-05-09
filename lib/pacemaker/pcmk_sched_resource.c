@@ -783,10 +783,6 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
     pe_node_t *node2 = NULL;
     pe_node_t *current_node1 = pe__current_node(instance1);
     pe_node_t *current_node2 = pe__current_node(instance2);
-    GList *list1 = NULL;
-    GList *list2 = NULL;
-    GList *iter = NULL;
-    GList *iter2 = NULL;
     GHashTable *colocated_scores1 = NULL;
     GHashTable *colocated_scores2 = NULL;
 
@@ -829,48 +825,9 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
         goto out;
     }
 
-    /* All location scores */
-    list1 = pcmk__sort_nodes(g_hash_table_get_values(colocated_scores1),
-                             current_node1, instance1->cluster);
-    list2 = pcmk__sort_nodes(g_hash_table_get_values(colocated_scores2),
-                             current_node2, instance1->cluster);
-
-    for (iter = list1, iter2 = list2; (iter != NULL) && (iter2 != NULL);
-         iter = iter->next, iter2 = iter2->next) {
-
-        node1 = (pe_node_t *) iter->data;
-        node2 = (pe_node_t *) iter2->data;
-
-        if (node1 == NULL) {
-            crm_trace("%s < %s: colocated score NULL",
-                      instance1->id, instance2->id);
-            rc = 1;
-            break;
-
-        } else if (node2 == NULL) {
-            crm_trace("%s > %s: colocated score NULL",
-                      instance1->id, instance2->id);
-            rc = -1;
-            break;
-        }
-
-        if (node1->weight < node2->weight) {
-            crm_trace("%s < %s: colocated score", instance1->id, instance2->id);
-            rc = 1;
-            break;
-
-        } else if (node1->weight > node2->weight) {
-            crm_trace("%s > %s: colocated score", instance1->id, instance2->id);
-            rc = -1;
-            break;
-        }
-    }
-
 out:
     g_hash_table_destroy(colocated_scores1);
     g_hash_table_destroy(colocated_scores2);
-    g_list_free(list1);
-    g_list_free(list2);
     return rc;
 }
 
