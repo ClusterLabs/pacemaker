@@ -209,7 +209,6 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
 
-    const char *ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
     const char *max_clones = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_MAX);
     const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
 
@@ -273,7 +272,13 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         pcmk__scan_min_int(max_clones, &(clone_data->clone_max), 0);
     }
 
-    clone_data->ordered = crm_is_true(ordered);
+    if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED))) {
+        clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                               "Clone", rsc->id,
+                                               clone_data->flags,
+                                               pe__clone_ordered,
+                                               "pe__clone_ordered");
+    }
 
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
         pcmk__config_err("Ignoring " XML_RSC_ATTR_PROMOTED_MAX " for %s "
@@ -1139,4 +1144,21 @@ pe__clone_child_id(pe_resource_t *rsc)
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
     return ID(clone_data->xml_obj_child);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a clone is ordered
+ *
+ * \param[in] clone  Clone resource to check
+ *
+ * \return true if clone is ordered, otherwise false
+ */
+bool
+pe__clone_is_ordered(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+    return pcmk_is_set(clone_data->flags, pe__clone_ordered);
 }

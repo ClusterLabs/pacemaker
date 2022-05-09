@@ -20,12 +20,12 @@
 extern bool pcmk__is_daemon;
 
 static void
-child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
+child_promoting_constraints(enum pe_ordering type,
                             pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
                             pe_working_set_t * data_set)
 {
     if (child == NULL) {
-        if (clone_data->ordered && last != NULL) {
+        if (pe__clone_is_ordered(rsc) && last != NULL) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* last child promote before promoted started */
             pcmk__order_resource_actions(last, RSC_PROMOTE, rsc, RSC_PROMOTED,
@@ -42,7 +42,7 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
     pcmk__order_resource_actions(rsc, RSC_PROMOTE, child, RSC_PROMOTE, type,
                                  data_set);
 
-    if (clone_data->ordered) {
+    if (pe__clone_is_ordered(rsc)) {
         pe_rsc_trace(rsc, "Ordered version");
         if (last == NULL) {
             /* global promote before first child promote */
@@ -60,12 +60,12 @@ child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering 
 }
 
 static void
-child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
+child_demoting_constraints(enum pe_ordering type,
                            pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
                            pe_working_set_t * data_set)
 {
     if (child == NULL) {
-        if (clone_data->ordered && last != NULL) {
+        if (pe__clone_is_ordered(rsc) && (last != NULL)) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* global demote before first child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
@@ -82,21 +82,21 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
     pcmk__order_resource_actions(rsc, RSC_DEMOTE, child, RSC_DEMOTE,
                                  pe_order_implies_first_printed, data_set);
 
-    if (clone_data->ordered && last != NULL) {
-        pe_rsc_trace(rsc, "Ordered version");
+    if (!pe__clone_is_ordered(rsc)) {
+        pe_rsc_trace(rsc, "Un-ordered version");
 
-        /* child/child relative demote */
-        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, type,
-                                     data_set);
-
-    } else if (clone_data->ordered) {
+    } else if (last == NULL) {
         pe_rsc_trace(rsc, "Ordered version (1st node)");
         /* first child stop before global stopped */
         pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type,
                                      data_set);
 
     } else {
-        pe_rsc_trace(rsc, "Un-ordered version");
+        pe_rsc_trace(rsc, "Ordered version");
+
+        /* child/child relative demote */
+        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, type,
+                                     data_set);
     }
 }
 
@@ -843,7 +843,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                   !any_promoting, true);
     action_complete->priority = INFINITY;
 
-    child_promoting_constraints(clone_data, pe_order_optional,
+    child_promoting_constraints(pe_order_optional,
                                 rsc, NULL, last_promote_rsc, data_set);
 
     if (clone_data->promote_notify == NULL) {
@@ -859,7 +859,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                   !any_demoting, true);
     action_complete->priority = INFINITY;
 
-    child_demoting_constraints(clone_data, pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
+    child_demoting_constraints(pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
 
     if (clone_data->demote_notify == NULL) {
         clone_data->demote_notify = pcmk__clone_notif_pseudo_ops(rsc,
@@ -932,9 +932,6 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     promote_demote_constraints(rsc, data_set);
 
@@ -945,10 +942,10 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
                                      RSC_PROMOTE, pe_order_optional, data_set);
 
-        child_promoting_constraints(clone_data, pe_order_optional,
+        child_promoting_constraints(pe_order_optional,
                                     rsc, child_rsc, last_rsc, data_set);
 
-        child_demoting_constraints(clone_data, pe_order_optional,
+        child_demoting_constraints(pe_order_optional,
                                    rsc, child_rsc, last_rsc, data_set);
 
         last_rsc = child_rsc;
