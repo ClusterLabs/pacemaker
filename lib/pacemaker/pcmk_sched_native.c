@@ -2469,7 +2469,9 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+        || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);

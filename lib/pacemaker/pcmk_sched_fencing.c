@@ -317,7 +317,8 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * only quorum. However, fence agents that unfence often don't have enough
      * information to even probe or start unless the node is first unfenced.
      */
-    if (pcmk__is_unfence_device(rsc, data_set)
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
@@ -449,21 +450,4 @@ pcmk__node_unfenced(pe_node_t *node)
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
-/*!
- * \internal
- * \brief Check whether a resource is a fencing device that supports unfencing
- *
- * \param[in] rsc       Resource to check
- *
- * \return true if \p rsc is a fencing device that supports unfencing,
- *         otherwise false
- */
-bool
-pcmk__is_unfence_device(const pe_resource_t *rsc,
-                        const pe_working_set_t *data_set)
-{
-    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }
