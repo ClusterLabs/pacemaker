@@ -22,9 +22,15 @@ enum pe__clone_flags {
     // Whether instances should be started sequentially
     pe__clone_ordered               = (1 << 0),
 
+    // Whether promotion scores have been added
+    pe__clone_promotion_added       = (1 << 1),
+
+    // Whether promotion constraints have been added
+    pe__clone_promotion_constrained = (1 << 2),
 };
 
 bool pe__clone_is_ordered(pe_resource_t *clone);
+int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
 
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)

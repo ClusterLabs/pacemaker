@@ -291,16 +291,13 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     GList *gIter = NULL;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
-    clone_variant_data_t *clone_data = NULL;
     char score[33];
     size_t len = sizeof(score);
 
-    get_clone_variant_data(clone_data, rsc);
-
-    if (clone_data->added_promoted_constraints) {
+    if (pe__set_clone_flag(rsc, pe__clone_promotion_constrained)
+            == pcmk_rc_already) {
         return;
     }
-    clone_data->added_promoted_constraints = true;
     pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
@@ -570,16 +567,10 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 {
     int score, new_score;
     GList *gIter = rsc->children;
-    clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, rsc);
-
-    if (clone_data->added_promotion_scores) {
-        /* Make sure we only do this once */
+    if (pe__set_clone_flag(rsc, pe__clone_promotion_added) == pcmk_rc_already) {
         return;
     }
-
-    clone_data->added_promotion_scores = true;
 
     for (; gIter != NULL; gIter = gIter->next) {
         GHashTableIter iter;

@@ -21,9 +21,6 @@ typedef struct clone_variant_data_s {
 
     int total_clones;
 
-    // @TODO make these a bitmask
-    bool added_promotion_scores;
-    bool added_promoted_constraints;
     uint32_t flags; // Group of enum pe__clone_flags
 
     notify_data_t *stop_notify;

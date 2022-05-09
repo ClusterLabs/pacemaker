@@ -1162,3 +1162,28 @@ pe__clone_is_ordered(pe_resource_t *clone)
     get_clone_variant_data(clone_data, clone);
     return pcmk_is_set(clone_data->flags, pe__clone_ordered);
 }
+
+/*!
+ * \internal
+ * \brief Set a clone flag
+ *
+ * \param[in] clone  Clone resource to set flag for
+ * \param[in] flag   Clone flag to set
+ *
+ * \return Standard Pacemaker return code (either pcmk_rc_ok if flag was not
+ *         already set or pcmk_rc_already if it was)
+ */
+int
+pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+    if (pcmk_is_set(clone_data->flags, flag)) {
+        return pcmk_rc_already;
+    }
+    clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                           "Clone", clone->id,
+                                           clone_data->flags, flag, "flag");
+    return pcmk_rc_ok;
+}
