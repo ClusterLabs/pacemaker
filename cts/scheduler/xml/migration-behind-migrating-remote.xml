@@ -88,7 +88,7 @@
           </lrm_resource>
           <lrm_resource id="remote2" type="remote" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="remote2_last_0" operation_key="remote2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="remote2_monitor_60000" operation_key="remote2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1503335516" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" ra-version="0.1"/>
+            <lrm_rsc_op id="remote2_monitor_60000" operation_key="remote2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node2" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1503335516" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" ra-version="0.1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
