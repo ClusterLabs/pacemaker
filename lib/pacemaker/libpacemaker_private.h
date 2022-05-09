@@ -34,8 +34,7 @@ pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
                                      guint interval_ms, pe_node_t *node);
 
 G_GNUC_INTERNAL
-pe_action_t *pcmk__new_shutdown_action(pe_node_t *node,
-                                       pe_working_set_t *data_set);
+pe_action_t *pcmk__new_shutdown_action(pe_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
@@ -77,7 +76,7 @@ void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
                             pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set);
+void pcmk__fence_guest(pe_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__node_unfenced(pe_node_t *node);
@@ -267,8 +266,7 @@ G_GNUC_INTERNAL
 pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
 
 G_GNUC_INTERNAL
-void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
-                                  pe_working_set_t *data_set);
+void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
 void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
@@ -423,8 +421,7 @@ void pcmk__release_node_capacity(GHashTable *current_utilization,
                                  pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
-                                     pe_working_set_t *data_set);
+void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,

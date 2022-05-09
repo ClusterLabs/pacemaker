@@ -1884,7 +1884,7 @@ main(int argc, char **argv)
                 rc = pcmk_rc_node_unknown;
             } else {
                 rc = pcmk__resource_digests(out, rsc, node,
-                                            options.override_params, data_set);
+                                            options.override_params);
             }
             break;
 

@@ -94,7 +94,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     int length = 0;
     bool result = false;
 
-    pcmk__ban_insufficient_capacity(rsc, &prefer, data_set);
+    pcmk__ban_insufficient_capacity(rsc, &prefer);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to != NULL;

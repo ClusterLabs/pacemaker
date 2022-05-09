@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -337,7 +337,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
         GHashTable *params = pe_rsc_params(action->rsc, action->node,
                                            action->rsc->cluster);
 
-        pcmk__substitute_remote_addr(action->rsc, params, action->rsc->cluster);
+        pcmk__substitute_remote_addr(action->rsc, params);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 

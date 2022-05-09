@@ -657,17 +657,15 @@ pcmk__connection_host_for_action(pe_action_t *action)
  *
  * \param[in] rsc       Resource to check
  * \param[in] params    Resource parameters evaluated per node
- * \param[in] data_set  Cluster working set
  */
 void
-pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
-                             pe_working_set_t *data_set)
+pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params)
 {
     const char *remote_addr = g_hash_table_lookup(params,
                                                   XML_RSC_ATTR_REMOTE_RA_ADDR);
 
     if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
-        GHashTable *base = pe_rsc_params(rsc, NULL, data_set);
+        GHashTable *base = pe_rsc_params(rsc, NULL, rsc->cluster);
 
         remote_addr = g_hash_table_lookup(base, XML_RSC_ATTR_REMOTE_RA_ADDR);
         if (remote_addr != NULL) {
