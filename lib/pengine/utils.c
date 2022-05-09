@@ -1732,17 +1732,14 @@ resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *
 	return an_int;							\
     } while(0)
 
-gint
-sort_op_by_callid(gconstpointer a, gconstpointer b)
+int
+pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
 {
     int a_call_id = -1;
     int b_call_id = -1;
 
     char *a_uuid = NULL;
     char *b_uuid = NULL;
-
-    const xmlNode *xml_a = a;
-    const xmlNode *xml_b = b;
 
     const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
@@ -1846,7 +1843,15 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
     /* we should never end up here */
     CRM_CHECK(FALSE, sort_return(0, "default"));
+}
 
+gint
+sort_op_by_callid(gconstpointer a, gconstpointer b)
+{
+    const xmlNode *xml_a = a;
+    const xmlNode *xml_b = b;
+
+    return pe__is_newer_op(xml_a, xml_b);
 }
 
 time_t

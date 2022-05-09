@@ -431,6 +431,7 @@ extern void pe_free_action(pe_action_t * action);
 extern void resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag,
                               pe_working_set_t * data_set);
 
+extern int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b);
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 extern gboolean get_target_role(pe_resource_t * rsc, enum rsc_role_e *role);
 void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
