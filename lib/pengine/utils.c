@@ -1744,7 +1744,11 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
     const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
-    if (pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
+    const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
+    const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);
+    bool same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
+
+    if (same_node && pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
         /* We have duplicate lrm_rsc_op entries in the status
          * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
@@ -1763,13 +1767,14 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
          */
         sort_return(0, "pending");
 
-    } else if (a_call_id >= 0 && a_call_id < b_call_id) {
+    } else if (same_node && a_call_id >= 0 && a_call_id < b_call_id) {
         sort_return(-1, "call id");
 
-    } else if (b_call_id >= 0 && a_call_id > b_call_id) {
+    } else if (same_node && b_call_id >= 0 && a_call_id > b_call_id) {
         sort_return(1, "call id");
 
-    } else if (b_call_id >= 0 && a_call_id == b_call_id) {
+    } else if (a_call_id >= 0 && b_call_id >= 0
+               && (!same_node || a_call_id == b_call_id)) {
         /*
          * The op and last_failed_op are the same
          * Order on last-rc-change
