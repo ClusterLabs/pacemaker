@@ -2628,6 +2628,30 @@ unknown_on_node(const char *rsc_id, const char *node_name,
             || first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP) == NULL);
 }
 
+/*!
+ * \brief Check whether a probe/monitor indicating the resource was not running
+ * on a node happened after some event
+ *
+ * \param[in] rsc_id    Resource being checked
+ * \param[in] node_name Node being checked
+ * \param[in] xml_op    Event that monitor is being compared to
+ * \param[in] data_set  Cluster working set
+ *
+ * \return true if such a monitor happened after event, false otherwise
+ */
+static bool
+monitor_not_running_after(const char *rsc_id, const char *node_name,
+                          xmlNode *xml_op, pe_working_set_t *data_set)
+{
+    /* Any probe/monitor operation on the node indicating it was not running
+     * there
+     */
+    xmlNode *monitor = find_lrm_op(rsc_id, CRMD_ACTION_STATUS, node_name,
+                                   NULL, PCMK_OCF_NOT_RUNNING, data_set);
+
+    return (monitor && pe__is_newer_op(monitor, xml_op) > 0);
+}
+
 static int
 pe__call_id(xmlNode *op_xml)
 {
@@ -2805,6 +2829,11 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * case the probe detects it's running there.
          */
         !unknown_on_node(rsc->id, target, data_set)
+        /* If there's any probe/monitor operation on the target newer than this
+         * failed migrate_to indicating it was not running there, this migrate_to
+         * failure no longer matters for the target.
+         */
+        && !monitor_not_running_after(rsc->id, target, xml_op, data_set)
         && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
         /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
