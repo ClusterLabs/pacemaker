@@ -1,0 +1,19 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node1
+    * dummy1	(ocf:pacemaker:Dummy):	 Started node1
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node1
+    * dummy1	(ocf:pacemaker:Dummy):	 Started node1
