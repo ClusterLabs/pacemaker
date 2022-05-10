@@ -68,6 +68,8 @@ command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
         options.command = 'R';
     } else if (pcmk__str_any_of(option_name, "--update", "-U", "-v", NULL)) {
         options.command = 'U';
+    } else if (pcmk__str_any_of(option_name, "--update-delay", "-Y", NULL)) {
+        options.command = 'Y';
     }
 
     return TRUE;
