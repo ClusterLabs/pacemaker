@@ -154,6 +154,14 @@ guest_location(pe_node_t *guest_node)
     return guest->fns->location(guest, NULL, FALSE);
 }
 
+/*!
+ * \internal
+ * \brief Get the node that an instance will be promoted on
+ *
+ * \param[in] rsc  Promotable clone instance to check
+ *
+ * \return Node that \p rsc will be promoted on, or NULL if none
+ */
 static pe_node_t *
 node_to_be_promoted_on(pe_resource_t *rsc)
 {
@@ -162,21 +170,15 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     pe_resource_t *parent = uber_parent(rsc);
     clone_variant_data_t *clone_data = NULL;
 
-#if 0
-    enum rsc_role_e role = RSC_ROLE_UNKNOWN;
-
-    role = rsc->fns->state(rsc, FALSE);
-    crm_info("%s role: %s", rsc->id, role2text(role));
-#endif
-
-    if (rsc->children) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
+    // If this is a cloned group, bail if any group member can't be promoted
+    if (rsc->children != NULL) {
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
 
             if (node_to_be_promoted_on(child) == NULL) {
-                pe_rsc_trace(rsc, "Child %s of %s can't be promoted", child->id, rsc->id);
+                pe_rsc_trace(rsc,
+                             "%s can't be promoted because member %s can't",
+                             rsc->id, child->id);
                 return NULL;
             }
         }
@@ -184,25 +186,30 @@ node_to_be_promoted_on(pe_resource_t *rsc)
 
     node = rsc->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
-        pe_rsc_trace(rsc, "%s cannot be promoted: not allocated", rsc->id);
+        pe_rsc_trace(rsc, "%s can't be promoted because it won't be active",
+                     rsc->id);
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
-            crm_notice("Forcing unmanaged instance %s to remain promoted on %s",
+            crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, node->details->uname);
-
         } else {
+            pe_rsc_trace(rsc, "%s can't be promoted because it is unmanaged",
+                         rsc->id);
             return NULL;
         }
 
     } else if (rsc->priority < 0) {
-        pe_rsc_trace(rsc, "%s cannot be promoted: preference: %d",
+        pe_rsc_trace(rsc,
+                     "%s can't be promoted because its promotion priority %d "
+                     "is negative",
                      rsc->id, rsc->priority);
         return NULL;
 
     } else if (!pcmk__node_available(node)) {
-        crm_trace("Node can't run any resources: %s", node->details->uname);
+        pe_rsc_trace(rsc, "%s can't be promoted because %s can't run resources",
+                     rsc->id, node->details->uname);
         return NULL;
 
     /* @TODO It's possible this check should be done in pcmk__node_available()
@@ -210,7 +217,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
      * would be a good idea.
      */
     } else if (pe__is_guest_node(node) && (guest_location(node) == NULL)) {
-        pe_rsc_trace(rsc, "%s cannot be promoted: guest %s not allocated",
+        pe_rsc_trace(rsc, "%s can't be promoted because %s won't be active",
                      rsc->id, node->details->remote_rsc->container->id);
         return NULL;
     }
@@ -219,19 +226,27 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     local_node = pe_hash_table_lookup(parent->allowed_nodes, node->details->id);
 
     if (local_node == NULL) {
-        crm_err("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
+        /* It should not be possible for the scheduler to have allocated the
+         * instance to a node where its parent is not allowed, but it's good to
+         * have a fail-safe.
+         */
+        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            crm_warn("%s can't be promoted because %s is not allowed on %s "
+                     "(scheduler bug?)",
+                     rsc->id, parent->id, node->details->uname);
+        } // else the instance is unmanaged and already promoted
         return NULL;
 
-    } else if ((local_node->count < clone_data->promoted_node_max)
-               || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        return local_node;
-
-    } else {
-        pe_rsc_trace(rsc, "%s cannot be promoted on %s: node full",
+    } else if ((local_node->count >= clone_data->promoted_node_max)
+               && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc,
+                     "%s can't be promoted because %s has "
+                     "maximum promoted instances already",
                      rsc->id, node->details->uname);
+        return NULL;
     }
 
-    return NULL;
+    return local_node;
 }
 
 static gint
