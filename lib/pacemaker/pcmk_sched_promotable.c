@@ -108,26 +108,39 @@ check_for_role_change(pe_resource_t *rsc, bool *demoting, bool *promoting)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add promoted-role location constraint scores to an instance's priority
+ *
+ * Adjust a promotable clone instance's promotion priority by the scores of any
+ * location constraints in a list that are both limited to the promoted role and
+ * for the node where the instance will be placed.
+ *
+ * \param[in] child                 Promotable clone instance
+ * \param[in] location_constraints  List of location constraints to apply
+ * \param[in] chosen                Node where \p child will be placed
+ */
 static void
-apply_promoted_location(pe_resource_t *child, GList *location_constraints,
-                        pe_node_t *chosen)
+apply_promoted_locations(pe_resource_t *child, GList *location_constraints,
+                         pe_node_t *chosen)
 {
-    CRM_CHECK(child && chosen, return);
-    for (GList *gIter = location_constraints; gIter; gIter = gIter->next) {
-        pe_node_t *cons_node = NULL;
-        pe__location_t *cons = gIter->data;
+    for (GList *iter = location_constraints; iter; iter = iter->next) {
+        pe__location_t *location = iter->data;
+        pe_node_t *weighted_node = NULL;
 
-        if (cons->role_filter == RSC_ROLE_PROMOTED) {
-            pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
-            cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
+        if (location->role_filter == RSC_ROLE_PROMOTED) {
+            weighted_node = pe_find_node_id(location->node_list_rh,
+                                            chosen->details->id);
         }
-        if (cons_node != NULL) {
+        if (weighted_node != NULL) {
             int new_priority = pcmk__add_scores(child->priority,
-                                                cons_node->weight);
+                                                weighted_node->weight);
 
-            pe_rsc_trace(child, "\t%s[%s]: %d -> %d (%d)",
-                         child->id, cons_node->details->uname, child->priority,
-                         new_priority, cons_node->weight);
+            pe_rsc_trace(child,
+                         "Applying location %s to %s promotion priority on %s: "
+                         "%d + %d = %d",
+                         location->id, child->id, weighted_node->details->uname,
+                         child->priority, weighted_node->weight, new_priority);
             child->priority = new_priority;
         }
     }
@@ -687,8 +700,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                           crm_err("Unknown resource role: %d for %s", next_role, child_rsc->id));
         }
 
-        apply_promoted_location(child_rsc, child_rsc->rsc_location, chosen);
-        apply_promoted_location(child_rsc, rsc->rsc_location, chosen);
+        apply_promoted_locations(child_rsc, child_rsc->rsc_location, chosen);
+        apply_promoted_locations(child_rsc, rsc->rsc_location, chosen);
 
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
