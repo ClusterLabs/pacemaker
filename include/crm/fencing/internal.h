@@ -197,6 +197,9 @@ int stonith__event_exit_status(stonith_event_t *event);
 int stonith__event_execution_status(stonith_event_t *event);
 const char *stonith__event_exit_reason(stonith_event_t *event);
 char *stonith__event_description(stonith_event_t *event);
+gchar *stonith__history_description(stonith_history_t *event, bool full_history,
+                                    const char *later_succeeded,
+                                    uint32_t show_opts);
 
 /*!
  * \internal
