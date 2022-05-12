@@ -290,6 +290,12 @@
         <choice>
             <value>Stopped</value>
             <value>Started</value>
+            <value>Promoted</value>
+            <value>Unpromoted</value>
+
+            <!-- These synonyms for Promoted/Unpromoted are allowed for
+                 backward compatibility with output from older Pacemaker
+                 versions that used them -->
             <value>Master</value>
             <value>Slave</value>
         </choice>
