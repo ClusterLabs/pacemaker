@@ -232,37 +232,61 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     return local_node;
 }
 
+/*!
+ * \internal
+ * \brief Compare two promotable clone instances by promotion priority
+ *
+ * \param[in] a  First instance to compare
+ * \param[in] b  Second instance to compare
+ *
+ * \return A negative number if \p a has higher promotion priority,
+ *         a positive number if \p b has higher promotion priority,
+ *         or 0 if promotion priorities are equal
+ */
 static gint
-sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
+cmp_promotable_instance(gconstpointer a, gconstpointer b)
 {
-    int rc;
+    const pe_resource_t *rsc1 = (const pe_resource_t *) a;
+    const pe_resource_t *rsc2 = (const pe_resource_t *) b;
+
     enum rsc_role_e role1 = RSC_ROLE_UNKNOWN;
     enum rsc_role_e role2 = RSC_ROLE_UNKNOWN;
 
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
+    CRM_ASSERT((rsc1 != NULL) && (rsc2 != NULL));
 
-    CRM_ASSERT(resource1 != NULL);
-    CRM_ASSERT(resource2 != NULL);
-
-    role1 = resource1->fns->state(resource1, TRUE);
-    role2 = resource2->fns->state(resource2, TRUE);
-
-    rc = sort_rsc_index(a, b);
-    if (rc != 0) {
-        crm_trace("%s %c %s (index)", resource1->id, rc < 0 ? '<' : '>', resource2->id);
-        return rc;
-    }
-
-    if (role1 > role2) {
-        crm_trace("%s %c %s (role)", resource1->id, '<', resource2->id);
+    // Check sort index set by pcmk__set_instance_roles()
+    if (rsc1->sort_index > rsc2->sort_index) {
+        pe_rsc_trace(rsc1,
+                     "%s has higher promotion priority than %s "
+                     "(sort index %d > %d)",
+                     rsc1->id, rsc2->id, rsc1->sort_index, rsc2->sort_index);
         return -1;
-
-    } else if (role1 < role2) {
-        crm_trace("%s %c %s (role)", resource1->id, '>', resource2->id);
+    } else if (rsc1->sort_index < rsc2->sort_index) {
+        pe_rsc_trace(rsc1,
+                     "%s has lower promotion priority than %s "
+                     "(sort index %d < %d)",
+                     rsc1->id, rsc2->id, rsc1->sort_index, rsc2->sort_index);
         return 1;
     }
 
+    // If those are the same, prefer instance whose current role is higher
+    role1 = rsc1->fns->state(rsc1, TRUE);
+    role2 = rsc2->fns->state(rsc2, TRUE);
+    if (role1 > role2) {
+        pe_rsc_trace(rsc1,
+                     "%s has higher promotion priority than %s "
+                     "(higher current role)",
+                     rsc1->id, rsc2->id);
+        return -1;
+    } else if (role1 < role2) {
+        pe_rsc_trace(rsc1,
+                     "%s has lower promotion priority than %s "
+                     "(lower current role)",
+                     rsc1->id, rsc2->id);
+        return 1;
+    }
+
+    // Finally, do normal clone instance sorting
     return pcmk__cmp_instance(a, b);
 }
 
@@ -381,8 +405,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe_rsc_trace(rsc, "Set sort index: %s = %d", child->id, child->sort_index);
     }
 
-    rsc->children = g_list_sort_with_data(rsc->children,
-                                          sort_promotable_instance, data_set);
+    rsc->children = g_list_sort(rsc->children, cmp_promotable_instance);
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
 

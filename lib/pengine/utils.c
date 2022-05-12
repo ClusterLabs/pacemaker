@@ -331,33 +331,6 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
 }
 
 gint
-sort_rsc_index(gconstpointer a, gconstpointer b)
-{
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
-
-    if (a == NULL && b == NULL) {
-        return 0;
-    }
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    if (resource1->sort_index > resource2->sort_index) {
-        return -1;
-    }
-
-    if (resource1->sort_index < resource2->sort_index) {
-        return 1;
-    }
-
-    return 0;
-}
-
-gint
 sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
     const pe_resource_t *resource1 = (const pe_resource_t *)a;

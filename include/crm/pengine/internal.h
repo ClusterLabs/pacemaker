@@ -372,9 +372,7 @@ void pe__show_node_weights_as(const char *file, const char *function,
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes), (data_set))
 
-/* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
-extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
 extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
 
