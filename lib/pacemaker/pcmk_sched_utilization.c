@@ -328,7 +328,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
     // Check whether any node has enough capacity for all the resources
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (!pcmk__node_available(node) || (node->weight < 0)) {
+        if (!pcmk__node_available(node, true)) {
             continue;
         }
 
@@ -347,7 +347,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
         // If so, ban resource from any node with insufficient capacity
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if ((node->weight >= 0) && pcmk__node_available(node)
+            if (pcmk__node_available(node, true)
                 && !have_enough_capacity(node, rscs_id,
                                          unallocated_utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
@@ -364,7 +364,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
         }
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if ((node->weight >= 0) && pcmk__node_available(node)
+            if (pcmk__node_available(node, true)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
                              node->details->uname, rsc->id);

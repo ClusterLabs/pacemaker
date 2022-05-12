@@ -312,7 +312,7 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 // Nodes (pcmk_sched_nodes.c)
 
 G_GNUC_INTERNAL
-bool pcmk__node_available(const pe_node_t *node);
+bool pcmk__node_available(const pe_node_t *node, bool consider_score);
 
 G_GNUC_INTERNAL
 bool pcmk__any_node_available(GHashTable *nodes);

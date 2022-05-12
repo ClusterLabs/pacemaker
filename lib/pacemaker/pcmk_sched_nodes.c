@@ -19,18 +19,26 @@
  * \internal
  * \brief Check whether a node is available to run resources
  *
- * \param[in] node  Node to check
+ * \param[in] node            Node to check
+ * \param[in] consider_score  If true, consider a negative score unavailable
  *
  * \return true if node is online and not shutting down, unclean, or in standby
  *         or maintenance mode, otherwise false
  */
 bool
-pcmk__node_available(const pe_node_t *node)
+pcmk__node_available(const pe_node_t *node, bool consider_score)
 {
-    // @TODO Should we add (node->weight >= 0)?
-    return (node != NULL) && (node->details != NULL) && node->details->online
-            && !node->details->shutdown && !node->details->unclean
-            && !node->details->standby && !node->details->maintenance;
+    if ((node == NULL) || (node->details == NULL) || !node->details->online
+            || node->details->shutdown || node->details->unclean
+            || node->details->standby || node->details->maintenance) {
+        return false;
+    }
+
+    if (consider_score && (node->weight < 0)) {
+        return false;
+    }
+
+    return true;
 }
 
 /*!
@@ -129,8 +137,8 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Compare node weights
 
-    node1_weight = pcmk__node_available(node1)? node1->weight : -INFINITY;
-    node2_weight = pcmk__node_available(node2)? node2->weight : -INFINITY;
+    node1_weight = pcmk__node_available(node1, false)? node1->weight : -INFINITY;
+    node2_weight = pcmk__node_available(node2, false)? node2->weight : -INFINITY;
 
     if (node1_weight > node2_weight) {
         crm_trace("%s (%d) > %s (%d) : weight",
@@ -247,7 +255,7 @@ pcmk__any_node_available(GHashTable *nodes)
     }
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if ((node->weight >= 0) && pcmk__node_available(node)) {
+        if (pcmk__node_available(node, true)) {
             return true;
         }
     }

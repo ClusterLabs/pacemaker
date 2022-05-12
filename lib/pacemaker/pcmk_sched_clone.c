@@ -37,7 +37,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         /* make clang analyzer happy */
         goto bail;
 
-    } else if (!pcmk__node_available(node)) {
+    } else if (!pcmk__node_available(node, false)) {
         goto bail;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -188,7 +188,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_node_t *node = nIter->data;
 
         node->count = 0;
-        if (pcmk__node_available(node)) {
+        if (pcmk__node_available(node, false)) {
             available_nodes++;
         }
     }
@@ -226,7 +226,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                      child->id, child_node->details->uname, max - allocated,
                      max);
 
-        if (!pcmk__node_available(child_node) || (child_node->weight < 0)) {
+        if (!pcmk__node_available(child_node, true)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
                          child_node->details->uname, child->id);
             continue;
