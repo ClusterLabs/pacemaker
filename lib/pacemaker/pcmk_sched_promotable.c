@@ -146,14 +146,6 @@ apply_promoted_locations(pe_resource_t *child, GList *location_constraints,
     }
 }
 
-static pe_node_t *
-guest_location(pe_node_t *guest_node)
-{
-    pe_resource_t *guest = guest_node->details->remote_rsc->container;
-
-    return guest->fns->location(guest, NULL, FALSE);
-}
-
 /*!
  * \internal
  * \brief Get the node that an instance will be promoted on
@@ -207,18 +199,9 @@ node_to_be_promoted_on(pe_resource_t *rsc)
                      rsc->id, rsc->priority);
         return NULL;
 
-    } else if (!pcmk__node_available(node, false)) {
+    } else if (!pcmk__node_available(node, false, true)) {
         pe_rsc_trace(rsc, "%s can't be promoted because %s can't run resources",
                      rsc->id, node->details->uname);
-        return NULL;
-
-    /* @TODO It's possible this check should be done in pcmk__node_available()
-     * instead. We should investigate all its callers to figure out whether that
-     * would be a good idea.
-     */
-    } else if (pe__is_guest_node(node) && (guest_location(node) == NULL)) {
-        pe_rsc_trace(rsc, "%s can't be promoted because %s won't be active",
-                     rsc->id, node->details->remote_rsc->container->id);
         return NULL;
     }
 
@@ -577,7 +560,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            if (!pcmk__node_available(node, false)) {
+            if (!pcmk__node_available(node, false, false)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
                  */

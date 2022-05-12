@@ -130,7 +130,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                          chosen->details->uname, rsc->id);
             chosen = NULL;
 
-        } else if (!pcmk__node_available(chosen, true)) {
+        } else if (!pcmk__node_available(chosen, true, false)) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
                          chosen->details->uname, rsc->id);
             chosen = NULL;
@@ -153,7 +153,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
             && (chosen != NULL) && (chosen->weight > 0) // Zero not acceptable
-            && pcmk__node_available(chosen, false)) {
+            && pcmk__node_available(chosen, false, false)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
@@ -165,9 +165,11 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
              */
             pe_node_t *running = pe__current_node(rsc);
 
-            if ((running != NULL) && !pcmk__node_available(running, true)) {
+            if ((running != NULL)
+                && !pcmk__node_available(running, true, false)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
+
             } else if (running) {
                 for (GList *iter = nodes->next; iter; iter = iter->next) {
                     pe_node_t *tmp = (pe_node_t *) iter->data;
@@ -222,7 +224,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score) && pcmk__node_available(node, false)
+        if ((node->weight > best_score) && pcmk__node_available(node, false, false)
             && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;

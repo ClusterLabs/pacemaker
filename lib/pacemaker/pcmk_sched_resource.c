@@ -346,13 +346,13 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
     if (!force && (chosen != NULL)) {
         if ((chosen->weight < 0)
             // Allow the graph to assume that guest node connections will come up
-            || (!pcmk__node_available(chosen, true)
+            || (!pcmk__node_available(chosen, true, false)
                 && !pe__is_guest_node(chosen))) {
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
                       "shutting down (%s can%s run resources, with weight %d)",
                       rsc->id, chosen->details->uname,
-                      (pcmk__node_available(chosen, true)? "" : "not"),
+                      (pcmk__node_available(chosen, true, false)? "" : "not"),
                       chosen->weight);
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;
@@ -1013,8 +1013,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance whose current node can run resources
-    can1 = pcmk__node_available(node1, false);
-    can2 = pcmk__node_available(node2, false);
+    can1 = pcmk__node_available(node1, false, false);
+    can2 = pcmk__node_available(node2, false, false);
     if (can1 && !can2) {
         crm_trace("Assign %s before %s: current node can run resources",
                   instance1->id, instance2->id);
