@@ -103,27 +103,6 @@ pcmk_readable_score(int score)
 }
 
 /*!
- * \brief Convert an integer score to a string, using a provided buffer
- *
- * Store the string equivalent of a given integer score in a given string
- * buffer, using "INFINITY" and "-INFINITY" when appropriate.
- *
- * \param[in]  score  Integer score to convert
- * \param[out] buf    Where to store string representation of \p score
- * \param[in]  len    Size of \p buf (in bytes)
- *
- * \return \p buf (or NULL if \p len is too small)
- */
-char *
-score2char_stack(int score, char *buf, size_t len)
-{
-    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
-              return NULL);
-    strcpy(buf, pcmk_readable_score(score));
-    return buf;
-}
-
-/*!
  * \internal
  * \brief Add two scores, bounding to +/-INFINITY
  *
@@ -205,6 +184,15 @@ score2char(int score)
 
     CRM_ASSERT(result != NULL);
     return result;
+}
+
+char *
+score2char_stack(int score, char *buf, size_t len)
+{
+    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
+              return NULL);
+    strcpy(buf, pcmk_readable_score(score));
+    return buf;
 }
 
 // LCOV_EXCL_STOP
