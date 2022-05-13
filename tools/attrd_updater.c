@@ -45,7 +45,6 @@ struct {
     gchar *attr_dampen;
     gchar *attr_name;
     gchar *attr_node;
-    gchar *attr_section;
     gchar *attr_set;
     char *attr_value;
     int attr_options;
@@ -79,6 +78,21 @@ command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 private_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
+    return TRUE;
+}
+
+static gboolean
+section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_any_of(optarg, "nodes", "forever", NULL)) {
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
+    } else if (pcmk__str_any_of(optarg, "status", "reboot", NULL)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE, "Unknown value for --lifetime: %s",
+                    optarg);
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -150,7 +164,7 @@ static GOptionEntry addl_entries[] = {
       "Show values of the attribute for all nodes (query only)",
       NULL },
 
-    { "lifetime", 'l', 0, G_OPTION_ARG_STRING, &options.attr_section,
+    { "lifetime", 'l', 0, G_OPTION_ARG_CALLBACK, section_cb,
       "(Not yet implemented) Lifetime of the node attribute (silently\n"
       INDENT "ignored by cluster)",
       "SECTION" },
@@ -167,7 +181,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL,
       NULL },
 
-    { "section", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_section,
+    { "section", 'S', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, section_cb,
       NULL,
       NULL },
 
@@ -265,7 +279,6 @@ done:
     g_free(options.attr_dampen);
     g_free(options.attr_name);
     g_free(options.attr_node);
-    g_free(options.attr_section);
     g_free(options.attr_set);
     free(options.attr_value);
 

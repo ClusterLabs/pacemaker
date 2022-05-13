@@ -22,12 +22,19 @@ enum pcmk__node_attr_opts {
     pcmk__node_attr_pattern = (1 << 2),
     pcmk__node_attr_value   = (1 << 3),
     pcmk__node_attr_delay   = (1 << 4),
+    pcmk__node_attr_perm    = (1 << 5),
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
         node_attr_flags = pcmk__set_flags_as(__func__, __LINE__,        \
             LOG_TRACE, "Node attribute", crm_system_name,               \
             (node_attr_flags), (flags_to_set), #flags_to_set);          \
+    } while (0)
+
+#define pcmk__clear_node_attr_flags(node_attr_flags, flags_to_clear) do {   \
+        node_attr_flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+            LOG_TRACE, "Node attribute", crm_system_name,                   \
+            (node_attr_flags), (flags_to_clear), #flags_to_clear);          \
     } while (0)
 
 const char *pcmk__node_attr_target(const char *name);
