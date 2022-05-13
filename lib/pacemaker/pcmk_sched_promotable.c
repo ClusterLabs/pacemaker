@@ -329,6 +329,57 @@ add_sort_index_to_node_weight(gpointer data, gpointer user_data)
     node->weight = pcmk__add_scores(child->sort_index, node->weight);
 }
 
+/*!
+ * \internal
+ * \brief Apply colocation to dependent's node weights if for promoted role
+ *
+ * \param[in] data       Colocation constraint to apply
+ * \param[in] user_data  Promotable clone that is constraint's dependent
+ */
+static void
+apply_coloc_to_dependent(gpointer data, gpointer user_data)
+{
+    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+    enum pe_weights flags = 0;
+
+    if (constraint->dependent_role != RSC_ROLE_PROMOTED) {
+        return;
+    }
+    if (constraint->score < INFINITY) {
+        flags = pe_weights_rollback;
+    }
+    pe_rsc_trace(clone, "RHS: %s with %s: %d",
+                 constraint->dependent->id, constraint->primary->id,
+                 constraint->score);
+    pcmk__apply_colocation(constraint, clone, constraint->primary, flags);
+}
+
+/*!
+ * \internal
+ * \brief Apply colocation to primary's node weights if for promoted role
+ *
+ * \param[in] data       Colocation constraint to apply
+ * \param[in] user_data  Promotable clone that is constraint's primary
+ */
+static void
+apply_coloc_to_primary(gpointer data, gpointer user_data)
+{
+    pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+
+    if ((constraint->primary_role != RSC_ROLE_PROMOTED)
+         || !pcmk__colocation_has_influence(constraint, NULL)) {
+        return;
+    }
+
+    pe_rsc_trace(clone, "LHS: %s with %s: %d",
+                 constraint->dependent->id, constraint->primary->id,
+                 constraint->score);
+    pcmk__apply_colocation(constraint, clone, constraint->dependent,
+                           pe_weights_rollback|pe_weights_positive);
+}
+
 static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -353,43 +404,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     g_list_foreach(rsc->children, add_sort_index_to_node_weight, rsc);
     pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
 
-    gIter = rsc->rsc_cons;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        /* (Re-)add location preferences of resources that a promoted instance
-         * should/must be colocated with.
-         */
-        if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
-            enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
-
-            pe_rsc_trace(rsc, "RHS: %s with %s: %d",
-                         constraint->dependent->id, constraint->primary->id,
-                         constraint->score);
-            pcmk__apply_colocation(constraint, rsc, constraint->primary,
-                                   flags);
-        }
-    }
-
-    gIter = rsc->rsc_cons_lhs;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (!pcmk__colocation_has_influence(constraint, NULL)) {
-            continue;
-        }
-
-        /* (Re-)add location preferences of resources that wish to be colocated
-         * with a promoted instance.
-         */
-        if (constraint->primary_role == RSC_ROLE_PROMOTED) {
-            pe_rsc_trace(rsc, "LHS: %s with %s: %d",
-                         constraint->dependent->id, constraint->primary->id,
-                         constraint->score);
-            pcmk__apply_colocation(constraint, rsc, constraint->dependent,
-                                   pe_weights_rollback|pe_weights_positive);
-        }
-    }
+    g_list_foreach(rsc->rsc_cons, apply_coloc_to_dependent, rsc);
+    g_list_foreach(rsc->rsc_cons_lhs, apply_coloc_to_primary, rsc);
 
     // Ban resource from all nodes if it needs a ticket but doesn't have it
     pcmk__require_promotion_tickets(rsc);
