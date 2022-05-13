@@ -421,42 +421,47 @@ set_sort_index_to_node_weight(gpointer data, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Sort a promotable clone's instances by descending promotion priority
+ *
+ * \param[in] clone  Promotable clone to sort
+ */
 static void
-promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
+sort_promotable_instances(pe_resource_t *clone)
 {
-    GList *gIter = NULL;
-
-    if (pe__set_clone_flag(rsc, pe__clone_promotion_constrained)
+    if (pe__set_clone_flag(clone, pe__clone_promotion_constrained)
             == pcmk_rc_already) {
         return;
     }
-    pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
-    pe__set_resource_flags(rsc, pe_rsc_merging);
+    pe__set_resource_flags(clone, pe_rsc_merging);
 
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
 
-        pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
+        pe_rsc_trace(clone,
+                     "Merging weights for %s: initial sort index for %s is %d",
+                     clone->id, child->id, child->sort_index);
     }
-    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, clone, "Before", clone->allowed_nodes,
+                          clone->cluster);
 
-    g_list_foreach(rsc->children, add_sort_index_to_node_weight, rsc);
-    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
-
-    g_list_foreach(rsc->rsc_cons, apply_coloc_to_dependent, rsc);
-    g_list_foreach(rsc->rsc_cons_lhs, apply_coloc_to_primary, rsc);
+    g_list_foreach(clone->children, add_sort_index_to_node_weight, clone);
+    g_list_foreach(clone->rsc_cons, apply_coloc_to_dependent, clone);
+    g_list_foreach(clone->rsc_cons_lhs, apply_coloc_to_primary, clone);
 
     // Ban resource from all nodes if it needs a ticket but doesn't have it
-    pcmk__require_promotion_tickets(rsc);
+    pcmk__require_promotion_tickets(clone);
 
-    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, clone, "After", clone->allowed_nodes,
+                          clone->cluster);
 
     // Reset sort indexes to final node weights
-    g_list_foreach(rsc->children, set_sort_index_to_node_weight, rsc);
+    g_list_foreach(clone->children, set_sort_index_to_node_weight, clone);
 
-    // Finally, sort in descending order of promotion priority
-    rsc->children = g_list_sort(rsc->children, cmp_promotable_instance);
-    pe__clear_resource_flags(rsc, pe_rsc_merging);
+    // Finally, sort instances in descending order of promotion priority
+    clone->children = g_list_sort(clone->children, cmp_promotable_instance);
+    pe__clear_resource_flags(clone, pe_rsc_merging);
 }
 
 static gboolean
@@ -787,8 +792,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes, data_set);
-    promotion_order(rsc, data_set);
+    sort_promotable_instances(rsc);
 
     // Choose the first N eligible instances to be promoted
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
