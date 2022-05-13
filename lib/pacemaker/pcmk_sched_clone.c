@@ -317,13 +317,10 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (!pcmk__colocation_has_influence(constraint, NULL)) {
-            continue;
+        if (pcmk__colocation_has_influence(constraint, NULL)) {
+            pcmk__apply_colocation(constraint, rsc, constraint->dependent,
+                                   pe_weights_rollback|pe_weights_positive);
         }
-        rsc->allowed_nodes = constraint->dependent->cmds->merge_weights(
-            constraint->dependent, rsc->id, rsc->allowed_nodes,
-            constraint->node_attribute, (float)constraint->score / INFINITY,
-            (pe_weights_rollback | pe_weights_positive));
     }
 
     pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),

@@ -366,10 +366,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             pe_rsc_trace(rsc, "RHS: %s with %s: %d",
                          constraint->dependent->id, constraint->primary->id,
                          constraint->score);
-            rsc->allowed_nodes = constraint->primary->cmds->merge_weights(
-                constraint->primary, rsc->id, rsc->allowed_nodes,
-                constraint->node_attribute,
-                constraint->score / (float) INFINITY, flags);
+            pcmk__apply_colocation(constraint, rsc, constraint->primary,
+                                   flags);
         }
     }
 
@@ -388,11 +386,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             pe_rsc_trace(rsc, "LHS: %s with %s: %d",
                          constraint->dependent->id, constraint->primary->id,
                          constraint->score);
-            rsc->allowed_nodes = constraint->dependent->cmds->merge_weights(
-                constraint->dependent, rsc->id, rsc->allowed_nodes,
-                constraint->node_attribute,
-                constraint->score / (float) INFINITY,
-                pe_weights_rollback|pe_weights_positive);
+            pcmk__apply_colocation(constraint, rsc, constraint->dependent,
+                                   pe_weights_rollback|pe_weights_positive);
         }
     }
 
