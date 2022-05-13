@@ -233,7 +233,6 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
-    char score[128]; // Stack-allocated since this is called frequently
 
     // Sort the nodes so the output is consistent for regression tests
     GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
@@ -241,8 +240,8 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        score2char_stack(node->weight, score, sizeof(score));
-        out->message(out, "node-weight", rsc, comment, node->details->uname, score);
+        out->message(out, "node-weight", rsc, comment, node->details->uname,
+                     pcmk_readable_score(node->weight));
     }
     g_list_free(list);
 }
@@ -264,25 +263,24 @@ pe__log_node_weights(const char *file, const char *function, int line,
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    char score[128]; // Stack-allocated since this is called frequently
 
     // Don't waste time if we're not tracing at this point
     pcmk__log_else(LOG_TRACE, return);
 
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        score2char_stack(node->weight, score, sizeof(score));
         if (rsc) {
             qb_log_from_external_source(function, file,
                                         "%s: %s allocation score on %s: %s",
                                         LOG_TRACE, line, 0,
                                         comment, rsc->id,
-                                        node->details->uname, score);
+                                        node->details->uname,
+                                        pcmk_readable_score(node->weight));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
                                         LOG_TRACE, line, 0,
                                         comment, node->details->uname,
-                                        score);
+                                        pcmk_readable_score(node->weight));
         }
     }
 }

@@ -189,13 +189,10 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     }
 
     if (multiple > 1) {
-        static char score[33];
-        int log_level = (chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO;
-
-        score2char_stack(chosen->weight, score, sizeof(score));
-        do_crm_log(log_level,
+        do_crm_log(((chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO),
                    "Chose node %s for %s from %d nodes with score %s",
-                   chosen->details->uname, rsc->id, multiple, score);
+                   chosen->details->uname, rsc->id, multiple,
+                   pcmk_readable_score(chosen->weight));
     }
 
     result = pcmk__assign_primitive(rsc, chosen, false);
