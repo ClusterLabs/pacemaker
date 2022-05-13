@@ -19,7 +19,6 @@ include $(top_srcdir)/mk/tap.mk
 check_PROGRAMS =		\
 	char2score_test		\
 	pcmk__add_scores_test	\
-	score2char_stack_test	\
-	score2char_test
+	score2char_stack_test
 
 TESTS = $(check_PROGRAMS)

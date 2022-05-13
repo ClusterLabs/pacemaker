@@ -124,28 +124,6 @@ score2char_stack(int score, char *buf, size_t len)
 }
 
 /*!
- * \brief Return the string equivalent of an integer score
- *
- * Return the string equivalent of a given integer score, using "INFINITY" and
- * "-INFINITY" when appropriate.
- *
- * \param[in]  score  Integer score to convert
- *
- * \return Newly allocated string equivalent of \p score
- * \note The caller is responsible for freeing the return value. This function
- *       asserts on memory errors, so the return value can be assumed to be
- *       non-NULL.
- */
-char *
-score2char(int score)
-{
-    char *result = strdup(pcmk_readable_score(score));
-
-    CRM_ASSERT(result != NULL);
-    return result;
-}
-
-/*!
  * \internal
  * \brief Add two scores, bounding to +/-INFINITY
  *
@@ -214,3 +192,20 @@ pcmk__add_scores(int score1, int score2)
     crm_trace("%d + %d = %d", score1, score2, result);
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/util_compat.h>
+
+char *
+score2char(int score)
+{
+    char *result = strdup(pcmk_readable_score(score));
+
+    CRM_ASSERT(result != NULL);
+    return result;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
