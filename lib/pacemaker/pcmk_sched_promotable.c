@@ -288,6 +288,47 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
     return pcmk__cmp_instance(a, b);
 }
 
+/*!
+ * \internal
+ * \brief Add a promotable clone instance's sort index to its node's weight
+ *
+ * Add a promotable clone instance's sort index (which sums its promotion
+ * preferences and scores of relevant location constraints for the promoted
+ * role) to the node weight of the instance's allocated node.
+ *
+ * \param[in] data       Promotable clone instance
+ * \param[in] user_data  Clone parent of \p data
+ */
+static void
+add_sort_index_to_node_weight(gpointer data, gpointer user_data)
+{
+    pe_resource_t *child = (pe_resource_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+
+    pe_node_t *node = NULL;
+    pe_node_t *chosen = NULL;
+
+    if (child->sort_index < 0) {
+        pe_rsc_trace(clone, "Not adding sort index of %s: negative", child->id);
+        return;
+    }
+
+    chosen = child->fns->location(child, NULL, FALSE);
+    if (chosen == NULL) {
+        pe_rsc_trace(clone, "Not adding sort index of %s: inactive", child->id);
+        return;
+    }
+
+    node = (pe_node_t *) pe_hash_table_lookup(clone->allowed_nodes,
+                                              chosen->details->id);
+    CRM_ASSERT(node != NULL);
+
+    pe_rsc_trace(clone, "Adding sort index %s of %s to weight for %s",
+                 pcmk_readable_score(child->sort_index), child->id,
+                 node->details->uname);
+    node->weight = pcmk__add_scores(child->sort_index, node->weight);
+}
+
 static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -309,25 +350,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
     pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-        chosen = child->fns->location(child, NULL, FALSE);
-        if (chosen == NULL || child->sort_index < 0) {
-            pe_rsc_trace(rsc, "Skipping %s", child->id);
-            continue;
-        }
-
-        node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
-        CRM_ASSERT(node != NULL);
-        // Add promotion preferences and rsc_location scores when role=Promoted
-        pe_rsc_trace(rsc, "Adding %s to %s from %s",
-                     pcmk_readable_score(child->sort_index),
-                     node->details->uname, child->id);
-        node->weight = pcmk__add_scores(child->sort_index, node->weight);
-    }
-
+    g_list_foreach(rsc->children, add_sort_index_to_node_weight, rsc);
     pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
 
     gIter = rsc->rsc_cons;
