@@ -380,12 +380,51 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
                            pe_weights_rollback|pe_weights_positive);
 }
 
+/*!
+ * \internal
+ * \brief Set clone instance's sort index to its node's weight
+ *
+ * \param[in] data       Promotable clone instance
+ * \param[in] user_data  Parent clone of \p data
+ */
+static void
+set_sort_index_to_node_weight(gpointer data, gpointer user_data)
+{
+    pe_resource_t *child = (pe_resource_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+
+    pe_node_t *chosen = child->fns->location(child, NULL, FALSE);
+
+    if (!pcmk_is_set(child->flags, pe_rsc_managed)
+        && (child->next_role == RSC_ROLE_PROMOTED)) {
+        child->sort_index = INFINITY;
+        pe_rsc_trace(clone,
+                     "Final sort index for %s is INFINITY (unmanaged promoted)",
+                     child->id);
+
+    } else if ((chosen == NULL) || (child->sort_index < 0)) {
+        pe_rsc_trace(clone,
+                     "Final sort index for %s is %d (ignoring node weight)",
+                     child->id, child->sort_index);
+
+    } else {
+        pe_node_t *node = NULL;
+
+        node = (pe_node_t *) pe_hash_table_lookup(clone->allowed_nodes,
+                                                  chosen->details->id);
+        CRM_ASSERT(node != NULL);
+
+        child->sort_index = node->weight;
+        pe_rsc_trace(clone,
+                     "Merging weights for %s: final sort index for %s is %d",
+                     clone->id, child->id, child->sort_index);
+    }
+}
+
 static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
-    pe_node_t *node = NULL;
-    pe_node_t *chosen = NULL;
 
     if (pe__set_clone_flag(rsc, pe__clone_promotion_constrained)
             == pcmk_rc_already) {
@@ -412,29 +451,10 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
 
-    /* write them back and sort */
+    // Reset sort indexes to final node weights
+    g_list_foreach(rsc->children, set_sort_index_to_node_weight, rsc);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-        chosen = child->fns->location(child, NULL, FALSE);
-        if (!pcmk_is_set(child->flags, pe_rsc_managed)
-            && (child->next_role == RSC_ROLE_PROMOTED)) {
-            child->sort_index = INFINITY;
-
-        } else if (chosen == NULL || child->sort_index < 0) {
-            pe_rsc_trace(rsc, "%s: %d", child->id, child->sort_index);
-
-        } else {
-            node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
-            CRM_ASSERT(node != NULL);
-
-            child->sort_index = node->weight;
-        }
-        pe_rsc_trace(rsc, "Set sort index: %s = %d", child->id, child->sort_index);
-    }
-
+    // Finally, sort in descending order of promotion priority
     rsc->children = g_list_sort(rsc->children, cmp_promotable_instance);
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
