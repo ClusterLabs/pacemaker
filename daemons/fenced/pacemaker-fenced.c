@@ -738,11 +738,10 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     } else if(node->weight < 0 || (parent && parent->weight < 0)) {
         /* Our node (or its group) is disallowed by score, so remove the device */
-        char *score = score2char((node->weight < 0) ? node->weight : parent->weight);
+        int score = (node->weight < 0)? node->weight : parent->weight;
 
-        crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
-        free(score);
-
+        crm_info("Device %s has been disabled on %s: score=%s",
+                 rsc->id, stonith_our_uname, pcmk_readable_score(score));
         return;
 
     } else {
