@@ -46,6 +46,7 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 int crm_default_remote_port(void);
 
 /* public score-related functions (from scores.c) */
+const char *pcmk_readable_score(int score);
 int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);

@@ -70,6 +70,39 @@ char2score(const char *score)
 }
 
 /*!
+ * \brief Return a displayable static string for a score value
+ *
+ * Given a score value, return a pointer to a static string representation of
+ * the score suitable for log messages, output, etc.
+ *
+ * \param[in] score  Score to display
+ *
+ * \return Pointer to static memory containing string representation of \p score
+ * \note Subsequent calls to this function will overwrite the returned value, so
+ *       it should be used only in a local context such as a printf()-style
+ *       statement.
+ */
+const char *
+pcmk_readable_score(int score)
+{
+    // The longest possible result is "-INFINITY"
+    static char score_s[sizeof(CRM_MINUS_INFINITY_S)];
+
+    if (score >= CRM_SCORE_INFINITY) {
+        strcpy(score_s, CRM_INFINITY_S);
+
+    } else if (score <= -CRM_SCORE_INFINITY) {
+        strcpy(score_s, CRM_MINUS_INFINITY_S);
+
+    } else {
+        // Range is limited to +/-1000000, so no chance of overflow
+        snprintf(score_s, sizeof(score_s), "%d", score);
+    }
+
+    return score_s;
+}
+
+/*!
  * \brief Convert an integer score to a string, using a provided buffer
  *
  * Store the string equivalent of a given integer score in a given string
@@ -86,14 +119,7 @@ score2char_stack(int score, char *buf, size_t len)
 {
     CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
               return NULL);
-
-    if (score >= CRM_SCORE_INFINITY) {
-        strcpy(buf, CRM_INFINITY_S);
-    } else if (score <= -CRM_SCORE_INFINITY) {
-        strcpy(buf, CRM_MINUS_INFINITY_S);
-    } else {
-        snprintf(buf, len, "%d", score);
-    }
+    strcpy(buf, pcmk_readable_score(score));
     return buf;
 }
 
@@ -113,19 +139,9 @@ score2char_stack(int score, char *buf, size_t len)
 char *
 score2char(int score)
 {
-    char *result = NULL;
+    char *result = strdup(pcmk_readable_score(score));
 
-    if (score >= CRM_SCORE_INFINITY) {
-        result = strdup(CRM_INFINITY_S);
-        CRM_ASSERT(result != NULL);
-
-    } else if (score <= -CRM_SCORE_INFINITY) {
-        result = strdup(CRM_MINUS_INFINITY_S);
-        CRM_ASSERT(result != NULL);
-
-    } else {
-        result = pcmk__itoa(score);
-    }
+    CRM_ASSERT(result != NULL);
     return result;
 }
 
