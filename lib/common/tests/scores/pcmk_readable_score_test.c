@@ -16,51 +16,25 @@
 #include <cmocka.h>
 
 static void
-invalid_params(void **state)
-{
-    char *buf = malloc(9);
-
-    assert_null(score2char_stack(100, NULL, 9));
-    assert_null(score2char_stack(100, buf, 9));
-
-    free(buf);
-}
-
-static void
 outside_limits(void **state)
 {
-    char *buf = malloc(10);
-
-    buf = score2char_stack(CRM_SCORE_INFINITY * 2, buf, 10);
-    assert_string_equal(buf, CRM_INFINITY_S);
-
-    buf = score2char_stack(-CRM_SCORE_INFINITY * 2, buf, 10);
-    assert_string_equal(buf, CRM_MINUS_INFINITY_S);
-
-    free(buf);
+    assert_string_equal(pcmk_readable_score(CRM_SCORE_INFINITY * 2),
+                        CRM_INFINITY_S);
+    assert_string_equal(pcmk_readable_score(-CRM_SCORE_INFINITY * 2),
+                        CRM_MINUS_INFINITY_S);
 }
 
 static void
 inside_limits(void **state)
 {
-    char *buf = malloc(10);
-
-    buf = score2char_stack(0, buf, 10);
-    assert_string_equal(buf, "0");
-
-    buf = score2char_stack(1024, buf, 10);
-    assert_string_equal(buf, "1024");
-
-    buf = score2char_stack(-1024, buf, 10);
-    assert_string_equal(buf, "-1024");
-
-    free(buf);
+    assert_string_equal(pcmk_readable_score(0), "0");
+    assert_string_equal(pcmk_readable_score(1024), "1024");
+    assert_string_equal(pcmk_readable_score(-1024), "-1024");
 }
 
 int main(int argc, char **argv)
 {
     const struct CMUnitTest tests[] = {
-        cmocka_unit_test(invalid_params),
         cmocka_unit_test(outside_limits),
         cmocka_unit_test(inside_limits),
     };
