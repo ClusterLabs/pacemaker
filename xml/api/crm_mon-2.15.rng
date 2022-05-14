@@ -129,7 +129,7 @@
                 <attribute name="status"> <data type="integer" /> </attribute>
             </optional>
             <zeroOrMore>
-                <externalRef href="fence-event-2.0.rng" />
+                <externalRef href="fence-event-2.15.rng" />
             </zeroOrMore>
         </element>
     </define>
