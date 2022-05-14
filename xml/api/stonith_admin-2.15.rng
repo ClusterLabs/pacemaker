@@ -26,7 +26,7 @@
                         <externalRef href="item-1.1.rng"/>
                     </oneOrMore>
                     <oneOrMore>
-                        <externalRef href="fence-event-2.0.rng"/>
+                        <externalRef href="fence-event-2.15.rng"/>
                     </oneOrMore>
                 </choice>
             </element>
