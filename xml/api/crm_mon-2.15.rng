@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm-mon"/>
+    </start>
+
+    <define name="element-crm-mon">
+        <optional>
+            <ref name="element-summary" />
+        </optional>
+        <optional>
+            <ref name="nodes-list" />
+        </optional>
+        <optional>
+            <ref name="resources-list" />
+        </optional>
+        <optional>
+            <ref name="node-attributes-list" />
+        </optional>
+        <optional>
+            <externalRef href="node-history-2.12.rng"/>
+        </optional>
+        <optional>
+            <ref name="failures-list" />
+        </optional>
+        <optional>
+            <ref name="fence-event-list" />
+        </optional>
+        <optional>
+            <ref name="tickets-list" />
+        </optional>
+        <optional>
+            <ref name="bans-list" />
+        </optional>
+    </define>
+
+    <define name="element-summary">
+        <element name="summary">
+            <optional>
+                <element name="stack">
+                    <attribute name="type"> <text /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="current_dc">
+                    <attribute name="present"> <data type="boolean" /> </attribute>
+                    <optional>
+                        <group>
+                            <attribute name="version"> <text /> </attribute>
+                            <attribute name="name"> <text /> </attribute>
+                            <attribute name="id"> <text /> </attribute>
+                            <attribute name="with_quorum"> <data type="boolean" /> </attribute>
+                        </group>
+                    </optional>
+                </element>
+            </optional>
+            <optional>
+                <element name="last_update">
+                    <attribute name="time"> <text /> </attribute>
+                </element>
+                <element name="last_change">
+                    <attribute name="time"> <text /> </attribute>
+                    <attribute name="user"> <text /> </attribute>
+                    <attribute name="client"> <text /> </attribute>
+                    <attribute name="origin"> <text /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="nodes_configured">
+                    <attribute name="number"> <data type="nonNegativeInteger" /> </attribute>
+                </element>
+                <element name="resources_configured">
+                    <attribute name="number"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="disabled"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="blocked"> <data type="nonNegativeInteger" /> </attribute>
+                </element>
+            </optional>
+            <optional>
+                <element name="cluster_options">
+                    <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
+                    <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
+                    <attribute name="no-quorum-policy"> <text /> </attribute>
+                    <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
+                    <attribute name="stop-all-resources"> <data type="boolean" /> </attribute>
+                    <attribute name="stonith-timeout-ms"> <data type="integer" /> </attribute>
+                    <attribute name="priority-fencing-delay-ms"> <data type="integer" /> </attribute>
+                </element>
+            </optional>
+        </element>
+    </define>
+
+    <define name="resources-list">
+        <element name="resources">
+            <zeroOrMore>
+                <externalRef href="resources-2.4.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="nodes-list">
+        <element name="nodes">
+            <zeroOrMore>
+                <externalRef href="nodes-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="node-attributes-list">
+        <element name="node_attributes">
+            <zeroOrMore>
+                <externalRef href="node-attrs-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="failures-list">
+        <element name="failures">
+            <zeroOrMore>
+                <externalRef href="failure-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="fence-event-list">
+        <element name="fence_history">
+            <optional>
+                <attribute name="status"> <data type="integer" /> </attribute>
+            </optional>
+            <zeroOrMore>
+                <externalRef href="fence-event-2.0.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="tickets-list">
+        <element name="tickets">
+            <zeroOrMore>
+                <ref name="element-ticket" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="bans-list">
+        <element name="bans">
+            <zeroOrMore>
+                <ref name="element-ban" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-ticket">
+        <element name="ticket">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="status">
+                <choice>
+                    <value>granted</value>
+                    <value>revoked</value>
+                </choice>
+            </attribute>
+            <attribute name="standby"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="last-granted"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-ban">
+        <element name="ban">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="resource"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="weight"> <data type="integer" /> </attribute>
+            <attribute name="promoted-only"> <data type="boolean" /> </attribute>
+            <!-- DEPRECATED: master_only is a duplicate of promoted-only that is
+                 provided solely for API backward compatibility. It will be
+                 removed in a future release. Check promoted-only instead.
+              -->
+            <attribute name="master_only"> <data type="boolean" /> </attribute>
+        </element>
+    </define>
+</grammar>
