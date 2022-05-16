@@ -1788,6 +1788,55 @@ EOF
 
 # Ensure all command output is in portable locale for comparison
 export LC_ALL="C"
+test_access_render() {
+    local TMPXML
+
+    TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.access_render.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
+    export CIB_shadow=$shadow
+
+    # Create a test CIB that has ACL roles
+    cat <<EOF > "$TMPXML"
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+EOF
+
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert $CRM_EX_OK
+
+    unset CIB_user
+
+    # Run cibadmin --show-access on the test CIB with different users (tony here)
+
+    desc="An instance of ACLs render (into color)"
+    cmd="cibadmin --force --show-access=color -Q --user tony"
+    test_assert $CRM_EX_OK 0
+
+    desc="An instance of ACLs render (into namespacing)"
+    cmd="cibadmin --force --show-access=namespace -Q --user tony"
+    test_assert $CRM_EX_OK 0
+
+    desc="An instance of ACLs render (into text)"
+    cmd="cibadmin --force --show-access=text -Q --user tony"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_shadow_dir
+    rm -f "$TMPXML"
+}
 
 # Process command-line arguments
 while [ $# -gt 0 ]; do
@@ -1905,6 +1954,7 @@ for t in $tests; do
         -e 's/Slaves:/Unpromoted:/' \
         -e 's/Master/Promoted/' \
         -e 's/Slave/Unpromoted/' \
+        -e 's/\x1b/\\x1b/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 

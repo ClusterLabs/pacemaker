@@ -1,0 +1,133 @@
+Created new pacemaker configuration
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Configure some ACLs =#=#=#=
+=#=#=#= Current cib after: Configure some ACLs =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Configure some ACLs - OK (0) =#=#=#=
+* Passed: cibadmin       - Configure some ACLs
+=#=#=#= Begin test: Enable ACLs =#=#=#=
+=#=#=#= Current cib after: Enable ACLs =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Enable ACLs - OK (0) =#=#=#=
+* Passed: crm_attribute  - Enable ACLs
+=#=#=#= Begin test: An instance of ACLs render (into color) =#=#=#=
+<!-- ACLs as evaluated for user tony -->
+\x1b[34m<cib epoch="2" num_updates="0" admin_epoch="0">
+  \x1b[34m<configuration>
+    \x1b[34m<crm_config>
+      \x1b[34m<cluster_property_set id="cib-bootstrap-options">
+        \x1b[34m<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>[0m
+      \x1b[34m</cluster_property_set>[0m
+    \x1b[34m</crm_config>[0m
+    \x1b[34m<nodes/>[0m
+    \x1b[34m<resources/>[0m
+    \x1b[34m<constraints/>[0m
+    \x1b[31m<acls>
+      \x1b[31m<acl_role id="role-deny-acls">
+        \x1b[31m<acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>[0m
+        \x1b[31m<acl_permission id="read-rest" kind="read" xpath="/cib"/>[0m
+      \x1b[31m</acl_role>[0m
+      \x1b[31m<acl_target id="tony">
+        \x1b[31m<role id="role-deny-acls"/>[0m
+      \x1b[31m</acl_target>[0m
+    \x1b[31m</acls>[0m
+  \x1b[34m</configuration>[0m
+  \x1b[34m<status/>[0m
+\x1b[34m</cib>[0m
+=#=#=#= End test: An instance of ACLs render (into color) - OK (0) =#=#=#=
+* Passed: cibadmin       - An instance of ACLs render (into color)
+=#=#=#= Begin test: An instance of ACLs render (into namespacing) =#=#=#=
+<!-- ACLs as evaluated for user tony -->
+<pcmk-access-readable:cib epoch="2" num_updates="0" admin_epoch="0" xmlns:pcmk-access-readable="http://clusterlabs.org/ns/pacemaker/access/readable" xmlns:pcmk-access-denied="http://clusterlabs.org/ns/pacemaker/access/denied">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    <pcmk-access-denied:acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </pcmk-access-denied:acls>
+  </configuration>
+  <status/>
+</pcmk-access-readable:cib>
+=#=#=#= End test: An instance of ACLs render (into namespacing) - OK (0) =#=#=#=
+* Passed: cibadmin       - An instance of ACLs render (into namespacing)
+=#=#=#= Begin test: An instance of ACLs render (into text) =#=#=#=
+<!-- ACLs as evaluated for user tony -->
+vvv---[ READABLE ]---vvv
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+    
+    vvv---[ ~DENIED~ ]---vvv
+    <acls>
+      <acl_role id="role-deny-acls">
+        <acl_permission id="deny-acls" kind="deny" xpath="/cib/configuration/acls"/>
+        <acl_permission id="read-rest" kind="read" xpath="/cib"/>
+      </acl_role>
+      <acl_target id="tony">
+        <role id="role-deny-acls"/>
+      </acl_target>
+    </acls>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: An instance of ACLs render (into text) - OK (0) =#=#=#=
+* Passed: cibadmin       - An instance of ACLs render (into text)
