@@ -22,7 +22,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules access_render')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -40,7 +40,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools crm_mon acls validity upgrade rules access_render"
+tests="dates tools crm_mon acls validity upgrade rules"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -1884,7 +1884,6 @@ for t in $tests; do
         upgrade) ;;
         rules) ;;
         crm_mon) ;;
-        access_render) ;;
         *)
             echo "error: unknown test $t"
             echo
