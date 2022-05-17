@@ -831,16 +831,106 @@ set_next_role_promoted(void *data, gpointer user_data)
     g_list_foreach(rsc->children, set_next_role_promoted, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Set a clone instance's promotion priority
+ *
+ * \param[in] data       Promotable clone instance to update
+ * \param[in] user_data  Instance's parent clone
+ */
+static void
+set_instance_priority(gpointer data, gpointer user_data)
+{
+    pe_resource_t *instance = (pe_resource_t *) data;
+    pe_resource_t *clone = (pe_resource_t *) user_data;
+    pe_node_t *chosen = NULL;
+    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
+    GList *list = NULL;
+
+    pe_rsc_trace(clone, "Assigning priority for %s: %s", instance->id,
+                 role2text(instance->next_role));
+
+    if (instance->fns->state(instance, TRUE) == RSC_ROLE_STARTED) {
+        set_current_role_unpromoted(instance, NULL);
+    }
+
+    // Only an instance that will be active can be promoted
+    chosen = instance->fns->location(instance, &list, FALSE);
+    if (pcmk__list_of_multiple(list)) {
+        pcmk__config_err("Cannot promote non-colocated child %s",
+                         instance->id);
+    }
+    g_list_free(list);
+    if (chosen == NULL) {
+        return;
+    }
+
+    next_role = instance->fns->state(instance, FALSE);
+    switch (next_role) {
+        case RSC_ROLE_STARTED:
+        case RSC_ROLE_UNKNOWN:
+            // Set instance priority to its promotion score (or -1 if none)
+            {
+                bool is_default = false;
+
+                instance->priority = promotion_score(instance, chosen,
+                                                      &is_default);
+                if (is_default) {
+                    /*
+                     * Default to -1 if no value is set. This allows
+                     * instances eligible for promotion to be specified
+                     * based solely on rsc_location constraints, but
+                     * prevents any instance from being promoted if neither
+                     * a constraint nor a promotion score is present
+                     */
+                    instance->priority = -1;
+                }
+            }
+            break;
+
+        case RSC_ROLE_UNPROMOTED:
+        case RSC_ROLE_STOPPED:
+            // Instance can't be promoted
+            instance->priority = -INFINITY;
+            break;
+
+        case RSC_ROLE_PROMOTED:
+            // Nothing needed (re-creating actions after scheduling fencing)
+            break;
+
+        default:
+            CRM_CHECK(FALSE, crm_err("Unknown resource role %d for %s",
+                                     next_role, instance->id));
+    }
+
+    // Add relevant location constraint scores for promoted role
+    apply_promoted_locations(instance, instance->rsc_location, chosen);
+    apply_promoted_locations(instance, clone->rsc_location, chosen);
+
+    // Apply relevant colocations with promoted role
+    for (GList *iter = instance->rsc_cons; iter != NULL; iter = iter->next) {
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;
+
+        instance->cmds->rsc_colocation_lh(instance, cons->primary, cons,
+                                          instance->cluster);
+    }
+
+    instance->sort_index = instance->priority;
+    if (next_role == RSC_ROLE_PROMOTED) {
+        instance->sort_index = INFINITY;
+    }
+    pe_rsc_trace(clone, "Assigning %s priority = %d",
+                 instance->id, instance->priority);
+}
+
 pe_node_t *
 pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GList *gIter = NULL;
-    GList *gIter2 = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
-    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -851,84 +941,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         node->count = 0;
     }
 
-    /*
-     * assign priority
-     */
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        GList *list = NULL;
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "Assigning priority for %s: %s", child_rsc->id,
-                     role2text(child_rsc->next_role));
-
-        if (child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
-            set_current_role_unpromoted(child_rsc, NULL);
-        }
-
-        chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
-        if (pcmk__list_of_multiple(list)) {
-            pcmk__config_err("Cannot promote non-colocated child %s",
-                             child_rsc->id);
-        }
-
-        g_list_free(list);
-        if (chosen == NULL) {
-            continue;
-        }
-
-        next_role = child_rsc->fns->state(child_rsc, FALSE);
-        switch (next_role) {
-            case RSC_ROLE_STARTED:
-            case RSC_ROLE_UNKNOWN:
-                {
-                    bool is_default = false;
-
-                    child_rsc->priority = promotion_score(child_rsc, chosen,
-                                                          &is_default);
-                    if (is_default) {
-                        /*
-                         * Default to -1 if no value is set. This allows
-                         * instances eligible for promotion to be specified
-                         * based solely on rsc_location constraints, but
-                         * prevents any instance from being promoted if neither
-                         * a constraint nor a promotion score is present
-                         */
-                        child_rsc->priority = -1;
-                    }
-                }
-                break;
-
-            case RSC_ROLE_UNPROMOTED:
-            case RSC_ROLE_STOPPED:
-                child_rsc->priority = -INFINITY;
-                break;
-            case RSC_ROLE_PROMOTED:
-                /* We will arrive here if we're re-creating actions after a stonith
-                 */
-                break;
-            default:
-                CRM_CHECK(FALSE /* unhandled */ ,
-                          crm_err("Unknown resource role: %d for %s", next_role, child_rsc->id));
-        }
-
-        apply_promoted_locations(child_rsc, child_rsc->rsc_location, chosen);
-        apply_promoted_locations(child_rsc, rsc->rsc_location, chosen);
-
-        for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
-            pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
-
-            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->primary, cons,
-                                               data_set);
-        }
-
-        child_rsc->sort_index = child_rsc->priority;
-        pe_rsc_trace(rsc, "Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
-
-        if (next_role == RSC_ROLE_PROMOTED) {
-            child_rsc->sort_index = INFINITY;
-        }
-    }
-
+    // Set instances' promotion priorities and sort by highest priority first
+    g_list_foreach(rsc->children, set_instance_priority, rsc);
     sort_promotable_instances(rsc);
 
     // Choose the first N eligible instances to be promoted
