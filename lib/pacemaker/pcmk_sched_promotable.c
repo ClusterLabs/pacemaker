@@ -541,39 +541,77 @@ is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
     return (allowed != NULL) && (allowed->weight >= 0);
 }
 
-static gboolean
-filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
+/*!
+ * \brief Check whether a clone instance's promotion score should be considered
+ *
+ * \param[in] rsc   Promotable clone instance to check
+ * \param[in] node  Node where score would be applied
+ *
+ * \return true if \p rsc's promotion score should be considered on \p node,
+ *         otherwise false
+ */
+static bool
+promotion_score_applies(pe_resource_t *rsc, const pe_node_t *node)
 {
-    char *key = clone_strip(rsc->id);
+    char *id = clone_strip(rsc->id);
     pe_resource_t *parent = uber_parent(rsc);
     pe_resource_t *active = NULL;
+    const char *reason = "allowed";
 
-    // If instance is active on the node, its score definitely applies
-    active = find_active_anon_instance(parent, key, node);
-    if (active == rsc) {
-        pe_rsc_trace(rsc,
-                     "Counting %s promotion score (for %s) on %s: active",
-                     rsc->id, key, node->details->uname);
-        free(key);
-        return TRUE;
+    // Some checks apply only to anonymous clone instances
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+
+        // If instance is active on the node, its score definitely applies
+        active = find_active_anon_instance(parent, id, node);
+        if (active == rsc) {
+            reason = "active";
+            goto check_allowed;
+        }
+
+        /* If *no* instance is active on this node, this instance's score will
+         * count if it has been probed on this node.
+         */
+        if ((active == NULL) && anonymous_known_on(parent, id, node)) {
+            reason = "probed";
+            goto check_allowed;
+        }
     }
 
-    if (active != NULL) {
-        pe_rsc_trace(rsc, "Found %s for %s on %s: not %s", active->id, key, node->details->uname, rsc->id);
-        free(key);
-        return FALSE;
-    }
-
-    /* No instance is running, so any score will count if this instance has been
-     * probed on this node.
+    /* If this clone's status is unknown on *all* nodes (e.g. cluster startup),
+     * take all instances' scores into account, to make sure we use any
+     * permanent promotion scores.
      */
-    if (!anonymous_known_on(parent, key, node)) {
-        free(key);
-        return FALSE;
+    if ((rsc->running_on == NULL) && (g_hash_table_size(rsc->known_on) == 0)) {
+        reason = "none probed";
+        goto check_allowed;
     }
 
-    free(key);
-    return TRUE;
+    /* Otherwise, we've probed and/or started the resource *somewhere*, so
+     * consider promotion scores on nodes where we know the status.
+     */
+    if ((pe_hash_table_lookup(rsc->known_on, node->details->id) != NULL)
+        || (pe_find_node_id(rsc->running_on, node->details->id) != NULL)) {
+        reason = "known";
+    } else {
+        pe_rsc_trace(rsc,
+                     "Ignoring %s promotion score (for %s) on %s: not probed",
+                     rsc->id, id, node->details->uname);
+        free(id);
+        return false;
+    }
+
+check_allowed:
+    if (is_allowed(rsc, node)) {
+        pe_rsc_trace(rsc, "Counting %s promotion score (for %s) on %s: %s",
+                     rsc->id, id, node->details->uname, reason);
+        free(id);
+        return true;
+    }
+
+    pe_rsc_trace(rsc, "Ignoring %s promotion score (for %s) on %s: not allowed",
+                 rsc->id, id, node->details->uname);
+    free(id);
+    return false;
 }
 
 static const char *
@@ -596,7 +634,6 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     char *name = rsc->id;
     const char *attr_value = NULL;
     int score = not_set_value;
-    pe_node_t *match = NULL;
 
     CRM_CHECK(node != NULL, return not_set_value);
 
@@ -616,29 +653,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
         return score;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
-        && filter_anonymous_instance(rsc, node)) {
-
-        pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
-
-    } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
-        /* If we've probed and/or started the resource anywhere, consider
-         * promotion scores only from nodes where we know the status. However,
-         * if the status of all nodes is unknown (e.g. cluster startup),
-         * skip this code, to make sure we take into account any permanent
-         * promotion scores set previously.
-         */
-        pe_node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
-
-        match = pe_find_node_id(rsc->running_on, node->details->id);
-        if ((match == NULL) && (known == NULL)) {
-            pe_rsc_trace(rsc, "skipping %s (aka. %s) promotion score on %s because inactive",
-                         rsc->id, rsc->clone_name, node->details->uname);
-            return score;
-        }
-    }
-
-    if (!is_allowed(rsc, node)) {
+    if (!promotion_score_applies(rsc, node)) {
         return score;
     }
 
