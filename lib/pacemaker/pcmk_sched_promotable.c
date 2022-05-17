@@ -771,30 +771,46 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief If a resource's current role is started, change it to unpromoted
+ *
+ * \param[in] data       Resource to update
+ * \param[in] user_data  Ignored
+ */
 static void
-set_role_unpromoted(pe_resource_t *rsc, bool current)
+set_current_role_unpromoted(void *data, void *user_data)
 {
-    GList *gIter = rsc->children;
+    pe_resource_t *rsc = (pe_resource_t *) data;
 
-    if (current) {
-        if (rsc->role == RSC_ROLE_STARTED) {
-            rsc->role = RSC_ROLE_UNPROMOTED;
-        }
+    if (rsc->role == RSC_ROLE_STARTED) {
+        // Promotable clones should use unpromoted role instead of started
+        rsc->role = RSC_ROLE_UNPROMOTED;
+    }
+    g_list_foreach(rsc->children, set_current_role_unpromoted, NULL);
+}
 
+/*!
+ * \internal
+ * \brief Set a resource's next role to unpromoted (or stopped if unassigned)
+ *
+ * \param[in] data       Resource to update
+ * \param[in] user_data  Ignored
+ */
+static void
+set_next_role_unpromoted(void *data, void *user_data)
+{
+    pe_resource_t *rsc = (pe_resource_t *) data;
+    GList *assigned = NULL;
+
+    rsc->fns->location(rsc, &assigned, FALSE);
+    if (assigned == NULL) {
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "stopped instance");
     } else {
-        GList *allocated = NULL;
-
-        rsc->fns->location(rsc, &allocated, FALSE);
-        pe__set_next_role(rsc, (allocated? RSC_ROLE_UNPROMOTED : RSC_ROLE_STOPPED),
-                          "unpromoted instance");
-        g_list_free(allocated);
+        pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED, "unpromoted instance");
+        g_list_free(assigned);
     }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        set_role_unpromoted(child_rsc, current);
-    }
+    g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
 }
 
 static void
@@ -838,7 +854,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                      role2text(child_rsc->next_role));
 
         if (child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
-            set_role_unpromoted(child_rsc, true);
+            set_current_role_unpromoted(child_rsc, NULL);
         }
 
         chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
@@ -940,7 +956,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe_rsc_debug(rsc, "%s promotion score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
-            set_role_unpromoted(child_rsc, false);
+            set_next_role_unpromoted(child_rsc, NULL);
             continue;
 
         } else if ((child_rsc->role < RSC_ROLE_PROMOTED)
@@ -948,7 +964,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
               && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                        child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
-            set_role_unpromoted(child_rsc, false);
+            set_next_role_unpromoted(child_rsc, NULL);
             continue;
         }
 
