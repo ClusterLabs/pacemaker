@@ -523,6 +523,24 @@ anonymous_known_on(const pe_resource_t *clone, const char *id,
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a node is allowed to run a resource
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return true if \p node is allowed to run \p rsc, otherwise false
+ */
+static bool
+is_allowed(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
+                                              node->details->id);
+
+    return (allowed != NULL) && (allowed->weight >= 0);
+}
+
 static gboolean
 filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
@@ -620,13 +638,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
         }
     }
 
-    match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-    if (match == NULL) {
-        return score;
-
-    } else if (match->weight < 0) {
-        pe_rsc_trace(rsc, "%s on %s has score: %d - ignoring",
-                     rsc->id, match->details->uname, match->weight);
+    if (!is_allowed(rsc, node)) {
         return score;
     }
 
