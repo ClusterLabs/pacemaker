@@ -719,23 +719,28 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
     return char2score(attr_value);
 }
 
+/*!
+ * \internal
+ * \brief Include promotion scores in instances' node weights and priorities
+ *
+ * \param[in] rsc  Promotable clone resource to update
+ */
 void
 pcmk__add_promotion_scores(pe_resource_t *rsc)
 {
-    int score, new_score;
-    GList *gIter = rsc->children;
-
     if (pe__set_clone_flag(rsc, pe__clone_promotion_added) == pcmk_rc_already) {
         return;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+
         GHashTableIter iter;
         pe_node_t *node = NULL;
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+        int score, new_score;
 
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!pcmk__node_available(node, false, false)) {
                 /* This node will never be promoted, so don't apply the
                  * promotion score, as that may lead to clone shuffling.
@@ -747,17 +752,20 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
             if (score > 0) {
                 new_score = pcmk__add_scores(node->weight, score);
                 if (new_score != node->weight) {
-                    pe_rsc_trace(rsc, "\t%s: Updating preference for %s (%d->%d)",
-                                 child_rsc->id, node->details->uname, node->weight, new_score);
+                    pe_rsc_trace(rsc,
+                                 "Adding promotion score to preference "
+                                 "for %s on %s (%d->%d)",
+                                 child_rsc->id, node->details->uname,
+                                 node->weight, new_score);
                     node->weight = new_score;
                 }
             }
 
-            new_score = QB_MAX(child_rsc->priority, score);
-            if (new_score != child_rsc->priority) {
-                pe_rsc_trace(rsc, "\t%s: Updating priority (%d->%d)",
-                             child_rsc->id, child_rsc->priority, new_score);
-                child_rsc->priority = new_score;
+            if (score > child_rsc->priority) {
+                pe_rsc_trace(rsc,
+                             "Updating %s priority to promotion score (%d->%d)",
+                             child_rsc->id, child_rsc->priority, score);
+                child_rsc->priority = score;
             }
         }
     }
