@@ -159,6 +159,11 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     xmlNode *request = create_attrd_op(user_name);
     const char *interval_desc = NULL;
     const char *op_desc = NULL;
+    const char *target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
+    }
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
@@ -190,8 +195,16 @@ int
 pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
                        uint32_t options)
 {
+    const char *target = NULL;
+
     if (name == NULL) {
         return EINVAL;
+    }
+
+    target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
     }
 
     /* Make sure the right update option is set. */
@@ -207,6 +220,11 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
     const char *display_host = (node ? node : "localhost");
+    const char *target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
+    }
 
     request = create_attrd_op(NULL);
 
@@ -228,9 +246,16 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
+    const char *target = NULL;
 
     if (name == NULL) {
         return EINVAL;
+    }
+
+    target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
     }
 
     request = create_attrd_op(NULL);
@@ -259,6 +284,11 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
     const char *display_host = (node ? node : "localhost");
+    const char *target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
+    }
 
     request = create_attrd_op(NULL);
 
@@ -282,9 +312,16 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
     const char *display_host = (node ? node : "localhost");
+    const char *target = NULL;
 
     if (name == NULL) {
         return EINVAL;
+    }
+
+    target = pcmk__node_attr_target(node);
+
+    if (target != NULL) {
+        node = target;
     }
 
     request = create_attrd_op(user_name);

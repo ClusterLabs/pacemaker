@@ -77,7 +77,6 @@ send_attrd_update(const char *attr_node, const char *attr_name,
 {
     pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
-    const char *target = NULL;
 
     // Create attrd IPC object
     rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
@@ -94,11 +93,6 @@ send_attrd_update(const char *attr_node, const char *attr_name,
                 pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
-    }
-
-    target = pcmk__node_attr_target(attr_node);
-    if (target != NULL) {
-        attr_node = target;
     }
 
     rc = pcmk__attrd_api_update(attrd_api, attr_node, attr_name, attr_value,

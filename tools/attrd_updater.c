@@ -263,10 +263,7 @@ main(int argc, char **argv)
          * However, it's not a big problem, because pacemaker-attrd will learn
          * and remember a node's "remoteness".
          */
-        const char *target = pcmk__node_attr_target(options.attr_node);
-
-        int rc = send_attrd_update(options.command,
-                                   target == NULL ? options.attr_node : target,
+        int rc = send_attrd_update(options.command, options.attr_node,
                                    options.attr_name, options.attr_value,
                                    options.attr_set, options.attr_dampen,
                                    options.attr_options);
@@ -366,11 +363,6 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
         attr_node = NULL;
-    } else {
-        const char *target = pcmk__node_attr_target(attr_node);
-        if (target != NULL) {
-            attr_node = target;
-        }
     }
 
     rc = pcmk__attrd_api_query(attrd_api, attr_node, attr_name, 0);
@@ -398,7 +390,6 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
     pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
     xmlNode *reply = NULL;
-    const char *target = NULL;
 
     // Create attrd IPC object
     rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
@@ -417,11 +408,6 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
                 pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
-    }
-
-    target = pcmk__node_attr_target(attr_node);
-    if (target != NULL) {
-        attr_node = target;
     }
 
     switch (command) {
