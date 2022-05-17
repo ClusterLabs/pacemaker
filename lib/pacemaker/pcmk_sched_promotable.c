@@ -639,23 +639,35 @@ promotion_attr_value(pe_resource_t *rsc, const pe_node_t *node,
     return attr_value;
 }
 
+/*!
+ * \internal
+ * \brief Get the promotion score for a clone instance on a node
+ *
+ * \param[in] rsc            Promotable clone instance to get score for
+ * \param[in] node           Node to get score for
+ * \param[in] default_score  Score to return if none found
+ *
+ * \return Promotion score for \p rsc on \p node
+ */
 static int
-promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
+promotion_score(pe_resource_t *rsc, const pe_node_t *node, int default_score)
 {
-    char *name = rsc->id;
+    char *name = NULL;
     const char *attr_value = NULL;
-    int score = not_set_value;
 
-    CRM_CHECK(node != NULL, return not_set_value);
+    CRM_CHECK((rsc != NULL) && (node != NULL), return default_score);
 
-    if (rsc->children) {
-        GList *gIter = rsc->children;
+    /* If this is an instance of a cloned group, the promotion score is the sum
+     * of all members' promotion scores.
+     */
+    if (rsc->children != NULL) {
+        int score = default_score;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-            int c_score = promotion_score(child, node, not_set_value);
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            pe_resource_t *child = (pe_resource_t *) iter->data;
+            int c_score = promotion_score(child, node, default_score);
 
-            if (score == not_set_value) {
+            if (score == default_score) {
                 score = c_score;
             } else {
                 score += c_score;
@@ -665,40 +677,35 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     }
 
     if (!promotion_score_applies(rsc, node)) {
-        return score;
+        return default_score;
     }
 
-    if (rsc->clone_name) {
-        /* Use the name the lrm knows this resource as,
-         * since that's what crm_attribute --promotion would have used
-         */
-        name = rsc->clone_name;
-    }
+    /* For the promotion score attribute name, use the name the resource is
+     * known as in resource history, since that's what crm_attribute --promotion
+     * would have used.
+     */
+    name = (rsc->clone_name == NULL)? rsc->id : rsc->clone_name;
 
     attr_value = promotion_attr_value(rsc, node, name);
-    pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
-                 name, node->details->uname, pcmk__s(attr_value, "(unset)"));
-
-    if ((attr_value == NULL) && !pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        /* If we don't have any LRM history yet, we won't have clone_name -- in
-         * that case, for anonymous clones, try the resource name without any
-         * instance number.
+    if (attr_value != NULL) {
+        pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
+                     name, node->details->uname, pcmk__s(attr_value, "(unset)"));
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        /* If we don't have any resource history yet, we won't have clone_name.
+         * In that case, for anonymous clones, try the resource name without
+         * any instance number.
          */
         name = clone_strip(rsc->id);
-        if (strcmp(rsc->id, name)) {
+        if (strcmp(rsc->id, name) != 0) {
             attr_value = promotion_attr_value(rsc, node, name);
-            pe_rsc_trace(rsc, "Stripped promotion score for %s on %s = %s",
-                         name, node->details->uname,
+            pe_rsc_trace(rsc, "Promotion score for %s on %s (for %s) = %s",
+                         name, node->details->uname, rsc->id,
                          pcmk__s(attr_value, "(unset)"));
         }
         free(name);
     }
 
-    if (attr_value != NULL) {
-        score = char2score(attr_value);
-    }
-
-    return score;
+    return (attr_value == NULL)? default_score : char2score(attr_value);
 }
 
 void
