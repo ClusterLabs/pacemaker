@@ -813,14 +813,22 @@ set_next_role_unpromoted(void *data, void *user_data)
     g_list_foreach(rsc->children, set_next_role_unpromoted, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Set a resource's next role to promoted if not already set
+ *
+ * \param[in] data       Resource to update
+ * \param[in] user_data  Ignored
+ */
 static void
-set_role_promoted(pe_resource_t *rsc, gpointer user_data)
+set_next_role_promoted(void *data, gpointer user_data)
 {
+    pe_resource_t *rsc = (pe_resource_t *) data;
+
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
         pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
-
-    g_list_foreach(rsc->children, (GFunc) set_role_promoted, NULL);
+    g_list_foreach(rsc->children, set_next_role_promoted, NULL);
 }
 
 pe_node_t *
@@ -971,7 +979,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         chosen->count++;
         pe_rsc_info(rsc, "Promoting %s (%s %s)",
                     child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_role_promoted(child_rsc, NULL);
+        set_next_role_promoted(child_rsc, NULL);
         promoted++;
     }
 
