@@ -1,6 +1,6 @@
 
-g_stateful:0 promotion score on gluster01.h: 4
-g_stateful:1 promotion score on gluster02.h: 4
+g_stateful:0 promotion score on gluster01.h: 5
+g_stateful:1 promotion score on gluster02.h: 5
 g_stateful:2 promotion score on none: 0
 pcmk__clone_allocate: c_dummy allocation score on gluster01.h: 0
 pcmk__clone_allocate: c_dummy allocation score on gluster02.h: 0
