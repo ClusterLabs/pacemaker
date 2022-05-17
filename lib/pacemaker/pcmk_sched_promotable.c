@@ -464,31 +464,56 @@ sort_promotable_instances(pe_resource_t *clone)
     pe__clear_resource_flags(clone, pe_rsc_merging);
 }
 
+/*!
+ * \internal
+ * \brief Find the active instance (if any) of an anonymous clone on a node
+ *
+ * \param[in] clone  Anonymous clone to check
+ * \param[in] id     Instance ID (without instance number) to check
+ * \param[in] node   Node to check
+ *
+ * \return
+ */
+static pe_resource_t *
+find_active_anon_instance(pe_resource_t *clone, const char *id,
+                          const pe_node_t *node)
+{
+    for (GList *iter = clone->children; iter; iter = iter->next) {
+        pe_resource_t *child = iter->data;
+        pe_resource_t *active = NULL;
+
+        // Use ->find_rsc() in case this is a cloned group
+        active = clone->fns->find_rsc(child, id, node,
+                                      pe_find_clone|pe_find_current);
+        if (active != NULL) {
+            return active;
+        }
+    }
+    return NULL;
+}
+
 static gboolean
 filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
     GList *rIter = NULL;
     char *key = clone_strip(rsc->id);
     pe_resource_t *parent = uber_parent(rsc);
+    pe_resource_t *active = NULL;
 
-    for (rIter = parent->children; rIter; rIter = rIter->next) {
-        /* If there is an active instance on the node, only it receives the
-         * promotion score. Use ->find_rsc() in case this is a cloned group.
-         */
-        pe_resource_t *child = rIter->data;
-        pe_resource_t *active = parent->fns->find_rsc(child, key, node, pe_find_clone|pe_find_current);
+    // If instance is active on the node, its score definitely applies
+    active = find_active_anon_instance(parent, key, node);
+    if (active == rsc) {
+        pe_rsc_trace(rsc,
+                     "Counting %s promotion score (for %s) on %s: active",
+                     rsc->id, key, node->details->uname);
+        free(key);
+        return TRUE;
+    }
 
-        if(rsc == active) {
-            pe_rsc_trace(rsc, "Found %s for %s active on %s: done", active->id, key, node->details->uname);
-            free(key);
-            return TRUE;
-        } else if(active) {
-            pe_rsc_trace(rsc, "Found %s for %s on %s: not %s", active->id, key, node->details->uname, rsc->id);
-            free(key);
-            return FALSE;
-        } else {
-            pe_rsc_trace(rsc, "%s on %s: not active", key, node->details->uname);
-        }
+    if (active != NULL) {
+        pe_rsc_trace(rsc, "Found %s for %s on %s: not %s", active->id, key, node->details->uname, rsc->id);
+        free(key);
+        return FALSE;
     }
 
     for (rIter = parent->children; rIter; rIter = rIter->next) {
