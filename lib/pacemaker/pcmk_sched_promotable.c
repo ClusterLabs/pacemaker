@@ -643,41 +643,45 @@ promotion_attr_value(pe_resource_t *rsc, const pe_node_t *node,
  * \internal
  * \brief Get the promotion score for a clone instance on a node
  *
- * \param[in] rsc            Promotable clone instance to get score for
- * \param[in] node           Node to get score for
- * \param[in] default_score  Score to return if none found
+ * \param[in]  rsc         Promotable clone instance to get score for
+ * \param[in]  node        Node to get score for
+ * \param[out] is_default  If non-NULL, will be set true if no score available
  *
- * \return Promotion score for \p rsc on \p node
+ * \return Promotion score for \p rsc on \p node (or 0 if none)
  */
 static int
-promotion_score(pe_resource_t *rsc, const pe_node_t *node, int default_score)
+promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
 {
     char *name = NULL;
     const char *attr_value = NULL;
 
-    CRM_CHECK((rsc != NULL) && (node != NULL), return default_score);
+    if (is_default != NULL) {
+        *is_default = true;
+    }
+
+    CRM_CHECK((rsc != NULL) && (node != NULL), return 0);
 
     /* If this is an instance of a cloned group, the promotion score is the sum
      * of all members' promotion scores.
      */
     if (rsc->children != NULL) {
-        int score = default_score;
+        int score = 0;
 
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *) iter->data;
-            int c_score = promotion_score(child, node, default_score);
+            bool child_default = false;
+            int child_score = promotion_score(child, node, &child_default);
 
-            if (score == default_score) {
-                score = c_score;
-            } else {
-                score += c_score;
+            if (!child_default && (is_default != NULL)) {
+                *is_default = false;
             }
+            score += child_score;
         }
         return score;
     }
 
     if (!promotion_score_applies(rsc, node)) {
-        return default_score;
+        return 0;
     }
 
     /* For the promotion score attribute name, use the name the resource is
@@ -705,7 +709,14 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int default_score)
         free(name);
     }
 
-    return (attr_value == NULL)? default_score : char2score(attr_value);
+    if (attr_value == NULL) {
+        return 0;
+    }
+
+    if (is_default != NULL) {
+        *is_default = false;
+    }
+    return char2score(attr_value);
 }
 
 void
@@ -732,7 +743,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
                 continue;
             }
 
-            score = promotion_score(child_rsc, node, 0);
+            score = promotion_score(child_rsc, node, NULL);
             if (score > 0) {
                 new_score = pcmk__add_scores(node->weight, score);
                 if (new_score != node->weight) {
@@ -837,15 +848,22 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         switch (next_role) {
             case RSC_ROLE_STARTED:
             case RSC_ROLE_UNKNOWN:
-                /*
-                 * Default to -1 if no value is set
-                 *
-                 * This allows instances eligible for promotion to be specified
-                 * based solely on rsc_location constraints,
-                 * but prevents anyone from being promoted if
-                 * neither a constraint nor a promotion score is present
-                 */
-                child_rsc->priority = promotion_score(child_rsc, chosen, -1);
+                {
+                    bool is_default = false;
+
+                    child_rsc->priority = promotion_score(child_rsc, chosen,
+                                                          &is_default);
+                    if (is_default) {
+                        /*
+                         * Default to -1 if no value is set. This allows
+                         * instances eligible for promotion to be specified
+                         * based solely on rsc_location constraints, but
+                         * prevents any instance from being promoted if neither
+                         * a constraint nor a promotion score is present
+                         */
+                        child_rsc->priority = -1;
+                    }
+                }
                 break;
 
             case RSC_ROLE_UNPROMOTED:
