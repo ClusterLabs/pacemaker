@@ -614,17 +614,28 @@ check_allowed:
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Get the value of a promotion score node attribute
+ *
+ * \param[in] rsc   Promotable clone instance to get promotion score for
+ * \param[in] node  Node to get promotion score for
+ * \param[in] name  Resource name to use in promotion score attribute name
+ *
+ * \return Value of promotion score node attribute for \p rsc on \p node
+ */
 static const char *
-lookup_promotion_score(pe_resource_t *rsc, const pe_node_t *node, const char *name)
+promotion_attr_value(pe_resource_t *rsc, const pe_node_t *node,
+                     const char *name)
 {
+    char *attr_name = NULL;
     const char *attr_value = NULL;
 
-    if (node && name) {
-        char *attr_name = pcmk_promotion_score_name(name);
+    CRM_CHECK((rsc != NULL) && (node != NULL) && (name != NULL), return NULL);
 
-        attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
-        free(attr_name);
-    }
+    attr_name = pcmk_promotion_score_name(name);
+    attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
+    free(attr_name);
     return attr_value;
 }
 
@@ -664,7 +675,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
         name = rsc->clone_name;
     }
 
-    attr_value = lookup_promotion_score(rsc, node, name);
+    attr_value = promotion_attr_value(rsc, node, name);
     pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
                  name, node->details->uname, pcmk__s(attr_value, "(unset)"));
 
@@ -675,7 +686,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
          */
         name = clone_strip(rsc->id);
         if (strcmp(rsc->id, name)) {
-            attr_value = lookup_promotion_score(rsc, node, name);
+            attr_value = promotion_attr_value(rsc, node, name);
             pe_rsc_trace(rsc, "Stripped promotion score for %s on %s = %s",
                          name, node->details->uname,
                          pcmk__s(attr_value, "(unset)"));
