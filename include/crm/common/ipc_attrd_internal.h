@@ -50,7 +50,8 @@ typedef struct {
  * \internal
  * \brief Send a request to pacemaker-attrd to clear resource failure
  *
- * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
  * \param[in] node          Affect only this node (or NULL for all nodes)
  * \param[in] resource      Name of resource to clear (or NULL for all)
  * \param[in] operation     Name of operation to clear (or NULL for all)
@@ -70,7 +71,8 @@ int pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
  *
  * \brief Delete a previously set attribute by setting its value to NULL
  *
- * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
  * \param[in] node          Delete attribute for this node (or NULL for current node)
  * \param[in] name          Attribute name
  * \param[in] options       Bitmask of pcmk__node_attr_opts
@@ -84,7 +86,8 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Purge a node from pacemaker-attrd
  *
- * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
  * \param[in] node          Node to remove
  *
  * \return Standard Pacemaker return code
@@ -110,7 +113,8 @@ int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *nam
  * \internal
  * \brief Tell pacemaker-attrd to update the CIB with current values
  *
- * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
  * \param[in] node          Affect only this node (or NULL for all nodes)
  *
  * \return Standard Pacemaker return code
@@ -121,7 +125,8 @@ int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
  * \internal
  * \brief Update an attribute's value, time to wait, or both
  *
- * \param[in] api           Connection to pacemaker-attrd
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
  * \param[in] node          Affect only this node (or NULL for current node)
  * \param[in] name          Attribute name
  * \param[in] value         The attribute's new value, or NULL to unset

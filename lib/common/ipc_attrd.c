@@ -144,6 +144,41 @@ create_attrd_op(const char *user_name)
 }
 
 static int
+connect_and_send_attrd_request(xmlNode *request)
+{
+    pcmk_ipc_api_t *api = NULL;
+    int rc = pcmk_rc_ok;
+    int max = 5;
+
+    rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
+    if (rc != pcmk_rc_ok) {
+        crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+        return ENOTCONN;
+    }
+
+    while (max > 0) {
+        crm_info("Connecting to cluster... %d retries remaining", max);
+        rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_sync);
+
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk__send_ipc_request(api, request);
+            pcmk_disconnect_ipc(api);
+            pcmk_free_ipc_api(api);
+            api = NULL;
+            break;
+        } else if (rc == EAGAIN || rc == EALREADY) {
+            sleep(5 - max);
+            max--;
+        } else {
+            crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+            break;
+        }
+    }
+
+    return rc;
+}
+
+static int
 send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 {
     return pcmk__send_ipc_request(api, request);
@@ -173,7 +208,12 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));
 
-    rc = send_attrd_request(api, request);
+    if (api == NULL) {
+        rc = connect_and_send_attrd_request(request);
+    } else {
+        rc = send_attrd_request(api, request);
+    }
+
     free_xml(request);
 
     if (operation) {
@@ -231,7 +271,12 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
-    rc = send_attrd_request(api, request);
+    if (api == NULL) {
+        rc = connect_and_send_attrd_request(request);
+    } else {
+        rc = send_attrd_request(api, request);
+    }
+
     free_xml(request);
 
     crm_debug("Asked pacemaker-attrd to purge %s: %s (%d)",
@@ -295,7 +340,12 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
-    rc = send_attrd_request(api, request);
+    if (api == NULL) {
+        rc = connect_and_send_attrd_request(request);
+    } else {
+        rc = send_attrd_request(api, request);
+    }
+
     free_xml(request);
 
     crm_debug("Asked pacemaker-attrd to refresh %s: %s (%d)",
@@ -349,7 +399,12 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     crm_xml_add_int(request, PCMK__XA_ATTR_IS_PRIVATE,
                     pcmk_is_set(options, pcmk__node_attr_private));
 
-    rc = send_attrd_request(api, request);
+    if (api == NULL) {
+        rc = connect_and_send_attrd_request(request);
+    } else {
+        rc = send_attrd_request(api, request);
+    }
+
     free_xml(request);
 
     crm_debug("Asked pacemaker-attrd to update %s on %s: %s (%d)",
