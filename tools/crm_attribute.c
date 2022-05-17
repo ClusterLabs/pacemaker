@@ -632,7 +632,11 @@ main(int argc, char **argv)
                         "Error: pattern can only be used with till-reboot update or delete");
             goto done;
         }
-        options.command = 'u';
+
+        if (options.command != 'D') {
+            options.command = 'u';
+        }
+
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
     }
