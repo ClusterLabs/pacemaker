@@ -492,10 +492,40 @@ find_active_anon_instance(pe_resource_t *clone, const char *id,
     return NULL;
 }
 
+/*
+ * \brief Check whether an anonymous clone instance is known on a node
+ *
+ * \param[in] clone  Anonymous clone to check
+ * \param[in] id     Instance ID (without instance number) to check
+ * \param[in] node   Node to check
+ *
+ * \return true if \p id instance of \p clone is known on \p node,
+ *         otherwise false
+ */
+static bool
+anonymous_known_on(const pe_resource_t *clone, const char *id,
+                   const pe_node_t *node)
+{
+    for (GList *iter = clone->children; iter; iter = iter->next) {
+        pe_resource_t *child = iter->data;
+
+        /* Use ->find_rsc() because this might be a cloned group, and knowing
+         * that other members of the group are known here implies nothing.
+         */
+        child = clone->fns->find_rsc(child, id, NULL, pe_find_clone);
+        CRM_LOG_ASSERT(child != NULL);
+        if (child != NULL) {
+            if (g_hash_table_lookup(child->known_on, node->details->id)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 static gboolean
 filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
-    GList *rIter = NULL;
     char *key = clone_strip(rsc->id);
     pe_resource_t *parent = uber_parent(rsc);
     pe_resource_t *active = NULL;
@@ -516,29 +546,16 @@ filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
         return FALSE;
     }
 
-    for (rIter = parent->children; rIter; rIter = rIter->next) {
-        pe_resource_t *child = rIter->data;
-
-        /*
-         * We know it's not running, but any score will still count if
-         * the instance has been probed on $node
-         *
-         * Again use ->find_rsc() because we might be a cloned group
-         * and knowing that other members of the group are known here
-         * implies nothing
-         */
-        rsc = parent->fns->find_rsc(child, key, NULL, pe_find_clone);
-        CRM_LOG_ASSERT(rsc);
-        if(rsc) {
-            pe_rsc_trace(rsc, "Checking %s for %s on %s", rsc->id, key, node->details->uname);
-            if (g_hash_table_lookup(rsc->known_on, node->details->id)) {
-                free(key);
-                return TRUE;
-            }
-        }
+    /* No instance is running, so any score will count if this instance has been
+     * probed on this node.
+     */
+    if (!anonymous_known_on(parent, key, node)) {
+        free(key);
+        return FALSE;
     }
+
     free(key);
-    return FALSE;
+    return TRUE;
 }
 
 static const char *
