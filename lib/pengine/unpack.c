@@ -2205,6 +2205,18 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         g_list_free(possible_matches);
     }
+
+    /* A successful stop after migrate_to on the migration source doesn't make
+     * the partially migrated resource stopped on the migration target.
+     */
+    if (rsc->role == RSC_ROLE_STOPPED
+        && rsc->partial_migration_source
+        && rsc->partial_migration_source->details == node->details
+        && rsc->partial_migration_target
+        && rsc->running_on) {
+
+        rsc->role = RSC_ROLE_STARTED;
+    }
 }
 
 /* create active recurring operations as optional */
