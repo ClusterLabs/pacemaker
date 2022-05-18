@@ -602,17 +602,15 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
-        if (((options.command != 'v') && (options.command != 'D'))
-            || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        if (options.command != 'G' &&
+            (((options.command != 'v') && (options.command != 'D'))
+             || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei))) {
 
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: pattern can only be used with till-reboot update or delete");
+                        "Error: pattern can only be used with query, or with "
+                        "till-reboot update or delete");
             goto done;
-        }
-
-        if (options.command != 'D') {
-            options.command = 'u';
         }
 
         g_free(options.attr_name);
@@ -663,10 +661,22 @@ main(int argc, char **argv)
     } else {                    /* query */
 
         xmlNode *result = NULL;
+        bool use_pattern = options.attr_pattern != NULL;
 
-        rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
-                                 options.set_type, options.set_name, options.attr_id,
-                                 options.attr_name, NULL, &result);
+        /* libxml2 doesn't support regular expressions in xpath queries (which is how
+         * cib__get_node_attrs -> find_attr finds attributes).  So instead, we'll just
+         * find all the attributes for a given node here by passing NULL for attr_id
+         * and attr_name, and then later see if they match the given pattern.
+         */
+        if (use_pattern) {
+            rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
+                                     options.set_type, options.set_name, NULL,
+                                     NULL, NULL, &result);
+        } else {
+            rc = cib__get_node_attrs(out, the_cib, options.type, options.dest_node,
+                                     options.set_type, options.set_name, options.attr_id,
+                                     options.attr_name, NULL, &result);
+        }
 
         if (rc == ENXIO && options.attr_default) {
             out->message(out, "attribute", options.type, options.attr_id,
@@ -686,6 +696,10 @@ main(int argc, char **argv)
                 const char *name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
                 const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
 
+                if (use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
+                    continue;
+                }
+
                 out->message(out, "attribute", options.type, options.attr_id,
                              name, value);
                 crm_info("Read %s=%s %s%s",
@@ -699,11 +713,13 @@ main(int argc, char **argv)
             const char *name = crm_element_value(result, XML_NVPAIR_ATTR_NAME);
             const char *value = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
 
-            out->message(out, "attribute", options.type, options.attr_id,
-                         name, value);
-            crm_info("Read %s=%s %s%s",
-                     crm_str(name), crm_str(value),
-                     options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+            if (!use_pattern || pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
+                out->message(out, "attribute", options.type, options.attr_id,
+                             name, value);
+                crm_info("Read %s=%s %s%s",
+                         crm_str(name), crm_str(value),
+                         options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+            }
 
             free_xml(result);
         }
