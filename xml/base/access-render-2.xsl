@@ -253,8 +253,6 @@
 <!-- mode-less, easy to override kick-off -->
 <xsl:template match="/">
   <xsl:apply-templates mode="accessrender:proceed" select="@*|node()"/>
-  <!-- do not taint any subsequent terminal session -->
-  <xsl:value-of select="$accessrendercfg:c-reset"/>
 </xsl:template>
 
 </xsl:stylesheet>

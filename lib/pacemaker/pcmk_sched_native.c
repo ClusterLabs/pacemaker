@@ -1250,7 +1250,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     gboolean need_stop = FALSE;
     bool need_promote = FALSE;
     gboolean is_moving = FALSE;
-    gboolean allow_migrate = pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)? TRUE : FALSE;
+    gboolean allow_migrate = FALSE;
 
     GList *gIter = NULL;
     unsigned int num_all_active = 0;
@@ -1259,9 +1259,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-    native_variant_data_t *native_data = NULL;
-
-    get_native_variant_data(native_data, rsc);
+    CRM_ASSERT(rsc != NULL);
+    allow_migrate = pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)? TRUE : FALSE;
 
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
@@ -1338,8 +1337,16 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
 
-        if (rsc->recovery_type == recovery_stop_start) {
-            need_stop = TRUE;
+        switch (rsc->recovery_type) {
+            case recovery_stop_start:
+                need_stop = TRUE;
+                break;
+            case recovery_stop_unexpected:
+                need_stop = TRUE; // StopRsc() will skip expected node
+                pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
+                break;
+            default:
+                break;
         }
 
         /* If by chance a partial migration is in process, but the migration
@@ -1350,7 +1357,6 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (!multiply_active) {
-        native_data->expected_node = NULL;
         pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
@@ -2020,14 +2026,11 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 static bool
 is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
 {
-    native_variant_data_t *native_data = NULL;
-
-    get_native_variant_data(native_data, rsc);
     return pcmk_all_flags_set(rsc->flags,
                               pe_rsc_stop_unexpected|pe_rsc_restarting)
            && (rsc->next_role > RSC_ROLE_STOPPED)
-           && (native_data->expected_node != NULL) && (node != NULL)
-           && (native_data->expected_node->details == node->details);
+           && (rsc->allocated_to != NULL) && (node != NULL)
+           && (rsc->allocated_to->details == node->details);
 }
 
 gboolean
@@ -2076,17 +2079,13 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
 
         if(rsc->allocated_to == NULL) {
             pe_action_set_reason(stop, "node availability", TRUE);
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_restarting)) {
-            native_variant_data_t *native_data = NULL;
-
-            get_native_variant_data(native_data, rsc);
-            if (native_data->expected_node != NULL) {
-                /* We are stopping a multiply active resource on a node that is
-                 * not its expected node, and we are still scheduling restart
-                 * actions, so the stop is for being multiply active.
-                 */
-                pe_action_set_reason(stop, "being multiply active", TRUE);
-            }
+        } else if (pcmk_all_flags_set(rsc->flags, pe_rsc_restarting
+                                                  |pe_rsc_stop_unexpected)) {
+            /* We are stopping a multiply active resource on a node that is
+             * not its expected node, and we are still scheduling restart
+             * actions, so the stop is for being multiply active.
+             */
+            pe_action_set_reason(stop, "being multiply active", TRUE);
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {

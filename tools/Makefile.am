@@ -118,8 +118,7 @@ crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_attribute_SOURCES	= crm_attribute.c
-crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
-			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
+crm_attribute_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 

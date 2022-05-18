@@ -38,7 +38,8 @@ dist_cli_DATA	= cli/constraints.xml \
 		  cli/regression.rules.exp	\
 		  cli/regression.tools.exp	\
 		  cli/regression.upgrade.exp	\
-		  cli/regression.validity.exp
+		  cli/regression.validity.exp	\
+		  cli/regression.access_render.exp
 
 scheduler-list:
 	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \

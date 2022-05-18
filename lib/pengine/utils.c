@@ -1124,10 +1124,10 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 #if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
 
-        pe_eval_versioned_attributes(data_set->input, xml_obj,
-                                     XML_TAG_ATTR_SETS, &rule_data,
-                                     rsc_details->versioned_parameters,
-                                     NULL);
+        /* Non-versioned attributes also unpack XML_TAG_ATTR_SETS, but that
+         * capability is deprecated, so we don't need to extend that support to
+         * versioned attributes.
+         */
         pe_eval_versioned_attributes(data_set->input, xml_obj,
                                      XML_TAG_META_SETS, &rule_data,
                                      rsc_details->versioned_meta,

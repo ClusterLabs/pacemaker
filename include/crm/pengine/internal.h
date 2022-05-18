@@ -580,10 +580,6 @@ xmlNode *pe__failed_probe_for_rsc(pe_resource_t *rsc, const char *name);
 
 const char *pe__clone_child_id(pe_resource_t *rsc);
 
-void pe__update_expected_node(pe_resource_t *rsc, pe_node_t *node,
-                              int execution_status, int exit_status,
-                              int expected_exit_status);
-
 int pe__sum_node_health_scores(const pe_node_t *node, int base_health);
 int pe__node_health(pe_node_t *node);
 

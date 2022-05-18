@@ -671,7 +671,7 @@ class Tests(object):
                      '--output-as=xml -R false2 -a fence_dummy -o "mode=fail" -o "pcmk_host_list=node3" -o "pcmk_off_timeout=4"')
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4 = 10
-        test.add_stonith_log_pattern("Total timeout set to 10")
+        test.add_stonith_log_pattern("Total timeout set to 12")
 
         # custom timeout _WITH_ topology
         test = self.new_test("cpg_custom_timeout_2",
@@ -687,7 +687,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 3 -v false2")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
         # timeout is 5+1+4000 = 4006
-        test.add_stonith_log_pattern("Total timeout set to 4006")
+        test.add_stonith_log_pattern("Total timeout set to 4807")
 
     def build_fence_merge_tests(self):
         """ Register tests to verify when fence operations should be merged """
@@ -799,7 +799,7 @@ class Tests(object):
                          "--output-as=xml -R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             if test_type["use_cpg"] == 1:
                 test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", CrmExit.TIMEOUT)
-                test.add_stonith_log_pattern("Total timeout set to 6")
+                test.add_stonith_log_pattern("Total timeout set to 7")
             else:
                 test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", CrmExit.ERROR)
 
@@ -821,7 +821,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
             if test_type["use_cpg"] == 1:
-                test.add_stonith_log_pattern("Total timeout set to 15")
+                test.add_stonith_log_pattern("Total timeout set to 18")
 
         # test what happens when we try to use a missing fence-agent.
         for test_type in test_types:
@@ -848,7 +848,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 1 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 5")
+            test.add_stonith_log_pattern("Total timeout set to 6")
             test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
 
@@ -866,7 +866,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -d node3 -i 1")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
-            test.add_stonith_log_pattern("Total timeout set to 5")
+            test.add_stonith_log_pattern("Total timeout set to 6")
             test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level has multiple devices.
@@ -885,7 +885,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_stonith_log_pattern("Total timeout set to 40")
+            test.add_stonith_log_pattern("Total timeout set to 48")
             test.add_stonith_log_pattern("targeting node3 using false returned 1")
             test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
@@ -919,7 +919,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
 
-            test.add_stonith_log_pattern("Total timeout set to 18")
+            test.add_stonith_log_pattern("Total timeout set to 21")
             test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
             test.add_stonith_log_pattern("targeting node3 using false2 returned 1")
             test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
@@ -986,7 +986,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
-            test.add_stonith_log_pattern("Total timeout set to 8")
+            test.add_stonith_log_pattern("Total timeout set to 96")
             test.add_stonith_log_pattern("targeting node3 using false1 returned 1")
             test.add_stonith_neg_log_pattern("targeting node3 using false2 returned ")
             test.add_stonith_log_pattern("targeting node3 using true3 returned 0")

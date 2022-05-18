@@ -1,0 +1,21 @@
+
+pcmk__native_allocate: Fencing allocation score on rhel8-1: 0
+pcmk__native_allocate: Fencing allocation score on rhel8-2: 0
+pcmk__native_allocate: Fencing allocation score on rhel8-3: 0
+pcmk__native_allocate: Fencing allocation score on rhel8-4: 0
+pcmk__native_allocate: Fencing allocation score on rhel8-5: 0
+pcmk__native_allocate: FencingFail allocation score on rhel8-1: 0
+pcmk__native_allocate: FencingFail allocation score on rhel8-2: 0
+pcmk__native_allocate: FencingFail allocation score on rhel8-3: 0
+pcmk__native_allocate: FencingFail allocation score on rhel8-4: 0
+pcmk__native_allocate: FencingFail allocation score on rhel8-5: 0
+pcmk__native_allocate: FencingPass allocation score on rhel8-1: 0
+pcmk__native_allocate: FencingPass allocation score on rhel8-2: 0
+pcmk__native_allocate: FencingPass allocation score on rhel8-3: 0
+pcmk__native_allocate: FencingPass allocation score on rhel8-4: 0
+pcmk__native_allocate: FencingPass allocation score on rhel8-5: 0
+pcmk__native_allocate: test allocation score on rhel8-1: 0
+pcmk__native_allocate: test allocation score on rhel8-2: 0
+pcmk__native_allocate: test allocation score on rhel8-3: 0
+pcmk__native_allocate: test allocation score on rhel8-4: 0
+pcmk__native_allocate: test allocation score on rhel8-5: 0
