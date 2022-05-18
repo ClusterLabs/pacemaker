@@ -388,26 +388,8 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
                   const char *attr_value, const char *attr_set,
                   const char *attr_dampen, uint32_t attr_options)
 {
-    pcmk_ipc_api_t *attrd_api = NULL;
     int rc = pcmk_rc_ok;
     uint32_t opts = attr_options;
-
-    // Create attrd IPC object
-    rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
-    if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
-        return ENOTCONN;
-    }
-
-    // Connect to attrd (without main loop)
-    rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
-    if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
-        pcmk_free_ipc_api(attrd_api);
-        return rc;
-    }
 
     if (options.attr_pattern) {
         opts |= pcmk__node_attr_pattern;
@@ -415,20 +397,16 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
 
     switch (command) {
         case 'D':
-            rc = pcmk__attrd_api_delete(attrd_api, attr_node, attr_name,
-                                        opts);
+            rc = pcmk__attrd_api_delete(NULL, attr_node, attr_name, opts);
             break;
 
         case 'u':
         case 'v':
-            rc = pcmk__attrd_api_update(attrd_api, attr_node, attr_name,
+            rc = pcmk__attrd_api_update(NULL, attr_node, attr_name,
                                         attr_value, NULL, attr_set, NULL,
                                         opts | pcmk__node_attr_value);
             break;
     }
-
-    pcmk_disconnect_ipc(attrd_api);
-    pcmk_free_ipc_api(attrd_api);
 
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not update %s=%s: %s (%d)",

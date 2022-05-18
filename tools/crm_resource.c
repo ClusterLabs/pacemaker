@@ -77,7 +77,6 @@ struct {
     gboolean require_cib;         // Whether command requires CIB IPC
     int cib_options;              // Options to use with CIB IPC calls
     gboolean require_crmd;        // Whether command requires controller IPC
-    gboolean require_attrd;       // Whether command requires attrd IPC
     gboolean require_dataset;     // Whether command requires populated data set
     gboolean require_resource;    // Whether command requires resource specified
     gboolean require_node;        // Whether command requires node specified
@@ -185,7 +184,6 @@ static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
 static cib_t *cib_conn = NULL;
 static pcmk_ipc_api_t *controld_api = NULL;
-static pcmk_ipc_api_t *attrd_api = NULL;
 static pe_working_set_t *data_set = NULL;
 
 #define MESSAGE_TIMEOUT_S 60
@@ -222,12 +220,6 @@ bye(crm_exit_t ec)
 
         controld_api = NULL; // Ensure we can't free this twice
         pcmk_free_ipc_api(save_controld_api);
-    }
-
-    if (attrd_api != NULL) {
-        pcmk_ipc_api_t *save_attrd_api = attrd_api;
-        attrd_api = NULL;
-        pcmk_free_ipc_api(save_attrd_api);
     }
 
     if (mainloop != NULL) {
@@ -646,7 +638,6 @@ static GOptionEntry addl_entries[] = {
 static void
 reset_options(void) {
     options.require_crmd = FALSE;
-    options.require_attrd = FALSE;
     options.require_node = FALSE;
 
     options.require_cib = TRUE,
@@ -700,7 +691,6 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     options.require_resource = FALSE;
     if (getenv("CIB_file") == NULL) {
         options.require_crmd = TRUE;
-        options.require_attrd = TRUE;
     }
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
@@ -798,7 +788,6 @@ gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     SET_COMMAND(cmd_fail);
     options.require_crmd = TRUE;
-    options.require_attrd = TRUE;
     options.require_node = TRUE;
     return TRUE;
 }
@@ -1025,9 +1014,8 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, attrd_api, options.host_uname, rsc,
-                             options.operation, options.interval_spec, TRUE,
-                             data_set, options.force);
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc, options.operation,
+                             options.interval_spec, TRUE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1311,7 +1299,7 @@ refresh(pcmk__output_t *out)
 
     crm_debug("Re-checking the state of all resources on %s", options.host_uname?options.host_uname:"all nodes");
 
-    rc = pcmk__attrd_api_clear_failures(attrd_api, options.host_uname, NULL,
+    rc = pcmk__attrd_api_clear_failures(NULL, options.host_uname, NULL,
                                         NULL, NULL, NULL, attr_options);
 
     if (pcmk_controld_api_reprobe(controld_api, options.host_uname,
@@ -1333,8 +1321,8 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, attrd_api, options.host_uname, rsc,
-                             NULL, 0, FALSE, data_set, options.force);
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0,
+                             FALSE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
@@ -1817,25 +1805,6 @@ main(int argc, char **argv)
         }
     }
 
-    // Establish a connection to the attribute manager
-    if (options.require_attrd) {
-        rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error connecting to the attribute manager: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-
-        rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_main);
-        if (rc != pcmk_rc_ok) {
-            exit_code = pcmk_rc2exitc(rc);
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error connecting to the attribute manager: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-    }
-
     /*
      * Handle requested command
      */
@@ -2098,7 +2067,7 @@ main(int argc, char **argv)
 
         case cmd_cleanup:
             if (rsc == NULL) {
-                rc = cli_cleanup_all(controld_api, attrd_api, options.host_uname,
+                rc = cli_cleanup_all(controld_api, options.host_uname,
                                      options.operation, options.interval_spec,
                                      data_set);
                 if (rc == pcmk_rc_ok) {

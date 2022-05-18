@@ -68,14 +68,13 @@ int cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
                       const char *rsc_id, pe_working_set_t *data_set);
 GList *cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                              pe_working_set_t *data_set);
-int cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_ipc_api_t *attrd_api,
-                        const char *host_uname, pe_resource_t *rsc,
-                        const char *operation, const char *interval_spec,
-                        bool just_failures, pe_working_set_t *data_set,
-                        gboolean force);
-int cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_ipc_api_t *attrd_api,
-                    const char *node_name, const char *operation,
-                    const char *interval_spec, pe_working_set_t *data_set);
+int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
+                        pe_resource_t *rsc, const char *operation,
+                        const char *interval_spec, bool just_failures,
+                        pe_working_set_t *data_set, gboolean force);
+int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
+                    const char *operation, const char *interval_spec,
+                    pe_working_set_t *data_set);
 int cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node,
                          const char *move_lifetime, int timeout_ms, cib_t *cib,
                          int cib_options, gboolean promoted_role_only, gboolean force);
