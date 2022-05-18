@@ -2661,6 +2661,49 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
     return (monitor && pe__is_newer_op(monitor, xml_op, same_node) > 0);
 }
 
+/*!
+ * \brief Check whether any non-monitor operation on a node happened after some
+ * event
+ *
+ * \param[in] rsc_id    Resource being checked
+ * \param[in] node_name Node being checked
+ * \param[in] xml_op    Event that non-monitor is being compared to
+ * \param[in] same_node Whether the operations are on the same node
+ * \param[in] data_set  Cluster working set
+ *
+ * \return true if such a operation happened after event, false otherwise
+ */
+static bool
+non_monitor_after(const char *rsc_id, const char *node_name, xmlNode *xml_op,
+                  bool same_node, pe_working_set_t *data_set)
+{
+    xmlNode *lrm_resource = NULL;
+
+    lrm_resource = find_lrm_resource(rsc_id, node_name, data_set);
+    if (lrm_resource == NULL) {
+        return false;
+    }
+
+    for (xmlNode *op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
+         op != NULL; op = crm_next_same_xml(op)) {
+        const char * task = NULL;
+
+        if (op == xml_op) {
+            continue;
+        }
+
+        task = crm_element_value(op, XML_LRM_ATTR_TASK);
+
+        if (pcmk__str_any_of(task, CRMD_ACTION_START, CRMD_ACTION_STOP,
+                             CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)
+            && pe__is_newer_op(op, xml_op, same_node) > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static int
 pe__call_id(xmlNode *op_xml)
 {
@@ -2672,32 +2715,6 @@ pe__call_id(xmlNode *op_xml)
     return id;
 }
 
-/*!
- * \brief Check whether a stop happened on the same node after some event
- *
- * \param[in] rsc       Resource being checked
- * \param[in] node      Node being checked
- * \param[in] xml_op    Event that stop is being compared to
- * \param[in] data_set  Cluster working set
- *
- * \return TRUE if stop happened after event, FALSE otherwise
- *
- * \note This is really unnecessary, but kept as a safety mechanism. We
- *       currently don't save more than one successful event in history, so this
- *       only matters when processing really old CIB files that we don't
- *       technically support anymore, or as preparation for logging an extended
- *       history in the future.
- */
-static bool
-stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
-                    pe_working_set_t *data_set)
-{
-    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP,
-                                   node->details->uname, NULL, PCMK_OCF_OK, data_set);
-
-    return (stop_op && (pe__call_id(stop_op) > pe__call_id(xml_op)));
-}
-
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set)
@@ -2707,8 +2724,29 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      *    migrate_from on target node
      *    stop on source node
      *
-     * If a migrate_to is followed by a stop, the entire migration (successful
-     * or failed) is complete, and we don't care what happened on the target.
+     * But there could be scenarios like (It's easier to produce with cluster
+     * property batch-limit=1):
+     *
+     * - rscA is live-migrating from node1 to node2.
+     *
+     * - Before migrate_to on node1 returns, put node2 into standby.
+     *
+     * - Transition aborts upon return of successful migrate_to on node1. New
+     *   transition is going to stop the rscA on both nodes and start it on
+     *   node1.
+     *
+     * - While it is stopping on node1, run something that is going to make
+     *   the transition abort again like:
+     *   crm_resource  --resource rscA --ban --node node2
+     *
+     * - Transition aborts upon return of stop on node1.
+     *
+     * Now although there's a stop on node1, it's still a partial migration and
+     * rscA is still potentially active on node2.
+     *
+     * So even if a migrate_to is followed by a stop, we still need to check
+     * whether there's a corresponding migrate_from or any newer operation on
+     * the target.
      *
      * If no migrate_from has happened, the migration is considered to be
      * "partial". If the migrate_from failed, make sure the resource gets
@@ -2726,11 +2764,25 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     xmlNode *migrate_from = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    bool source_newer_op = false;
 
     // Sanity check
     CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
 
-    if (stop_happened_after(rsc, node, xml_op, data_set)) {
+    /* If there's any newer non-monitor operation on the source, this migrate_to
+     * potentially no longer matters for the source.
+     */
+    source_newer_op = non_monitor_after(rsc->id, source, xml_op, true,
+                                        data_set);
+
+    // Check whether there was a migrate_from action on the target
+    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
+                               source, -1, data_set);
+
+    /* Even if there's a newer non-monitor operation on the source, we still
+     * need to check how this migrate_to might matter for the target.
+     */
+    if (source_newer_op && migrate_from) {
         return;
     }
 
@@ -2740,9 +2792,6 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     target_node = pe_find_node(data_set->nodes, target);
     source_node = pe_find_node(data_set->nodes, source);
 
-    // Check whether there was a migrate_from action on the target
-    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, -1, data_set);
     if (migrate_from) {
         crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
         crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
@@ -2784,8 +2833,11 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 rsc->partial_migration_target = target_node;
                 rsc->partial_migration_source = source_node;
             }
-        } else {
-            /* Consider it failed here - forces a restart, prevents migration */
+        } else if (!source_newer_op) {
+            /* This migrate_to matters for the source only if it's the last
+             * non-monitor operation here.
+             * Consider it failed here - forces a restart, prevents migration
+             */
             pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
