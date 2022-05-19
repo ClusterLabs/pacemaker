@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-04-08 10:34-0500\n"
+"POT-Creation-Date: 2022-02-11 13:46+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -19,6 +19,48 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: daemons/controld/controld_control.c:525
+msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
+msgstr "集群选定的控制器节点(DC)Pacemaker版本"
+
+#: daemons/controld/controld_control.c:526
+msgid ""
+"Includes a hash which identifies the exact changeset the code was built "
+"from. Used for diagnostic purposes."
+msgstr "它包含一个可识别代码构建中所有变更的哈希，其可用于诊断。"
+
+#: daemons/controld/controld_control.c:531
+msgid "The messaging stack on which Pacemaker is currently running"
+msgstr "Pacemaker当前正在运行的消息传递堆栈"
+
+#: daemons/controld/controld_control.c:532
+msgid "Used for informational and diagnostic purposes."
+msgstr "用于提供信息和诊断。"
+
+#: daemons/controld/controld_control.c:536
+msgid "An arbitrary name for the cluster"
+msgstr "任意集群的名称"
+
+#: daemons/controld/controld_control.c:537
+msgid ""
+"This optional value is mostly for users' convenience as desired in "
+"administration, but may also be used in Pacemaker configuration rules via "
+"the #cluster-name node attribute, and by higher-level tools and resource "
+"agents."
+msgstr "该可选值主要是为了方便用户管理使用，"
+"也可以在pacemaker 配置规则中通过 #cluster-name 节点属性配置使用，"
+"也可以通过高级工具和资源代理使用。"
+
+#: daemons/controld/controld_control.c:545
+msgid "How long to wait for a response from other nodes during start-up"
+msgstr "启动过程中等待其他节点响应的时间"
+
+#: daemons/controld/controld_control.c:546
+msgid ""
+"The optimal value will depend on the speed and load of your network and the "
+"type of switches used."
+msgstr "其最佳值将由你的网络的速度和负载以及所用交换机的类型决定。"
 
 #: daemons/controld/controld_control.c:551
 msgid ""
@@ -28,7 +70,128 @@ msgstr ""
 "设置为0将禁用轮询，设置为正数将是以秒为单位的时间间隔（除非使用了其他单位，比"
 "如\"5min\"表示5分钟）"
 
-#: daemons/fenced/pacemaker-fenced.c:1462
+#: daemons/controld/controld_control.c:554
+msgid ""
+"Polling interval to recheck cluster state and evaluate rules with date "
+"specifications"
+msgstr "重新检查集群状态及日期使用规范的轮询间隔"
+
+#: daemons/controld/controld_control.c:565
+msgid "Maximum amount of system load that should be used by cluster nodes"
+msgstr "集群节点应该使用的最大系统负载值"
+
+#: daemons/controld/controld_control.c:566
+msgid ""
+"The cluster will slow down its recovery process when the amount of system "
+"resources used (currently CPU) approaches this limit"
+msgstr "当使用的系统资源量（当前为CPU）接近此限制时，集群将减慢其恢复过程"
+
+#: daemons/controld/controld_control.c:572
+msgid ""
+"Maximum number of jobs that can be scheduled per node (defaults to 2x cores)"
+msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
+
+#: daemons/controld/controld_control.c:576
+msgid "How a cluster node should react if notified of its own fencing"
+msgstr "集群节点在收到自己的防护通知时应如何反应"
+
+#: daemons/controld/controld_control.c:577
+msgid ""
+"A cluster node may receive notification of its own fencing if fencing is "
+"misconfigured, or if fabric fencing is in use that doesn't cut cluster "
+"communication. Allowed values are \"stop\" to attempt to immediately stop "
+"Pacemaker and stay stopped, or \"panic\" to attempt to immediately reboot "
+"the local node, falling back to stop on failure."
+msgstr "如果配置了错误的防护，或者节点正在使用的防护没有中断集群通信，则集群节点可能会收到"
+"有关自身的防护通知。允许的值为 \"stop\" 尝试立即停止pacemaker并保持停用状态,或者 \"panic\" 尝试"
+"立即重新启动本地节点，并在失败时返回执行stop。"
+
+#: daemons/controld/controld_control.c:587
+msgid ""
+"Declare an election failed if it is not decided within this much time. If "
+"you need to adjust this value, it probably indicates the presence of a bug."
+msgstr ""
+"如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可能代表"
+"存在某些错误。"
+
+#: daemons/controld/controld_control.c:595
+msgid ""
+"Exit immediately if shutdown does not complete within this much time. If you "
+"need to adjust this value, it probably indicates the presence of a bug."
+msgstr "如果在这段时间内关机仍未完成，请立即退出。如果您需要调整该值，这可能代表"
+"存在某些错误。"
+
+#: daemons/controld/controld_control.c:603
+#: daemons/controld/controld_control.c:610
+msgid ""
+"If you need to adjust this value, it probably indicates the presence of a "
+"bug."
+msgstr "如果您需要调整该值，这可能代表存在某些错误。"
+
+#: daemons/controld/controld_control.c:616
+msgid ""
+"*** Advanced Use Only *** Enabling this option will slow down cluster "
+"recovery under all conditions"
+msgstr ""
+"*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
+
+#: daemons/controld/controld_control.c:618
+msgid ""
+"Delay cluster recovery for this much time to allow for additional events to "
+"occur. Useful if your configuration is sensitive to the order in which ping "
+"updates arrive."
+msgstr "当集群恢复被延迟了指定的时间间隔时，可能会有其它事件出现。"
+"如果您的配置对 ping 更新到达的顺序很敏感，这就很有用"
+
+#: daemons/controld/controld_control.c:625
+msgid ""
+"How long to wait before we can assume nodes are safely down when watchdog-"
+"based self-fencing via SBD is in use"
+msgstr "当watchdog-based self-fencing 通过SBD 被执行时，"
+"我们可以假设节点安全关闭之前需要等待多长时间"
+
+#: daemons/controld/controld_control.c:627
+msgid ""
+"If nonzero, along with `have-watchdog=true` automatically set by the "
+"cluster, when fencing is required, watchdog-based self-fencing will be "
+"performed via SBD without requiring a fencing resource explicitly "
+"configured. If `stonith-watchdog-timeout` is set to a positive value, unseen "
+"nodes are assumed to self-fence within this much time. +WARNING:+ It must be "
+"ensured that this value is larger than the `SBD_WATCHDOG_TIMEOUT` "
+"environment variable on all nodes. Pacemaker verifies the settings "
+"individually on all nodes and prevents startup or shuts down if configured "
+"wrongly on the fly. It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is "
+"set to the same value on all nodes. If `stonith-watchdog-timeout` is set to "
+"a negative value, and `SBD_WATCHDOG_TIMEOUT` is set, twice that value will "
+"be used. +WARNING:+ In this case, it's essential (currently not verified by "
+"Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on all nodes."
+msgstr ""
+"如果值非零，且集群设置了 `have-watchdog=true` ，当需要fencing时，watchdog-based self-fence 将通过SBD执行，"
+"而不需要显式配置fencing资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定未被发现的节点在这段时间内self-fence。"
+" +WARNING:+ 必须确保值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变量。Pacemaker将在所有节点上单独验证设置，"
+"并防止所有节点在动态配置错误时发生启动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。"
+"如果 `stonith-watchdog-timeout` 设置为负值。并且设置了 `SBD_WATCHDOG_TIMEOUT` ，则将使用该值的两倍，"
+" +WARNING:+ 在这种情况下，必须将所有节点上 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值(目前没有通过pacemaker验证)。"
+
+#: daemons/controld/controld_control.c:648
+msgid ""
+"How many times fencing can fail before it will no longer be immediately re-"
+"attempted on a target"
+msgstr "stonith失败多少次会停止尝试"
+
+#: daemons/controld/controld_control.c:556
+msgid ""
+"Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
+"cluster state for failure timeouts and most time-based rules. However, it "
+"will also recheck the cluster after this amount of inactivity, to evaluate "
+"rules with date specifications and serve as a fail-safe for certain types of "
+"scheduler bugs."
+msgstr ""
+"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态及大多数基于时间的规则"
+"以获取当前出现的失败或超时的问题。同时，在其不活动状态结束之后，它还将重新检"
+"查集群，以评估具有日期规格的规则，并为某些类型的调度程序错误提供故障保护服务。"
+
+#: daemons/fenced/pacemaker-fenced.c:1464
 #, c-format
 msgid ""
 " <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -38,7 +201,7 @@ msgstr ""
 " <longdesc lang=\"zh\">实例属性可用于所有stonith类资源，并由Pacemaker的fence"
 "守护程序使用（以前称为stonithd）</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1467
+#: daemons/fenced/pacemaker-fenced.c:1469
 #, c-format
 msgid ""
 " <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -46,7 +209,7 @@ msgid ""
 msgstr ""
 " <shortdesc lang=\"zh\">可用于所有stonith类资源的实例属性</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1490
+#: daemons/fenced/pacemaker-fenced.c:1492
 #, fuzzy, c-format
 msgid ""
 "    <longdesc lang=\"en\">Some devices do not support the standard 'port' "
@@ -63,7 +226,7 @@ msgstr ""
 "使用值'%s'可用来告诉集群不提供任何额外的参数\n"
 "     </longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1502
+#: daemons/fenced/pacemaker-fenced.c:1504
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to "
@@ -72,7 +235,7 @@ msgstr ""
 "    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
 "代'port'</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1513
+#: daemons/fenced/pacemaker-fenced.c:1515
 #, c-format
 msgid ""
 "    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to "
@@ -81,7 +244,7 @@ msgstr ""
 "    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群"
 "的节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1519
+#: daemons/fenced/pacemaker-fenced.c:1521
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">A mapping of host names to ports numbers for "
@@ -107,20 +270,20 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:590
+#: lib/common/options.c:591
 msgid "  Allowed values: "
 msgstr ""
 
-#: lib/pengine/common.c:131
+#: lib/pengine/common.c:119
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用看门狗集成设置"
 
-#: tools/crm_resource.c:1388
+#: tools/crm_resource.c:1405
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1394
+#: tools/crm_resource.c:1411
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
