@@ -831,6 +831,34 @@ set_next_role_promoted(void *data, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Show instance's promotion score on node where it will be active
+ *
+ * \param[in] instance  Promotable clone instance to show
+ */
+static void
+show_promotion_score(pe_resource_t *instance)
+{
+    pe_node_t *chosen = instance->fns->location(instance, NULL, FALSE);
+
+    if (pcmk_is_set(instance->cluster->flags, pe_flag_show_scores)
+        && !pcmk__is_daemon && (instance->cluster->priv != NULL)) {
+
+        pcmk__output_t *out = instance->cluster->priv;
+
+        out->message(out, "promotion-score", instance, chosen,
+                     pcmk_readable_score(instance->sort_index));
+    } else {
+        pe_rsc_debug(uber_parent(instance),
+                     "%s promotion score on %s: sort=%s priority=%s",
+                     instance->id,
+                     ((chosen == NULL)? "none" : chosen->details->uname),
+                     pcmk_readable_score(instance->sort_index),
+                     pcmk_readable_score(instance->priority));
+    }
+}
+
+/*!
+ * \internal
  * \brief Set a clone instance's promotion priority
  *
  * \param[in] data       Promotable clone instance to update
@@ -929,7 +957,6 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     GList *gIter = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    pe_node_t *chosen = NULL;
 
     // Repurpose count to track the number of promoted instances allocated
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -944,24 +971,9 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     // Choose the first N eligible instances to be promoted
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+        pe_node_t *chosen = NULL;
 
-        chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && !pcmk__is_daemon) {
-            if (data_set->priv != NULL) {
-                pcmk__output_t *out = data_set->priv;
-                out->message(out, "promotion-score", child_rsc, chosen,
-                             pcmk_readable_score(child_rsc->sort_index));
-            }
-
-        } else {
-            pe_rsc_trace(rsc, "%s promotion score on %s: %s", child_rsc->id,
-                         (chosen? chosen->details->uname : "none"),
-                         pcmk_readable_score(child_rsc->sort_index));
-        }
-
-        chosen = NULL;          /* nuke 'chosen' so that we don't promote more than the
-                                 * required number of instances
-                                 */
+        show_promotion_score(child_rsc);
 
         if (child_rsc->sort_index < 0) {
             pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
@@ -970,8 +982,6 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                    || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             chosen = node_to_be_promoted_on(child_rsc);
         }
-
-        pe_rsc_debug(rsc, "%s promotion score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
             set_next_role_unpromoted(child_rsc, NULL);
