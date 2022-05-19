@@ -758,34 +758,6 @@ pcmk__log_action(const char *pre_text, pe_action_t *action, bool details)
 
 /*!
  * \internal
- * \brief Create a new pseudo-action for a resource
- *
- * \param[in] rsc   Resource to create action for
- * \param[in] task  Action name
- * \param[in] optional  Whether action should be considered optional
- * \param[in] runnable  Whethe action should be considered runnable
- *
- * \return New action object corresponding to arguments
- */
-pe_action_t *
-pcmk__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
-                            bool optional, bool runnable)
-{
-    pe_action_t *action = NULL;
-
-    CRM_ASSERT((rsc != NULL) && (task != NULL));
-
-    action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0), task, NULL,
-                           optional, TRUE, rsc->cluster);
-    pe__set_action_flags(action, pe_action_pseudo);
-    if (runnable) {
-        pe__set_action_flags(action, pe_action_runnable);
-    }
-    return action;
-}
-
-/*!
- * \internal
  * \brief Create an executor cancel action
  *
  * \param[in] rsc          Resource of action to cancel

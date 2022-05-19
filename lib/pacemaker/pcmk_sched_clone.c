@@ -512,9 +512,9 @@ clone_create_pseudo_actions(
     }
 
     /* start */
-    start = pcmk__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
-    started = pcmk__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
-                                          false);
+    start = pe__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
+    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
+                                        false);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
@@ -527,9 +527,9 @@ clone_create_pseudo_actions(
     }
 
     /* stop */
-    stop = pcmk__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
-    stopped = pcmk__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
-                                          true);
+    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
+    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
+                                        true);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);

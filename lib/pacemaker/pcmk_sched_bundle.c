@@ -199,13 +199,13 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
-            pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
-            action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
+            pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, true, true);
+            action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED, true, true);
             action->priority = INFINITY;
 
             /* demote */
-            pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
-            action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
+            pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, true, true);
+            action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, true, true);
             action->priority = INFINITY;
         }
     }

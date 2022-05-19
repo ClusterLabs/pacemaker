@@ -1051,10 +1051,9 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* promote */
-    action = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting,
-                                         true);
-    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
-                                                  !any_promoting, true);
+    action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting, true);
+    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
+                                                !any_promoting, true);
     action_complete->priority = INFINITY;
 
     if (clone_data->promote_notify == NULL) {
@@ -1065,9 +1064,9 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     /* demote */
-    action = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
-    action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED,
-                                                  !any_demoting, true);
+    action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
+    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, !any_demoting,
+                                                true);
     action_complete->priority = INFINITY;
 
     if (clone_data->demote_notify == NULL) {
