@@ -450,7 +450,6 @@ extern enum action_tasks get_complex_task(pe_resource_t * rsc, const char *name,
 extern GList *find_actions(GList *input, const char *key, const pe_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,
                           const pe_node_t *on_node);
-extern GList *find_recurring_actions(GList *input, pe_node_t * not_on_node);
 GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                             const char *task, bool require_node);
 

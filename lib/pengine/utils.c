@@ -312,40 +312,6 @@ print_str_str(gpointer key, gpointer value, gpointer user_data)
               user_data == NULL ? "" : ": ", (char *)key, (char *)value);
 }
 
-GList *
-find_recurring_actions(GList *input, pe_node_t * not_on_node)
-{
-    const char *value = NULL;
-    GList *result = NULL;
-    GList *gIter = input;
-
-    CRM_CHECK(input != NULL, return NULL);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL_MS);
-        if (value == NULL) {
-            /* skip */
-        } else if (pcmk__str_eq(value, "0", pcmk__str_casei)) {
-            /* skip */
-        } else if (pcmk__str_eq(CRMD_ACTION_CANCEL, action->task, pcmk__str_casei)) {
-            /* skip */
-        } else if (not_on_node == NULL) {
-            crm_trace("(null) Found: %s", action->uuid);
-            result = g_list_prepend(result, action);
-
-        } else if (action->node == NULL) {
-            /* skip */
-        } else if (action->node->details != not_on_node->details) {
-            crm_trace("Found: %s", action->uuid);
-            result = g_list_prepend(result, action);
-        }
-    }
-
-    return result;
-}
-
 static void
 resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char *tag)
 {
