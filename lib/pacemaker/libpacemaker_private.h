@@ -248,11 +248,23 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
                                  (rsc2), CRMD_ACTION_STOP, (type), (data_set))
 
+
+// Ticket constraints (pcmk_sched_tickets.c)
+
 G_GNUC_INTERNAL
 void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
+
+// Promotable clone resources (pcmk_sched_promotable.c)
+
 G_GNUC_INTERNAL
 void pcmk__require_promotion_tickets(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__set_instance_roles(pe_resource_t *rsc);
+
+
+// Pacemaker Remote nodes (pcmk_sched_remote.c)
 
 G_GNUC_INTERNAL
 bool pcmk__is_failed_remote_node(pe_node_t *node);

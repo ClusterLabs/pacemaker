@@ -333,7 +333,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     g_list_free(nodes);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pcmk__set_instance_roles(rsc, data_set);
+        pcmk__set_instance_roles(rsc);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);

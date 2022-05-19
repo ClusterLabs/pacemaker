@@ -998,8 +998,14 @@ set_instance_role(gpointer data, gpointer user_data)
     (*count)++;
 }
 
-pe_node_t *
-pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Set roles for all instances of a promotable clone
+ *
+ * \param[in] clone  Promotable clone resource to update
+ */
+void
+pcmk__set_instance_roles(pe_resource_t *rsc)
 {
     int promoted = 0;
     GHashTableIter iter;
@@ -1019,7 +1025,6 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     g_list_foreach(rsc->children, set_instance_role, &promoted);
     pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
                 rsc->id, promoted, pe__clone_promoted_max(rsc));
-    return NULL;
 }
 
 void

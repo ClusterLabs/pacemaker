@@ -187,8 +187,6 @@ void pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
 void pcmk__add_promotion_scores(pe_resource_t *rsc);
-pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,
-                                    pe_working_set_t *data_set);
 void create_promotable_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promotable_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
