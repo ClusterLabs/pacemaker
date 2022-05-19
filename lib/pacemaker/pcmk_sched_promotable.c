@@ -1024,29 +1024,39 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
                 rsc->id, promoted, pe__clone_promoted_max(rsc));
 }
 
+/*!
+ *
+ * \internal
+ * \brief Create actions for promotable clone instances
+ *
+ * \param[in]  clone          Promotable clone to create actions for
+ * \param[out] any_promoting  Will be set true if any instance is promoting
+ * \param[out] any_demoting   Will be set true if any instance is demoting
+ */
+static void
+create_promotable_instance_actions(pe_resource_t *clone,
+                                   bool *any_promoting, bool *any_demoting)
+{
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+
+        instance->cmds->create_actions(instance, clone->cluster);
+        check_for_role_change(instance, any_demoting, any_promoting);
+    }
+}
+
 void
 create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GList *gIter = rsc->children;
     bool any_promoting = false;
     bool any_demoting = false;
 
     pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "Creating actions for %s", child_rsc->id);
-        child_rsc->cmds->create_actions(child_rsc, data_set);
-        check_for_role_change(child_rsc, &any_demoting, &any_promoting);
-    }
-
+    create_promotable_instance_actions(rsc, &any_promoting, &any_demoting);
     pe__create_promotable_pseudo_ops(rsc, any_promoting, any_demoting);
 
     /* restore the correct priority */
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->priority = rsc->priority;
