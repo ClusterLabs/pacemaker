@@ -155,7 +155,7 @@ while true; do
 	    for f in $files; do
 		rm -f $cts_root/$f
 		echo "Downloading helper script $f from GitHub"
-		wget -O "$cts_root/$f" "$(REPO)/$f"
+		wget -O "$cts_root/$f" "${REPO}/$f"
 		chmod +x $cts_root/$f
 	    done
 	    shift
@@ -171,14 +171,14 @@ export PATH="$PATH:$cts_root"
 which cluster-helper &>/dev/null
 if [ $? != 0 ]; then
     echo $0 needs the cluster-helper script to be in your path
-    echo "You can obtain it from: $(REPO)/cluster-helper"
+    echo "You can obtain it from: ${REPO}/cluster-helper"
     exit 1
 fi
 
 which cluster-clean &>/dev/null
 if [ $? != 0 ]; then
     echo $0 needs the cluster-clean script to be in your path
-    echo "You can obtain it from: $(REPO)/cluster-clean"
+    echo "You can obtain it from: ${REPO}/cluster-clean"
     exit 1
 fi
 
