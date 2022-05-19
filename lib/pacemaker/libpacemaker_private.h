@@ -350,25 +350,6 @@ pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
                                   const pe_node_t *node);
 
 
-// Clone notifictions (pcmk_sched_notif.c)
-
-G_GNUC_INTERNAL
-void pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
-
-G_GNUC_INTERNAL
-notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
-                                            const char *task,
-                                            pe_action_t *action,
-                                            pe_action_t *complete);
-
-G_GNUC_INTERNAL
-void pcmk__free_notification_data(notify_data_t *n_data);
-
-G_GNUC_INTERNAL
-void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
-                                      pe_action_t *stonith_op);
-
-
 // Functions applying to more than one variant (pcmk_sched_resource.c)
 
 G_GNUC_INTERNAL

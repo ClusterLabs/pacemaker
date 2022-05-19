@@ -39,6 +39,7 @@ libpe_status_la_SOURCES	+= complex.c
 libpe_status_la_SOURCES	+= failcounts.c
 libpe_status_la_SOURCES	+= group.c
 libpe_status_la_SOURCES	+= pe_health.c
+libpe_status_la_SOURCES	+= pe_notif.c
 libpe_status_la_SOURCES	+= native.c
 libpe_status_la_SOURCES	+= pe_digest.c
 libpe_status_la_SOURCES	+= remote.c

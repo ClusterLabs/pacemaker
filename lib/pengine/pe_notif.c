@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
-#include "libpacemaker_private.h"
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
