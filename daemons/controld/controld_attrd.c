@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2020 the Pacemaker project contributors
+ * Copyright 2006-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,20 +11,28 @@
 
 #include <crm/crm.h>
 #include <crm/common/attrd_internal.h>
+#include <crm/common/ipc.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/msg_xml.h>
 
 #include <pacemaker-controld.h>
 
-static crm_ipc_t *attrd_ipc = NULL;
+static pcmk_ipc_api_t *attrd_api = NULL;
+
+enum attrd_command {
+    cmd_clear,
+    cmd_purge,
+    cmd_update
+};
 
 void
 controld_close_attrd_ipc()
 {
-    if (attrd_ipc) {
+    if (attrd_api != NULL) {
         crm_trace("Closing connection to pacemaker-attrd");
-        crm_ipc_close(attrd_ipc);
-        crm_ipc_destroy(attrd_ipc);
-        attrd_ipc = NULL;
+        pcmk_disconnect_ipc(attrd_api);
+        pcmk_free_ipc_api(attrd_api);
+        attrd_api = NULL;
     }
 }
 
@@ -78,7 +86,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
 static void
 update_attrd_helper(const char *host, const char *name, const char *value,
                     const char *interval_spec, const char *user_name,
-                    gboolean is_remote_node, char command)
+                    gboolean is_remote_node, enum attrd_command command)
 {
     int rc;
     int attrd_opts = pcmk__node_attr_none;
@@ -87,39 +95,53 @@ update_attrd_helper(const char *host, const char *name, const char *value,
         pcmk__set_node_attr_flags(attrd_opts, pcmk__node_attr_remote);
     }
 
-    if (attrd_ipc == NULL) {
-        attrd_ipc = crm_ipc_new(T_ATTRD, 0);
+    if (attrd_api == NULL) {
+        rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
+
+        if (rc != pcmk_rc_ok) {
+            log_attrd_error(host, name, value, is_remote_node, command, rc);
+            return;
+        }
     }
 
     for (int attempt = 1; attempt <= 4; ++attempt) {
         rc = pcmk_rc_ok;
 
         // If we're not already connected, try to connect
-        if (crm_ipc_connected(attrd_ipc) == FALSE) {
+        if (!pcmk_ipc_is_connected(attrd_api)) {
             if (attempt == 1) {
                 // Start with a clean slate
-                crm_ipc_close(attrd_ipc);
+                pcmk_disconnect_ipc(attrd_api);
             }
-            if (crm_ipc_connect(attrd_ipc) == FALSE) {
-                rc = errno;
-            }
+
+            // Connect without a main loop, and with no callback either.
+            // We don't use any commands that expect a reply.
+            rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
+
             crm_debug("Attribute manager connection attempt %d of 4: %s (%d)",
                       attempt, pcmk_rc_str(rc), rc);
         }
 
         if (rc == pcmk_rc_ok) {
-            if (command) {
-                rc = pcmk__node_attr_request(attrd_ipc, command, host, name,
-                                             value, XML_CIB_TAG_STATUS, NULL,
-                                             NULL, user_name, attrd_opts);
-            } else {
-                 /* No command means clear fail count (name/value is really
-                  * resource/operation)
-                  */
-                 rc = pcmk__node_attr_request_clear(attrd_ipc, host, name,
-                                                    value, interval_spec,
-                                                    user_name, attrd_opts);
+            switch (command) {
+                case cmd_clear:
+                    /* name/value is really resource/operation */
+                    rc = pcmk__attrd_api_clear_failures(attrd_api, host, name,
+                                                        value, interval_spec,
+                                                        user_name, attrd_opts);
+                    break;
+
+                case cmd_update:
+                    rc = pcmk__attrd_api_update(attrd_api, host, name, value,
+                                                NULL, NULL, user_name,
+                                                attrd_opts | pcmk__node_attr_value);
+                    break;
+
+                case cmd_purge:
+                    rc = pcmk__attrd_api_purge(attrd_api, host);
+                    break;
             }
+
             crm_debug("Attribute manager request attempt %d of 4: %s (%d)",
                       attempt, pcmk_rc_str(rc), rc);
         }
@@ -132,7 +154,7 @@ update_attrd_helper(const char *host, const char *name, const char *value,
             /* EAGAIN or EALREADY indicates a temporary block, so just try
              * again. Otherwise, close the connection for a clean slate.
              */
-            crm_ipc_close(attrd_ipc);
+            pcmk_disconnect_ipc(attrd_api);
         }
 
         /* @TODO If the attribute manager remains unavailable the entire time,
@@ -154,7 +176,7 @@ update_attrd(const char *host, const char *name, const char *value,
              const char *user_name, gboolean is_remote_node)
 {
     update_attrd_helper(host, name, value, NULL, user_name, is_remote_node,
-                        'U');
+                        cmd_update);
 }
 
 void
@@ -162,7 +184,7 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
     crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
               host);
-    update_attrd_helper(host, NULL, NULL, NULL, user_name, TRUE, 'C');
+    update_attrd_helper(host, NULL, NULL, NULL, user_name, TRUE, cmd_purge);
 }
 
 void
@@ -182,5 +204,5 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
     }
     crm_info("Asking pacemaker-attrd to clear failure of %s %s for %s on %s node %s",
              interval_desc, op_desc, rsc, node_type, host);
-    update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, 0);
+    update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, cmd_clear);
 }

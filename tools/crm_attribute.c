@@ -32,6 +32,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
@@ -378,6 +379,40 @@ get_node_name_from_controller(void)
 
     pcmk_disconnect_ipc(controld_api);
     pcmk_free_ipc_api(controld_api);
+
+    return rc;
+}
+
+static int
+send_attrd_update(char command, const char *attr_node, const char *attr_name,
+                  const char *attr_value, const char *attr_set,
+                  const char *attr_dampen, uint32_t attr_options)
+{
+    int rc = pcmk_rc_ok;
+    uint32_t opts = attr_options;
+
+    if (options.attr_pattern) {
+        opts |= pcmk__node_attr_pattern;
+    }
+
+    switch (command) {
+        case 'D':
+            rc = pcmk__attrd_api_delete(NULL, attr_node, attr_name, opts);
+            break;
+
+        case 'u':
+        case 'v':
+            rc = pcmk__attrd_api_update(NULL, attr_node, attr_name,
+                                        attr_value, NULL, attr_set, NULL,
+                                        opts | pcmk__node_attr_value);
+            break;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not update %s=%s: %s (%d)",
+                    attr_name, attr_value, pcmk_rc_str(rc), rc);
+    }
+
     return rc;
 }
 
@@ -575,7 +610,11 @@ main(int argc, char **argv)
                         "Error: pattern can only be used with till-reboot update or delete");
             goto done;
         }
-        options.command = 'u';
+
+        if (options.command != 'D') {
+            options.command = 'u';
+        }
+
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
     }
@@ -591,10 +630,10 @@ main(int argc, char **argv)
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
-    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u')) && try_attrd
-        && (pcmk__node_attr_request(NULL, options.command, options.dest_uname, options.attr_name,
-                                    options.attr_value, options.type, options.set_name, NULL, NULL,
-                                    attrd_opts) == pcmk_rc_ok)) {
+    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u'))
+        && try_attrd
+        && (send_attrd_update(options.command, options.dest_uname, options.attr_name,
+                              options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 

@@ -67,6 +67,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
     // Set server methods and max_size (if not default)
     switch (server) {
         case pcmk_ipc_attrd:
+            (*api)->cmds = pcmk__attrd_api_methods();
             break;
 
         case pcmk_ipc_based:
@@ -246,7 +247,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
     }
     switch (api->server) {
         case pcmk_ipc_attrd:
-            return for_log? "attribute manager" : NULL /* T_ATTRD */;
+            return for_log? "attribute manager" : T_ATTRD;
 
         case pcmk_ipc_based:
             return for_log? "CIB manager" : NULL /* PCMK__SERVER_BASED_RW */;

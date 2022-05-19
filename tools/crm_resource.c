@@ -12,6 +12,7 @@
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
 #include <pacemaker-internal.h>
@@ -213,16 +214,19 @@ bye(crm_exit_t ec)
         cib_conn = NULL; // Ensure we can't free this twice
         cib__clean_up_connection(&save_cib_conn);
     }
+
     if (controld_api != NULL) {
         pcmk_ipc_api_t *save_controld_api = controld_api;
 
         controld_api = NULL; // Ensure we can't free this twice
         pcmk_free_ipc_api(save_controld_api);
     }
+
     if (mainloop != NULL) {
         g_main_loop_unref(mainloop);
         mainloop = NULL;
     }
+
     pe_free_working_set(data_set);
     data_set = NULL;
     crm_exit(ec);
@@ -1295,9 +1299,8 @@ refresh(pcmk__output_t *out)
 
     crm_debug("Re-checking the state of all resources on %s", options.host_uname?options.host_uname:"all nodes");
 
-    rc = pcmk__node_attr_request_clear(NULL, options.host_uname,
-                                       NULL, NULL, NULL,
-                                       NULL, attr_options);
+    rc = pcmk__attrd_api_clear_failures(NULL, options.host_uname, NULL,
+                                        NULL, NULL, NULL, attr_options);
 
     if (pcmk_controld_api_reprobe(controld_api, options.host_uname,
                                   router_node) == pcmk_rc_ok) {
@@ -1318,8 +1321,8 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL,
-                             0, FALSE, data_set, options.force);
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0,
+                             FALSE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped

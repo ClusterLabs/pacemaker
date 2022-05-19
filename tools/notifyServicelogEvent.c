@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2021 the Pacemaker project contributors
+ * Later changes copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,6 +30,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/common/attrd_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -67,6 +68,24 @@ event2status(struct sl_event * event)
     }
 
     return status;
+}
+
+static int
+send_attrd_update(const char *attr_node, const char *attr_name,
+                  const char *attr_value, const char *attr_set,
+                  const char *attr_dampen, uint32_t attr_options)
+{
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__attrd_api_update(NULL, attr_node, attr_name, attr_value, NULL,
+                                NULL, NULL, attr_options | pcmk__node_attr_pattern);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not update %s=%s: %s (%d)",
+                attr_name, attr_value, pcmk_rc_str(rc), rc);
+    }
+
+    return rc;
 }
 
 static pcmk__cli_option_t long_options[] = {
@@ -180,10 +199,8 @@ main(int argc, char *argv[])
             int attrd_rc;
 
             // @TODO pass pcmk__node_attr_remote when appropriate
-            attrd_rc = pcmk__node_attr_request(NULL, 'v', NULL,
-                                               health_component, health_status,
-                                               NULL, NULL, NULL, NULL,
-                                               pcmk__node_attr_none);
+            attrd_rc = send_attrd_update(NULL, health_component, health_status,
+                                         NULL, NULL, pcmk__node_attr_none);
             crm_debug("Updating attribute ('%s', '%s') = %d",
                       health_component, health_status, attrd_rc);
         } else {

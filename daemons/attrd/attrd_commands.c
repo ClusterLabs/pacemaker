@@ -442,6 +442,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         return NULL;
     }
     crm_xml_add(reply, F_TYPE, T_ATTRD);
+    crm_xml_add(reply, F_SUBTYPE, PCMK__ATTRD_CMD_QUERY);
     crm_xml_add(reply, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
 
     /* If desired attribute exists, add its value(s) to the reply */
