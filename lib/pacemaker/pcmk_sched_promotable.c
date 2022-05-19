@@ -1045,6 +1045,26 @@ create_promotable_instance_actions(pe_resource_t *clone,
     }
 }
 
+/*!
+ * \internal
+ * \brief Reset each promotable instance's resource priority
+ *
+ * Reset the priority of each instance of a promotable clone to the clone's
+ * priority (after promotion actions are scheduled, when instance priorities
+ * were repurposed as promotion scores).
+ *
+ * \param[in] clone  Promotable clone to reset
+ */
+static void
+reset_instance_priorities(pe_resource_t *clone)
+{
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+
+        instance->priority = clone->priority;
+    }
+}
+
 void
 create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1054,13 +1074,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
     create_promotable_instance_actions(rsc, &any_promoting, &any_demoting);
     pe__create_promotable_pseudo_ops(rsc, any_promoting, any_demoting);
-
-    /* restore the correct priority */
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->priority = rsc->priority;
-    }
+    reset_instance_priorities(rsc);
 }
 
 void
