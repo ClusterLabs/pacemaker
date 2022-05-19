@@ -262,6 +262,9 @@ void pcmk__set_instance_roles(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__create_promotable_actions(pe_resource_t *clone);
 
+G_GNUC_INTERNAL
+void pcmk__promotable_restart_ordering(pe_resource_t *rsc);
+
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 

@@ -1088,45 +1088,12 @@ pcmk__create_promotable_actions(pe_resource_t *clone)
 }
 
 void
-promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
-{
-    /* global stopped before start */
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
-
-    /* global stopped before promote */
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
-
-    /* global demoted before start */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
-
-    /* global started before promote */
-    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
-
-    /* global demoted before stop */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                 pe_order_optional, data_set);
-
-    /* global demote before demoted */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_optional, data_set);
-
-    /* global demoted before promote */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
-}
-
-
-void
 promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
 
-    promote_demote_constraints(rsc, data_set);
+    pcmk__promotable_restart_ordering(rsc);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
