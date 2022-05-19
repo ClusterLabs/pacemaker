@@ -160,7 +160,6 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     pe_node_t *node = NULL;
     pe_node_t *local_node = NULL;
     pe_resource_t *parent = uber_parent(rsc);
-    clone_variant_data_t *clone_data = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
     for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
@@ -203,7 +202,6 @@ node_to_be_promoted_on(pe_resource_t *rsc)
         return NULL;
     }
 
-    get_clone_variant_data(clone_data, parent);
     local_node = pe_hash_table_lookup(parent->allowed_nodes, node->details->id);
 
     if (local_node == NULL) {
@@ -218,7 +216,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
         } // else the instance is unmanaged and already promoted
         return NULL;
 
-    } else if ((local_node->count >= clone_data->promoted_node_max)
+    } else if ((local_node->count >= pe__clone_promoted_node_max(parent))
                && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
                      "%s can't be promoted because %s has "
@@ -927,13 +925,11 @@ pe_node_t *
 pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
+    int promoted_max = pe__clone_promoted_max(rsc);
     GList *gIter = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     // Repurpose count to track the number of promoted instances allocated
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -970,7 +966,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         if (child_rsc->sort_index < 0) {
             pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
 
-        } else if ((promoted < clone_data->promoted_max)
+        } else if ((promoted < promoted_max)
                    || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             chosen = node_to_be_promoted_on(child_rsc);
         }
@@ -998,7 +994,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
-                rsc->id, promoted, clone_data->promoted_max);
+                rsc->id, promoted, promoted_max);
 
     return NULL;
 }

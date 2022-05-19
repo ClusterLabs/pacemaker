@@ -229,6 +229,9 @@ typedef struct notify_data_s {
 
 } notify_data_t;
 
+int pe__clone_promoted_max(pe_resource_t *clone);
+int pe__clone_promoted_node_max(pe_resource_t *clone);
+
 bool pe_can_fence(pe_working_set_t *data_set, pe_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
