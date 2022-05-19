@@ -949,12 +949,59 @@ set_instance_priority(gpointer data, gpointer user_data)
                  instance->id, instance->priority);
 }
 
+/*!
+ * \internal
+ * \brief Set a promotable clone instance's role
+ *
+ * \param[in] data       Promotable clone instance to update
+ * \param[in] user_data  Pointer to count of instances chosen for promotion
+ */
+static void
+set_instance_role(gpointer data, gpointer user_data)
+{
+    pe_resource_t *instance = (pe_resource_t *) data;
+    int *count = (int *) user_data;
+
+    pe_resource_t *clone = uber_parent(instance);
+    pe_node_t *chosen = NULL;
+
+    show_promotion_score(instance);
+
+    if (instance->sort_index < 0) {
+        pe_rsc_trace(clone, "Not supposed to promote instance %s",
+                     instance->id);
+
+    } else if ((*count < pe__clone_promoted_max(instance))
+               || !pcmk_is_set(clone->flags, pe_rsc_managed)) {
+        chosen = node_to_be_promoted_on(instance);
+    }
+
+    if (chosen == NULL) {
+        set_next_role_unpromoted(instance, NULL);
+        return;
+    }
+
+    if ((instance->role < RSC_ROLE_PROMOTED)
+        && !pcmk_is_set(instance->cluster->flags, pe_flag_have_quorum)
+        && (instance->cluster->no_quorum_policy == no_quorum_freeze)) {
+        crm_notice("Clone instance %s cannot be promoted without quorum",
+                   instance->id);
+        set_next_role_unpromoted(instance, NULL);
+        return;
+    }
+
+    chosen->count++;
+    pe_rsc_info(clone, "Choosing %s (%s) on %s for promotion",
+                instance->id, role2text(instance->role),
+                chosen->details->uname);
+    set_next_role_promoted(instance, NULL);
+    (*count)++;
+}
+
 pe_node_t *
 pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
-    int promoted_max = pe__clone_promoted_max(rsc);
-    GList *gIter = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
@@ -969,43 +1016,9 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     sort_promotable_instances(rsc);
 
     // Choose the first N eligible instances to be promoted
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        pe_node_t *chosen = NULL;
-
-        show_promotion_score(child_rsc);
-
-        if (child_rsc->sort_index < 0) {
-            pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
-
-        } else if ((promoted < promoted_max)
-                   || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            chosen = node_to_be_promoted_on(child_rsc);
-        }
-
-        if (chosen == NULL) {
-            set_next_role_unpromoted(child_rsc, NULL);
-            continue;
-
-        } else if ((child_rsc->role < RSC_ROLE_PROMOTED)
-              && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-              && data_set->no_quorum_policy == no_quorum_freeze) {
-            crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
-                       child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
-            set_next_role_unpromoted(child_rsc, NULL);
-            continue;
-        }
-
-        chosen->count++;
-        pe_rsc_info(rsc, "Promoting %s (%s %s)",
-                    child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_next_role_promoted(child_rsc, NULL);
-        promoted++;
-    }
-
+    g_list_foreach(rsc->children, set_instance_role, &promoted);
     pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
-                rsc->id, promoted, promoted_max);
-
+                rsc->id, promoted, pe__clone_promoted_max(rsc));
     return NULL;
 }
 
