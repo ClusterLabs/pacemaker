@@ -38,17 +38,18 @@ libpe_status_la_SOURCES	+= common.c
 libpe_status_la_SOURCES	+= complex.c
 libpe_status_la_SOURCES	+= failcounts.c
 libpe_status_la_SOURCES	+= group.c
-libpe_status_la_SOURCES	+= pe_health.c
-libpe_status_la_SOURCES	+= pe_notif.c
 libpe_status_la_SOURCES	+= native.c
+libpe_status_la_SOURCES	+= pe_actions.c
+libpe_status_la_SOURCES	+= pe_health.c
 libpe_status_la_SOURCES	+= pe_digest.c
+libpe_status_la_SOURCES	+= pe_notif.c
+libpe_status_la_SOURCES	+= pe_output.c
 libpe_status_la_SOURCES	+= remote.c
 libpe_status_la_SOURCES	+= rules.c
 libpe_status_la_SOURCES	+= status.c
 libpe_status_la_SOURCES	+= tags.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
-libpe_status_la_SOURCES	+= pe_output.c
 
 clean-generic:
 	rm -f *.log *.debug *~
