@@ -1065,16 +1065,26 @@ reset_instance_priorities(pe_resource_t *clone)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create actions specific to promotable clones
+ *
+ * \param[in] clone  Promotable clone to create actions for
+ */
 void
-create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+pcmk__create_promotable_actions(pe_resource_t *clone)
 {
     bool any_promoting = false;
     bool any_demoting = false;
 
-    pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
-    create_promotable_instance_actions(rsc, &any_promoting, &any_demoting);
-    pe__create_promotable_pseudo_ops(rsc, any_promoting, any_demoting);
-    reset_instance_priorities(rsc);
+    // Create actions for each clone instance individually
+    create_promotable_instance_actions(clone, &any_promoting, &any_demoting);
+
+    // Create pseudo-actions for clone as a whole
+    pe__create_promotable_pseudo_ops(clone, any_promoting, any_demoting);
+
+    // Undo our temporary repurposing of resource priority for instances
+    reset_instance_priorities(clone);
 }
 
 void

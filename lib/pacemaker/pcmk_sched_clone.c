@@ -472,10 +472,13 @@ clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
+
+    pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
     child_ordering_constraints(rsc, data_set);
+
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        create_promotable_actions(rsc, data_set);
+        pcmk__create_promotable_actions(rsc);
     }
 }
 
