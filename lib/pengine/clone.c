@@ -1221,3 +1221,73 @@ pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag)
                                            clone_data->flags, flag, "flag");
     return pcmk_rc_ok;
 }
+
+/*!
+ * \internal
+ * \brief Create pseudo-actions needed for promotable clones
+ *
+ * \param[in] clone          Promotable clone to create actions for
+ * \param[in] any_promoting  Whether any instances will be promoted
+ * \param[in] any_demoting   Whether any instance will be demoted
+ */
+void
+pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
+                                 bool any_demoting)
+{
+    pe_action_t *action = NULL;
+    pe_action_t *action_complete = NULL;
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    // Create a "promote" action for the clone itself
+    action = pe__new_rsc_pseudo_action(clone, RSC_PROMOTE, !any_promoting,
+                                       true);
+
+    // Create a "promoted" action for when all promotions are done
+    action_complete = pe__new_rsc_pseudo_action(clone, RSC_PROMOTED,
+                                                !any_promoting, true);
+    action_complete->priority = INFINITY;
+
+    // Create notification pseudo-actions for promotion
+    if (clone_data->promote_notify == NULL) {
+        clone_data->promote_notify = pe__clone_notif_pseudo_ops(clone,
+                                                                RSC_PROMOTE,
+                                                                action,
+                                                                action_complete);
+    }
+
+    // Create a "demote" action for the clone itself
+    action = pe__new_rsc_pseudo_action(clone, RSC_DEMOTE, !any_demoting, true);
+
+    // Create a "demoted" action for when all demotions are done
+    action_complete = pe__new_rsc_pseudo_action(clone, RSC_DEMOTED,
+                                                !any_demoting, true);
+    action_complete->priority = INFINITY;
+
+    // Create notification pseudo-actions for demotion
+    if (clone_data->demote_notify == NULL) {
+        clone_data->demote_notify = pe__clone_notif_pseudo_ops(clone,
+                                                               RSC_DEMOTE,
+                                                               action,
+                                                               action_complete);
+
+        if (clone_data->promote_notify != NULL) {
+            order_actions(clone_data->stop_notify->post_done,
+                          clone_data->promote_notify->pre,
+                          pe_order_optional);
+            order_actions(clone_data->start_notify->post_done,
+                          clone_data->promote_notify->pre,
+                          pe_order_optional);
+            order_actions(clone_data->demote_notify->post_done,
+                          clone_data->promote_notify->pre,
+                          pe_order_optional);
+            order_actions(clone_data->demote_notify->post_done,
+                          clone_data->start_notify->pre,
+                          pe_order_optional);
+            order_actions(clone_data->demote_notify->post_done,
+                          clone_data->stop_notify->pre,
+                          pe_order_optional);
+        }
+    }
+}

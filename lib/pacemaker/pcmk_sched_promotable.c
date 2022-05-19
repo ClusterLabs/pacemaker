@@ -14,9 +14,6 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_CLONE 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Add implicit promotion ordering for a promotable instance
@@ -1030,15 +1027,9 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
 void
 create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    pe_action_t *action = NULL;
     GList *gIter = rsc->children;
-    pe_action_t *action_complete = NULL;
     bool any_promoting = false;
     bool any_demoting = false;
-
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
 
@@ -1050,46 +1041,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         check_for_role_change(child_rsc, &any_demoting, &any_promoting);
     }
 
-    /* promote */
-    action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting, true);
-    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
-                                                !any_promoting, true);
-    action_complete->priority = INFINITY;
-
-    if (clone_data->promote_notify == NULL) {
-        clone_data->promote_notify = pe__clone_notif_pseudo_ops(rsc,
-                                                                RSC_PROMOTE,
-                                                                action,
-                                                                action_complete);
-    }
-
-    /* demote */
-    action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
-    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, !any_demoting,
-                                                true);
-    action_complete->priority = INFINITY;
-
-    if (clone_data->demote_notify == NULL) {
-        clone_data->demote_notify = pe__clone_notif_pseudo_ops(rsc, RSC_DEMOTE,
-                                                               action,
-                                                               action_complete);
-
-        if (clone_data->promote_notify) {
-            /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
-             * Requires exposing *_notify
-             */
-            order_actions(clone_data->stop_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->start_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,
-                          pe_order_optional);
-        }
-    }
+    pe__create_promotable_pseudo_ops(rsc, any_promoting, any_demoting);
 
     /* restore the correct priority */
 
