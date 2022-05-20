@@ -1744,7 +1744,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
     const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
-    if (pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_casei)) {
+    if (pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
         /* We have duplicate lrm_rsc_op entries in the status
          * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
