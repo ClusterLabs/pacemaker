@@ -132,7 +132,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.command = 'v';
+    options.command = 'u';
     pcmk__str_update(&options.attr_value, optarg);
     return TRUE;
 }
@@ -389,7 +389,6 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
             break;
 
         case 'u':
-        case 'v':
             rc = pcmk__attrd_api_update(NULL, attr_node, attr_name,
                                         attr_value, NULL, attr_set, NULL,
                                         opts | pcmk__node_attr_value);
@@ -551,8 +550,7 @@ use_attrd(void)
 static bool
 try_ipc_update(void)
 {
-    return use_attrd() &&
-           (options.command == 'v' || options.command == 'D' || options.command == 'u');
+    return use_attrd() && (options.command == 'D' || options.command == 'u');
 }
 
 static bool
@@ -563,7 +561,7 @@ pattern_used_correctly(void)
      * -v (update) or -D (delete), with till-reboot
      */
     return options.command == 'G' ||
-           ((options.command == 'v' || options.command == 'D') &&
+           ((options.command == 'u' || options.command == 'D') &&
             pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei));
 }
 
@@ -764,7 +762,7 @@ main(int argc, char **argv)
     } else if (options.command == 'D') {
         rc = command_delete(out, the_cib);
 
-    } else if (options.command == 'v') {
+    } else if (options.command == 'u') {
         rc = command_update(out, the_cib, is_remote_node);
 
     } else {
