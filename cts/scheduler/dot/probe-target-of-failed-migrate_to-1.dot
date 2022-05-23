@@ -1,0 +1,4 @@
+ digraph "g" {
+"dummy1_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
+"st-sbd_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
+}

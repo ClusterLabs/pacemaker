@@ -2549,7 +2549,7 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
 #define STATUS_PATH_MAX 1024
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
-            bool success_only, pe_working_set_t *data_set)
+            int target_rc, pe_working_set_t *data_set)
 {
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
@@ -2580,17 +2580,76 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     CRM_LOG_ASSERT(offset > 0);
     xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 
-    if (xml && success_only) {
+    if (xml && target_rc >= 0) {
         int rc = PCMK_OCF_UNKNOWN_ERROR;
         int status = PCMK_EXEC_ERROR;
 
         crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
         crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS, &status);
-        if ((rc != PCMK_OCF_OK) || (status != PCMK_EXEC_DONE)) {
+        if ((rc != target_rc) || (status != PCMK_EXEC_DONE)) {
             return NULL;
         }
     }
     return xml;
+}
+
+static xmlNode *
+find_lrm_resource(const char *rsc_id, const char *node_name,
+                  pe_working_set_t *data_set)
+{
+    int offset = 0;
+    char xpath[STATUS_PATH_MAX];
+    xmlNode *xml = NULL;
+
+    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset,
+                       "//node_state[@uname='%s']", node_name);
+    offset +=
+        snprintf(xpath + offset, STATUS_PATH_MAX - offset,
+                 "//" XML_LRM_TAG_RESOURCE "[@id='%s']", rsc_id);
+
+    CRM_LOG_ASSERT(offset > 0);
+    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+
+    return xml;
+}
+
+static bool
+unknown_on_node(const char *rsc_id, const char *node_name,
+                pe_working_set_t *data_set)
+{
+    xmlNode *lrm_resource = NULL;
+
+    lrm_resource = find_lrm_resource(rsc_id, node_name, data_set);
+
+    /* If the resource has no lrm_rsc_op history on the node, that means its
+     * state is unknown there.
+     */
+    return (lrm_resource == NULL
+            || first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP) == NULL);
+}
+
+/*!
+ * \brief Check whether a probe/monitor indicating the resource was not running
+ * on a node happened after some event
+ *
+ * \param[in] rsc_id    Resource being checked
+ * \param[in] node_name Node being checked
+ * \param[in] xml_op    Event that monitor is being compared to
+ * \param[in] data_set  Cluster working set
+ *
+ * \return true if such a monitor happened after event, false otherwise
+ */
+static bool
+monitor_not_running_after(const char *rsc_id, const char *node_name,
+                          xmlNode *xml_op, pe_working_set_t *data_set)
+{
+    /* Any probe/monitor operation on the node indicating it was not running
+     * there
+     */
+    xmlNode *monitor = find_lrm_op(rsc_id, CRMD_ACTION_STATUS, node_name,
+                                   NULL, PCMK_OCF_NOT_RUNNING, data_set);
+
+    return (monitor && pe__is_newer_op(monitor, xml_op) > 0);
 }
 
 static int
@@ -2625,7 +2684,7 @@ stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                     pe_working_set_t *data_set)
 {
     xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP,
-                                   node->details->uname, NULL, TRUE, data_set);
+                                   node->details->uname, NULL, PCMK_OCF_OK, data_set);
 
     return (stop_op && (pe__call_id(stop_op) > pe__call_id(xml_op)));
 }
@@ -2674,7 +2733,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     // Check whether there was a migrate_from action on the target
     migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                               source, FALSE, data_set);
+                               source, -1, data_set);
     if (migrate_from) {
         crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
         crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
@@ -2729,7 +2788,7 @@ static bool
 newer_op(pe_resource_t *rsc, const char *action_name, const char *node_name,
          int call_id, pe_working_set_t *data_set)
 {
-    xmlNode *action = find_lrm_op(rsc->id, action_name, node_name, NULL, TRUE,
+    xmlNode *action = find_lrm_op(rsc->id, action_name, node_name, NULL, PCMK_OCF_OK,
                                   data_set);
 
     return pe__call_id(action) > call_id;
@@ -2756,15 +2815,26 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
     // Check for stop on the target
     target_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, target, NULL,
-                              TRUE, data_set);
+                              PCMK_OCF_OK, data_set);
     target_stop_id = pe__call_id(target_stop);
 
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
-                                      source, TRUE, data_set);
+                                      source, PCMK_OCF_OK, data_set);
     target_migrate_from_id = pe__call_id(target_migrate_from);
 
-    if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
+    if (/* If the resource state is unknown on the target, it will likely be
+         * probed there.
+         * Don't just consider it running there. We will get back here anyway in
+         * case the probe detects it's running there.
+         */
+        !unknown_on_node(rsc->id, target, data_set)
+        /* If there's any probe/monitor operation on the target newer than this
+         * failed migrate_to indicating it was not running there, this migrate_to
+         * failure no longer matters for the target.
+         */
+        && !monitor_not_running_after(rsc->id, target, xml_op, data_set)
+        && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
         /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
          * (if it is up).
@@ -2823,11 +2893,11 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
 
     // Check for a stop on the source
     source_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, source, NULL,
-                              TRUE, data_set);
+                              PCMK_OCF_OK, data_set);
 
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
-                                    source, target, TRUE, data_set);
+                                    source, target, PCMK_OCF_OK, data_set);
 
     if ((source_stop == NULL)
         || (pe__call_id(source_stop) < pe__call_id(source_migrate_to))) {
