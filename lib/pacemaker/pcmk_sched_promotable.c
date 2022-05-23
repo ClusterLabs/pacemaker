@@ -1114,28 +1114,49 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
     }
 }
 
+/*!
+ * \internal
+ * \brief Update dependent's allowed nodes for colocation with promotable
+ *
+ * \param[in] dependent     Dependent resource to update
+ * \param[in] primary_node  Node where an instance of the primary will be
+ * \param[in] colocation    Colocation constraint to apply
+ */
 static void
-node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int score)
+update_dependent_allowed_nodes(pe_resource_t *dependent,
+                               pe_node_t *primary_node,
+                               pcmk__colocation_t *colocation)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    const char *value = NULL;
+    const char *primary_value = NULL;
+    const char *attr = NULL;
 
-    if (other == NULL) {
-        return;
+    if (colocation->score >= INFINITY) {
+        return; // Colocation is mandatory, so allowed node scores don't matter
+    }
 
-    } else if (attr == NULL) {
+    // Get value of primary's colocation node attribute
+    attr = colocation->node_attribute;
+    if (attr == NULL) {
         attr = CRM_ATTR_UNAME;
     }
- 
-    value = pe_node_attribute_raw(other, attr);
-    g_hash_table_iter_init(&iter, hash);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        const char *tmp = pe_node_attribute_raw(node, attr);
+    primary_value = pe_node_attribute_raw(primary_node, attr);
 
-        if (pcmk__str_eq(value, tmp, pcmk__str_casei)) {
-            crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
-            node->weight = pcmk__add_scores(node->weight, score);
+    pe_rsc_trace(colocation->primary,
+                 "Applying %s (%s with %s on %s by %s @%d) to %s",
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id, primary_node->details->uname, attr,
+                 colocation->score, dependent->id);
+
+    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        const char *dependent_value = pe_node_attribute_raw(node, attr);
+
+        if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
+            pe_rsc_trace(colocation->primary, "%s: %d + %d",
+                         node->details->uname, node->weight, colocation->score);
+            node->weight = pcmk__add_scores(node->weight, colocation->score);
         }
     }
 }
@@ -1155,14 +1176,9 @@ promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
             pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
             enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 
-            pe_rsc_trace(primary, "Processing: %s", child_rsc->id);
+            pe_rsc_trace(constraint->primary, "Processing: %s", child_rsc->id);
             if ((chosen != NULL) && (next_role == constraint->primary_role)) {
-                pe_rsc_trace(primary, "Applying: %s %s %s %d", child_rsc->id,
-                             role2text(next_role), chosen->details->uname, constraint->score);
-                if (constraint->score < INFINITY) {
-                    node_hash_update_one(dependent->allowed_nodes, chosen,
-                                         constraint->node_attribute, constraint->score);
-                }
+                update_dependent_allowed_nodes(dependent, chosen, constraint);
                 affected_nodes = g_list_prepend(affected_nodes, chosen);
             }
         }
