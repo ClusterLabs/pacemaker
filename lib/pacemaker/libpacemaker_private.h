@@ -273,6 +273,11 @@ void pcmk__update_dependent_with_promotable(pe_resource_t *primary,
                                             pe_resource_t *dependent,
                                             pcmk__colocation_t *colocation);
 
+G_GNUC_INTERNAL
+void pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
+                                                pe_resource_t *dependent,
+                                                pcmk__colocation_t *colocation);
+
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 

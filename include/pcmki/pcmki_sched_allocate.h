@@ -187,9 +187,6 @@ void pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
 
 void pcmk__add_promotion_scores(pe_resource_t *rsc);
-void promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *constraint,
-                              pe_working_set_t *data_set);
 
 enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
                                           pe_node_t *node,

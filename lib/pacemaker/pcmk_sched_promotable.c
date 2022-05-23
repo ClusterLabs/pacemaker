@@ -1213,33 +1213,46 @@ pcmk__update_dependent_with_promotable(pe_resource_t *primary,
     g_list_free(affected_nodes);
 }
 
+/*!
+ * \internal
+ * \brief Update dependent priority for colocation with promotable
+ *
+ * \param[in] primary     Primary resource in the colocation
+ * \param[in] dependent   Dependent resource in the colocation
+ * \param[in] colocation  Colocation constraint to apply
+ */
 void
-promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint,
-                         pe_working_set_t *data_set)
+pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
+                                           pe_resource_t *dependent,
+                                           pcmk__colocation_t *colocation)
 {
-    if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
-        pe_resource_t *primary_instance;
+    pe_resource_t *primary_instance = NULL;
 
-        primary_instance = find_compatible_child(dependent, primary,
-                                                 constraint->primary_role,
-                                                 FALSE, data_set);
-        if ((primary_instance == NULL) && (constraint->score >= INFINITY)) {
-            pe_rsc_trace(dependent, "%s can't be promoted %s",
-                         dependent->id, constraint->id);
-            dependent->priority = -INFINITY;
+    // Look for a primary instance where dependent will be
+    primary_instance = find_compatible_child(dependent, primary,
+                                             colocation->primary_role, FALSE,
+                                             primary->cluster);
 
-        } else if (primary_instance != NULL) {
-            int new_priority = pcmk__add_scores(dependent->priority,
-                                                constraint->score);
+    if (primary_instance != NULL) {
+        // Add primary instance's priority to dependent's
+        int new_priority = pcmk__add_scores(dependent->priority,
+                                            colocation->score);
 
-            pe_rsc_debug(dependent, "Applying %s to %s",
-                         constraint->id, dependent->id);
-            pe_rsc_debug(dependent, "\t%s: %d->%d",
-                         dependent->id, dependent->priority, new_priority);
-            dependent->priority = new_priority;
-        }
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (%s with %s) to %s priority (%s + %s = %s)",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id,
+                     pcmk_readable_score(dependent->priority),
+                     pcmk_readable_score(colocation->score),
+                     pcmk_readable_score(new_priority));
+        dependent->priority = new_priority;
+
+    } else if (colocation->score >= INFINITY) {
+        // Mandatory colocation, but primary won't be here
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (%s with %s) to %s: can't be promoted",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id);
+        dependent->priority = -INFINITY;
     }
-
-    return;
 }

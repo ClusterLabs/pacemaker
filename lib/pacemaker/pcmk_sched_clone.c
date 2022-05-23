@@ -715,8 +715,10 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                                                    constraint);
             return;
 
-        } else {
-            promotable_colocation_rh(dependent, primary, constraint, data_set);
+        } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
+            // We're choosing roles for the dependent
+            pcmk__update_promotable_dependent_priority(primary, dependent,
+                                                       constraint);
             return;
         }
     }
