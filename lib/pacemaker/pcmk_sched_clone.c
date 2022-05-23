@@ -700,11 +700,21 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
         if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+            // We haven't placed the primary yet, so we can't apply colocation
             pe_rsc_trace(primary, "%s is still provisional", primary->id);
             return;
+
         } else if (constraint->primary_role == RSC_ROLE_UNKNOWN) {
+            // This isn't a role-specfic colocation, so handle normally
             pe_rsc_trace(primary, "Handling %s as a clone colocation",
                          constraint->id);
+
+        } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+            // We're placing the dependent
+            pcmk__update_dependent_with_promotable(primary, dependent,
+                                                   constraint);
+            return;
+
         } else {
             promotable_colocation_rh(dependent, primary, constraint, data_set);
             return;

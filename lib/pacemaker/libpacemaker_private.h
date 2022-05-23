@@ -268,6 +268,11 @@ void pcmk__promotable_restart_ordering(pe_resource_t *rsc);
 G_GNUC_INTERNAL
 void pcmk__order_promotable_instances(pe_resource_t *clone);
 
+G_GNUC_INTERNAL
+void pcmk__update_dependent_with_promotable(pe_resource_t *primary,
+                                            pe_resource_t *dependent,
+                                            pcmk__colocation_t *colocation);
+
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
 

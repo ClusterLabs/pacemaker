@@ -1161,43 +1161,64 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
     }
 }
 
+/*!
+ * \brief Update dependent for a colocation with a promotable clone
+ *
+ * \param[in] primary     Primary resource in the colocation
+ * \param[in] dependent   Dependent resource in the colocation
+ * \param[in] colocation  Colocation constraint to apply
+ */
+void
+pcmk__update_dependent_with_promotable(pe_resource_t *primary,
+                                       pe_resource_t *dependent,
+                                       pcmk__colocation_t *colocation)
+{
+    GList *affected_nodes = NULL;
+
+    /* Build a list of all nodes where an instance of the primary will be, and
+     * (for optional colocations) update the dependent's allowed node scores for
+     * each one.
+     */
+    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pe_node_t *node = instance->fns->location(instance, NULL, FALSE);
+
+        if (node == NULL) {
+            continue;
+        }
+        if (instance->fns->state(instance, FALSE) == colocation->primary_role) {
+            update_dependent_allowed_nodes(dependent, node, colocation);
+            affected_nodes = g_list_prepend(affected_nodes, node);
+        }
+    }
+
+    /* For mandatory colocations, add the primary's node weight to the
+     * dependent's node weight for each affected node, and ban the dependent
+     * from all other nodes.
+     *
+     * However, skip this for promoted-with-promoted colocations, otherwise
+     * inactive dependent instances can't start (in the unpromoted role).
+     */
+    if ((colocation->score >= INFINITY)
+        && ((colocation->dependent_role != RSC_ROLE_PROMOTED)
+            || (colocation->primary_role != RSC_ROLE_PROMOTED))) {
+
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (mandatory %s with %s) to %s",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id);
+        node_list_exclude(dependent->allowed_nodes, affected_nodes,
+                          TRUE);
+    }
+    g_list_free(affected_nodes);
+}
+
 void
 promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
-
-    if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-        GList *affected_nodes = NULL;
-
-        for (gIter = primary->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-            enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
-
-            pe_rsc_trace(constraint->primary, "Processing: %s", child_rsc->id);
-            if ((chosen != NULL) && (next_role == constraint->primary_role)) {
-                update_dependent_allowed_nodes(dependent, chosen, constraint);
-                affected_nodes = g_list_prepend(affected_nodes, chosen);
-            }
-        }
-
-        /* Only do this if it's not a promoted-with-promoted colocation. Doing
-         * this unconditionally would prevent unpromoted instances from being
-         * started.
-         */
-        if ((constraint->dependent_role != RSC_ROLE_PROMOTED)
-            || (constraint->primary_role != RSC_ROLE_PROMOTED)) {
-
-            if (constraint->score >= INFINITY) {
-                node_list_exclude(dependent->allowed_nodes, affected_nodes,
-                                  TRUE);
-            }
-        }
-        g_list_free(affected_nodes);
-
-    } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
+    if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
         pe_resource_t *primary_instance;
 
         primary_instance = find_compatible_child(dependent, primary,
