@@ -222,10 +222,9 @@ synthesize_timeout_event(crm_action_t *action, int target_rc)
     return op;
 }
 
-void
-controld_record_action_timeout(crm_action_t *action)
+static void
+controld_record_action_event(crm_action_t *action, lrmd_event_data_t *op)
 {
-    lrmd_event_data_t *op = NULL;
     xmlNode *state = NULL;
     xmlNode *rsc = NULL;
     xmlNode *action_rsc = NULL;
@@ -239,9 +238,6 @@ controld_record_action_timeout(crm_action_t *action)
 
     int call_options = cib_quorum_override | cib_scope_local;
     int target_rc = get_target_rc(action);
-
-    crm_warn("%s %d: %s on %s timed out",
-             crm_element_name(action->xml), action->id, task_uuid, target);
 
     action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
     if (action_rsc == NULL) {
@@ -278,18 +274,34 @@ controld_record_action_timeout(crm_action_t *action)
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
 
-    op = synthesize_timeout_event(action, target_rc);
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
-    lrmd_free_event(op);
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
 
-    crm_trace("Sent CIB update (call ID %d) for timeout of action %d (%s on %s)",
+    crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
               rc, action->id, task_uuid, target);
     crm__set_graph_action_flags(action, pcmk__graph_action_sent_update);
+}
+
+void
+controld_record_action_timeout(crm_action_t *action)
+{
+    lrmd_event_data_t *op = NULL;
+
+    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+
+    int target_rc = get_target_rc(action);
+
+    crm_warn("%s %d: %s on %s timed out",
+             crm_element_name(action->xml), action->id, task_uuid, target);
+
+    op = synthesize_timeout_event(action, target_rc);
+    controld_record_action_event(action, op);
+    lrmd_free_event(op);
 }
 
 static gboolean
