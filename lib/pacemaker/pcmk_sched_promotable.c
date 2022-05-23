@@ -1087,25 +1087,30 @@ pcmk__create_promotable_actions(pe_resource_t *clone)
     reset_instance_priorities(clone);
 }
 
+/*!
+ * \internal
+ * \brief Create internal orderings for a promotable clone's instances
+ *
+ * \param[in] clone  Promotable clone instance to order
+ */
 void
-promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+pcmk__order_promotable_instances(pe_resource_t *clone)
 {
-    GList *gIter = rsc->children;
-    pe_resource_t *last_rsc = NULL;
+    pe_resource_t *previous = NULL; // Needed for ordered clones
 
-    pcmk__promotable_restart_ordering(rsc);
+    pcmk__promotable_restart_ordering(clone);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        /* child demote before promote */
-        pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
-                                     RSC_PROMOTE, pe_order_optional, data_set);
+        // Demote before promote
+        pcmk__order_resource_actions(instance, RSC_DEMOTE,
+                                     instance, RSC_PROMOTE,
+                                     pe_order_optional, instance->cluster);
 
-        order_instance_promotion(rsc, child_rsc, last_rsc);
-        order_instance_demotion(rsc, child_rsc, last_rsc);
-
-        last_rsc = child_rsc;
+        order_instance_promotion(clone, instance, previous);
+        order_instance_demotion(clone, instance, previous);
+        previous = instance;
     }
 }
 

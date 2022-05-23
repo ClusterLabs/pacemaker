@@ -599,7 +599,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
         last_rsc = child_rsc;
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        promotable_constraints(rsc, data_set);
+        pcmk__order_promotable_instances(rsc);
     }
 }
 
