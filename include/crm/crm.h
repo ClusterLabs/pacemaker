@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.15.0"
+#  define CRM_FEATURE_SET		"3.15.1"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -123,6 +123,7 @@ extern char *crm_system_name;
 #  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
 #  define CRM_ATTR_RA_VERSION       "#ra-version"
 #  define CRM_ATTR_PROTOCOL         "#attrd-protocol"
+#  define CRM_ATTR_FEATURE_SET      "#feature-set"
 
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"
