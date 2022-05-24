@@ -563,7 +563,7 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
  * \param[in] values  If not NULL, the allowed values for the parameter
  */
 static void
-add_desc(GString *s, const char *tag, const char *desc, const char *values)
+add_desc(GString *s, const char *tag, const char *desc, const char *values, const char *spaces)
 {
     char *escaped_en = crm_xml_escape(desc);
 
@@ -585,6 +585,9 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values)
                 locale = strtok(setlocale(LC_ALL, NULL), "_");
             }
 
+	    if (spaces != NULL) {
+                g_string_append_printf(s, "%s", spaces);
+            }
             g_string_append_printf(s, "<%s lang=\"%s\">%s",
                                    tag, locale, localized);
             if (values != NULL) {
@@ -617,10 +620,10 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                               name, PCMK_OCF_VERSION);
 
     g_string_append(s, "  ");
-    add_desc(s, "longdesc", desc_long, NULL);
+    add_desc(s, "longdesc", desc_long, NULL, "  ");
 
     g_string_append(s, "  ");
-    add_desc(s, "shortdesc", desc_short, NULL);
+    add_desc(s, "shortdesc", desc_short, NULL, "  ");
 
     g_string_append(s, "  <parameters>\n");
 
@@ -638,10 +641,10 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                                option_list[lpc].name);
 
         g_string_append(s, "      ");
-        add_desc(s, "longdesc", long_desc, option_list[lpc].values);
+        add_desc(s, "longdesc", long_desc, option_list[lpc].values, "      ");
 
         g_string_append(s, "      ");
-        add_desc(s, "shortdesc", option_list[lpc].description_short, NULL);
+        add_desc(s, "shortdesc", option_list[lpc].description_short, NULL, "      ");
 
         if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
             char *str = strdup(option_list[lpc].values);
