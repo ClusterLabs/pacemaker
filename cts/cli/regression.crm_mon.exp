@@ -34,7 +34,7 @@ Active Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -279,7 +279,7 @@ Active Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --exclude=nodes">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1036,7 +1036,7 @@ Negative Location Constraints:
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --group-by-node">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1348,7 +1348,7 @@ Negative Location Constraints:
 <pacemaker-result api-version="X" request="crm_mon --output-as xml --include=all --node=cluster01">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1539,7 +1539,7 @@ Negative Location Constraints:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --node=even-nodes">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1707,7 +1707,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --resource=fencing-rscs">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1764,7 +1764,7 @@ Active Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --node=blah">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1893,7 +1893,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Fencing">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -1970,7 +1970,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=exim-group">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2051,7 +2051,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Email">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2131,7 +2131,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping-clone">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2221,7 +2221,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2311,7 +2311,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping:1">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2380,7 +2380,7 @@ Active Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=blah">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2454,7 +2454,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2582,7 +2582,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2681,7 +2681,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-docker-2">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2778,7 +2778,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-0">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -2881,7 +2881,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3007,7 +3007,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-clone-group">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3113,7 +3113,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3217,7 +3217,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group:1">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3309,7 +3309,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3413,7 +3413,7 @@ Operations:
 <pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy:1">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
@@ -3504,7 +3504,7 @@ Failed Resource Actions:
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
@@ -3970,7 +3970,7 @@ Full List of Resources:
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
@@ -4067,7 +4067,7 @@ Active Resources:
 <pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
-    <current_dc present="true" version="" with_quorum="true"/>
+    <current_dc present="true" version="" name="cluster02" id="2" with_quorum="true"/>
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="2"/>
