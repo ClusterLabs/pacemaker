@@ -25,6 +25,9 @@
                     </choice>
                 </attribute>
             </optional>
+            <optional>
+                <attribute name="feature_set"> <text/> </attribute>
+            </optional>
             <attribute name="shutdown"> <data type="boolean" /> </attribute>
             <attribute name="expected_up"> <data type="boolean" /> </attribute>
             <attribute name="is_dc"> <data type="boolean" /> </attribute>

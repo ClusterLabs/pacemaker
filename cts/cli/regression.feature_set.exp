@@ -1,0 +1,202 @@
+Created new pacemaker configuration
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Import the test CIB =#=#=#=
+=#=#=#= Current cib after: Import the test CIB =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+      <node id="3" uname="cluster03"/>
+      <node id="4" type="remote" uname="remote01"/>
+    </nodes>
+    <resources>
+      <bundle id="guest01">
+        <docker image="pcmk:http"/>
+        <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0"/>
+        <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
+      </bundle>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.15.1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.15.1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="cluster03" in_ccm="true" crmd="offline" join="down" expected="down"/>
+    <node_state id="4" uname="remote01" in_ccm="true" remote_node="true"/>
+  </status>
+</cib>
+=#=#=#= End test: Import the test CIB - OK (0) =#=#=#=
+* Passed: cibadmin       - Import the test CIB
+=#=#=#= Begin test: Complete text output, no mixed status =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster01 (1) (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 4 resource instances configured
+
+Node List:
+  * Node cluster01 (1): online, feature set 3.15.1
+  * Node cluster02 (2): online, feature set 3.15.1
+  * Node cluster03 (3): OFFLINE
+  * GuestNode guest01-0@: OFFLINE
+  * RemoteNode remote01 (4): OFFLINE
+
+Active Resources:
+  * No active resources
+=#=#=#= End test: Complete text output, no mixed status - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output, no mixed status
+=#=#=#= Begin test: XML output, no mixed status =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="false"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="4" disabled="0" blocked="0"/>
+    <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
+    <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
+    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
+  </nodes>
+  <resources>
+    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output, no mixed status - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output, no mixed status
+=#=#=#= Begin test: Fake inconsistent feature set =#=#=#=
+=#=#=#= Current cib after: Fake inconsistent feature set =#=#=#=
+<cib epoch="2" num_updates="1" admin_epoch="0" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+      <node id="3" uname="cluster03"/>
+      <node id="4" type="remote" uname="remote01"/>
+    </nodes>
+    <resources>
+      <bundle id="guest01">
+        <docker image="pcmk:http"/>
+        <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0"/>
+        <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
+      </bundle>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.15.1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.15.0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="cluster03" in_ccm="true" crmd="offline" join="down" expected="down"/>
+    <node_state id="4" uname="remote01" in_ccm="true" remote_node="true"/>
+  </status>
+</cib>
+=#=#=#= End test: Fake inconsistent feature set - OK (0) =#=#=#=
+* Passed: crm_attribute  - Fake inconsistent feature set
+=#=#=#= Begin test: Complete text output, mixed status =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster01 (1) (version) - MIXED-VERSION partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 4 resource instances configured
+
+Node List:
+  * Node cluster01 (1): online, feature set 3.15.1
+  * Node cluster02 (2): online, feature set 3.15.0
+  * Node cluster03 (3): OFFLINE
+  * GuestNode guest01-0@: OFFLINE
+  * RemoteNode remote01 (4): OFFLINE
+
+Active Resources:
+  * No active resources
+=#=#=#= End test: Complete text output, mixed status - OK (0) =#=#=#=
+* Passed: crm_mon        - Complete text output, mixed status
+=#=#=#= Begin test: XML output, mixed status =#=#=#=
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml">
+  <summary>
+    <stack type="corosync"/>
+    <current_dc present="true" version="" name="cluster01" id="1" with_quorum="true" mixed_version="true"/>
+    <last_update time=""/>
+    <last_change time=""/>
+    <nodes_configured number="5"/>
+    <resources_configured number="4" disabled="0" blocked="0"/>
+    <cluster_options stonith-enabled="false" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false" stonith-timeout-ms="60000" priority-fencing-delay-ms="0"/>
+  </summary>
+  <nodes>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="0" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="3.15.0" shutdown="false" expected_up="true" is_dc="false" resources_running="0" type="member"/>
+    <node name="cluster03" id="3" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="member"/>
+    <node name="guest01-0" id="guest01-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="guest01-docker-0"/>
+    <node name="remote01" id="4" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote"/>
+  </nodes>
+  <resources>
+    <bundle id="guest01" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
+      <replica id="0">
+        <resource id="guest01-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="guest01-0" resource_agent="ocf:pacemaker:remote" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </replica>
+    </bundle>
+  </resources>
+  <node_history/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: XML output, mixed status - OK (0) =#=#=#=
+* Passed: crm_mon        - XML output, mixed status

@@ -54,6 +54,9 @@
                             <attribute name="with_quorum"> <data type="boolean" /> </attribute>
                         </group>
                     </optional>
+                    <optional>
+                        <attribute name="mixed_version"> <data type="boolean" /> </attribute>
+                    </optional>
                 </element>
             </optional>
             <optional>

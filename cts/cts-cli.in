@@ -22,7 +22,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -40,7 +40,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools crm_mon acls validity upgrade rules"
+tests="dates tools crm_mon acls validity upgrade rules feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -1838,6 +1838,38 @@ EOF
     rm -f "$TMPXML"
 }
 
+function test_feature_set() {
+    create_shadow_cib
+
+    # Import the initial test CIB with non-mixed versions
+    desc="Import the test CIB"
+    cmd="cibadmin --replace --xml-file $test_home/cli/crm_mon-feature_set.xml"
+    test_assert $CRM_EX_OK
+
+    desc="Complete text output, no mixed status"
+    cmd="crm_mon -1 --show-detail"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, no mixed status"
+    cmd="crm_mon --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    # Modify the CIB to fake that the cluster has mixed versions
+    desc="Fake inconsistent feature set"
+    cmd="crm_attribute --node=cluster02 --name=#feature-set --update=3.15.0 --lifetime=reboot"
+    test_assert $CRM_EX_OK
+
+    desc="Complete text output, mixed status"
+    cmd="crm_mon -1 --show-detail"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, mixed status"
+    cmd="crm_mon --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_shadow_dir
+}
+
 # Process command-line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -1884,6 +1916,7 @@ for t in $tests; do
         upgrade) ;;
         rules) ;;
         crm_mon) ;;
+        feature_set) ;;
         *)
             echo "error: unknown test $t"
             echo
