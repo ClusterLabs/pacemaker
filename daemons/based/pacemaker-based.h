@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,7 +88,6 @@ void terminate_cib(const char *caller, int fast);
 gboolean cib_legacy_mode(void);
 
 gboolean uninitializeCib(void);
-gboolean verifyCibXml(xmlNode *cib);
 xmlNode *readCibXml(char *buffer);
 xmlNode *readCibXmlFile(const char *dir, const char *file,
                         gboolean discard_status);

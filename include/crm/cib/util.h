@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,10 +19,7 @@ extern "C" {
 #endif
 
 /* Utility functions */
-xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
-
 xmlNode *createEmptyCib(int cib_epoch);
-gboolean verifyCibXml(xmlNode * cib);
 
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
 
