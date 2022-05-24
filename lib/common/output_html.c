@@ -33,7 +33,7 @@ static const char *stylesheet_default =
     ".rsc-multiple { color: orange }\n"
     ".rsc-ok { color: green }\n"
 
-    ".warning { color: red, font-weight: bold }";
+    ".warning { color: red; font-weight: bold }";
 
 static gboolean cgi_output = FALSE;
 static char *stylesheet_link = NULL;
