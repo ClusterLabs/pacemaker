@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the Pacemaker project contributors
+ * Copyright 2013-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,30 @@
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/cib/internal.h>
+
+/*
+ * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
+ * with the no-longer-supported CMAN or corosync-plugin stacks) is unversioned.
+ *
+ * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
+ * peer request and reply. As of Pacemaker 2.0.0, at start-up each attrd will
+ * also set a private attribute for itself with its version, so any attrd can
+ * determine the minimum version supported by all peers.
+ *
+ * Protocol  Pacemaker  Significant changes
+ * --------  ---------  -------------------
+ *     1       1.1.11   PCMK__ATTRD_CMD_UPDATE (PCMK__XA_ATTR_NAME only),
+ *                      PCMK__ATTRD_CMD_PEER_REMOVE, PCMK__ATTRD_CMD_REFRESH,
+ *                      PCMK__ATTRD_CMD_FLUSH, PCMK__ATTRD_CMD_SYNC,
+ *                      PCMK__ATTRD_CMD_SYNC_RESPONSE
+ *     1       1.1.13   PCMK__ATTRD_CMD_UPDATE (with PCMK__XA_ATTR_PATTERN),
+ *                      PCMK__ATTRD_CMD_QUERY
+ *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
+ *                      PCMK__ATTRD_CMD_UPDATE_DELAY
+ *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
+ *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
+ */
+#define ATTRD_PROTOCOL_VERSION "3"
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
