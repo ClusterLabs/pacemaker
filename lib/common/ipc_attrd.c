@@ -360,6 +360,40 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     return rc;
 }
 
+static void
+add_op_attr(xmlNode *op, uint32_t options)
+{
+    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
+    }
+}
+
+static void
+populate_update_op(xmlNode *op, const char *node, const char *name, const char *value,
+                   const char *dampen, const char *set, uint32_t options)
+{
+    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
+        crm_xml_add(op, PCMK__XA_ATTR_PATTERN, name);
+    } else {
+        crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
+    }
+
+    add_op_attr(op, options);
+
+    crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
+    crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
+    crm_xml_add(op, PCMK__XA_ATTR_NODE_NAME, node);
+    crm_xml_add(op, PCMK__XA_ATTR_SET, set);
+    crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(options, pcmk__node_attr_remote));
+    crm_xml_add_int(op, PCMK__XA_ATTR_IS_PRIVATE,
+                    pcmk_is_set(options, pcmk__node_attr_private));
+}
+
 int
 pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
                        const char *value, const char *dampen, const char *set,
@@ -381,29 +415,7 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     }
 
     request = create_attrd_op(user_name);
-
-    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
-        crm_xml_add(request, PCMK__XA_ATTR_PATTERN, name);
-    } else {
-        crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
-    }
-
-    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
-    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
-    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
-    }
-
-    crm_xml_add(request, PCMK__XA_ATTR_VALUE, value);
-    crm_xml_add(request, PCMK__XA_ATTR_DAMPENING, dampen);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
-    crm_xml_add(request, PCMK__XA_ATTR_SET, set);
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(options, pcmk__node_attr_remote));
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_PRIVATE,
-                    pcmk_is_set(options, pcmk__node_attr_private));
+    populate_update_op(request, node, name, value, dampen, set, options);
 
     if (api == NULL) {
         rc = connect_and_send_attrd_request(request);
