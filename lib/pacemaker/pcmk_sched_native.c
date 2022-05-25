@@ -1401,36 +1401,49 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     g_list_free(allowed_nodes);
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
 pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                   pe_resource_t *primary,
-                                  pcmk__colocation_t *constraint,
+                                  pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {
     enum pcmk__coloc_affects filter_results;
 
-    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
               return);
 
     if (for_dependent) {
         // Always process on behalf of primary resource
-        primary->cmds->apply_coloc_score(dependent, primary, constraint, false);
+        primary->cmds->apply_coloc_score(dependent, primary, colocation, false);
         return;
     }
 
-    filter_results = pcmk__colocation_affects(dependent, primary, constraint,
+    filter_results = pcmk__colocation_affects(dependent, primary, colocation,
                                               false);
     pe_rsc_trace(dependent, "%s %s with %s (%s, score=%d, filter=%d)",
-                 ((constraint->score > 0)? "Colocating" : "Anti-colocating"),
-                 dependent->id, primary->id, constraint->id, constraint->score,
+                 ((colocation->score > 0)? "Colocating" : "Anti-colocating"),
+                 dependent->id, primary->id, colocation->id, colocation->score,
                  filter_results);
 
     switch (filter_results) {
         case pcmk__coloc_affects_role:
-            pcmk__apply_coloc_to_priority(dependent, primary, constraint);
+            pcmk__apply_coloc_to_priority(dependent, primary, colocation);
             break;
         case pcmk__coloc_affects_location:
-            pcmk__apply_coloc_to_weights(dependent, primary, constraint);
+            pcmk__apply_coloc_to_weights(dependent, primary, colocation);
             break;
         case pcmk__coloc_affects_nothing:
         default:

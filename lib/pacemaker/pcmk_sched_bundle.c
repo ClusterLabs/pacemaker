@@ -448,9 +448,22 @@ int copies_per_node(pe_resource_t * rsc)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
 pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
+                               pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
     GList *allocated_primaries = NULL;
@@ -462,7 +475,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
      */
     CRM_ASSERT(!for_dependent);
 
-    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
               return);
     CRM_ASSERT(dependent->variant == pe_native);
 
@@ -470,7 +483,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         pe_rsc_trace(primary, "%s is still provisional", primary->id);
         return;
 
-    } else if(constraint->dependent->variant > pe_group) {
+    } else if (colocation->dependent->variant > pe_group) {
         pe_resource_t *primary_replica = compatible_replica(dependent, primary,
                                                             RSC_ROLE_UNKNOWN,
                                                             FALSE,
@@ -480,9 +493,9 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
             dependent->cmds->apply_coloc_score(dependent, primary_replica,
-                                               constraint, true);
+                                               colocation, true);
 
-        } else if (constraint->score >= INFINITY) {
+        } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
@@ -497,16 +510,16 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
     get_bundle_variant_data(bundle_data, primary);
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, dependent->id, primary->id, constraint->score);
+                 colocation->id, dependent->id, primary->id, colocation->score);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (constraint->score < INFINITY) {
+        if (colocation->score < INFINITY) {
             replica->container->cmds->apply_coloc_score(dependent,
                                                         replica->container,
-                                                        constraint, false);
+                                                        colocation, false);
 
         } else {
             pe_node_t *chosen = replica->container->fns->location(replica->container,
@@ -516,23 +529,23 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
             pe_rsc_trace(primary, "Allowing %s: %s %d",
-                         constraint->id, chosen->details->uname,
+                         colocation->id, chosen->details->uname,
                          chosen->weight);
             allocated_primaries = g_list_prepend(allocated_primaries, chosen);
         }
     }
 
-    if (constraint->score >= INFINITY) {
+    if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, allocated_primaries, FALSE);
     }
     g_list_free(allocated_primaries);

@@ -25,8 +25,21 @@ struct resource_alloc_functions_s {
     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
 
+    /*!
+     * \internal
+     * \brief Apply a colocation's score to node weights or resource priority
+     *
+     * Given a colocation constraint, apply its score to the dependent's
+     * allowed node weights (if we are still placing resources) or priority (if
+     * we are choosing promotable clone instance roles).
+     *
+     * \param[in] dependent      Dependent resource in colocation
+     * \param[in] primary        Primary resource in colocation
+     * \param[in] colocation     Colocation constraint to apply
+     * \param[in] for_dependent  true if called on behalf of dependent
+     */
     void (*apply_coloc_score) (pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
+                               pcmk__colocation_t *colocation,
                                bool for_dependent);
 
     /*!
@@ -391,7 +404,7 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        pe_resource_t *primary,
-                                       pcmk__colocation_t *constraint,
+                                       pcmk__colocation_t *colocation,
                                        bool for_dependent);
 
 // Groups (pcmk_sched_group.c)
@@ -399,7 +412,7 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
 G_GNUC_INTERNAL
 void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    pe_resource_t *primary,
-                                   pcmk__colocation_t *constraint,
+                                   pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
@@ -412,7 +425,7 @@ GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
 G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    pe_resource_t *primary,
-                                   pcmk__colocation_t *constraint,
+                                   pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
 // Bundles (pcmk_sched_bundle.c)
@@ -420,7 +433,7 @@ void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     pe_resource_t *primary,
-                                    pcmk__colocation_t *constraint,
+                                    pcmk__colocation_t *colocation,
                                     bool for_dependent);
 
 G_GNUC_INTERNAL

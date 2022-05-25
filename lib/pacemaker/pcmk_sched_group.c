@@ -355,15 +355,28 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
 pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *constraint,
+                              pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
-    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
               return);
 
     if (!for_dependent) {
@@ -377,11 +390,11 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
     if (group_data->colocated) {
         group_data->first_child->cmds->apply_coloc_score(group_data->first_child,
-                                                         primary, constraint,
+                                                         primary, colocation,
                                                          true);
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation "
                          "between non-colocated group and %s",
                          dependent->id, primary->id);
@@ -391,7 +404,7 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->apply_coloc_score(child_rsc, primary, constraint,
+        child_rsc->cmds->apply_coloc_score(child_rsc, primary, colocation,
                                            true);
     }
     return;
@@ -402,27 +415,27 @@ for_primary:
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary, "Processing RH %s of constraint %s (LH is %s)",
-                 primary->id, constraint->id, dependent->id);
+                 primary->id, colocation->id, dependent->id);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
-        if (constraint->score >= INFINITY) {
+        if (colocation->score >= INFINITY) {
             /* Ensure RHS is _fully_ up before can start LHS */
             group_data->last_child->cmds->apply_coloc_score(dependent,
                                                             group_data->last_child,
-                                                            constraint, false);
+                                                            colocation, false);
         } else {
             /* A partially active RHS is fine */
             group_data->first_child->cmds->apply_coloc_score(dependent,
                                                              group_data->first_child,
-                                                             constraint, false);
+                                                             colocation, false);
         }
 
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s", dependent->id, primary->id);
         return;
@@ -431,7 +444,7 @@ for_primary:
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, constraint,
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
                                            false);
     }
 }

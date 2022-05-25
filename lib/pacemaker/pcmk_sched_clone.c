@@ -674,9 +674,22 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     return pair;
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
 pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *constraint,
+                              pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
     GList *gIter = NULL;
@@ -689,12 +702,12 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
      */
     CRM_ASSERT(!for_dependent);
 
-    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
               return);
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, dependent->id, primary->id, constraint->score);
+                 colocation->id, dependent->id, primary->id, colocation->score);
 
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
         if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
@@ -702,38 +715,38 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
             pe_rsc_trace(primary, "%s is still provisional", primary->id);
             return;
 
-        } else if (constraint->primary_role == RSC_ROLE_UNKNOWN) {
+        } else if (colocation->primary_role == RSC_ROLE_UNKNOWN) {
             // This isn't a role-specfic colocation, so handle normally
             pe_rsc_trace(primary, "Handling %s as a clone colocation",
-                         constraint->id);
+                         colocation->id);
 
         } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
             // We're placing the dependent
             pcmk__update_dependent_with_promotable(primary, dependent,
-                                                   constraint);
+                                                   colocation);
             return;
 
-        } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
+        } else if (colocation->dependent_role == RSC_ROLE_PROMOTED) {
             // We're choosing roles for the dependent
             pcmk__update_promotable_dependent_priority(primary, dependent,
-                                                       constraint);
+                                                       colocation);
             return;
         }
     }
 
     /* only the LHS side needs to be labeled as interleave */
-    interleave_s = g_hash_table_lookup(constraint->dependent->meta,
+    interleave_s = g_hash_table_lookup(colocation->dependent->meta,
                                        XML_RSC_ATTR_INTERLEAVE);
     if (crm_is_true(interleave_s)
-        && (constraint->dependent->variant > pe_group)) {
+        && (colocation->dependent->variant > pe_group)) {
         /* @TODO Do we actually care about multiple primary copies sharing a
          * dependent copy anymore?
          */
-        if (copies_per_node(constraint->dependent) != copies_per_node(constraint->primary)) {
+        if (copies_per_node(colocation->dependent) != copies_per_node(colocation->primary)) {
             pcmk__config_err("Cannot interleave %s and %s because they do not "
                              "support the same number of instances per node",
-                             constraint->dependent->id,
-                             constraint->primary->id);
+                             colocation->dependent->id,
+                             colocation->primary->id);
 
         } else {
             do_interleave = TRUE;
@@ -754,9 +767,9 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);
             dependent->cmds->apply_coloc_score(dependent, primary_instance,
-                                               constraint, true);
+                                               colocation, true);
 
-        } else if (constraint->score >= INFINITY) {
+        } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
@@ -768,7 +781,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         GList *affected_nodes = NULL;
 
         gIter = primary->children;
@@ -778,7 +791,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
-                             constraint->id, chosen->details->uname,
+                             colocation->id, chosen->details->uname,
                              chosen->weight);
                 affected_nodes = g_list_prepend(affected_nodes, chosen);
             }
@@ -793,7 +806,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, constraint,
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
                                            false);
     }
 }
