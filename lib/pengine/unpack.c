@@ -2649,7 +2649,8 @@ unknown_on_node(const char *rsc_id, const char *node_name,
  */
 static bool
 monitor_not_running_after(const char *rsc_id, const char *node_name,
-                          xmlNode *xml_op, pe_working_set_t *data_set)
+                          xmlNode *xml_op, bool same_node,
+                          pe_working_set_t *data_set)
 {
     /* Any probe/monitor operation on the node indicating it was not running
      * there
@@ -2657,7 +2658,7 @@ monitor_not_running_after(const char *rsc_id, const char *node_name,
     xmlNode *monitor = find_lrm_op(rsc_id, CRMD_ACTION_STATUS, node_name,
                                    NULL, PCMK_OCF_NOT_RUNNING, data_set);
 
-    return (monitor && pe__is_newer_op(monitor, xml_op) > 0);
+    return (monitor && pe__is_newer_op(monitor, xml_op, same_node) > 0);
 }
 
 static int
@@ -2841,7 +2842,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * failed migrate_to indicating it was not running there, this migrate_to
          * failure no longer matters for the target.
          */
-        && !monitor_not_running_after(rsc->id, target, xml_op, data_set)
+        && !monitor_not_running_after(rsc->id, target, xml_op, false, data_set)
         && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
         /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
