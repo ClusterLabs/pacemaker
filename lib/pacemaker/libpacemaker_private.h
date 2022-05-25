@@ -222,11 +222,6 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    pcmk__colocation_t *constraint);
 
 G_GNUC_INTERNAL
-void pcmk__apply_colocation(pcmk__colocation_t *colocation,
-                            pe_resource_t *rsc1, pe_resource_t *rsc2,
-                            uint32_t flags);
-
-G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL

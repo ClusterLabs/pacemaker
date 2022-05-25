@@ -1075,26 +1075,6 @@ pcmk__apply_coloc_to_priority(pe_resource_t *dependent, pe_resource_t *primary,
 
 /*!
  * \internal
- * \brief Apply a colocation constraint to allowed nodes' weights
- *
- * \param[in] colocation   Colocation constraint to apply
- * \param[in] rsc1         Resource whose allowed nodes should be updated
- * \param[in] rsc2         Resource whose preferences should be added
- * \param[in] flags        Flags (enum pe_weights) to apply when adding scores
- */
-void
-pcmk__apply_colocation(pcmk__colocation_t *colocation, pe_resource_t *rsc1,
-                       pe_resource_t *rsc2, uint32_t flags)
-{
-    CRM_ASSERT((colocation != NULL) && (rsc1 != NULL) && (rsc2 != NULL));
-
-    rsc2->cmds->merge_weights(rsc2, rsc1->id, &rsc1->allowed_nodes,
-                              colocation->node_attribute,
-                              colocation->score / (float) INFINITY, flags);
-}
-
-/*!
- * \internal
  * \brief Find score of highest-scored node that matches colocation attribute
  *
  * \param[in] rsc    Resource whose allowed nodes should be searched

@@ -318,8 +318,15 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (pcmk__colocation_has_influence(constraint, NULL)) {
-            pcmk__apply_colocation(constraint, rsc, constraint->dependent,
-                                   pe_weights_rollback|pe_weights_positive);
+            pe_resource_t *dependent = constraint->dependent;
+            const uint32_t flags = pe_weights_rollback|pe_weights_positive;
+
+            dependent->cmds->merge_weights(dependent, rsc->id,
+                                           &rsc->allowed_nodes,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           flags);
+
         }
     }
 
