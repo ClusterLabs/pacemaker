@@ -2704,6 +2704,63 @@ non_monitor_after(const char *rsc_id, const char *node_name, xmlNode *xml_op,
     return false;
 }
 
+/*!
+ * \brief Check whether the resource has newer state on a node after a migration
+ * attempt
+ *
+ * \param[in] rsc_id       Resource being checked
+ * \param[in] node_name    Node being checked
+ * \param[in] migrate_to   Any migrate_to event that is being compared to
+ * \param[in] migrate_from Any migrate_from event that is being compared to
+ * \param[in] data_set     Cluster working set
+ *
+ * \return true if such a operation happened after event, false otherwise
+ */
+static bool
+newer_state_after_migrate(const char *rsc_id, const char *node_name,
+                          xmlNode *migrate_to, xmlNode *migrate_from,
+                          pe_working_set_t *data_set)
+{
+    xmlNode *xml_op = migrate_to;
+    const char *source = NULL;
+    const char *target = NULL;
+    bool same_node = false;
+
+    if (migrate_from) {
+        xml_op = migrate_from;
+    }
+
+    source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+    /* It's preferred to compare to the migrate event on the same node if
+     * existing, since call ids are more reliable.
+     */
+    if (pcmk__str_eq(node_name, target, pcmk__str_casei)) {
+        if (migrate_from) {
+           xml_op = migrate_from;
+           same_node = true;
+
+        } else {
+           xml_op = migrate_to;
+        }
+
+    } else if (pcmk__str_eq(node_name, source, pcmk__str_casei)) {
+        if (migrate_to) {
+           xml_op = migrate_to;
+           same_node = true;
+
+        } else {
+           xml_op = migrate_from;
+        }
+    }
+
+    /* If there's any newer non-monitor operation on the node, the migration
+     * events potentially no longer matter for the node.
+     */
+    return non_monitor_after(rsc_id, node_name, xml_op, same_node, data_set);
+}
+
 static int
 pe__call_id(xmlNode *op_xml)
 {
@@ -2765,6 +2822,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
     bool source_newer_op = false;
+    bool target_newer_state = false;
 
     // Sanity check
     CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
@@ -2783,6 +2841,16 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      * need to check how this migrate_to might matter for the target.
      */
     if (source_newer_op && migrate_from) {
+        return;
+    }
+
+    /* If the resource has newer state on the target after the migration
+     * events, this migrate_to no longer matters for the target.
+     */
+    target_newer_state = newer_state_after_migrate(rsc->id, target, xml_op,
+                                                   migrate_from, data_set);
+
+    if (source_newer_op && target_newer_state) {
         return;
     }
 
@@ -2811,14 +2879,31 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 
     } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
-        if (target_node && target_node->details->online) {
+        /* If the resource has newer state on the target, this migrate_to no
+         * longer matters for the target.
+         */
+        if (!target_newer_state
+            && target_node && target_node->details->online) {
             pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
                          target_node->details->online);
             native_add_running(rsc, target_node, data_set, TRUE);
+
+        } else {
+            /* With the earlier bail logic, migrate_from != NULL here implies
+             * source_newer_op is false, meaning this migrate_to still matters
+             * for the source.
+             * Consider it failed here - forces a restart, prevents migration
+             */
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
 
     } else { // Pending, or complete but erased
-        if (target_node && target_node->details->online) {
+        /* If the resource has newer state on the target, this migrate_to no
+         * longer matters for the target.
+         */
+        if (!target_newer_state
+            && target_node && target_node->details->online) {
             pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
                          target_node->details->online);
 
