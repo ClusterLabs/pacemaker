@@ -19,13 +19,13 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-GHashTable *pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
-                                       GHashTable *nodes, const char *attr,
-                                       float factor, uint32_t flags);
+void pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
+                                GHashTable **nodes, const char *attr,
+                                float factor, uint32_t flags);
 
-GHashTable *pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
-                                      GHashTable *nodes, const char *attr,
-                                      float factor, uint32_t flags);
+void pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
+                               GHashTable **nodes, const char *attr,
+                               float factor, uint32_t flags);
 
 pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *preferred,
                                  pe_working_set_t *data_set);

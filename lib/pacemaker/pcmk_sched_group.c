@@ -561,9 +561,9 @@ group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-GHashTable *
+void
 pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
-                          GHashTable *nodes, const char *attr, float factor,
+                          GHashTable **nodes, const char *attr, float factor,
                           uint32_t flags)
 {
     GList *gIter = rsc->rsc_cons_lhs;
@@ -575,26 +575,25 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
                     rsc->id, primary_id);
-        return nodes;
+        return;
     }
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
     member = group_data->first_child;
-    nodes = member->cmds->merge_weights(member, primary_id, nodes, attr,
-                                        factor, flags);
+    member->cmds->merge_weights(member, primary_id, nodes, attr, factor,
+                                flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        nodes = pcmk__native_merge_weights(constraint->dependent, rsc->id,
-                                           nodes, constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           flags);
+        pcmk__native_merge_weights(constraint->dependent, rsc->id, nodes,
+                                   constraint->node_attribute,
+                                   constraint->score / (float) INFINITY,
+                                   flags);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
-    return nodes;
 }
 
 void

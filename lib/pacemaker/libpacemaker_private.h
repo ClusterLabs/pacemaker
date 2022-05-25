@@ -18,8 +18,8 @@
 
 // Resource allocation methods
 struct resource_alloc_functions_s {
-    GHashTable *(*merge_weights) (pe_resource_t *, const char *, GHashTable *, const char *, float,
-                                  enum pe_weights);
+    void (*merge_weights) (pe_resource_t *, const char *, GHashTable **, const char *, float,
+                           enum pe_weights);
     pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
     void (*create_actions) (pe_resource_t *, pe_working_set_t *);
     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);

@@ -1088,11 +1088,9 @@ pcmk__apply_colocation(pcmk__colocation_t *colocation, pe_resource_t *rsc1,
 {
     CRM_ASSERT((colocation != NULL) && (rsc1 != NULL) && (rsc2 != NULL));
 
-    rsc1->allowed_nodes = rsc2->cmds->merge_weights(rsc2, rsc1->id,
-                                                    rsc1->allowed_nodes,
-                                                    colocation->node_attribute,
-                                                    colocation->score / (float) INFINITY,
-                                                    flags);
+    rsc2->cmds->merge_weights(rsc2, rsc1->id, &rsc1->allowed_nodes,
+                              colocation->node_attribute,
+                              colocation->score / (float) INFINITY, flags);
 }
 
 /*!
@@ -1248,14 +1246,10 @@ is_nonempty_group(pe_resource_t *rsc)
  * \param[in]     attr        Colocation attribute (ID by default)
  * \param[in]     factor      Incorporate scores multiplied by this factor
  * \param[in]     flags       Bitmask of enum pe_weights values
- *
- * \return Nodes, with scores modified by this constraint
- * \note This function assumes ownership of the nodes argument. The caller
- *       should free the returned copy rather than the original.
  */
-GHashTable *
+void
 pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
-                           GHashTable *nodes, const char *attr, float factor,
+                           GHashTable **nodes, const char *attr, float factor,
                            uint32_t flags)
 {
     GHashTable *work = NULL;
@@ -1264,7 +1258,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "%s: Breaking dependency loop at %s",
                     primary_id, rsc->id);
-        return nodes;
+        return;
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
@@ -1276,8 +1270,8 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
                          "using last member %s (at %.6f)",
                          primary_id, rsc->id, last_rsc->id, factor);
-            work = last_rsc->cmds->merge_weights(last_rsc, primary_id, NULL,
-                                                 attr, factor, flags);
+            last_rsc->cmds->merge_weights(last_rsc, primary_id, &work, attr,
+                                          factor, flags);
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
@@ -1298,14 +1292,14 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
          */
         pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
                      "(at %.6f)", primary_id, rsc->id, factor);
-        work = pcmk__copy_node_table(nodes);
-        work = member->cmds->merge_weights(member, primary_id, work, attr,
-                                           factor, flags);
+        work = pcmk__copy_node_table(*nodes);
+        member->cmds->merge_weights(member, primary_id, &work, attr, factor,
+                                    flags);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",
                      primary_id, rsc->id, factor);
-        work = pcmk__copy_node_table(nodes);
+        work = pcmk__copy_node_table(*nodes);
         add_node_scores_matching_attr(work, rsc, attr, factor,
                                       pcmk_is_set(flags, pe_weights_positive));
     }
@@ -1350,10 +1344,10 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
             pe_rsc_trace(rsc, "Optionally merging score of '%s' constraint (%s with %s)",
                          constraint->id, constraint->dependent->id,
                          constraint->primary->id);
-            work = pcmk__native_merge_weights(other, primary_id, work,
-                                              constraint->node_attribute,
-                                              multiplier * constraint->score / (float) INFINITY,
-                                              flags|pe_weights_rollback);
+            factor = multiplier * constraint->score / (float) INFINITY;
+            pcmk__native_merge_weights(other, primary_id, &work,
+                                       constraint->node_attribute, factor,
+                                       flags|pe_weights_rollback);
             pe__show_node_weights(true, NULL, primary_id, work, rsc->cluster);
         }
 
@@ -1362,7 +1356,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
                     primary_id, rsc->id);
         g_hash_table_destroy(work);
         pe__clear_resource_flags(rsc, pe_rsc_merging);
-        return nodes;
+        return;
     }
 
 
@@ -1378,10 +1372,10 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
         }
     }
 
-    if (nodes) {
-       g_hash_table_destroy(nodes);
+    if (*nodes != NULL) {
+       g_hash_table_destroy(*nodes);
     }
+    *nodes = work;
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
-    return work;
 }
