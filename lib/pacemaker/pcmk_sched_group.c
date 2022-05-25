@@ -357,8 +357,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 void
 group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+                        pcmk__colocation_t *constraint)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
@@ -379,8 +378,7 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
 
     if (group_data->colocated) {
         group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
-                                                         primary, constraint,
-                                                         data_set);
+                                                         primary, constraint);
         return;
 
     } else if (constraint->score >= INFINITY) {
@@ -393,15 +391,13 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint,
-                                           data_set);
+        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint);
     }
 }
 
 void
 group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+                        pcmk__colocation_t *constraint)
 {
     GList *gIter = primary->children;
     group_variant_data_t *group_data = NULL;
@@ -420,14 +416,12 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
             /* Ensure RHS is _fully_ up before can start LHS */
             group_data->last_child->cmds->rsc_colocation_rh(dependent,
                                                             group_data->last_child,
-                                                            constraint,
-                                                            data_set);
+                                                            constraint);
         } else {
             /* A partially active RHS is fine */
             group_data->first_child->cmds->rsc_colocation_rh(dependent,
                                                              group_data->first_child,
-                                                             constraint,
-                                                             data_set);
+                                                             constraint);
         }
 
         return;
@@ -441,8 +435,7 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
-                                           data_set);
+        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint);
     }
 }
 

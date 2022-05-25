@@ -676,8 +676,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
 
 void
 clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+                        pcmk__colocation_t *constraint)
 {
     /* -- Never called --
      *
@@ -688,8 +687,7 @@ clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
 
 void
 clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+                        pcmk__colocation_t *constraint)
 {
     GList *gIter = NULL;
     gboolean do_interleave = FALSE;
@@ -758,12 +756,12 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
         primary_instance = find_compatible_child(dependent, primary,
                                                  RSC_ROLE_UNKNOWN, FALSE,
-                                                 data_set);
+                                                 dependent->cluster);
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);
             dependent->cmds->rsc_colocation_lh(dependent, primary_instance,
-                                               constraint, data_set);
+                                               constraint);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
@@ -802,8 +800,7 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
-                                           data_set);
+        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint);
     }
 }
 

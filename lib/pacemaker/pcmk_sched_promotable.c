@@ -942,8 +942,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     for (GList *iter = instance->rsc_cons; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;
 
-        instance->cmds->rsc_colocation_lh(instance, cons->primary, cons,
-                                          instance->cluster);
+        instance->cmds->rsc_colocation_lh(instance, cons->primary, cons);
     }
 
     instance->sort_index = instance->priority;

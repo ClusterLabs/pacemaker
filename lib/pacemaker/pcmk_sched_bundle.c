@@ -409,8 +409,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 
 void
 pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
+                               pcmk__colocation_t *constraint)
 {
     /* -- Never called --
      *
@@ -462,8 +461,7 @@ int copies_per_node(pe_resource_t * rsc)
 
 void
 pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
+                               pcmk__colocation_t *constraint)
 {
     GList *allocated_primaries = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -482,13 +480,14 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     } else if(constraint->dependent->variant > pe_group) {
         pe_resource_t *primary_replica = compatible_replica(dependent, primary,
                                                             RSC_ROLE_UNKNOWN,
-                                                            FALSE, data_set);
+                                                            FALSE,
+                                                            dependent->cluster);
 
         if (primary_replica) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
             dependent->cmds->rsc_colocation_lh(dependent, primary_replica,
-                                               constraint, data_set);
+                                               constraint);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
@@ -514,7 +513,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         if (constraint->score < INFINITY) {
             replica->container->cmds->rsc_colocation_rh(dependent,
                                                         replica->container,
-                                                        constraint, data_set);
+                                                        constraint);
 
         } else {
             pe_node_t *chosen = replica->container->fns->location(replica->container,

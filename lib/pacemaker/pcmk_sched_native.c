@@ -233,7 +233,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      rsc->id, primary->id, constraint->id,
                      constraint->score, role2text(constraint->dependent_role));
         primary->cmds->allocate(primary, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, primary, constraint, data_set);
+        rsc->cmds->rsc_colocation_lh(rsc, primary, constraint);
         if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
                         rsc->id, primary->id);
@@ -1403,8 +1403,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 void
 native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint,
-                         pe_working_set_t *data_set)
+                         pcmk__colocation_t *constraint)
 {
     if (dependent == NULL) {
         pe_err("dependent was NULL for %s", constraint->id);
@@ -1419,13 +1418,12 @@ native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
                  "Processing colocation constraint between %s and %s",
                  dependent->id, primary->id);
 
-    primary->cmds->rsc_colocation_rh(dependent, primary, constraint, data_set);
+    primary->cmds->rsc_colocation_rh(dependent, primary, constraint);
 }
 
 void
 native_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint,
-                         pe_working_set_t *data_set)
+                         pcmk__colocation_t *constraint)
 {
     enum pcmk__coloc_affects filter_results;
 
