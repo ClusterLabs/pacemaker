@@ -946,7 +946,7 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
  * \internal
  * \brief Apply colocation to dependent for allocation purposes
  *
- * Update the allocated node weights of the dependent resource in a colocation,
+ * Update the allowed node weights of the dependent resource in a colocation,
  * for the purposes of allocating it to a node
  *
  * \param[in] dependent   Dependent resource in colocation
