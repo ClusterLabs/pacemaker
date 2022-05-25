@@ -675,29 +675,22 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
 }
 
 void
-clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint)
-{
-    /* -- Never called --
-     *
-     * Instead we add the colocation constraints to the child and call from there
-     */
-    CRM_ASSERT(FALSE);
-}
-
-void
-clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint)
+pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                              pcmk__colocation_t *constraint,
+                              bool for_dependent)
 {
     GList *gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
 
-    CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(dependent != NULL,
-              pe_err("dependent was NULL for %s", constraint->id); return);
-    CRM_CHECK(primary != NULL,
-              pe_err("primary was NULL for %s", constraint->id); return);
+    /* This should never be called for the clone itself as a dependent. Instead,
+     * we add its colocation constraints to its instances and call the
+     * apply_coloc_score() for the instances as dependents.
+     */
+    CRM_ASSERT(!for_dependent);
+
+    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
@@ -760,8 +753,8 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);
-            dependent->cmds->rsc_colocation_lh(dependent, primary_instance,
-                                               constraint);
+            dependent->cmds->apply_coloc_score(dependent, primary_instance,
+                                               constraint, true);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
@@ -800,7 +793,8 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint);
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, constraint,
+                                           false);
     }
 }
 

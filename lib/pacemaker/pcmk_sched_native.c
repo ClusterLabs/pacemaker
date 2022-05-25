@@ -233,7 +233,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      rsc->id, primary->id, constraint->id,
                      constraint->score, role2text(constraint->dependent_role));
         primary->cmds->allocate(primary, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, primary, constraint);
+        rsc->cmds->apply_coloc_score(rsc, primary, constraint, true);
         if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
                         rsc->id, primary->id);
@@ -1402,32 +1402,22 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint)
-{
-    if (dependent == NULL) {
-        pe_err("dependent was NULL for %s", constraint->id);
-        return;
-
-    } else if (constraint->primary == NULL) {
-        pe_err("primary was NULL for %s", constraint->id);
-        return;
-    }
-
-    pe_rsc_trace(dependent,
-                 "Processing colocation constraint between %s and %s",
-                 dependent->id, primary->id);
-
-    primary->cmds->rsc_colocation_rh(dependent, primary, constraint);
-}
-
-void
-native_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint)
+pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
+                                  pe_resource_t *primary,
+                                  pcmk__colocation_t *constraint,
+                                  bool for_dependent)
 {
     enum pcmk__coloc_affects filter_results;
 
-    CRM_ASSERT((dependent != NULL) && (primary != NULL));
+    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
+
+    if (for_dependent) {
+        // Always process on behalf of primary resource
+        primary->cmds->apply_coloc_score(dependent, primary, constraint, false);
+        return;
+    }
+
     filter_results = pcmk__colocation_affects(dependent, primary, constraint,
                                               false);
     pe_rsc_trace(dependent, "%s %s with %s (%s, score=%d, filter=%d)",

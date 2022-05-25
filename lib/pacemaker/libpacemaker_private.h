@@ -25,10 +25,9 @@ struct resource_alloc_functions_s {
     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
 
-    void (*rsc_colocation_lh) (pe_resource_t *, pe_resource_t *,
-                               pcmk__colocation_t *);
-    void (*rsc_colocation_rh) (pe_resource_t *, pe_resource_t *,
-                               pcmk__colocation_t *);
+    void (*apply_coloc_score) (pe_resource_t *dependent, pe_resource_t *primary,
+                               pcmk__colocation_t *constraint,
+                               bool for_dependent);
 
     /*!
      * \internal
@@ -390,22 +389,19 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 // Primitives (pcmk_sched_native.c)
 
 G_GNUC_INTERNAL
-void native_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *constraint);
-
-G_GNUC_INTERNAL
-void native_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *constraint);
+void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
+                                       pe_resource_t *primary,
+                                       pcmk__colocation_t *constraint,
+                                       bool for_dependent);
 
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL
-void group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                             pcmk__colocation_t *constraint);
+void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *constraint,
+                                   bool for_dependent);
 
-G_GNUC_INTERNAL
-void group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                             pcmk__colocation_t *constraint);
 G_GNUC_INTERNAL
 GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
                                        pe_resource_t *orig_rsc,
@@ -414,24 +410,19 @@ GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
-void clone_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                             pcmk__colocation_t *constraint);
-
-G_GNUC_INTERNAL
-void clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                             pcmk__colocation_t *constraint);
+void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *constraint,
+                                   bool for_dependent);
 
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
-void pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent,
+void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     pe_resource_t *primary,
-                                    pcmk__colocation_t *constraint);
+                                    pcmk__colocation_t *constraint,
+                                    bool for_dependent);
 
-G_GNUC_INTERNAL
-void pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent,
-                                    pe_resource_t *primary,
-                                    pcmk__colocation_t *constraint);
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
 

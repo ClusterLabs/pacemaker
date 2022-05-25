@@ -407,17 +407,6 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     return pair;
 }
 
-void
-pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint)
-{
-    /* -- Never called --
-     *
-     * Instead we add the colocation constraints to the child and call from there
-     */
-    CRM_ASSERT(FALSE);
-}
-
 int copies_per_node(pe_resource_t * rsc) 
 {
     /* Strictly speaking, there should be a 'copies_per_node' addition
@@ -460,17 +449,21 @@ int copies_per_node(pe_resource_t * rsc)
 }
 
 void
-pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint)
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                               pcmk__colocation_t *constraint,
+                               bool for_dependent)
 {
     GList *allocated_primaries = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(dependent != NULL,
-              pe_err("dependent was NULL for %s", constraint->id); return);
-    CRM_CHECK(primary != NULL,
-              pe_err("primary was NULL for %s", constraint->id); return);
+    /* This should never be called for the bundle itself as a dependent.
+     * Instead, we add its colocation constraints to its replicas and call the
+     * apply_coloc_score() for the replicas as dependents.
+     */
+    CRM_ASSERT(!for_dependent);
+
+    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
     CRM_ASSERT(dependent->variant == pe_native);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
@@ -486,8 +479,8 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         if (primary_replica) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
-            dependent->cmds->rsc_colocation_lh(dependent, primary_replica,
-                                               constraint);
+            dependent->cmds->apply_coloc_score(dependent, primary_replica,
+                                               constraint, true);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
@@ -511,9 +504,9 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
         pe__bundle_replica_t *replica = gIter->data;
 
         if (constraint->score < INFINITY) {
-            replica->container->cmds->rsc_colocation_rh(dependent,
+            replica->container->cmds->apply_coloc_score(dependent,
                                                         replica->container,
-                                                        constraint);
+                                                        constraint, false);
 
         } else {
             pe_node_t *chosen = replica->container->fns->location(replica->container,

@@ -356,19 +356,18 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint)
+pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                              pcmk__colocation_t *constraint,
+                              bool for_dependent)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
-    if (dependent == NULL) {
-        pe_err("dependent was NULL for %s", constraint->id);
-        return;
+    CRM_CHECK((constraint != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
 
-    } else if (primary == NULL) {
-        pe_err("primary was NULL for %s", constraint->id);
-        return;
+    if (!for_dependent) {
+        goto for_primary;
     }
 
     gIter = dependent->children;
@@ -377,8 +376,9 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     get_group_variant_data(group_data, dependent);
 
     if (group_data->colocated) {
-        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
-                                                         primary, constraint);
+        group_data->first_child->cmds->apply_coloc_score(group_data->first_child,
+                                                         primary, constraint,
+                                                         true);
         return;
 
     } else if (constraint->score >= INFINITY) {
@@ -391,17 +391,13 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint);
+        child_rsc->cmds->apply_coloc_score(child_rsc, primary, constraint,
+                                           true);
     }
-}
+    return;
 
-void
-group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint)
-{
-    GList *gIter = primary->children;
-    group_variant_data_t *group_data = NULL;
-
+for_primary:
+    gIter = primary->children;
     get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
@@ -414,14 +410,14 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     } else if (group_data->colocated && group_data->first_child) {
         if (constraint->score >= INFINITY) {
             /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(dependent,
+            group_data->last_child->cmds->apply_coloc_score(dependent,
                                                             group_data->last_child,
-                                                            constraint);
+                                                            constraint, false);
         } else {
             /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(dependent,
+            group_data->first_child->cmds->apply_coloc_score(dependent,
                                                              group_data->first_child,
-                                                             constraint);
+                                                             constraint, false);
         }
 
         return;
@@ -435,7 +431,8 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint);
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, constraint,
+                                           false);
     }
 }
 
