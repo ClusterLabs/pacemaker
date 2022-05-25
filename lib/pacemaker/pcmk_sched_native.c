@@ -251,6 +251,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
         pe_resource_t *dependent = constraint->dependent;
+        const float factor = constraint->score / (float) INFINITY;
 
         if (!pcmk__colocation_has_influence(constraint, NULL)) {
             continue;
@@ -258,11 +259,10 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
                      constraint->id, constraint->dependent->id,
                      constraint->primary->id);
-        dependent->cmds->merge_weights(dependent, rsc->id, &rsc->allowed_nodes,
-                                       constraint->node_attribute,
-                                       constraint->score / (float) INFINITY,
-                                       pe_weights_rollback);
-
+        dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
+                                                   &rsc->allowed_nodes,
+                                                   constraint->node_attribute,
+                                                   factor, pe_weights_rollback);
     }
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {

@@ -18,8 +18,6 @@
 
 // Resource allocation methods
 struct resource_alloc_functions_s {
-    void (*merge_weights) (pe_resource_t *, const char *, GHashTable **, const char *, float,
-                           enum pe_weights);
     pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
     void (*create_actions) (pe_resource_t *, pe_working_set_t *);
     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
@@ -41,6 +39,27 @@ struct resource_alloc_functions_s {
     void (*apply_coloc_score) (pe_resource_t *dependent, pe_resource_t *primary,
                                pcmk__colocation_t *colocation,
                                bool for_dependent);
+
+    /*!
+     * \internal
+     * \brief Update nodes with scores of colocated resources' nodes
+     *
+     * Given a table of nodes and a resource, update the nodes' scores with the
+     * scores of the best nodes matching the attribute used for each of the
+     * resource's relevant colocations.
+     *
+     * \param[in,out] rsc      Resource to check colocations for
+     * \param[in]     log_id   Resource ID to use in log messages
+     * \param[in,out] nodes    Nodes to update
+     * \param[in]     attr     Colocation attribute (NULL to use default)
+     * \param[in]     factor   Incorporate scores multiplied by this factor
+     * \param[in]     flags    Bitmask of enum pe_weights values
+     *
+     * \note The caller remains responsible for freeing \p *nodes.
+     */
+    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, enum pe_weights flags);
 
     /*!
      * \internal
@@ -234,6 +253,11 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    pcmk__colocation_t *constraint);
 
 G_GNUC_INTERNAL
+void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
+                                     GHashTable **nodes, const char *attr,
+                                     float factor, uint32_t flags);
+
+G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
@@ -414,6 +438,12 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    pe_resource_t *primary,
                                    pcmk__colocation_t *colocation,
                                    bool for_dependent);
+
+G_GNUC_INTERNAL
+void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+                                           const char *log_id,
+                                           GHashTable **nodes, const char *attr,
+                                           float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
 GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
