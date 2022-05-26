@@ -380,7 +380,7 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
                                  (rsc2), CRMD_ACTION_START, (type))
 
-#define pcmk__order_stops(rsc1, rsc2, type, data_set)        \
+#define pcmk__order_stops(rsc1, rsc2, type)                  \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
                                  (rsc2), CRMD_ACTION_STOP, (type))
 

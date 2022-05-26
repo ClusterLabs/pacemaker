@@ -594,13 +594,11 @@ clone_internal_constraints(pe_resource_t *rsc)
             pcmk__order_starts(last_rsc, child_rsc, pe_order_optional);
         }
 
-        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
-                          rsc->cluster);
+        pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
-            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional,
-                              rsc->cluster);
+            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional);
         }
 
         last_rsc = child_rsc;

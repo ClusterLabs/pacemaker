@@ -255,10 +255,10 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
         if (replica->child) {
             pcmk__order_stops(rsc, replica->child,
-                              pe_order_implies_first_printed, rsc->cluster);
+                              pe_order_implies_first_printed);
         }
         pcmk__order_stops(rsc, replica->container,
-                          pe_order_implies_first_printed, rsc->cluster);
+                          pe_order_implies_first_printed);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
                                      RSC_STARTED,
                                      pe_order_implies_then_printed);
@@ -273,8 +273,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
             pcmk__order_starts(replica->ip, replica->container,
                                pe_order_runnable_left|pe_order_preserve);
             pcmk__order_stops(replica->container, replica->ip,
-                              pe_order_implies_first|pe_order_preserve,
-                              rsc->cluster);
+                              pe_order_implies_first|pe_order_preserve);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,
