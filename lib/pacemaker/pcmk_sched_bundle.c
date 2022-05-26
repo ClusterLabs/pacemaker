@@ -251,8 +251,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
         replica->container->cmds->internal_constraints(replica->container);
 
         pcmk__order_starts(rsc, replica->container,
-                           pe_order_runnable_left|pe_order_implies_first_printed,
-                           rsc->cluster);
+                           pe_order_runnable_left|pe_order_implies_first_printed);
 
         if (replica->child) {
             pcmk__order_stops(rsc, replica->child,
@@ -272,8 +271,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
             // Start IP then container
             pcmk__order_starts(replica->ip, replica->container,
-                               pe_order_runnable_left|pe_order_preserve,
-                               rsc->cluster);
+                               pe_order_runnable_left|pe_order_preserve);
             pcmk__order_stops(replica->container, replica->ip,
                               pe_order_implies_first|pe_order_preserve,
                               rsc->cluster);

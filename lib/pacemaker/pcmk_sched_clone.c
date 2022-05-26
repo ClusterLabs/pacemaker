@@ -587,13 +587,11 @@ clone_internal_constraints(pe_resource_t *rsc)
         child_rsc->cmds->internal_constraints(child_rsc);
 
         pcmk__order_starts(rsc, child_rsc,
-                           pe_order_runnable_left|pe_order_implies_first_printed,
-                           rsc->cluster);
+                           pe_order_runnable_left|pe_order_implies_first_printed);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
-            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
-                               rsc->cluster);
+            pcmk__order_starts(last_rsc, child_rsc, pe_order_optional);
         }
 
         pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
