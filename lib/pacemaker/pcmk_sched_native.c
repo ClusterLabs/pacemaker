@@ -1992,7 +1992,7 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
 
 gboolean
 native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                    gboolean force, pe_working_set_t * data_set)
+                    gboolean force)
 {
     enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
@@ -2010,7 +2010,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     CRM_CHECK(node != NULL, return FALSE);
-    if (!force && !pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (!force && !pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
     }
@@ -2024,7 +2024,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                          rsc->id, node->details->id);
             return FALSE;
         } else if (pe__is_guest_node(node)
-                   && pe__resource_contains_guest_node(data_set, rsc)) {
+                   && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
                          rsc->id, node->details->id);
@@ -2044,7 +2044,8 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            any_created = child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set)
+            any_created = child_rsc->cmds->create_probe(child_rsc, node,
+                                                        complete, force)
                 || any_created;
         }
 
@@ -2128,7 +2129,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                                    pcmk__op_key(remote->id, RSC_STATUS, 0),
                                    NULL, top,
                                    pcmk__op_key(top->id, RSC_START, 0), NULL,
-                                   pe_order_optional, data_set);
+                                   pe_order_optional, rsc->cluster);
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
@@ -2150,7 +2151,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
              */
             pcmk__new_ordering(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
                                NULL, top, pcmk__op_key(top->id, RSC_START, 0),
-                               NULL, pe_order_optional, data_set);
+                               NULL, pe_order_optional, rsc->cluster);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
             return FALSE;
@@ -2161,10 +2162,10 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
-    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
+    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, rsc->cluster);
     pe__clear_action_flags(probe, pe_action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, data_set);
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, rsc->cluster);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -2182,7 +2183,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
         || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
@@ -2199,11 +2200,11 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
     pcmk__new_ordering(rsc, NULL, probe, top,
                        pcmk__op_key(top->id, RSC_START, 0), NULL, flags,
-                       data_set);
+                       rsc->cluster);
 
     // Order the probe before any agent reload
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pe_order_optional, data_set);
+                       pe_order_optional, rsc->cluster);
 
     return TRUE;
 }

@@ -966,8 +966,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
 gboolean
 pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, gboolean force,
-                          pe_working_set_t * data_set)
+                          pe_action_t *complete, gboolean force)
 {
     bool any_created = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -982,18 +981,17 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
         CRM_ASSERT(replica);
         if (replica->ip) {
             any_created |= replica->ip->cmds->create_probe(replica->ip, node,
-                                                           complete, force,
-                                                           data_set);
+                                                           complete, force);
         }
         if (replica->child && (node->details == replica->node->details)) {
             any_created |= replica->child->cmds->create_probe(replica->child,
                                                               node, complete,
-                                                              force, data_set);
+                                                              force);
         }
         if (replica->container) {
             bool created = replica->container->cmds->create_probe(replica->container,
                                                                   node, complete,
-                                                                  force, data_set);
+                                                                  force);
 
             if(created) {
                 any_created = TRUE;
@@ -1024,15 +1022,14 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                            pcmk__op_key(other->container->id, RSC_START, 0),
                                            NULL,
                                            pe_order_optional|pe_order_same_node,
-                                           data_set);
+                                           rsc->cluster);
                     }
                 }
             }
         }
         if (replica->container && replica->remote
             && replica->remote->cmds->create_probe(replica->remote, node,
-                                                   complete, force,
-                                                   data_set)) {
+                                                   complete, force)) {
 
             /* Do not probe the remote resource until we know where the
              * container is running. This is required for REMOTE_CONTAINER_HACK
@@ -1051,7 +1048,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 pcmk__new_ordering(replica->container,
                                    pcmk__op_key(replica->container->id, RSC_START, 0),
                                    NULL, replica->remote, NULL, probe,
-                                   pe_order_probe, data_set);
+                                   pe_order_probe, rsc->cluster);
             }
         }
     }

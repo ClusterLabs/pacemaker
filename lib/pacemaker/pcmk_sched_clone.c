@@ -1013,8 +1013,7 @@ probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
 
         pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
-        any_created |= child->cmds->create_probe(child, node, complete, force,
-                                                 data_set);
+        any_created |= child->cmds->create_probe(child, node, complete, force);
     }
     return any_created;
 }
@@ -1050,12 +1049,12 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
         child = rsc->children->data;
     }
     CRM_ASSERT(child);
-    return child->cmds->create_probe(child, node, complete, force, data_set);
+    return child->cmds->create_probe(child, node, complete, force);
 }
 
 gboolean
 clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                   gboolean force, pe_working_set_t * data_set)
+                   gboolean force)
 {
     gboolean any_created = FALSE;
 
@@ -1085,10 +1084,11 @@ clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        any_created = probe_unique_clone(rsc, node, complete, force, data_set);
+        any_created = probe_unique_clone(rsc, node, complete, force,
+                                         rsc->cluster);
     } else {
         any_created = probe_anonymous_clone(rsc, node, complete, force,
-                                            data_set);
+                                            rsc->cluster);
     }
     return any_created;
 }
