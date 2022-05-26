@@ -31,7 +31,7 @@ int lrmd_call_id = 0;
 
 #ifdef PCMK__COMPILE_REMOTE
 /* whether shutdown request has been sent */
-static sig_atomic_t shutting_down = FALSE;
+static gboolean shutting_down = FALSE;
 
 /* timer for waiting for acknowledgment of shutdown request */
 static guint shutdown_ack_timer = 0;
@@ -271,7 +271,7 @@ lrmd_exit(gpointer data)
     }
 
 #ifdef PCMK__COMPILE_REMOTE
-    lrmd_tls_server_destroy();
+    execd_stop_tls_server();
     ipc_proxy_cleanup();
 #endif
 
@@ -284,6 +284,22 @@ lrmd_exit(gpointer data)
 
     crm_exit(CRM_EX_OK);
     return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Clean up and exit if shutdown has started
+ *
+ * \return Doesn't return
+ */
+void execd_exit_if_shutting_down()
+{
+#ifdef PCMK__COMPILE_REMOTE
+    if (shutting_down) {
+        crm_warn("exit because TLS connection was closed and 'shutting_down' set");
+        lrmd_exit(NULL);
+    }
+#endif
 }
 
 /*!
@@ -320,7 +336,7 @@ lrmd_shutdown(int nsig)
             shutting_down = TRUE;
 
             /* Stop accepting new proxy connections */
-            lrmd_tls_server_destroy();
+            execd_stop_tls_server();
 
             /* Older controller versions will never acknowledge our request, so
              * set a fairly short timeout to exit quickly in that case. If we
