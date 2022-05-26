@@ -150,17 +150,30 @@ create_attrd_op(const char *user_name)
 }
 
 static int
-connect_and_send_attrd_request(xmlNode *request)
+create_api(pcmk_ipc_api_t **api)
 {
-    pcmk_ipc_api_t *api = NULL;
-    int rc = pcmk_rc_ok;
-    int max = 5;
+    int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
 
-    rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
     if (rc != pcmk_rc_ok) {
         crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
-        return ENOTCONN;
     }
+
+    return rc;
+}
+
+static void
+destroy_api(pcmk_ipc_api_t *api)
+{
+    pcmk_disconnect_ipc(api);
+    pcmk_free_ipc_api(api);
+    api = NULL;
+}
+
+static int
+connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+{
+    int rc = pcmk_rc_ok;
+    int max = 5;
 
     while (max > 0) {
         crm_info("Connecting to cluster... %d retries remaining", max);
@@ -168,9 +181,6 @@ connect_and_send_attrd_request(xmlNode *request)
 
         if (rc == pcmk_rc_ok) {
             rc = pcmk__send_ipc_request(api, request);
-            pcmk_disconnect_ipc(api);
-            pcmk_free_ipc_api(api);
-            api = NULL;
             break;
         } else if (rc == EAGAIN || rc == EALREADY) {
             sleep(5 - max);
@@ -215,7 +225,13 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
                     pcmk_is_set(options, pcmk__node_attr_remote));
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -278,7 +294,13 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -347,7 +369,13 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -418,7 +446,13 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     populate_update_op(request, node, name, value, dampen, set, options);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
