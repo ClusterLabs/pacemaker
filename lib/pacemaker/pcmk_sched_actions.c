@@ -817,8 +817,7 @@ pcmk__new_shutdown_action(pe_node_t *node)
     shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN, node, FALSE,
                                 TRUE, node->details->data_set);
 
-    pcmk__order_stops_before_shutdown(node, shutdown_op,
-                                      node->details->data_set);
+    pcmk__order_stops_before_shutdown(node, shutdown_op);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     return shutdown_op;
 }

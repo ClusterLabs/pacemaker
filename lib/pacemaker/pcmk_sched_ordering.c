@@ -1276,13 +1276,13 @@ pcmk__disable_invalid_orderings(pe_working_set_t *data_set)
  *
  * \param[in] node         Node being shut down
  * \param[in] shutdown_op  Shutdown action for node
- * \param[in] data_set     Cluster working set
  */
 void
-pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op,
-                                  pe_working_set_t *data_set)
+pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 {
-    for (GList *iter = data_set->actions; iter != NULL; iter = iter->next) {
+    for (GList *iter = node->details->data_set->actions;
+         iter != NULL; iter = iter->next) {
+
         pe_action_t *action = (pe_action_t *) iter->data;
 
         // Only stops on the node shutting down are relevant
@@ -1327,7 +1327,8 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op,
         pe__clear_action_flags(action, pe_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(CRM_OP_SHUTDOWN), shutdown_op,
-                           pe_order_optional|pe_order_runnable_left, data_set);
+                           pe_order_optional|pe_order_runnable_left,
+                           node->details->data_set);
     }
 }
 

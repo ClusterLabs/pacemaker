@@ -347,8 +347,7 @@ void pcmk__disable_invalid_orderings(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__order_stops_before_shutdown(pe_node_t *node,
-                                       pe_action_t *shutdown_op,
-                                       pe_working_set_t *data_set);
+                                       pe_action_t *shutdown_op);
 
 G_GNUC_INTERNAL
 void pcmk__apply_orderings(pe_working_set_t *data_set);
