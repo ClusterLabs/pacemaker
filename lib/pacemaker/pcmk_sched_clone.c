@@ -473,15 +473,16 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+clone_create_actions(pe_resource_t *rsc)
 {
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
 
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
-    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
-    child_ordering_constraints(rsc, data_set);
+    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify,
+                                &clone_data->stop_notify, rsc->cluster);
+    child_ordering_constraints(rsc, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__create_promotable_actions(rsc);
@@ -510,7 +511,7 @@ clone_create_pseudo_actions(
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
 
-        child_rsc->cmds->create_actions(child_rsc, data_set);
+        child_rsc->cmds->create_actions(child_rsc);
         clone_update_pseudo_status(child_rsc, &stopping, &starting, &child_active);
         if (stopping && starting) {
             allow_dependent_migrations = FALSE;

@@ -956,7 +956,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
 }
 
 void
-native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *start = NULL;
     pe_node_t *chosen = NULL;
@@ -996,12 +996,12 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_action_t *stop = NULL;
 
         pe_rsc_trace(rsc, "Creating stop action %sfor %s on %s due to dangling migration",
-                     pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
+                     pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
                      rsc->id, dangling_source->details->uname);
         stop = stop_action(rsc, dangling_source, FALSE);
         pe__set_action_flags(stop, pe_action_dangle);
-        if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, dangling_source, FALSE, data_set);
+        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
+            DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
         }
     }
 
@@ -1126,7 +1126,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
                      rsc->id, role2text(role), role2text(next_role),
                      role2text(rsc->next_role));
-        if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, FALSE,
+                                                rsc->cluster)) {
             break;
         }
         role = next_role;
@@ -1142,13 +1143,13 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                      ((rsc->next_role == RSC_ROLE_STOPPED)? "unmanaged" : "active"),
                      rsc->id);
         start = start_action(rsc, chosen, TRUE);
-        Recurring(rsc, start, chosen, data_set);
-        Recurring_Stopped(rsc, start, chosen, data_set);
+        Recurring(rsc, start, chosen, rsc->cluster);
+        Recurring_Stopped(rsc, start, chosen, rsc->cluster);
 
     } else {
         pe_rsc_trace(rsc, "Creating recurring monitors for inactive resource %s",
                      rsc->id);
-        Recurring_Stopped(rsc, NULL, NULL, data_set);
+        Recurring_Stopped(rsc, NULL, NULL, rsc->cluster);
     }
 
     /* if we are stuck in a partial migration, where the target
@@ -1169,7 +1170,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (allow_migrate) {
-        handle_migration_actions(rsc, current, chosen, data_set);
+        handle_migration_actions(rsc, current, chosen, rsc->cluster);
     }
 }
 

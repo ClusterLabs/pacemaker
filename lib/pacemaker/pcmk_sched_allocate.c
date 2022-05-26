@@ -405,7 +405,7 @@ schedule_resource_actions(pe_working_set_t *data_set)
     for (GList *iter = data_set->resources; iter != NULL; iter = iter->next) {
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
-        rsc->cmds->create_actions(rsc, data_set);
+        rsc->cmds->create_actions(rsc);
     }
 }
 

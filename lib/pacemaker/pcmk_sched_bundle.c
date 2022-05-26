@@ -162,7 +162,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 
 
 void
-pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *action = NULL;
     GList *containers = NULL;
@@ -178,21 +178,20 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         CRM_ASSERT(replica);
         if (replica->ip) {
-            replica->ip->cmds->create_actions(replica->ip, data_set);
+            replica->ip->cmds->create_actions(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->create_actions(replica->container,
-                                                     data_set);
+            replica->container->cmds->create_actions(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->create_actions(replica->remote, data_set);
+            replica->remote->cmds->create_actions(replica->remote);
         }
     }
 
-    clone_create_pseudo_actions(rsc, containers, NULL, NULL,  data_set);
+    clone_create_pseudo_actions(rsc, containers, NULL, NULL,  rsc->cluster);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
+        bundle_data->child->cmds->create_actions(bundle_data->child);
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */

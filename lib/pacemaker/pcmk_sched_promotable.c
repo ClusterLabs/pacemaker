@@ -1052,7 +1052,7 @@ create_promotable_instance_actions(pe_resource_t *clone,
     for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
         pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        instance->cmds->create_actions(instance, clone->cluster);
+        instance->cmds->create_actions(instance);
         check_for_role_change(instance, any_demoting, any_promoting);
     }
 }

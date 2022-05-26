@@ -138,7 +138,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
 
 void
-group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *op = NULL;
     const char *value = NULL;
@@ -149,7 +149,7 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->create_actions(child_rsc, data_set);
+        child_rsc->cmds->create_actions(child_rsc);
         group_update_pseudo_status(rsc, child_rsc);
     }
 
@@ -157,28 +157,36 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
-                       RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
+                       RSC_STARTED, NULL,
+                       TRUE /* !group_data->child_starting */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
-                       RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
+                       RSC_STOPPED, NULL,
+                       TRUE /* !group_data->child_stopping */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
-        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
+                           TRUE, rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 }
