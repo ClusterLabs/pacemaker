@@ -21,7 +21,6 @@
 
 enum pe_weights {
     pe_weights_none = 0x0,
-    pe_weights_init = 0x1,
     pe_weights_forward = 0x4,
     pe_weights_positive = 0x8,
     pe_weights_rollback = 0x10,

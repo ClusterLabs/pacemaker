@@ -623,10 +623,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // Calculate and log node weights
     pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
                                     resource1->id, &r1_nodes, NULL, 1,
-                                    pe_weights_forward|pe_weights_init);
+                                    pe_weights_forward);
     pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
                                     resource2->id, &r2_nodes, NULL, 1,
-                                    pe_weights_forward|pe_weights_init);
+                                    pe_weights_forward);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,

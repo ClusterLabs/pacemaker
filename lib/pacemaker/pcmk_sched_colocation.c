@@ -32,12 +32,6 @@
 // Used to temporarily mark a node as unusable
 #define INFINITY_HACK   (INFINITY * -100)
 
-#define clear_node_weights_flags(nw_flags, nw_rsc, flags_to_clear) do {     \
-        flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,         \
-                                     "Node weight", (nw_rsc)->id, (flags),  \
-                                     (flags_to_clear), #flags_to_clear);    \
-    } while (0)
-
 static gint
 cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
@@ -1248,7 +1242,10 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (pcmk_is_set(flags, pe_weights_init)) {
+    if (*nodes == NULL) {
+        /* Only cmp_resources() passes a NULL nodes table, which indicates we
+         * should initialize it with the resource's allowed node scores.
+         */
         if (is_nonempty_group(rsc)) {
             GList *last = g_list_last(rsc->children);
             pe_resource_t *last_rsc = last->data;
@@ -1262,7 +1259,6 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
-        clear_node_weights_flags(flags, rsc, pe_weights_init);
 
     } else if (is_nonempty_group(rsc)) {
         pe_resource_t *member = rsc->children->data;
