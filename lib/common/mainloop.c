@@ -703,6 +703,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     rc = qb_ipcs_run(server);
     if (rc < 0) {
         crm_err("Could not start %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
+        qb_ipcs_destroy(server);
         return NULL;
     }
 
