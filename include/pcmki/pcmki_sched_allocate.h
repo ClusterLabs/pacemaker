@@ -95,6 +95,7 @@ enum pe_graph_flags pcmk__multi_update_actions(pe_action_t *first,
                                                pe_working_set_t *data_set);
 
 void pcmk__log_transition_summary(const char *filename);
-void clone_create_pseudo_actions(
-    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
+void clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
+                                 notify_data_t **start_notify,
+                                 notify_data_t **stop_notify);
 #endif

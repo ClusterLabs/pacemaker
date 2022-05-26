@@ -481,7 +481,7 @@ clone_create_actions(pe_resource_t *rsc)
 
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify,
-                                &clone_data->stop_notify, rsc->cluster);
+                                &clone_data->stop_notify);
     child_ordering_constraints(rsc, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
@@ -490,8 +490,9 @@ clone_create_actions(pe_resource_t *rsc)
 }
 
 void
-clone_create_pseudo_actions(
-    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
+                            notify_data_t **start_notify,
+                            notify_data_t **stop_notify)
 {
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
