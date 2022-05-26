@@ -27,10 +27,10 @@ enum loss_ticket_policy {
 
 typedef struct {
     const char *id;
-    pe_resource_t *rsc_lh;
+    pe_resource_t *rsc;
     pe_ticket_t *ticket;
     enum loss_ticket_policy loss_policy;
-    int role_lh;
+    int role;
 } rsc_ticket_t;
 
 /*!
@@ -43,74 +43,74 @@ typedef struct {
  *            constraint's, otherwise false
  */
 static bool
-ticket_role_matches(pe_resource_t *rsc_lh, rsc_ticket_t *rsc_ticket)
+ticket_role_matches(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket)
 {
-    if ((rsc_ticket->role_lh == RSC_ROLE_UNKNOWN)
-        || (rsc_ticket->role_lh == rsc_lh->role)) {
+    if ((rsc_ticket->role == RSC_ROLE_UNKNOWN)
+        || (rsc_ticket->role == rsc->role)) {
         return true;
     }
-    pe_rsc_trace(rsc_lh, "LH: Skipping constraint: \"%s\" state filter",
-                 role2text(rsc_ticket->role_lh));
+    pe_rsc_trace(rsc, "Skipping constraint: \"%s\" state filter",
+                 role2text(rsc_ticket->role));
     return false;
 }
 
 /*!
  * \brief Create location constraints and fencing as needed for a ticket
  *
- * \param[in] rsc_lh      Resource affected by ticket
+ * \param[in] rsc         Resource affected by ticket
  * \param[in] rsc_ticket  Ticket
  * \param[in] data_set    Cluster working set
  */
 static void
-constraints_for_ticket(pe_resource_t *rsc_lh, rsc_ticket_t *rsc_ticket,
+constraints_for_ticket(pe_resource_t *rsc, rsc_ticket_t *rsc_ticket,
                        pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
 
-    CRM_CHECK((rsc_lh != NULL) && (rsc_ticket != NULL), return);
+    CRM_CHECK((rsc != NULL) && (rsc_ticket != NULL), return);
 
     if (rsc_ticket->ticket->granted && !rsc_ticket->ticket->standby) {
         return;
     }
 
-    if (rsc_lh->children) {
-        pe_rsc_trace(rsc_lh, "Processing ticket dependencies from %s", rsc_lh->id);
-        for (gIter = rsc_lh->children; gIter != NULL; gIter = gIter->next) {
+    if (rsc->children) {
+        pe_rsc_trace(rsc, "Processing ticket dependencies from %s", rsc->id);
+        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             constraints_for_ticket((pe_resource_t *) gIter->data, rsc_ticket,
                                   data_set);
         }
         return;
     }
 
-    pe_rsc_trace(rsc_lh, "%s: Processing ticket dependency on %s (%s, %s)",
-                 rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id,
-                 role2text(rsc_ticket->role_lh));
+    pe_rsc_trace(rsc, "%s: Processing ticket dependency on %s (%s, %s)",
+                 rsc->id, rsc_ticket->ticket->id, rsc_ticket->id,
+                 role2text(rsc_ticket->role));
 
-    if (!rsc_ticket->ticket->granted && (rsc_lh->running_on != NULL)) {
+    if (!rsc_ticket->ticket->granted && (rsc->running_on != NULL)) {
 
         switch (rsc_ticket->loss_policy) {
             case loss_ticket_stop:
-                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__",
+                resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
                                   data_set);
                 break;
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
-                if (rsc_ticket->role_lh != RSC_ROLE_PROMOTED) {
-                    resource_location(rsc_lh, NULL, -INFINITY,
+                if (rsc_ticket->role != RSC_ROLE_PROMOTED) {
+                    resource_location(rsc, NULL, -INFINITY,
                                       "__loss_of_ticket__", data_set);
                 }
                 break;
 
             case loss_ticket_fence:
-                if (!ticket_role_matches(rsc_lh, rsc_ticket)) {
+                if (!ticket_role_matches(rsc, rsc_ticket)) {
                     return;
                 }
 
-                resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__",
+                resource_location(rsc, NULL, -INFINITY, "__loss_of_ticket__",
                                   data_set);
 
-                for (gIter = rsc_lh->running_on; gIter != NULL;
+                for (gIter = rsc->running_on; gIter != NULL;
                      gIter = gIter->next) {
                     pe_fence_node(data_set, (pe_node_t *) gIter->data,
                                   "deadman ticket was lost", FALSE);
@@ -118,42 +118,42 @@ constraints_for_ticket(pe_resource_t *rsc_lh, rsc_ticket_t *rsc_ticket,
                 break;
 
             case loss_ticket_freeze:
-                if (!ticket_role_matches(rsc_lh, rsc_ticket)) {
+                if (!ticket_role_matches(rsc, rsc_ticket)) {
                     return;
                 }
-                if (rsc_lh->running_on != NULL) {
-                    pe__clear_resource_flags(rsc_lh, pe_rsc_managed);
-                    pe__set_resource_flags(rsc_lh, pe_rsc_block);
+                if (rsc->running_on != NULL) {
+                    pe__clear_resource_flags(rsc, pe_rsc_managed);
+                    pe__set_resource_flags(rsc, pe_rsc_block);
                 }
                 break;
         }
 
     } else if (!rsc_ticket->ticket->granted) {
 
-        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__",
+            resource_location(rsc, NULL, -INFINITY, "__no_ticket__",
                               data_set);
         }
 
     } else if (rsc_ticket->ticket->standby) {
 
-        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role != RSC_ROLE_PROMOTED)
             || (rsc_ticket->loss_policy == loss_ticket_stop)) {
-            resource_location(rsc_lh, NULL, -INFINITY, "__ticket_standby__",
+            resource_location(rsc, NULL, -INFINITY, "__ticket_standby__",
                               data_set);
         }
     }
 }
 
 static void
-rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
-               const char *state_lh, const char *loss_policy,
+rsc_ticket_new(const char *id, pe_resource_t *rsc, pe_ticket_t *ticket,
+               const char *state, const char *loss_policy,
                pe_working_set_t *data_set)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
 
-    if (rsc_lh == NULL) {
+    if (rsc == NULL) {
         pcmk__config_err("Ignoring ticket '%s' because resource "
                          "does not exist", id);
         return;
@@ -164,15 +164,15 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
         return;
     }
 
-    if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S,
+    if (pcmk__str_eq(state, RSC_ROLE_STARTED_S,
                      pcmk__str_null_matches|pcmk__str_casei)) {
-        state_lh = RSC_ROLE_UNKNOWN_S;
+        state = RSC_ROLE_UNKNOWN_S;
     }
 
     new_rsc_ticket->id = id;
     new_rsc_ticket->ticket = ticket;
-    new_rsc_ticket->rsc_lh = rsc_lh;
-    new_rsc_ticket->role_lh = text2role(state_lh);
+    new_rsc_ticket->rsc = rsc;
+    new_rsc_ticket->role = text2role(state);
 
     if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
         if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -187,52 +187,52 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
 
     if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
         crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                  role2text(new_rsc_ticket->role_lh));
+                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                  role2text(new_rsc_ticket->role));
 
     } else if (pcmk__str_eq(loss_policy, "freeze", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                  role2text(new_rsc_ticket->role_lh));
+                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                  role2text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
     } else if (pcmk__str_eq(loss_policy, "demote", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Demote %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                  role2text(new_rsc_ticket->role_lh));
+                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                  role2text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
     } else if (pcmk__str_eq(loss_policy, "stop", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Stop %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                  role2text(new_rsc_ticket->role_lh));
+                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                  role2text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
-        if (new_rsc_ticket->role_lh == RSC_ROLE_PROMOTED) {
+        if (new_rsc_ticket->role == RSC_ROLE_PROMOTED) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
-                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                      role2text(new_rsc_ticket->role_lh));
+                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                      role2text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_demote;
 
         } else {
             crm_debug("On loss of ticket '%s': Default to stop %s (%s)",
-                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
-                      role2text(new_rsc_ticket->role_lh));
+                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                      role2text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_stop;
         }
     }
 
-    pe_rsc_trace(rsc_lh, "%s (%s) ==> %s",
-                 rsc_lh->id, role2text(new_rsc_ticket->role_lh), ticket->id);
+    pe_rsc_trace(rsc, "%s (%s) ==> %s",
+                 rsc->id, role2text(new_rsc_ticket->role), ticket->id);
 
-    rsc_lh->rsc_tickets = g_list_append(rsc_lh->rsc_tickets, new_rsc_ticket);
+    rsc->rsc_tickets = g_list_append(rsc->rsc_tickets, new_rsc_ticket);
 
     data_set->ticket_constraints = g_list_append(data_set->ticket_constraints,
                                                  new_rsc_ticket);
 
     if (!(new_rsc_ticket->ticket->granted) || new_rsc_ticket->ticket->standby) {
-        constraints_for_ticket(rsc_lh, new_rsc_ticket, data_set);
+        constraints_for_ticket(rsc, new_rsc_ticket, data_set);
     }
 }
 
@@ -286,14 +286,15 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     pe_ticket_t *ticket = NULL;
 
-    const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    const char *state_lh = crm_element_value(xml_obj,
+    const char *rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    const char *state = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_ROLE);
 
     // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
-    const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
+    const char *instance = crm_element_value(xml_obj,
+                                             XML_COLOC_ATTR_SOURCE_INSTANCE);
 
-    pe_resource_t *rsc_lh = NULL;
+    pe_resource_t *rsc = NULL;
 
     CRM_CHECK(xml_obj != NULL, return);
 
@@ -318,36 +319,36 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         return;
     }
 
-    if (id_lh == NULL) {
+    if (rsc_id == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
         return;
     } else {
-        rsc_lh = pcmk__find_constraint_resource(data_set->resources, id_lh);
+        rsc = pcmk__find_constraint_resource(data_set->resources, rsc_id);
     }
 
-    if (rsc_lh == NULL) {
+    if (rsc == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_lh);
+                         "does not exist", id, rsc_id);
         return;
 
-    } else if ((instance_lh != NULL) && !pe_rsc_is_clone(rsc_lh)) {
+    } else if ((instance != NULL) && !pe_rsc_is_clone(rsc)) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
-                         id, id_lh, instance_lh);
+                         id, rsc_id, instance);
         return;
     }
 
-    if (instance_lh != NULL) {
-        rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
-        if (rsc_lh == NULL) {
+    if (instance != NULL) {
+        rsc = find_clone_instance(rsc, instance, data_set);
+        if (rsc == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
-                              "'%s'", id, id_lh, instance_lh);
+                              "'%s'", id, rsc_id, instance);
             return;
         }
     }
 
-    rsc_ticket_new(id, rsc_lh, ticket, state_lh, loss_policy, data_set);
+    rsc_ticket_new(id, rsc, ticket, state, loss_policy, data_set);
 }
 
 // \return Standard Pacemaker return code
@@ -356,13 +357,13 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                        pe_working_set_t *data_set)
 {
     const char *id = NULL;
-    const char *id_lh = NULL;
-    const char *state_lh = NULL;
+    const char *rsc_id = NULL;
+    const char *state = NULL;
 
-    pe_resource_t *rsc_lh = NULL;
-    pe_tag_t *tag_lh = NULL;
+    pe_resource_t *rsc = NULL;
+    pe_tag_t *tag = NULL;
 
-    xmlNode *rsc_set_lh = NULL;
+    xmlNode *rsc_set = NULL;
 
     *expanded_xml = NULL;
 
@@ -382,37 +383,37 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
-    if (id_lh == NULL) {
+    rsc_id = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
+    if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
+    if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_lh);
+                         "valid resource or tag", id, rsc_id);
         return pcmk_rc_schema_validation;
 
-    } else if (rsc_lh) {
+    } else if (rsc != NULL) {
         // No template or tag is referenced
         return pcmk_rc_ok;
     }
 
-    state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+    state = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert template/tag reference in "rsc" into resource_set under rsc_ticket
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE,
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_COLOC_ATTR_SOURCE,
                           false, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
-    if (rsc_set_lh != NULL) {
-        if (state_lh != NULL) {
+    if (rsc_set != NULL) {
+        if (state != NULL) {
             // Move "rsc-role" into converted resource_set as a "role" attribute
-            crm_xml_add(rsc_set_lh, "role", state_lh);
+            crm_xml_add(rsc_set, "role", state);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
 
@@ -515,7 +516,7 @@ pcmk__require_promotion_tickets(pe_resource_t *rsc)
     for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
 
-        if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
+        if ((rsc_ticket->role == RSC_ROLE_PROMOTED)
             && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -INFINITY,
                               "__stateful_without_ticket__", rsc->cluster);
