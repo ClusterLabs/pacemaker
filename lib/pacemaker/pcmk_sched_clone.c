@@ -321,7 +321,8 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pe_resource_t *dependent = constraint->dependent;
             const char *attr = constraint->node_attribute;
             const float factor = constraint->score / (float) INFINITY;
-            const uint32_t flags = pe_weights_rollback|pe_weights_positive;
+            const uint32_t flags = pcmk__coloc_select_active
+                                   |pcmk__coloc_select_nonnegative;
 
             dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
                                                        &rsc->allowed_nodes,

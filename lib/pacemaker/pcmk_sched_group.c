@@ -577,7 +577,7 @@ group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
  * \param[in,out] nodes    Nodes to update
  * \param[in]     attr     Colocation attribute (NULL to use default)
  * \param[in]     factor   Incorporate scores multiplied by this factor
- * \param[in]     flags    Bitmask of enum pe_weights values
+ * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
  *
  * \note The caller remains responsible for freeing \p *nodes.
  */

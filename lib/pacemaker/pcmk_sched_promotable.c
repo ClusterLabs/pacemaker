@@ -337,14 +337,14 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
     pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
     pe_resource_t *primary = constraint->primary;
-    enum pe_weights flags = 0;
+    uint32_t flags = pcmk__coloc_select_default;
     float factor = constraint->score / (float) INFINITY;
 
     if (constraint->dependent_role != RSC_ROLE_PROMOTED) {
         return;
     }
     if (constraint->score < INFINITY) {
-        flags = pe_weights_rollback;
+        flags = pcmk__coloc_select_active;
     }
     pe_rsc_trace(clone, "RHS: %s with %s: %d",
                  constraint->dependent->id, constraint->primary->id,
@@ -369,7 +369,8 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
     pe_resource_t *clone = (pe_resource_t *) user_data;
     pe_resource_t *dependent = constraint->dependent;
     const float factor = constraint->score / (float) INFINITY;
-    const uint32_t flags = pe_weights_rollback|pe_weights_positive;
+    const uint32_t flags = pcmk__coloc_select_active
+                           |pcmk__coloc_select_nonnegative;
 
     if ((constraint->primary_role != RSC_ROLE_PROMOTED)
          || !pcmk__colocation_has_influence(constraint, NULL)) {

@@ -262,7 +262,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
                                                    &rsc->allowed_nodes,
                                                    constraint->node_attribute,
-                                                   factor, pe_weights_rollback);
+                                                   factor,
+                                                   pcmk__coloc_select_active);
     }
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {

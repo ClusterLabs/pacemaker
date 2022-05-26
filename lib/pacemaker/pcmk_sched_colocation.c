@@ -1223,7 +1223,7 @@ is_nonempty_group(pe_resource_t *rsc)
  * \param[in,out] nodes    Nodes to update
  * \param[in]     attr     Colocation attribute (NULL to use default)
  * \param[in]     factor   Incorporate scores multiplied by this factor
- * \param[in]     flags    Bitmask of enum pe_weights values
+ * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
  *
  * \note The caller remains responsible for freeing \p *nodes.
  */
@@ -1284,14 +1284,15 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                      log_id, rsc->id, factor);
         work = pcmk__copy_node_table(*nodes);
         add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      pcmk_is_set(flags, pe_weights_positive));
+                                      pcmk_is_set(flags,
+                                                  pcmk__coloc_select_nonnegative));
     }
 
     if (pcmk__any_node_available(work)) {
         GList *gIter = NULL;
         float multiplier = (factor < 0.0)? -1.0 : 1.0;
 
-        if (pcmk_is_set(flags, pe_weights_forward)) {
+        if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
             gIter = rsc->rsc_cons;
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
@@ -1316,7 +1317,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             pe_resource_t *other = NULL;
             pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-            if (pcmk_is_set(flags, pe_weights_forward)) {
+            if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
             } else if (!pcmk__colocation_has_influence(constraint, NULL)) {
                 continue;
@@ -1330,11 +1331,11 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
             factor = multiplier * constraint->score / (float) INFINITY;
             pcmk__add_colocated_node_scores(other, log_id, &work,
                                             constraint->node_attribute, factor,
-                                            flags|pe_weights_rollback);
+                                            flags|pcmk__coloc_select_active);
             pe__show_node_weights(true, NULL, log_id, work, rsc->cluster);
         }
 
-    } else if (pcmk_is_set(flags, pe_weights_rollback)) {
+    } else if (pcmk_is_set(flags, pcmk__coloc_select_active)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
                     log_id, rsc->id);
         g_hash_table_destroy(work);
@@ -1343,7 +1344,7 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     }
 
 
-    if (pcmk_is_set(flags, pe_weights_positive)) {
+    if (pcmk_is_set(flags, pcmk__coloc_select_nonnegative)) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
 

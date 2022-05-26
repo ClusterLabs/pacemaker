@@ -16,6 +16,21 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
+// Flags to modify the behavior of the add_colocated_node_scores() method
+enum pcmk__coloc_select {
+    // With no other flags, apply all "with this" colocations
+    pcmk__coloc_select_default      = 0,
+
+    // Apply "this with" colocations instead of "with this" colocations
+    pcmk__coloc_select_this_with    = (1 << 0),
+
+    // Apply only colocations with non-negative scores
+    pcmk__coloc_select_nonnegative  = (1 << 1),
+
+    // Apply only colocations with at least one matching node
+    pcmk__coloc_select_active       = (1 << 2),
+};
+
 // Resource allocation methods
 struct resource_alloc_functions_s {
     pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
@@ -53,13 +68,14 @@ struct resource_alloc_functions_s {
      * \param[in,out] nodes    Nodes to update
      * \param[in]     attr     Colocation attribute (NULL to use default)
      * \param[in]     factor   Incorporate scores multiplied by this factor
-     * \param[in]     flags    Bitmask of enum pe_weights values
+     * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
      *
      * \note The caller remains responsible for freeing \p *nodes.
      */
     void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
                                       GHashTable **nodes, const char *attr,
-                                      float factor, enum pe_weights flags);
+                                      float factor,
+                                      enum pcmk__coloc_select flags);
 
     /*!
      * \internal

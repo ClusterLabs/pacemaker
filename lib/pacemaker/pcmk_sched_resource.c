@@ -623,10 +623,10 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     // Calculate and log node weights
     pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
                                     resource1->id, &r1_nodes, NULL, 1,
-                                    pe_weights_forward);
+                                    pcmk__coloc_select_this_with);
     pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
                                     resource2->id, &r2_nodes, NULL, 1,
-                                    pe_weights_forward);
+                                    pcmk__coloc_select_this_with);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
@@ -742,7 +742,7 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
         pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
                                         colocation->node_attribute,
                                         colocation->score / (float) INFINITY,
-                                        0);
+                                        pcmk__coloc_select_default);
     }
     for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
@@ -752,7 +752,7 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
         pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
                                         colocation->node_attribute,
                                         colocation->score / (float) INFINITY,
-                                        pe_weights_positive);
+                                        pcmk__coloc_select_nonnegative);
     }
 }
 
