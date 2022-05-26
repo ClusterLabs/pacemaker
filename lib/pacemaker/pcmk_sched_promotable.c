@@ -346,9 +346,10 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
     if (constraint->score < INFINITY) {
         flags = pcmk__coloc_select_active;
     }
-    pe_rsc_trace(clone, "RHS: %s with %s: %d",
-                 constraint->dependent->id, constraint->primary->id,
-                 constraint->score);
+    pe_rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
+                 constraint->id, constraint->dependent->id,
+                 constraint->primary->id,
+                 pcmk_readable_score(constraint->score));
     primary->cmds->add_colocated_node_scores(primary, clone->id,
                                              &clone->allowed_nodes,
                                              constraint->node_attribute,
@@ -377,9 +378,10 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
         return;
     }
 
-    pe_rsc_trace(clone, "LHS: %s with %s: %d",
-                 constraint->dependent->id, constraint->primary->id,
-                 constraint->score);
+    pe_rsc_trace(clone, "Applying colocation %s (%s with promoted %s) @%s",
+                 constraint->id, constraint->dependent->id,
+                 constraint->primary->id,
+                 pcmk_readable_score(constraint->score));
     dependent->cmds->add_colocated_node_scores(dependent, clone->id,
                                                &clone->allowed_nodes,
                                                constraint->node_attribute,

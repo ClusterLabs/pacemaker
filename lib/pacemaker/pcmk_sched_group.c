@@ -414,20 +414,21 @@ for_primary:
     get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
-    pe_rsc_trace(primary, "Processing RH %s of constraint %s (LH is %s)",
-                 primary->id, colocation->id, dependent->id);
+    pe_rsc_trace(primary,
+                 "Processing colocation %s (%s with group %s) for primary",
+                 colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
         if (colocation->score >= INFINITY) {
-            /* Ensure RHS is _fully_ up before can start LHS */
+            // Dependent can't start until group is fully up
             group_data->last_child->cmds->apply_coloc_score(dependent,
                                                             group_data->last_child,
                                                             colocation, false);
         } else {
-            /* A partially active RHS is fine */
+            // Dependent can start as long as group is partially up
             group_data->first_child->cmds->apply_coloc_score(dependent,
                                                              group_data->first_child,
                                                              colocation, false);

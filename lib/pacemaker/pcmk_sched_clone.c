@@ -734,7 +734,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         }
     }
 
-    /* only the LHS side needs to be labeled as interleave */
+    // Only the dependent needs to be marked for interleave
     interleave_s = g_hash_table_lookup(colocation->dependent->meta,
                                        XML_RSC_ATTR_INTERLEAVE);
     if (crm_is_true(interleave_s)
