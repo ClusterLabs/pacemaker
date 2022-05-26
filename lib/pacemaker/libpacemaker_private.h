@@ -367,22 +367,22 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \param[in] flags       Bitmask of enum pe_ordering flags
  * \param[in] data_set    Cluster working set to add ordering to
  */
-#define pcmk__order_resource_actions(first_rsc, first_task, \
-                                     then_rsc, then_task, flags, data_set)  \
+#define pcmk__order_resource_actions(first_rsc, first_task,                 \
+                                     then_rsc, then_task, flags)            \
     pcmk__new_ordering((first_rsc),                                         \
                        pcmk__op_key((first_rsc)->id, (first_task), 0),      \
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (data_set))
+                       NULL, (flags), (first_rsc)->cluster)
 
 #define pcmk__order_starts(rsc1, rsc2, type, data_set)       \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
-                                 (rsc2), CRMD_ACTION_START, (type), (data_set))
+                                 (rsc2), CRMD_ACTION_START, (type))
 
 #define pcmk__order_stops(rsc1, rsc2, type, data_set)        \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
-                                 (rsc2), CRMD_ACTION_STOP, (type), (data_set))
+                                 (rsc2), CRMD_ACTION_STOP, (type))
 
 
 // Ticket constraints (pcmk_sched_tickets.c)

@@ -564,17 +564,17 @@ clone_internal_constraints(pe_resource_t *rsc)
 
     pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left, rsc->cluster);
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left, rsc->cluster);
+                                 pe_order_runnable_left);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                     pe_order_optional, rsc->cluster);
+                                     pe_order_optional);
         pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                     pe_order_runnable_left, rsc->cluster);
+                                     pe_order_runnable_left);
     }
 
     if (ordered) {
@@ -590,8 +590,7 @@ clone_internal_constraints(pe_resource_t *rsc)
                            pe_order_runnable_left|pe_order_implies_first_printed,
                            rsc->cluster);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     pe_order_implies_then_printed,
-                                     rsc->cluster);
+                                     pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
             pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
                                rsc->cluster);
@@ -600,8 +599,7 @@ clone_internal_constraints(pe_resource_t *rsc)
         pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
                           rsc->cluster);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     pe_order_implies_then_printed,
-                                     rsc->cluster);
+                                     pe_order_implies_then_printed);
         if (ordered && (last_rsc != NULL)) {
             pcmk__order_stops(child_rsc, last_rsc, pe_order_optional,
                               rsc->cluster);

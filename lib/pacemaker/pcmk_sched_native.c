@@ -1339,8 +1339,7 @@ native_internal_constraints(pe_resource_t *rsc)
              * transition and avoid the unnecessary recovery.
              */
             pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
-                                         RSC_STOP, pe_order_optional,
-                                         rsc->cluster);
+                                         RSC_STOP, pe_order_optional);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1983,12 +1982,10 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
     delete_action(rsc, node, optional);
 
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
-                                 optional? pe_order_implies_then : pe_order_optional,
-                                 data_set);
+                                 optional? pe_order_implies_then : pe_order_optional);
 
     pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
-                                 optional? pe_order_implies_then : pe_order_optional,
-                                 data_set);
+                                 optional? pe_order_implies_then : pe_order_optional);
 
     return TRUE;
 }

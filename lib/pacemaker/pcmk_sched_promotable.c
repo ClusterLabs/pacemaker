@@ -28,14 +28,14 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
 {
     // "Promote clone" -> promote instance -> "clone promoted"
     pcmk__order_resource_actions(clone, RSC_PROMOTE, child, RSC_PROMOTE,
-                                 pe_order_optional, clone->cluster);
+                                 pe_order_optional);
     pcmk__order_resource_actions(child, RSC_PROMOTE, clone, RSC_PROMOTED,
-                                 pe_order_optional, clone->cluster);
+                                 pe_order_optional);
 
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {
         pcmk__order_resource_actions(last, RSC_PROMOTE, child, RSC_PROMOTE,
-                                     pe_order_optional, clone->cluster);
+                                     pe_order_optional);
     }
 }
 
@@ -53,15 +53,14 @@ order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
 {
     // "Demote clone" -> demote instance -> "clone demoted"
     pcmk__order_resource_actions(clone, RSC_DEMOTE, child, RSC_DEMOTE,
-                                 pe_order_implies_first_printed,
-                                 clone->cluster);
+                                 pe_order_implies_first_printed);
     pcmk__order_resource_actions(child, RSC_DEMOTE, clone, RSC_DEMOTED,
-                                 pe_order_implies_then_printed, clone->cluster);
+                                 pe_order_implies_then_printed);
 
     // If clone is ordered, order this instance relative to last
     if ((last != NULL) && pe__clone_is_ordered(clone)) {
         pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE,
-                                     pe_order_optional, clone->cluster);
+                                     pe_order_optional);
     }
 }
 
@@ -1118,7 +1117,7 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
         // Demote before promote
         pcmk__order_resource_actions(instance, RSC_DEMOTE,
                                      instance, RSC_PROMOTE,
-                                     pe_order_optional, instance->cluster);
+                                     pe_order_optional);
 
         order_instance_promotion(clone, instance, previous);
         order_instance_demotion(clone, instance, previous);

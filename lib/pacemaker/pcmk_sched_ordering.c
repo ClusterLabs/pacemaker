@@ -404,7 +404,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
 
         handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
         pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
-                                     action_first, flags, data_set);
+                                     action_first, flags);
     }
 }
 
@@ -473,7 +473,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
                            cons_weight, min_required_before, data_set);
     } else {
         pcmk__order_resource_actions(rsc_first, action_first, rsc_then,
-                                     action_then, cons_weight, data_set);
+                                     action_then, cons_weight);
     }
 
     if (symmetry == ordering_symmetric) {
@@ -813,7 +813,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
         } else if (sequential) {
             if (last != NULL) {
                 pcmk__order_resource_actions(last, action, resource, action,
-                                             flags, data_set);
+                                             flags);
             }
             last = resource;
         }
@@ -838,7 +838,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind parent_kind,
         if (sequential) {
             if (last != NULL) {
                 pcmk__order_resource_actions(resource, action, last, action,
-                                             flags, data_set);
+                                             flags);
             }
             last = resource;
         }
@@ -992,8 +992,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
     }
 
     if ((rsc_1 != NULL) && (rsc_2 != NULL)) {
-        pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags,
-                                     data_set);
+        pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2, flags);
 
     } else if (rsc_1 != NULL) {
         for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
@@ -1001,7 +1000,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
-                                         flags, data_set);
+                                         flags);
         }
 
     } else if (rsc_2 != NULL) {
@@ -1010,7 +1009,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
             pcmk__order_resource_actions(rsc_1, action_1, rsc_2, action_2,
-                                         flags, data_set);
+                                         flags);
         }
 
     } else {
@@ -1024,7 +1023,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
                 pcmk__order_resource_actions(rsc_1, action_1, rsc_2,
-                                             action_2, flags, data_set);
+                                             action_2, flags);
             }
         }
     }
@@ -1584,23 +1583,23 @@ pcmk__promotable_restart_ordering(pe_resource_t *rsc)
 {
     // Order start and promote after all instances are stopped
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
 
     // Order stop, start, and promote after all instances are demoted
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
 
     // Order promote after all instances are started
     pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
 
     // Order demote after all instances are demoted
     pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_optional, rsc->cluster);
+                                 pe_order_optional);
 }

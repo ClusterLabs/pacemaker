@@ -220,30 +220,24 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 
     if (bundle_data->child) {
         pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
-                                     RSC_START, pe_order_implies_first_printed,
-                                     rsc->cluster);
+                                     RSC_START, pe_order_implies_first_printed);
         pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
-                                     RSC_STOP, pe_order_implies_first_printed,
-                                     rsc->cluster);
+                                     RSC_STOP, pe_order_implies_first_printed);
 
         if (bundle_data->child->children) {
             pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
         } else {
             pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
         }
     }
 
@@ -267,11 +261,11 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
         pcmk__order_stops(rsc, replica->container,
                           pe_order_implies_first_printed, rsc->cluster);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
-                                     RSC_STARTED, pe_order_implies_then_printed,
-                                     rsc->cluster);
+                                     RSC_STARTED,
+                                     pe_order_implies_then_printed);
         pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
-                                     RSC_STOPPED, pe_order_implies_then_printed,
-                                     rsc->cluster);
+                                     RSC_STOPPED,
+                                     pe_order_implies_then_printed);
 
         if (replica->ip) {
             replica->ip->cmds->internal_constraints(replica->ip);
@@ -314,26 +308,22 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
             /* child demoted before global demoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
                                          RSC_DEMOTED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
 
             /* global demote before child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
                                          RSC_DEMOTE,
-                                         pe_order_implies_first_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_first_printed);
 
             /* child promoted before global promoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
                                          RSC_PROMOTED,
-                                         pe_order_implies_then_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_then_printed);
 
             /* global promote before child promote */
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
                                          RSC_PROMOTE,
-                                         pe_order_implies_first_printed,
-                                         rsc->cluster);
+                                         pe_order_implies_first_printed);
         }
     }
 }
