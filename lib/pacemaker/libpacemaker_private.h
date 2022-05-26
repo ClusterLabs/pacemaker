@@ -190,8 +190,7 @@ void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
-                            pe_action_t *action, enum pe_ordering order,
-                            pe_working_set_t *data_set);
+                            pe_action_t *action, enum pe_ordering order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);

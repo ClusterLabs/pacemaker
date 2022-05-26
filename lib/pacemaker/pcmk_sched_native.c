@@ -1843,7 +1843,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
                  ((next == NULL)? 0 : next->weight));
     start = start_action(rsc, next, TRUE);
 
-    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
+    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
@@ -2168,7 +2168,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, rsc->cluster);
     pe__clear_action_flags(probe, pe_action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, rsc->cluster);
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
