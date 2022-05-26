@@ -210,8 +210,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 }
 
 void
-pcmk__bundle_internal_constraints(pe_resource_t *rsc,
-                                  pe_working_set_t *data_set)
+pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -222,29 +221,29 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     if (bundle_data->child) {
         pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
                                      RSC_START, pe_order_implies_first_printed,
-                                     data_set);
+                                     rsc->cluster);
         pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
                                      RSC_STOP, pe_order_implies_first_printed,
-                                     data_set);
+                                     rsc->cluster);
 
         if (bundle_data->child->children) {
             pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
                                          RSC_STARTED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
                                          RSC_STOPPED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
         } else {
             pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
                                          RSC_STARTED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
                                          RSC_STOPPED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
         }
     }
 
@@ -255,40 +254,39 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         CRM_ASSERT(replica);
         CRM_ASSERT(replica->container);
 
-        replica->container->cmds->internal_constraints(replica->container,
-                                                       data_set);
+        replica->container->cmds->internal_constraints(replica->container);
 
         pcmk__order_starts(rsc, replica->container,
                            pe_order_runnable_left|pe_order_implies_first_printed,
-                           data_set);
+                           rsc->cluster);
 
         if (replica->child) {
             pcmk__order_stops(rsc, replica->child,
-                              pe_order_implies_first_printed, data_set);
+                              pe_order_implies_first_printed, rsc->cluster);
         }
         pcmk__order_stops(rsc, replica->container,
-                          pe_order_implies_first_printed, data_set);
+                          pe_order_implies_first_printed, rsc->cluster);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
                                      RSC_STARTED, pe_order_implies_then_printed,
-                                     data_set);
+                                     rsc->cluster);
         pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
                                      RSC_STOPPED, pe_order_implies_then_printed,
-                                     data_set);
+                                     rsc->cluster);
 
         if (replica->ip) {
-            replica->ip->cmds->internal_constraints(replica->ip, data_set);
+            replica->ip->cmds->internal_constraints(replica->ip);
 
             // Start IP then container
             pcmk__order_starts(replica->ip, replica->container,
                                pe_order_runnable_left|pe_order_preserve,
-                               data_set);
+                               rsc->cluster);
             pcmk__order_stops(replica->container, replica->ip,
                               pe_order_implies_first|pe_order_preserve,
-                              data_set);
+                              rsc->cluster);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,
-                                 data_set);
+                                 rsc->cluster);
         }
 
         if (replica->remote) {
@@ -297,8 +295,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
              * colocated relative to the container, we don't need to do anything
              * explicit here with IP.
              */
-            replica->remote->cmds->internal_constraints(replica->remote,
-                                                        data_set);
+            replica->remote->cmds->internal_constraints(replica->remote);
         }
 
         if (replica->child) {
@@ -310,7 +307,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     }
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
+        bundle_data->child->cmds->internal_constraints(bundle_data->child);
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             pcmk__promotable_restart_ordering(rsc);
 
@@ -318,25 +315,25 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
                                          RSC_DEMOTED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
 
             /* global demote before child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
                                          RSC_DEMOTE,
                                          pe_order_implies_first_printed,
-                                         data_set);
+                                         rsc->cluster);
 
             /* child promoted before global promoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
                                          RSC_PROMOTED,
                                          pe_order_implies_then_printed,
-                                         data_set);
+                                         rsc->cluster);
 
             /* global promote before child promote */
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
                                          RSC_PROMOTE,
                                          pe_order_implies_first_printed,
-                                         data_set);
+                                         rsc->cluster);
         }
     }
 }

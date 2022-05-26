@@ -37,7 +37,7 @@ struct resource_alloc_functions_s {
     void (*create_actions)(pe_resource_t *rsc);
     gboolean (*create_probe)(pe_resource_t *rsc, pe_node_t *node,
                              pe_action_t *complete, gboolean force);
-    void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
+    void (*internal_constraints)(pe_resource_t *rsc);
 
     /*!
      * \internal

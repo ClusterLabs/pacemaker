@@ -1218,7 +1218,7 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_internal_constraints(pe_resource_t *rsc)
 {
     /* This function is on the critical path and worth optimizing as much as possible */
 
@@ -1238,19 +1238,19 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-                      && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)
+                      && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                         && !pcmk__str_eq(data_set->placement_strategy,
+                         && !pcmk__str_eq(rsc->cluster->placement_strategy,
                                           "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                        rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                        pe_order_optional|pe_order_implies_then|pe_order_restart,
-                       data_set);
+                       rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
@@ -1258,22 +1258,22 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                           pe_order_promoted_implies_first, data_set);
+                           pe_order_promoted_implies_first, rsc->cluster);
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
-                           pe_order_runnable_left, data_set);
+                           pe_order_runnable_left, rsc->cluster);
     }
 
     // Don't clear resource history if probing on same node
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
                        NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
                        NULL, pe_order_same_node|pe_order_then_cancels_first,
-                       data_set);
+                       rsc->cluster);
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
-        allowed_nodes = allowed_nodes_as_list(rsc, data_set);
+        allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
     }
 
     if (check_unfencing) {
@@ -1281,7 +1281,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *node = item->data;
-            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
+            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
+                                               rsc->cluster);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -1303,12 +1304,13 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              */
             pcmk__new_ordering(rsc, stop_key(rsc), NULL,
                                NULL, strdup(unfence->uuid), unfence,
-                               pe_order_optional|pe_order_same_node, data_set);
+                               pe_order_optional|pe_order_same_node,
+                               rsc->cluster);
 
             pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
                                rsc, start_key(rsc), NULL,
                                pe_order_implies_then_on_node|pe_order_same_node,
-                               data_set);
+                               rsc->cluster);
         }
     }
 
@@ -1337,7 +1339,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * transition and avoid the unnecessary recovery.
              */
             pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
-                                         RSC_STOP, pe_order_optional, data_set);
+                                         RSC_STOP, pe_order_optional,
+                                         rsc->cluster);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1349,7 +1352,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
         } else  {
-            remote_rsc = pe__resource_contains_guest_node(data_set,
+            remote_rsc = pe__resource_contains_guest_node(rsc->cluster,
                                                           rsc->container);
         }
 
@@ -1380,12 +1383,12 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
                                NULL,
                                pe_order_implies_then|pe_order_runnable_left,
-                               data_set);
+                               rsc->cluster);
 
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                                rsc->container,
                                pcmk__op_key(rsc->container->id, RSC_STOP, 0),
-                               NULL, pe_order_implies_first, data_set);
+                               NULL, pe_order_implies_first, rsc->cluster);
 
             if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1393,7 +1396,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, true, data_set);
+                                 rsc->container, NULL, NULL, true, rsc->cluster);
         }
     }
 

@@ -555,7 +555,7 @@ clone_create_pseudo_actions(
 }
 
 void
-clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
+clone_internal_constraints(pe_resource_t *rsc)
 {
     pe_resource_t *last_rsc = NULL;
     GList *gIter;
@@ -563,17 +563,17 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+                                 pe_order_optional, rsc->cluster);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left, rsc->cluster);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                     pe_order_optional, data_set);
+                                     pe_order_optional, rsc->cluster);
         pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                     pe_order_runnable_left, data_set);
+                                     pe_order_runnable_left, rsc->cluster);
     }
 
     if (ordered) {
@@ -583,24 +583,27 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->internal_constraints(child_rsc, data_set);
+        child_rsc->cmds->internal_constraints(child_rsc);
 
         pcmk__order_starts(rsc, child_rsc,
                            pe_order_runnable_left|pe_order_implies_first_printed,
-                           data_set);
+                           rsc->cluster);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     pe_order_implies_then_printed, data_set);
+                                     pe_order_implies_then_printed,
+                                     rsc->cluster);
         if (ordered && (last_rsc != NULL)) {
             pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
-                               data_set);
+                               rsc->cluster);
         }
 
         pcmk__order_stops(rsc, child_rsc, pe_order_implies_first_printed,
-                          data_set);
+                          rsc->cluster);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     pe_order_implies_then_printed, data_set);
+                                     pe_order_implies_then_printed,
+                                     rsc->cluster);
         if (ordered && (last_rsc != NULL)) {
-            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional, data_set);
+            pcmk__order_stops(child_rsc, last_rsc, pe_order_optional,
+                              rsc->cluster);
         }
 
         last_rsc = child_rsc;
