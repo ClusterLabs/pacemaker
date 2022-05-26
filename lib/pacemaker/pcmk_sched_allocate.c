@@ -318,8 +318,7 @@ allocate_resources(pe_working_set_t *data_set)
             if (rsc->is_remote_node) {
                 pe_rsc_trace(rsc, "Allocating remote connection resource '%s'",
                              rsc->id);
-                rsc->cmds->allocate(rsc, rsc->partial_migration_target,
-                                    data_set);
+                rsc->cmds->allocate(rsc, rsc->partial_migration_target);
             }
         }
     }
@@ -331,7 +330,7 @@ allocate_resources(pe_working_set_t *data_set)
         if (!rsc->is_remote_node) {
             pe_rsc_trace(rsc, "Allocating %s resource '%s'",
                          crm_element_name(rsc->xml), rsc->id);
-            rsc->cmds->allocate(rsc, NULL, data_set);
+            rsc->cmds->allocate(rsc, NULL);
         }
     }
 

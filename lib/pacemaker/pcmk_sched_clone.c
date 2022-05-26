@@ -111,7 +111,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
-    chosen = rsc->cmds->allocate(rsc, prefer, data_set);
+    chosen = rsc->cmds->allocate(rsc, prefer);
     if (chosen && prefer && (chosen->details != prefer->details)) {
         crm_info("Not pre-allocating %s to %s because %s is better",
                  rsc->id, prefer->details->uname, chosen->details->uname);
@@ -280,8 +280,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
 
 pe_node_t *
-pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                     pe_working_set_t *data_set)
+pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -310,8 +309,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         pe_rsc_trace(rsc, "%s: Allocating %s first",
                      rsc->id, constraint->primary->id);
-        constraint->primary->cmds->allocate(constraint->primary, prefer,
-                                            data_set);
+        constraint->primary->cmds->allocate(constraint->primary, prefer);
     }
 
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
@@ -330,13 +328,14 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, rsc->cluster);
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
+    distribute_children(rsc, rsc->children, nodes, clone_data->clone_max,
+                        clone_data->clone_node_max, rsc->cluster);
     g_list_free(nodes);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {

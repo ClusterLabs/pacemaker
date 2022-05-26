@@ -193,8 +193,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
 }
 
 pe_node_t *
-pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                      pe_working_set_t *data_set)
+pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *gIter = NULL;
 
@@ -202,7 +201,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         /* never allocate children on their own */
         pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
                      rsc->parent->id);
-        rsc->parent->cmds->allocate(rsc->parent, prefer, data_set);
+        rsc->parent->cmds->allocate(rsc->parent, prefer);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -215,7 +214,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes,
+                          rsc->cluster);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -232,7 +232,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      "%s: Allocating %s first (constraint=%s score=%d role=%s)",
                      rsc->id, primary->id, constraint->id,
                      constraint->score, role2text(constraint->dependent_role));
-        primary->cmds->allocate(primary, NULL, data_set);
+        primary->cmds->allocate(primary, NULL);
         rsc->cmds->apply_coloc_score(rsc, primary, constraint, true);
         if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
@@ -246,7 +246,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes,
+                          rsc->cluster);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -269,20 +270,21 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesn't come up again */
-        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
+        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE,
+                          rsc->cluster);
 
     } else if(rsc->next_role > rsc->role
-              && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-              && data_set->no_quorum_policy == no_quorum_freeze) {
+              && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
+              && rsc->cluster->no_quorum_policy == no_quorum_freeze) {
         crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
-        && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
+        && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
@@ -305,12 +307,12 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                     (assign_to? assign_to->details->uname : "no node"), reason);
         pcmk__assign_primitive(rsc, assign_to, true);
 
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
         pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
-               && native_choose_node(rsc, prefer, data_set)) {
+               && native_choose_node(rsc, prefer, rsc->cluster)) {
         pe_rsc_trace(rsc, "Allocated resource %s to %s", rsc->id,
                      rsc->allocated_to->details->uname);
 
@@ -329,7 +331,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__clear_resource_flags(rsc, pe_rsc_allocating);
 
     if (rsc->is_remote_node) {
-        pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+        pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
         CRM_ASSERT(remote_node != NULL);
         if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {

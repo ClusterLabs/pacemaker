@@ -82,8 +82,7 @@ expand_group_colocations(pe_resource_t *rsc)
 }
 
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                     pe_working_set_t *data_set)
+pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
@@ -111,8 +110,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     expand_group_colocations(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -120,7 +119,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         pe_rsc_trace(rsc, "Allocating group %s member %s",
                      rsc->id, child_rsc->id);
-        node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
+        node = child_rsc->cmds->allocate(child_rsc, prefer);
         if (group_node == NULL) {
             group_node = node;
         }

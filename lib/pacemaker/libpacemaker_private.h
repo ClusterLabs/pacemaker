@@ -33,7 +33,7 @@ enum pcmk__coloc_select {
 
 // Resource allocation methods
 struct resource_alloc_functions_s {
-    pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
+    pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
     void (*create_actions) (pe_resource_t *, pe_working_set_t *);
     gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);

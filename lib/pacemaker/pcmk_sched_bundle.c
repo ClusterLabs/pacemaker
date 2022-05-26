@@ -62,8 +62,7 @@ get_containers_or_children(pe_resource_t *rsc)
 }
 
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                      pe_working_set_t *data_set)
+pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *containers = NULL;
     GList *nodes = NULL;
@@ -76,14 +75,14 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL, rsc->cluster);
     containers = g_list_sort(containers, pcmk__cmp_instance);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
-                        bundle_data->nreplicas_per_host, data_set);
+                        bundle_data->nreplicas_per_host, rsc->cluster);
     g_list_free(nodes);
     g_list_free(containers);
 
@@ -96,7 +95,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         if (replica->ip) {
             pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
                          rsc->id, replica->ip->id);
-            replica->ip->cmds->allocate(replica->ip, prefer, data_set);
+            replica->ip->cmds->allocate(replica->ip, prefer);
         }
 
         container_host = replica->container->allocated_to;
@@ -108,14 +107,13 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pcmk__new_colocation("child-remote-with-docker-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
-                                 NULL, true, data_set);
+                                 NULL, true, rsc->cluster);
         }
 
         if (replica->remote) {
             pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
                          rsc->id, replica->remote->id);
-            replica->remote->cmds->allocate(replica->remote, prefer,
-                                            data_set);
+            replica->remote->cmds->allocate(replica->remote, prefer);
         }
 
         // Explicitly allocate replicas' children before bundle child
@@ -136,8 +134,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
-            replica->child->cmds->allocate(replica->child, replica->node,
-                                           data_set);
+            replica->child->cmds->allocate(replica->child, replica->node);
             pe__clear_resource_flags(replica->child->parent,
                                        pe_rsc_allocating);
         }
@@ -156,7 +153,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
                      rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
+        bundle_data->child->cmds->allocate(bundle_data->child, prefer);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
