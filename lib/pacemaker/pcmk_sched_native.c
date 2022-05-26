@@ -1707,7 +1707,7 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
 
@@ -1718,13 +1718,13 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         crm_trace("processing action %d for rsc=%s", action->id, rsc->id);
-        pcmk__add_action_to_graph(action, data_set);
+        pcmk__add_action_to_graph(action, rsc->cluster);
     }
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->expand(child_rsc, data_set);
+        child_rsc->cmds->expand(child_rsc);
     }
 }
 

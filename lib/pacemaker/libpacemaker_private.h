@@ -108,7 +108,7 @@ struct resource_alloc_functions_s {
                                            pe_working_set_t *data_set);
     void (*output_actions)(pe_resource_t *rsc);
 
-    void (*expand) (pe_resource_t *, pe_working_set_t *);
+    void (*expand)(pe_resource_t *rsc);
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
 
     /*!

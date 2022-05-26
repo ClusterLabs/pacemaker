@@ -890,7 +890,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
+pcmk__bundle_expand(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -899,7 +899,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->expand(bundle_data->child, data_set);
+        bundle_data->child->cmds->expand(bundle_data->child);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -908,7 +908,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote, data_set)) {
+            && pe__bundle_needs_remote_name(replica->remote, rsc->cluster)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -922,7 +922,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
             // Replace the value in replica->remote->xml (if appropriate)
             calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                         data_set,
+                                                         rsc->cluster,
                                                          nvpair, "value");
             if (calculated_addr) {
                 /* Since this is for the bundle as a resource, and not any
@@ -932,7 +932,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                  * parameters.
                  */
                 GHashTable *params = pe_rsc_params(replica->remote,
-                                                   NULL, data_set);
+                                                   NULL, rsc->cluster);
 
                 g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
@@ -950,13 +950,13 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
             }
         }
         if (replica->ip) {
-            replica->ip->cmds->expand(replica->ip, data_set);
+            replica->ip->cmds->expand(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->expand(replica->container, data_set);
+            replica->container->cmds->expand(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->expand(replica->remote, data_set);
+            replica->remote->cmds->expand(replica->remote);
         }
     }
 }

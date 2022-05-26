@@ -925,7 +925,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
+clone_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -945,10 +945,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->expand(child_rsc, data_set);
+        child_rsc->cmds->expand(child_rsc);
     }
 
-    native_expand(rsc, data_set);
+    native_expand(rsc);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
     pe__free_notification_data(clone_data->demote_notify);
