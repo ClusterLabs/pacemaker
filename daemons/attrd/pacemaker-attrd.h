@@ -38,8 +38,10 @@
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
  *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
  *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
+ *     4       2.2.0    Multiple attributes can be updated in a single IPC
+ *                      message
  */
-#define ATTRD_PROTOCOL_VERSION "3"
+#define ATTRD_PROTOCOL_VERSION "4"
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);

@@ -252,10 +252,37 @@ void
 attrd_client_update(xmlNode *xml)
 {
     attribute_t *a = NULL;
-    char *host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
-    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
+    char *host;
+    const char *attr, *value, *regex;
+
+    /* If the message has children, that means it is a message from a newer
+     * client that supports sending multiple operations at a time.  There are
+     * two ways we can handle that.
+     */
+    if (xml_has_children(xml)) {
+        if (minimum_protocol_version >= 4) {
+            /* First, if all peers support a certain protocol version, we can
+             * just broadcast the big message and they'll handle it.
+             */
+            send_attrd_message(NULL, xml);
+        } else {
+            /* Second, if they do not support that protocol version, split it
+             * up into individual messages and call attrd_client_update on
+             * each one.
+             */
+            for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
+                 child = crm_next_same_xml(child)) {
+                attrd_client_update(xml);
+            }
+        }
+
+        return;
+    }
+
+    host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
+    attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
+    value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    regex = crm_element_value(xml, PCMK__XA_ATTR_PATTERN);
 
     /* If a regex was specified, broadcast a message for each match */
     if ((attr == NULL) && regex) {
@@ -979,12 +1006,13 @@ populate_attribute(xmlNode *xml, const char *attr)
     return a;
 }
 
-void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
+static void
+attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
 {
     attribute_t *a = NULL;
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
     const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     int is_force_write = 0;
 
     if (attr == NULL) {
@@ -999,27 +1027,47 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         return;
     }
 
-    // If no host was specified, update all hosts recursively
     if (host == NULL) {
+        // If no host was specified, update all hosts
         GHashTableIter vIter;
 
         crm_debug("Setting %s for all hosts to %s", attr, value);
         xml_remove_prop(xml, PCMK__XA_ATTR_NODE_ID);
         g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
-            attrd_peer_update(peer, xml, host, filter);
-        }
-        return;
-    }
 
-    // Update attribute value for one host
-    update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
+            update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+        }
+
+    } else {
+        // Update attribute value for the given host
+        update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
+    }
 
     /* If this is a message from some attrd instance broadcasting its protocol
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
         update_minimum_protocol_ver(value);
+    }
+}
+
+void
+attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
+{
+    if (xml_has_children(xml)) {
+        for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
+             child = crm_next_same_xml(child)) {
+            /* Set the node name on the child message, assuming it isn't already. */
+            if (crm_element_value(child, PCMK__XA_ATTR_NODE_NAME) == NULL) {
+                crm_xml_add(child, PCMK__XA_ATTR_NODE_NAME, host);
+            }
+
+            attrd_peer_update_one(peer, child, filter);
+        }
+
+    } else {
+        attrd_peer_update_one(peer, xml, filter);
     }
 }
 
