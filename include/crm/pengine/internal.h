@@ -402,48 +402,48 @@ extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *ta
 #  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define stopped_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #  define stopped_action(rsc, node, optional) custom_action(		\
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define stop_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define started_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #  define started_action(rsc, node, optional) custom_action(		\
 		rsc, started_key(rsc), CRMD_ACTION_STARTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define promote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define promoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
 #  define promoted_action(rsc, node, optional) custom_action(		\
 		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define demote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node,		\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define demoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
 #  define demoted_action(rsc, node, optional) custom_action(		\
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
