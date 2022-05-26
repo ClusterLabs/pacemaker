@@ -309,6 +309,39 @@ resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
     return buf;
 }
 
+static const char *
+get_node_feature_set(pe_node_t *node) {
+    const char *feature_set = NULL;
+
+    if (node->details->online && !pe__is_guest_or_remote_node(node)) {
+        feature_set = g_hash_table_lookup(node->details->attrs,
+                                          CRM_ATTR_FEATURE_SET);
+        /* The feature set attribute is present since 3.15.1. If it is missing
+         * then the node must be running an earlier version. */
+        if (feature_set == NULL) {
+            feature_set = "<3.15.1";
+        }
+    }
+    return feature_set;
+}
+
+static bool
+is_mixed_version(pe_working_set_t *data_set) {
+    const char *feature_set = NULL;
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = gIter->data;
+        const char *node_feature_set = get_node_feature_set(node);
+        if (node_feature_set != NULL) {
+            if (feature_set == NULL) {
+                feature_set = node_feature_set;
+            } else if (strcmp(feature_set, node_feature_set) != 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "uint32_t", "uint32_t")
 static int
 cluster_summary(pcmk__output_t *out, va_list args) {
@@ -332,9 +365,11 @@ cluster_summary(pcmk__output_t *out, va_list args) {
                                    : NULL;
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
+        bool mixed_version = is_mixed_version(data_set);
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
-        out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
+        out->message(out, "cluster-dc", data_set->dc_node, quorum,
+                     dc_version_s, dc_name, mixed_version);
         free(dc_name);
     }
 
@@ -395,9 +430,11 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
                                    : NULL;
         const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
+        bool mixed_version = is_mixed_version(data_set);
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
-        out->message(out, "cluster-dc", data_set->dc_node, quorum, dc_version_s, dc_name);
+        out->message(out, "cluster-dc", data_set->dc_node, quorum,
+                     dc_version_s, dc_name, mixed_version);
         free(dc_name);
     }
 
@@ -768,51 +805,59 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *",
+                  "char *", "int")
 static int
 cluster_dc_html(pcmk__output_t *out, va_list args) {
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
+    bool mixed_version = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
     pcmk_create_html_node(node, "span", NULL, "bold", "Current DC: ");
 
     if (dc) {
-        if (crm_is_true(quorum)) {
-            char *buf = crm_strdup_printf("%s (version %s) - partition with quorum",
-                                          dc_name, dc_version_s ? dc_version_s : "unknown");
-            pcmk_create_html_node(node, "span", NULL, NULL, buf);
-            free(buf);
-        } else {
-            char *buf = crm_strdup_printf("%s (version %s) - partition",
-                                          dc_name, dc_version_s ? dc_version_s : "unknown");
-            pcmk_create_html_node(node, "span", NULL, NULL, buf);
-            free(buf);
+        char *buf = crm_strdup_printf("%s (version %s) -", dc_name,
+                                      dc_version_s ? dc_version_s : "unknown");
+        pcmk_create_html_node(node, "span", NULL, NULL, buf);
+        free(buf);
 
-            pcmk_create_html_node(node, "span", NULL, "warning", "WITHOUT");
-            pcmk_create_html_node(node, "span", NULL, NULL, "quorum");
+        if (mixed_version) {
+            pcmk_create_html_node(node, "span", NULL, "warning",
+                                  " MIXED-VERSION");
         }
+        pcmk_create_html_node(node, "span", NULL, NULL, " partition");
+        if (crm_is_true(quorum)) {
+            pcmk_create_html_node(node, "span", NULL, NULL, " with");
+        } else {
+            pcmk_create_html_node(node, "span", NULL, "warning", " WITHOUT");
+        }
+        pcmk_create_html_node(node, "span", NULL, NULL, " quorum");
     } else {
-        pcmk_create_html_node(node ,"span", NULL, "warning", "NONE");
+        pcmk_create_html_node(node, "span", NULL, "warning", "NONE");
     }
 
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *",
+                  "char *", "int")
 static int
 cluster_dc_text(pcmk__output_t *out, va_list args) {
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name = va_arg(args, char *);
+    bool mixed_version = va_arg(args, int);
 
     if (dc) {
-        out->list_item(out, "Current DC", "%s (version %s) - partition %s quorum",
+        out->list_item(out, "Current DC",
+                       "%s (version %s) - %spartition %s quorum",
                        dc_name, dc_version_s ? dc_version_s : "unknown",
+                       mixed_version ? "MIXED-VERSION " : "",
                        crm_is_true(quorum) ? "with" : "WITHOUT");
     } else {
         out->list_item(out, "Current DC", "NONE");
@@ -821,13 +866,15 @@ cluster_dc_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *",
+                  "char *", "int")
 static int
 cluster_dc_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name G_GNUC_UNUSED = va_arg(args, char *);
+    bool mixed_version = va_arg(args, int);
 
     if (dc) {
         pcmk__output_create_xml_node(out, "current_dc",
@@ -836,6 +883,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
                                      "name", dc->details->uname,
                                      "id", dc->details->id,
                                      "with_quorum", pcmk__btoa(crm_is_true(quorum)),
+                                     "mixed_version", pcmk__btoa(mixed_version),
                                      NULL);
     } else {
         pcmk__output_create_xml_node(out, "current_dc",
@@ -1399,7 +1447,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 }
 
 static void
-status_node(pe_node_t *node, xmlNodePtr parent)
+status_node(pe_node_t *node, xmlNodePtr parent, uint32_t show_opts)
 {
     int health = pe__node_health(node);
 
@@ -1439,6 +1487,16 @@ status_node(pe_node_t *node, xmlNodePtr parent)
         pcmk_create_html_node(parent, "span", NULL, "health_yellow",
                               " (health is YELLOW)");
     }
+
+    // Feature set
+    if (pcmk_is_set(show_opts, pcmk_show_feature_set)) {
+        const char *feature_set = get_node_feature_set(node);
+        if (feature_set != NULL) {
+            char *buf = crm_strdup_printf(", feature set %s", feature_set);
+            pcmk_create_html_node(parent, "span", NULL, NULL, buf);
+            free(buf);
+        }
+    }
 }
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
@@ -1462,7 +1520,7 @@ node_html(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, "%s:", node_name);
             item_node = pcmk__output_xml_create_parent(out, "li", NULL);
             pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
-            status_node(node, item_node);
+            status_node(node, item_node, show_opts);
 
             if (rscs != NULL) {
                 uint32_t new_show_opts = (show_opts | pcmk_show_rsc_only) & ~pcmk_show_inactive_rscs;
@@ -1481,7 +1539,7 @@ node_html(pcmk__output_t *out, va_list args) {
             out->begin_list(out, NULL, NULL, "%s:", node_name);
             item_node = pcmk__output_xml_create_parent(out, "li", NULL);
             pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
-            status_node(node, item_node);
+            status_node(node, item_node, show_opts);
 
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
@@ -1501,7 +1559,7 @@ node_html(pcmk__output_t *out, va_list args) {
 
             item_node = pcmk__output_create_xml_node(out, "li", NULL);
             pcmk_create_html_node(item_node, "span", NULL, "bold", buf);
-            status_node(node, item_node);
+            status_node(node, item_node, show_opts);
 
             free(buf);
         }
@@ -1596,6 +1654,12 @@ node_text(pcmk__output_t *out, va_list args) {
         } else if (health == 0) {
             g_string_append(str, " (health is YELLOW)");
         }
+        if (pcmk_is_set(show_opts, pcmk_show_feature_set)) {
+            const char *feature_set = get_node_feature_set(node);
+            if (feature_set != NULL) {
+                g_string_append_printf(str, ", feature set %s", feature_set);
+            }
+        }
 
         /* If we're grouping by node, print its resources */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
@@ -1662,6 +1726,7 @@ node_xml(pcmk__output_t *out, va_list args) {
         char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
         int health = pe__node_health(node);
         const char *health_s = NULL;
+        const char *feature_set;
 
         switch (node->details->type) {
             case node_member:
@@ -1683,7 +1748,9 @@ node_xml(pcmk__output_t *out, va_list args) {
             health_s = "green";
         }
 
-        pe__name_and_nvpairs_xml(out, true, "node", 14,
+        feature_set = get_node_feature_set(node);
+
+        pe__name_and_nvpairs_xml(out, true, "node", 15,
                                  "name", node->details->uname,
                                  "id", node->details->id,
                                  "online", pcmk__btoa(node->details->online),
@@ -1693,6 +1760,7 @@ node_xml(pcmk__output_t *out, va_list args) {
                                  "pending", pcmk__btoa(node->details->pending),
                                  "unclean", pcmk__btoa(node->details->unclean),
                                  "health", health_s,
+                                 "feature_set", feature_set,
                                  "shutdown", pcmk__btoa(node->details->shutdown),
                                  "expected_up", pcmk__btoa(node->details->expected_up),
                                  "is_dc", pcmk__btoa(node->details->is_dc),
@@ -2176,6 +2244,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             || (node->details->standby_onfail && node->details->online)
             || node->details->standby || node->details->maintenance
             || pcmk_is_set(show_opts, pcmk_show_rscs_by_node)
+            || pcmk_is_set(show_opts, pcmk_show_feature_set)
             || (pe__node_health(node) <= 0)) {
             // Display node individually
 
