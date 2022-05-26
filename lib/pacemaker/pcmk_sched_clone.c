@@ -646,8 +646,7 @@ is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_r
 
 pe_resource_t *
 find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
-                      enum rsc_role_e filter, gboolean current,
-                      pe_working_set_t *data_set)
+                      enum rsc_role_e filter, gboolean current)
 {
     pe_resource_t *pair = NULL;
     GList *gIter = NULL;
@@ -765,8 +764,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
         pe_resource_t *primary_instance = NULL;
 
         primary_instance = find_compatible_child(dependent, primary,
-                                                 RSC_ROLE_UNKNOWN, FALSE,
-                                                 dependent->cluster);
+                                                 RSC_ROLE_UNKNOWN, FALSE);
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);

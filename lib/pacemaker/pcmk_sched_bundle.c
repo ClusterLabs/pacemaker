@@ -653,7 +653,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
         pe_resource_t *first_child = find_compatible_child(then_child,
                                                            first->rsc,
                                                            RSC_ROLE_UNKNOWN,
-                                                           current, data_set);
+                                                           current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 

@@ -259,7 +259,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
             compatible_rsc = find_compatible_child(probe->rsc,
                                                    after->rsc,
                                                    RSC_ROLE_UNKNOWN,
-                                                   FALSE, data_set);
+                                                   FALSE);
         }
     }
 

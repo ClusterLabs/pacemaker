@@ -1242,8 +1242,7 @@ pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
 
     // Look for a primary instance where dependent will be
     primary_instance = find_compatible_child(dependent, primary,
-                                             colocation->primary_role, FALSE,
-                                             primary->cluster);
+                                             colocation->primary_role, FALSE);
 
     if (primary_instance != NULL) {
         // Add primary instance's priority to dependent's
