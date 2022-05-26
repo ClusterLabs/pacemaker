@@ -527,8 +527,7 @@ G_GNUC_INTERNAL
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 
 G_GNUC_INTERNAL
-GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
-                        pe_working_set_t *data_set);
+GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_node_health(pe_working_set_t *data_set);

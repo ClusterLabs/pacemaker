@@ -332,7 +332,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, rsc->cluster);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max,
                         clone_data->clone_node_max, rsc->cluster);
@@ -659,7 +659,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {

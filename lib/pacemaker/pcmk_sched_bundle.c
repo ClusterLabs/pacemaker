@@ -79,7 +79,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, rsc->cluster);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     containers = g_list_sort(containers, pcmk__cmp_instance);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
                         bundle_data->nreplicas_per_host, rsc->cluster);
@@ -383,7 +383,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL);
 
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
