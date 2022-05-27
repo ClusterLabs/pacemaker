@@ -612,17 +612,14 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
              * start again to get the new actions_before list
              */
             pe__set_graph_flags(changed, then,
-                                pe_graph_updated_then|pe_graph_disable);
-        }
-
-        if (pcmk_is_set(changed, pe_graph_disable)) {
+                                pe_graph_updated_then);
             pe_rsc_trace(then->rsc,
                          "Disabled ordering %s then %s in favor of %s then %s",
                          other->action->uuid, then->uuid, first->uuid,
                          then->uuid);
-            pe__clear_graph_flags(changed, then, pe_graph_disable);
             other->type = pe_order_none;
         }
+
 
         if (pcmk_is_set(changed, pe_graph_updated_first)) {
             crm_trace("Re-processing %s and its 'after' actions "
