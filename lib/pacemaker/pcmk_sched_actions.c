@@ -702,14 +702,13 @@ is_primitive_action(pe_action_t *action)
  *
  * \param[in] first   'First' action in an ordering with pe_restart_order
  * \param[in] then    'Then' action in an ordering with pe_restart_order
- * \param[in] filter  What ordering flags to care about
+ * \param[in] filter  What action flags to care about
  *
  * \note pe_restart_order is set for "stop resource before starting it" and
  *       "stop later group member before stopping earlier group member"
  */
 static void
-handle_restart_ordering(pe_action_t *first, pe_action_t *then,
-                        enum pe_action_flags filter)
+handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
 {
     const char *reason = NULL;
 
@@ -787,7 +786,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
  */
 uint32_t
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
-                      uint32_t flags, enum pe_action_flags filter,
+                      uint32_t flags, uint32_t filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
@@ -841,7 +840,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (type & pe_order_promoted_implies_first) {
-        if ((filter & pe_action_optional)
+        if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(then->flags, pe_action_optional)
             && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
 

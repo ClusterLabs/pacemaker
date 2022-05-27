@@ -618,8 +618,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node,
-                                enum pe_action_flags filter,
+                                pe_node_t *node, uint32_t filter,
                                 enum pe_ordering type,
                                 pe_working_set_t *data_set)
 {
@@ -818,8 +817,8 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
  */
 uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, uint32_t flags,
-                           enum pe_action_flags filter, enum pe_ordering type,
+                           pe_node_t *node, uint32_t flags, uint32_t filter,
+                           enum pe_ordering type,
                            pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
