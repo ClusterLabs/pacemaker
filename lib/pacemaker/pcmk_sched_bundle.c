@@ -618,8 +618,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, uint32_t filter,
-                                enum pe_ordering type,
+                                pe_node_t *node, uint32_t filter, uint32_t type,
                                 pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
@@ -652,7 +651,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
              *   on the same node as then_child, then they must
              *   not be allowed to start
              */
-            if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
+            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if (pcmk__assign_resource(then_child, NULL, true)) {
                     pcmk__set_updated_flags(changed, first, pcmk__updated_then);
@@ -818,8 +817,7 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
 uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                            pe_node_t *node, uint32_t flags, uint32_t filter,
-                           enum pe_ordering type,
-                           pe_working_set_t *data_set)
+                           uint32_t type, pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
 

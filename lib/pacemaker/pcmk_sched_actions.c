@@ -787,13 +787,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
 uint32_t
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                       uint32_t flags, uint32_t filter,
-                      enum pe_ordering type, pe_working_set_t *data_set)
+                      uint32_t type, pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
     uint32_t then_flags = then->flags;
     uint32_t first_flags = first->flags;
 
-    if (type & pe_order_asymmetrical) {
+    if (pcmk_is_set(type, pe_order_asymmetrical)) {
         pe_resource_t *then_rsc = then->rsc;
         enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
 
@@ -839,7 +839,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if (type & pe_order_promoted_implies_first) {
+    if (pcmk_is_set(type, pe_order_promoted_implies_first)) {
         if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(then->flags, pe_action_optional)
             && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
@@ -854,7 +854,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if ((type & pe_order_implies_first_migratable)
+    if (pcmk_is_set(type, pe_order_implies_first_migratable)
         && pcmk_is_set(filter, pe_action_optional)) {
 
         if (!pcmk_all_flags_set(then->flags,
@@ -867,7 +867,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if ((type & pe_order_pseudo_left)
+    if (pcmk_is_set(type, pe_order_pseudo_left)
         && pcmk_is_set(filter, pe_action_optional)) {
 
         if (!pcmk_is_set(first->flags, pe_action_runnable)) {

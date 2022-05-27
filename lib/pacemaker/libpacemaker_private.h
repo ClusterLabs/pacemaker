@@ -147,8 +147,7 @@ struct resource_alloc_functions_s {
      */
     uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
                                        pe_node_t *node, uint32_t flags,
-                                       uint32_t filter,
-                                       enum pe_ordering type,
+                                       uint32_t filter, uint32_t type,
                                        pe_working_set_t *data_set);
 
     void (*output_actions)(pe_resource_t *rsc);
