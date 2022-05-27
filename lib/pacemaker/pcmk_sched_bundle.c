@@ -618,7 +618,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, enum pe_action_flags flags,
+                                pe_node_t *node,
                                 enum pe_action_flags filter,
                                 enum pe_ordering type,
                                 pe_working_set_t *data_set)
@@ -827,8 +827,8 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, flags,
-                                                  filter, type, data_set);
+        changed = multi_update_interleave_actions(first, then, node, filter,
+                                                  type, data_set);
 
     } else if(then->rsc) {
         GList *gIter = NULL;
