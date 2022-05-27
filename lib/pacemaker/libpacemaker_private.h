@@ -152,7 +152,14 @@ struct resource_alloc_functions_s {
 
     void (*output_actions)(pe_resource_t *rsc);
 
-    void (*expand)(pe_resource_t *rsc);
+    /*!
+     * \internal
+     * \brief Add a resource's actions to the transition graph
+     *
+     * \param[in] rsc  Resource whose actions should be added
+     */
+    void (*add_actions_to_graph)(pe_resource_t *rsc);
+
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
 
     /*!

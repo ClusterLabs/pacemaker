@@ -1050,7 +1050,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->cmds->expand(rsc);
+        rsc->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update

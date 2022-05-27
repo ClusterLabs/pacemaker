@@ -904,6 +904,12 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
 void
 pcmk__bundle_expand(pe_resource_t *rsc)
 {
@@ -914,7 +920,7 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->expand(bundle_data->child);
+        bundle_data->child->cmds->add_actions_to_graph(bundle_data->child);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -965,13 +971,13 @@ pcmk__bundle_expand(pe_resource_t *rsc)
             }
         }
         if (replica->ip) {
-            replica->ip->cmds->expand(replica->ip);
+            replica->ip->cmds->add_actions_to_graph(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->expand(replica->container);
+            replica->container->cmds->add_actions_to_graph(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->expand(replica->remote);
+            replica->remote->cmds->add_actions_to_graph(replica->remote);
         }
     }
 }
