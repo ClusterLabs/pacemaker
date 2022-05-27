@@ -299,7 +299,7 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -341,7 +341,7 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -377,7 +377,7 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -422,7 +422,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -458,7 +458,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -504,7 +504,7 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -565,7 +565,7 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }

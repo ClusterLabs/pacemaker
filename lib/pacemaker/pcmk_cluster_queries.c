@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -301,7 +301,7 @@ pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_ti
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -346,7 +346,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -391,7 +391,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_tim
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -489,7 +489,7 @@ pcmk_list_nodes(xmlNodePtr *xml, char *node_types)
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }

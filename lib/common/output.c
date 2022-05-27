@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,13 +172,17 @@ pcmk__output_and_clear_error(GError *error, pcmk__output_t *out)
  * \internal
  * \brief Create an XML-only output object
  *
- * \param[out]  out  Where to put newly created output object
- * \param[in]   xml  If non-NULL, this will be freed
+ * Create an output object that supports only the XML format, and free
+ * existing XML if supplied (particularly useful for libpacemaker public API
+ * functions that want to free any previous result supplied by the caller).
+ *
+ * \param[out]     out  Where to put newly created output object
+ * \param[in,out]  xml  If non-NULL, this will be freed
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
+pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
     pcmk__supported_format_t xml_format[] = {
         PCMK__SUPPORTED_FORMAT_XML,
         { NULL, NULL, NULL }

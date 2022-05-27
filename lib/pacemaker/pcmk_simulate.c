@@ -966,7 +966,7 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }

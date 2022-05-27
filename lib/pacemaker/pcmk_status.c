@@ -217,7 +217,7 @@ pcmk_status(xmlNodePtr *xml)
         return pcmk_rc_cib_corrupt;
     }
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         cib_delete(cib);
         return rc;
