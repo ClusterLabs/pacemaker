@@ -832,8 +832,8 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         GList *children = NULL;
 
         // Handle the 'primitive' ordering case
-        changed |= native_update_actions(first, then, node, flags, filter,
-                                         type, data_set);
+        changed |= pcmk__update_ordered_actions(first, then, node, flags,
+                                                filter, type, data_set);
 
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);

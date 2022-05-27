@@ -835,9 +835,9 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then, uint32_t filter)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
-                      uint32_t flags, uint32_t filter,
-                      uint32_t type, pe_working_set_t *data_set)
+pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                             pe_node_t *node, uint32_t flags, uint32_t filter,
+                             uint32_t type, pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
     uint32_t then_flags = then->flags;
@@ -857,24 +857,23 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
             clear_action_flag_because(first, pe_action_optional, then);
         }
 
-        if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
-            !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
+        if (pcmk_is_set(flags, pe_action_migrate_runnable)
+            && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
             clear_action_flag_because(first, pe_action_migrate_runnable, then);
         }
     }
 
-    if (pcmk_is_set(type, pe_order_promoted_implies_first)) {
-        if (pcmk_is_set(filter, pe_action_optional)
-            && !pcmk_is_set(then->flags, pe_action_optional)
-            && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
+    if (pcmk_is_set(type, pe_order_promoted_implies_first)
+        && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)
+        && pcmk_is_set(filter, pe_action_optional)
+        && !pcmk_is_set(then->flags, pe_action_optional)) {
 
-            clear_action_flag_because(first, pe_action_optional, then);
+        clear_action_flag_because(first, pe_action_optional, then);
 
-            if (pcmk_is_set(first->flags, pe_action_migrate_runnable)
-                && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-                clear_action_flag_because(first, pe_action_migrate_runnable,
-                                          then);
-            }
+        if (pcmk_is_set(first->flags, pe_action_migrate_runnable)
+            && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
+            clear_action_flag_because(first, pe_action_migrate_runnable,
+                                      then);
         }
     }
 
@@ -892,12 +891,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (pcmk_is_set(type, pe_order_pseudo_left)
-        && pcmk_is_set(filter, pe_action_optional)) {
+        && pcmk_is_set(filter, pe_action_optional)
+        && !pcmk_is_set(first->flags, pe_action_runnable)) {
 
-        if (!pcmk_is_set(first->flags, pe_action_runnable)) {
-            clear_action_flag_because(then, pe_action_migrate_runnable, first);
-            pe__clear_action_flags(then, pe_action_pseudo);
-        }
+        clear_action_flag_because(then, pe_action_migrate_runnable, first);
+        pe__clear_action_flags(then, pe_action_pseudo);
     }
 
     if (pcmk_is_set(type, pe_order_runnable_left)
@@ -931,8 +929,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                      then->node? then->node->details->uname : "no node",
                      then->flags, then_flags, first->uuid, first->flags);
 
-        if(then->rsc && then->rsc->parent) {
-            /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
+        if ((then->rsc != NULL) && (then->rsc->parent != NULL)) {
+            // Required to handle "X_stop then X_start" for cloned groups
             pcmk__update_action_for_orderings(then, data_set);
         }
     }

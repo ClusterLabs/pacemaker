@@ -526,8 +526,8 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     uint32_t changed = pcmk__updated_none;
 
     CRM_ASSERT(then->rsc != NULL);
-    changed |= native_update_actions(first, then, node, flags, filter, type,
-                                     data_set);
+    changed |= pcmk__update_ordered_actions(first, then, node, flags, filter,
+                                            type, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;

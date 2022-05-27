@@ -189,6 +189,12 @@ void pcmk__update_action_for_orderings(pe_action_t *action,
                                        pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                                      pe_node_t *node, uint32_t flags,
+                                      uint32_t filter, uint32_t type,
+                                      pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);
 
 G_GNUC_INTERNAL
