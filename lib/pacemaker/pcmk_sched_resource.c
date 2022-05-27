@@ -47,7 +47,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         group_action_flags,
         group_update_actions,
         pcmk__output_resource_actions,
-        group_expand,
+        native_expand,
         group_append_meta,
         pcmk__group_add_utilization,
         pcmk__group_shutdown_lock,

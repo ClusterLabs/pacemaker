@@ -39,7 +39,6 @@ void group_create_actions(pe_resource_t *rsc);
 void group_internal_constraints(pe_resource_t *rsc);
 extern enum pe_action_flags group_action_flags(pe_action_t * action, pe_node_t * node);
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-void group_expand(pe_resource_t *rsc);
 extern void group_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
