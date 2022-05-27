@@ -237,6 +237,9 @@ G_GNUC_INTERNAL
 void pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+void pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__create_graph(pe_working_set_t *data_set);
 
 

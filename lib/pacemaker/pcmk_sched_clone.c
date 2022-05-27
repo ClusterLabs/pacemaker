@@ -947,7 +947,7 @@ clone_expand(pe_resource_t *rsc)
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 
-    native_expand(rsc);
+    pcmk__add_rsc_actions_to_graph(rsc);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
     pe__free_notification_data(clone_data->demote_notify);

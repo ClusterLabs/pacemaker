@@ -996,22 +996,24 @@ pcmk__log_transition_summary(const char *filename)
  * \param[in] rsc  Resource whose actions should be added
  */
 void
-native_expand(pe_resource_t *rsc)
+pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
 {
-    GList *gIter = NULL;
+    GList *iter = NULL;
 
-    CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
+    CRM_ASSERT(rsc != NULL);
+    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
 
-    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    // First add the resource's own actions
+    for (iter = rsc->actions; iter != NULL; iter = iter->next) {
+        pe_action_t *action = (pe_action_t *) iter->data;
 
-        crm_trace("processing action %d for rsc=%s", action->id, rsc->id);
+        crm_trace("Adding action %d for %s to graph", action->id, rsc->id);
         pcmk__add_action_to_graph(action, rsc->cluster);
     }
 
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Then recursively add its children's actions (appropriate to variant)
+    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
 
         child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
