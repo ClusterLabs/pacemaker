@@ -616,7 +616,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
     return NULL;
 }
 
-static enum pcmk__updated
+static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 pe_node_t *node, enum pe_action_flags flags,
                                 enum pe_action_flags filter,
@@ -626,7 +626,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     GList *gIter = NULL;
     GList *children = NULL;
     gboolean current = FALSE;
-    enum pcmk__updated changed = pcmk__updated_none;
+    uint32_t changed = pcmk__updated_none;
 
     /* Fix this - lazy */
     if (pcmk__ends_with(first->uuid, "_stopped_0")
@@ -791,13 +791,13 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
     return interleave;
 }
 
-enum pcmk__updated
+uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                            pe_node_t *node, enum pe_action_flags flags,
                            enum pe_action_flags filter, enum pe_ordering type,
                            pe_working_set_t *data_set)
 {
-    enum pcmk__updated changed = pcmk__updated_none;
+    uint32_t changed = pcmk__updated_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
@@ -817,7 +817,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         children = get_containers_or_children(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            enum pcmk__updated then_child_changed = pcmk__updated_none;
+            uint32_t then_child_changed = pcmk__updated_none;
             pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {

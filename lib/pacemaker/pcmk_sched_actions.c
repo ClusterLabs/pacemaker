@@ -217,14 +217,14 @@ action_for_ordering(pe_action_t *action)
  *
  * \return Group of enum pcmk__updated flags
  */
-static enum pcmk__updated
+static uint32_t
 update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                                  enum pe_action_flags first_flags,
                                  enum pe_action_flags then_flags,
                                  pe_action_wrapper_t *order,
                                  pe_working_set_t *data_set)
 {
-    enum pcmk__updated changed = pcmk__updated_none;
+    uint32_t changed = pcmk__updated_none;
 
     /* The node will only be used for clones. If interleaved, node will be NULL,
      * otherwise the ordering scope will be limited to the node. Normally, the
@@ -490,7 +490,7 @@ void
 pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 {
     GList *lpc = NULL;
-    enum pcmk__updated changed = pcmk__updated_none;
+    uint32_t changed = pcmk__updated_none;
     int last_flags = then->flags;
 
     pe_rsc_trace(then->rsc, "Updating %s %s (%s %s) on %s",
@@ -752,12 +752,12 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
 
 /* \param[in] flags   Flags from action_flags_for_ordering()
  */
-enum pcmk__updated
+uint32_t
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                       enum pe_action_flags flags, enum pe_action_flags filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
-    enum pcmk__updated changed = pcmk__updated_none;
+    uint32_t changed = pcmk__updated_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
