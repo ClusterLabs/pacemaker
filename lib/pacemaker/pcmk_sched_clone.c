@@ -1005,8 +1005,8 @@ find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 
 // For unique clones, probe each instance separately
 static bool
-probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
-                   bool force, pe_working_set_t *data_set)
+probe_unique_clone(pe_resource_t *rsc, pe_node_t *node,
+                   pe_working_set_t *data_set)
 {
     bool any_created = false;
 
@@ -1015,7 +1015,7 @@ probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
 
         pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
-        if (child->cmds->create_probe(child, node, complete, force)) {
+        if (child->cmds->create_probe(child, node)) {
             any_created = true;
         }
     }
@@ -1025,7 +1025,6 @@ probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
 // For anonymous clones, only a single instance needs to be probed
 static bool
 probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
-                      pe_action_t *complete, bool force,
                       pe_working_set_t *data_set)
 {
     // First, check if we probed an instance on this node last time
@@ -1053,12 +1052,21 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
         child = rsc->children->data;
     }
     CRM_ASSERT(child);
-    return child->cmds->create_probe(child, node, complete, force);
+    return child->cmds->create_probe(child, node);
 }
 
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
 bool
-clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                   bool force)
+clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     CRM_ASSERT(rsc);
 
@@ -1086,9 +1094,9 @@ clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        return probe_unique_clone(rsc, node, complete, force, rsc->cluster);
+        return probe_unique_clone(rsc, node, rsc->cluster);
     } else {
-        return probe_anonymous_clone(rsc, node, complete, force, rsc->cluster);
+        return probe_anonymous_clone(rsc, node, rsc->cluster);
     }
 }
 

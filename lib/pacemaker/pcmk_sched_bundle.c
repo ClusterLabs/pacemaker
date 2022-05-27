@@ -982,9 +982,18 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
 bool
-pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, bool force)
+pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     bool any_created = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -998,18 +1007,16 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
 
         CRM_ASSERT(replica);
         if ((replica->ip != NULL)
-            && replica->ip->cmds->create_probe(replica->ip, node, complete,
-                                               force)) {
+            && replica->ip->cmds->create_probe(replica->ip, node)) {
             any_created = true;
         }
         if ((replica->child != NULL) && (node->details == replica->node->details)
-            && replica->child->cmds->create_probe(replica->child, node,
-                                                  complete, force)) {
+            && replica->child->cmds->create_probe(replica->child, node)) {
             any_created = true;
         }
         if ((replica->container != NULL)
-            && replica->container->cmds->create_probe(replica->container, node,
-                                                      complete, force)) {
+            && replica->container->cmds->create_probe(replica->container,
+                                                      node)) {
             any_created = true;
 
             /* If we're limited to one replica per host (due to
@@ -1044,8 +1051,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
             }
         }
         if ((replica->container != NULL) && (replica->remote != NULL)
-            && replica->remote->cmds->create_probe(replica->remote, node,
-                                                   complete, force)) {
+            && replica->remote->cmds->create_probe(replica->remote, node)) {
 
             /* Do not probe the remote resource until we know where the
              * container is running. This is required for REMOTE_CONTAINER_HACK

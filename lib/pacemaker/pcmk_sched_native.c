@@ -1731,9 +1731,18 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
     return TRUE;
 }
 
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
 bool
-native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                    bool force)
+native_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
@@ -1751,7 +1760,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     CRM_CHECK(node != NULL, return false);
-    if (!force && !pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
+    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return false;
     }
@@ -1785,8 +1794,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            if (child_rsc->cmds->create_probe(child_rsc, node, complete,
-                                              force)) {
+            if (child_rsc->cmds->create_probe(child_rsc, node)) {
                 any_created = true;
             }
         }
@@ -1804,7 +1812,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     // Check whether resource is already known on node
-    if (!force && g_hash_table_lookup(rsc->known_on, node->details->id)) {
+    if (g_hash_table_lookup(rsc->known_on, node->details->id)) {
         pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
         return false;
     }

@@ -57,8 +57,16 @@ struct resource_alloc_functions_s {
     pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
     void (*create_actions)(pe_resource_t *rsc);
 
-    bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node,
-                         pe_action_t *complete, bool force);
+    /*!
+     * \internal
+     * \brief Schedule any probes needed for a resource on a node
+     *
+     * \param[in] rsc   Resource to create probe for
+     * \param[in] node  Node to create probe on
+     *
+     * \return true if any probe was created, otherwise false
+     */
+    bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node);
 
     void (*internal_constraints)(pe_resource_t *rsc);
 
