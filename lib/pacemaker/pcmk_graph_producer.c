@@ -991,6 +991,34 @@ pcmk__log_transition_summary(const char *filename)
 
 /*!
  * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
+void
+native_expand(pe_resource_t *rsc)
+{
+    GList *gIter = NULL;
+
+    CRM_ASSERT(rsc);
+    pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
+
+    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
+
+        crm_trace("processing action %d for rsc=%s", action->id, rsc->id);
+        pcmk__add_action_to_graph(action, rsc->cluster);
+    }
+
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+        child_rsc->cmds->add_actions_to_graph(child_rsc);
+    }
+}
+
+/*!
+ * \internal
  * \brief Create a transition graph with all cluster actions needed
  *
  * \param[in] data_set  Cluster working set
