@@ -787,12 +787,12 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
  */
 uint32_t
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
-                      enum pe_action_flags flags, enum pe_action_flags filter,
+                      uint32_t flags, enum pe_action_flags filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
     uint32_t changed = pcmk__updated_none;
-    enum pe_action_flags then_flags = then->flags;
-    enum pe_action_flags first_flags = first->flags;
+    uint32_t then_flags = then->flags;
+    uint32_t first_flags = first->flags;
 
     if (type & pe_order_asymmetrical) {
         pe_resource_t *then_rsc = then->rsc;
@@ -814,7 +814,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
              * asymmetrical -- unless the start is mandatory, which indicates
              * the resource is restarting, and the ordering is still needed.
              */
-        } else if (!(first->flags & pe_action_runnable)) {
+        } else if (!pcmk_is_set(first->flags, pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
             clear_action_flag_because(then, pe_action_optional, first);
@@ -841,14 +841,14 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (type & pe_order_promoted_implies_first) {
-        if ((filter & pe_action_optional) &&
-            ((then->flags & pe_action_optional) == FALSE) &&
-            (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
+        if ((filter & pe_action_optional)
+            && !pcmk_is_set(then->flags, pe_action_optional)
+            && (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
 
             clear_action_flag_because(first, pe_action_optional, then);
 
-            if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
-                !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
+            if (pcmk_is_set(first->flags, pe_action_migrate_runnable)
+                && !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
                 clear_action_flag_because(first, pe_action_migrate_runnable,
                                           then);
             }
@@ -858,12 +858,12 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if ((type & pe_order_implies_first_migratable)
         && pcmk_is_set(filter, pe_action_optional)) {
 
-        if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
-            ((then->flags & pe_action_runnable) == FALSE)) {
+        if (!pcmk_all_flags_set(then->flags,
+                                pe_action_migrate_runnable|pe_action_runnable)) {
             clear_action_flag_because(first, pe_action_runnable, then);
         }
 
-        if ((then->flags & pe_action_optional) == 0) {
+        if (!pcmk_is_set(then->flags, pe_action_optional)) {
             clear_action_flag_because(first, pe_action_optional, then);
         }
     }
@@ -871,7 +871,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if ((type & pe_order_pseudo_left)
         && pcmk_is_set(filter, pe_action_optional)) {
 
-        if ((first->flags & pe_action_runnable) == FALSE) {
+        if (!pcmk_is_set(first->flags, pe_action_runnable)) {
             clear_action_flag_because(then, pe_action_migrate_runnable, first);
             pe__clear_action_flags(then, pe_action_pseudo);
         }

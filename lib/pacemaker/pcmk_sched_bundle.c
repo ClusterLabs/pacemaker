@@ -818,7 +818,7 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
  */
 uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, enum pe_action_flags flags,
+                           pe_node_t *node, uint32_t flags,
                            enum pe_action_flags filter, enum pe_ordering type,
                            pe_working_set_t *data_set)
 {
@@ -846,7 +846,8 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
             pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
-                enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
+                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
+                                                                           node);
 
                 if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
                     then_child_changed |= then_child->cmds->update_ordered_actions(first,

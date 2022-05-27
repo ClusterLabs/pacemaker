@@ -146,8 +146,7 @@ struct resource_alloc_functions_s {
      * \return Group of enum pcmk__updated flags indicating what was updated
      */
     uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
-                                       pe_node_t *node,
-                                       enum pe_action_flags flags,
+                                       pe_node_t *node, uint32_t flags,
                                        enum pe_action_flags filter,
                                        enum pe_ordering type,
                                        pe_working_set_t *data_set);
