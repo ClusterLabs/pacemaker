@@ -47,6 +47,8 @@
  */
 #define ATTRD_PROTOCOL_VERSION "3"
 
+static int minimum_protocol_version = -1;
+
 int last_cib_op_done = 0;
 GHashTable *attributes = NULL;
 
@@ -357,22 +359,19 @@ attrd_client_update(xmlNode *xml)
 void
 attrd_client_clear_failure(xmlNode *xml)
 {
-#if 0
-    /* @TODO Track the minimum supported protocol version across all nodes,
-     * then enable this more-efficient code.
-     */
-    if (compare_version("2", minimum_protocol_version) <= 0) {
+    const char *rsc, *op, *interval_spec;
+
+    if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
         send_attrd_message(NULL, xml);
         return;
     }
-#endif
 
-    const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
-    const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
-    const char *interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
+    rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
+    op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
+    interval_spec = crm_element_value(xml, PCMK__XA_ATTR_INTERVAL);
 
     /* Map this to an update */
     crm_xml_add(xml, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
@@ -987,6 +986,21 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
                   known_peer->uname, known_peer->uuid);
         if (attrd_election_won()) {
             write_attributes(FALSE, FALSE);
+        }
+    }
+
+    /* If this is a message from some attrd instance broadcasting its protocol
+     * version, check to see if it's a new minimum version.
+     */
+    if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
+        int ver;
+
+        pcmk__scan_min_int(value, &ver, 0);
+
+        if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
+            minimum_protocol_version = ver;
+            crm_trace("Set minimum attrd protocol version to %d",
+                      minimum_protocol_version);
         }
     }
 }
