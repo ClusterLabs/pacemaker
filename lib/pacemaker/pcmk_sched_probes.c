@@ -557,7 +557,7 @@ pcmk__schedule_probes(pe_working_set_t *data_set)
              rsc_iter = rsc_iter->next) {
             pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
-            rsc->cmds->create_probe(rsc, node, NULL, FALSE);
+            rsc->cmds->create_probe(rsc, node, NULL, false);
         }
     }
 }

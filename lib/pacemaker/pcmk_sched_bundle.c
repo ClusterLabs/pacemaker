@@ -982,14 +982,14 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     }
 }
 
-gboolean
+bool
 pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, gboolean force)
+                          pe_action_t *complete, bool force)
 {
-    bool any_created = FALSE;
+    bool any_created = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(rsc != NULL, return FALSE);
+    CRM_CHECK(rsc != NULL, return false);
 
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -997,55 +997,53 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->ip) {
-            any_created |= replica->ip->cmds->create_probe(replica->ip, node,
-                                                           complete, force);
+        if ((replica->ip != NULL)
+            && replica->ip->cmds->create_probe(replica->ip, node, complete,
+                                               force)) {
+            any_created = true;
         }
-        if (replica->child && (node->details == replica->node->details)) {
-            any_created |= replica->child->cmds->create_probe(replica->child,
-                                                              node, complete,
-                                                              force);
+        if ((replica->child != NULL) && (node->details == replica->node->details)
+            && replica->child->cmds->create_probe(replica->child, node,
+                                                  complete, force)) {
+            any_created = true;
         }
-        if (replica->container) {
-            bool created = replica->container->cmds->create_probe(replica->container,
-                                                                  node, complete,
-                                                                  force);
+        if ((replica->container != NULL)
+            && replica->container->cmds->create_probe(replica->container, node,
+                                                      complete, force)) {
+            any_created = true;
 
-            if(created) {
-                any_created = TRUE;
-                /* If we're limited to one replica per host (due to
-                 * the lack of an IP range probably), then we don't
-                 * want any of our peer containers starting until
-                 * we've established that no other copies are already
-                 * running.
-                 *
-                 * Partly this is to ensure that nreplicas_per_host is
-                 * observed, but also to ensure that the containers
-                 * don't fail to start because the necessary port
-                 * mappings (which won't include an IP for uniqueness)
-                 * are already taken
-                 */
+            /* If we're limited to one replica per host (due to
+             * the lack of an IP range probably), then we don't
+             * want any of our peer containers starting until
+             * we've established that no other copies are already
+             * running.
+             *
+             * Partly this is to ensure that nreplicas_per_host is
+             * observed, but also to ensure that the containers
+             * don't fail to start because the necessary port
+             * mappings (which won't include an IP for uniqueness)
+             * are already taken
+             */
 
-                for (GList *tIter = bundle_data->replicas;
-                     tIter && (bundle_data->nreplicas_per_host == 1);
-                     tIter = tIter->next) {
-                    pe__bundle_replica_t *other = tIter->data;
+            for (GList *tIter = bundle_data->replicas;
+                 tIter && (bundle_data->nreplicas_per_host == 1);
+                 tIter = tIter->next) {
+                pe__bundle_replica_t *other = tIter->data;
 
-                    if ((other != replica) && (other != NULL)
-                        && (other->container != NULL)) {
+                if ((other != replica) && (other != NULL)
+                    && (other->container != NULL)) {
 
-                        pcmk__new_ordering(replica->container,
-                                           pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                           NULL, other->container,
-                                           pcmk__op_key(other->container->id, RSC_START, 0),
-                                           NULL,
-                                           pe_order_optional|pe_order_same_node,
-                                           rsc->cluster);
-                    }
+                    pcmk__new_ordering(replica->container,
+                                       pcmk__op_key(replica->container->id, RSC_STATUS, 0),
+                                       NULL, other->container,
+                                       pcmk__op_key(other->container->id, RSC_START, 0),
+                                       NULL,
+                                       pe_order_optional|pe_order_same_node,
+                                       rsc->cluster);
                 }
             }
         }
-        if (replica->container && replica->remote
+        if ((replica->container != NULL) && (replica->remote != NULL)
             && replica->remote->cmds->create_probe(replica->remote, node,
                                                    complete, force)) {
 
@@ -1059,8 +1057,8 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                                    probe_uuid, NULL, node);
 
             free(probe_uuid);
-            if (probe) {
-                any_created = TRUE;
+            if (probe != NULL) {
+                any_created = true;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
                 pcmk__new_ordering(replica->container,

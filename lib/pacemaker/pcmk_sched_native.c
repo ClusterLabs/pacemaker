@@ -1731,9 +1731,9 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
     return TRUE;
 }
 
-gboolean
+bool
 native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                    gboolean force)
+                    bool force)
 {
     enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
@@ -1750,10 +1750,10 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
     }
 
-    CRM_CHECK(node != NULL, return FALSE);
+    CRM_CHECK(node != NULL, return false);
     if (!force && !pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
-        return FALSE;
+        return false;
     }
 
     if (pe__is_guest_or_remote_node(node)) {
@@ -1763,49 +1763,50 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
                          rsc->id, node->details->id);
-            return FALSE;
+            return false;
         } else if (pe__is_guest_node(node)
                    && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
                          rsc->id, node->details->id);
-            return FALSE;
+            return false;
         } else if (rsc->is_remote_node) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because Pacemaker Remote nodes cannot host remote connections",
                          rsc->id, node->details->id);
-            return FALSE;
+            return false;
         }
     }
 
     if (rsc->children) {
         GList *gIter = NULL;
-        gboolean any_created = FALSE;
+        bool any_created = false;
 
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            any_created = child_rsc->cmds->create_probe(child_rsc, node,
-                                                        complete, force)
-                || any_created;
+            if (child_rsc->cmds->create_probe(child_rsc, node, complete,
+                                              force)) {
+                any_created = true;
+            }
         }
 
         return any_created;
 
     } else if ((rsc->container) && (!rsc->is_remote_node)) {
         pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
-        return FALSE;
+        return false;
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         pe_rsc_trace(rsc, "Skipping orphan: %s", rsc->id);
-        return FALSE;
+        return false;
     }
 
     // Check whether resource is already known on node
     if (!force && g_hash_table_lookup(rsc->known_on, node->details->id)) {
         pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
-        return FALSE;
+        return false;
     }
 
     allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
@@ -1814,12 +1815,12 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         if (allowed == NULL) {
             /* exclusive discover is enabled and this node is not in the allowed list. */    
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, A", rsc->id, node->details->id);
-            return FALSE;
+            return false;
         } else if (allowed->rsc_discover_mode != pe_discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on */ 
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, B", rsc->id, node->details->id);
-            return FALSE;
+            return false;
         }
     }
 
@@ -1830,13 +1831,13 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
          * no need to probe for this resource.
          */
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, C", rsc->id, node->details->id);
-        return FALSE;
+        return false;
     }
 
     if (allowed && allowed->rsc_discover_mode == pe_discover_never) {
         /* this resource is marked as not needing to be discovered on this node */
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, discovery mode", rsc->id, node->details->id);
-        return FALSE;
+        return false;
     }
 
     if (pe__is_guest_node(node)) {
@@ -1874,7 +1875,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
-            return FALSE;
+            return false;
 
             /* Here we really we want to check if remote->stop is required,
              * but that information doesn't exist yet
@@ -1895,7 +1896,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                                NULL, pe_order_optional, rsc->cluster);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
-            return FALSE;
+            return false;
 /*      } else {
  *            The container is running so there is no problem probing it
  */
@@ -1947,7 +1948,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
                        pe_order_optional, rsc->cluster);
 
-    return TRUE;
+    return true;
 }
 
 void

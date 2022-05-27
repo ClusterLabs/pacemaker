@@ -1004,26 +1004,28 @@ find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
 }
 
 // For unique clones, probe each instance separately
-static gboolean
+static bool
 probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
-                   gboolean force, pe_working_set_t *data_set)
+                   bool force, pe_working_set_t *data_set)
 {
-    gboolean any_created = FALSE;
+    bool any_created = false;
 
     for (GList *child_iter = rsc->children; child_iter != NULL;
          child_iter = child_iter->next) {
 
         pe_resource_t *child = (pe_resource_t *) child_iter->data;
 
-        any_created |= child->cmds->create_probe(child, node, complete, force);
+        if (child->cmds->create_probe(child, node, complete, force)) {
+            any_created = true;
+        }
     }
     return any_created;
 }
 
 // For anonymous clones, only a single instance needs to be probed
-static gboolean
+static bool
 probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
-                      pe_action_t *complete, gboolean force,
+                      pe_action_t *complete, bool force,
                       pe_working_set_t *data_set)
 {
     // First, check if we probed an instance on this node last time
@@ -1054,18 +1056,16 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
     return child->cmds->create_probe(child, node, complete, force);
 }
 
-gboolean
+bool
 clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                   gboolean force)
+                   bool force)
 {
-    gboolean any_created = FALSE;
-
     CRM_ASSERT(rsc);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     if (rsc->children == NULL) {
         pe_warn("Clone %s has no children", rsc->id);
-        return FALSE;
+        return false;
     }
 
     if (rsc->exclusive_discover) {
@@ -1081,18 +1081,15 @@ clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete
             g_hash_table_remove(rsc->allowed_nodes, node->details->id);
 
             /* Bit of a shortcut - might as well take it */
-            return FALSE;
+            return false;
         }
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        any_created = probe_unique_clone(rsc, node, complete, force,
-                                         rsc->cluster);
+        return probe_unique_clone(rsc, node, complete, force, rsc->cluster);
     } else {
-        any_created = probe_anonymous_clone(rsc, node, complete, force,
-                                            rsc->cluster);
+        return probe_anonymous_clone(rsc, node, complete, force, rsc->cluster);
     }
-    return any_created;
 }
 
 void
