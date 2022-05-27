@@ -976,6 +976,6 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
 
     rc = pcmk__simulate(data_set, out, injections, flags, section_opts,
                         use_date, input_file, graph_file, dot_file);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }

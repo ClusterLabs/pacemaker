@@ -198,16 +198,13 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
 
 /*!
  * \internal
- * \brief  Free an XML-only output object
+ * \brief  Finish and free an XML-only output object
  *
  * \param[in]  out     Output object to free
- * \param[out] xml     Where to store XML output if needed
- * \param[in]  retval  Store XML output if this is pcmk_rc_ok
+ * \param[out] xml     Where to store XML output
  */
 void
-pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
-    if (retval == pcmk_rc_ok) {
-        out->finish(out, 0, FALSE, (void **) xml);
-    }
+pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml) {
+    out->finish(out, 0, FALSE, (void **) xml);
     pcmk__output_free(out);
 }

@@ -309,7 +309,7 @@ pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_ti
     pcmk__register_lib_messages(out);
 
     rc = pcmk__controller_status(out, dest_node, (guint) message_timeout_ms);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }
 
@@ -354,7 +354,7 @@ pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__designated_controller(out, (guint) message_timeout_ms);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }
 
@@ -399,7 +399,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_tim
     pcmk__register_lib_messages(out);
 
     rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }
 
@@ -497,6 +497,6 @@ pcmk_list_nodes(xmlNodePtr *xml, char *node_types)
     pcmk__register_lib_messages(out);
 
     rc = pcmk__list_nodes(out, node_types, FALSE);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }

@@ -859,7 +859,7 @@ G_GNUC_NULL_TERMINATED;
 void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
-void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
+void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

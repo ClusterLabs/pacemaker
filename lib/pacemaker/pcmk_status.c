@@ -229,7 +229,7 @@ pcmk_status(xmlNodePtr *xml)
 
     rc = pcmk__status(out, cib, pcmk__fence_history_full, pcmk_section_all,
                       show_opts, NULL, NULL, NULL, false);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
 
     cib_delete(cib);
     return rc;

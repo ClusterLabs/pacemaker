@@ -135,6 +135,6 @@ pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
     }
     pcmk__register_lib_messages(out);
     rc = pcmk__resource_digests(out, rsc, node, overrides, data_set);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }
