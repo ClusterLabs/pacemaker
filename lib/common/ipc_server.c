@@ -777,6 +777,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
  * \param[in] line      Source file line within calling function
  * \param[in] flags     IPC flags to use when sending
  * \param[in] tag       Element name to use for acknowledgement
+ * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Exit status code to add to ack
  *
  * \return Newly created XML for ack
@@ -784,7 +785,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                        const char *tag, crm_exit_t status)
+                        const char *tag, const char *ver, crm_exit_t status)
 {
     xmlNode *ack = NULL;
 
@@ -793,6 +794,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
         crm_xml_add(ack, "function", function);
         crm_xml_add_int(ack, "line", line);
         crm_xml_add_int(ack, "status", (int) status);
+        crm_xml_add(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     }
     return ack;
 }
@@ -807,6 +809,7 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  * \param[in] request   Request ID being replied to
  * \param[in] flags     IPC flags to use when sending
  * \param[in] tag       Element name to use for acknowledgement
+ * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Status code to send with acknowledgement
  *
  * \return Standard Pacemaker return code
@@ -814,10 +817,10 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
 int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
                       uint32_t request, uint32_t flags, const char *tag,
-                      crm_exit_t status)
+                      const char *ver, crm_exit_t status)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, tag, status);
+    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, tag, ver, status);
 
     if (ack != NULL) {
         crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",

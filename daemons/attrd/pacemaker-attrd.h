@@ -140,7 +140,7 @@ extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 
 #define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", CRM_EX_INDETERMINATE)
+    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 
 #define CIB_OP_TIMEOUT_S 120
 
