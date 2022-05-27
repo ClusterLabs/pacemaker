@@ -31,7 +31,7 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_active       = (1 << 2),
 };
 
-// Flags the update_actions() method can return
+// Flags the update_ordered_actions() method can return
 enum pcmk__updated {
     pcmk__updated_none      = 0,        // Nothing changed
     pcmk__updated_first     = (1 << 0), // First action was updated
@@ -122,11 +122,36 @@ struct resource_alloc_functions_s {
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
     enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
-    uint32_t (*update_actions) (pe_action_t *, pe_action_t *,
-                                pe_node_t *, enum pe_action_flags,
-                                enum pe_action_flags,
-                                enum pe_ordering,
-                                pe_working_set_t *data_set);
+
+    /*!
+     * \internal
+     * \brief Update two actions according to an ordering between them
+     *
+     * Given information about an ordering of two actions, update the actions'
+     * flags (and runnable_before members if appropriate) as appropriate for the
+     * ordering. In some cases, the ordering could be disabled as well.
+     *
+     * \param[in] first     'First' action in an ordering
+     * \param[in] then      'Then' action in an ordering
+     * \param[in] node      If not NULL, limit scope of ordering to this node
+     *                      (only used when interleaving instances)
+     * \param[in] flags     Action flags for \p first for ordering purposes
+     * \param[in] filter    Action flags to limit scope of certain updates (may
+     *                      include pe_action_optional to affect only mandatory
+     *                      actions, and pe_action_runnable to affect only
+     *                      runnable actions)
+     * \param[in] type      Group of enum pe_ordering flags to apply
+     * \param[in] data_set  Cluster working set
+     *
+     * \return Group of enum pcmk__updated flags indicating what was updated
+     */
+    uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
+                                       pe_node_t *node,
+                                       enum pe_action_flags flags,
+                                       enum pe_action_flags filter,
+                                       enum pe_ordering type,
+                                       pe_working_set_t *data_set);
+
     void (*output_actions)(pe_resource_t *rsc);
 
     void (*expand)(pe_resource_t *rsc);

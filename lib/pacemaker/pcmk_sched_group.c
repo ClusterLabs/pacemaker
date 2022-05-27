@@ -495,6 +495,28 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
     return flags;
 }
 
+/*!
+ * \internal
+ * \brief Update two actions according to an ordering between them
+ *
+ * Given information about an ordering of two actions, update the actions'
+ * flags (and runnable_before members if appropriate) as appropriate for the
+ * ordering. In some cases, the ordering could be disabled as well.
+ *
+ * \param[in] first     'First' action in an ordering
+ * \param[in] then      'Then' action in an ordering
+ * \param[in] node      If not NULL, limit scope of ordering to this node
+ *                      (only used when interleaving instances)
+ * \param[in] flags     Action flags for \p first for ordering purposes
+ * \param[in] filter    Action flags to limit scope of certain updates (may
+ *                      include pe_action_optional to affect only mandatory
+ *                      actions, and pe_action_runnable to affect only
+ *                      runnable actions)
+ * \param[in] type      Group of enum pe_ordering flags to apply
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
 uint32_t
 group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                      enum pe_action_flags flags, enum pe_action_flags filter,
@@ -512,9 +534,9 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         pe_action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
-            changed |= child->cmds->update_actions(first, child_action, node,
-                                                   flags, filter, type,
-                                                   data_set);
+            changed |= child->cmds->update_ordered_actions(first, child_action,
+                                                           node, flags, filter,
+                                                           type, data_set);
         }
     }
 
