@@ -495,13 +495,13 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
     return flags;
 }
 
-enum pe_graph_flags
+enum pcmk__updated
 group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                      enum pe_action_flags flags, enum pe_action_flags filter,
                      enum pe_ordering type, pe_working_set_t *data_set)
 {
     GList *gIter = then->rsc->children;
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
 
     CRM_ASSERT(then->rsc != NULL);
     changed |= native_update_actions(first, then, node, flags, filter, type,

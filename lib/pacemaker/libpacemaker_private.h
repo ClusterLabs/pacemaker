@@ -122,11 +122,11 @@ struct resource_alloc_functions_s {
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
     enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
-    enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
-                                           pe_node_t *, enum pe_action_flags,
-                                           enum pe_action_flags,
-                                           enum pe_ordering,
-                                           pe_working_set_t *data_set);
+    enum pcmk__updated (*update_actions) (pe_action_t *, pe_action_t *,
+                                          pe_node_t *, enum pe_action_flags,
+                                          enum pe_action_flags,
+                                          enum pe_ordering,
+                                          pe_working_set_t *data_set);
     void (*output_actions)(pe_resource_t *rsc);
 
     void (*expand)(pe_resource_t *rsc);

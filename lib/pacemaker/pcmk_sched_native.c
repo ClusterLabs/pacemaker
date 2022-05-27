@@ -1557,12 +1557,12 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
 
 /* \param[in] flags   Flags from action_flags_for_ordering()
  */
-enum pe_graph_flags
+enum pcmk__updated
 native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                       enum pe_action_flags flags, enum pe_action_flags filter,
                       enum pe_ordering type, pe_working_set_t *data_set)
 {
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
 
@@ -1672,7 +1672,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (then_flags != then->flags) {
-        pe__set_graph_flags(changed, first, pe_graph_updated_then);
+        pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         pe_rsc_trace(then->rsc,
                      "%s on %s: flags are now %#.6x (was %#.6x) "
                      "because of 'first' %s (%#.6x)",
@@ -1687,7 +1687,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (first_flags != first->flags) {
-        pe__set_graph_flags(changed, first, pe_graph_updated_first);
+        pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         pe_rsc_trace(first->rsc,
                      "%s on %s: flags are now %#.6x (was %#.6x) "
                      "because of 'then' %s (%#.6x)",

@@ -215,16 +215,16 @@ action_for_ordering(pe_action_t *action)
  * \param[in] order        Action wrapper for \p first in ordering
  * \param[in] data_set     Cluster working set
  *
- * \return Mask of pe_graph_updated_first and/or pe_graph_updated_then
+ * \return Group of enum pcmk__updated flags
  */
-static enum pe_graph_flags
+static enum pcmk__updated
 update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                                  enum pe_action_flags first_flags,
                                  enum pe_action_flags then_flags,
                                  pe_action_wrapper_t *order,
                                  pe_working_set_t *data_set)
 {
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
 
     /* The node will only be used for clones. If interleaved, node will be NULL,
      * otherwise the ordering scope will be limited to the node. Normally, the
@@ -258,7 +258,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         } else if (!pcmk_is_set(first_flags, pe_action_optional)
                    && pcmk_is_set(then->flags, pe_action_optional)) {
             pe__clear_action_flags(then, pe_action_optional);
-            pe__set_graph_flags(changed, first, pe_graph_updated_then);
+            pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_implies_then",
                      first->uuid, then->uuid,
@@ -286,7 +286,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         } else if (!pcmk_is_set(first_flags, pe_action_optional)
                    && pcmk_is_set(first->flags, pe_action_runnable)) {
             pe__clear_action_flags(first, pe_action_runnable);
-            pe__set_graph_flags(changed, first, pe_graph_updated_first);
+            pcmk__set_updated_flags(changed, first, pcmk__updated_first);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_implies_first",
                      first->uuid, then->uuid,
@@ -326,7 +326,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                 && !pcmk_is_set(then->flags, pe_action_runnable)) {
 
                 pe__set_action_flags(then, pe_action_runnable);
-                pe__set_graph_flags(changed, first, pe_graph_updated_then);
+                pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_one_or_more",
@@ -366,7 +366,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                    && pcmk_is_set(then->flags, pe_action_runnable)) {
 
             pe__clear_action_flags(then, pe_action_runnable);
-            pe__set_graph_flags(changed, first, pe_graph_updated_then);
+            pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_runnable_left",
                      first->uuid, then->uuid,
@@ -454,7 +454,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
 
         if (pcmk_is_set(then->flags, pe_action_runnable)) {
             pe__clear_action_flags(then, pe_action_runnable);
-            pe__set_graph_flags(changed, first, pe_graph_updated_then);
+            pcmk__set_updated_flags(changed, first, pcmk__updated_then);
         }
         pe_rsc_trace(then->rsc, "%s then %s: %s after checking whether first "
                      "is blocked, unmanaged, unrunnable stop",
@@ -490,7 +490,7 @@ void
 pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 {
     GList *lpc = NULL;
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
     int last_flags = then->flags;
 
     pe_rsc_trace(then->rsc, "Updating %s %s (%s %s) on %s",
@@ -561,7 +561,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
             continue;
         }
 
-        pe__clear_graph_flags(changed, then, pe_graph_updated_first);
+        pcmk__clear_updated_flags(changed, then, pcmk__updated_first);
 
         if ((first->rsc != NULL)
             && pcmk_is_set(other->type, pe_order_then_cancels_first)
@@ -611,8 +611,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
             /* This was the first time 'first' and 'then' were associated,
              * start again to get the new actions_before list
              */
-            pe__set_graph_flags(changed, then,
-                                pe_graph_updated_then);
+            pcmk__set_updated_flags(changed, then, pcmk__updated_then);
             pe_rsc_trace(then->rsc,
                          "Disabled ordering %s then %s in favor of %s then %s",
                          other->action->uuid, then->uuid, first->uuid,
@@ -621,7 +620,7 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
         }
 
 
-        if (pcmk_is_set(changed, pe_graph_updated_first)) {
+        if (pcmk_is_set(changed, pcmk__updated_first)) {
             crm_trace("Re-processing %s and its 'after' actions "
                       "because it changed", first->uuid);
             for (GList *lpc2 = first->actions_after; lpc2 != NULL;
@@ -636,13 +635,13 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
     if (pcmk_is_set(then->flags, pe_action_requires_any)) {
         if (last_flags == then->flags) {
-            pe__clear_graph_flags(changed, then, pe_graph_updated_then);
+            pcmk__clear_updated_flags(changed, then, pcmk__updated_then);
         } else {
-            pe__set_graph_flags(changed, then, pe_graph_updated_then);
+            pcmk__set_updated_flags(changed, then, pcmk__updated_then);
         }
     }
 
-    if (pcmk_is_set(changed, pe_graph_updated_then)) {
+    if (pcmk_is_set(changed, pcmk__updated_then)) {
         crm_trace("Re-processing %s and its 'after' actions because it changed",
                   then->uuid);
         if (pcmk_is_set(last_flags, pe_action_runnable)

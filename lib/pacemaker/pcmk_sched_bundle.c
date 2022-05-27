@@ -616,7 +616,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
     return NULL;
 }
 
-static enum pe_graph_flags
+static enum pcmk__updated
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 pe_node_t *node, enum pe_action_flags flags,
                                 enum pe_action_flags filter,
@@ -626,7 +626,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     GList *gIter = NULL;
     GList *children = NULL;
     gboolean current = FALSE;
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
 
     /* Fix this - lazy */
     if (pcmk__ends_with(first->uuid, "_stopped_0")
@@ -656,7 +656,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
+                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
                 }
             }
 
@@ -736,8 +736,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                           then_action->uuid,
                           pcmk_is_set(then_action->flags, pe_action_optional),
                           type);
-                pe__set_graph_flags(changed, first,
-                                    pe_graph_updated_first|pe_graph_updated_then);
+                pcmk__set_updated_flags(changed, first,
+                                        pcmk__updated_first|pcmk__updated_then);
             }
             if(first_action && then_action) {
                 changed |= then_child->cmds->update_actions(first_action,
@@ -791,13 +791,13 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
     return interleave;
 }
 
-enum pe_graph_flags
+enum pcmk__updated
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                            pe_node_t *node, enum pe_action_flags flags,
                            enum pe_action_flags filter, enum pe_ordering type,
                            pe_working_set_t *data_set)
 {
-    enum pe_graph_flags changed = pe_graph_none;
+    enum pcmk__updated changed = pcmk__updated_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
@@ -817,7 +817,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         children = get_containers_or_children(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            enum pe_graph_flags then_child_changed = pe_graph_none;
+            enum pcmk__updated then_child_changed = pcmk__updated_none;
             pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
@@ -828,7 +828,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                         then_child_action, node, flags, filter, type, data_set);
                 }
                 changed |= then_child_changed;
-                if (then_child_changed & pe_graph_updated_then) {
+                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
 
