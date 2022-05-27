@@ -31,6 +31,27 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_active       = (1 << 2),
 };
 
+// Flags the update_actions() method can return
+enum pcmk__updated {
+    pcmk__updated_none      = 0,        // Nothing changed
+    pcmk__updated_first     = (1 << 0), // First action was updated
+    pcmk__updated_then      = (1 << 1), // Then action was updated
+};
+
+#define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \
+        au_flags = pcmk__set_flags_as(__func__, __LINE__,                   \
+                                      LOG_TRACE, "Action update",           \
+                                      (action)->uuid, au_flags,             \
+                                      (flags_to_set), #flags_to_set);       \
+    } while (0)
+
+#define pcmk__clear_updated_flags(au_flags, action, flags_to_clear) do {    \
+        au_flags = pcmk__clear_flags_as(__func__, __LINE__,                 \
+                                        LOG_TRACE, "Action update",         \
+                                        (action)->uuid, au_flags,           \
+                                        (flags_to_clear), #flags_to_clear); \
+    } while (0)
+
 // Resource allocation methods
 struct resource_alloc_functions_s {
     pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
