@@ -698,6 +698,56 @@ is_primitive_action(pe_action_t *action)
 
 /*!
  * \internal
+ * \brief Update actions in an asymmetric ordering
+ *
+ * \param[in] first  'First' action in an asymmetric ordering
+ * \param[in] then   'Then' action in an asymmetric ordering
+ */
+static void
+handle_asymmetric_ordering(pe_action_t *first, pe_action_t *then)
+{
+    enum rsc_role_e then_rsc_role = RSC_ROLE_UNKNOWN;
+    GList *then_on = NULL;
+
+    if (then->rsc == NULL) {
+        // Asymmetric orderings only matter if there's a resource involved
+        return;
+    }
+
+    then_rsc_role = then->rsc->fns->state(then->rsc, TRUE);
+    then_on = then->rsc->running_on;
+
+    if ((then_rsc_role == RSC_ROLE_STOPPED)
+        && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_none)) {
+        /* Nothing needs to be done for asymmetric ordering if 'then' is
+         * supposed to be stopped after 'first' but is already stopped.
+         */
+        return;
+    }
+
+    if ((then_rsc_role >= RSC_ROLE_STARTED)
+        && pcmk_is_set(then->flags, pe_action_optional)
+        && (then->node != NULL)
+        && pcmk__list_of_1(then_on)
+        && (then->node->details == ((pe_node_t *) then_on->data)->details)
+        && pcmk__str_eq(then->task, RSC_START, pcmk__str_none)) {
+        /* Nothing needs to be done for asymmetric ordering if 'then' is
+         * supposed to be started after 'first' but is already started --
+         * unless the start is mandatory, which indicates the resource is
+         * restarting and the ordering is still needed.
+         */
+        return;
+    }
+
+    if (!pcmk_is_set(first->flags, pe_action_runnable)) {
+        // 'First' can't run, so 'then' can't either
+        clear_action_flag_because(then, pe_action_optional, first);
+        clear_action_flag_because(then, pe_action_runnable, first);
+    }
+}
+
+/*!
+ * \internal
  * \brief Set action bits appropriately when pe_restart_order is used
  *
  * \param[in] first   'First' action in an ordering with pe_restart_order
@@ -794,33 +844,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     uint32_t first_flags = first->flags;
 
     if (pcmk_is_set(type, pe_order_asymmetrical)) {
-        pe_resource_t *then_rsc = then->rsc;
-        enum rsc_role_e then_rsc_role = then_rsc ? then_rsc->fns->state(then_rsc, TRUE) : 0;
-
-        if (!then_rsc) {
-            /* ignore */
-        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_casei)) {
-            /* ignore... if 'then' is supposed to be stopped after 'first', but
-             * then is already stopped, there is nothing to be done when non-symmetrical.  */
-        } else if ((then_rsc_role >= RSC_ROLE_STARTED)
-                   && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)
-                   && pcmk_is_set(then->flags, pe_action_optional)
-                   && then->node
-                   && pcmk__list_of_1(then_rsc->running_on)
-                   && then->node->details == ((pe_node_t *) then_rsc->running_on->data)->details) {
-            /* Ignore. If 'then' is supposed to be started after 'first', but
-             * 'then' is already started, there is nothing to be done when
-             * asymmetrical -- unless the start is mandatory, which indicates
-             * the resource is restarting, and the ordering is still needed.
-             */
-        } else if (!pcmk_is_set(first->flags, pe_action_runnable)) {
-            /* prevent 'then' action from happening if 'first' is not runnable and
-             * 'then' has not yet occurred. */
-            clear_action_flag_because(then, pe_action_optional, first);
-            clear_action_flag_because(then, pe_action_runnable, first);
-        } else {
-            /* ignore... then is allowed to start/stop if it wants to. */
-        }
+        handle_asymmetric_ordering(first, then);
     }
 
     if (pcmk_is_set(type, pe_order_implies_first)
