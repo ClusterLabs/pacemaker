@@ -22,7 +22,7 @@ msgstr ""
 
 #: daemons/controld/controld_control.c:525
 msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
-msgstr "集群选定的控制器节点(DC)的Pacemaker版本"
+msgstr "集群选定的控制器节点(DC)的 Pacemaker 版本"
 
 #: daemons/controld/controld_control.c:526
 msgid ""
@@ -32,7 +32,7 @@ msgstr "它包含一个标识所构建代码变更版本的哈希值，其可用
 
 #: daemons/controld/controld_control.c:531
 msgid "The messaging stack on which Pacemaker is currently running"
-msgstr "Pacemaker上的消息传输引擎当前正在运行"
+msgstr "Pacemaker 正在使用的消息传输引擎"
 
 #: daemons/controld/controld_control.c:532
 msgid "Used for informational and diagnostic purposes."
@@ -74,7 +74,7 @@ msgstr ""
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
-msgstr "重新检查集群状态并且评估基于时间的配置规则的轮询间隔"
+msgstr "重新检查集群状态并且评估具有日期规格的配置规则的轮询间隔"
 
 #: daemons/controld/controld_control.c:565
 msgid "Maximum amount of system load that should be used by cluster nodes"
@@ -102,7 +102,7 @@ msgid ""
 "communication. Allowed values are \"stop\" to attempt to immediately stop "
 "Pacemaker and stay stopped, or \"panic\" to attempt to immediately reboot "
 "the local node, falling back to stop on failure."
-msgstr "如果配置了错误的 fence 操作，或者在使用 fabric fence 机制 (并不会切断集群通信），"
+msgstr "如果有错误的 fence 配置，或者在使用 fabric fence 机制 (并不会切断集群通信），"
 "则集群节点可能会收到针对自己的 fence 结果通知。允许的值为 \"stop\" 尝试立即停止 pacemaker "
 "并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败时返回执行stop。"
 
@@ -166,8 +166,8 @@ msgid ""
 "be used. +WARNING:+ In this case, it's essential (currently not verified by "
 "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on all nodes."
 msgstr ""
-"如果值非零，且集群设置了 `have-watchdog=true` ，当需要fencing时，基于 watchdog 的自我 fence 机制将通过SBD执行，"
-"而不需要显式配置 fencing 资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定不可见的节点在这段时间内自我fence。"
+"如果值非零，且集群设置了 `have-watchdog=true` ，当需要 fence 操作时，基于 watchdog 的自我 fence 机制将通过SBD执行，"
+"而不需要显式配置 fence 资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定不可见的节点在这段时间内自我fence。"
 " +WARNING:+ 必须确保该值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变量。Pacemaker将在所有节点上单独验证设置，"
 "如发现有错误的动态配置，将防止节点启动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。"
 "如果 `stonith-watchdog-timeout` 设置为负值。并且设置了 `SBD_WATCHDOG_TIMEOUT` ，则将使用该值的两倍，"
