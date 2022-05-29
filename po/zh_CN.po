@@ -22,17 +22,17 @@ msgstr ""
 
 #: daemons/controld/controld_control.c:525
 msgid "Pacemaker version on cluster node elected Designated Controller (DC)"
-msgstr "集群选定的控制器节点(DC)Pacemaker版本"
+msgstr "集群选定的控制器节点(DC)的Pacemaker版本"
 
 #: daemons/controld/controld_control.c:526
 msgid ""
 "Includes a hash which identifies the exact changeset the code was built "
 "from. Used for diagnostic purposes."
-msgstr "它包含一个可识别代码构建中所有变更的哈希，其可用于诊断。"
+msgstr "它包含一个标识所构建代码变更版本的哈希值，其可用于诊断。"
 
 #: daemons/controld/controld_control.c:531
 msgid "The messaging stack on which Pacemaker is currently running"
-msgstr "Pacemaker当前正在运行的消息传递堆栈"
+msgstr "Pacemaker上的消息传输引擎当前正在运行"
 
 #: daemons/controld/controld_control.c:532
 msgid "Used for informational and diagnostic purposes."
@@ -40,7 +40,7 @@ msgstr "用于提供信息和诊断。"
 
 #: daemons/controld/controld_control.c:536
 msgid "An arbitrary name for the cluster"
-msgstr "任意集群的名称"
+msgstr "任意的集群名称"
 
 #: daemons/controld/controld_control.c:537
 msgid ""
@@ -60,7 +60,7 @@ msgstr "启动过程中等待其他节点响应的时间"
 msgid ""
 "The optimal value will depend on the speed and load of your network and the "
 "type of switches used."
-msgstr "其最佳值将由你的网络的速度和负载以及所用交换机的类型决定。"
+msgstr "其最佳值将取决于你的网络速度和负载以及所用交换机的类型。"
 
 #: daemons/controld/controld_control.c:551
 msgid ""
@@ -74,11 +74,11 @@ msgstr ""
 msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
-msgstr "重新检查集群状态及日期使用规范的轮询间隔"
+msgstr "重新检查集群状态并且评估基于时间的配置规则的轮询间隔"
 
 #: daemons/controld/controld_control.c:565
 msgid "Maximum amount of system load that should be used by cluster nodes"
-msgstr "集群节点应该使用的最大系统负载值"
+msgstr "集群节点应该使用的最大系统负载量"
 
 #: daemons/controld/controld_control.c:566
 msgid ""
@@ -93,7 +93,7 @@ msgstr "每个节点可以调度的最大作业数（默认为2x内核数）"
 
 #: daemons/controld/controld_control.c:576
 msgid "How a cluster node should react if notified of its own fencing"
-msgstr "集群节点在收到自己的防护通知时应如何反应"
+msgstr "集群节点在收到针对自己的 fence 操作结果通知时应如何反应"
 
 #: daemons/controld/controld_control.c:577
 msgid ""
@@ -102,9 +102,9 @@ msgid ""
 "communication. Allowed values are \"stop\" to attempt to immediately stop "
 "Pacemaker and stay stopped, or \"panic\" to attempt to immediately reboot "
 "the local node, falling back to stop on failure."
-msgstr "如果配置了错误的防护，或者节点正在使用的防护没有中断集群通信，则集群节点可能会收到"
-"有关自身的防护通知。允许的值为 \"stop\" 尝试立即停止pacemaker并保持停用状态,或者 \"panic\" 尝试"
-"立即重新启动本地节点，并在失败时返回执行stop。"
+msgstr "如果配置了错误的 fence 操作，或者在使用 fabric fence 机制 (并不会切断集群通信），"
+"则集群节点可能会收到针对自己的 fence 结果通知。允许的值为 \"stop\" 尝试立即停止 pacemaker "
+"并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败时返回执行stop。"
 
 #: daemons/controld/controld_control.c:587
 msgid ""
@@ -112,21 +112,21 @@ msgid ""
 "you need to adjust this value, it probably indicates the presence of a bug."
 msgstr ""
 "如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可能代表"
-"存在某些错误。"
+"存在某些缺陷。"
 
 #: daemons/controld/controld_control.c:595
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
-msgstr "如果在这段时间内关机仍未完成，请立即退出。如果您需要调整该值，这可能代表"
-"存在某些错误。"
+msgstr "如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表"
+"存在某些缺陷。"
 
 #: daemons/controld/controld_control.c:603
 #: daemons/controld/controld_control.c:610
 msgid ""
 "If you need to adjust this value, it probably indicates the presence of a "
 "bug."
-msgstr "如果您需要调整该值，这可能代表存在某些错误。"
+msgstr "如果您需要调整该值，这可能代表存在某些缺陷。"
 
 #: daemons/controld/controld_control.c:616
 msgid ""
@@ -140,14 +140,14 @@ msgid ""
 "Delay cluster recovery for this much time to allow for additional events to "
 "occur. Useful if your configuration is sensitive to the order in which ping "
 "updates arrive."
-msgstr "当集群恢复被延迟了指定的时间间隔时，可能会有其它事件出现。"
+msgstr "集群恢复将被推迟指定的时间间隔，以等待更多事件发生。"
 "如果您的配置对 ping 更新到达的顺序很敏感，这就很有用"
 
 #: daemons/controld/controld_control.c:625
 msgid ""
 "How long to wait before we can assume nodes are safely down when watchdog-"
 "based self-fencing via SBD is in use"
-msgstr "当watchdog-based self-fencing 通过SBD 被执行时，"
+msgstr "当基于 watchdog 的自我 fence 机制通过SBD 被执行时，"
 "我们可以假设节点安全关闭之前需要等待多长时间"
 
 #: daemons/controld/controld_control.c:627
@@ -166,10 +166,10 @@ msgid ""
 "be used. +WARNING:+ In this case, it's essential (currently not verified by "
 "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on all nodes."
 msgstr ""
-"如果值非零，且集群设置了 `have-watchdog=true` ，当需要fencing时，watchdog-based self-fence 将通过SBD执行，"
-"而不需要显式配置fencing资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定未被发现的节点在这段时间内self-fence。"
-" +WARNING:+ 必须确保值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变量。Pacemaker将在所有节点上单独验证设置，"
-"并防止所有节点在动态配置错误时发生启动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。"
+"如果值非零，且集群设置了 `have-watchdog=true` ，当需要fencing时，基于 watchdog 的自我 fence 机制将通过SBD执行，"
+"而不需要显式配置 fencing 资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定不可见的节点在这段时间内自我fence。"
+" +WARNING:+ 必须确保该值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变量。Pacemaker将在所有节点上单独验证设置，"
+"如发现有错误的动态配置，将防止节点启动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。"
 "如果 `stonith-watchdog-timeout` 设置为负值。并且设置了 `SBD_WATCHDOG_TIMEOUT` ，则将使用该值的两倍，"
 " +WARNING:+ 在这种情况下，必须将所有节点上 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值(目前没有通过pacemaker验证)。"
 
@@ -177,7 +177,7 @@ msgstr ""
 msgid ""
 "How many times fencing can fail before it will no longer be immediately re-"
 "attempted on a target"
-msgstr "stonith失败多少次会停止尝试"
+msgstr "fence操作失败多少次会停止立即尝试"
 
 #: daemons/controld/controld_control.c:556
 msgid ""
@@ -187,9 +187,9 @@ msgid ""
 "rules with date specifications and serve as a fail-safe for certain types of "
 "scheduler bugs."
 msgstr ""
-"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态及大多数基于时间的规则"
-"以获取当前出现的失败或超时的问题。同时，在其不活动状态结束之后，它还将重新检"
-"查集群，以评估具有日期规格的规则，并为某些类型的调度程序错误提供故障保护服务。"
+"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态以评估大多数基于时间"
+"的规则以及过期的错误。然而无论如何，在集群经过该时间间隔的不活动状态后，它还"
+"将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障保护。"
 
 #: daemons/fenced/pacemaker-fenced.c:1464
 #, c-format
