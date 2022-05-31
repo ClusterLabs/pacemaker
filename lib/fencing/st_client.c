@@ -150,7 +150,7 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
 enum stonith_namespace
 stonith_get_namespace(const char *agent, const char *namespace_s)
 {
-    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_casei)) {
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
         return st_namespace_internal;
     }
 
@@ -1045,12 +1045,12 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     type = crm_element_value(blob.xml, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
 
-    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
+    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_none)) {
         invoke_registered_callbacks(st, blob.xml, 0);
 
-    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_none)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
-    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_none)) {
         int call_id = 0;
         int timeout = 0;
 
@@ -1131,7 +1131,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
 
             native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
                 crm_log_xml_debug(reply, "Invalid fencer reply");
@@ -1409,7 +1409,7 @@ xml_to_event(xmlNode *msg)
     // Some notification subtypes have additional information
 
     if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
-                     pcmk__str_casei)) {
+                     pcmk__str_none)) {
         xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
@@ -1489,7 +1489,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_none)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
@@ -1727,7 +1727,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
         if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT,
-                         pcmk__str_casei)) {
+                         pcmk__str_none)) {
             host_arg = params->value;
         }
         if (!pcmk_stonith_param(params->key)) {
@@ -2222,7 +2222,7 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
         }
         if ((prev_hp->state == st_done) &&
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
-            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
+            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_none) &&
             ((event->completed < prev_hp->completed) ||
              ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
 
