@@ -2512,33 +2512,18 @@ stonith__event_exit_reason(stonith_event_t *event)
 char *
 stonith__event_description(stonith_event_t *event)
 {
-    const char *origin = event->client_origin;
-    const char *origin_node = event->origin;
-    const char *executioner = event->executioner;
-    const char *device = event->device;
-    const char *action = event->action;
-    const char *target = event->target;
+    // Use somewhat readable defaults
+    const char *origin = pcmk__s(event->client_origin, "a client");
+    const char *origin_node = pcmk__s(event->origin, "a node");
+    const char *executioner = pcmk__s(event->executioner, "the cluster");
+    const char *device = pcmk__s(event->device, "unknown");
+    const char *action = pcmk__s(event->action, event->operation);
+    const char *target = pcmk__s(event->target, "no node");
     const char *reason = stonith__event_exit_reason(event);
     const char *status;
 
-    // Use somewhat readable defaults
-    if (origin == NULL) {
-        origin = "a client";
-    }
-    if (origin_node == NULL) {
-        origin_node = "a node";
-    }
-    if (executioner == NULL) {
-        executioner = "the cluster";
-    }
-    if (device == NULL) {
-        device = "unknown";
-    }
     if (action == NULL) {
-        action = (event->operation == NULL)? "(unknown)" : event->operation;
-    }
-    if (target == NULL) {
-        target = "no node";
+        action = "(unknown)";
     }
 
     if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
@@ -2577,10 +2562,9 @@ stonith__event_description(stonith_event_t *event)
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
                              action, target, executioner, origin, origin_node,
                              status,
-                             ((reason == NULL)? "" : " ("),
-                             ((reason == NULL)? "" : reason),
+                             ((reason == NULL)? "" : " ("), pcmk__s(reason, ""),
                              ((reason == NULL)? "" : ")"),
-                             ((event->id == NULL)? "(none)" : event->id));
+                             pcmk__s(event->id, "(none)"));
 }
 
 
