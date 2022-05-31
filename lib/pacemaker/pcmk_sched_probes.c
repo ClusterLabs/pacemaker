@@ -18,6 +18,40 @@
 
 /*!
  * \internal
+ * \brief Add the expected result to a newly created probe
+ *
+ * \param[in] probe  Probe action to add expected result to
+ * \param[in] rsc    Resource that probe is for
+ * \param[in] node   Node that probe will run on
+ */
+static void
+add_expected_result(pe_action_t *probe, pe_resource_t *rsc, pe_node_t *node)
+{
+    // Check whether resource is currently active on node
+    pe_node_t *running = pe_find_node_id(rsc->running_on, node->details->id);
+
+    // The expected result is what we think the resource's current state is
+    if (running == NULL) {
+        static const char *rc_inactive = NULL;
+
+        if (rc_inactive == NULL) {
+            rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
+        }
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
+
+    } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        static const char *rc_promoted = NULL;
+
+        if (rc_promoted == NULL) {
+            rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
+        }
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create probes for a resource on a node, if needed
  *
  * \brief Schedule any probes needed for a resource on a node
  *
@@ -32,17 +66,8 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
     enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
     pe_action_t *probe = NULL;
-    pe_node_t *running = NULL;
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
-
-    static const char *rc_promoted = NULL;
-    static const char *rc_inactive = NULL;
-
-    if (rc_inactive == NULL) {
-        rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
-    }
 
     CRM_CHECK(node != NULL, return false);
     if (!pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
@@ -202,20 +227,7 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
 
     pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
 
-    /*
-     * We need to know if it's running_on (not just known_on) this node
-     * to correctly determine the target rc.
-     */
-    running = pe_find_node_id(rsc->running_on, node->details->id);
-    if (running == NULL) {
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
-
-    } else if (rsc->role == RSC_ROLE_PROMOTED) {
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
-    }
-
-    crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
-              pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
+    add_expected_result(probe, rsc, node);
 
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
          && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
