@@ -1003,25 +1003,6 @@ find_instance_on(const pe_resource_t *clone, const pe_node_t *node)
     return NULL;
 }
 
-// For unique clones, probe each instance separately
-static bool
-probe_unique_clone(pe_resource_t *rsc, pe_node_t *node,
-                   pe_working_set_t *data_set)
-{
-    bool any_created = false;
-
-    for (GList *child_iter = rsc->children; child_iter != NULL;
-         child_iter = child_iter->next) {
-
-        pe_resource_t *child = (pe_resource_t *) child_iter->data;
-
-        if (child->cmds->create_probe(child, node)) {
-            any_created = true;
-        }
-    }
-    return any_created;
-}
-
 // For anonymous clones, only a single instance needs to be probed
 static bool
 probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
@@ -1094,7 +1075,7 @@ clone_create_probe(pe_resource_t *rsc, pe_node_t *node)
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        return probe_unique_clone(rsc, node, rsc->cluster);
+        return pcmk__probe_resource_list(rsc->children, node);
     } else {
         return probe_anonymous_clone(rsc, node, rsc->cluster);
     }

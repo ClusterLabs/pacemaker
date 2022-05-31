@@ -51,6 +51,30 @@ add_expected_result(pe_action_t *probe, pe_resource_t *rsc, pe_node_t *node)
 
 /*!
  * \internal
+ * \brief Create any needed robes on a node for a list of resources
+ *
+ * \param[in] rscs  List of resources to create probes for
+ * \param[in] node  Node to create probes on
+ *
+ * \return true if any probe was created, otherwise false
+ */
+bool
+pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
+{
+    bool any_created = false;
+
+    for (GList *iter = rscs; iter != NULL; iter = iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) iter->data;
+
+        if (rsc->cmds->create_probe(rsc, node)) {
+            any_created = true;
+        }
+    }
+    return any_created;
+}
+
+/*!
+ * \internal
  * \brief Create probes for a resource on a node, if needed
  *
  * \brief Schedule any probes needed for a resource on a node
@@ -97,19 +121,9 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
         }
     }
 
-    if (rsc->children) {
-        GList *gIter = NULL;
-        bool any_created = false;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            if (child_rsc->cmds->create_probe(child_rsc, node)) {
-                any_created = true;
-            }
-        }
-
-        return any_created;
+    // If this is a collective resource, probes are created for its children
+    if (rsc->children != NULL) {
+        return pcmk__probe_resource_list(rsc->children, node);
 
     } else if ((rsc->container) && (!rsc->is_remote_node)) {
         pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
@@ -793,11 +807,6 @@ pcmk__schedule_probes(pe_working_set_t *data_set)
         }
 
         // Probe each resource in the cluster on this node, as needed
-        for (GList *rsc_iter = data_set->resources; rsc_iter != NULL;
-             rsc_iter = rsc_iter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
-
-            rsc->cmds->create_probe(rsc, node);
-        }
+        pcmk__probe_resource_list(data_set->resources, node);
     }
 }

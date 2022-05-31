@@ -655,6 +655,9 @@ G_GNUC_INTERNAL
 void pcmk__order_probes(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+bool pcmk__probe_resource_list(GList *rscs, pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);
 
 
