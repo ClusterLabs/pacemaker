@@ -95,6 +95,34 @@ probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
 
 /*!
  * \internal
+ * \brief Check whether a guest resource will stop
+ *
+ * \param[in] node  Guest node to check
+ *
+ * \return true if guest resource will likely stop, otherwise false
+ */
+static bool
+guest_resource_will_stop(pe_node_t *node)
+{
+    pe_resource_t *guest_rsc = node->details->remote_rsc->container;
+
+    /* Ideally, we'd check whether the guest has a required stop, but that
+     * information doesn't exist yet, so approximate it ...
+     */
+    return node->details->remote_requires_reset
+           || node->details->unclean
+           || pcmk_is_set(guest_rsc->flags, pe_rsc_failed)
+           || (guest_rsc->next_role == RSC_ROLE_STOPPED)
+
+           // Guest is moving
+           || ((guest_rsc->role > RSC_ROLE_STOPPED)
+               && (guest_rsc->allocated_to != NULL)
+               && (pe_find_node(guest_rsc->running_on,
+                   guest_rsc->allocated_to->details->uname) == NULL));
+}
+
+/*!
+ * \internal
  * \brief Create probes for a resource on a node, if needed
  *
  * \brief Schedule any probes needed for a resource on a node
@@ -216,16 +244,7 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
             probe_then_start(remote, top);
             return false;
 
-            /* Here we really we want to check if remote->stop is required,
-             * but that information doesn't exist yet
-             */
-        } else if(node->details->remote_requires_reset
-                  || node->details->unclean
-                  || pcmk_is_set(remote->flags, pe_rsc_failed)
-                  || remote->next_role == RSC_ROLE_STOPPED
-                  || (remote->allocated_to
-                      && pe_find_node(remote->running_on, remote->allocated_to->details->uname) == NULL)
-            ) {
+        } else if (guest_resource_will_stop(node)) {
             /* The container is stopping or restarting, don't start
              * 'rsc' until 'remote' stops as this also implies that
              * 'rsc' is stopped - avoiding the need to probe
