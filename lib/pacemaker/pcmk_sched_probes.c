@@ -18,6 +18,234 @@
 
 /*!
  * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
+bool
+native_create_probe(pe_resource_t *rsc, pe_node_t *node)
+{
+    enum pe_ordering flags = pe_order_optional;
+    char *key = NULL;
+    pe_action_t *probe = NULL;
+    pe_node_t *running = NULL;
+    pe_node_t *allowed = NULL;
+    pe_resource_t *top = uber_parent(rsc);
+
+    static const char *rc_promoted = NULL;
+    static const char *rc_inactive = NULL;
+
+    if (rc_inactive == NULL) {
+        rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
+        rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
+    }
+
+    CRM_CHECK(node != NULL, return false);
+    if (!pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
+        pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
+        return false;
+    }
+
+    if (pe__is_guest_or_remote_node(node)) {
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
+                         rsc->id, node->details->id);
+            return false;
+        } else if (pe__is_guest_node(node)
+                   && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
+                         rsc->id, node->details->id);
+            return false;
+        } else if (rsc->is_remote_node) {
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot host remote connections",
+                         rsc->id, node->details->id);
+            return false;
+        }
+    }
+
+    if (rsc->children) {
+        GList *gIter = NULL;
+        bool any_created = false;
+
+        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+
+            if (child_rsc->cmds->create_probe(child_rsc, node)) {
+                any_created = true;
+            }
+        }
+
+        return any_created;
+
+    } else if ((rsc->container) && (!rsc->is_remote_node)) {
+        pe_rsc_trace(rsc, "Skipping %s: it is within container %s", rsc->id, rsc->container->id);
+        return false;
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        pe_rsc_trace(rsc, "Skipping orphan: %s", rsc->id);
+        return false;
+    }
+
+    // Check whether resource is already known on node
+    if (g_hash_table_lookup(rsc->known_on, node->details->id)) {
+        pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
+        return false;
+    }
+
+    allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+
+    if (rsc->exclusive_discover || top->exclusive_discover) {
+        if (allowed == NULL) {
+            /* exclusive discover is enabled and this node is not in the allowed list. */    
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, A", rsc->id, node->details->id);
+            return false;
+        } else if (allowed->rsc_discover_mode != pe_discover_exclusive) {
+            /* exclusive discover is enabled and this node is not marked
+             * as a node this resource should be discovered on */ 
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, B", rsc->id, node->details->id);
+            return false;
+        }
+    }
+
+    if(allowed == NULL && node->rsc_discover_mode == pe_discover_never) {
+        /* If this node was allowed to host this resource it would
+         * have been explicitly added to the 'allowed_nodes' list.
+         * However it wasn't and the node has discovery disabled, so
+         * no need to probe for this resource.
+         */
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, C", rsc->id, node->details->id);
+        return false;
+    }
+
+    if (allowed && allowed->rsc_discover_mode == pe_discover_never) {
+        /* this resource is marked as not needing to be discovered on this node */
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, discovery mode", rsc->id, node->details->id);
+        return false;
+    }
+
+    if (pe__is_guest_node(node)) {
+        pe_resource_t *remote = node->details->remote_rsc->container;
+
+        if(remote->role == RSC_ROLE_STOPPED) {
+            /* If the container is stopped, then we know anything that
+             * might have been inside it is also stopped and there is
+             * no need to probe.
+             *
+             * If we don't know the container's state on the target
+             * either:
+             *
+             * - the container is running, the transition will abort
+             *   and we'll end up in a different case next time, or
+             *
+             * - the container is stopped
+             *
+             * Either way there is no need to probe.
+             *
+             */
+            if(remote->allocated_to
+               && g_hash_table_lookup(remote->known_on, remote->allocated_to->details->id) == NULL) {
+                /* For safety, we order the 'rsc' start after 'remote'
+                 * has been probed.
+                 *
+                 * Using 'top' helps for groups, but we may need to
+                 * follow the start's ordering chain backwards.
+                 */
+                pcmk__new_ordering(remote,
+                                   pcmk__op_key(remote->id, RSC_STATUS, 0),
+                                   NULL, top,
+                                   pcmk__op_key(top->id, RSC_START, 0), NULL,
+                                   pe_order_optional, rsc->cluster);
+            }
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
+                         rsc->id, node->details->id, remote->id);
+            return false;
+
+            /* Here we really we want to check if remote->stop is required,
+             * but that information doesn't exist yet
+             */
+        } else if(node->details->remote_requires_reset
+                  || node->details->unclean
+                  || pcmk_is_set(remote->flags, pe_rsc_failed)
+                  || remote->next_role == RSC_ROLE_STOPPED
+                  || (remote->allocated_to
+                      && pe_find_node(remote->running_on, remote->allocated_to->details->uname) == NULL)
+            ) {
+            /* The container is stopping or restarting, don't start
+             * 'rsc' until 'remote' stops as this also implies that
+             * 'rsc' is stopped - avoiding the need to probe
+             */
+            pcmk__new_ordering(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
+                               NULL, top, pcmk__op_key(top->id, RSC_START, 0),
+                               NULL, pe_order_optional, rsc->cluster);
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
+                     rsc->id, node->details->id, remote->id);
+            return false;
+/*      } else {
+ *            The container is running so there is no problem probing it
+ */
+        }
+    }
+
+    key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
+    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, rsc->cluster);
+    pe__clear_action_flags(probe, pe_action_optional);
+
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
+
+    /*
+     * We need to know if it's running_on (not just known_on) this node
+     * to correctly determine the target rc.
+     */
+    running = pe_find_node_id(rsc->running_on, node->details->id);
+    if (running == NULL) {
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
+
+    } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
+    }
+
+    crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
+              pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
+
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
+        || !pe_rsc_is_clone(top)) {
+        top = rsc;
+    } else {
+        crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
+    }
+
+    if (!pcmk_is_set(probe->flags, pe_action_runnable)
+        && (rsc->running_on == NULL)) {
+        /* Prevent the start from occurring if rsc isn't active, but
+         * don't cause it to stop if it was active already
+         */
+        pe__set_order_flags(flags, pe_order_runnable_left);
+    }
+
+    pcmk__new_ordering(rsc, NULL, probe, top,
+                       pcmk__op_key(top->id, RSC_START, 0), NULL, flags,
+                       rsc->cluster);
+
+    // Order the probe before any agent reload
+    pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
+                       pe_order_optional, rsc->cluster);
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Check whether a probe should be ordered before another action
  *
  * \param[in] probe  Probe action to check
