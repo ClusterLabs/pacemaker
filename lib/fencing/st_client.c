@@ -2575,7 +2575,7 @@ stonith__event_description(stonith_event_t *event)
                                  device);
     }
 
-    // event->operation should be T_STONITH_NOTIFY_FENCE
+    // event->operation should be T_STONITH_NOTIFY_FENCE at this point
 
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
                              action, target, executioner, origin, origin_node,
