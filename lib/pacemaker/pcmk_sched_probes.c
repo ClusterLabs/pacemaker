@@ -123,6 +123,33 @@ guest_resource_will_stop(pe_node_t *node)
 
 /*!
  * \internal
+ * \brief Create a probe action for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in[ node  Node to create probe on
+ *
+ * \return Newly created probe action
+ */
+static pe_action_t *
+probe_action(pe_resource_t *rsc, pe_node_t *node)
+{
+    pe_action_t *probe = NULL;
+    char *key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
+
+    crm_debug("Scheduling probe of %s %s on %s",
+              role2text(rsc->role), rsc->id, node->details->uname);
+
+    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE,
+                          rsc->cluster);
+    pe__clear_action_flags(probe, pe_action_optional);
+
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
+    add_expected_result(probe, rsc, node);
+    return probe;
+}
+
+/*!
+ * \internal
  * \brief Create probes for a resource on a node, if needed
  *
  * \brief Schedule any probes needed for a resource on a node
@@ -136,7 +163,6 @@ bool
 native_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
     enum pe_ordering flags = pe_order_optional;
-    char *key = NULL;
     pe_action_t *probe = NULL;
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
@@ -261,13 +287,8 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
         }
     }
 
-    key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
-    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, rsc->cluster);
-    pe__clear_action_flags(probe, pe_action_optional);
-
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
-
-    add_expected_result(probe, rsc, node);
+    // We've eliminated all cases where a probe is not needed, so now it is
+    probe = probe_action(rsc, node);
 
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
          && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
