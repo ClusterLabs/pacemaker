@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,6 +46,9 @@ extern "C" {
                 break;                                                      \
         }                                                                   \
     } while (0)
+
+//! \deprecated Do not use Pacemaker for general-purpose string handling
+#define crm_str(x) (const char *) ((x)? (x) : "<null>")
 
 //! \deprecated Do not use Pacemaker for general-purpose logging
 gboolean crm_log_cli_init(const char *entity);
