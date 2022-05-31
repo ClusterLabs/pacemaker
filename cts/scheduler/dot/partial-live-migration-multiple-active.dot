@@ -1,0 +1,7 @@
+ digraph "g" {
+"migrator_monitor_10000 node1" [ style=bold color="green" fontcolor="black"]
+"migrator_start_0 node1" -> "migrator_monitor_10000 node1" [ style = bold]
+"migrator_start_0 node1" [ style=bold color="green" fontcolor="black"]
+"migrator_stop_0 node2" -> "migrator_start_0 node1" [ style = bold]
+"migrator_stop_0 node2" [ style=bold color="green" fontcolor="black"]
+}
