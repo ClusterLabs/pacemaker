@@ -767,11 +767,10 @@ __________________________________
   to use ``%lld`` in the format string, and cast the value to ``long long``.
 
 * Do not rely on ``%s`` handling ``NULL`` values properly. While the standard
-  library functions might, not all Pacemaker API using them does, and it's
-  safest to get in the habit of always ensuring format values are non-NULL.
-  For debug and trace messages, the ``crm_str()`` macro is sufficient and will
-  map NULL to the string "<null>", but for other messages an understandable
-  string appropriate to the context should be used when the value is NULL.
+  library functions might, not all functions using printf-style formatting
+  does, and it's safest to get in the habit of always ensuring format values
+  are non-NULL. If a value can be NULL, the ``pcmk__s()`` function is a
+  convenient way to say "this string if not NULL otherwise this default".
 
 * The convenience macros ``pcmk__plural_s()`` and ``pcmk__plural_alt()`` are
   handy when logging a word that may be singular or plural.
