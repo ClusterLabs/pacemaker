@@ -379,7 +379,6 @@ fencing_result2xml(remote_fencing_op_t *op)
     crm_xml_add(notify_data, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME, op->client_name);
 
-    stonith__xe_set_result(notify_data, &op->result);
     return notify_data;
 }
 
@@ -407,6 +406,8 @@ fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
     if (op_merged) {
         pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
     }
+
+    stonith__xe_set_result(notify_data, &op->result);
 
     add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);

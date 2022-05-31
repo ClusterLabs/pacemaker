@@ -475,22 +475,26 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 }
 
 static void
-handle_topology_change(xmlNode *match, bool remove) 
+remove_topology_level(xmlNode *match)
+{
+    int index = 0;
+    char *key = NULL;
+
+    CRM_CHECK(match != NULL, return);
+
+    key = stonith_level_key(match, fenced_target_by_unknown);
+    crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+    topology_remove_helper(key, index);
+    free(key);
+}
+
+static void
+add_topology_level(xmlNode *match)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(match != NULL, return);
-    crm_trace("Updating %s", ID(match));
-
-    if(remove) {
-        int index = 0;
-        char *key = stonith_level_key(match, fenced_target_by_unknown);
-
-        crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-        topology_remove_helper(key, index);
-        free(key);
-    }
 
     fenced_register_level(match, &desc, &result);
     fenced_send_level_notification(STONITH_OP_LEVEL_ADD, &result, desc);
@@ -535,7 +539,8 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        handle_topology_change(match, TRUE);
+        remove_topology_level(match);
+        add_topology_level(match);
     }
 }
 
@@ -624,7 +629,7 @@ watchdog_device_update(void)
                              so we can skip that here
                            */
                     NULL);
-            rc = stonith_device_register(xml, NULL, TRUE);
+            rc = stonith_device_register(xml, TRUE);
             free_xml(xml);
             if (rc != pcmk_ok) {
                 crm_crit("Cannot register watchdog pseudo fence agent");
@@ -780,7 +785,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
                                               agent, params, rsc_provides);
         stonith_key_value_freeall(params, 1, 1);
-        rc = stonith_device_register(data, NULL, TRUE);
+        rc = stonith_device_register(data, TRUE);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(data);
     }
@@ -1083,13 +1088,14 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     continue;
 
                 } else if(strcmp(op, "create") == 0) {
-                    handle_topology_change(change->children, FALSE);
+                    add_topology_level(change->children);
 
                 } else if(strcmp(op, "modify") == 0) {
                     xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
 
                     if(match) {
-                        handle_topology_change(match->children, TRUE);
+                        remove_topology_level(match->children);
+                        add_topology_level(match->children);
                     }
 
                 } else if(strcmp(op, "delete") == 0) {

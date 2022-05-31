@@ -150,7 +150,7 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
 enum stonith_namespace
 stonith_get_namespace(const char *agent, const char *namespace_s)
 {
-    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_casei)) {
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
         return st_namespace_internal;
     }
 
@@ -1045,12 +1045,12 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     type = crm_element_value(blob.xml, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
 
-    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
+    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_none)) {
         invoke_registered_callbacks(st, blob.xml, 0);
 
-    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_none)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
-    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_none)) {
         int call_id = 0;
         int timeout = 0;
 
@@ -1131,7 +1131,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
 
             native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
                 crm_log_xml_debug(reply, "Invalid fencer reply");
@@ -1386,7 +1386,6 @@ static stonith_event_t *
 xml_to_event(xmlNode *msg)
 {
     stonith_event_t *event = calloc(1, sizeof(stonith_event_t));
-    const char *ntype = crm_element_value(msg, F_SUBTYPE);
     struct event_private *event_private = NULL;
 
     CRM_ASSERT(event != NULL);
@@ -1397,18 +1396,21 @@ xml_to_event(xmlNode *msg)
 
     crm_log_xml_trace(msg, "stonith_notify");
 
-    // All notification types have the operation result
+    // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
+    event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
 
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
 
-    // Fence notifications have additional information
-    if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
-        xmlNode *data = get_event_data_xml(msg, ntype);
+    // Some notification subtypes have additional information
+
+    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_FENCE,
+                     pcmk__str_none)) {
+        xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
-            crm_err("No data for %s event", ntype);
+            crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
             event->origin = crm_element_value_copy(data, F_STONITH_ORIGIN);
@@ -1419,7 +1421,19 @@ xml_to_event(xmlNode *msg)
             event->client_origin = crm_element_value_copy(data, F_STONITH_CLIENTNAME);
             event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
         }
-        event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
+
+    } else if (pcmk__str_any_of(event->operation,
+                                STONITH_OP_DEVICE_ADD, STONITH_OP_DEVICE_DEL,
+                                STONITH_OP_LEVEL_ADD, STONITH_OP_LEVEL_DEL,
+                                NULL)) {
+        xmlNode *data = get_event_data_xml(msg, event->operation);
+
+        if (data == NULL) {
+            crm_err("No data for %s event", event->operation);
+            crm_log_xml_notice(msg, "BadEvent");
+        } else {
+            event->device = crm_element_value_copy(data, F_STONITH_DEVICE);
+        }
     }
 
     return event;
@@ -1472,7 +1486,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_none)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
@@ -1710,7 +1724,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
         if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT,
-                         pcmk__str_casei)) {
+                         pcmk__str_none)) {
             host_arg = params->value;
         }
         if (!pcmk_stonith_param(params->key)) {
@@ -2205,7 +2219,7 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
         }
         if ((prev_hp->state == st_done) &&
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
-            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
+            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_none) &&
             ((event->completed < prev_hp->completed) ||
              ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
 
@@ -2494,22 +2508,37 @@ stonith__event_exit_reason(stonith_event_t *event)
  * \return Newly allocated string with description of \p event
  * \note The caller is responsible for freeing the return value.
  *       This function asserts on memory errors and never returns NULL.
- * \note This currently is useful only for events of type
- *       T_STONITH_NOTIFY_FENCE.
  */
 char *
 stonith__event_description(stonith_event_t *event)
 {
     const char *origin = event->client_origin;
+    const char *origin_node = event->origin;
     const char *executioner = event->executioner;
+    const char *device = event->device;
+    const char *action = event->action;
+    const char *target = event->target;
     const char *reason = stonith__event_exit_reason(event);
     const char *status;
 
+    // Use somewhat readable defaults
     if (origin == NULL) {
         origin = "a client";
     }
+    if (origin_node == NULL) {
+        origin_node = "a node";
+    }
     if (executioner == NULL) {
         executioner = "the cluster";
+    }
+    if (device == NULL) {
+        device = "unknown";
+    }
+    if (action == NULL) {
+        action = (event->operation == NULL)? "(unknown)" : event->operation;
+    }
+    if (target == NULL) {
+        target = "no node";
     }
 
     if (stonith__event_execution_status(event) != PCMK_EXEC_DONE) {
@@ -2520,13 +2549,38 @@ stonith__event_description(stonith_event_t *event)
         status = crm_exit_str(CRM_EX_OK);
     }
 
+    if (pcmk__str_eq(event->operation, T_STONITH_NOTIFY_HISTORY,
+                     pcmk__str_none)) {
+        return crm_strdup_printf("Fencing history may have changed");
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_ADD,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing device (%s) was added", device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_DEL,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing device (%s) was removed", device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_ADD,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing topology level (%s) was added",
+                                 device);
+
+    } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_DEL,
+                            pcmk__str_none)) {
+        return crm_strdup_printf("A fencing topology level (%s) was removed",
+                                 device);
+    }
+
+    // event->operation should be T_STONITH_NOTIFY_FENCE at this point
+
     return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
-                             event->action, event->target, executioner, origin,
-                             event->origin, status,
+                             action, target, executioner, origin, origin_node,
+                             status,
                              ((reason == NULL)? "" : " ("),
                              ((reason == NULL)? "" : reason),
                              ((reason == NULL)? "" : ")"),
-                             event->id);
+                             ((event->id == NULL)? "(none)" : event->id));
 }
 
 
