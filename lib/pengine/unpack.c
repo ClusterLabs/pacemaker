@@ -2755,10 +2755,13 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
         }
     }
 
-    /* If there's any newer non-monitor operation on the node, the migration
-     * events potentially no longer matter for the node.
+    /* If there's any newer non-monitor operation on the node, or any newer
+     * probe/monitor operation on the node indicating it was not running there,
+     * the migration events potentially no longer matter for the node.
      */
-    return non_monitor_after(rsc_id, node_name, xml_op, same_node, data_set);
+    return non_monitor_after(rsc_id, node_name, xml_op, same_node, data_set)
+           || monitor_not_running_after(rsc_id, node_name, xml_op, same_node,
+                                        data_set);
 }
 
 static int
