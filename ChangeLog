@@ -1,24 +1,6 @@
-* Mon May 16 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3-rc2
-- Changesets: 28
-- Diff: 24 files changed, 810 insertions(+), 156 deletions(-)
-
-- Features added since Pacemaker-2.1.3-rc1
-  + rpm: crm_attribute is now part of the pacemaker-cli package instead of
-         the pacemaker package
-
-- Fixes since Pacemaker-2.1.3-rc1
-  + scheduler: make multiple-active="stop_unexpected" actually work
-  + libcrmcommon: retry IPC requests after EAGAIN errors
-  + tools: get attrd_updater -Y working again (regression in 2.1.3-rc1)
-  + tools: support command-line crm_attribute calls on Pacemaker remote nodes
-           whose node name in the cluster differs from their local hostname
-
-- Public API changes since Pacemaker-2.1.3-rc1
-  + libstonithd: deprecate stonith_t:call_timeout
-
-* Mon Apr 18 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3-rc1
-- Changesets: 779
-- Diff: 330 files changed, 22740 insertions(+), 12103 deletions(-)
+* Wed Jun 1 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3
+- Changesets: 814
+- Diff: 332 files changed, 23435 insertions(+), 12137 deletions(-)
 
 - Features added since Pacemaker-2.1.2
   + Internal failures of resource actions (such as an OCF agent not being
@@ -28,6 +10,8 @@
   + build: configure script supports experimental --enable-nls option to
            enable native language translations (currently only Chinese
            translations of certain help text are available)
+  + rpm: crm_attribute is now part of the pacemaker-cli package instead of
+         the pacemaker package
   + CIB: resources support allow-unhealthy-nodes meta-attribute to exempt
          the resource from bans due to node health checks (particularly useful
          for health monitoring resources themselves)
@@ -69,12 +53,15 @@
   + resources: use correct syntax in Stateful meta-data
                (regression introduced in 2.1.0)
   + corosync: repeat corosync_cfg_trackstart if first attempt fails
+  + libcrmcommon: retry IPC requests after EAGAIN errors
   + executor,scheduler: treat "no secrets" fence results as a hard error
   + fencing: handle dynamic target query failures better
   + fencing: don't set stonith action to pending if fork fails
   + pacemakerd: avoid race condition when subdaemaon is checked while exiting
   + scheduler: avoid memory leak when displaying clones in certain conditions
   + scheduler: properly set data set flags when scheduling actions
+  + tools: support command-line crm_attribute calls on Pacemaker remote nodes
+           whose node name in the cluster differs from their local hostname
   + tools: prevent possible crm_resource crashes if multiple commands specified
 
 - Public API changes since Pacemaker-2.1.2
@@ -96,6 +83,7 @@
   + libpe_status: deprecate pe_order_stonith_stop
   + libpe_status: deprecate pe_rsc_starting and pe_rsc_stopping
   + libstonithd: add exit_reason member to stonith_history_t
+  + libstonithd: deprecate stonith_t:call_timeout
   + libstonithd: stonith_api_del_notification() with NULL second argument
                  removes all notifications
 
