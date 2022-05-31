@@ -25,7 +25,6 @@ void native_internal_constraints(pe_resource_t *rsc);
 extern enum pe_action_flags native_action_flags(pe_action_t * action, pe_node_t * node);
 
 void native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
-bool native_create_probe(pe_resource_t *rsc, pe_node_t *node);
 extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__primitive_add_utilization(pe_resource_t *rsc,
                                      pe_resource_t *orig_rsc, GList *all_rscs,

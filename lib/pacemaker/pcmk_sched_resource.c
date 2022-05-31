@@ -21,7 +21,7 @@ static resource_alloc_functions_t allocation_methods[] = {
     {
         pcmk__native_allocate,
         native_create_actions,
-        native_create_probe,
+        pcmk__probe_rsc_on_node,
         native_internal_constraints,
         pcmk__primitive_apply_coloc_score,
         pcmk__add_colocated_node_scores,
@@ -38,7 +38,7 @@ static resource_alloc_functions_t allocation_methods[] = {
     {
         pcmk__group_allocate,
         group_create_actions,
-        native_create_probe,
+        pcmk__probe_rsc_on_node,
         group_internal_constraints,
         pcmk__group_apply_coloc_score,
         pcmk__group_add_colocated_node_scores,

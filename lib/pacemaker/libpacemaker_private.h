@@ -652,6 +652,9 @@ gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
 // Functions related to probes (pcmk_sched_probes.c)
 
 G_GNUC_INTERNAL
+bool pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__order_probes(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
