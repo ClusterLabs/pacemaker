@@ -75,6 +75,26 @@ pcmk__probe_resource_list(GList *rscs, pe_node_t *node)
 
 /*!
  * \internal
+ * \brief Order one resource's start after another's start-up probe
+ *
+ * \param[in] rsc1  Resource that might get start-up probe
+ * \param[in] rsc2  Resource that might be started
+ */
+static void
+probe_then_start(pe_resource_t *rsc1, pe_resource_t *rsc2)
+{
+    if ((rsc1->allocated_to != NULL)
+        && (g_hash_table_lookup(rsc1->known_on,
+                                rsc1->allocated_to->details->id) == NULL)) {
+
+        pcmk__new_ordering(rsc1, pcmk__op_key(rsc1->id, RSC_STATUS, 0), NULL,
+                           rsc2, pcmk__op_key(rsc2->id, RSC_START, 0), NULL,
+                           pe_order_optional, rsc1->cluster);
+    }
+}
+
+/*!
+ * \internal
  * \brief Create probes for a resource on a node, if needed
  *
  * \brief Schedule any probes needed for a resource on a node
@@ -191,22 +211,9 @@ native_create_probe(pe_resource_t *rsc, pe_node_t *node)
              * Either way there is no need to probe.
              *
              */
-            if(remote->allocated_to
-               && g_hash_table_lookup(remote->known_on, remote->allocated_to->details->id) == NULL) {
-                /* For safety, we order the 'rsc' start after 'remote'
-                 * has been probed.
-                 *
-                 * Using 'top' helps for groups, but we may need to
-                 * follow the start's ordering chain backwards.
-                 */
-                pcmk__new_ordering(remote,
-                                   pcmk__op_key(remote->id, RSC_STATUS, 0),
-                                   NULL, top,
-                                   pcmk__op_key(top->id, RSC_START, 0), NULL,
-                                   pe_order_optional, rsc->cluster);
-            }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
+            probe_then_start(remote, top);
             return false;
 
             /* Here we really we want to check if remote->stop is required,
