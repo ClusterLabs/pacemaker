@@ -549,8 +549,8 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     }
 
     attr_value = lookup_promotion_score(rsc, node, name);
-    pe_rsc_trace(rsc, "promotion score for %s on %s = %s",
-                 name, node->details->uname, crm_str(attr_value));
+    pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
+                 name, node->details->uname, pcmk__s(attr_value, "(unset)"));
 
     if ((attr_value == NULL) && !pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         /* If we don't have any LRM history yet, we won't have clone_name -- in
@@ -560,8 +560,9 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
         name = clone_strip(rsc->id);
         if (strcmp(rsc->id, name)) {
             attr_value = lookup_promotion_score(rsc, node, name);
-            pe_rsc_trace(rsc, "stripped promotion score for %s on %s = %s",
-                         name, node->details->uname, crm_str(attr_value));
+            pe_rsc_trace(rsc, "Stripped promotion score for %s on %s = %s",
+                         name, node->details->uname,
+                         pcmk__s(attr_value, "(unset)"));
         }
         free(name);
     }

@@ -423,12 +423,13 @@ pe_create_node(const char *id, const char *uname, const char *type,
          */
         if (!pcmk__str_eq(type, "ping", pcmk__str_casei)) {
             pcmk__config_warn("Node %s has unrecognized type '%s', "
-                              "assuming 'ping'", crm_str(uname), type);
+                              "assuming 'ping'", pcmk__s(uname, "without name"),
+                              type);
         }
         pe_warn_once(pe_wo_ping_node,
                      "Support for nodes of type 'ping' (such as %s) is "
                      "deprecated and will be removed in a future release",
-                     crm_str(uname));
+                     pcmk__s(uname, "unnamed node"));
         new_node->details->type = node_ping;
     }
 
@@ -794,7 +795,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         } else {
             pcmk__config_err("Ignoring <%s> resource '%s' "
                              "because configuration is invalid",
-                             crm_element_name(xml_obj), crm_str(ID(xml_obj)));
+                             crm_element_name(xml_obj),
+                             pcmk__s(ID(xml_obj), "(unnamed)"));
             if (new_rsc != NULL && new_rsc->fns != NULL) {
                 new_rsc->fns->free(new_rsc);
             }
@@ -1326,7 +1328,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
 
     if (!crm_is_true(in_cluster)) {
-        crm_trace("Node is down: in_cluster=%s", crm_str(in_cluster));
+        crm_trace("Node is down: in_cluster=%s",
+                  pcmk__s(in_cluster, "<null>"));
 
     } else if (pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei)) {
         if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
@@ -1336,15 +1339,17 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
         }
 
     } else if (this_node->details->expected_up == FALSE) {
-        crm_trace("Controller is down: in_cluster=%s", crm_str(in_cluster));
-        crm_trace("\tis_peer=%s, join=%s, expected=%s",
-                  crm_str(is_peer), crm_str(join), crm_str(exp_state));
+        crm_trace("Controller is down: "
+                  "in_cluster=%s is_peer=%s join=%s expected=%s",
+                  pcmk__s(in_cluster, "<null>"), pcmk__s(is_peer, "<null>"),
+                  pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
 
     } else {
         /* mark it unclean */
         pe_fence_node(data_set, this_node, "peer is unexpectedly down", FALSE);
-        crm_info("\tin_cluster=%s, is_peer=%s, join=%s, expected=%s",
-                 crm_str(in_cluster), crm_str(is_peer), crm_str(join), crm_str(exp_state));
+        crm_info("in_cluster=%s is_peer=%s join=%s expected=%s",
+                 pcmk__s(in_cluster, "<null>"), pcmk__s(is_peer, "<null>"),
+                 pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
     }
     return online;
 }
@@ -1381,9 +1386,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         }
     }
 
-    crm_trace("%s: in_cluster=%s, is_peer=%s, join=%s, expected=%s, term=%d",
-              this_node->details->uname, crm_str(in_cluster), crm_str(is_peer),
-              crm_str(join), crm_str(exp_state), do_terminate);
+    crm_trace("%s: in_cluster=%s is_peer=%s join=%s expected=%s term=%d",
+              this_node->details->uname, pcmk__s(in_cluster, "<null>"),
+              pcmk__s(is_peer, "<null>"), pcmk__s(join, "<null>"),
+              pcmk__s(exp_state, "<null>"), do_terminate);
 
     online = crm_is_true(in_cluster);
     crmd_online = pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei);
@@ -1441,9 +1447,11 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     } else {
         pe_fence_node(data_set, this_node, "peer was in an unknown state", FALSE);
-        crm_warn("%s: in-cluster=%s, is-peer=%s, join=%s, expected=%s, term=%d, shutdown=%d",
-                 this_node->details->uname, crm_str(in_cluster), crm_str(is_peer),
-                 crm_str(join), crm_str(exp_state), do_terminate, this_node->details->shutdown);
+        crm_warn("%s: in-cluster=%s is-peer=%s join=%s expected=%s term=%d shutdown=%d",
+                 this_node->details->uname, pcmk__s(in_cluster, "<null>"),
+                 pcmk__s(is_peer, "<null>"), pcmk__s(join, "<null>"),
+                 pcmk__s(exp_state, "<null>"), do_terminate,
+                 this_node->details->shutdown);
     }
 
     return online;

@@ -311,7 +311,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             crm_trace("Masking systemd stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
-                      error->name, crm_str(op->rsc));
+                      error->name, pcmk__s(op->rsc, "unknown resource"));
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -322,7 +322,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
     }
 
     crm_info("DBus request for %s of systemd unit %s for resource %s failed: %s",
-             op->action, op->agent, crm_str(op->rsc), error->message);
+             op->action, op->agent, pcmk__s(op->rsc, "(unspecified)"),
+             error->message);
 }
 
 /*!
@@ -725,7 +726,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
         crm_info("DBus request for %s of %s succeeded but "
-                 "return type was unexpected", op->action, crm_str(op->rsc));
+                 "return type was unexpected",
+                 op->action, pcmk__s(op->rsc, "unknown resource"));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE,
                              "systemd DBus method had unexpected reply");
 
@@ -736,7 +738,7 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                               DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
         crm_debug("DBus request for %s of %s using %s succeeded",
-                  op->action, crm_str(op->rsc), path);
+                  op->action, pcmk__s(op->rsc, "unknown resource"), path);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
 }
@@ -890,7 +892,8 @@ parse_status_result(const char *name, const char *state, void *userdata)
     svc_action_t *op = userdata;
 
     crm_trace("Resource %s has %s='%s'",
-              crm_str(op->rsc), name, crm_str(state));
+              pcmk__s(op->rsc, "(unspecified)"), name,
+              pcmk__s(state, "<null>"));
 
     if (pcmk__str_eq(state, "active", pcmk__str_none)) {
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -966,7 +969,8 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         services__format_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE,
                                 PCMK_EXEC_ERROR,
                                 "Action %s not implemented "
-                                "for systemd resources", crm_str(op->action));
+                                "for systemd resources",
+                                pcmk__s(op->action, "(unspecified)"));
         if (!(op->synchronous)) {
             services__finalize_async_op(op);
         }
@@ -974,7 +978,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
     }
 
     crm_trace("Calling %s for unit path %s named %s",
-              method, unit, crm_str(op->rsc));
+              method, unit, pcmk__s(op->rsc, "with unknown name"));
 
     msg = systemd_new_method(method);
     CRM_ASSERT(msg != NULL);
@@ -1062,9 +1066,9 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
+    crm_debug("Performing %ssynchronous %s op on systemd unit %s named %s",
               (op->synchronous? "" : "a"), op->action, op->agent,
-              crm_str(op->rsc));
+              pcmk__s(op->rsc, "with unknown name"));
 
     if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);

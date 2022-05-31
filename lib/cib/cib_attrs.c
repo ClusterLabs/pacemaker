@@ -149,7 +149,8 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
-                  attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
+                  attr_name, section, pcmk__s(node_uuid, "<null>"),
+                  pcmk__s(set_name, "<null>"), xpath_string,
                   pcmk_rc_str(rc));
         goto done;
     } else {
@@ -341,7 +342,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         rc = pcmk_legacy2rc(rc);
 
         out->err(out, "Error setting %s=%s (section=%s, set=%s): %s",
-                 attr_name, attr_value, section, crm_str(set_name), pcmk_rc_str(rc));
+                 attr_name, attr_value, section, pcmk__s(set_name, "<null>"),
+                 pcmk_rc_str(rc));
         crm_log_xml_info(xml_top, "Update");
     } else {
         rc = pcmk_rc_ok;
@@ -371,8 +373,10 @@ cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
                    user_name, result);
 
     if (rc != pcmk_rc_ok) {
-        crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
-                  crm_str(attr_name), section, crm_str(set_name), crm_str(node_uuid), pcmk_strerror(rc));
+        crm_trace("Query failed for attribute %s (section=%s node=%s set=%s): %s",
+                  pcmk__s(attr_name, "with unspecified name"),
+                  section, pcmk__s(set_name, "<null>"),
+                  pcmk__s(node_uuid, "<null>"), pcmk_strerror(rc));
     }
 
     return rc;

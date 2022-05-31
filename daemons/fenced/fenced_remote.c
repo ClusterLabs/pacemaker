@@ -1080,7 +1080,8 @@ fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
     CRM_CHECK(dev != NULL, return EPROTO);
 
     crm_notice("Received manual confirmation that %s has been fenced",
-               crm_str(crm_element_value(dev, F_STONITH_TARGET)));
+               pcmk__s(crm_element_value(dev, F_STONITH_TARGET),
+                       "unknown target"));
     op = initiate_remote_stonith_op(client, msg, TRUE);
     if (op == NULL) {
         return EPROTO;

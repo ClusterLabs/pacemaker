@@ -400,7 +400,7 @@ print_xml_output(xmlNode * xml)
 
     } else {
         buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", crm_str(buffer));
+        fprintf(stdout, "%s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
     }
 }
@@ -605,7 +605,7 @@ main(int argc, char **argv)
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
                 admin_input_xml = dump_xml_formatted(output);
-                fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+                fprintf(stdout, "%s", pcmk__s(admin_input_xml, "<null>\n"));
                 crm_exit(CRM_EX_OK);
                 break;
             default:
@@ -708,7 +708,7 @@ main(int argc, char **argv)
 
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
-        fprintf(stdout, "%s\n", crm_str(digest));
+        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         free_xml(input);
         crm_exit(CRM_EX_OK);
@@ -725,7 +725,7 @@ main(int argc, char **argv)
         version = crm_element_value(input, XML_ATTR_CRM_VERSION);
         digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
-        fprintf(stdout, "%s\n", crm_str(digest));
+        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         free_xml(input);
         crm_exit(CRM_EX_OK);

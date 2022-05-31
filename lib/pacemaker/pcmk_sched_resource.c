@@ -123,7 +123,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
                            rsc->id, node->details->uname, attr_list[i],
-                           crm_str(old_value), crm_str(value));
+                           pcmk__s(old_value, ""), pcmk__s(value, ""));
             }
         }
     }

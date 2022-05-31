@@ -108,7 +108,7 @@ print_patch(xmlNode *patch)
 {
     char *buffer = dump_xml_formatted(patch);
 
-    printf("%s\n", crm_str(buffer));
+    printf("%s", pcmk__s(buffer, "<null>\n"));
     free(buffer);
     fflush(stdout);
 }
@@ -134,7 +134,7 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 
         version = crm_element_value(output, XML_ATTR_CRM_VERSION);
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
-        crm_trace("Digest: %s\n", crm_str(buffer));
+        crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
         free_xml(output);
     }

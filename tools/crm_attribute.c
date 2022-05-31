@@ -452,8 +452,8 @@ output_one_attribute(pcmk__output_t *out, xmlNode *node, bool use_pattern)
     }
 
     out->message(out, "attribute", options.type, options.attr_id, name, value, host);
-    crm_info("Read %s=%s %s%s",
-             crm_str(name), crm_str(value),
+    crm_info("Read %s='%s' %s%s",
+             pcmk__s(name, "<null>"), pcmk__s(value, ""),
              options.set_name ? "in " : "", options.set_name ? options.set_name : "");
     return true;
 }

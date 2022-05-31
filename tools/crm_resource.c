@@ -2007,7 +2007,8 @@ main(int argc, char **argv)
 
             if (count > 1) {
                 out->err(out, "%s is active on more than one node,"
-                         " returning the default value for %s", rsc->id, crm_str(options.prop_name));
+                         " returning the default value for %s", rsc->id,
+                         pcmk__s(options.prop_name, "unspecified property"));
                 current = NULL;
             }
 

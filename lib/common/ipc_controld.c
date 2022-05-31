@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -201,7 +201,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     if ((value == NULL) || (strcmp(value, XML_ATTR_REQUEST)
                             && strcmp(value, XML_ATTR_RESPONSE))) {
         crm_debug("Unrecognizable controller message: invalid message type '%s'",
-                  crm_str(value));
+                  pcmk__s(value, "(unspecified)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -362,8 +362,8 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
         router_node = target_node;
     }
     crm_debug("Sending %s IPC request to reprobe %s via %s",
-              pcmk_ipc_name(api, true), crm_str(target_node),
-              crm_str(router_node));
+              pcmk_ipc_name(api, true), pcmk__s(target_node, "unknown node"),
+              pcmk__s(router_node, "unknown node"));
     msg_data = create_reprobe_message_data(target_node, router_node);
     request = create_controller_request(api, CRM_OP_REPROBE, router_node,
                                         msg_data);
@@ -533,8 +533,10 @@ pcmk_controld_api_fail(pcmk_ipc_api_t *api,
                        const char *type)
 {
     crm_debug("Sending %s IPC request to fail %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), crm_str(rsc_id), crm_str(rsc_long_id),
-              crm_str(target_node), crm_str(router_node));
+              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+              pcmk__s(rsc_long_id, "no other names"),
+              pcmk__s(target_node, "unspecified node"),
+              pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_FAIL, target_node,
                                   router_node, false, rsc_id, rsc_long_id,
                                   standard, provider, type);
@@ -564,8 +566,10 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
                           const char *type, bool cib_only)
 {
     crm_debug("Sending %s IPC request to refresh %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), crm_str(rsc_id), crm_str(rsc_long_id),
-              crm_str(target_node), crm_str(router_node));
+              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+              pcmk__s(rsc_long_id, "no other names"),
+              pcmk__s(target_node, "unspecified node"),
+              pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_DELETE, target_node,
                                   router_node, cib_only, rsc_id, rsc_long_id,
                                   standard, provider, type);

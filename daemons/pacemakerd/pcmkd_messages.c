@@ -29,7 +29,7 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
 
     /* Pinged for status */
     crm_trace("Pinged from %s.%s",
-              crm_str(crm_element_value(msg, F_CRM_ORIGIN)),
+              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), "unknown"),
               from?from:"unknown");
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
     value = crm_element_value(msg, F_CRM_SYS_TO);
@@ -180,7 +180,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     } else {
         crm_debug("Unrecognized IPC command '%s' from client %s",
-                  crm_str(task), pcmk__client_name(c));
+                  pcmk__s(task, "(unspecified)"), pcmk__client_name(c));
         pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
     }
 

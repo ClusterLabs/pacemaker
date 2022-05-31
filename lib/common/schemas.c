@@ -607,8 +607,8 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    known_schemas[method].name);
 
-    crm_trace("Validating with: %s (type=%d)",
-              crm_str(file), known_schemas[method].validator);
+    crm_trace("Validating with %s (type=%d)",
+              pcmk__s(file, "missing schema"), known_schemas[method].validator);
     switch (known_schemas[method].validator) {
         case schema_validator_rng:
             valid =
@@ -1235,14 +1235,14 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
                                      "would not upgrade past %s",
                                      orig_value,
                                      get_schema_name(min_version),
-                                     crm_str(value));
+                                     pcmk__s(value, "unspecified version"));
                 } else {
                     fprintf(stderr, "Cannot upgrade configuration (claiming "
                                     "schema %s) to at least %s because it "
                                     "would not upgrade past %s\n",
                                     orig_value,
                                     get_schema_name(min_version),
-                                    crm_str(value));
+                                    pcmk__s(value, "unspecified version"));
                 }
             }
 

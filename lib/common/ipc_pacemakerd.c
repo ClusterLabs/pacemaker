@@ -153,7 +153,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
     if ((value == NULL) || (strcmp(value, XML_ATTR_RESPONSE))) {
         crm_debug("Unrecognizable pacemakerd message: invalid message type '%s'",
-                  crm_str(value));
+                  pcmk__s(value, "(unspecified)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -185,7 +185,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
     } else {
-        crm_debug("Unrecognizable pacemakerd message: '%s'", crm_str(value));
+        crm_debug("Unrecognizable pacemakerd message: '%s'",
+                  pcmk__s(value, "(unspecified)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

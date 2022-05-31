@@ -2360,10 +2360,10 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
 {
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
-                     action->uuid, action->reason, crm_str(reason));
+                     action->uuid, action->reason, pcmk__s(reason, "(none)"));
     } else if (action->reason == NULL) {
         pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
-                     action->uuid, crm_str(reason));
+                     action->uuid, pcmk__s(reason, "(none)"));
     } else {
         // crm_assert(action->reason != NULL && !overwrite);
         return;

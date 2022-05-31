@@ -940,7 +940,7 @@ invoke_registered_callbacks(stonith_t *stonith, xmlNode *msg, int call_id)
     if ((cb_info != NULL) && (cb_info->callback != NULL)
         && (pcmk__result_ok(&result) || !(cb_info->only_success))) {
         crm_trace("Invoking callback %s for call %d",
-                  crm_str(cb_info->id), call_id);
+                  pcmk__s(cb_info->id, "without ID"), call_id);
         invoke_fence_action_callback(stonith, call_id, &result,
                                      cb_info->user_data, cb_info->callback);
 
@@ -1332,7 +1332,7 @@ stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
     int call = GPOINTER_TO_INT(key);
     stonith_callback_client_t *blob = value;
 
-    crm_debug("Call %d (%s): pending", call, crm_str(blob->id));
+    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "no ID"));
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -200,10 +200,12 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
      * v2 also uses the xmlBuffer contents directly to avoid additional copying
      */
     if (version == NULL || compare_version("3.0.5", version) > 0) {
-        crm_trace("Using v1 digest algorithm for %s", crm_str(version));
+        crm_trace("Using v1 digest algorithm for %s",
+                  pcmk__s(version, "unknown feature set"));
         return calculate_xml_digest_v1(input, sort, do_filter);
     }
-    crm_trace("Using v2 digest algorithm for %s", crm_str(version));
+    crm_trace("Using v2 digest algorithm for %s",
+              pcmk__s(version, "unknown feature set"));
     return calculate_xml_digest_v2(input, do_filter);
 }
 

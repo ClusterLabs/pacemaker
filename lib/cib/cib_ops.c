@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,8 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     xmlNode *obj_root = NULL;
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing '%s' event for section='%s'",
+              op, pcmk__s(section, "<null>"));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -129,8 +130,9 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event for epoch=%s",
-              op, crm_str(crm_element_value(existing_cib, XML_ATTR_GENERATION)));
+    crm_trace("Processing '%s' event for epoch='%s'",
+              op, pcmk__s(crm_element_value(existing_cib, XML_ATTR_GENERATION),
+                          "<null>"));
 
     *answer = NULL;
     cib_update_counter(*result_cib, XML_ATTR_GENERATION, FALSE);
@@ -155,7 +157,8 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
         new_value = strdup("1");
     }
 
-    crm_trace("%s %d(%s)->%s", field, int_value, crm_str(old_value), crm_str(new_value));
+    crm_trace("%s %d(%s)->%s", field, int_value, pcmk__s(old_value, "<null>"),
+              pcmk__s(new_value, "<null>"));
     crm_xml_add(xml_obj, field, new_value);
 
     free(new_value);
@@ -172,7 +175,8 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     const char *tag = NULL;
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing '%s' event for section='%s'",
+              op, pcmk__s(section, "<null>"));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -395,7 +399,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     CRM_CHECK(object_name != NULL, return -EINVAL);
 
     object_id = ID(update);
-    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing <%s id='%s'>",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     if (object_id == NULL) {
         /*  placeholder object */
@@ -409,7 +414,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = create_xml_node(parent, object_name);
     }
 
-    crm_trace("Found node <%s id=%s> to update", crm_str(object_name), crm_str(object_id));
+    crm_trace("Found node <%s id='%s'> to update",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
@@ -447,7 +453,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     copy_in_properties(target, update);
 
-    crm_trace("Processing children of <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing children of <%s id='%s'>",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
@@ -467,7 +474,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         }
     }
 
-    crm_trace("Finished with <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Finished with <%s id='%s'>",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     return result;
 }
@@ -485,7 +493,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     }
     object_id = crm_element_value(new_obj, XML_ATTR_ID);
 
-    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing: <%s id='%s'>",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     if (new_obj == NULL || object_name == NULL) {
         result = -EINVAL;
@@ -523,7 +532,8 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     int result = pcmk_ok;
     xmlNode *update_section = NULL;
 
-    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing '%s' event for section='%s'",
+              op, pcmk__s(section, "<null>"));
     if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 

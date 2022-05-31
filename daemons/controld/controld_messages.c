@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1239,7 +1239,8 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         crmd_proxy_send(sys, msg);
 
     } else {
-        crm_debug("Unknown Sub-system (%s)... discarding message.", crm_str(sys));
+        crm_debug("Ignoring message for unknown subsystem %s",
+                  pcmk__s(sys, "<null>"));
     }
 }
 

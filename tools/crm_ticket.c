@@ -445,7 +445,7 @@ dump_ticket_xml(cib_t * the_cib, gchar *ticket_id)
         char *state_xml_str = NULL;
 
         state_xml_str = dump_xml_formatted(state_xml);
-        fprintf(stdout, "\n%s\n", crm_str(state_xml_str));
+        fprintf(stdout, "\n%s", pcmk__s(state_xml_str, "<null>\n"));
         free_xml(state_xml);
         free(state_xml_str);
     }
@@ -467,7 +467,8 @@ dump_constraints(cib_t * the_cib, gchar *ticket_id)
     }
 
     cons_xml_str = dump_xml_formatted(cons_xml);
-    fprintf(stdout, "Constraints XML:\n\n%s\n", crm_str(cons_xml_str));
+    fprintf(stdout, "Constraints XML:\n\n%s",
+            pcmk__s(cons_xml_str, "<null>\n"));
     free_xml(cons_xml);
     free(cons_xml_str);
 
