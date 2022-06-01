@@ -452,7 +452,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
     if (set_id == NULL) {
         pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
                          XML_ATTR_ID " in constraint '%s'",
-                         crm_str(ID(location)));
+                         pcmk__s(ID(location), "(missing ID)"));
         return pcmk_rc_schema_validation;
     }
 
@@ -542,8 +542,12 @@ pcmk__new_location(const char *id, pe_resource_t *rsc,
 {
     pe__location_t *new_con = NULL;
 
-    if ((rsc == NULL) || (id == NULL)) {
-        pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
+    if (id == NULL) {
+        pe_err("Invalid constraint: no ID specified");
+        return NULL;
+
+    } else if (rsc == NULL) {
+        pe_err("Invalid constraint %s: no resource specified", id);
         return NULL;
 
     } else if (node == NULL) {

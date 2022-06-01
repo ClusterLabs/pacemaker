@@ -55,6 +55,21 @@ GHashTable *pcmk__str_table_dup(GHashTable *old_table);
 
 /*!
  * \internal
+ * \brief Get a string value with a default if NULL
+ *
+ * \param[in] s              String to return if non-NULL
+ * \param[in] default_value  String (or NULL) to return if \p s is NULL
+ *
+ * \return \p s if \p s is non-NULL, otherwise \p default_value
+ */
+static inline const char *
+pcmk__s(const char *s, const char *default_value)
+{
+    return (s == NULL)? default_value : s;
+}
+
+/*!
+ * \internal
  * \brief Create a hash table with integer keys
  *
  * \param[in] value_destroy_func  Function to free a value

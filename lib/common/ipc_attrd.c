@@ -68,9 +68,14 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     /* Do some basic validation of the reply */
     value = crm_element_value(reply, F_TYPE);
-    if (value == NULL || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
+    if (value == NULL) {
+        crm_debug("Unrecognizable attrd message: no message type specified");
+        status = CRM_EX_PROTOCOL;
+        goto done;
+    }
+    if (!pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
         crm_debug("Unrecognizable attrd message: invalid message type '%s'",
-                  crm_str(value));
+                  value);
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -92,7 +97,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_pairs_data(&reply_data, reply);
     } else {
         crm_debug("Cannot handle a reply from message type '%s'",
-                  crm_str(value));
+                  pcmk__s(value, "(unspecified)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

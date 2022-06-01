@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -688,7 +688,7 @@ cib_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
     int call = GPOINTER_TO_INT(key);
     cib_callback_client_t *blob = value;
 
-    crm_debug("Call %d (%s): pending", call, crm_str(blob->id));
+    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "without ID"));
 }
 
 void

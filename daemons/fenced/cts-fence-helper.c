@@ -142,7 +142,7 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
     crm_notice("Call %d exited %d: %s (%s)",
                data->call_id, stonith__exit_status(data),
                stonith__execution_status(data),
-               crm_str(stonith__exit_reason(data)));
+               pcmk__s(stonith__exit_reason(data), "unspecified reason"));
 }
 
 static void

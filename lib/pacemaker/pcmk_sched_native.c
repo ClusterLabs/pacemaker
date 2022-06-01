@@ -988,17 +988,18 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         }
 
         pe_rsc_trace(rsc, "Creating recurring action %s for %s on %s",
-                     ID(operation), rsc->id, crm_str(stop_node_uname));
+                     ID(operation), rsc->id,
+                     pcmk__s(stop_node_uname, "unknown node"));
 
         /* start a monitor for an already stopped resource */
         possible_matches = find_actions_exact(rsc->actions, key, stop_node);
         if (possible_matches == NULL) {
             pe_rsc_trace(rsc, "Marking %s mandatory on %s: not active", key,
-                         crm_str(stop_node_uname));
+                         pcmk__s(stop_node_uname, "unknown node"));
             is_optional = FALSE;
         } else {
             pe_rsc_trace(rsc, "Marking %s optional on %s: already active", key,
-                         crm_str(stop_node_uname));
+                         pcmk__s(stop_node_uname, "unknown node"));
             is_optional = TRUE;
             g_list_free(possible_matches);
         }
@@ -1035,7 +1036,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
                 crm_debug("%s\t   %s (cancelled : stop un-runnable)",
-                          crm_str(stop_node_uname), stopped_mon->uuid);
+                          pcmk__s(stop_node_uname, "<null>"),
+                          stopped_mon->uuid);
                 pe__clear_action_flags(stopped_mon, pe_action_runnable);
             }
 
@@ -1055,24 +1057,28 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         if (is_optional == FALSE && probe_is_optional && stop_is_optional
             && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             pe_rsc_trace(rsc, "Marking %s optional on %s due to unmanaged",
-                         key, crm_str(stop_node_uname));
+                         key, pcmk__s(stop_node_uname, "unknown node"));
             pe__set_action_flags(stopped_mon, pe_action_optional);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
-            pe_rsc_trace(rsc, "%s\t   %s (optional)", crm_str(stop_node_uname), stopped_mon->uuid);
+            pe_rsc_trace(rsc, "%s\t   %s (optional)",
+                         pcmk__s(stop_node_uname, "<null>"),
+                         stopped_mon->uuid);
         }
 
         if (stop_node->details->online == FALSE || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
-                         crm_str(stop_node_uname), stopped_mon->uuid);
+                         pcmk__s(stop_node_uname, "<null>"),
+                         stopped_mon->uuid);
             pe__clear_action_flags(stopped_mon, pe_action_runnable);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
             && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             crm_notice(" Start recurring %s (%us) for %s on %s", stopped_mon->task,
-                       interval_ms / 1000, rsc->id, crm_str(stop_node_uname));
+                       interval_ms / 1000, rsc->id,
+                       pcmk__s(stop_node_uname, "unknown node"));
         }
     }
 
@@ -1332,7 +1338,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
             // Resource was (possibly) incorrectly multiply active
             pe_proc_err("%s resource %s might be active on %u nodes (%s)",
-                        crm_str(class), rsc->id, num_all_active,
+                        pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                         recovery2text(rsc->recovery_type));
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
@@ -1369,8 +1375,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     if (current && chosen && current->details != chosen->details) {
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, crm_str(current->details->uname),
-                     crm_str(chosen->details->uname));
+                     rsc->id, pcmk__s(current->details->uname, "unknown node"),
+                     pcmk__s(chosen->details->uname, "unknown node"));
         is_moving = TRUE;
         need_stop = TRUE;
 

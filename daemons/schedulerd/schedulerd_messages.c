@@ -198,7 +198,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         /* ignore */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-        crm_trace("Bad sys-to %s", crm_str(sys_to));
+        crm_trace("Bad sys-to: %s", pcmk__s(sys_to, "unspecified"));
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
         handle_pecalc_op(msg, xml_data, sender);

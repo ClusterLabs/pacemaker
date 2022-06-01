@@ -3500,7 +3500,6 @@ Removing constraint: cli-prefer-dummy
     <!-- test: move this comment to end of configuration -->
   </change>
 </diff>
-
 =#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
 * Passed: crm_diff       - Create an XML patchset
 =#=#=#= Begin test: Check locations and constraints for prim1 =#=#=#=

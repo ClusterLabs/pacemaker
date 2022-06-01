@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -380,8 +380,6 @@ unsigned int get_crm_log_level(void);
             do_crm_log_xml(LOG_TRACE,   text, xml);             \
         }                                                       \
     } while(0)
-
-#  define crm_str(x)    (const char*)(x?x:"<null>")
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/logging_compat.h>

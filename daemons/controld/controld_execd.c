@@ -1887,7 +1887,8 @@ do_lrm_invoke(long long action,
         lrmd_free_rsc_info(rsc);
 
     } else {
-        crm_err("Cannot perform operation %s of unknown type", crm_str(crm_op));
+        crm_err("Cannot perform operation %s of unknown type",
+                pcmk__s(crm_op, "(unspecified)"));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }

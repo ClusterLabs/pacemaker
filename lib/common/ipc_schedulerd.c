@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -91,7 +91,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
     if ((value == NULL) || (strcmp(value, XML_ATTR_RESPONSE))) {
         crm_debug("Unrecognizable schedulerd message: invalid message type '%s'",
-                  crm_str(value));
+                  pcmk__s(value, "(missing)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -112,7 +112,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.data.graph.input = crm_element_value(reply, F_CRM_TGRAPH_INPUT);
         reply_data.data.graph.tgraph = msg_data;
     } else {
-        crm_debug("Unrecognizable pacemakerd message: '%s'", crm_str(value));
+        crm_debug("Unrecognizable pacemakerd message: '%s'",
+                  pcmk__s(value, "(missing)"));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

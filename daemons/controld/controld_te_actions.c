@@ -115,9 +115,11 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              crm_err("Corrupted command (id=%s) %s: no node", crm_str(id), crm_str(task));
-              return FALSE);
+    if (pcmk__str_empty(on_node)) {
+        crm_err("Corrupted command (id=%s) %s: no node",
+                pcmk__s(id, "<null>"), pcmk__s(task, "without task"));
+        return FALSE;
+    }
 
     if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
         is_local = TRUE;
@@ -129,12 +131,13 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     }
 
     crm_info("Executing crm-event (%s)%s%s: %s on %s",
-             crm_str(id), (is_local? " locally" : ""),
-             (no_wait? " without waiting" : ""), crm_str(task), on_node);
+             pcmk__s(id, "<null>"), (is_local? " locally" : ""),
+             (no_wait? " without waiting" : ""),
+             pcmk__s(task, "unspecified task"), on_node);
 
     if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         /* defer until everything else completes */
-        crm_info("crm-event (%s) is a local shutdown", crm_str(id));
+        crm_info("crm-event (%s) is a local shutdown", pcmk__s(id, "<null>"));
         graph->completion_action = tg_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
@@ -333,9 +336,11 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
     crm__clear_graph_action_flags(action, pcmk__graph_action_executed);
     on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 
-    CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-              crm_err("Corrupted command(id=%s) %s: no node", ID(action->xml), crm_str(task));
-              return FALSE);
+    if (pcmk__str_empty(on_node)) {
+        crm_err("Corrupted command(id=%s) %s: no node",
+                ID(action->xml), pcmk__s(task, "without task"));
+        return FALSE;
+    }
 
     rsc_op = action->xml;
     task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
@@ -667,7 +672,8 @@ notify_crmd(crm_graph_t * graph)
             }
     }
 
-    crm_debug("Transition %d status: %s - %s", graph->id, type, crm_str(graph->abort_reason));
+    crm_debug("Transition %d status: %s - %s", graph->id, type,
+              pcmk__s(graph->abort_reason, "unspecified reason"));
 
     graph->abort_reason = NULL;
     graph->completion_action = tg_done;

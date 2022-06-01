@@ -415,7 +415,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             crm_trace("Masking stop failure (%s) for %s "
                       "because unknown service can be considered stopped",
-                      error->name, crm_str(op->rsc));
+                      error->name, pcmk__s(op->rsc, "unknown resource"));
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -427,13 +427,14 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
                && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
         crm_trace("Masking start failure (%s) for %s "
                   "because already started resource is OK",
-                  error->name, crm_str(op->rsc));
+                  error->name, pcmk__s(op->rsc, "unknown resource"));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         return;
     }
 
     crm_info("DBus request for %s of Upstart job %s for resource %s failed: %s",
-             op->action, op->agent, crm_str(op->rsc), error->message);
+             op->action, op->agent, pcmk__s(op->rsc, "with unknown name"),
+             error->message);
 }
 
 /*!
@@ -463,13 +464,15 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
 
     } else if (pcmk__str_eq(op->action, "stop", pcmk__str_none)) {
         // Call has no return value
-        crm_debug("DBus request for stop of %s succeeded", crm_str(op->rsc));
+        crm_debug("DBus request for stop of %s succeeded",
+                  pcmk__s(op->rsc, "unknown resource"));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
     } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
                                      __func__, __LINE__)) {
         crm_info("DBus request for %s of %s succeeded but "
-                 "return type was unexpected", op->action, crm_str(op->rsc));
+                 "return type was unexpected", op->action,
+                 pcmk__s(op->rsc, "unknown resource"));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
 
     } else {
@@ -478,7 +481,7 @@ job_method_complete(DBusPendingCall *pending, void *user_data)
         dbus_message_get_args(reply, NULL, DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
         crm_debug("DBus request for %s of %s using %s succeeded",
-                  op->action, crm_str(op->rsc), path);
+                  op->action, pcmk__s(op->rsc, "unknown resource"), path);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     }
 
@@ -615,7 +618,8 @@ services__execute_upstart(svc_action_t *op)
     services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_DONE,
                          "Bug in service library");
 
-    crm_debug("Calling %s for %s on %s", action, crm_str(op->rsc), job);
+    crm_debug("Calling %s for %s on %s",
+              action, pcmk__s(op->rsc, "unknown resource"), job);
 
     msg = dbus_message_new_method_call(BUS_NAME, // target for the method call
                                        job, // object to call on

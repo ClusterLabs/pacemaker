@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -666,11 +666,11 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     } else if (host != NULL) {
         /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring msg for instance on %s", crm_str(host));
+        crm_trace("Ignoring msg for instance on %s", host);
 
     } else if (reply_to == NULL && cib_is_master == FALSE) {
         /* this is for the master instance and we're not it */
-        crm_trace("Ignoring reply to %s", crm_str(reply_to));
+        crm_trace("Ignoring reply for primary instance");
 
     } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
         if (reply_to != NULL) {
@@ -798,7 +798,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     } else if (host != NULL) {
         /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring %s operation for instance on %s", op, crm_str(host));
+        crm_trace("Ignoring %s operation for instance on %s", op, host);
         return FALSE;
 
     } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {

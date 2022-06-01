@@ -102,8 +102,8 @@ get_ordering_type(xmlNode *xml_obj)
 
     } else {
         pcmk__config_err("Resetting '" XML_ORDER_ATTR_KIND "' for constraint "
-                         "'%s' to Mandatory because '%s' is not valid",
-                         crm_str(ID(xml_obj)), kind);
+                         "%s to 'Mandatory' because '%s' is not valid",
+                         pcmk__s(ID(xml_obj), "missing ID"), kind);
     }
     return kind_e;
 }
@@ -1558,8 +1558,10 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
         const char *before_desc = before->task? before->task : before->uuid;
 
         crm_debug("Ordering %s on %s before %s on %s",
-                  before_desc, crm_str(before->node->details->uname),
-                  after_desc, crm_str(after->node->details->uname));
+                  before_desc,
+                  pcmk__s(before->node->details->uname, "unknown node"),
+                  after_desc,
+                  pcmk__s(after->node->details->uname, "unknown node"));
         order_actions(before, after, pe_order_optional);
     }
 }

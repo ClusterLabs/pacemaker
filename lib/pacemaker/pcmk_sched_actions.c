@@ -1238,7 +1238,7 @@ schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
 
     crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
              pcmk__readable_interval(interval_ms), task, rsc->id,
-             crm_str(node->details->uname), reason);
+             pcmk__s(node->details->uname, "unknown node"), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
 

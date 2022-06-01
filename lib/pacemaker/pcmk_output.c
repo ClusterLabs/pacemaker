@@ -600,8 +600,10 @@ health_text(pcmk__output_t *out, va_list args)
     const char *result = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
-        return out->info(out, "Controller on %s in state %s: %s", crm_str(host_from),
-                         crm_str(fsa_state), crm_str(result));
+        return out->info(out, "Controller on %s in state %s: %s",
+                         pcmk__s(host_from, "unknown node"),
+                         pcmk__s(fsa_state, "unknown"),
+                         pcmk__s(result, "unknown result"));
     } else if (fsa_state != NULL) {
         pcmk__formatted_printf(out, "%s\n", fsa_state);
         return pcmk_rc_ok;
@@ -619,10 +621,10 @@ health_xml(pcmk__output_t *out, va_list args)
     const char *fsa_state = va_arg(args, const char *);
     const char *result = va_arg(args, const char *);
 
-    pcmk__output_create_xml_node(out, crm_str(sys_from),
-                                 "node_name", crm_str(host_from),
-                                 "state", crm_str(fsa_state),
-                                 "result", crm_str(result),
+    pcmk__output_create_xml_node(out, pcmk__s(sys_from, ""),
+                                 "node_name", pcmk__s(host_from, ""),
+                                 "state", pcmk__s(fsa_state, ""),
+                                 "result", pcmk__s(result, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -636,11 +638,12 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
     const char *last_updated = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
-        return out->info(out, "Status of %s: '%s' %s %s", crm_str(sys_from),
-                         crm_str(state), (!pcmk__str_empty(last_updated))?
-                         "last updated":"", crm_str(last_updated));
+        return out->info(out, "Status of %s: '%s' (last updated %s)",
+                         pcmk__s(sys_from, "unknown node"),
+                         pcmk__s(state, "unknown state"),
+                         pcmk__s(last_updated, "at unknown time"));
     } else {
-        pcmk__formatted_printf(out, "%s\n", crm_str(state));
+        pcmk__formatted_printf(out, "%s\n", pcmk__s(state, "<null>"));
         return pcmk_rc_ok;
     }
 
@@ -655,9 +658,9 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     const char *state = va_arg(args, const char *);
     const char *last_updated = va_arg(args, const char *);
 
-    pcmk__output_create_xml_node(out, crm_str(sys_from),
-                                 "state", crm_str(state),
-                                 "last_updated", crm_str(last_updated),
+    pcmk__output_create_xml_node(out, pcmk__s(sys_from, "<null>"),
+                                 "state", pcmk__s(state, ""),
+                                 "last_updated", pcmk__s(last_updated, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -700,9 +703,10 @@ dc_text(pcmk__output_t *out, va_list args)
     const char *dc = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
-        return out->info(out, "Designated Controller is: %s", crm_str(dc));
+        return out->info(out, "Designated Controller is: %s",
+                         pcmk__s(dc, "not yet elected"));
     } else if (dc != NULL) {
-        pcmk__formatted_printf(out, "%s\n", dc);
+        pcmk__formatted_printf(out, "%s\n", pcmk__s(dc, ""));
         return pcmk_rc_ok;
     }
 
@@ -716,7 +720,7 @@ dc_xml(pcmk__output_t *out, va_list args)
     const char *dc = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "dc",
-                                 "node_name", crm_str(dc),
+                                 "node_name", pcmk__s(dc, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -731,13 +735,14 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     if (out->is_quiet(out)) {
-        pcmk__formatted_printf(out, "%s\n", crm_str(name));
+        pcmk__formatted_printf(out, "%s\n", pcmk__s(name, "<null>"));
         return pcmk_rc_ok;
     } else if (BASH_EXPORT) {
-        return out->info(out, "export %s=%s", crm_str(name), crm_str(id));
+        return out->info(out, "export %s=%s",
+                         pcmk__s(name, "<null>"), pcmk__s(id, ""));
     } else {
         return out->info(out, "%s node: %s (%s)", type ? type : "cluster",
-                         crm_str(name), crm_str(id));
+                         pcmk__s(name, "<null>"), pcmk__s(id, "<null>"));
     }
 }
 
@@ -751,8 +756,8 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "cluster",
-                                 "name", crm_str(name),
-                                 "id", crm_str(id),
+                                 "name", pcmk__s(name, ""),
+                                 "id", pcmk__s(id, ""),
                                  NULL);
     return pcmk_rc_ok;
 }
@@ -842,9 +847,9 @@ digests_xml(pcmk__output_t *out, va_list args)
     xmlNode *xml = NULL;
 
     xml = pcmk__output_create_xml_node(out, "digests",
-                                       "resource", crm_str(rsc->id),
-                                       "node", crm_str(node->details->uname),
-                                       "task", crm_str(task),
+                                       "resource", pcmk__s(rsc->id, ""),
+                                       "node", pcmk__s(node->details->uname, ""),
+                                       "task", pcmk__s(task, ""),
                                        "interval", interval_s,
                                        NULL);
     free(interval_s);

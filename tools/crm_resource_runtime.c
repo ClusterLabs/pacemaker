@@ -1845,8 +1845,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
                               PCMK_RESOURCE_CLASS_LSB, NULL)) {
         services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                                "Manual execution of the %s standard "
-                                "is unsupported", crm_str(class));
+                                "Manual execution of the %s standard is "
+                                "unsupported", pcmk__s(class, "unspecified"));
     }
 
     if (op->rc != PCMK_OCF_UNKNOWN) {

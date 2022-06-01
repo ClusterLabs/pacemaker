@@ -406,7 +406,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                                                        XML_ATTR_VALIDATION);
 
         crm_warn("Updated CIB does not validate against %s schema",
-                 crm_str(current_schema));
+                 pcmk__s(current_schema, "unspecified"));
         rc = -pcmk_err_schema_validation;
     }
 
@@ -494,7 +494,8 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     if (blob && blob->callback && (rc == pcmk_ok || blob->only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d", crm_str(blob->id), call_id);
+        crm_trace("Invoking callback %s for call %d",
+                  pcmk__s(blob->id, "without ID"), call_id);
         blob->callback(msg, call_id, rc, output, blob->user_data);
 
     } else if (cib && cib->op_callback == NULL && rc != pcmk_ok) {

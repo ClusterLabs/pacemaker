@@ -158,7 +158,8 @@ do_te_invoke(long long action,
         }
 
         if (fsa_pe_ref == NULL || !pcmk__str_eq(fsa_pe_ref, ref, pcmk__str_casei)) {
-            crm_info("Transition is redundant: %s vs. %s", crm_str(fsa_pe_ref), crm_str(ref));
+            crm_info("Transition is redundant: %s vs. %s",
+                     pcmk__s(fsa_pe_ref, "<null>"), pcmk__s(ref, "<null>"));
             abort_transition(INFINITY, tg_restart, "Transition Redundant", NULL);
         }
 

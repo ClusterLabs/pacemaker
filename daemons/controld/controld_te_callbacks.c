@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -573,7 +573,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         /* error */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-        crm_trace("Bad sys-to %s", crm_str(sys_to));
+        crm_trace("Bad sys-to: %s", pcmk__s(sys_to, "missing"));
         return FALSE;
 
     } else if (pcmk__str_eq(op, CRM_OP_INVOKE_LRM, pcmk__str_casei)

@@ -505,7 +505,8 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 {
     CRM_CHECK(hash != NULL, return);
 
-    crm_trace("adding: name=%s value=%s", crm_str(name), crm_str(value));
+    crm_trace("Adding name='%s' value='%s' to hash table",
+              pcmk__s(name, "<null>"), pcmk__s(value, "<null>"));
     if (name == NULL || value == NULL) {
         return;
 

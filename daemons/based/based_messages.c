@@ -394,7 +394,8 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     }
     object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Processing: <%s id='%s'>",
+              pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
 
     if (delete_spec == NULL) {
         result = -EINVAL;
@@ -419,7 +420,8 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
 
     } else if (xml_has_children(delete_spec) == FALSE) {
         /*  only leaves are deleted */
-        crm_debug("Removing leaf: <%s id=%s>", crm_str(object_name), crm_str(object_id));
+        crm_debug("Removing leaf: <%s id='%s'>",
+                  pcmk__s(object_name, "<null>"), pcmk__s(object_id, "<null>"));
         free_xml(equiv_node);
         equiv_node = NULL;
 
@@ -449,7 +451,8 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     int result = pcmk_ok;
     xmlNode *update_section = NULL;
 
-    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
+    crm_trace("Processing '%s' event for section '%s'",
+              op, pcmk__s(section, "<null>"));
     if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
