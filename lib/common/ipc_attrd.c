@@ -69,36 +69,30 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     /* Do some basic validation of the reply */
     value = crm_element_value(reply, F_TYPE);
-    if (value == NULL) {
-        crm_debug("Unrecognizable attrd message: no message type specified");
-        status = CRM_EX_PROTOCOL;
-        goto done;
-    }
-    if (!pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
-        crm_debug("Unrecognizable attrd message: invalid message type '%s'",
-                  value);
+    if (pcmk__str_empty(value)
+        || !pcmk__str_eq(value, T_ATTRD, pcmk__str_none)) {
+        crm_info("Unrecognizable message from attribute manager: "
+                 "message type '%s' not '" T_ATTRD "'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    /* Only the query command gets a reply for now. */
     value = crm_element_value(reply, F_SUBTYPE);
+
+    /* Only the query command gets a reply for now. NULL counts as query for
+     * backward compatibility with attribute managers <2.1.3 that didn't set it.
+     */
     if (pcmk__str_eq(value, PCMK__ATTRD_CMD_QUERY, pcmk__str_null_matches)) {
-        /* This likely means the client gave us an attribute name that doesn't
-         * exist.
-         */
         if (!xmlHasProp(reply, (pcmkXmlStr) PCMK__XA_ATTR_NAME)) {
-            crm_debug("Empty attrd message: no attribute name");
-            status = ENXIO;
+            status = ENXIO; // Most likely, the attribute doesn't exist
             goto done;
         }
-
         reply_data.reply_type = pcmk__attrd_reply_query;
-
         set_pairs_data(&reply_data, reply);
+
     } else {
-        crm_debug("Cannot handle a reply from message type '%s'",
-                  pcmk__s(value, "(unspecified)"));
+        crm_info("Unrecognizable message from attribute manager: "
+                 "message subtype '%s' unknown", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
