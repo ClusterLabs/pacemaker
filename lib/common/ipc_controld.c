@@ -183,7 +183,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      * <ack function="dispatch_controller_ipc" line="391" status="112"/>
      */
     if (pcmk__str_eq(crm_element_name(reply), "ack", pcmk__str_none)) {
-        return true;
+        return true; // More replies needed
     }
 
     if (private->replies_expected > 0) {
@@ -198,23 +198,23 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      *       old versions (feature set could be used to differentiate).
      */
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if ((value == NULL) || (strcmp(value, XML_ATTR_REQUEST)
-                            && strcmp(value, XML_ATTR_RESPONSE))) {
-        crm_debug("Unrecognizable controller message: invalid message type '%s'",
-                  pcmk__s(value, "(unspecified)"));
+    if (pcmk__str_empty(value)
+        || !pcmk__str_any_of(value, XML_ATTR_REQUEST, XML_ATTR_RESPONSE, NULL)) {
+        crm_info("Unrecognizable message from controller: "
+                 "invalid message type '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (crm_element_value(reply, XML_ATTR_REFERENCE) == NULL) {
-        crm_debug("Unrecognizable controller message: no reference");
+    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+        crm_info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     value = crm_element_value(reply, F_CRM_TASK);
-    if (value == NULL) {
-        crm_debug("Unrecognizable controller message: no command name");
+    if (pcmk__str_empty(value)) {
+        crm_info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -242,8 +242,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_nodes_data(&reply_data, msg_data);
 
     } else {
-        crm_debug("Unrecognizable controller message: unknown command '%s'",
-                  value);
+        crm_info("Unrecognizable message from controller: unknown command '%s'",
+                 value);
         status = CRM_EX_PROTOCOL;
     }
 
@@ -255,7 +255,7 @@ done:
         g_list_free_full(reply_data.data.nodes, free);
     }
 
-    return false;
+    return false; // No further replies needed
 }
 
 pcmk__ipc_methods_t *
