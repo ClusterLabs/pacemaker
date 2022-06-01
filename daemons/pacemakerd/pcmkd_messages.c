@@ -28,9 +28,9 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from %s.%s",
-              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), "unknown"),
-              from?from:"unknown");
+    crm_trace("Pinged from " F_CRM_SYS_FROM "='%s' " F_CRM_ORIGIN "='%s'",
+              pcmk__s(from, ""),
+              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
     value = crm_element_value(msg, F_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);

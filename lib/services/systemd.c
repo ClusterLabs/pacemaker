@@ -321,8 +321,9 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
                                "systemd unit %s not found", op->agent);
     }
 
-    crm_info("DBus request for %s of systemd unit %s for resource %s failed: %s",
+    crm_info("DBus request for %s of systemd unit %s%s%s failed: %s",
              op->action, op->agent, pcmk__s(op->rsc, "(unspecified)"),
+             ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""),
              error->message);
 }
 
@@ -977,8 +978,9 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         return;
     }
 
-    crm_trace("Calling %s for unit path %s named %s",
-              method, unit, pcmk__s(op->rsc, "with unknown name"));
+    crm_trace("Calling %s for unit path %s%s%s",
+              method, unit,
+              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
 
     msg = systemd_new_method(method);
     CRM_ASSERT(msg != NULL);
@@ -1066,9 +1068,9 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    crm_debug("Performing %ssynchronous %s op on systemd unit %s named %s",
+    crm_debug("Performing %ssynchronous %s op on systemd unit %s%s%s",
               (op->synchronous? "" : "a"), op->action, op->agent,
-              pcmk__s(op->rsc, "with unknown name"));
+              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
 
     if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);

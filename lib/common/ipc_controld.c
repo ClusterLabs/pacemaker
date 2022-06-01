@@ -361,9 +361,10 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
     if (router_node == NULL) {
         router_node = target_node;
     }
-    crm_debug("Sending %s IPC request to reprobe %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(target_node, "unknown node"),
-              pcmk__s(router_node, "unknown node"));
+    crm_debug("Sending %s IPC request to reprobe %s%s%s",
+              pcmk_ipc_name(api, true), pcmk__s(target_node, "local node"),
+              ((router_node == target_node)? "" : " via "),
+              pcmk__s(router_node, ""));
     msg_data = create_reprobe_message_data(target_node, router_node);
     request = create_controller_request(api, CRM_OP_REPROBE, router_node,
                                         msg_data);

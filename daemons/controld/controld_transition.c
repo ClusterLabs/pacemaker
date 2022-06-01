@@ -158,9 +158,11 @@ do_te_invoke(long long action,
             return;
         }
 
-        if (fsa_pe_ref == NULL || !pcmk__str_eq(fsa_pe_ref, ref, pcmk__str_casei)) {
-            crm_info("Transition is redundant: %s vs. %s",
-                     pcmk__s(fsa_pe_ref, "<null>"), pcmk__s(ref, "<null>"));
+        if ((fsa_pe_ref == NULL)
+            || !pcmk__str_eq(fsa_pe_ref, ref, pcmk__str_none)) {
+            crm_info("Transition is redundant: %s expected but %s received",
+                     pcmk__s(fsa_pe_ref, "no reference"),
+                     pcmk__s(ref, "no reference"));
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
         }

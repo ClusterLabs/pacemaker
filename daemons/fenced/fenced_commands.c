@@ -3022,7 +3022,7 @@ is_privileged(pcmk__client_t *c, const char *op)
         return true;
     } else {
         crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 pcmk__s(op, "<null>"), pcmk__client_name(c));
+                 pcmk__s(op, ""), pcmk__client_name(c));
         return false;
     }
 }
