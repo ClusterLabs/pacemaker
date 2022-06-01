@@ -3388,14 +3388,11 @@ handle_cache_request(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
-
     crm_err("Unknown IPC request %s from %s %s",
-            op, pcmk__request_origin_type(request),
+            request->op, pcmk__request_origin_type(request),
             pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                        "Unknown IPC request type '%s' (bug?)",
-                        pcmk__s(op, "<null>"));
+                        "Unknown IPC request type '%s' (bug?)", request->op);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
