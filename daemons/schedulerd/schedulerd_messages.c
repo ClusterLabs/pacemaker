@@ -184,24 +184,28 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
-    const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
 
-    crm_trace("Processing %s op (ref=%s)...", op, ref);
+    if (pcmk__str_empty(op)) {
+        crm_info("Ignoring invalid IPC message: no " F_CRM_TASK);
 
-    if (op == NULL) {
-        /* error */
+    } else if (pcmk__str_eq(op, CRM_OP_HELLO, pcmk__str_none)) {
+        crm_trace("Received IPC hello from %s", pcmk__client_name(sender));
 
-    } else if (strcasecmp(op, CRM_OP_HELLO) == 0) {
-        /* ignore */
+    } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
+                            XML_ATTR_RESPONSE, pcmk__str_none)) {
+        crm_info("Ignoring IPC reply from %s", pcmk__client_name(sender));
 
-    } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE, pcmk__str_casei)) {
-        /* ignore */
+    } else if (pcmk__str_empty(sys_to)
+               || !pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
+        crm_info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_PENGINE,
+                 pcmk__s(sys_to, ""));
 
-    } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
-        crm_trace("Bad sys-to: %s", pcmk__s(sys_to, "unspecified"));
-
-    } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
+    } else if (pcmk__str_eq(op, CRM_OP_PECALC, pcmk__str_none)) {
         handle_pecalc_op(msg, xml_data, sender);
+
+    } else {
+        crm_trace("Ignoring invalid IPC message: unknown request type '%s' ",
+                  op);
     }
 }
 
