@@ -1765,40 +1765,44 @@ do_lrm_invoke(long long action,
     user_name = pcmk__update_acl_user(input->msg, F_CRM_USER, NULL);
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
     from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
-    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
+    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
-    crm_trace("Executor %s command from %s as user %s",
-              crm_op, from_sys, user_name);
 
-    if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-        if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_none)) {
+        if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
         operation = CRMD_ACTION_DELETE;
-
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_casei)) {
-        fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
-                          from_sys);
-        return;
 
     } else if (input->xml != NULL) {
         operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
     }
 
-    if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
+    CRM_CHECK(!pcmk__str_empty(crm_op) || !pcmk__str_empty(operation), return);
+
+    crm_trace("'%s' execution request from %s as %s user",
+              pcmk__s(crm_op, operation),
+              pcmk__s(from_sys, "unknown subsystem"),
+              pcmk__s(user_name, "current"));
+
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_none)) {
+        fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
+                          from_sys);
+
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
         handle_refresh_op(lrm_state, user_name, from_host, from_sys);
 
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_none)) {
         handle_query_op(input->msg, lrm_state);
 
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
-    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
-    } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_casei)
-               || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_none)
+               || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node);
 
@@ -1806,7 +1810,7 @@ do_lrm_invoke(long long action,
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
         gboolean create_rsc = !pcmk__str_eq(operation, CRMD_ACTION_DELETE,
-                                            pcmk__str_casei);
+                                            pcmk__str_none);
         int rc;
 
         // We can't return anything meaningful without a resource ID
@@ -1853,12 +1857,12 @@ do_lrm_invoke(long long action,
             return;
         }
 
-        if (pcmk__str_eq(operation, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
+        if (pcmk__str_eq(operation, CRMD_ACTION_CANCEL, pcmk__str_none)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
                 crm_log_xml_warn(input->xml, "Bad command");
             }
 
-        } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_none)) {
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
@@ -1887,8 +1891,8 @@ do_lrm_invoke(long long action,
         lrmd_free_rsc_info(rsc);
 
     } else {
-        crm_err("Cannot perform operation %s of unknown type",
-                pcmk__s(crm_op, "(unspecified)"));
+        crm_err("Invalid execution request: unknown command '%s' (bug?)",
+                crm_op);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
