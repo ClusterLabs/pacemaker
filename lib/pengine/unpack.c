@@ -2959,9 +2959,6 @@ static void
 unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set)
 {
-    int target_stop_id = 0;
-    int target_migrate_from_id = 0;
-    xmlNode *target_stop = NULL;
     xmlNode *target_migrate_from = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
@@ -2974,15 +2971,9 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      */
     rsc->role = RSC_ROLE_STARTED;
 
-    // Check for stop on the target
-    target_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, target, NULL,
-                              PCMK_OCF_OK, data_set);
-    target_stop_id = pe__call_id(target_stop);
-
     // Check for migrate_from on the target
     target_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, target,
                                       source, PCMK_OCF_OK, data_set);
-    target_migrate_from_id = pe__call_id(target_migrate_from);
 
     if (/* If the resource state is unknown on the target, it will likely be
          * probed there.
@@ -2994,16 +2985,13 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * events, this migrate_to no longer matters for the target.
          */
         && !newer_state_after_migrate(rsc->id, target, xml_op, target_migrate_from,
-                                      data_set)
-        && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
-        /* There was no stop on the target, or a stop that happened before a
-         * migrate_from, so assume the resource is still active on the target
+                                      data_set)) {
+        /* The resource has no newer state on the target, so assume it's still
+         * active there.
          * (if it is up).
          */
         pe_node_t *target_node = pe_find_node(data_set->nodes, target);
 
-        pe_rsc_trace(rsc, "stop (%d) + migrate_from (%d)",
-                     target_stop_id, target_migrate_from_id);
         if (target_node && target_node->details->online) {
             native_add_running(rsc, target_node, data_set, FALSE);
         }
