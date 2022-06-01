@@ -1197,9 +1197,6 @@ handle_shutdown_request(xmlNode * stored_msg)
     return I_NULL;
 }
 
-/* msg is deleted by the time this returns */
-extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);
-
 static void
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {

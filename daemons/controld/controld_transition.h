@@ -27,8 +27,7 @@ pcmk__graph_action_t *controld_get_action(int id);
 gboolean stop_te_timer(pcmk__graph_action_t *action);
 const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 
-/* unpack */
-extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);
+void process_te_message(xmlNode *msg, xmlNode *xml_data);
 
 extern pcmk__graph_t *transition_graph;
 extern crm_trigger_t *transition_trigger;
