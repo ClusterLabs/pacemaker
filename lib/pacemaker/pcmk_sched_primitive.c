@@ -64,6 +64,27 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Promoted  */  { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp,       },
 };
 
+/*!
+ * \internal
+ * \brief Get a list of a resource's allowed nodes sorted by node weight
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return List of allowed nodes sorted by node weight
+ */
+static GList *
+sorted_allowed_nodes(const pe_resource_t *rsc)
+{
+    if (rsc->allowed_nodes != NULL) {
+        GList *nodes = g_hash_table_get_values(rsc->allowed_nodes);
+
+        if (nodes != NULL) {
+            return pcmk__sort_nodes(nodes, pe__current_node(rsc));
+        }
+    }
+    return NULL;
+}
+
 static bool
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
 {
@@ -71,7 +92,6 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     pe_node_t *chosen = NULL;
     pe_node_t *best = NULL;
     int multiple = 1;
-    int length = 0;
     bool result = false;
 
     pcmk__ban_insufficient_capacity(rsc, &prefer);
@@ -81,15 +101,9 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     }
 
     // Sort allowed nodes by weight
-    if (rsc->allowed_nodes) {
-        length = g_hash_table_size(rsc->allowed_nodes);
-    }
-    if (length > 0) {
-        nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = pcmk__sort_nodes(nodes, pe__current_node(rsc));
-
-        // First node in sorted list has the best score
-        best = g_list_nth_data(nodes, 0);
+    nodes = sorted_allowed_nodes(rsc);
+    if (nodes != NULL) {
+        best = (pe_node_t *) nodes->data; // First node has best score
     }
 
     if (prefer && nodes) {
@@ -118,7 +132,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
         } else {
             pe_rsc_trace(rsc,
                          "Chose preferred node %s for %s (ignoring %d candidates)",
-                         chosen->details->uname, rsc->id, length);
+                         chosen->details->uname, rsc->id, g_list_length(nodes));
         }
     }
 
@@ -129,7 +143,8 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
 
         chosen = best;
         pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
-                     chosen ? chosen->details->uname : "<none>", rsc->id, length);
+                     chosen ? chosen->details->uname : "<none>",
+                     rsc->id, g_list_length(nodes));
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
             && (chosen != NULL) && (chosen->weight > 0) // Zero not acceptable
