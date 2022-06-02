@@ -2944,17 +2944,6 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 }
 
-// Is there an action_name in node_name's rsc history newer than call_id?
-static bool
-newer_op(pe_resource_t *rsc, const char *action_name, const char *node_name,
-         int call_id, pe_working_set_t *data_set)
-{
-    xmlNode *action = find_lrm_op(rsc->id, action_name, node_name, NULL, PCMK_OCF_OK,
-                                  data_set);
-
-    return pe__call_id(action) > call_id;
-}
-
 static void
 unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set)
@@ -2996,7 +2985,8 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             native_add_running(rsc, target_node, data_set, FALSE);
         }
 
-    } else if (target_migrate_from == NULL) {
+    } else if (!non_monitor_after(rsc->id, source, xml_op, true, data_set)
+               && target_migrate_from == NULL) {
         /* We know there was a stop on the target, but there may not have been a
          * migrate_from (the stop could have happened before migrate_from was
          * scheduled or attempted).
@@ -3007,16 +2997,6 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * a successful stop, full restart, or migration in the reverse
          * direction, in which case we don't want to force a stop.
          */
-        int source_migrate_to_id = pe__call_id(xml_op);
-
-        if (newer_op(rsc, CRMD_ACTION_MIGRATED, source, source_migrate_to_id,
-                     data_set)
-            || newer_op(rsc, CRMD_ACTION_START, source, source_migrate_to_id,
-                     data_set)
-            || newer_op(rsc, CRMD_ACTION_STOP, source, source_migrate_to_id,
-                     data_set)) {
-            return;
-        }
 
         // Mark node as having dangling migration so we can force a stop later
         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
