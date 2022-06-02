@@ -27,13 +27,12 @@ static void RecurringOp_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_
                                 xmlNode *operation, pe_working_set_t *data_set);
 
 gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
-gboolean StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional,
-                    pe_working_set_t * data_set);
-gboolean RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
-gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
+static bool StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static bool StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static bool DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static bool PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static bool RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static bool NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional);
 
 /* This array says what the *next* role should be when transitioning from one
  * role to another. For example going from Stopped to Promoted, the next role is
@@ -51,9 +50,8 @@ static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
 };
 
-typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
-                                      gboolean optional,
-                                      pe_working_set_t *data_set);
+typedef bool (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
+                                  bool optional);
 
 // This array picks the function needed to transition from one role to another
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
@@ -910,8 +908,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
                      (need_stop? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, current, !need_stop,
-                                                rsc->cluster)) {
+        if (!rsc_action_matrix[role][next_role](rsc, current, !need_stop)) {
             break;
         }
         role = next_role;
@@ -929,8 +926,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
                      (required? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required,
-                                                rsc->cluster)) {
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required)) {
             break;
         }
         role = next_role;
@@ -1110,8 +1106,7 @@ native_create_actions(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
                      rsc->id, role2text(role), role2text(next_role),
                      role2text(rsc->next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, FALSE,
-                                                rsc->cluster)) {
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, false)) {
             break;
         }
         role = next_role;
@@ -1475,8 +1470,8 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
            && (rsc->allocated_to->details == node->details);
 }
 
-gboolean
-StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     GList *gIter = NULL;
 
@@ -1514,7 +1509,7 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
                              "Forcing stop of %s on %s "
                              "because migration target changed",
                              rsc->id, current->details->uname);
-                optional = FALSE;
+                optional = false;
             }
         }
 
@@ -1537,12 +1532,13 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
             pe__clear_action_flags(stop, pe_action_runnable);
         }
 
-        if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, current, optional, data_set);
+        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
+            DeleteRsc(rsc, current, optional, rsc->cluster);
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
+            pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE,
+                                               rsc->cluster);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (!pcmk__node_unfenced(current)) {
@@ -1551,11 +1547,11 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
         }
     }
 
-    return TRUE;
+    return true;
 }
 
-gboolean
-StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     pe_action_t *start = NULL;
 
@@ -1584,18 +1580,18 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
         pe__set_action_flags(start, pe_action_pseudo);
     }
 
-    return TRUE;
+    return true;
 }
 
-gboolean
-PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     GList *gIter = NULL;
     gboolean runnable = TRUE;
     GList *action_list = NULL;
 
     CRM_ASSERT(rsc);
-    CRM_CHECK(next != NULL, return FALSE);
+    CRM_CHECK(next != NULL, return false);
 
     pe_rsc_trace(rsc, "%s on %s", rsc->id, next->details->uname);
 
@@ -1624,7 +1620,7 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
             pe__set_action_flags(promote, pe_action_pseudo);
         }
 
-        return TRUE;
+        return true;
     }
 
     pe_rsc_debug(rsc, "%s\tPromote %s (canceled)", next->details->uname, rsc->id);
@@ -1638,11 +1634,11 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
     }
 
     g_list_free(action_list);
-    return TRUE;
+    return true;
 }
 
-gboolean
-DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     GList *gIter = NULL;
 
@@ -1653,7 +1649,7 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
                      "Skipping demote of multiply active resource %s "
                      "on expected node %s",
                      rsc->id, next->details->uname);
-        return TRUE;
+        return true;
     }
 
     pe_rsc_trace(rsc, "%s", rsc->id);
@@ -1665,20 +1661,20 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
         pe_rsc_trace(rsc, "%s on %s", rsc->id, next ? next->details->uname : "N/A");
         demote_action(rsc, current, optional);
     }
-    return TRUE;
+    return true;
 }
 
-gboolean
-RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     CRM_ASSERT(rsc);
     crm_err("%s on %s", rsc->id, next ? next->details->uname : "N/A");
-    CRM_CHECK(FALSE, return FALSE);
-    return FALSE;
+    CRM_CHECK(false, return false);
+    return false;
 }
 
-gboolean
-NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set)
+static bool
+NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional)
 {
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
