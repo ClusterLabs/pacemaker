@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,16 @@ extern "C" {
 
 #include <stdint.h>       // uint32_t
 #include <stdbool.h>
+
+// Known resource classes
+#define PCMK_RESOURCE_CLASS_OCF     "ocf"
+#define PCMK_RESOURCE_CLASS_SERVICE "service"
+#define PCMK_RESOURCE_CLASS_LSB     "lsb"
+#define PCMK_RESOURCE_CLASS_SYSTEMD "systemd"
+#define PCMK_RESOURCE_CLASS_UPSTART "upstart"
+#define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
+#define PCMK_RESOURCE_CLASS_STONITH "stonith"
+#define PCMK_RESOURCE_CLASS_ALERT   "alert"
 
 /* Special stonith-class agent parameters interpreted directly by Pacemaker
  * (not including the pcmk_ACTION_{action,retries,timeout} parameters)
