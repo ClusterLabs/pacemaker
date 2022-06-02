@@ -450,41 +450,46 @@ xe_interval(const xmlNode *xml)
                                                      XML_LRM_ATTR_INTERVAL));
 }
 
-static gboolean
-is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
+/*!
+ * \internal
+ * \brief Check whether an operation exists multiple times in resource history
+ *
+ * \param[in] rsc          Resource with history to search
+ * \param[in] name         Name of action to search for
+ * \param[in] interval_ms  Interval (in milliseconds) of action to search for
+ *
+ * \return true if an operation with \p name and \p interval_ms exists more than
+ *         once in the operation history of \p rsc, otherwise false
+ */
+static bool
+is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
 {
-    gboolean dup = FALSE;
     const char *id = NULL;
-    const char *value = NULL;
-    xmlNode *operation = NULL;
 
-    CRM_ASSERT(rsc);
-    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
-         operation = pcmk__xe_next(operation)) {
+    for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
+         op != NULL; op = crm_next_same_xml(op)) {
 
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            value = crm_element_value(operation, "name");
-            if (!pcmk__str_eq(value, name, pcmk__str_casei)) {
-                continue;
-            }
+        // Check whether action name and interval match
+        if (!pcmk__str_eq(crm_element_value(op, "name"),
+                          name, pcmk__str_none)
+            || (xe_interval(op) != interval_ms)) {
+            continue;
+        }
 
-            if (xe_interval(operation) != interval_ms) {
-                continue;
-            }
+        if (ID(op) == NULL) {
+            continue; // Shouldn't be possible
+        }
 
-            if (id == NULL) {
-                id = ID(operation);
-
-            } else {
-                pcmk__config_err("Operation %s is duplicate of %s (do not use "
-                                 "same name and interval combination more "
-                                 "than once per resource)", ID(operation), id);
-                dup = TRUE;
-            }
+        if (id == NULL) {
+            id = ID(op); // First matching op
+        } else {
+            pcmk__config_err("Operation %s is duplicate of %s (do not use "
+                             "same name and interval combination more "
+                             "than once per resource)", ID(op), id);
+            return true;
         }
     }
-
-    return dup;
+    return false;
 }
 
 static bool
