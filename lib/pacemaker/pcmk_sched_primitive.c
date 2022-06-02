@@ -11,21 +11,11 @@
 
 #include <stdbool.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
-#include <crm/common/xml_internal.h>
+#include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
-#include <crm/services.h>
 
 #include "libpacemaker_private.h"
-
-// The controller removes the resource from the CIB, making this redundant
-// #define DELETE_THEN_REFRESH 1
-
-#define VARIANT_NATIVE 1
-#include <lib/pengine/variant.h>
-
-extern bool pcmk__is_daemon;
 
 static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                       pe_working_set_t *data_set);
