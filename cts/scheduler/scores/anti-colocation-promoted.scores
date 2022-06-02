@@ -5,13 +5,13 @@ pcmk__clone_allocate: state1:0 allocation score on sle12sp2-1: 0
 pcmk__clone_allocate: state1:0 allocation score on sle12sp2-2: 6
 pcmk__clone_allocate: state1:1 allocation score on sle12sp2-1: 11
 pcmk__clone_allocate: state1:1 allocation score on sle12sp2-2: 0
-pcmk__native_allocate: dummy1 allocation score on sle12sp2-1: 0
-pcmk__native_allocate: dummy1 allocation score on sle12sp2-2: -INFINITY
-pcmk__native_allocate: st_sbd allocation score on sle12sp2-1: 0
-pcmk__native_allocate: st_sbd allocation score on sle12sp2-2: 0
-pcmk__native_allocate: state1:0 allocation score on sle12sp2-1: -INFINITY
-pcmk__native_allocate: state1:0 allocation score on sle12sp2-2: 6
-pcmk__native_allocate: state1:1 allocation score on sle12sp2-1: 11
-pcmk__native_allocate: state1:1 allocation score on sle12sp2-2: 0
+pcmk__primitive_assign: dummy1 allocation score on sle12sp2-1: 0
+pcmk__primitive_assign: dummy1 allocation score on sle12sp2-2: -INFINITY
+pcmk__primitive_assign: st_sbd allocation score on sle12sp2-1: 0
+pcmk__primitive_assign: st_sbd allocation score on sle12sp2-2: 0
+pcmk__primitive_assign: state1:0 allocation score on sle12sp2-1: -INFINITY
+pcmk__primitive_assign: state1:0 allocation score on sle12sp2-2: 6
+pcmk__primitive_assign: state1:1 allocation score on sle12sp2-1: 11
+pcmk__primitive_assign: state1:1 allocation score on sle12sp2-2: 0
 state1:0 promotion score on sle12sp2-2: 5
 state1:1 promotion score on sle12sp2-1: -INFINITY

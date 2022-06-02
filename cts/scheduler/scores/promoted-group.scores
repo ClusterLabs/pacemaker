@@ -23,9 +23,9 @@ pcmk__group_allocate: resource_1 allocation score on rh44-1: INFINITY
 pcmk__group_allocate: resource_1 allocation score on rh44-2: 100
 pcmk__group_allocate: test allocation score on rh44-1: 200
 pcmk__group_allocate: test allocation score on rh44-2: 100
-pcmk__native_allocate: master_slave_Stateful:0 allocation score on rh44-1: 0
-pcmk__native_allocate: master_slave_Stateful:0 allocation score on rh44-2: INFINITY
-pcmk__native_allocate: master_slave_Stateful:1 allocation score on rh44-1: INFINITY
-pcmk__native_allocate: master_slave_Stateful:1 allocation score on rh44-2: -INFINITY
-pcmk__native_allocate: resource_1 allocation score on rh44-1: INFINITY
-pcmk__native_allocate: resource_1 allocation score on rh44-2: 100
+pcmk__primitive_assign: master_slave_Stateful:0 allocation score on rh44-1: 0
+pcmk__primitive_assign: master_slave_Stateful:0 allocation score on rh44-2: INFINITY
+pcmk__primitive_assign: master_slave_Stateful:1 allocation score on rh44-1: INFINITY
+pcmk__primitive_assign: master_slave_Stateful:1 allocation score on rh44-2: -INFINITY
+pcmk__primitive_assign: resource_1 allocation score on rh44-1: INFINITY
+pcmk__primitive_assign: resource_1 allocation score on rh44-2: 100

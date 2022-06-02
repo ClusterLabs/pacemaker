@@ -13,16 +13,16 @@ pcmk__group_allocate: grp_pgsql_mirror allocation score on arc-dknightlx: 0
 pcmk__group_allocate: grp_pgsql_mirror allocation score on arc-tkincaidlx.wsicorp.com: 0
 pcmk__group_allocate: pgsql_5555 allocation score on arc-dknightlx: 0
 pcmk__group_allocate: pgsql_5555 allocation score on arc-tkincaidlx.wsicorp.com: 0
-pcmk__native_allocate: IPaddr_147_81_84_133 allocation score on arc-dknightlx: -INFINITY
-pcmk__native_allocate: IPaddr_147_81_84_133 allocation score on arc-tkincaidlx.wsicorp.com: 0
-pcmk__native_allocate: fs_mirror allocation score on arc-dknightlx: -INFINITY
-pcmk__native_allocate: fs_mirror allocation score on arc-tkincaidlx.wsicorp.com: 101
-pcmk__native_allocate: pgsql_5555 allocation score on arc-dknightlx: -INFINITY
-pcmk__native_allocate: pgsql_5555 allocation score on arc-tkincaidlx.wsicorp.com: 0
-pcmk__native_allocate: rsc_drbd_7788:0 allocation score on arc-dknightlx: -INFINITY
-pcmk__native_allocate: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: -INFINITY
-pcmk__native_allocate: rsc_drbd_7788:1 allocation score on arc-dknightlx: -INFINITY
-pcmk__native_allocate: rsc_drbd_7788:1 allocation score on arc-tkincaidlx.wsicorp.com: 101
+pcmk__primitive_assign: IPaddr_147_81_84_133 allocation score on arc-dknightlx: -INFINITY
+pcmk__primitive_assign: IPaddr_147_81_84_133 allocation score on arc-tkincaidlx.wsicorp.com: 0
+pcmk__primitive_assign: fs_mirror allocation score on arc-dknightlx: -INFINITY
+pcmk__primitive_assign: fs_mirror allocation score on arc-tkincaidlx.wsicorp.com: 101
+pcmk__primitive_assign: pgsql_5555 allocation score on arc-dknightlx: -INFINITY
+pcmk__primitive_assign: pgsql_5555 allocation score on arc-tkincaidlx.wsicorp.com: 0
+pcmk__primitive_assign: rsc_drbd_7788:0 allocation score on arc-dknightlx: -INFINITY
+pcmk__primitive_assign: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: -INFINITY
+pcmk__primitive_assign: rsc_drbd_7788:1 allocation score on arc-dknightlx: -INFINITY
+pcmk__primitive_assign: rsc_drbd_7788:1 allocation score on arc-tkincaidlx.wsicorp.com: 101
 rsc_drbd_7788:0 promotion score on none: 0
 rsc_drbd_7788:1 promotion score on arc-tkincaidlx.wsicorp.com: 200
 rsc_drbd_7788:2 promotion score on none: 0

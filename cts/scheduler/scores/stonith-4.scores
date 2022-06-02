@@ -1,12 +1,12 @@
 
-pcmk__native_allocate: Fencing allocation score on pcmk-10: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-11: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-1: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-2: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-3: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-4: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-5: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-6: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-7: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-8: 0
-pcmk__native_allocate: Fencing allocation score on pcmk-9: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-10: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-11: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-1: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-2: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-3: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-4: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-5: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-6: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-7: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-8: 0
+pcmk__primitive_assign: Fencing allocation score on pcmk-9: 0

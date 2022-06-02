@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: rsc1 allocation score on sles11-1: -INFINITY
-pcmk__native_allocate: rsc1 allocation score on sles11-2: 0
-pcmk__native_allocate: rsc2 allocation score on sles11-1: 1000
-pcmk__native_allocate: rsc2 allocation score on sles11-2: 0
-pcmk__native_allocate: st_sbd allocation score on sles11-1: 1000
-pcmk__native_allocate: st_sbd allocation score on sles11-2: 0
+pcmk__primitive_assign: rsc1 allocation score on sles11-1: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on sles11-2: 0
+pcmk__primitive_assign: rsc2 allocation score on sles11-1: 1000
+pcmk__primitive_assign: rsc2 allocation score on sles11-2: 0
+pcmk__primitive_assign: st_sbd allocation score on sles11-1: 1000
+pcmk__primitive_assign: st_sbd allocation score on sles11-2: 0

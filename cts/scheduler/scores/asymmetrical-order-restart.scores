@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: cesr104ipmi allocation score on cesr105-p16: 0
-pcmk__native_allocate: cesr104ipmi allocation score on cesr109-p16: 0
-pcmk__native_allocate: sleep_a allocation score on cesr105-p16: -INFINITY
-pcmk__native_allocate: sleep_a allocation score on cesr109-p16: -INFINITY
-pcmk__native_allocate: sleep_b allocation score on cesr105-p16: 0
-pcmk__native_allocate: sleep_b allocation score on cesr109-p16: 0
+pcmk__primitive_assign: cesr104ipmi allocation score on cesr105-p16: 0
+pcmk__primitive_assign: cesr104ipmi allocation score on cesr109-p16: 0
+pcmk__primitive_assign: sleep_a allocation score on cesr105-p16: -INFINITY
+pcmk__primitive_assign: sleep_a allocation score on cesr109-p16: -INFINITY
+pcmk__primitive_assign: sleep_b allocation score on cesr105-p16: 0
+pcmk__primitive_assign: sleep_b allocation score on cesr109-p16: 0

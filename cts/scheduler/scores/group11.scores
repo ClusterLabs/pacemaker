@@ -3,6 +3,6 @@ pcmk__group_allocate: group1 allocation score on node1: 0
 pcmk__group_allocate: rsc1 allocation score on node1: 0
 pcmk__group_allocate: rsc2 allocation score on node1: 0
 pcmk__group_allocate: rsc3 allocation score on node1: 0
-pcmk__native_allocate: rsc1 allocation score on node1: 0
-pcmk__native_allocate: rsc2 allocation score on node1: -INFINITY
-pcmk__native_allocate: rsc3 allocation score on node1: -INFINITY
+pcmk__primitive_assign: rsc1 allocation score on node1: 0
+pcmk__primitive_assign: rsc2 allocation score on node1: -INFINITY
+pcmk__primitive_assign: rsc3 allocation score on node1: -INFINITY

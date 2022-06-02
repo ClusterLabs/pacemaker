@@ -1,4 +1,4 @@
 
-pcmk__native_allocate: fence_scsi allocation score on virt-008: 0
-pcmk__native_allocate: fence_scsi allocation score on virt-009: 0
-pcmk__native_allocate: fence_scsi allocation score on virt-013: 0
+pcmk__primitive_assign: fence_scsi allocation score on virt-008: 0
+pcmk__primitive_assign: fence_scsi allocation score on virt-009: 0
+pcmk__primitive_assign: fence_scsi allocation score on virt-013: 0

@@ -5,9 +5,9 @@ pcmk__group_allocate: res_Dummy_1 allocation score on lenny-a: 0
 pcmk__group_allocate: res_Dummy_1 allocation score on lenny-b: 100
 pcmk__group_allocate: res_Dummy_2 allocation score on lenny-a: 0
 pcmk__group_allocate: res_Dummy_2 allocation score on lenny-b: INFINITY
-pcmk__native_allocate: res_Dummy_1 allocation score on lenny-a: -INFINITY
-pcmk__native_allocate: res_Dummy_1 allocation score on lenny-b: INFINITY
-pcmk__native_allocate: res_Dummy_2 allocation score on lenny-a: -INFINITY
-pcmk__native_allocate: res_Dummy_2 allocation score on lenny-b: INFINITY
-pcmk__native_allocate: res_Dummy_3 allocation score on lenny-a: 100
-pcmk__native_allocate: res_Dummy_3 allocation score on lenny-b: -INFINITY
+pcmk__primitive_assign: res_Dummy_1 allocation score on lenny-a: -INFINITY
+pcmk__primitive_assign: res_Dummy_1 allocation score on lenny-b: INFINITY
+pcmk__primitive_assign: res_Dummy_2 allocation score on lenny-a: -INFINITY
+pcmk__primitive_assign: res_Dummy_2 allocation score on lenny-b: INFINITY
+pcmk__primitive_assign: res_Dummy_3 allocation score on lenny-a: 100
+pcmk__primitive_assign: res_Dummy_3 allocation score on lenny-b: -INFINITY

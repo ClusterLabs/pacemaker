@@ -1,2 +1,2 @@
 
-pcmk__native_allocate: DcIPaddr allocation score on c001n05: 0
+pcmk__primitive_assign: DcIPaddr allocation score on c001n05: 0
