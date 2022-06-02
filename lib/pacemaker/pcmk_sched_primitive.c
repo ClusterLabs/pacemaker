@@ -331,26 +331,29 @@ remote_connection_assigned(pe_resource_t *connection)
 pe_node_t *
 pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
-    if (rsc->parent && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
-        /* never allocate children on their own */
-        pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
-                     rsc->parent->id);
+    CRM_ASSERT(rsc != NULL);
+
+    // Never assign a child without parent being assigned first
+    if ((rsc->parent != NULL)
+        && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
+        pe_rsc_debug(rsc, "%s: Assigning parent %s first",
+                     rsc->id, rsc->parent->id);
         rsc->parent->cmds->assign(rsc->parent, prefer);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to;
+        return rsc->allocated_to; // Assignment has already been done
     }
 
+    // Ensure we detect assignment loops
     if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
         return NULL;
     }
-
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes,
-                          rsc->cluster);
 
+    pe__show_node_weights(true, rsc, "Pre-assignment", rsc->allowed_nodes,
+                          rsc->cluster);
 
     g_list_foreach(rsc->rsc_cons, apply_this_with, rsc);
     pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
@@ -359,27 +362,32 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
     g_list_foreach(rsc->rsc_cons_lhs, apply_with_this, rsc);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
-        pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
-        /* make sure it doesn't come up again */
+        pe_rsc_trace(rsc,
+                     "Banning %s from all nodes because it will be stopped",
+                     rsc->id);
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE,
                           rsc->cluster);
 
-    } else if(rsc->next_role > rsc->role
-              && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
-              && rsc->cluster->no_quorum_policy == no_quorum_freeze) {
-        crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
+    } else if ((rsc->next_role > rsc->role)
+               && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
+               && (rsc->cluster->no_quorum_policy == no_quorum_freeze)) {
+        crm_notice("Resource %s cannot be elevated from %s to %s due to "
+                   "no-quorum-policy=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+
+    // Unmanage resource if fencing is enabled but no device is configured
     if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
         && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        // Unmanaged resources stay on their current node
         const char *reason = NULL;
         pe_node_t *assign_to = NULL;
 
@@ -394,18 +402,17 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         } else {
             reason = "active";
         }
-        pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
+        pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
         pcmk__assign_primitive(rsc, assign_to, true);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
-        pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
+        pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
         pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && assign_best_node(rsc, prefer)) {
-        pe_rsc_trace(rsc, "Allocated resource %s to %s", rsc->id,
-                     rsc->allocated_to->details->uname);
+        // Assignment successful
 
     } else if (rsc->allocated_to == NULL) {
         if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -415,7 +422,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         }
 
     } else {
-        pe_rsc_debug(rsc, "Pre-Allocated resource %s to %s", rsc->id,
+        pe_rsc_debug(rsc, "%s: pre-assigned to %s", rsc->id,
                      rsc->allocated_to->details->uname);
     }
 
