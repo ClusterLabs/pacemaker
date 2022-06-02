@@ -127,7 +127,7 @@ class CIB12(ConfigBase):
         (rc, output) = self.Factory.rsh(self.Factory.target,
             r"""awk -v RS="}" """
             r"""'/^(\s*nodelist\s*{)?\s*node\s*{.*(ring0_addr|name):\s*%s(\s+|$)/"""
-            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}'%s"""
+            r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s"""
             % (node_name, CTSvars.COROSYNC_CONF), None)
 
         if rc == 0 and len(output) == 1:
