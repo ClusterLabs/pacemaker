@@ -286,6 +286,41 @@ apply_with_this(void *data, void *user_data)
 
 /*!
  * \internal
+ * \brief Update a Pacemaker Remote node once its connection has been assigned
+ *
+ * \param[in] connection  Connection resource that has been assigned
+ */
+static void
+remote_connection_assigned(pe_resource_t *connection)
+{
+    pe_node_t *remote_node = pe_find_node(connection->cluster->nodes,
+                                          connection->id);
+
+    CRM_CHECK(remote_node != NULL, return);
+
+    if ((connection->allocated_to != NULL)
+        && (connection->next_role != RSC_ROLE_STOPPED)) {
+
+        crm_trace("Pacemaker Remote node %s will be online",
+                  remote_node->details->id);
+        remote_node->details->online = TRUE;
+        if (remote_node->details->unseen) {
+            // Avoid unnecessary fence, since we will attempt connection
+            remote_node->details->unclean = FALSE;
+        }
+
+    } else {
+        crm_trace("Pacemaker Remote node %s will be shut down "
+                  "(%sassigned connection's next role is %s)",
+                  remote_node->details->id,
+                  ((connection->allocated_to == NULL)? "un" : ""),
+                  role2text(connection->next_role));
+        remote_node->details->shutdown = TRUE;
+    }
+}
+
+/*!
+ * \internal
  * \brief Assign a primitive resource to a node
  *
  * \param[in] rsc     Resource to assign to a node
@@ -387,25 +422,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
     pe__clear_resource_flags(rsc, pe_rsc_allocating);
 
     if (rsc->is_remote_node) {
-        pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
-
-        CRM_ASSERT(remote_node != NULL);
-        if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
-            crm_trace("Setting Pacemaker Remote node %s to ONLINE",
-                      remote_node->details->id);
-            remote_node->details->online = TRUE;
-            /* We shouldn't consider an unseen remote-node unclean if we are going
-             * to try and connect to it. Otherwise we get an unnecessary fence */
-            if (remote_node->details->unseen == TRUE) {
-                remote_node->details->unclean = FALSE;
-            }
-
-        } else {
-            crm_trace("Setting Pacemaker Remote node %s to SHUTDOWN (next role %s, %sallocated)",
-                      remote_node->details->id, role2text(rsc->next_role),
-                      (rsc->allocated_to? "" : "un"));
-            remote_node->details->shutdown = TRUE;
-        }
+        remote_connection_assigned(rsc);
     }
 
     return rsc->allocated_to;
