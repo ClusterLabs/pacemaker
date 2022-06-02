@@ -212,6 +212,52 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
 
 /*!
  * \internal
+ * \brief Apply a "this with" colocation to a node's allowed node scores
+ *
+ * \param[in] data       Colocation to apply
+ * \param[in] user_data  Resource being assigned
+ */
+static void
+apply_this_with(void *data, void *user_data)
+{
+    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    GHashTable *archive = NULL;
+    pe_resource_t *other = colocation->primary;
+
+    // In certain cases, we will need to revert the node scores
+    if ((colocation->dependent_role >= RSC_ROLE_PROMOTED)
+        || ((colocation->score < 0) && (colocation->score > -INFINITY))) {
+        archive = pcmk__copy_node_table(rsc->allowed_nodes);
+    }
+
+    pe_rsc_trace(rsc,
+                 "%s: Assigning colocation %s primary %s first"
+                 "(score=%d role=%s)",
+                 rsc->id, colocation->id, other->id,
+                 colocation->score, role2text(colocation->dependent_role));
+    other->cmds->assign(other, NULL);
+
+    // Apply the colocation score to this resource's allowed node scores
+    rsc->cmds->apply_coloc_score(rsc, other, colocation, true);
+    if ((archive != NULL)
+        && !pcmk__any_node_available(rsc->allowed_nodes)) {
+        pe_rsc_info(rsc,
+                    "%s: Reverting scores from colocation with %s "
+                    "because no nodes allowed",
+                    rsc->id, other->id);
+        g_hash_table_destroy(rsc->allowed_nodes);
+        rsc->allowed_nodes = archive;
+        archive = NULL;
+    }
+    if (archive != NULL) {
+        g_hash_table_destroy(archive);
+    }
+}
+
+/*!
+ * \internal
  * \brief Assign a primitive resource to a node
  *
  * \param[in] rsc     Resource to assign to a node
@@ -244,36 +290,9 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes,
                           rsc->cluster);
 
-    for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        GHashTable *archive = NULL;
-        pe_resource_t *primary = constraint->primary;
-
-        if ((constraint->dependent_role >= RSC_ROLE_PROMOTED)
-            || (constraint->score < 0 && constraint->score > -INFINITY)) {
-            archive = pcmk__copy_node_table(rsc->allowed_nodes);
-        }
-
-        pe_rsc_trace(rsc,
-                     "%s: Allocating %s first (constraint=%s score=%d role=%s)",
-                     rsc->id, primary->id, constraint->id,
-                     constraint->score, role2text(constraint->dependent_role));
-        primary->cmds->assign(primary, NULL);
-        rsc->cmds->apply_coloc_score(rsc, primary, constraint, true);
-        if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
-            pe_rsc_info(rsc, "%s: Rolling back scores from %s",
-                        rsc->id, primary->id);
-            g_hash_table_destroy(rsc->allowed_nodes);
-            rsc->allowed_nodes = archive;
-            archive = NULL;
-        }
-        if (archive) {
-            g_hash_table_destroy(archive);
-        }
-    }
-
-    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes,
+    g_list_foreach(rsc->rsc_cons, apply_this_with, rsc);
+    pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
                           rsc->cluster);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
