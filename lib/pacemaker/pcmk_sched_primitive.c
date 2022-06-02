@@ -85,18 +85,27 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Assign a resource to its best allowed node, if possible
+ *
+ * \param[in] rsc     Resource to choose a node for
+ * \param[in] prefer  If not NULL, prefer this node when all else equal
+ *
+ * \return true if \p rsc could be assigned to a node, otherwise false
+ */
 static bool
-native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
+assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *nodes = NULL;
     pe_node_t *chosen = NULL;
     pe_node_t *best = NULL;
-    int multiple = 1;
     bool result = false;
 
     pcmk__ban_insufficient_capacity(rsc, &prefer);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        // We've already finished assignment of resources to nodes
         return rsc->allocated_to != NULL;
     }
 
@@ -106,7 +115,8 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
         best = (pe_node_t *) nodes->data; // First node has best score
     }
 
-    if (prefer && nodes) {
+    if ((prefer != NULL) && (nodes != NULL)) {
+        // Get the allowed node version of prefer
         chosen = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
 
         if (chosen == NULL) {
@@ -136,18 +146,15 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
         }
     }
 
-    if ((chosen == NULL) && nodes) {
+    if ((chosen == NULL) && (best != NULL)) {
         /* Either there is no preferred node, or the preferred node is not
-         * available, but there are other nodes allowed to run the resource.
+         * suitable, but another node is allowed to run the resource.
          */
 
         chosen = best;
-        pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
-                     chosen ? chosen->details->uname : "<none>",
-                     rsc->id, g_list_length(nodes));
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
-            && (chosen != NULL) && (chosen->weight > 0) // Zero not acceptable
+            && (chosen->weight > 0) // Zero not acceptable
             && pcmk__node_available(chosen, false, false)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
@@ -155,39 +162,47 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
              * We don't do this for unique clone instances, because
              * distribute_children() has already assigned instances to their
              * running nodes when appropriate, and if we get here, we don't want
-             * remaining unallocated instances to prefer a node that's already
+             * remaining unassigned instances to prefer a node that's already
              * running another instance.
              */
             pe_node_t *running = pe__current_node(rsc);
 
-            if ((running != NULL)
-                && !pcmk__node_available(running, true, false)) {
+            if (running == NULL) {
+                // Nothing to do
+
+            } else if (!pcmk__node_available(running, true, false)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
 
-            } else if (running) {
-                for (GList *iter = nodes->next; iter; iter = iter->next) {
-                    pe_node_t *tmp = (pe_node_t *) iter->data;
+            } else {
+                int nodes_with_best_score = 1;
 
-                    if (tmp->weight != chosen->weight) {
+                for (GList *iter = nodes->next; iter; iter = iter->next) {
+                    pe_node_t *allowed = (pe_node_t *) iter->data;
+
+                    if (allowed->weight != chosen->weight) {
                         // The nodes are sorted by weight, so no more are equal
                         break;
                     }
-                    if (tmp->details == running->details) {
+                    if (allowed->details == running->details) {
                         // Scores are equal, so prefer the current node
-                        chosen = tmp;
+                        chosen = allowed;
                     }
-                    multiple++;
+                    nodes_with_best_score++;
+                }
+
+                if (nodes_with_best_score > 1) {
+                    do_crm_log(((chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO),
+                               "Chose node %s for %s from %d nodes with score %s",
+                               chosen->details->uname, rsc->id,
+                               nodes_with_best_score,
+                               pcmk_readable_score(chosen->weight));
                 }
             }
         }
-    }
 
-    if (multiple > 1) {
-        do_crm_log(((chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO),
-                   "Chose node %s for %s from %d nodes with score %s",
-                   chosen->details->uname, rsc->id, multiple,
-                   pcmk_readable_score(chosen->weight));
+        pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
+                     chosen->details->uname, rsc->id, g_list_length(nodes));
     }
 
     result = pcmk__assign_primitive(rsc, chosen, false);
@@ -315,7 +330,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
-               && native_choose_node(rsc, prefer, rsc->cluster)) {
+               && assign_best_node(rsc, prefer)) {
         pe_rsc_trace(rsc, "Allocated resource %s to %s", rsc->id,
                      rsc->allocated_to->details->uname);
 
