@@ -210,6 +210,15 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Assign a primitive resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
 pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
@@ -219,7 +228,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         /* never allocate children on their own */
         pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
                      rsc->parent->id);
-        rsc->parent->cmds->allocate(rsc->parent, prefer);
+        rsc->parent->cmds->assign(rsc->parent, prefer);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -250,7 +259,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
                      "%s: Allocating %s first (constraint=%s score=%d role=%s)",
                      rsc->id, primary->id, constraint->id,
                      constraint->score, role2text(constraint->dependent_role));
-        primary->cmds->allocate(primary, NULL);
+        primary->cmds->assign(primary, NULL);
         rsc->cmds->apply_coloc_score(rsc, primary, constraint, true);
         if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",

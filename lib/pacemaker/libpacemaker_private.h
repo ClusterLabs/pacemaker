@@ -54,7 +54,17 @@ enum pcmk__updated {
 
 // Resource allocation methods
 struct resource_alloc_functions_s {
-    pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
+    /*!
+     * \internal
+     * \brief Assign a resource to a node
+     *
+     * \param[in] rsc     Resource to assign to a node
+     * \param[in] prefer  Node to prefer, if all else is equal
+     *
+     * \return Node that \p rsc is assigned to, if assigned entirely to one node
+     */
+    pe_node_t *(*assign)(pe_resource_t *rsc, pe_node_t *prefer);
+
     void (*create_actions)(pe_resource_t *rsc);
 
     /*!

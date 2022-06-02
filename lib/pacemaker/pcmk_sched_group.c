@@ -81,6 +81,15 @@ expand_group_colocations(pe_resource_t *rsc)
     rsc->rsc_cons_lhs = NULL;
 }
 
+/*!
+ * \internal
+ * \brief Assign a group resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
 pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
@@ -119,7 +128,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 
         pe_rsc_trace(rsc, "Allocating group %s member %s",
                      rsc->id, child_rsc->id);
-        node = child_rsc->cmds->allocate(child_rsc, prefer);
+        node = child_rsc->cmds->assign(child_rsc, prefer);
         if (group_node == NULL) {
             group_node = node;
         }
