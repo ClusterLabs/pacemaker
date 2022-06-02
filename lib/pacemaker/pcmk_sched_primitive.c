@@ -329,7 +329,7 @@ remote_connection_assigned(pe_resource_t *connection)
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
 {
     CRM_ASSERT(rsc != NULL);
 

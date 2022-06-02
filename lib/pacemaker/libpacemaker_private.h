@@ -520,7 +520,7 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,

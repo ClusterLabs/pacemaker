@@ -19,7 +19,7 @@
 // Resource allocation methods that vary by resource variant
 static resource_alloc_functions_t allocation_methods[] = {
     {
-        pcmk__native_allocate,
+        pcmk__primitive_assign,
         native_create_actions,
         pcmk__probe_rsc_on_node,
         native_internal_constraints,
