@@ -258,6 +258,34 @@ apply_this_with(void *data, void *user_data)
 
 /*!
  * \internal
+ * \brief Apply a "with this" colocation to a node's allowed node scores
+ *
+ * \param[in] data       Colocation to apply
+ * \param[in] user_data  Resource being assigned
+ */
+static void
+apply_with_this(void *data, void *user_data)
+{
+    pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    pe_resource_t *other = colocation->dependent;
+    const float factor = colocation->score / (float) INFINITY;
+
+    if (!pcmk__colocation_has_influence(colocation, NULL)) {
+        return;
+    }
+    pe_rsc_trace(rsc,
+                 "%s: Incorporating attenuated %s assignment scores due "
+                 "to colocation %s", rsc->id, other->id, colocation->id);
+    other->cmds->add_colocated_node_scores(other, rsc->id,
+                                           &rsc->allowed_nodes,
+                                           colocation->node_attribute,
+                                           factor, pcmk__coloc_select_active);
+}
+
+/*!
+ * \internal
  * \brief Assign a primitive resource to a node
  *
  * \param[in] rsc     Resource to assign to a node
@@ -268,8 +296,6 @@ apply_this_with(void *data, void *user_data)
 pe_node_t *
 pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
-    GList *gIter = NULL;
-
     if (rsc->parent && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
         /* never allocate children on their own */
         pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
@@ -295,23 +321,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
     pe__show_node_weights(true, rsc, "Post-this-with", rsc->allowed_nodes,
                           rsc->cluster);
 
-    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-        pe_resource_t *dependent = constraint->dependent;
-        const float factor = constraint->score / (float) INFINITY;
-
-        if (!pcmk__colocation_has_influence(constraint, NULL)) {
-            continue;
-        }
-        pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
-                     constraint->id, constraint->dependent->id,
-                     constraint->primary->id);
-        dependent->cmds->add_colocated_node_scores(dependent, rsc->id,
-                                                   &rsc->allowed_nodes,
-                                                   constraint->node_attribute,
-                                                   factor,
-                                                   pcmk__coloc_select_active);
-    }
+    g_list_foreach(rsc->rsc_cons_lhs, apply_with_this, rsc);
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
