@@ -1545,7 +1545,7 @@ unpack_level_kind(xmlNode *level)
     }
     if (!stand_alone /* if standalone, there's no attribute manager */
         && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL)) {
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
     return fenced_target_by_unknown;
