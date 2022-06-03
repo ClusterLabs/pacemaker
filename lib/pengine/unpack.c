@@ -2776,17 +2776,6 @@ newer_state_after_migrate(const char *rsc_id, const char *node_name,
                                         data_set);
 }
 
-static int
-pe__call_id(xmlNode *op_xml)
-{
-    int id = 0;
-
-    if (op_xml) {
-        crm_element_value_int(op_xml, XML_LRM_ATTR_CALLID, &id);
-    }
-    return id;
-}
-
 static void
 unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set)
@@ -3000,7 +2989,6 @@ static void
 unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
                             xmlNode *xml_op, pe_working_set_t *data_set)
 {
-    xmlNode *source_stop = NULL;
     xmlNode *source_migrate_to = NULL;
     const char *source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
     const char *target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
@@ -3013,19 +3001,23 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
      */
     rsc->role = RSC_ROLE_STARTED;
 
-    // Check for a stop on the source
-    source_stop = find_lrm_op(rsc->id, CRMD_ACTION_STOP, source, NULL,
-                              PCMK_OCF_OK, data_set);
-
     // Check for a migrate_to on the source
     source_migrate_to = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE,
                                     source, target, PCMK_OCF_OK, data_set);
 
-    if ((source_stop == NULL)
-        || (pe__call_id(source_stop) < pe__call_id(source_migrate_to))) {
-        /* There was no stop on the source, or a stop that happened before
-         * migrate_to, so assume the resource is still active on the source (if
-         * it is up).
+    if (/* If the resource state is unknown on the source, it will likely be
+         * probed there.
+         * Don't just consider it running there. We will get back here anyway in
+         * case the probe detects it's running there.
+         */
+        !unknown_on_node(rsc->id, source, data_set)
+        /* If the resource has newer state on the source after the migration
+         * events, this migrate_from no longer matters for the source.
+         */
+        && !newer_state_after_migrate(rsc->id, source, source_migrate_to, xml_op,
+                                      data_set)) {
+        /* The resource has no newer state on the source, so assume it's still
+         * active there (if it is up).
          */
         pe_node_t *source_node = pe_find_node(data_set->nodes, source);
 
