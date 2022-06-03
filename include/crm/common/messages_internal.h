@@ -50,11 +50,14 @@ typedef struct {
      * generically, but each daemon uses a different XML attribute for it,
      * so the daemon is responsible for populating this field.
      *
+     * This must be a copy of the XML field, and not just a pointer into xml,
+     * because handlers might modify the original XML.
+     *
      * @TODO Create a per-daemon struct with IPC handlers, IPC endpoints, etc.,
      * and the name of the XML attribute for IPC commands, then replace this
-     * with a convenience function to grab the command.
+     * with a convenience function to copy the command.
      */
-    const char *op;                 // IPC command from xml
+    char *op;                       // IPC command name
 } pcmk__request_t;
 
 #define pcmk__set_request_flags(request, flags_to_set) do {         \
@@ -72,6 +75,7 @@ typedef struct {
 const char *pcmk__message_name(const char *name);
 GHashTable *pcmk__register_handlers(pcmk__server_command_t handlers[]);
 xmlNode *pcmk__process_request(pcmk__request_t *request, GHashTable *handlers);
+void pcmk__reset_request(pcmk__request_t *request);
 
 /*!
  * \internal

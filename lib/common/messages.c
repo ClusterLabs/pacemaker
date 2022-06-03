@@ -276,3 +276,18 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
 
     return (*handler)(request);
 }
+
+/*!
+ * \internal
+ * \brief Free memory used within a request (but not the request itself)
+ *
+ * \param[in] request  Request to reset
+ */
+void
+pcmk__reset_request(pcmk__request_t *request)
+{
+    free(request->op);
+    request->op = NULL;
+
+    pcmk__reset_result(&(request->result));
+}

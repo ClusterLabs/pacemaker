@@ -3498,7 +3498,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value(request.xml, F_STONITH_OPERATION);
+        request.op = crm_element_value_copy(request.xml, F_STONITH_OPERATION);
         CRM_CHECK(request.op != NULL, return);
 
         if (pcmk_is_set(request.call_options, st_opt_sync_call)) {
@@ -3506,6 +3506,6 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
         }
 
         handle_request(&request);
-        pcmk__reset_result(&request.result);
+        pcmk__reset_request(&request);
     }
 }
