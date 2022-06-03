@@ -40,7 +40,7 @@
         <lrm_resources id="lrm_resources.id21961">
           <lrm_resource id="rsc3" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="3.0.4" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-            <lrm_rsc_op id="rsc3_stop_0" operation="stop" interval="0" op-status="0" rc-code="0" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="3.0.4" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+	    <lrm_rsc_op id="rsc3_stop_0" operation="stop" interval="0" op-status="0" rc-code="0" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="3.0.4" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" last-rc-change="1342180268"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -49,7 +49,7 @@
       <lrm id="node2">
         <lrm_resources id="lrm_resources.id22036">
           <lrm_resource id="rsc3" class="ocf" provider="heartbeat" type="apache">
-            <lrm_rsc_op id="rsc3_migrate_from_0" operation="migrate_from" interval="0" op-status="4" rc-code="1" call-id="1" op-digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="3.0.4" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" migrate_source="node1" migrate_target="node2"/>
+            <lrm_rsc_op id="rsc3_migrate_from_0" operation="migrate_from" interval="0" op-status="4" rc-code="1" call-id="1" op-digest="a4ee04201fa9196ee5ef9928c48f35eb" crm_feature_set="3.0.4" transition-key="0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;0:0:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" migrate_source="node1" migrate_target="node2" last-rc-change="1342180267"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
