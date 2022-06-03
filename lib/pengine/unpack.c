@@ -2985,17 +2985,10 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             native_add_running(rsc, target_node, data_set, FALSE);
         }
 
-    } else if (!non_monitor_after(rsc->id, source, xml_op, true, data_set)
-               && target_migrate_from == NULL) {
-        /* We know there was a stop on the target, but there may not have been a
-         * migrate_from (the stop could have happened before migrate_from was
-         * scheduled or attempted).
-         *
-         * That means this could be a "dangling" migration. But first, check
-         * whether there is a newer successful stop, start, or migrate_from on
-         * the source node -- it's possible the failed migration was followed by
-         * a successful stop, full restart, or migration in the reverse
-         * direction, in which case we don't want to force a stop.
+    } else if (!non_monitor_after(rsc->id, source, xml_op, true, data_set)) {
+        /* We know the resource has newer state on the target, but this
+         * migrate_to still matters for the source as long as there's no newer
+         * non-monitor operation there.
          */
 
         // Mark node as having dangling migration so we can force a stop later
