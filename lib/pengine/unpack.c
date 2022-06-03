@@ -2990,11 +2990,11 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * case the probe detects it's running there.
          */
         !unknown_on_node(rsc->id, target, data_set)
-        /* If there's any probe/monitor operation on the target newer than this
-         * failed migrate_to indicating it was not running there, this migrate_to
-         * failure no longer matters for the target.
+        /* If the resource has newer state on the target after the migration
+         * events, this migrate_to no longer matters for the target.
          */
-        && !monitor_not_running_after(rsc->id, target, xml_op, false, data_set)
+        && !newer_state_after_migrate(rsc->id, target, xml_op, target_migrate_from,
+                                      data_set)
         && ((target_stop == NULL) || (target_stop_id < target_migrate_from_id))) {
         /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
