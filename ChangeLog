@@ -1,3 +1,15 @@
+* Fri Jun 03 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.4-rc1
+- Changesets: 11
+- Diff: 8 files changed, 31 insertions(+), 11 deletions(-)
+
+- Fixes since Pacemaker-2.1.3
+  + fencing: get target-by-attribute working again (regression in 2.1.3)
+  + fencing: avoid use-after-free when processing self-fencing requests
+             with topology (regression in 2.1.3)
+  + fencing: avoid memory leaks when processing topology requests
+  + fencing: delegate shouldn't matter when checking equivalent fencing
+  + tools: fix CSS syntax error in crm_mon --output-as=html
+
 * Wed Jun 1 2022 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.3
 - Changesets: 814
 - Diff: 332 files changed, 23435 insertions(+), 12137 deletions(-)

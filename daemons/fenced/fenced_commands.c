@@ -1549,7 +1549,7 @@ unpack_level_kind(xmlNode *level)
     }
     if (!stand_alone /* if standalone, there's no attribute manager */
         && (crm_element_value(level, XML_ATTR_STONITH_TARGET_ATTRIBUTE) != NULL)
-        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) == NULL)) {
+        && (crm_element_value(level, XML_ATTR_STONITH_TARGET_VALUE) != NULL)) {
         return fenced_target_by_attribute;
     }
     return fenced_target_by_unknown;
@@ -1669,6 +1669,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         if (tp == NULL) {
             pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                              strerror(ENOMEM));
+            free(target);
             return;
         }
         tp->kind = mode;
@@ -3326,6 +3327,7 @@ handle_level_delete_request(pcmk__request_t *request)
                          "Unprivileged users must delete level via CIB");
     }
     fenced_send_level_notification(op, &request->result, device_id);
+    free(device_id);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3496,7 +3498,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value(request.xml, F_STONITH_OPERATION);
+        request.op = crm_element_value_copy(request.xml, F_STONITH_OPERATION);
         CRM_CHECK(request.op != NULL, return);
 
         if (pcmk_is_set(request.call_options, st_opt_sync_call)) {
@@ -3504,6 +3506,6 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
         }
 
         handle_request(&request);
-        pcmk__reset_result(&request.result);
+        pcmk__reset_request(&request);
     }
 }

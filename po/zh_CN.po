@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-04-08 10:34-0500\n"
+"POT-Creation-Date: 2022-06-03 09:28-0500\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -107,20 +107,20 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:590
+#: lib/common/options.c:594
 msgid "  Allowed values: "
 msgstr ""
 
-#: lib/pengine/common.c:131
+#: lib/pengine/common.c:119
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用看门狗集成设置"
 
-#: tools/crm_resource.c:1388
+#: tools/crm_resource.c:1405
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1394
+#: tools/crm_resource.c:1411
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
