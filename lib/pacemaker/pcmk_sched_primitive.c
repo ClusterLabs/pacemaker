@@ -435,6 +435,21 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
     return rsc->allocated_to;
 }
 
+/*!
+ * \internal
+ * \brief Parse an interval from XML
+ *
+ * \param[in] xml  XML containing an interval attribute
+ *
+ * \return Interval parsed from XML (or 0 as default)
+ */
+static guint
+xe_interval(const xmlNode *xml)
+{
+    return crm_parse_interval_spec(crm_element_value(xml,
+                                                     XML_LRM_ATTR_INTERVAL));
+}
+
 static gboolean
 is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
 {
@@ -442,7 +457,6 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
     const char *id = NULL;
     const char *value = NULL;
     xmlNode *operation = NULL;
-    guint interval2_ms = 0;
 
     CRM_ASSERT(rsc);
     for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
@@ -454,9 +468,7 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
                 continue;
             }
 
-            value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            interval2_ms = crm_parse_interval_spec(value);
-            if (interval_ms != interval2_ms) {
+            if (xe_interval(operation) != interval_ms) {
                 continue;
             }
 
@@ -488,10 +500,9 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *interval_spec = NULL;
     const char *node_uname = node? node->details->uname : "n/a";
 
-    guint interval_ms = 0;
+    guint interval_ms = xe_interval(operation);
     pe_action_t *mon = NULL;
     gboolean is_optional = TRUE;
     GList *possible_matches = NULL;
@@ -504,8 +515,6 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         return;
     }
 
-    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_parse_interval_spec(interval_spec);
     if (interval_ms == 0) {
         return;
     }
@@ -682,10 +691,9 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *interval_spec = NULL;
     const char *node_uname = node? node->details->uname : "n/a";
 
-    guint interval_ms = 0;
+    guint interval_ms = xe_interval(operation);
     GList *possible_matches = NULL;
     GList *gIter = NULL;
 
@@ -695,8 +703,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         return;
     }
 
-    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_parse_interval_spec(interval_spec);
     if (interval_ms == 0) {
         return;
     }
