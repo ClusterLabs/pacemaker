@@ -565,6 +565,60 @@ is_recurring_history(const pe_resource_t *rsc, const xmlNode *op, char **key,
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a recurring action for an active role should be optional
+ *
+ * \param[in] rsc    Resource that recurring action is for
+ * \param[in] node   Node that \p rsc will be active on (if any)
+ * \param[in] key    Operation key for recurring action to check
+ * \param[in] start  Start action for \p rsc
+ *
+ * \return true if recurring action should be optional, otherwise false
+ */
+static bool
+active_recurring_should_be_optional(const pe_resource_t *rsc,
+                                    const pe_node_t *node, const char *key,
+                                    pe_action_t *start)
+{
+    GList *possible_matches = NULL;
+
+    if (node == NULL) { // Should only be possible if unmanaged and stopped
+        pe_rsc_trace(rsc, "%s will be mandatory because resource is unmanaged",
+                     key);
+        return false;
+    }
+
+    if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
+                     pe_action_optional)) {
+        pe_rsc_trace(rsc, "%s will be mandatory because %s is",
+                     key, start->uuid);
+        return false;
+    }
+
+    possible_matches = find_actions_exact(rsc->actions, key, node);
+    if (possible_matches == NULL) {
+        pe_rsc_trace(rsc, "%s will be mandatory because it is not active on %s",
+                     key, node->details->uname);
+        return false;
+    }
+
+    for (GList *iter = possible_matches; iter != NULL; iter = iter->next) {
+        pe_action_t *op = (pe_action_t *) iter->data;
+
+        if (pcmk_is_set(op->flags, pe_action_reschedule)) {
+            pe_rsc_trace(rsc,
+                         "%s will be mandatory because "
+                         "it needs to be rescheduled", key);
+            g_list_free(possible_matches);
+            return false;
+        }
+    }
+
+    g_list_free(possible_matches);
+    return true;
+}
+
 static void
 RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             xmlNode * operation, pe_working_set_t * data_set)
@@ -576,8 +630,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
     guint interval_ms = 0;
     pe_action_t *mon = NULL;
-    gboolean is_optional = TRUE;
-    GList *possible_matches = NULL;
+    bool is_optional = true;
 
     /* Only process for the operations without role="Stopped" */
     role = crm_element_value(operation, "role");
@@ -594,30 +647,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     pe_rsc_trace(rsc, "Creating recurring action %s for %s in role %s on %s",
                  ID(operation), rsc->id, role2text(rsc->next_role), node_uname);
 
-    pe_rsc_trace(rsc, "Marking %s %s due to %s", key,
-                 pcmk_is_set(start->flags, pe_action_optional)? "optional" : "mandatory",
-                 start->uuid);
-    is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
-
-    /* start a monitor for an already active resource */
-    possible_matches = find_actions_exact(rsc->actions, key, node);
-    if (possible_matches == NULL) {
-        is_optional = FALSE;
-        pe_rsc_trace(rsc, "Marking %s mandatory: not active", key);
-
-    } else {
-        GList *gIter = NULL;
-
-        for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *op = (pe_action_t *) gIter->data;
-
-            if (pcmk_is_set(op->flags, pe_action_reschedule)) {
-                is_optional = FALSE;
-                break;
-            }
-        }
-        g_list_free(possible_matches);
-    }
+    is_optional = active_recurring_should_be_optional(rsc, node, key, start);
 
     if (((rsc->next_role == RSC_ROLE_PROMOTED) && (role == NULL))
         || (role != NULL && text2role(role) != rsc->next_role)) {
