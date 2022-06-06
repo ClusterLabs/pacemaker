@@ -579,8 +579,6 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     gboolean is_optional = TRUE;
     GList *possible_matches = NULL;
 
-    CRM_ASSERT(rsc);
-
     /* Only process for the operations without role="Stopped" */
     role = crm_element_value(operation, "role");
     if (role && text2role(role) == RSC_ROLE_STOPPED) {
@@ -596,15 +594,10 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     pe_rsc_trace(rsc, "Creating recurring action %s for %s in role %s on %s",
                  ID(operation), rsc->id, role2text(rsc->next_role), node_uname);
 
-    if (start != NULL) {
-        pe_rsc_trace(rsc, "Marking %s %s due to %s", key,
-                     pcmk_is_set(start->flags, pe_action_optional)? "optional" : "mandatory",
-                     start->uuid);
-        is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
-    } else {
-        pe_rsc_trace(rsc, "Marking %s optional", key);
-        is_optional = TRUE;
-    }
+    pe_rsc_trace(rsc, "Marking %s %s due to %s", key,
+                 pcmk_is_set(start->flags, pe_action_optional)? "optional" : "mandatory",
+                 start->uuid);
+    is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
 
     /* start a monitor for an already active resource */
     possible_matches = find_actions_exact(rsc->actions, key, node);
@@ -678,7 +671,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         pe_rsc_trace(rsc, "%s\t   %s (optional)", node_uname, mon->uuid);
     }
 
-    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(start->flags, pe_action_runnable)) {
         pe_rsc_debug(rsc, "%s\t   %s (cancelled : start un-runnable)",
                      node_uname, mon->uuid);
         pe__clear_action_flags(mon, pe_action_runnable);
