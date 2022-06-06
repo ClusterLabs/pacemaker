@@ -208,7 +208,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc,
                      (optional? "optional" : "required"),
                      data_set->action_id, key, task,
                      ((rsc == NULL)? "no resource" : rsc->id),
-                     ((node == NULL)? "no node" : node->details->uname));
+                     pe__node_name(node));
         action->id = data_set->action_id++;
 
         data_set->actions = g_list_prepend(data_set->actions, action);
@@ -267,7 +267,7 @@ update_action_optional(pe_action_t *action, gboolean optional)
         && (g_hash_table_lookup(action->meta,
                                 XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
             pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
-                         action->uuid, action->node->details->uname,
+                         action->uuid, pe__node_name(action->node),
                          action->rsc->id);
             pe__set_action_flags(action, pe_action_optional);
             // We shouldn't clear runnable here because ... something
@@ -334,7 +334,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
         pe__clear_action_flags(action, pe_action_runnable);
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
                    "%s on %s is unrunnable (node is offline)",
-                   action->uuid, action->node->details->uname);
+                   action->uuid, pe__node_name(action->node));
         if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
             && for_graph
             && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
@@ -347,7 +347,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
         pe__clear_action_flags(action, pe_action_runnable);
         do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
                    "Action %s on %s is unrunnable (node is pending)",
-                   action->uuid, action->node->details->uname);
+                   action->uuid, pe__node_name(action->node));
 
     } else if (action->needs == rsc_req_nothing) {
         pe_action_set_reason(action, NULL, TRUE);
@@ -360,12 +360,12 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
              */
             pe_rsc_debug(action->rsc, "%s on %s is unrunnable "
                          "(node's host cannot be fenced)",
-                         action->uuid, action->node->details->uname);
+                         action->uuid, pe__node_name(action->node));
             pe__clear_action_flags(action, pe_action_runnable);
         } else {
             pe_rsc_trace(action->rsc,
                          "%s on %s does not require fencing or quorum",
-                         action->uuid, action->node->details->uname);
+                         action->uuid, pe__node_name(action->node));
             pe__set_action_flags(action, pe_action_runnable);
         }
 
@@ -373,7 +373,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
         switch (effective_quorum_policy(action->rsc, data_set)) {
             case no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
-                             action->uuid, action->node->details->uname);
+                             action->uuid, pe__node_name(action->node));
                 pe__clear_action_flags(action, pe_action_runnable);
                 pe_action_set_reason(action, "no quorum", true);
                 break;
@@ -383,7 +383,7 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                     || (action->rsc->next_role > action->rsc->role)) {
                     pe_rsc_debug(action->rsc,
                                  "%s on %s is unrunnable (no quorum)",
-                                 action->uuid, action->node->details->uname);
+                                 action->uuid, pe__node_name(action->node));
                     pe__clear_action_flags(action, pe_action_runnable);
                     pe_action_set_reason(action, "quorum freeze", true);
                 }
@@ -1223,11 +1223,15 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                 data = pe__compare_fencing_digest(match, agent, node, data_set);
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
-                    crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
+                    crm_notice("Unfencing Pacemaker Remote node %s "
+                               "because the definition of %s changed",
+                               pe__node_name(node), match->id);
                     if (!pcmk__is_daemon && data_set->priv != NULL) {
                         pcmk__output_t *out = data_set->priv;
-                        out->info(out, "notice: Unfencing %s (remote): because the definition of %s changed",
-                                  node->details->uname, match->id);
+                        out->info(out,
+                                  "notice: Unfencing Pacemaker Remote node %s "
+                                  "because the definition of %s changed",
+                                  pe__node_name(node), match->id);
                     }
                 }
 
@@ -1433,13 +1437,13 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
 
         } else if (action->node == NULL) {
             crm_trace("Action %s matches (unallocated, assigning to %s)",
-                      key, on_node->details->uname);
+                      key, pe__node_name(on_node));
 
             action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
         } else if (on_node->details == action->node->details) {
-            crm_trace("Action %s on %s matches", key, on_node->details->uname);
+            crm_trace("Action %s on %s matches", key, pe__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }
@@ -1466,7 +1470,7 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
             && pcmk__str_eq(on_node->details->id, action->node->details->id,
                             pcmk__str_casei)) {
 
-            crm_trace("Action %s on %s matches", key, on_node->details->uname);
+            crm_trace("Action %s on %s matches", key, pe__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }

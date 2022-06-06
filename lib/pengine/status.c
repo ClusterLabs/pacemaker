@@ -208,7 +208,7 @@ pe_free_nodes(GList *nodes)
          * use node->details->uname for Pacemaker Remote nodes.
          */
         crm_trace("Freeing node %s", (pe__is_guest_or_remote_node(node)?
-                  "(guest or remote)" : node->details->uname));
+                  "(guest or remote)" : pe__node_name(node)));
 
         if (node->details->attrs != NULL) {
             g_hash_table_destroy(node->details->attrs);

@@ -298,7 +298,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
 
         if (now > (last + rsc->failure_timeout)) {
             crm_debug("Failcount for %s on %s expired after %ds",
-                      rsc->id, node->details->uname, rsc->failure_timeout);
+                      rsc->id, pe__node_name(node), rsc->failure_timeout);
             failcount = 0;
         }
     }
@@ -334,13 +334,13 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
             crm_info("Container %s and the resources within it "
                      "have failed %s time%s on %s",
                      rsc->id, pcmk_readable_score(failcount),
-                     pcmk__plural_s(failcount), node->details->uname);
+                     pcmk__plural_s(failcount), pe__node_name(node));
         }
 
     } else if (failcount > 0) {
         crm_info("%s has failed %s time%s on %s",
                  rsc->id, pcmk_readable_score(failcount),
-                 pcmk__plural_s(failcount), node->details->uname);
+                 pcmk__plural_s(failcount), pe__node_name(node));
     }
 
     return failcount;
@@ -370,6 +370,6 @@ pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
                           data_set);
     add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-               rsc->id, node->details->uname, reason, clear->uuid);
+               rsc->id, pe__node_name(node), reason, clear->uuid);
     return clear;
 }

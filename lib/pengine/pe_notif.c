@@ -334,7 +334,7 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
     }
     if (skip_reason != NULL) {
         pe_rsc_trace(rsc, "Skipping notify action for %s on %s: %s",
-                     rsc->id, node->details->uname, skip_reason);
+                     rsc->id, pe__node_name(node), skip_reason);
         return NULL;
     }
 
@@ -342,7 +342,7 @@ new_notify_action(pe_resource_t *rsc, pe_node_t *node, pe_action_t *op,
     task = g_hash_table_lookup(op->meta, "notify_operation"); // original action
 
     pe_rsc_trace(rsc, "Creating notify action for %s on %s (%s-%s)",
-                 rsc->id, node->details->uname, value, task);
+                 rsc->id, pe__node_name(node), value, task);
 
     // Create the notify action
     key = pcmk__notify_key(rsc->id, value, task);
@@ -588,8 +588,7 @@ collect_resource_data(pe_resource_t *rsc, bool activity, notify_data_t *n_data)
         default:
             crm_err("Resource %s role on %s (%s) is not supported for "
                     "notifications (bug?)",
-                    rsc->id, ((node == NULL)? "no node" : node->details->uname),
-                    role2text(rsc->role));
+                    rsc->id, pe__node_name(node), role2text(rsc->role));
             free(entry);
             break;
     }

@@ -68,11 +68,12 @@ pe_can_fence(pe_working_set_t *data_set, pe_node_t *node)
         return false;
 
     } else if(node->details->online) {
-        crm_notice("We can fence %s without quorum because they're in our membership", node->details->uname);
+        crm_notice("We can fence %s without quorum because they're in our membership",
+                   pe__node_name(node));
         return true;
     }
 
-    crm_trace("Cannot fence %s", node->details->uname);
+    crm_trace("Cannot fence %s", pe__node_name(node));
     return false;
 }
 
@@ -253,12 +254,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
                                         "%s: %s allocation score on %s: %s",
                                         LOG_TRACE, line, 0,
                                         comment, rsc->id,
-                                        node->details->uname,
+                                        pe__node_name(node),
                                         pcmk_readable_score(node->weight));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
                                         LOG_TRACE, line, 0,
-                                        comment, node->details->uname,
+                                        comment, pe__node_name(node),
                                         pcmk_readable_score(node->weight));
         }
     }
@@ -382,7 +383,8 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
         }
     }
 
-    pe_rsc_trace(rsc, "Setting %s for %s on %s: %d", tag, rsc->id, node->details->uname, score);
+    pe_rsc_trace(rsc, "Setting %s for %s on %s: %d",
+                 tag, rsc->id, pe__node_name(node), score);
     match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match == NULL) {
         match = pe__copy_node(node);
@@ -419,7 +421,8 @@ resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *
 
     if (node == NULL && score == -INFINITY) {
         if (rsc->allocated_to) {
-            crm_info("Deallocating %s from %s", rsc->id, rsc->allocated_to->details->uname);
+            crm_info("Deallocating %s from %s",
+                     rsc->id, pe__node_name(rsc->allocated_to));
             free(rsc->allocated_to);
             rsc->allocated_to = NULL;
         }

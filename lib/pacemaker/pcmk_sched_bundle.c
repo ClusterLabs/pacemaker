@@ -345,7 +345,7 @@ compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
     get_bundle_variant_data(bundle_data, rsc);
 
     crm_trace("Looking for compatible child from %s for %s on %s",
-              rsc_lh->id, rsc->id, candidate->details->uname);
+              rsc_lh->id, rsc->id, pe__node_name(candidate));
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -354,7 +354,7 @@ compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
         if (is_child_compatible(replica->container, candidate, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
                       rsc_lh->id, replica->container->id,
-                      candidate->details->uname);
+                      pe__node_name(candidate));
             return replica->container;
         }
     }
@@ -528,8 +528,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
             }
 
             pe_rsc_trace(primary, "Allowing %s: %s %d",
-                         colocation->id, chosen->details->uname,
-                         chosen->weight);
+                         colocation->id, pe__node_name(chosen), chosen->weight);
             allocated_primaries = g_list_prepend(allocated_primaries, chosen);
         }
     }
@@ -583,7 +582,7 @@ find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_nod
     }
 
     crm_trace("Looking for compatible child from %s for %s on %s",
-              local_child->id, rsc->id, local_node->details->uname);
+              local_child->id, rsc->id, pe__node_name(local_node));
 
     children = get_containers_or_children(rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
@@ -591,7 +590,7 @@ find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_nod
 
         if(is_child_compatible(child_rsc, local_node, filter, current)) {
             crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, local_node->details->uname);
+                      local_child->id, child_rsc->id, pe__node_name(local_node));
             return child_rsc;
         }
     }
@@ -1075,7 +1074,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
             if (probe != NULL) {
                 any_created = true;
                 crm_trace("Ordering %s probe on %s",
-                          replica->remote->id, node->details->uname);
+                          replica->remote->id, pe__node_name(node));
                 pcmk__new_ordering(replica->container,
                                    pcmk__op_key(replica->container->id, RSC_START, 0),
                                    NULL, replica->remote, NULL, probe,

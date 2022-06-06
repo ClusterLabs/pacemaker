@@ -149,43 +149,55 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role),
+                                    role2text(rsc->next_role),
+                                    pe__node_name(destination));
 
     } else if (origin == NULL) {
         /* Starting a resource */
-        details = crm_strdup_printf("%s", destination->details->uname);
+        details = crm_strdup_printf("%s", pe__node_name(destination));
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+        details = crm_strdup_printf("%s %s", role2text(rsc->role),
+                                    pe__node_name(origin));
 
     } else if (destination == NULL) {
         /* Stopping a resource */
-        details = crm_strdup_printf("%s", origin->details->uname);
+        details = crm_strdup_printf("%s", pe__node_name(origin));
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+        details = crm_strdup_printf("%s %s", role2text(rsc->role),
+                                    pe__node_name(origin));
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        details = crm_strdup_printf("%s", origin->details->uname);
+        details = crm_strdup_printf("%s", pe__node_name(origin));
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
+        details = crm_strdup_printf("%s -> %s %s", pe__node_name(origin),
+                                    pe__node_name(destination),
+                                    role2text(rsc->role));
 
     } else if (same_role) {
         /* Moving a normal resource */
-        details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
+        details = crm_strdup_printf("%s -> %s", pe__node_name(origin),
+                                    pe__node_name(destination));
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role),
+                                    role2text(rsc->next_role),
+                                    pe__node_name(origin));
 
     } else {
         /* Moving and promoting/demoting */
-        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role), origin->details->uname, role2text(rsc->next_role), destination->details->uname);
+        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role),
+                                    pe__node_name(origin),
+                                    role2text(rsc->next_role),
+                                    pe__node_name(destination));
     }
 
     len = strlen(details);
@@ -518,7 +530,7 @@ locations_list(pcmk__output_t *out, va_list args) {
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
-                           node->details->uname,
+                           pe__node_name(node),
                            pcmk_readable_score(node->weight), cons->id,
                            rsc->id);
         }
@@ -966,7 +978,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                                   current, next, promote, demote);
             } else {
                 pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
-                            role2text(rsc->role), next->details->uname);
+                            role2text(rsc->role), pe__node_name(next));
             }
 
         } else if (!pcmk_is_set(start->flags, pe_action_runnable)) {

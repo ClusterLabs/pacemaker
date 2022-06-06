@@ -878,8 +878,8 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
                 (primary_node->details != dependent->allocated_to->details)) {
                 crm_err("%s must be colocated with %s but is not (%s vs. %s)",
                         dependent->id, primary->id,
-                        dependent->allocated_to->details->uname,
-                        (primary_node == NULL)? "unallocated" : primary_node->details->uname);
+                        pe__node_name(dependent->allocated_to),
+                        pe__node_name(primary_node));
             }
 
         } else if (constraint->score <= -CRM_SCORE_INFINITY) {
@@ -889,7 +889,7 @@ pcmk__colocation_affects(pe_resource_t *dependent, pe_resource_t *primary,
                 (dependent->allocated_to->details == primary_node->details)) {
                 crm_err("%s and %s must be anti-colocated but are allocated "
                         "to the same node (%s)",
-                        dependent->id, primary->id, primary_node->details->uname);
+                        dependent->id, primary->id, pe__node_name(primary_node));
             }
         }
         return pcmk__coloc_affects_nothing;
@@ -975,7 +975,7 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         if (primary->allocated_to == NULL) {
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s inactive)",
-                         constraint->id, dependent->id, node->details->uname,
+                         constraint->id, dependent->id, pe__node_name(node),
                          constraint->score, primary->id);
             node->weight = pcmk__add_scores(-constraint->score, node->weight);
 
@@ -984,14 +984,14 @@ pcmk__apply_coloc_to_weights(pe_resource_t *dependent, pe_resource_t *primary,
             if (constraint->score < CRM_SCORE_INFINITY) {
                 pe_rsc_trace(dependent, "%s: %s@%s += %d",
                              constraint->id, dependent->id,
-                             node->details->uname, constraint->score);
+                             pe__node_name(node), constraint->score);
                 node->weight = pcmk__add_scores(constraint->score,
                                                 node->weight);
             }
 
         } else if (constraint->score >= CRM_SCORE_INFINITY) {
             pe_rsc_trace(dependent, "%s: %s@%s -= %d (%s mismatch)",
-                         constraint->id, dependent->id, node->details->uname,
+                         constraint->id, dependent->id, pe__node_name(node),
                          constraint->score, attribute);
             node->weight = pcmk__add_scores(-constraint->score, node->weight);
         }
@@ -1153,13 +1153,13 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
              * @TODO Consider filtering only if weight is -INFINITY
              */
             crm_trace("%s: Filtering %d + %f * %d (double negative disallowed)",
-                      node->details->uname, node->weight, factor, score);
+                      pe__node_name(node), node->weight, factor, score);
             continue;
         }
 
         if (node->weight == INFINITY_HACK) {
             crm_trace("%s: Filtering %d + %f * %d (node was marked unusable)",
-                      node->details->uname, node->weight, factor, score);
+                      pe__node_name(node), node->weight, factor, score);
             continue;
         }
 
@@ -1185,7 +1185,7 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
         if (only_positive && (new_score < 0) && (node->weight > 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d "
                       "(negative disallowed, marking node unusable)",
-                      node->details->uname, node->weight, factor, score,
+                      pe__node_name(node), node->weight, factor, score,
                       new_score);
             node->weight = INFINITY_HACK;
             continue;
@@ -1193,12 +1193,12 @@ add_node_scores_matching_attr(GHashTable *nodes, const pe_resource_t *rsc,
 
         if (only_positive && (new_score < 0) && (node->weight == 0)) {
             crm_trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
-                      node->details->uname, node->weight, factor, score,
+                      pe__node_name(node), node->weight, factor, score,
                       new_score);
             continue;
         }
 
-        crm_trace("%s: %d + %f * %d = %d", node->details->uname,
+        crm_trace("%s: %d + %f * %d = %d", pe__node_name(node),
                   node->weight, factor, score, new_score);
         node->weight = new_score;
     }

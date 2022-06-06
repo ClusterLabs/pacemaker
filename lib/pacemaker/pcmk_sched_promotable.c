@@ -135,7 +135,7 @@ apply_promoted_locations(pe_resource_t *child, GList *location_constraints,
             pe_rsc_trace(child,
                          "Applying location %s to %s promotion priority on %s: "
                          "%d + %d = %d",
-                         location->id, child->id, weighted_node->details->uname,
+                         location->id, child->id, pe__node_name(weighted_node),
                          child->priority, weighted_node->weight, new_priority);
             child->priority = new_priority;
         }
@@ -178,7 +178,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
-                       rsc->id, node->details->uname);
+                       rsc->id, pe__node_name(node));
         } else {
             pe_rsc_trace(rsc, "%s can't be promoted because it is unmanaged",
                          rsc->id);
@@ -194,7 +194,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
 
     } else if (!pcmk__node_available(node, false, true)) {
         pe_rsc_trace(rsc, "%s can't be promoted because %s can't run resources",
-                     rsc->id, node->details->uname);
+                     rsc->id, pe__node_name(node));
         return NULL;
     }
 
@@ -208,7 +208,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
         if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             crm_warn("%s can't be promoted because %s is not allowed on %s "
                      "(scheduler bug?)",
-                     rsc->id, parent->id, node->details->uname);
+                     rsc->id, parent->id, pe__node_name(node));
         } // else the instance is unmanaged and already promoted
         return NULL;
 
@@ -217,7 +217,7 @@ node_to_be_promoted_on(pe_resource_t *rsc)
         pe_rsc_trace(rsc,
                      "%s can't be promoted because %s has "
                      "maximum promoted instances already",
-                     rsc->id, node->details->uname);
+                     rsc->id, pe__node_name(node));
         return NULL;
     }
 
@@ -319,7 +319,7 @@ add_sort_index_to_node_weight(gpointer data, gpointer user_data)
 
     pe_rsc_trace(clone, "Adding sort index %s of %s to weight for %s",
                  pcmk_readable_score(child->sort_index), child->id,
-                 node->details->uname);
+                 pe__node_name(node));
     node->weight = pcmk__add_scores(child->sort_index, node->weight);
 }
 
@@ -602,7 +602,7 @@ promotion_score_applies(pe_resource_t *rsc, const pe_node_t *node)
     } else {
         pe_rsc_trace(rsc,
                      "Ignoring %s promotion score (for %s) on %s: not probed",
-                     rsc->id, id, node->details->uname);
+                     rsc->id, id, pe__node_name(node));
         free(id);
         return false;
     }
@@ -610,13 +610,13 @@ promotion_score_applies(pe_resource_t *rsc, const pe_node_t *node)
 check_allowed:
     if (is_allowed(rsc, node)) {
         pe_rsc_trace(rsc, "Counting %s promotion score (for %s) on %s: %s",
-                     rsc->id, id, node->details->uname, reason);
+                     rsc->id, id, pe__node_name(node), reason);
         free(id);
         return true;
     }
 
     pe_rsc_trace(rsc, "Ignoring %s promotion score (for %s) on %s: not allowed",
-                 rsc->id, id, node->details->uname);
+                 rsc->id, id, pe__node_name(node));
     free(id);
     return false;
 }
@@ -700,7 +700,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
     attr_value = promotion_attr_value(rsc, node, name);
     if (attr_value != NULL) {
         pe_rsc_trace(rsc, "Promotion score for %s on %s = %s",
-                     name, node->details->uname, pcmk__s(attr_value, "(unset)"));
+                     name, pe__node_name(node), pcmk__s(attr_value, "(unset)"));
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         /* If we don't have any resource history yet, we won't have clone_name.
          * In that case, for anonymous clones, try the resource name without
@@ -710,7 +710,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, bool *is_default)
         if (strcmp(rsc->id, name) != 0) {
             attr_value = promotion_attr_value(rsc, node, name);
             pe_rsc_trace(rsc, "Promotion score for %s on %s (for %s) = %s",
-                         name, node->details->uname, rsc->id,
+                         name, pe__node_name(node), rsc->id,
                          pcmk__s(attr_value, "(unset)"));
         }
         free(name);
@@ -762,7 +762,7 @@ pcmk__add_promotion_scores(pe_resource_t *rsc)
                     pe_rsc_trace(rsc,
                                  "Adding promotion score to preference "
                                  "for %s on %s (%d->%d)",
-                                 child_rsc->id, node->details->uname,
+                                 child_rsc->id, pe__node_name(node),
                                  node->weight, new_score);
                     node->weight = new_score;
                 }
@@ -860,7 +860,7 @@ show_promotion_score(pe_resource_t *instance)
         pe_rsc_debug(uber_parent(instance),
                      "%s promotion score on %s: sort=%s priority=%s",
                      instance->id,
-                     ((chosen == NULL)? "none" : chosen->details->uname),
+                     ((chosen == NULL)? "none" : pe__node_name(chosen)),
                      pcmk_readable_score(instance->sort_index),
                      pcmk_readable_score(instance->priority));
     }
@@ -1001,7 +1001,7 @@ set_instance_role(gpointer data, gpointer user_data)
     chosen->count++;
     pe_rsc_info(clone, "Choosing %s (%s) on %s for promotion",
                 instance->id, role2text(instance->role),
-                chosen->details->uname);
+                pe__node_name(chosen));
     set_next_role_promoted(instance, NULL);
     (*count)++;
 }
@@ -1157,7 +1157,7 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
     pe_rsc_trace(colocation->primary,
                  "Applying %s (%s with %s on %s by %s @%d) to %s",
                  colocation->id, colocation->dependent->id,
-                 colocation->primary->id, primary_node->details->uname, attr,
+                 colocation->primary->id, pe__node_name(primary_node), attr,
                  colocation->score, dependent->id);
 
     g_hash_table_iter_init(&iter, dependent->allowed_nodes);
@@ -1166,7 +1166,7 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
 
         if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
             pe_rsc_trace(colocation->primary, "%s: %d + %d",
-                         node->details->uname, node->weight, colocation->score);
+                         pe__node_name(node), node->weight, colocation->score);
             node->weight = pcmk__add_scores(node->weight, colocation->score);
         }
     }

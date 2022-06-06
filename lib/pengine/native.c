@@ -61,8 +61,8 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
     }
 
     node->details->priority += priority;
-    pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s)",
-                 node->details->uname, node->details->priority,
+    pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s)",
+                 pe__node_name(node), node->details->priority,
                  (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                  rsc->id, rsc->priority,
                  (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "");
@@ -77,13 +77,13 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, gboolean failed)
             pe_node_t *a_node = gIter->data;
 
             a_node->details->priority += priority;
-            pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s) "
-                         "from guest node '%s'",
-                         a_node->details->uname, a_node->details->priority,
+            pe_rsc_trace(rsc, "%s now has priority %d with %s'%s' (priority: %d%s) "
+                         "from guest node %s",
+                         pe__node_name(a_node), a_node->details->priority,
                          (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                          rsc->id, rsc->priority,
                          (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "",
-                         node->details->uname);
+                         pe__node_name(node));
         }
     }
 }
@@ -103,7 +103,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
         }
     }
 
-    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, node->details->uname,
+    pe_rsc_trace(rsc, "Adding %s to %s %s", rsc->id, pe__node_name(node),
                  pcmk_is_set(rsc->flags, pe_rsc_managed)? "" : "(unmanaged)");
 
     rsc->running_on = g_list_append(rsc->running_on, node);
@@ -176,11 +176,12 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                 break;
         }
         crm_debug("%s is active on multiple nodes including %s: %s",
-                  rsc->id, node->details->uname,
+                  rsc->id, pe__node_name(node),
                   recovery2text(rsc->recovery_type));
 
     } else {
-        pe_rsc_trace(rsc, "Resource %s is active on: %s", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "Resource %s is active on %s",
+                     rsc->id, pe__node_name(node));
     }
 
     if (rsc->parent != NULL) {
@@ -243,7 +244,7 @@ static bool
 rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
 {
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
-                 rsc->id, node->details->uname);
+                 rsc->id, pe__node_name(node));
 
     if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
 
@@ -349,15 +350,15 @@ native_active(pe_resource_t * rsc, gboolean all)
         pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         if (a_node->details->unclean) {
-            pe_rsc_trace(rsc, "Resource %s: node %s is unclean",
-                         rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: %s is unclean",
+                         rsc->id, pe__node_name(a_node));
             return TRUE;
         } else if (a_node->details->online == FALSE && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            pe_rsc_trace(rsc, "Resource %s: node %s is offline",
-                         rsc->id, a_node->details->uname);
+            pe_rsc_trace(rsc, "Resource %s: %s is offline",
+                         rsc->id, pe__node_name(a_node));
         } else {
             pe_rsc_trace(rsc, "Resource %s active on %s",
-                         rsc->id, a_node->details->uname);
+                         rsc->id, pe__node_name(a_node));
             return TRUE;
         }
     }
@@ -498,7 +499,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
             pe_node_t *node = (pe_node_t *) gIter->data;
 
             status_print("%s    <node name=\"%s\" id=\"%s\" cached=\"%s\"/>\n", pre_text,
-                         node->details->uname, node->details->id,
+                         pcmk__s(node->details->uname, ""), node->details->id,
                          pcmk__btoa(node->details->online == FALSE));
         }
         status_print("%s</resource>\n", pre_text);
@@ -597,7 +598,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         g_string_append_printf(outstr, " %s", native_displayable_state(rsc, pcmk_is_set(show_opts, pcmk_show_pending)));
     }
     if (node) {
-        g_string_append_printf(outstr, " %s", node->details->uname);
+        g_string_append_printf(outstr, " %s", pe__node_name(node));
     }
 
     // Failed probe operation
@@ -849,17 +850,17 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
             counter++;
 
             if (options & pe_print_html) {
-                status_print("<li>\n%s", n->details->uname);
+                status_print("<li>\n%s", pe__node_name(n));
 
             } else if ((options & pe_print_printf)
                        || (options & pe_print_ncurses)) {
-                status_print(" %s", n->details->uname);
+                status_print(" %s", pe__node_name(n));
 
             } else if ((options & pe_print_log)) {
-                status_print("\t%d : %s", counter, n->details->uname);
+                status_print("\t%d : %s", counter, pe__node_name(n));
 
             } else {
-                status_print("%s", n->details->uname);
+                status_print("%s", pe__node_name(n));
             }
             if (options & pe_print_html) {
                 status_print("</li>\n");

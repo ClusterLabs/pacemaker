@@ -1295,16 +1295,16 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
 
         if (pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)) {
             pe_rsc_trace(action->rsc,
-                         "Not ordering %s before %s shutdown because "
+                         "Not ordering %s before shutdown of %s because "
                          "resource in maintenance mode",
-                         action->uuid, node->details->uname);
+                         action->uuid, pe__node_name(node));
             continue;
 
         } else if (node->details->maintenance) {
             pe_rsc_trace(action->rsc,
-                         "Not ordering %s before %s shutdown because "
+                         "Not ordering %s before shutdown of %s because "
                          "node in maintenance mode",
-                         action->uuid, node->details->uname);
+                         action->uuid, pe__node_name(node));
             continue;
         }
 
@@ -1315,14 +1315,14 @@ pcmk__order_stops_before_shutdown(pe_node_t *node, pe_action_t *shutdown_op)
         if (!pcmk_any_flags_set(action->rsc->flags,
                                 pe_rsc_managed|pe_rsc_block)) {
             pe_rsc_trace(action->rsc,
-                         "Not ordering %s before %s shutdown because "
+                         "Not ordering %s before shutdown of %s because "
                          "resource is unmanaged or blocked",
-                         action->uuid, node->details->uname);
+                         action->uuid, pe__node_name(node));
             continue;
         }
 
-        pe_rsc_trace(action->rsc, "Ordering %s before %s shutdown",
-                     action->uuid, node->details->uname);
+        pe_rsc_trace(action->rsc, "Ordering %s before shutdown of %s",
+                     action->uuid, pe__node_name(node));
         pe__clear_action_flags(action, pe_action_optional);
         pcmk__new_ordering(action->rsc, NULL, action, NULL,
                            strdup(CRM_OP_SHUTDOWN), shutdown_op,
@@ -1564,10 +1564,8 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
         const char *before_desc = before->task? before->task : before->uuid;
 
         crm_debug("Ordering %s on %s before %s on %s",
-                  before_desc,
-                  pcmk__s(before->node->details->uname, "unknown node"),
-                  after_desc,
-                  pcmk__s(after->node->details->uname, "unknown node"));
+                  before_desc, pe__node_name(before->node),
+                  after_desc, pe__node_name(after->node));
         order_actions(before, after, pe_order_optional);
     }
 }

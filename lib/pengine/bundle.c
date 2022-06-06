@@ -994,7 +994,7 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
     }
 
     crm_trace("Setting address for bundle connection %s to bundle host %s",
-              rsc->id, node->details->uname);
+              rsc->id, pe__node_name(node));
     if(xml != NULL && field != NULL) {
         crm_xml_add(xml, field, node->details->uname);
     }

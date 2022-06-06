@@ -204,13 +204,13 @@ apply_stickiness(pe_resource_t *rsc, pe_working_set_t *data_set)
                                  node->details->id) == NULL)) {
         pe_rsc_debug(rsc,
                      "Ignoring %s stickiness because the cluster is "
-                     "asymmetric and node %s is not explicitly allowed",
-                     rsc->id, node->details->uname);
+                     "asymmetric and %s is not explicitly allowed",
+                     rsc->id, pe__node_name(node));
         return;
     }
 
-    pe_rsc_debug(rsc, "Resource %s has %d stickiness on node %s",
-                 rsc->id, rsc->stickiness, node->details->uname);
+    pe_rsc_debug(rsc, "Resource %s has %d stickiness on %s",
+                 rsc->id, rsc->stickiness, pe__node_name(node));
     resource_location(rsc, node, rsc->stickiness, "stickiness",
                       rsc->cluster);
 }
@@ -524,7 +524,7 @@ schedule_fencing(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *fencing = pe_fence_op(node, NULL, FALSE, "node is unclean",
                                        FALSE, data_set);
 
-    pe_warn("Scheduling node %s for fencing", node->details->uname);
+    pe_warn("Scheduling node %s for fencing", pe__node_name(node));
     pcmk__order_vs_fence(fencing, data_set);
     return fencing;
 }
@@ -589,7 +589,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
         if ((fencing == NULL) && node->details->unclean) {
             integrity_lost = true;
             pe_warn("Node %s is unclean but cannot be fenced",
-                    node->details->uname);
+                    pe__node_name(node));
         }
     }
 

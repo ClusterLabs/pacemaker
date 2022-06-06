@@ -548,7 +548,8 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
 
     if(node->details->remote_rsc->container->running_on) {
         pe_node_t *host = node->details->remote_rsc->container->running_on->data;
-        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s", rsc->id, name, host->details->uname);
+        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s",
+                     rsc->id, name, pe__node_name(host));
         return g_hash_table_lookup(host->details->attrs, name);
     }
 
