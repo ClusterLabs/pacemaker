@@ -767,6 +767,52 @@ Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working
     }
 }
 
+/*!
+ * \internal
+ * \brief Cancel a recurring action if running on a node
+ *
+ * \param[in,out] rsc          Resource that action is for
+ * \param[in]     node         Node to cancel action on
+ * \param[in]     key          Operation key for action
+ * \param[in]     name         Action name
+ * \param[in]     interval_ms  Action interval (in milliseconds)
+ */
+static void
+cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
+                  const char *name, guint interval_ms)
+{
+    GList *possible_matches = find_actions_exact(rsc->actions, key, node);
+    pe_action_t *cancel_op = NULL;
+
+    if (possible_matches == NULL) {
+        return; // Recurring action isn't running on this node
+    }
+    g_list_free(possible_matches);
+
+    cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
+
+    switch (rsc->next_role) {
+        case RSC_ROLE_STARTED:
+        case RSC_ROLE_UNPROMOTED:
+            /* Order starts after cancel. If the current role is
+             * stopped, this cancels the monitor before the resource
+             * starts; if the current role is started, then this cancels
+             * the monitor on a migration target before starting there.
+             */
+            pcmk__new_ordering(rsc, NULL, cancel_op,
+                               rsc, start_key(rsc), NULL,
+                               pe_order_runnable_left, rsc->cluster);
+            break;
+        default:
+            break;
+    }
+    pe_rsc_info(rsc,
+                "Cancelling %s-interval %s action for %s on %s because "
+                "configured for " RSC_ROLE_STOPPED_S " role (not %s)",
+                pcmk__readable_interval(interval_ms), name, rsc->id,
+                pe__node_name(node), role2text(rsc->next_role));
+}
+
 static void
 RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                     xmlNode * operation, pe_working_set_t * data_set)
@@ -774,8 +820,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *node_uname = node? node->details->uname : "n/a";
-
     guint interval_ms = 0;
     GList *possible_matches = NULL;
     GList *gIter = NULL;
@@ -804,29 +848,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                  "Creating recurring action %s for %s in role %s on nodes where it should not be running",
                  ID(operation), rsc->id, role2text(rsc->next_role));
 
-    /* if the monitor exists on the node where the resource will be running, cancel it */
-    if (node != NULL) {
-        possible_matches = find_actions_exact(rsc->actions, key, node);
-        if (possible_matches) {
-            pe_action_t *cancel_op = NULL;
-
-            g_list_free(possible_matches);
-
-            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
-
-            if ((rsc->next_role == RSC_ROLE_STARTED)
-                || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
-                /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */
-                /* rsc->role == RSC_ROLE_STARTED: for a migration, cancel the monitor on the target node before start */
-                pcmk__new_ordering(rsc, NULL, cancel_op, rsc, start_key(rsc),
-                                   NULL, pe_order_runnable_left, data_set);
-            }
-
-            pe_rsc_info(rsc, "Cancel action %s (%s vs. %s) on %s",
-                        key, role, role2text(rsc->next_role), node_uname);
-        }
-    }
-
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *stop_node = (pe_node_t *) gIter->data;
         const char *stop_node_uname = stop_node->details->uname;
@@ -837,7 +858,11 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         GList *stop_ops = NULL;
         GList *local_gIter = NULL;
 
-        if (node && pcmk__str_eq(stop_node_uname, node_uname, pcmk__str_casei)) {
+        // Cancel action on node where resource will be active
+        if ((node != NULL)
+            && pcmk__str_eq(stop_node->details->uname, node->details->uname,
+                            pcmk__str_casei)) {
+            cancel_if_running(rsc, node, key, name, interval_ms);
             continue;
         }
 
