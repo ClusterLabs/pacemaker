@@ -552,10 +552,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if (rsc->next_role == RSC_ROLE_PROMOTED) {
-        char *running_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
-
-        add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_promoted);
-        free(running_promoted);
+        pe__add_action_expected_result(mon, CRM_EX_PROMOTED);
     }
 
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -687,7 +684,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         gboolean probe_is_optional = TRUE;
         gboolean stop_is_optional = TRUE;
         pe_action_t *stopped_mon = NULL;
-        char *rc_inactive = NULL;
         GList *stop_ops = NULL;
         GList *local_gIter = NULL;
 
@@ -714,9 +710,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
         stopped_mon = custom_action(rsc, strdup(key), name, stop_node, is_optional, TRUE, data_set);
 
-        rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
-        free(rc_inactive);
+        pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
         if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             GList *probes = pe__resource_actions(rsc, stop_node, RSC_STATUS,

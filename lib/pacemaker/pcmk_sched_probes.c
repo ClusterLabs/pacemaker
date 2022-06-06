@@ -32,20 +32,10 @@ add_expected_result(pe_action_t *probe, pe_resource_t *rsc, pe_node_t *node)
 
     // The expected result is what we think the resource's current state is
     if (running == NULL) {
-        static const char *rc_inactive = NULL;
-
-        if (rc_inactive == NULL) {
-            rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        }
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
+        pe__add_action_expected_result(probe, CRM_EX_NOT_RUNNING);
 
     } else if (rsc->role == RSC_ROLE_PROMOTED) {
-        static const char *rc_promoted = NULL;
-
-        if (rc_promoted == NULL) {
-            rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
-        }
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
+        pe__add_action_expected_result(probe, CRM_EX_PROMOTED);
     }
 }
 

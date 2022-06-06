@@ -1749,3 +1749,25 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
     }
     return action;
 }
+
+/*!
+ * \internal
+ * \brief Add the expected result to an action
+ *
+ * \param[in] action           Action to add expected result to
+ * \param[in] expected_result  Expected result to add
+ *
+ * \note This is more efficient than calling add_hash_param().
+ */
+void
+pe__add_action_expected_result(pe_action_t *action, int expected_result)
+{
+    char *name = NULL;
+
+    CRM_ASSERT((action != NULL) && (action->meta != NULL));
+
+    name = strdup(XML_ATTR_TE_TARGET_RC);
+    CRM_ASSERT (name != NULL);
+
+    g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));
+}
