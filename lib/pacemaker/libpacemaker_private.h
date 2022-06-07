@@ -253,6 +253,15 @@ void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 void pcmk__create_recurring_actions(pe_resource_t *rsc);
 
+G_GNUC_INTERNAL
+void pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id,
+                           const char *task, guint interval_ms, pe_node_t *node,
+                           const char *reason);
+
+G_GNUC_INTERNAL
+void pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
+                                guint interval_ms, pe_node_t *node);
+
 
 // Producing transition graphs (pcmk_graph_producer.c)
 

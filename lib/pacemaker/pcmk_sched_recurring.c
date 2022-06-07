@@ -584,3 +584,95 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
         recurring_op_for_inactive(rsc, rsc->allocated_to, op);
     }
 }
+
+/*!
+ * \internal
+ * \brief Create an executor cancel action
+ *
+ * \param[in] rsc          Resource of action to cancel
+ * \param[in] task         Name of action to cancel
+ * \param[in] interval_ms  Interval of action to cancel
+ * \param[in] node         Node of action to cancel
+ *
+ * \return Created op
+ */
+pe_action_t *
+pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
+                        const pe_node_t *node)
+{
+    pe_action_t *cancel_op = NULL;
+    char *key = NULL;
+    char *interval_ms_s = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (task != NULL) && (node != NULL));
+
+    // @TODO dangerous if possible to schedule another action with this key
+    key = pcmk__op_key(rsc->id, task, interval_ms);
+
+    cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
+                              rsc->cluster);
+
+    pcmk__str_update(&cancel_op->task, RSC_CANCEL);
+    pcmk__str_update(&cancel_op->cancel_task, task);
+
+    interval_ms_s = crm_strdup_printf("%u", interval_ms);
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
+    free(interval_ms_s);
+
+    return cancel_op;
+}
+
+/*!
+ * \internal
+ * \brief Schedule cancellation of a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] call_id      Action's call ID from history
+ * \param[in] task         Action name
+ * \param[in] interval_ms  Action interval
+ * \param[in] node         Node that history entry is for
+ * \param[in] reason       Short description of why action is being cancelled
+ */
+void
+pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
+                      guint interval_ms, pe_node_t *node, const char *reason)
+{
+    pe_action_t *cancel = NULL;
+
+    CRM_CHECK((rsc != NULL) && (task != NULL)
+              && (node != NULL) && (reason != NULL),
+              return);
+
+    crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
+             pcmk__readable_interval(interval_ms), task, rsc->id,
+             pe__node_name(node), reason);
+    cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
+    add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
+
+    // Cancellations happen after stops
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL, rsc, NULL, cancel,
+                       pe_order_optional, rsc->cluster);
+}
+
+/*!
+ * \internal
+ * \brief Reschedule a recurring action
+ *
+ * \param[in] rsc          Resource that action is for
+ * \param[in] task         Name of action being rescheduled
+ * \param[in] interval_ms  Action interval (in milliseconds)
+ * \param[in] node         Node where action should be rescheduled
+ */
+void
+pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
+                           guint interval_ms, pe_node_t *node)
+{
+    pe_action_t *op = NULL;
+
+    trigger_unfencing(rsc, node, "Device parameters changed (reschedule)",
+                      NULL, rsc->cluster);
+    op = custom_action(rsc, pcmk__op_key(rsc->id, task, interval_ms),
+                       task, node, TRUE, TRUE, rsc->cluster);
+    pe__set_action_flags(op, pe_action_reschedule);
+}
