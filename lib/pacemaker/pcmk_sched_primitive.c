@@ -17,11 +17,6 @@
 
 #include "libpacemaker_private.h"
 
-static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
-                      pe_working_set_t *data_set);
-static void Recurring_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
-                              pe_working_set_t *data_set);
-
 gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
 static bool StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
@@ -747,24 +742,6 @@ recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
     }
 }
 
-static void
-Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working_set_t * data_set)
-{
-    if (!pcmk_is_set(rsc->flags, pe_rsc_maintenance) &&
-        (node == NULL || node->details->maintenance == FALSE)) {
-        xmlNode *operation = NULL;
-
-        for (operation = pcmk__xe_first_child(rsc->ops_xml);
-             operation != NULL;
-             operation = pcmk__xe_next(operation)) {
-
-            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-                recurring_op_for_active(rsc, start, node, operation);
-            }
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Cancel a recurring action if running on a node
@@ -968,21 +945,53 @@ recurring_op_for_inactive(pe_resource_t *rsc, const pe_node_t *node,
     free(key);
 }
 
+/*!
+ * \internal
+ * \brief Create recurring actions for a resource
+ *
+ * \param[in,out] rsc  Resource to create recurring actions for
+ */
 static void
-Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working_set_t * data_set)
+create_recurring_actions(pe_resource_t *rsc)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_maintenance) &&
-        (node == NULL || node->details->maintenance == FALSE)) {
-        xmlNode *operation = NULL;
+    pe_action_t *start = NULL;
 
-        for (operation = pcmk__xe_first_child(rsc->ops_xml);
-             operation != NULL;
-             operation = pcmk__xe_next(operation)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
+        pe_rsc_trace(rsc, "Skipping recurring actions for blocked resource %s",
+                     rsc->id);
+        return;
+    }
 
-            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-                recurring_op_for_inactive(rsc, node, operation);
-            }
+    if (pcmk_is_set(rsc->flags, pe_rsc_maintenance)) {
+        pe_rsc_trace(rsc, "Skipping recurring actions for %s "
+                          "in maintenance mode", rsc->id);
+        return;
+    }
+
+    if (rsc->allocated_to == NULL) {
+        // Recurring actions for active roles not needed
+
+    } else if (rsc->allocated_to->details->maintenance) {
+        pe_rsc_trace(rsc,
+                     "Skipping recurring actions for %s on %s "
+                     "in maintenance mode",
+                     rsc->id, pe__node_name(rsc->allocated_to));
+
+    } else if ((rsc->next_role != RSC_ROLE_STOPPED)
+        || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        // Recurring actions for active roles needed
+        start = start_action(rsc, rsc->allocated_to, TRUE);
+    }
+
+    pe_rsc_trace(rsc, "Creating any recurring actions needed for %s", rsc->id);
+
+    for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
+         op != NULL; op = crm_next_same_xml(op)) {
+
+        if (start != NULL) {
+            recurring_op_for_active(rsc, start, rsc->allocated_to, op);
         }
+        recurring_op_for_inactive(rsc, rsc->allocated_to, op);
     }
 }
 
@@ -1304,24 +1313,7 @@ native_create_actions(pe_resource_t *rsc)
         role = next_role;
     }
 
-    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        pe_rsc_trace(rsc, "Not creating recurring monitors for blocked resource %s",
-                     rsc->id);
-
-    } else if ((rsc->next_role != RSC_ROLE_STOPPED)
-               || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Creating recurring monitors for %s resource %s",
-                     ((rsc->next_role == RSC_ROLE_STOPPED)? "unmanaged" : "active"),
-                     rsc->id);
-        start = start_action(rsc, chosen, TRUE);
-        Recurring(rsc, start, chosen, rsc->cluster);
-        Recurring_Stopped(rsc, start, chosen, rsc->cluster);
-
-    } else {
-        pe_rsc_trace(rsc, "Creating recurring monitors for inactive resource %s",
-                     rsc->id);
-        Recurring_Stopped(rsc, NULL, NULL, rsc->cluster);
-    }
+    create_recurring_actions(rsc);
 
     /* if we are stuck in a partial migration, where the target
      * of the partial migration no longer matches the chosen target.
