@@ -58,6 +58,7 @@ libpacemaker_la_SOURCES += pcmk_sched_ordering.c
 libpacemaker_la_SOURCES += pcmk_sched_primitive.c
 libpacemaker_la_SOURCES += pcmk_sched_probes.c
 libpacemaker_la_SOURCES += pcmk_sched_promotable.c
+libpacemaker_la_SOURCES += pcmk_sched_recurring.c
 libpacemaker_la_SOURCES += pcmk_sched_remote.c
 libpacemaker_la_SOURCES += pcmk_sched_resource.c
 libpacemaker_la_SOURCES += pcmk_sched_tickets.c

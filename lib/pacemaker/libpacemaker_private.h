@@ -247,6 +247,13 @@ bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
 G_GNUC_INTERNAL
 void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);
 
+
+// Recurring actions (pcmk_sched_recurring.c)
+
+G_GNUC_INTERNAL
+void pcmk__create_recurring_actions(pe_resource_t *rsc);
+
+
 // Producing transition graphs (pcmk_graph_producer.c)
 
 G_GNUC_INTERNAL
