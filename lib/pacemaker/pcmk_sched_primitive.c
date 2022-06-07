@@ -834,6 +834,47 @@ order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
     g_list_free(probes);
 }
 
+/*!
+ * \internal
+ * \brief Order an action after all stops of a resource on a node
+ *
+ * \param[in,out] rsc     Resource to check for stops
+ * \param[in]     node    Node to check for stops of \p rsc
+ * \param[in,out] action  Action to order after stops of \p rsc on \p node
+ */
+static void
+order_after_stops(pe_resource_t *rsc, const pe_node_t *node,
+                  pe_action_t *action)
+{
+    GList *stop_ops = pe__resource_actions(rsc, node, RSC_STOP, TRUE);
+
+    for (GList *iter = stop_ops; iter != NULL; iter = iter->next) {
+        pe_action_t *stop = (pe_action_t *) iter->data;
+
+        if (!pcmk_is_set(stop->flags, pe_action_optional)
+            && !pcmk_is_set(action->flags, pe_action_optional)
+            && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            pe_rsc_trace(rsc, "%s optional on %s: unmanaged",
+                         action->uuid, pe__node_name(node));
+            pe__set_action_flags(action, pe_action_optional);
+        }
+
+        if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
+            crm_debug("%s unrunnable on %s: stop is unrunnable",
+                      action->uuid, pe__node_name(node));
+            pe__clear_action_flags(action, pe_action_runnable);
+        }
+
+        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+            pcmk__new_ordering(rsc, stop_key(rsc), stop,
+                               NULL, NULL, action,
+                               pe_order_implies_then|pe_order_runnable_left,
+                               rsc->cluster);
+        }
+    }
+    g_list_free(stop_ops);
+}
+
 static void
 RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                     xmlNode * operation, pe_working_set_t * data_set)
@@ -873,11 +914,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         pe_node_t *stop_node = (pe_node_t *) gIter->data;
         const char *stop_node_uname = stop_node->details->uname;
         gboolean is_optional = TRUE;
-        gboolean probe_is_optional = TRUE;
-        gboolean stop_is_optional = TRUE;
         pe_action_t *stopped_mon = NULL;
-        GList *stop_ops = NULL;
-        GList *local_gIter = NULL;
 
         // Cancel action on node where resource will be active
         if ((node != NULL)
@@ -912,47 +949,10 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             order_after_probes(rsc, stop_node, stopped_mon);
         }
 
-        stop_ops = pe__resource_actions(rsc, stop_node, RSC_STOP, TRUE);
-
-        for (local_gIter = stop_ops; local_gIter != NULL; local_gIter = local_gIter->next) {
-            pe_action_t *stop = (pe_action_t *) local_gIter->data;
-
-            if (!pcmk_is_set(stop->flags, pe_action_optional)) {
-                stop_is_optional = FALSE;
-            }
-
-            if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
-                crm_debug("%s\t   %s (cancelled : stop un-runnable)",
-                          pcmk__s(stop_node_uname, "<null>"),
-                          stopped_mon->uuid);
-                pe__clear_action_flags(stopped_mon, pe_action_runnable);
-            }
-
-            if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-                pcmk__new_ordering(rsc, stop_key(rsc), stop, NULL, strdup(key),
-                                   stopped_mon,
-                                   pe_order_implies_then|pe_order_runnable_left,
-                                   data_set);
-            }
-
-        }
-
-        if (stop_ops) {
-            g_list_free(stop_ops);
-        }
-
-        if (is_optional == FALSE && probe_is_optional && stop_is_optional
-            && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            pe_rsc_trace(rsc, "Marking %s optional on %s due to unmanaged",
-                         key, pcmk__s(stop_node_uname, "unknown node"));
-            pe__set_action_flags(stopped_mon, pe_action_optional);
-        }
-
-        if (pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
-            pe_rsc_trace(rsc, "%s\t   %s (optional)",
-                         pcmk__s(stop_node_uname, "<null>"),
-                         stopped_mon->uuid);
-        }
+        /* The recurring action is for the inactive role, so it shouldn't be
+         * performed until the resource is inactive.
+         */
+        order_after_stops(rsc, stop_node, stopped_mon);
 
         if (stop_node->details->online == FALSE || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
