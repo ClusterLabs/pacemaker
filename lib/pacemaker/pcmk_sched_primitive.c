@@ -813,6 +813,27 @@ cancel_if_running(pe_resource_t *rsc, const pe_node_t *node, const char *key,
                 pe__node_name(node), role2text(rsc->next_role));
 }
 
+/*!
+ * \internal
+ * \brief Order an action after all probes of a resource on a node
+ *
+ * \param[in,out] rsc     Resource to check for probes
+ * \param[in]     node    Node to check for probes of \p rsc
+ * \param[in,out] action  Action to order after probes of \p rsc on \p node
+ */
+static void
+order_after_probes(pe_resource_t *rsc, const pe_node_t *node,
+                   pe_action_t *action)
+{
+    GList *probes = pe__resource_actions(rsc, node, RSC_STATUS, FALSE);
+
+    for (GList *iter = probes; iter != NULL; iter = iter->next) {
+        order_actions((pe_action_t *) iter->data, action,
+                      pe_order_runnable_left);
+    }
+    g_list_free(probes);
+}
+
 static void
 RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                     xmlNode * operation, pe_working_set_t * data_set)
@@ -888,20 +909,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         pe__add_action_expected_result(stopped_mon, CRM_EX_NOT_RUNNING);
 
         if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            GList *probes = pe__resource_actions(rsc, stop_node, RSC_STATUS,
-                                                 FALSE);
-            GList *pIter = NULL;
-
-            for (pIter = probes; pIter != NULL; pIter = pIter->next) {
-                pe_action_t *probe = (pe_action_t *) pIter->data;
-
-                order_actions(probe, stopped_mon, pe_order_runnable_left);
-                crm_trace("%s then %s on %s",
-                          probe->uuid, stopped_mon->uuid,
-                          pe__node_name(stop_node));
-            }
-
-            g_list_free(probes);
+            order_after_probes(rsc, stop_node, stopped_mon);
         }
 
         stop_ops = pe__resource_actions(rsc, stop_node, RSC_STOP, TRUE);
