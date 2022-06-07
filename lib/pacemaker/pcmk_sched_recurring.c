@@ -677,3 +677,24 @@ pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
                        task, node, TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_reschedule);
 }
+
+/*!
+ * \internal
+ * \brief Check whether an action is recurring
+ *
+ * \param[in] action  Action to check
+ *
+ * \return true if \p action has a nonzero interval, otherwise false
+ */
+bool
+pcmk__action_is_recurring(const pe_action_t *action)
+{
+    guint interval_ms = 0;
+
+    if (pcmk__guint_from_hash(action->meta,
+                              XML_LRM_ATTR_INTERVAL_MS, 0,
+                              &interval_ms) != pcmk_rc_ok) {
+        return false;
+    }
+    return (interval_ms > 0);
+}

@@ -262,6 +262,9 @@ G_GNUC_INTERNAL
 void pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
                                 guint interval_ms, pe_node_t *node);
 
+G_GNUC_INTERNAL
+bool pcmk__action_is_recurring(const pe_action_t *action);
+
 
 // Producing transition graphs (pcmk_graph_producer.c)
 
