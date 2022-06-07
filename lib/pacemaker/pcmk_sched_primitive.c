@@ -444,29 +444,39 @@ add_migration_meta(pe_action_t *action, const pe_node_t *source,
                    target->details->uname);
 }
 
+/*!
+ * \internal
+ * \brief Create internal migration actions for a migrateable resource
+ *
+ * \param[in,out] rsc      Resource to create migration actions for
+ * \param[in]     current  Node that resource is originally active on
+ */
 static void
-handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *chosen, pe_working_set_t * data_set)
+create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
 {
     pe_action_t *migrate_to = NULL;
     pe_action_t *migrate_from = NULL;
     pe_action_t *start = NULL;
     pe_action_t *stop = NULL;
-    gboolean partial = rsc->partial_migration_target ? TRUE : FALSE;
 
-    pe_rsc_trace(rsc, "Processing migration actions %s moving from %s to %s . partial migration = %s",
-    rsc->id, current->details->id, chosen->details->id, partial ? "TRUE" : "FALSE");
-    start = start_action(rsc, chosen, TRUE);
+    pe_rsc_trace(rsc, "Creating actions to %smigrate %s from %s to %s",
+                 ((rsc->partial_migration_target == NULL)? "" : "partially "),
+                 rsc->id, pe__node_name(current),
+                 pe__node_name(rsc->allocated_to));
+    start = start_action(rsc, rsc->allocated_to, TRUE);
     stop = stop_action(rsc, current, TRUE);
 
-    if (partial == FALSE) {
+    if (rsc->partial_migration_target == NULL) {
         migrate_to = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                   RSC_MIGRATE, current, TRUE, TRUE, data_set);
+                                   RSC_MIGRATE, current, TRUE, TRUE,
+                                   rsc->cluster);
     }
-
     migrate_from = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                                 RSC_MIGRATED, chosen, TRUE, TRUE, data_set);
+                                 RSC_MIGRATED, rsc->allocated_to, TRUE, TRUE,
+                                 rsc->cluster);
 
-    if ((migrate_to && migrate_from) || (migrate_from && partial)) {
+    if ((migrate_from != NULL)
+        && ((migrate_to != NULL) || (rsc->partial_migration_target != NULL))) {
 
         pe__set_action_flags(start, pe_action_migrate_runnable);
         pe__set_action_flags(stop, pe_action_migrate_runnable);
@@ -474,59 +484,62 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
         // This is easier than trying to delete it from the graph
         pe__set_action_flags(start, pe_action_pseudo);
 
-        /* order probes before migrations */
-        if (partial) {
-            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
-            migrate_from->needs = start->needs;
-
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                               NULL, pe_order_optional, data_set);
-
-        } else {
+        if (rsc->partial_migration_target == NULL) {
             pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
+            // Probe -> migrate_to -> migrate_from
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                               NULL, pe_order_optional, data_set);
+                               NULL, pe_order_optional, rsc->cluster);
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
                                rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
                                NULL,
                                pe_order_optional|pe_order_implies_first_migratable,
-                               data_set);
+                               rsc->cluster);
+        } else {
+            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
+            migrate_from->needs = start->needs;
+
+            // Probe -> migrate_from (migrate_to already completed)
+            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
+                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
+                               NULL, pe_order_optional, rsc->cluster);
         }
 
+        // migrate_from before stop or start
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                            pe_order_optional|pe_order_implies_first_migratable,
-                           data_set);
+                           rsc->cluster);
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                            pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
-                           data_set);
+                           rsc->cluster);
     }
 
-    if (migrate_to) {
-        add_migration_meta(migrate_to, current, chosen);
+    if (migrate_to != NULL) {
+        add_migration_meta(migrate_to, current, rsc->allocated_to);
 
-        /* Pacemaker Remote connections don't require pending to be recorded in
-         * the CIB. We can reduce CIB writes by not setting PENDING for them.
-         */
-        if (rsc->is_remote_node == FALSE) {
-            /* migrate_to takes place on the source node, but can 
-             * have an effect on the target node depending on how
-             * the agent is written. Because of this, we have to maintain
-             * a record that the migrate_to occurred, in case the source node
-             * loses membership while the migrate_to action is still in-flight.
+        if (!rsc->is_remote_node) {
+            /* migrate_to takes place on the source node, but can affect the
+             * target node depending on how the agent is written. Because of
+             * this, pending migrate_to actions must be recorded in the CIB,
+             * in case the source node loses membership while the migrate_to
+             * action is still in flight.
+             *
+             * However we know Pacemaker Remote connection resources don't
+             * require this, so we skip this for them. (Although it wouldn't
+             * hurt, and now that record-pending defaults to true, skipping it
+             * matters even less.)
              */
             add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
         }
     }
 
-    if (migrate_from) {
-        add_migration_meta(migrate_from, current, chosen);
+    if (migrate_from != NULL) {
+        add_migration_meta(migrate_from, current, rsc->allocated_to);
     }
 }
 
@@ -780,7 +793,7 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     if (allow_migrate) {
-        handle_migration_actions(rsc, current, chosen, rsc->cluster);
+        create_migration_actions(rsc, current);
     }
 }
 
