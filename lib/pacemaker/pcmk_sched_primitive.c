@@ -425,6 +425,25 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
     return rsc->allocated_to;
 }
 
+/*!
+ * \internal
+ * \brief Add migration source and target meta-attributes to an action
+ *
+ * \param[in,out] action  Action to add meta-attributes to
+ * \param[in]     source  Node to add as migration source
+ * \param[in]     target  Node to add as migration target
+ */
+static void
+add_migration_meta(pe_action_t *action, const pe_node_t *source,
+                   const pe_node_t *target)
+{
+    add_hash_param(action->meta, XML_LRM_ATTR_MIGRATE_SOURCE,
+                   source->details->uname);
+
+    add_hash_param(action->meta, XML_LRM_ATTR_MIGRATE_TARGET,
+                   target->details->uname);
+}
+
 static void
 handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *chosen, pe_working_set_t * data_set)
 {
@@ -490,8 +509,7 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
     }
 
     if (migrate_to) {
-        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
-        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
+        add_migration_meta(migrate_to, current, chosen);
 
         /* Pacemaker Remote connections don't require pending to be recorded in
          * the CIB. We can reduce CIB writes by not setting PENDING for them.
@@ -508,8 +526,7 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
     }
 
     if (migrate_from) {
-        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
-        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
+        add_migration_meta(migrate_from, current, chosen);
     }
 }
 
