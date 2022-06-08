@@ -182,8 +182,8 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
     char procfs_exe_path[PATH_MAX];
     ssize_t link_rc;
 
-    if (snprintf(procfs_exe_path, path_size, "/proc/%lld/exe",
-                 (long long) pid) >= path_size) {
+    if (snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
+                 (long long) pid) >= PATH_MAX) {
         return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
     }
 
