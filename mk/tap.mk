@@ -20,6 +20,7 @@ WRAPPED = calloc		\
 	  getenv		\
 	  getgrent		\
 	  getpwnam_r		\
+	  readlink		\
 	  setgrent		\
 	  uname
 LDFLAGS_WRAP = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))

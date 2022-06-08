@@ -41,6 +41,12 @@ int __real_getpwnam_r(const char *name, struct passwd *pwd,
 int __wrap_getpwnam_r(const char *name, struct passwd *pwd,
                       char *buf, size_t buflen, struct passwd **result);
 
+extern bool pcmk__mock_readlink;
+ssize_t __real_readlink(const char *restrict path, char *restrict buf,
+                        size_t bufsize);
+ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
+                        size_t bufsize);
+
 extern bool pcmk__mock_uname;
 int __real_uname(struct utsname *buf);
 int __wrap_uname(struct utsname *buf);

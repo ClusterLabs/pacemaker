@@ -186,6 +186,39 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
     }
 }
 
+/*
+ * If pcmk__mock_readlink is set to true, later calls to readlink() must be
+ * preceded by:
+ *
+ *     will_return(__wrap_readlink, errno_to_set);
+ *     will_return(__wrap_readlink, link_contents);
+ *
+ * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
+ */
+
+bool pcmk__mock_readlink = false;
+
+ssize_t
+__wrap_readlink(const char *restrict path, char *restrict buf,
+                size_t bufsize)
+{
+    if (pcmk__mock_readlink) {
+        const char *contents = NULL;
+
+        errno = mock_type(int);
+        contents = mock_ptr_type(const char *);
+
+        if (errno == 0) {
+            strncpy(buf, contents, bufsize - 1);
+            return strlen(contents);
+        }
+        return -1;
+
+    } else {
+        return __real_readlink(path, buf, bufsize);
+    }
+}
+
 
 /* uname()
  *
