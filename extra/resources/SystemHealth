@@ -32,6 +32,11 @@ the health of a system via IPMI.
 <shortdesc lang="en">SystemHealth resource agent</shortdesc>
 
 <parameters>
+  <parameter name="program">
+    <longdesc lang="en">Path to notifyServicelogEvent command</longdesc>
+    <shortdesc lang="en">Path to notify command</shortdesc>
+    <content type="string" default="/usr/sbin/notifyServicelogEvent"/>
+  </parameter>
 </parameters>
 
 <actions>
