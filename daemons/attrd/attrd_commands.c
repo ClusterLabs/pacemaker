@@ -813,95 +813,23 @@ broadcast_local_value(attribute_t *a)
     return v;
 }
 
-void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
+static void
+record_peer_nodeid(attribute_value_t *v, const char *host)
 {
-    bool update_both = FALSE;
-    attribute_t *a;
+    crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
+
+    crm_trace("Learned %s has node id %s", known_peer->uname, known_peer->uuid);
+    if (attrd_election_won()) {
+        write_attributes(false, false);
+    }
+}
+
+static void
+update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *attr,
+                    const char *value, const char *host, bool filter,
+                    int is_force_write)
+{
     attribute_value_t *v = NULL;
-    gboolean is_force_write = FALSE;
-
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
-    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
-
-    if (attr == NULL) {
-        crm_warn("Could not update attribute: peer did not specify name");
-        return;
-    }
-
-    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
-    update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                               pcmk__str_null_matches | pcmk__str_casei);
-
-    // Look up or create attribute entry
-    a = g_hash_table_lookup(attributes, attr);
-    if (a == NULL) {
-        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
-            a = create_attribute(xml);
-        } else {
-            crm_warn("Could not update %s: attribute not found", attr);
-            return;
-        }
-    }
-
-    // Update attribute dampening
-    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
-        const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
-        int dampen = 0;
-
-        if (dvalue == NULL) {
-            crm_warn("Could not update %s: peer did not specify value for delay",
-                     attr);
-            return;
-        }
-
-        dampen = crm_get_msec(dvalue);
-        if (dampen < 0) {
-            crm_warn("Could not update %s: invalid delay value %dms (%s)",
-                     attr, dampen, dvalue);
-            return;
-        }
-
-        if (a->timeout_ms != dampen) {
-            mainloop_timer_del(a->timer);
-            a->timeout_ms = dampen;
-            if (dampen > 0) {
-                a->timer = mainloop_timer_add(attr, a->timeout_ms, FALSE,
-                                              attribute_timer_cb, a);
-                crm_info("Update attribute %s delay to %dms (%s)",
-                         attr, dampen, dvalue);
-            } else {
-                a->timer = NULL;
-                crm_info("Update attribute %s to remove delay", attr);
-            }
-
-            /* If dampening changed, do an immediate write-out,
-             * otherwise repeated dampening changes would prevent write-outs
-             */
-            write_or_elect_attribute(a);
-        }
-
-        if (!update_both) {
-            return;
-        }
-    }
-
-    // If no host was specified, update all hosts recursively
-    if (host == NULL) {
-        GHashTableIter vIter;
-
-        crm_debug("Setting %s for all hosts to %s", attr, value);
-        xml_remove_prop(xml, PCMK__XA_ATTR_NODE_ID);
-        g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
-            attrd_peer_update(peer, xml, host, filter);
-        }
-        return;
-    }
-
-    // Update attribute value for one host
 
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
@@ -914,7 +842,8 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
-                   attr, host, v->current? v->current : "(unset)", value? value : "(unset)", peer->uname);
+                   attr, host, v->current? v->current : "(unset)",
+                   value? value : "(unset)", peer->uname);
         pcmk__str_update(&v->current, value);
         a->changed = TRUE;
 
@@ -938,10 +867,11 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         }
 
     } else {
-        if (is_force_write && a->timeout_ms && a->timer) {
+        if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
-            crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)", attr, host, peer->uname, value);
+            crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)",
+                      attr, host, peer->uname, value);
             a->force_write = TRUE;
         } else {
             crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
@@ -955,29 +885,141 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if ((v->nodeid == 0) && (v->is_remote == FALSE)
         && (crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID,
                                   (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
+        record_peer_nodeid(v, host);
+    }
+}
 
-        crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
+static int
+update_attr_dampening(attribute_t *a, xmlNode *xml, const char *attr)
+{
+    const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
+    int dampen = 0;
 
-        crm_trace("Learned %s has node id %s",
-                  known_peer->uname, known_peer->uuid);
-        if (attrd_election_won()) {
-            write_attributes(FALSE, FALSE);
+    if (dvalue == NULL) {
+        crm_warn("Could not update %s: peer did not specify value for delay",
+                 attr);
+        return EINVAL;
+    }
+
+    dampen = crm_get_msec(dvalue);
+    if (dampen < 0) {
+        crm_warn("Could not update %s: invalid delay value %dms (%s)",
+                 attr, dampen, dvalue);
+        return EINVAL;
+    }
+
+    if (a->timeout_ms != dampen) {
+        mainloop_timer_del(a->timer);
+        a->timeout_ms = dampen;
+        if (dampen > 0) {
+            a->timer = mainloop_timer_add(attr, a->timeout_ms, FALSE,
+                                          attribute_timer_cb, a);
+            crm_info("Update attribute %s delay to %dms (%s)",
+                     attr, dampen, dvalue);
+        } else {
+            a->timer = NULL;
+            crm_info("Update attribute %s to remove delay", attr);
+        }
+
+        /* If dampening changed, do an immediate write-out,
+         * otherwise repeated dampening changes would prevent write-outs
+         */
+        write_or_elect_attribute(a);
+    }
+
+    return pcmk_rc_ok;
+}
+
+static void
+update_minimum_protocol_ver(const char *value)
+{
+    int ver;
+
+    pcmk__scan_min_int(value, &ver, 0);
+
+    if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
+        minimum_protocol_version = ver;
+        crm_trace("Set minimum attrd protocol version to %d",
+                  minimum_protocol_version);
+    }
+}
+
+static attribute_t *
+populate_attribute(xmlNode *xml, const char *attr)
+{
+    attribute_t *a = NULL;
+    bool update_both = false;
+
+    const char *op = crm_element_value(xml, PCMK__XA_TASK);
+
+    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
+    update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                               pcmk__str_null_matches | pcmk__str_casei);
+
+    // Look up or create attribute entry
+    a = g_hash_table_lookup(attributes, attr);
+    if (a == NULL) {
+        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
+            a = create_attribute(xml);
+        } else {
+            crm_warn("Could not update %s: attribute not found", attr);
+            return NULL;
         }
     }
+
+    // Update attribute dampening
+    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
+        int rc = update_attr_dampening(a, xml, attr);
+
+        if (rc != pcmk_rc_ok || !update_both) {
+            return NULL;
+        }
+    }
+
+    return a;
+}
+
+void
+attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
+{
+    attribute_t *a = NULL;
+    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
+    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
+    int is_force_write = 0;
+
+    if (attr == NULL) {
+        crm_warn("Could not update attribute: peer did not specify name");
+        return;
+    }
+
+    crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
+
+    a = populate_attribute(xml, attr);
+    if (a == NULL) {
+        return;
+    }
+
+    // If no host was specified, update all hosts recursively
+    if (host == NULL) {
+        GHashTableIter vIter;
+
+        crm_debug("Setting %s for all hosts to %s", attr, value);
+        xml_remove_prop(xml, PCMK__XA_ATTR_NODE_ID);
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
+            attrd_peer_update(peer, xml, host, filter);
+        }
+        return;
+    }
+
+    // Update attribute value for one host
+    update_attr_on_host(a, peer, xml, attr, value, host, filter, is_force_write);
 
     /* If this is a message from some attrd instance broadcasting its protocol
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        int ver;
-
-        pcmk__scan_min_int(value, &ver, 0);
-
-        if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
-            minimum_protocol_version = ver;
-            crm_trace("Set minimum attrd protocol version to %d",
-                      minimum_protocol_version);
-        }
+        update_minimum_protocol_ver(value);
     }
 }
 
