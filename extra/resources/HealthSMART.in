@@ -108,7 +108,7 @@ Number of deg C below/above the upper/lower temp limits at which point the statu
 The path to the smartctl program, used for querying device health.
 </longdesc>
 <shortdesc lang="en">The path to the smartctl program</shortdesc>
-<contest type="string" default="/usr/sbin/smartctl"/>
+<content type="string" default="/usr/sbin/smartctl"/>
 </parameter>
 
 <parameter name="dampen" reloadable="1">
