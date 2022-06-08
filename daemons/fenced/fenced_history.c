@@ -233,6 +233,8 @@ stonith_xml_history_to_list(xmlNode *history)
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
         int state;
+        int exit_status = CRM_EX_OK;
+        int execution_status = PCMK_EXEC_DONE;
         long long completed;
         long long completed_nsec = 0L;
 
@@ -257,7 +259,23 @@ stonith_xml_history_to_list(xmlNode *history)
         op->completed_nsec = completed_nsec;
         crm_element_value_int(xml_op, F_STONITH_STATE, &state);
         op->state = (enum op_state) state;
-        stonith__xe_get_result(xml_op, &op->result);
+
+        /* @COMPAT We can't use stonith__xe_get_result() here because
+         * fencers <2.1.3 didn't include results, leading it to assume an error
+         * status. Instead, set an unknown status in that case.
+         */
+        if ((crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &exit_status) < 0)
+            || (crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS,
+                                      &execution_status) < 0)) {
+            exit_status = CRM_EX_INDETERMINATE;
+            execution_status = PCMK_EXEC_UNKNOWN;
+        }
+        pcmk__set_result(&op->result, exit_status, execution_status,
+                         crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON));
+        pcmk__set_result_output(&op->result,
+                                crm_element_value_copy(xml_op, F_STONITH_OUTPUT),
+                                NULL);
+
 
         g_hash_table_replace(rv, id, op);
         CRM_LOG_ASSERT(g_hash_table_lookup(rv, id) != NULL);
