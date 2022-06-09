@@ -643,31 +643,21 @@ watchdog_device_update(void)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    xmlNode *stonith_enabled_xml = NULL;
-    bool stonith_enabled = false;
-    int rc = pcmk_rc_ok;
     long timeout_ms = 0;
+    xmlNode *stonith_watchdog_xml = NULL;
+    const char *value = NULL;
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
-                                           cib, LOG_NEVER);
-    rc = pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &stonith_enabled);
+    stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
+					    cib, LOG_NEVER);
+    if (stonith_watchdog_xml) {
+        value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+    if (value) {
+        timeout_ms = crm_get_msec(value);
+    }
 
-    if (rc != pcmk_rc_ok || stonith_enabled) {
-        xmlNode *stonith_watchdog_xml = NULL;
-        const char *value = NULL;
-
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
-                                                cib, LOG_NEVER);
-        if (stonith_watchdog_xml) {
-            value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
-        }
-        if (value) {
-            timeout_ms = crm_get_msec(value);
-        }
-
-        if (timeout_ms < 0) {
-            timeout_ms = pcmk__auto_watchdog_timeout();
-        }
+    if (timeout_ms < 0) {
+        timeout_ms = pcmk__auto_watchdog_timeout();
     }
 
     stonith_watchdog_timeout_ms = timeout_ms;
