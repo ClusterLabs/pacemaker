@@ -95,14 +95,17 @@ libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
-WRAPPED = calloc getenv getpwnam_r uname setgrent getgrent endgrent
-WRAPPED_FLAGS = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))
+#
+# libcrmcommon_test is used only with unit tests, so we can mock system calls.
+# See mock.c for details.
+#
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
-libcrmcommon_test_la_LDFLAGS	= $(LDFLAGS_HARDENED_LIB) $(WRAPPED_FLAGS)
+libcrmcommon_test_la_LDFLAGS	= $(LDFLAGS_HARDENED_LIB)
 libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS)
-libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka
+
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
 
 clean-generic:

@@ -18,23 +18,20 @@
 #include <cmocka.h>
 #include <sys/types.h>
 
-int
-__wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen,
-                  struct passwd **result)
-{
-    *result = mock_ptr_type(struct passwd *);
-    return 0;
-}
-
 static void
 no_matching_pwent(void **state)
 {
     uid_t uid;
     gid_t gid;
 
-    will_return(__wrap_getpwnam_r, NULL);               // result parameter to getpwnam_r()
+    // Set getpwnam_r() return value and result parameter
+    pcmk__mock_getpwnam_r = true;
+    will_return(__wrap_getpwnam_r, ENOENT);
+    will_return(__wrap_getpwnam_r, NULL);
 
-    assert_int_equal(pcmk_daemon_user(&uid, &gid), -EINVAL);
+    assert_int_equal(pcmk_daemon_user(&uid, &gid), -ENOENT);
+
+    pcmk__mock_getpwnam_r = false;
 }
 
 static void
@@ -50,15 +47,24 @@ entry_found(void **state)
 
     /* Test getpwnam_r returning a valid passwd entry, but we don't pass uid or gid. */
 
-    will_return_always(__wrap_getpwnam_r, &returned_ent);      // result parameter to getpwnam_r()
+    // Set getpwnam_r() return value and result parameter
+    pcmk__mock_getpwnam_r = true;
+    will_return(__wrap_getpwnam_r, 0);
+    will_return(__wrap_getpwnam_r, &returned_ent);
 
     assert_int_equal(pcmk_daemon_user(NULL, NULL), 0);
 
     /* Test getpwnam_r returning a valid passwd entry, and we do pass uid and gid. */
 
+    /* We don't need to call will_return() again because pcmk_daemon_user()
+     * will have cached the uid/gid from the previous call and won't make
+     * another call to getpwnam_r().
+     */
     assert_int_equal(pcmk_daemon_user(&uid, &gid), 0);
     assert_int_equal(uid, 1000);
     assert_int_equal(gid, 1000);
+
+    pcmk__mock_getpwnam_r = false;
 }
 
 int main(int argc, char **argv)

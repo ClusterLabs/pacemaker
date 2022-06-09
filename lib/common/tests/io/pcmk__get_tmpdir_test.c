@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,29 +19,12 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
-static bool use_mocked = false;
-
-char *
-__wrap_getenv(const char *name)
-{
-    /* If coverage is enabled, something in "make check" will want to call
-     * the real getenv(), which will of course fail if the mocked version gets
-     * used.  This bool needs to be set and unset around every unit test so
-     * the mocked version is only called in that time.
-     */
-    if (use_mocked) {
-        return mock_ptr_type(char *);
-    } else {
-        return __real_getenv(name);
-    }
-}
-
 static void
 getenv_returns_invalid(void **state)
 {
     const char *result;
 
-    use_mocked = true;
+    pcmk__mock_getenv = true;
 
     will_return(__wrap_getenv, NULL);                   // getenv("TMPDIR") return value
     result = pcmk__get_tmpdir();
@@ -55,7 +38,7 @@ getenv_returns_invalid(void **state)
     result = pcmk__get_tmpdir();
     assert_string_equal(result, "/tmp");
 
-    use_mocked = false;
+    pcmk__mock_getenv = false;
 }
 
 static void
@@ -63,7 +46,7 @@ getenv_returns_valid(void **state)
 {
     const char *result;
 
-    use_mocked = true;
+    pcmk__mock_getenv = true;
 
     will_return(__wrap_getenv, "/var/tmp");             // getenv("TMPDIR") return value
     result = pcmk__get_tmpdir();
@@ -77,7 +60,7 @@ getenv_returns_valid(void **state)
     result = pcmk__get_tmpdir();
     assert_string_equal(result, "/tmp/abcd.1234");
 
-    use_mocked = false;
+    pcmk__mock_getenv = false;
 }
 
 int
