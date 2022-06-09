@@ -546,6 +546,33 @@ create_migration_actions(pe_resource_t *rsc, const pe_node_t *current)
 
 /*!
  * \internal
+ * \brief Abort a dangling migration by scheduling a stop (and possibly cleanup)
+ *
+ * \param[in]     data       Source node of dangling migration
+ * \param[in,out] user_data  Resource involved in dangling migration
+ */
+static void
+abort_dangling_migration(void *data, void *user_data)
+{
+    const pe_node_t *dangling_source = (const pe_node_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    pe_action_t *stop = NULL;
+    bool cleanup = pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop);
+
+    pe_rsc_trace(rsc,
+                 "Scheduling stop%s for %s on %s due to dangling migration",
+                 (cleanup? " and cleanup" : ""), rsc->id,
+                 pe__node_name(dangling_source));
+    stop = stop_action(rsc, dangling_source, FALSE);
+    pe__set_action_flags(stop, pe_action_dangle);
+    if (cleanup) {
+        DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
+    }
+}
+
+/*!
+ * \internal
  * \brief Schedule actions to bring resource down and back to current role
  *
  * \param[in] rsc           Resource to restart
@@ -609,7 +636,6 @@ native_create_actions(pe_resource_t *rsc)
     gboolean is_moving = FALSE;
     gboolean allow_migrate = FALSE;
 
-    GList *gIter = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
     bool multiply_active = FALSE;
@@ -633,20 +659,7 @@ native_create_actions(pe_resource_t *rsc)
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
-    for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *dangling_source = (pe_node_t *) gIter->data;
-
-        pe_action_t *stop = NULL;
-
-        pe_rsc_trace(rsc, "Creating stop action %sfor %s on %s due to dangling migration",
-                     pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
-                     rsc->id, pe__node_name(dangling_source));
-        stop = stop_action(rsc, dangling_source, FALSE);
-        pe__set_action_flags(stop, pe_action_dangle);
-        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
-        }
-    }
+    g_list_foreach(rsc->dangling_migrations, abort_dangling_migration, rsc);
 
     if ((num_all_active == 2) && (num_clean_active == 2) && chosen
         && rsc->partial_migration_source && rsc->partial_migration_target
