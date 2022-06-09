@@ -566,7 +566,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",
-                 (rsc? rsc : "all resources"));
+                 pcmk__s(rsc, "all resources"));
         return;
     }
 
@@ -581,7 +581,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
         if (regexec(&regex, attr, 0, NULL, 0) == 0) {
             crm_trace("Matched %s when clearing %s",
-                      attr, (rsc? rsc : "all resources"));
+                      attr, pcmk__s(rsc, "all resources"));
             crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
             attrd_peer_update(peer, xml, host, FALSE);
         }
@@ -869,8 +869,8 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
-                   attr, host, v->current? v->current : "(unset)",
-                   value? value : "(unset)", peer->uname);
+                   attr, host, pcmk__s(v->current, "(unset)"),
+                   pcmk__s(value, "(unset)"), peer->uname);
         pcmk__str_update(&v->current, value);
         a->changed = TRUE;
 
@@ -1094,7 +1094,7 @@ attrd_election_cb(gpointer user_data)
     return FALSE;
 }
 
-#define state_text(state) ((state)? (const char *)(state) : "in unknown state")
+#define state_text(state) pcmk__s((state), "in unknown state")
 
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
@@ -1445,7 +1445,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     if (private_updates) {
         crm_info("Processed %d private change%s for %s, id=%s, set=%s",
                  private_updates, pcmk__plural_s(private_updates),
-                 a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
     }
     if (cib_updates) {
         crm_log_xml_trace(xml_top, __func__);
@@ -1455,7 +1455,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
+                 a->id, pcmk__s(a->uuid, "n/a"), pcmk__s(a->set, "n/a"));
 
         the_cib->cmds->register_callback_full(the_cib, a->update,
                                               CIB_OP_TIMEOUT_S, FALSE,
