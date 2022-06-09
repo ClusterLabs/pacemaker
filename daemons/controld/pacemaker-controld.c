@@ -129,8 +129,7 @@ main(int argc, char **argv)
         return CRM_EX_FATAL;
     }
 
-    logger_out = pcmk__new_logger();
-    if (logger_out == NULL) {
+    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         return CRM_EX_FATAL;
     }
 
