@@ -668,27 +668,27 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     peer_won = attrd_check_for_new_writer(peer, xml);
 
-    if (pcmk__strcase_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                             PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
+    if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                         PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
         attrd_peer_sync(peer, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_none)) {
         attrd_peer_remove(host, TRUE, peer->uname);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
          */
         attrd_peer_clear_failure(peer, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_casei)
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)
                && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
         process_peer_sync_response(peer, peer_won, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_none)) {
         /* Ignore. The flush command was removed in 2.0.0 but may be
          * received from peers running older versions.
          */
@@ -981,12 +981,12 @@ populate_attribute(xmlNode *xml, const char *attr)
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                               pcmk__str_null_matches | pcmk__str_casei);
+                               pcmk__str_null_matches);
 
     // Look up or create attribute entry
     a = g_hash_table_lookup(attributes, attr);
     if (a == NULL) {
-        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
+        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_none)) {
             a = create_attribute(xml);
         } else {
             crm_warn("Could not update %s: attribute not found", attr);
@@ -995,7 +995,7 @@ populate_attribute(xmlNode *xml, const char *attr)
     }
 
     // Update attribute dampening
-    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
+    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
         int rc = update_attr_dampening(a, xml, attr);
 
         if (rc != pcmk_rc_ok || !update_both) {
