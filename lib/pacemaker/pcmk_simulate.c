@@ -885,6 +885,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                 rc = pcmk_rc_error;
                 goto simulate_done;
             }
+            pe__register_messages(logger_out);
+            pcmk__register_lib_messages(logger_out);
             data_set->priv = logger_out;
         }
 
@@ -966,7 +968,7 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -976,6 +978,6 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
 
     rc = pcmk__simulate(data_set, out, injections, flags, section_opts,
                         use_date, input_file, graph_file, dot_file);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }

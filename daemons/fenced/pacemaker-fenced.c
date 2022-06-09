@@ -297,7 +297,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
-                                    crm_ipc_server_event|crm_ipc_server_error);
+                                    crm_ipc_server_event);
 
         if (rc != pcmk_rc_ok) {
             crm_warn("%s notification of client %s failed: %s "

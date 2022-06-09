@@ -137,7 +137,8 @@ main(int argc, char **argv)
         exit_code = CRM_EX_FATAL;
         goto done;
     }
-
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
     /* Create the mainloop and run it... */

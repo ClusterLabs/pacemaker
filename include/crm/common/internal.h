@@ -175,7 +175,8 @@ pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value);
 
 pid_t pcmk__procfs_pid_of(const char *name);
 unsigned int pcmk__procfs_num_cores(void);
-
+int pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size);
+bool pcmk__procfs_has_pids(void);
 
 /* internal XML schema functions (from xml.c) */
 

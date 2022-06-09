@@ -331,18 +331,6 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     if (value == NULL) {
         return NULL;
     }
-#if XML_PARANOIA_CHECKS
-    {
-        const char *old_value = NULL;
-
-        old_value = crm_element_value(node, name);
-
-        /* Could be re-setting the same value */
-        CRM_CHECK(old_value != value,
-                  crm_err("Cannot reset %s with crm_xml_add(%s)", name, value);
-                  return value);
-    }
-#endif
 
     if (pcmk__tracking_xml_changes(node, FALSE)) {
         const char *old = crm_element_value(node, name);

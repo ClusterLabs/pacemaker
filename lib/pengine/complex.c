@@ -489,11 +489,89 @@ pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
     return params_on_node;
 }
 
+/*!
+ * \internal
+ * \brief Unpack a resource's "requires" meta-attribute
+ *
+ * \param[in] rsc         Resource being unpacked
+ * \param[in] value       Value of "requires" meta-attribute
+ * \param[in] is_default  Whether \p value was selected by default
+ */
+static void
+unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
+{
+    if (pcmk__str_eq(value, PCMK__VALUE_NOTHING, pcmk__str_casei)) {
+
+    } else if (pcmk__str_eq(value, PCMK__VALUE_QUORUM, pcmk__str_casei)) {
+        pe__set_resource_flags(rsc, pe_rsc_needs_quorum);
+
+    } else if (pcmk__str_eq(value, PCMK__VALUE_FENCING, pcmk__str_casei)) {
+        pe__set_resource_flags(rsc, pe_rsc_needs_fencing);
+        if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+            pcmk__config_warn("%s requires fencing but fencing is disabled",
+                              rsc->id);
+        }
+
+    } else if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+                              "devices cannot require unfencing", rsc->id);
+            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+            return;
+
+        } else if (!pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+            pcmk__config_warn("Resetting \"" XML_RSC_ATTR_REQUIRES "\" for %s "
+                              "to \"" PCMK__VALUE_QUORUM "\" because fencing "
+                              "is disabled", rsc->id);
+            unpack_requires(rsc, PCMK__VALUE_QUORUM, true);
+            return;
+
+        } else {
+            pe__set_resource_flags(rsc,
+                                   pe_rsc_needs_fencing|pe_rsc_needs_unfencing);
+        }
+
+    } else {
+        const char *orig_value = value;
+
+        if (pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
+            value = PCMK__VALUE_QUORUM;
+
+        } else if ((rsc->variant == pe_native)
+                   && xml_contains_remote_node(rsc->xml)) {
+            value = PCMK__VALUE_QUORUM;
+
+        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)) {
+            value = PCMK__VALUE_UNFENCING;
+
+        } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)) {
+            value = PCMK__VALUE_FENCING;
+
+        } else if (rsc->cluster->no_quorum_policy == no_quorum_ignore) {
+            value = PCMK__VALUE_NOTHING;
+
+        } else {
+            value = PCMK__VALUE_QUORUM;
+        }
+
+        if (orig_value != NULL) {
+            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
+                             "to '%s' because '%s' is not valid",
+                              rsc->id, value, orig_value);
+        }
+        unpack_requires(rsc, value, true);
+        return;
+    }
+
+    pe_rsc_trace(rsc, "\tRequired to start: %s%s", value,
+                 (is_default? " (default)" : ""));
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
               pe_resource_t * parent, pe_working_set_t * data_set)
 {
-    bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
@@ -735,79 +813,8 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
+    unpack_requires(*rsc, value, false);
 
-  handle_requires_pref:
-    if (pcmk__str_eq(value, "nothing", pcmk__str_casei)) {
-
-    } else if (pcmk__str_eq(value, "quorum", pcmk__str_casei)) {
-        pe__set_resource_flags(*rsc, pe_rsc_needs_quorum);
-
-    } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
-        if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
-                              "to 'quorum' because fencing devices cannot "
-                              "require unfencing", (*rsc)->id);
-            value = "quorum";
-            isdefault = TRUE;
-            goto handle_requires_pref;
-
-        } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
-                              "to 'quorum' because fencing is disabled",
-                              (*rsc)->id);
-            value = "quorum";
-            isdefault = TRUE;
-            goto handle_requires_pref;
-
-        } else {
-            pe__set_resource_flags(*rsc, pe_rsc_needs_fencing
-                                           |pe_rsc_needs_unfencing);
-        }
-
-    } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
-        pe__set_resource_flags(*rsc, pe_rsc_needs_fencing);
-        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            pcmk__config_warn("%s requires fencing but fencing is disabled",
-                              (*rsc)->id);
-        }
-
-    } else {
-        const char *orig_value = value;
-
-        isdefault = TRUE;
-        if (pcmk_is_set((*rsc)->flags, pe_rsc_fence_device)) {
-            value = "quorum";
-
-        } else if (((*rsc)->variant == pe_native)
-                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)
-                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker", pcmk__str_casei)
-                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote", pcmk__str_casei)
-            ) {
-            value = "quorum";
-
-        } else if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
-            value = "unfencing";
-
-        } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            value = "fencing";
-
-        } else if (data_set->no_quorum_policy == no_quorum_ignore) {
-            value = "nothing";
-
-        } else {
-            value = "quorum";
-        }
-
-        if (orig_value != NULL) {
-            pcmk__config_err("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
-                             "to '%s' because '%s' is not valid",
-                              (*rsc)->id, value, orig_value);
-        }
-
-        goto handle_requires_pref;
-    }
-
-    pe_rsc_trace((*rsc), "\tRequired to start: %s%s", value, isdefault?" (default)":"");
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
     if (value != NULL) {
         // Stored as seconds

@@ -28,6 +28,7 @@ header_HEADERS = acl.h \
 				 nvpair.h \
 				 output.h \
 				 results.h \
+				 results_compat.h \
 				 util.h \
 				 util_compat.h \
 				 xml.h \

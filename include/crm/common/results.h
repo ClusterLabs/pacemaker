@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -176,13 +176,6 @@ enum ocf_exitcode {
      * controller records PCMK_OCF_UNKNOWN for pending actions.
      * PCMK_OCF_CONNECTION_DIED is used only with older DCs that don't support
      * PCMK_EXEC_NOT_CONNECTED.
-     *
-     * @TODO PCMK_OCF_UNKNOWN should be deprecated, and an execution status of
-     * PCMK_EXEC_PENDING relied on instead (though it might be worthwhile to
-     * keep PCMK_OCF_UNKNOWN as an invalid value for initializing new action
-     * objects). However, backward compatibility must be considered (processing
-     * old saved CIB files, rolling upgrades with older DCs, older
-     * Pacemaker Remote nodes or connection hosts, and older bundles).
      */
     PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
@@ -246,6 +239,8 @@ typedef enum crm_exit_e {
     CRM_EX_NOT_INSTALLED        =   5, //!< Dependencies not available locally
     CRM_EX_NOT_CONFIGURED       =   6, //!< Parameter invalid (inherently)
     CRM_EX_NOT_RUNNING          =   7, //!< Service safely stopped
+    CRM_EX_PROMOTED             =   8, //!< Service active and promoted
+    CRM_EX_FAILED_PROMOTED      =   9, //!< Service failed and possibly promoted
 
     // sysexits.h
     CRM_EX_USAGE                =  64, //!< Command line usage error
@@ -292,6 +287,13 @@ typedef enum crm_exit_e {
     CRM_EX_DEGRADED             = 190, //!< Service active but more likely to fail soon
     CRM_EX_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
 
+    /* Custom
+     *
+     * This can be used to initialize exit status variables or to indicate that
+     * a command is pending (which is what the controller uses it for).
+     */
+    CRM_EX_NONE                 = 193, //!< No exit status available
+
     CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;
 
@@ -331,7 +333,6 @@ int pcmk_legacy2rc(int legacy_rc);
 const char *pcmk_strerror(int rc);
 const char *pcmk_errorname(int rc);
 const char *bz2_strerror(int rc);
-crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);

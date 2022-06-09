@@ -1236,7 +1236,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_standby;
         value = "node standby";
 
-    } else if (pcmk__strcase_any_of(value, "ignore", "nothing", NULL)) {
+    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+                                    NULL)) {
         action->on_fail = action_fail_ignore;
         value = "ignore";
 
@@ -2059,16 +2060,20 @@ find_unfencing_devices(GList *candidates, GList *matches)
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *candidate = gIter->data;
-        const char *provides = g_hash_table_lookup(candidate->meta,
-                                                   PCMK_STONITH_PROVIDES);
-        const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
-        if(candidate->children) {
+        if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
+
         } else if (!pcmk_is_set(candidate->flags, pe_rsc_fence_device)) {
             continue;
 
-        } else if (pcmk__str_eq(provides, "unfencing", pcmk__str_casei) || pcmk__str_eq(requires, "unfencing", pcmk__str_casei)) {
+        } else if (pcmk_is_set(candidate->flags, pe_rsc_needs_unfencing)) {
+            matches = g_list_prepend(matches, candidate);
+
+        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
+                                                    PCMK_STONITH_PROVIDES),
+                                PCMK__VALUE_UNFENCING,
+                                pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
     }

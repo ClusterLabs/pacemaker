@@ -678,6 +678,8 @@ log_all_actions(pe_working_set_t *data_set)
         return;
     }
 
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
     pcmk__output_set_log_level(out, LOG_NOTICE);
     data_set->priv = out;
 
