@@ -16,6 +16,8 @@ AM_LDFLAGS = $(LDFLAGS_WRAP)
 include $(top_srcdir)/mk/tap.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__procfs_pid2path_test
+check_PROGRAMS = pcmk__procfs_has_pids_false_test	\
+		 pcmk__procfs_has_pids_true_test	\
+		 pcmk__procfs_pid2path_test
 
 TESTS = $(check_PROGRAMS)
