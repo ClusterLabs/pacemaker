@@ -28,6 +28,7 @@
 #include <crm/common/results_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/strings_internal.h>
+#include <crm/common/acl_internal.h>
 
 /* This says whether the current application is a Pacemaker daemon or not,
  * and is used to change default logging settings such as whether to log to
@@ -40,23 +41,6 @@ extern bool pcmk__is_daemon;
 
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
-
-/* internal ACL-related utilities */
-
-char *pcmk__uid2username(uid_t uid);
-const char *pcmk__update_acl_user(xmlNode *request, const char *field,
-                                  const char *peer_user);
-
-static inline bool
-pcmk__is_privileged(const char *user)
-{
-    return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
-}
-
-void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
-
-bool pcmk__check_acl(xmlNode *xml, const char *name,
-                     enum xml_private_flags mode);
 
 #if SUPPORT_CIBSECRETS
 /* internal CIB utilities (from cib_secrets.c) */

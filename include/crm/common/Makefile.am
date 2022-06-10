@@ -34,7 +34,8 @@ header_HEADERS = acl.h \
 				 xml.h \
 				 xml_compat.h
 
-noinst_HEADERS = alerts_internal.h	\
+noinst_HEADERS = acl_internal.h 	\
+				 alerts_internal.h	\
 				 attrd_internal.h	\
 				 cmdline_internal.h	\
 				 health_internal.h	\
