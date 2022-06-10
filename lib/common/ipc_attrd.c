@@ -150,17 +150,30 @@ create_attrd_op(const char *user_name)
 }
 
 static int
-connect_and_send_attrd_request(xmlNode *request)
+create_api(pcmk_ipc_api_t **api)
 {
-    pcmk_ipc_api_t *api = NULL;
-    int rc = pcmk_rc_ok;
-    int max = 5;
+    int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
 
-    rc = pcmk_new_ipc_api(&api, pcmk_ipc_attrd);
     if (rc != pcmk_rc_ok) {
         crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
-        return ENOTCONN;
     }
+
+    return rc;
+}
+
+static void
+destroy_api(pcmk_ipc_api_t *api)
+{
+    pcmk_disconnect_ipc(api);
+    pcmk_free_ipc_api(api);
+    api = NULL;
+}
+
+static int
+connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+{
+    int rc = pcmk_rc_ok;
+    int max = 5;
 
     while (max > 0) {
         crm_info("Connecting to cluster... %d retries remaining", max);
@@ -168,9 +181,6 @@ connect_and_send_attrd_request(xmlNode *request)
 
         if (rc == pcmk_rc_ok) {
             rc = pcmk__send_ipc_request(api, request);
-            pcmk_disconnect_ipc(api);
-            pcmk_free_ipc_api(api);
-            api = NULL;
             break;
         } else if (rc == EAGAIN || rc == EALREADY) {
             sleep(5 - max);
@@ -215,7 +225,13 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
                     pcmk_is_set(options, pcmk__node_attr_remote));
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -278,7 +294,13 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -347,7 +369,13 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -358,6 +386,40 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
               display_host, pcmk_rc_str(rc), rc);
 
     return rc;
+}
+
+static void
+add_op_attr(xmlNode *op, uint32_t options)
+{
+    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
+    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
+        crm_xml_add(op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
+    }
+}
+
+static void
+populate_update_op(xmlNode *op, const char *node, const char *name, const char *value,
+                   const char *dampen, const char *set, uint32_t options)
+{
+    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
+        crm_xml_add(op, PCMK__XA_ATTR_PATTERN, name);
+    } else {
+        crm_xml_add(op, PCMK__XA_ATTR_NAME, name);
+    }
+
+    add_op_attr(op, options);
+
+    crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
+    crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
+    crm_xml_add(op, PCMK__XA_ATTR_NODE_NAME, node);
+    crm_xml_add(op, PCMK__XA_ATTR_SET, set);
+    crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
+                    pcmk_is_set(options, pcmk__node_attr_remote));
+    crm_xml_add_int(op, PCMK__XA_ATTR_IS_PRIVATE,
+                    pcmk_is_set(options, pcmk__node_attr_private));
 }
 
 int
@@ -381,32 +443,16 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     }
 
     request = create_attrd_op(user_name);
-
-    if (pcmk_is_set(options, pcmk__node_attr_pattern)) {
-        crm_xml_add(request, PCMK__XA_ATTR_PATTERN, name);
-    } else {
-        crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
-    }
-
-    if (pcmk_all_flags_set(options, pcmk__node_attr_value | pcmk__node_attr_delay)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_BOTH);
-    } else if (pcmk_is_set(options, pcmk__node_attr_value)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
-    } else if (pcmk_is_set(options, pcmk__node_attr_delay)) {
-        crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE_DELAY);
-    }
-
-    crm_xml_add(request, PCMK__XA_ATTR_VALUE, value);
-    crm_xml_add(request, PCMK__XA_ATTR_DAMPENING, dampen);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
-    crm_xml_add(request, PCMK__XA_ATTR_SET, set);
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_REMOTE,
-                    pcmk_is_set(options, pcmk__node_attr_remote));
-    crm_xml_add_int(request, PCMK__XA_ATTR_IS_PRIVATE,
-                    pcmk_is_set(options, pcmk__node_attr_private));
+    populate_update_op(request, node, name, value, dampen, set, options);
 
     if (api == NULL) {
-        rc = connect_and_send_attrd_request(request);
+        rc = create_api(&api);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        destroy_api(api);
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -415,6 +461,99 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     crm_debug("Asked pacemaker-attrd to update %s on %s: %s (%d)",
               name, display_host, pcmk_rc_str(rc), rc);
+
+    return rc;
+}
+
+int
+pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampen,
+                            const char *set, const char *user_name,
+                            uint32_t options)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *request = NULL;
+
+    if (attrs == NULL) {
+        return EINVAL;
+    }
+
+    /* There are two different ways of handling a list of attributes:
+     *
+     * (1) For messages originating from some command line tool, we have to send
+     *     them one at a time.  In this loop, we just call pcmk__attrd_api_update
+     *     for each, letting it deal with creating the API object if it doesn't
+     *     already exist.
+     *
+     *     The reason we can't use a single message in this case is that we can't
+     *     trust that the server supports it.  Remote nodes could be involved
+     *     here, and there's no guarantee that a newer client running on a remote
+     *     node is talking to (or proxied through) a cluster node with a newer
+     *     attrd.  We also can't just try sending a single message and then falling
+     *     back on multiple.  There's no handshake with the attrd server to
+     *     determine its version.  And then we would need to do that fallback in the
+     *     dispatch function for this to work for all connection types (mainloop in
+     *     particular), and at that point we won't know what the original message
+     *     was in order to break it apart and resend as individual messages.
+     *
+     * (2) For messages between daemons, we can be assured that the local attrd
+     *     will support the new message and that it can send to the other attrds
+     *     as one request or split up according to the minimum supported version.
+     */
+    for (GList *iter = attrs; iter != NULL; iter = iter->next) {
+        pcmk__attrd_query_pair_t *pair = (pcmk__attrd_query_pair_t *) iter->data;
+
+        if (pcmk__is_daemon) {
+            const char *target = NULL;
+            xmlNode *child = NULL;
+
+            /* First time through this loop - create the basic request. */
+            if (request == NULL) {
+                request = create_attrd_op(user_name);
+                add_op_attr(request, options);
+            }
+
+            /* Add a child node for this operation.  We add the task to the top
+             * level XML node so attrd_ipc_dispatch doesn't need changes.  And
+             * then we also add the task to each child node in populate_update_op
+             * so attrd_client_update knows what form of update is taking place.
+             */
+            child = create_xml_node(request, XML_ATTR_OP);
+            target = pcmk__node_attr_target(pair->node);
+
+            if (target != NULL) {
+                pair->node = target;
+            }
+
+            populate_update_op(child, pair->node, pair->name, pair->value, dampen,
+                               set, options);
+        } else {
+            rc = pcmk__attrd_api_update(api, pair->node, pair->name, pair->value,
+                                        dampen, set, user_name, options);
+        }
+    }
+
+    /* If we were doing multiple attributes at once, we still need to send the
+     * request.  Do that now, creating and destroying the API object if needed.
+     */
+    if (pcmk__is_daemon) {
+        bool created_api = false;
+
+        if (api == NULL) {
+            rc = create_api(&api);
+            if (rc != pcmk_rc_ok) {
+                return rc;
+            }
+
+            created_api = true;
+        }
+
+        rc = connect_and_send_attrd_request(api, request);
+        free_xml(request);
+
+        if (created_api) {
+            destroy_api(api);
+        }
+    }
 
     return rc;
 }

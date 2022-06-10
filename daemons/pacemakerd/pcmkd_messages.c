@@ -160,28 +160,28 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         pcmk_handle_shutdown_request(c, msg, id, flags);
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring request from client %s to purge node "
                   "because peer cache is not used", pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_OK);
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         pcmk_handle_ping_request(c, msg, id);
 
     } else {
         crm_debug("Unrecognized IPC command '%s' from client %s",
                   pcmk__s(task, "(unspecified)"), pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INVALID_PARAM);
     }
 
     free_xml(msg);

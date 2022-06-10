@@ -223,7 +223,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     pcmk__client_t *c = pcmk__find_client(qbc);
     xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
 
-    pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+    pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
     if (msg != NULL) {
         xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
 

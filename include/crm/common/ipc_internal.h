@@ -31,6 +31,12 @@ extern "C" {
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>    // mainloop_io_t
 
+/*
+ * XML attribute names used only by internal code
+ */
+
+#define PCMK__XA_IPC_PROTO_VERSION  "ipc-protocol-version"
+
 /* denotes "non yieldable PID" on FreeBSD, or actual PID1 in scenarios that
    require a delicate handling anyway (socket-based activation with systemd);
    we can be reasonably sure that this PID is never possessed by the actual
@@ -204,15 +210,15 @@ void pcmk__drop_all_clients(qb_ipcs_service_t *s);
 bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
 xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                                 const char *tag, crm_exit_t status);
-#define pcmk__ipc_create_ack(flags, tag, st) \
-    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (tag), (st))
+                                 const char *tag, const char *ver, crm_exit_t status);
+#define pcmk__ipc_create_ack(flags, tag, ver, st) \
+    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (tag), (ver), (st))
 
 int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
                           uint32_t request, uint32_t flags, const char *tag,
-                          crm_exit_t status);
-#define pcmk__ipc_send_ack(c, req, flags, tag, st) \
-    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (st))
+                          const char *ver, crm_exit_t status);
+#define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
+    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
 
 int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
                           uint32_t max_send_size,

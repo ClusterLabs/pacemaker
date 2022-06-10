@@ -385,10 +385,10 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
-    pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_INDETERMINATE);
+    pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
 
     CRM_ASSERT(client->user != NULL);
     pcmk__update_acl_user(msg, F_CRM_USER, client->user);

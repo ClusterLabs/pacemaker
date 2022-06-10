@@ -141,6 +141,28 @@ int pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *na
                            const char *value, const char *dampen, const char *set,
                            const char *user_name, uint32_t options);
 
+/*!
+ * \internal
+ * \brief Like pcmk__attrd_api_update, but for multiple attributes at once
+ *
+ * \param[in] api           Connection to pacemaker-attrd (or NULL to use
+ *                          a temporary new connection)
+ * \param[in] attrs         A list of pcmk__attr_query_pair_t structs
+ * \param[in] dampen        The new time to wait value, or NULL to unset
+ * \param[in] set           ID of attribute set to use (or NULL to choose first)
+ * \param[in] user_name     ACL user to pass to pacemaker-attrd
+ * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note Not all attrd versions support setting multiple attributes at once.
+ *       For those servers that do not, this function will fall back to just
+ *       sending a separate IPC request for each attribute.
+ */
+int pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs,
+                                const char *dampen, const char *set,
+                                const char *user_name, uint32_t options);
+
 #ifdef __cplusplus
 }
 #endif
