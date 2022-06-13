@@ -643,7 +643,6 @@ native_create_actions(pe_resource_t *rsc)
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
     CRM_ASSERT(rsc != NULL);
-    allow_migrate = pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)? TRUE : FALSE;
 
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
@@ -661,19 +660,58 @@ native_create_actions(pe_resource_t *rsc)
 
     g_list_foreach(rsc->dangling_migrations, abort_dangling_migration, rsc);
 
-    if ((num_all_active == 2) && (num_clean_active == 2) && chosen
-        && rsc->partial_migration_source && rsc->partial_migration_target
+    if ((current != NULL) && (chosen != NULL)
+        && (current->details != chosen->details)
+        && (rsc->next_role >= RSC_ROLE_STARTED)) {
+
+        pe_rsc_trace(rsc, "Moving %s from %s to %s",
+                     rsc->id, pe__node_name(current), pe__node_name(chosen));
+        is_moving = TRUE;
+
+        // Check whether resource is allowed to migrate
+        if (pcmk_all_flags_set(rsc->flags, pe_rsc_allow_migrate|pe_rsc_managed)
+            && !pcmk_any_flags_set(rsc->flags, pe_rsc_failed|pe_rsc_start_pending)
+            && !current->details->unclean && !chosen->details->unclean) {
+            allow_migrate = TRUE;
+        }
+
+        // This is needed even if migrating (though I'm not sure why ...)
+        need_stop = TRUE;
+    }
+
+    // Check whether resource is partially migrated and/or multiply active
+    if ((rsc->partial_migration_source != NULL)
+        && (rsc->partial_migration_target != NULL)
+        && allow_migrate && (num_all_active == 2)
         && (current->details == rsc->partial_migration_source->details)
         && (chosen->details == rsc->partial_migration_target->details)) {
-
-        /* The chosen node is still the migration target from a partial
-         * migration. Attempt to continue the migration instead of recovering
-         * by stopping the resource everywhere and starting it on a single node.
+        /* A partial migration is in progress, and the migration target remains
+         * the same as when the migration began.
          */
-        pe_rsc_trace(rsc, "Will attempt to continue with partial migration "
-                     "to target %s from %s",
-                     rsc->partial_migration_target->details->id,
-                     rsc->partial_migration_source->details->id);
+        pe_rsc_trace(rsc, "Partial migration of %s from %s to %s will continue",
+                     rsc->id, pe__node_name(rsc->partial_migration_source),
+                     pe__node_name(rsc->partial_migration_target));
+
+    } else if ((rsc->partial_migration_source != NULL)
+               || (rsc->partial_migration_target != NULL)) {
+        // A partial migration is in progress but can't be continued
+
+        if (num_all_active > 2) {
+            // The resource is migrating *and* multiply active!
+            crm_notice("Forcing recovery of %s because it is migrating "
+                       "from %s to %s and possibly active elsewhere",
+                       rsc->id, pe__node_name(rsc->partial_migration_source),
+                       pe__node_name(rsc->partial_migration_target));
+        } else {
+            // The migration source or target isn't available
+            crm_notice("Forcing recovery of %s because it can no longer "
+                       "migrate from %s to %s",
+                       rsc->id, pe__node_name(rsc->partial_migration_source),
+                       pe__node_name(rsc->partial_migration_target));
+        }
+        need_stop = TRUE;
+        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+        allow_migrate = FALSE;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
         /* If a resource has "requires" set to nothing or quorum, don't consider
@@ -689,23 +727,13 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     if (multiply_active) {
-        if (rsc->partial_migration_target && rsc->partial_migration_source) {
-            // Migration was in progress, but we've chosen a different target
-            crm_notice("Resource %s can no longer migrate from %s to %s "
-                       "(will stop on both nodes)",
-                       rsc->id, pe__node_name(rsc->partial_migration_source),
-                       pe__node_name(rsc->partial_migration_target));
-            multiply_active = false;
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-        } else {
-            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-            // Resource was (possibly) incorrectly multiply active
-            pe_proc_err("%s resource %s might be active on %u nodes (%s)",
-                        pcmk__s(class, "Untyped"), rsc->id, num_all_active,
-                        recovery2text(rsc->recovery_type));
-            crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
-        }
+        // Resource was (possibly) incorrectly multiply active
+        pe_proc_err("%s resource %s might be active on %u nodes (%s)",
+                    pcmk__s(class, "Untyped"), rsc->id, num_all_active,
+                    recovery2text(rsc->recovery_type));
+        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
 
         switch (rsc->recovery_type) {
             case recovery_stop_start:
@@ -719,14 +747,7 @@ native_create_actions(pe_resource_t *rsc)
                 break;
         }
 
-        /* If by chance a partial migration is in process, but the migration
-         * target is not chosen still, clear all partial migration data.
-         */
-        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-        allow_migrate = FALSE;
-    }
-
-    if (!multiply_active) {
+    } else {
         pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
@@ -737,11 +758,8 @@ native_create_actions(pe_resource_t *rsc)
         pe__set_action_flags(start, pe_action_print_always);
     }
 
-    if (current && chosen && current->details != chosen->details) {
-        pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, pe__node_name(current), pe__node_name(chosen));
-        is_moving = TRUE;
-        need_stop = TRUE;
+    if (is_moving) {
+        // Remaining tests are only for resources staying where they are
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
@@ -788,23 +806,6 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     pcmk__create_recurring_actions(rsc);
-
-    /* if we are stuck in a partial migration, where the target
-     * of the partial migration no longer matches the chosen target.
-     * A full stop/start is required */
-    if (rsc->partial_migration_target && (chosen == NULL || rsc->partial_migration_target->details != chosen->details)) {
-        pe_rsc_trace(rsc, "Not allowing partial migration of %s to continue",
-                     rsc->id);
-        allow_migrate = FALSE;
-
-    } else if (!is_moving || !pcmk_is_set(rsc->flags, pe_rsc_managed)
-               || pcmk_any_flags_set(rsc->flags,
-                                     pe_rsc_failed|pe_rsc_start_pending)
-               || (current && current->details->unclean)
-               || rsc->next_role < RSC_ROLE_STARTED) {
-
-        allow_migrate = FALSE;
-    }
 
     if (allow_migrate) {
         create_migration_actions(rsc, current);
