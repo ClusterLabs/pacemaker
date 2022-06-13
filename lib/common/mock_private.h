@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <grp.h>
 
 /* This header is for the sole use of libcrmcommon_test. */
 
@@ -30,5 +31,15 @@ int __wrap_getpwnam_r(const char *name, struct passwd *pwd,
 
 int __real_uname(struct utsname *buf);
 int __wrap_uname(struct utsname *buf);
+
+void __real_setgrent(void);
+void __wrap_setgrent(void);
+
+struct group *__real_getgrent(void);
+struct group *__wrap_getgrent(void);
+
+void __real_endgrent(void);
+void __wrap_endgrent(void);
+
 
 #endif  // MOCK_PRIVATE__H

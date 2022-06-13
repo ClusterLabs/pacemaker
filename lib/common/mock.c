@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <grp.h>
 
 #include "mock_private.h"
 
@@ -18,13 +19,13 @@
  * libcrmcommon_test.a, not into libcrmcommon.so.  It is used to support
  * constructing mock versions of library functions for unit testing.
  *
- * Each unit test will only ever want to use a mocked version of one or two
- * library functions.  However, we need to mark all the mocked functions as
- * wrapped (with -Wl,--wrap= in the LDFLAGS) in libcrmcommon_test.a so that
- * all those unit tests can share the same special test library.  The unit
- * test then defines its own wrapped function.  Because a unit test won't
- * define every single wrapped function, there will be undefined references
- * at link time.
+ * Each unit test will only ever want to use a mocked version of a few
+ * library functions (i.e. not all of them). However, we need to mark all
+ * the mocked functions as wrapped (with -Wl,--wrap= in the LDFLAGS) in
+ * libcrmcommon_test.a so that all those unit tests can share the same
+ * special test library.  The unit test then defines its own wrapped
+ * function. Because a unit test won't define every single wrapped
+ * function, there will be undefined references at link time.
  *
  * This file takes care of those undefined references.  It defines a
  * wrapped version of every function that simply calls the real libc
@@ -74,3 +75,19 @@ int __attribute__((weak))
 __wrap_uname(struct utsname *buf) {
     return __real_uname(buf);
 }
+
+void __attribute__((weak))
+__wrap_setgrent(void) {
+    __real_setgrent();
+}
+
+struct group * __attribute__((weak))
+__wrap_getgrent(void) {
+    return __real_getgrent();
+}
+
+void __attribute__((weak))
+__wrap_endgrent(void) {
+    __real_endgrent();
+}
+
