@@ -94,7 +94,7 @@ libcrmcommon_la_SOURCES	+= watchdog.c
 libcrmcommon_la_SOURCES	+= xml.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
-WRAPPED = calloc getenv getpwnam_r uname
+WRAPPED = calloc getenv getpwnam_r uname setgrent getgrent endgrent
 WRAPPED_FLAGS = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))
 
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
