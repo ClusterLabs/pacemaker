@@ -320,6 +320,13 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
                         crm_debug("Unpacking ACLs for user '%s'", id);
                         p->acls = parse_acl_entry(acls, child, p->acls);
                     }
+                } else if (!strcmp(tag, XML_ACL_TAG_GROUP)) {
+                    const char *id = crm_element_value(child, XML_ATTR_ID);
+
+                    if (id && pcmk__is_user_in_group(user,id)) {
+                        crm_debug("Unpacking ACLs for group '%s'", id);
+                        p->acls = parse_acl_entry(acls, child, p->acls);
+                    }
                 }
             }
         }
