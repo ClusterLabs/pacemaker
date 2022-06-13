@@ -573,6 +573,62 @@ abort_dangling_migration(void *data, void *user_data)
 
 /*!
  * \internal
+ * \brief Check whether a resource can migrate
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Resource's current node
+ *
+ * \return true if \p rsc can migrate, otherwise false
+ */
+static bool
+can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
+{
+    CRM_CHECK(rsc != NULL, return false);
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)) {
+        pe_rsc_trace(rsc, "%s cannot migrate because "
+                          "the configuration does not allow it",
+                     rsc->id);
+        return false;
+    }
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pe_rsc_trace(rsc, "%s cannot migrate because it is not managed",
+                     rsc->id);
+        return false;
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        pe_rsc_trace(rsc, "%s cannot migrate because it is failed",
+                     rsc->id);
+        return false;
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+        pe_rsc_trace(rsc, "%s cannot migrate because it has a start pending",
+                     rsc->id);
+        return false;
+    }
+
+    if ((current == NULL) || current->details->unclean) {
+        pe_rsc_trace(rsc, "%s cannot migrate because "
+                          "its current node (%s) is unclean",
+                     rsc->id, pe__node_name(current));
+        return false;
+    }
+
+    if ((rsc->allocated_to == NULL) || rsc->allocated_to->details->unclean) {
+        pe_rsc_trace(rsc, "%s cannot migrate because "
+                          "its next node (%s) is unclean",
+                     rsc->id, pe__node_name(rsc->allocated_to));
+        return false;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Schedule actions to bring resource down and back to current role
  *
  * \param[in] rsc           Resource to restart
@@ -667,13 +723,7 @@ native_create_actions(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
                      rsc->id, pe__node_name(current), pe__node_name(chosen));
         is_moving = TRUE;
-
-        // Check whether resource is allowed to migrate
-        if (pcmk_all_flags_set(rsc->flags, pe_rsc_allow_migrate|pe_rsc_managed)
-            && !pcmk_any_flags_set(rsc->flags, pe_rsc_failed|pe_rsc_start_pending)
-            && !current->details->unclean && !chosen->details->unclean) {
-            allow_migrate = TRUE;
-        }
+        allow_migrate = can_migrate(rsc, current);
 
         // This is needed even if migrating (though I'm not sure why ...)
         need_stop = TRUE;
