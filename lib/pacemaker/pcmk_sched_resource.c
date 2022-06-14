@@ -804,28 +804,18 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
 
     // Compare nodes by updated scores
     if (node1->weight < node2->weight) {
-        if (node1->weight < 0) {
-            crm_trace("%s (%d on %s) > %s (%d on %s)",
-                      instance1->id, node1->weight, node1->details->uname,
-                      instance2->id, node2->weight, node2->details->uname);
-            rc = -1;
-        } else {
-            crm_trace("%s (%d on %s) < %s (%d on %s)",
-                      instance1->id, node1->weight, node1->details->uname,
-                      instance2->id, node2->weight, node2->details->uname);
-            rc = 1;
-        }
-        goto out;
+        crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
+                  instance1->id, node1->weight, node1->details->uname,
+                  instance2->id, node2->weight, node2->details->uname);
+        rc = 1;
 
     } else if (node1->weight > node2->weight) {
-        crm_trace("%s (%d on %s) > %s (%d on %s)",
+        crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
                   instance1->id, node1->weight, node1->details->uname,
                   instance2->id, node2->weight, node2->details->uname);
         rc = -1;
-        goto out;
     }
 
-out:
     g_hash_table_destroy(colocated_scores1);
     g_hash_table_destroy(colocated_scores2);
     return rc;
