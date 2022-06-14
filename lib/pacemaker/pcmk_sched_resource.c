@@ -895,6 +895,30 @@ did_fail(const pe_resource_t * rsc)
 
 /*!
  * \internal
+ * \brief Check whether a node is allowed to run a resource
+ *
+ * \param[in]     rsc   Resource to check
+ * \param[in,out] node  Node to check (will be set NULL if not allowed)
+ *
+ * \return true if *node is either NULL or allowed for \p rsc, otherwise false
+ */
+static bool
+node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
+{
+    if (*node != NULL) {
+        pe_node_t *allowed = pe_hash_table_lookup(rsc->allowed_nodes,
+                                                  (*node)->details->id);
+        if ((allowed == NULL) || (allowed->weight < 0)) {
+            pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
+                         rsc->id, (*node)->details->uname);
+            return false;
+        }
+    }
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Compare clone or bundle instances according to assignment order
  *
  * \param[in] a          First instance to compare
@@ -910,8 +934,6 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     int rc = 0;
     pe_node_t *node1 = NULL;
     pe_node_t *node2 = NULL;
-    pe_node_t *current_node1 = NULL;
-    pe_node_t *current_node2 = NULL;
     unsigned int nnodes1 = 0;
     unsigned int nnodes2 = 0;
 
@@ -932,8 +954,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
      *  - inactive instances
      */
 
-    current_node1 = pe__find_active_on(resource1, &nnodes1, NULL);
-    current_node2 = pe__find_active_on(resource2, &nnodes2, NULL);
+    node1 = pe__find_active_on(resource1, &nnodes1, NULL);
+    node2 = pe__find_active_on(resource2, &nnodes2, NULL);
 
     /* If both instances are running and at least one is multiply
      * active, give precedence to the one that's running on fewer nodes.
@@ -949,29 +971,11 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
         }
     }
 
-    /* Instance whose current location is available sorts first */
-    node1 = current_node1;
-    node2 = current_node2;
-    if (node1 != NULL) {
-        pe_node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
-
-        if (match == NULL || match->weight < 0) {
-            crm_trace("%s: current location is unavailable", resource1->id);
-            node1 = NULL;
-            can1 = FALSE;
-        }
-    }
-
-    if (node2 != NULL) {
-        pe_node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
-
-        if (match == NULL || match->weight < 0) {
-            crm_trace("%s: current location is unavailable", resource2->id);
-            node2 = NULL;
-            can2 = FALSE;
-        }
-    }
-
+    /* An instance that is either inactive or active on an allowed node is
+     * preferred over an instance that is active on a no-longer-allowed node.
+     */
+    can1 = node_is_allowed(resource1, &node1);
+    can2 = node_is_allowed(resource2, &node2);
     if (can1 && !can2) {
         crm_trace("%s < %s: availability of current location", resource1->id,
                   resource2->id);
