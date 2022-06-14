@@ -1127,9 +1127,17 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
         return rc;
     }
 
-    // Prefer instance with lower ID in lexicographic order
-    rc = strcmp(instance1->id, instance2->id);
-    crm_trace("Assign %s %s %s: default",
-              instance1->id, ((rc < 0)? "before" : "after"), instance2->id);
+    // Prefer instance with lower instance number
+    rc = pcmk__cmp_instance_number(instance1, instance2);
+    if (rc < 0) {
+        crm_trace("Assign %s before %s: instance number",
+                  instance1->id, instance2->id);
+    } else if (rc > 0) {
+        crm_trace("Assign %s after %s: instance number",
+                  instance1->id, instance2->id);
+    } else {
+        crm_trace("No assignment preference for %s vs. %s",
+                  instance1->id, instance2->id);
+    }
     return rc;
 }
