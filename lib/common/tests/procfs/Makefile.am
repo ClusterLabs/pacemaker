@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2022 the Pacemaker project contributors
+# Copyright 2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,6 +16,8 @@ AM_LDFLAGS = $(LDFLAGS_WRAP)
 include $(top_srcdir)/mk/tap.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__readable_interval_test
+check_PROGRAMS = pcmk__procfs_has_pids_false_test	\
+		 pcmk__procfs_has_pids_true_test	\
+		 pcmk__procfs_pid2path_test
 
 TESTS = $(check_PROGRAMS)

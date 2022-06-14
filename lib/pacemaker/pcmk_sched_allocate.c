@@ -672,9 +672,9 @@ log_all_actions(pe_working_set_t *data_set)
      * previously set and just log instead.
      */
     pcmk__output_t *prev_out = data_set->priv;
-    pcmk__output_t *out = pcmk__new_logger();
+    pcmk__output_t *out = NULL;
 
-    if (out == NULL) {
+    if (pcmk__log_output_new(&out) != pcmk_rc_ok) {
         return;
     }
 

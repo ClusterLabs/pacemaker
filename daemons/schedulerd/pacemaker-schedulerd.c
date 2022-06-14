@@ -132,8 +132,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    logger_out = pcmk__new_logger();
-    if (logger_out == NULL) {
+    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
         goto done;
     }

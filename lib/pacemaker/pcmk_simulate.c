@@ -880,9 +880,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
             printed = pcmk_rc_ok;
 
         } else {
-            logger_out = pcmk__new_logger();
-            if (logger_out == NULL) {
-                rc = pcmk_rc_error;
+            rc = pcmk__log_output_new(&logger_out);
+            if (rc != pcmk_rc_ok) {
                 goto simulate_done;
             }
             pe__register_messages(logger_out);
