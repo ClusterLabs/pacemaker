@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdlib.h>
+#include <string.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
@@ -915,6 +918,41 @@ node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
         }
     }
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Compare two clone or bundle instances' instance numbers
+ *
+ * \param[in] a  First instance to compare
+ * \param[in] b  Second instance to compare
+ *
+ * \return A negative number if \p a's instance number is lower,
+ *         a positive number if \p b's instance number is lower,
+ *         or 0 if their instance numbers are the same
+ */
+gint
+pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
+{
+    const pe_resource_t *instance1 = (const pe_resource_t *) a;
+    const pe_resource_t *instance2 = (const pe_resource_t *) b;
+    char *div1 = NULL;
+    char *div2 = NULL;
+
+    CRM_ASSERT((instance1 != NULL) && (instance2 != NULL));
+
+    // Clone numbers are after a colon, bundle numbers after a dash
+    div1 = strrchr(instance1->id, ':');
+    if (div1 == NULL) {
+        div1 = strrchr(instance1->id, '-');
+    }
+    div2 = strrchr(instance2->id, ':');
+    if (div2 == NULL) {
+        div2 = strrchr(instance2->id, '-');
+    }
+    CRM_ASSERT((div1 != NULL) && (div2 != NULL));
+
+    return (gint) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
 }
 
 /*!

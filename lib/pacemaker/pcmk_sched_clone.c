@@ -19,30 +19,6 @@
 
 static void append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all);
 
-static gint
-sort_rsc_id(gconstpointer a, gconstpointer b)
-{
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
-    long num1, num2;
-
-    CRM_ASSERT(resource1 != NULL);
-    CRM_ASSERT(resource2 != NULL);
-
-    /*
-     * Sort clone instances numerically by instance number, so instance :10
-     * comes after :9.
-     */
-    num1 = strtol(strrchr(resource1->id, ':') + 1, NULL, 10);
-    num2 = strtol(strrchr(resource2->id, ':') + 1, NULL, 10);
-    if (num1 < num2) {
-        return -1;
-    } else if (num1 > num2) {
-        return 1;
-    }
-    return 0;
-}
-
 static pe_node_t *
 can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
 {
@@ -470,7 +446,7 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
     /* we have to maintain a consistent sorted child list when building order constraints */
-    rsc->children = g_list_sort(rsc->children, sort_rsc_id);
+    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -600,7 +576,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     if (clone_data->ordered) {
         /* we have to maintain a consistent sorted child list when building order constraints */
-        rsc->children = g_list_sort(rsc->children, sort_rsc_id);
+        rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     }
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -1067,7 +1043,7 @@ clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete
 
     CRM_ASSERT(rsc);
 
-    rsc->children = g_list_sort(rsc->children, sort_rsc_id);
+    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     if (rsc->children == NULL) {
         pe_warn("Clone %s has no children", rsc->id);
         return FALSE;

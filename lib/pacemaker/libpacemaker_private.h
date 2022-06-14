@@ -395,6 +395,9 @@ void pcmk__sort_resources(pe_working_set_t *data_set);
 G_GNUC_INTERNAL
 gint pcmk__cmp_instance(gconstpointer a, gconstpointer b);
 
+G_GNUC_INTERNAL
+gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
+
 
 // Functions related to probes (pcmk_sched_probes.c)
 
