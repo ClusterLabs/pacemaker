@@ -137,6 +137,13 @@ update_attrd(const char *host, const char *name, const char *value,
 }
 
 void
+update_attrd_list(GList *attrs, uint32_t opts)
+{
+    pcmk__attrd_api_update_list(attrd_api, attrs, NULL, NULL, NULL,
+                                opts | pcmk__node_attr_value);
+}
+
+void
 update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
     crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",

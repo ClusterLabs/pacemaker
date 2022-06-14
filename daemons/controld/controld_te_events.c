@@ -17,6 +17,9 @@
 
 #include <pacemaker-controld.h>
 
+#include <crm/common/attrd_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
+
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
@@ -163,12 +166,18 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     if (do_update) {
+        pcmk__attrd_query_pair_t *fail_pair = NULL;
+        pcmk__attrd_query_pair_t *last_pair = NULL;
+        char *fail_name = NULL;
+        char *last_name = NULL;
+        GList *attrs = NULL;
+
+        uint32_t opts = pcmk__node_attr_none;
+
         char *now = pcmk__ttoa(time(NULL));
-        char *attr_name = NULL;
-        gboolean is_remote_node = FALSE;
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
-            is_remote_node = TRUE;
+            opts |= pcmk__node_attr_remote;
         }
 
         crm_info("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
@@ -177,17 +186,40 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = pcmk__failcount_name(rsc_id, task, interval_ms);
-            update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
-            free(attr_name);
+            fail_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+            CRM_ASSERT(fail_pair != NULL);
+
+            fail_name = pcmk__failcount_name(rsc_id, task, interval_ms);
+            fail_pair->name = fail_name;
+            fail_pair->value = value;
+            fail_pair->node = on_uname;
+
+            attrs = g_list_prepend(attrs, fail_pair);
         }
 
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
-        update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
-        free(attr_name);
+        last_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+        CRM_ASSERT(last_pair != NULL);
+
+        last_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
+        last_pair->name = last_name;
+        last_pair->value = now;
+        last_pair->node = on_uname;
+
+        attrs = g_list_prepend(attrs, last_pair);
+
+        update_attrd_list(attrs, opts);
+
+        if (!ignore_failures) {
+            free(fail_name);
+            free(fail_pair);
+        }
+
+        free(last_name);
+        free(last_pair);
+        g_list_free(attrs);
 
         free(now);
     }
