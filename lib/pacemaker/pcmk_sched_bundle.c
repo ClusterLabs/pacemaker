@@ -81,8 +81,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = pcmk__sort_nodes(nodes, NULL, data_set);
-    containers = g_list_sort_with_data(containers, pcmk__cmp_instance,
-                                       data_set);
+    containers = g_list_sort(containers, pcmk__cmp_instance);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
                         bundle_data->nreplicas_per_host, data_set);
     g_list_free(nodes);

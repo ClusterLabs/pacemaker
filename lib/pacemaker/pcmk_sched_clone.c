@@ -355,8 +355,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = pcmk__sort_nodes(nodes, NULL, data_set);
-    rsc->children = g_list_sort_with_data(rsc->children, pcmk__cmp_instance,
-                                          data_set);
+    rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
 

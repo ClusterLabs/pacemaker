@@ -896,14 +896,13 @@ did_fail(const pe_resource_t * rsc)
  *
  * \param[in] a          First instance to compare
  * \param[in] b          Second instance to compare
- * \param[in] user_data  Cluster working set
  *
  * \return A negative number if \p a should be assigned first,
  *         a positive number if \p b should be assigned first,
  *         or 0 if assignment order doesn't matter
  */
 gint
-pcmk__cmp_instance(gconstpointer a, gconstpointer b, gpointer user_data)
+pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 {
     int rc = 0;
     pe_node_t *node1 = NULL;

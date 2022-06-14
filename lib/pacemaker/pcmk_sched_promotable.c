@@ -282,7 +282,7 @@ sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return 1;
     }
 
-    return pcmk__cmp_instance(a, b, data_set);
+    return pcmk__cmp_instance(a, b);
 }
 
 static void
