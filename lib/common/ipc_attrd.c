@@ -232,6 +232,10 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
 
         rc = connect_and_send_attrd_request(api, request);
         destroy_api(api);
+
+    } else if (!pcmk_ipc_is_connected(api)) {
+        rc = connect_and_send_attrd_request(api, request);
+
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -301,6 +305,10 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
 
         rc = connect_and_send_attrd_request(api, request);
         destroy_api(api);
+
+    } else if (!pcmk_ipc_is_connected(api)) {
+        rc = connect_and_send_attrd_request(api, request);
+
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -376,6 +384,10 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
 
         rc = connect_and_send_attrd_request(api, request);
         destroy_api(api);
+
+    } else if (!pcmk_ipc_is_connected(api)) {
+        rc = connect_and_send_attrd_request(api, request);
+
     } else {
         rc = send_attrd_request(api, request);
     }
@@ -453,6 +465,10 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
 
         rc = connect_and_send_attrd_request(api, request);
         destroy_api(api);
+
+    } else if (!pcmk_ipc_is_connected(api)) {
+        rc = connect_and_send_attrd_request(api, request);
+
     } else {
         rc = send_attrd_request(api, request);
     }

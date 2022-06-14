@@ -50,14 +50,19 @@ typedef struct {
  * \internal
  * \brief Send a request to pacemaker-attrd to clear resource failure
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
+ * \param[in] api           pacemaker-attrd IPC object
  * \param[in] node          Affect only this node (or NULL for all nodes)
  * \param[in] resource      Name of resource to clear (or NULL for all)
  * \param[in] operation     Name of operation to clear (or NULL for all)
  * \param[in] interval_spec If operation is not NULL, its interval
  * \param[in] user_name     ACL user to pass to pacemaker-attrd
  * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \note If \p api is NULL, a new temporary connection will be created
+ *       just for this operation and destroyed afterwards.  If \p api is
+ *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       will be connected for this operation and left connected afterwards.
+ *       This allows for reusing an IPC connection.
  *
  * \return Standard Pacemaker return code
  */
@@ -86,9 +91,14 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Purge a node from pacemaker-attrd
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
+ * \param[in] api           pacemaker-attrd IPC object
  * \param[in] node          Node to remove
+ *
+ * \note If \p api is NULL, a new temporary connection will be created
+ *       just for this operation and destroyed afterwards.  If \p api is
+ *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       will be connected for this operation and left connected afterwards.
+ *       This allows for reusing an IPC connection.
  *
  * \return Standard Pacemaker return code
  */
@@ -113,9 +123,14 @@ int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *nam
  * \internal
  * \brief Tell pacemaker-attrd to update the CIB with current values
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
+ * \param[in] api           pacemaker-attrd IPC object
  * \param[in] node          Affect only this node (or NULL for all nodes)
+ *
+ * \note If \p api is NULL, a new temporary connection will be created
+ *       just for this operation and destroyed afterwards.  If \p api is
+ *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       will be connected for this operation and left connected afterwards.
+ *       This allows for reusing an IPC connection.
  *
  * \return Standard Pacemaker return code
  */
@@ -125,8 +140,7 @@ int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
  * \internal
  * \brief Update an attribute's value, time to wait, or both
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
+ * \param[in] api           pacemaker-attrd IPC object
  * \param[in] node          Affect only this node (or NULL for current node)
  * \param[in] name          Attribute name
  * \param[in] value         The attribute's new value, or NULL to unset
@@ -134,6 +148,12 @@ int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
  * \param[in] set           ID of attribute set to use (or NULL to choose first)
  * \param[in] user_name     ACL user to pass to pacemaker-attrd
  * \param[in] options       Bitmask of pcmk__node_attr_opts
+ *
+ * \note If \p api is NULL, a new temporary connection will be created
+ *       just for this operation and destroyed afterwards.  If \p api is
+ *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       will be connected for this operation and left connected afterwards.
+ *       This allows for reusing an IPC connection.
  *
  * \return Standard Pacemaker return code
  */
@@ -145,19 +165,24 @@ int pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Like pcmk__attrd_api_update, but for multiple attributes at once
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
+ * \param[in] api           pacemaker-attrd IPC object
  * \param[in] attrs         A list of pcmk__attr_query_pair_t structs
  * \param[in] dampen        The new time to wait value, or NULL to unset
  * \param[in] set           ID of attribute set to use (or NULL to choose first)
  * \param[in] user_name     ACL user to pass to pacemaker-attrd
  * \param[in] options       Bitmask of pcmk__node_attr_opts
  *
- * \return Standard Pacemaker return code
+ * \note If \p api is NULL, a new temporary connection will be created
+ *       just for this operation and destroyed afterwards.  If \p api is
+ *       not NULL but is not yet connected to pacemaker-attrd, the object
+ *       will be connected for this operation and left connected afterwards.
+ *       This allows for reusing an IPC connection.
  *
  * \note Not all attrd versions support setting multiple attributes at once.
  *       For those servers that do not, this function will fall back to just
  *       sending a separate IPC request for each attribute.
+ *
+ * \return Standard Pacemaker return code
  */
 int pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs,
                                 const char *dampen, const char *set,
