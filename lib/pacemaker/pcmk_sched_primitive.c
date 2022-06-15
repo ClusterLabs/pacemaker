@@ -1014,9 +1014,19 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given primitive resource action
+ *
+ * \param[in,out] action  Action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-native_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
 {
+    CRM_ASSERT(action != NULL);
     return action->flags;
 }
 

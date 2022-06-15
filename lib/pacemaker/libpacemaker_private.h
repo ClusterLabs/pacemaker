@@ -573,6 +573,10 @@ G_GNUC_INTERNAL
 void pcmk__primitive_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
+enum pe_action_flags pcmk__primitive_action_flags(pe_action_t *action,
+                                                  const pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        pe_resource_t *primary,
                                        pcmk__colocation_t *colocation,

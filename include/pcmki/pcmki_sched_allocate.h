@@ -19,9 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-enum pe_action_flags native_action_flags(pe_action_t *action,
-                                         const pe_node_t *node);
-
 void native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__primitive_add_utilization(pe_resource_t *rsc,
