@@ -718,14 +718,21 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Ban a resource from any allowed nodes that are Pacemaker Remote nodes
+ *
+ * \param[in] rsc  Resource to check
+ */
 static void
-rsc_avoids_remote_nodes(pe_resource_t *rsc)
+rsc_avoids_remote_nodes(const pe_resource_t *rsc)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
+
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (node->details->remote_rsc) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        if (node->details->remote_rsc != NULL) {
             node->weight = -INFINITY;
         }
     }
