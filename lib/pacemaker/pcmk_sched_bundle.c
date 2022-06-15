@@ -895,18 +895,19 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         pe__bundle_replica_t *replica = gIter->data;
 
         if (replica->container) {
-            replica->container->cmds->rsc_location(replica->container,
-                                                   constraint);
+            replica->container->cmds->apply_location(replica->container,
+                                                     constraint);
         }
         if (replica->ip) {
-            replica->ip->cmds->rsc_location(replica->ip, constraint);
+            replica->ip->cmds->apply_location(replica->ip, constraint);
         }
     }
 
     if (bundle_data->child
         && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
             || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
-        bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
+        bundle_data->child->cmds->apply_location(bundle_data->child,
+                                                 constraint);
         bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
                                                           constraint);
     }

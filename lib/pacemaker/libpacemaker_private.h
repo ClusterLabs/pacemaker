@@ -151,7 +151,14 @@ struct resource_alloc_functions_s {
     GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                   GList *colocated_rscs);
 
-    void (*rsc_location) (pe_resource_t *, pe__location_t *);
+    /*!
+     * \internal
+     * \brief Apply a location constraint to a resource's allowed node scores
+     *
+     * \param[in,out] rsc       Resource to apply constraint to
+     * \param[in,out] location  Location constraint to apply
+     */
+    void (*apply_location)(pe_resource_t *rsc, pe__location_t *location);
 
     /*!
      * \internal

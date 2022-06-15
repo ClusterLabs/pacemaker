@@ -923,7 +923,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_location(child_rsc, constraint);
+        child_rsc->cmds->apply_location(child_rsc, constraint);
     }
 }
 
