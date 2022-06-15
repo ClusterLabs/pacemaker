@@ -1030,12 +1030,6 @@ pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
     return action->flags;
 }
 
-void
-native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
-{
-    pcmk__apply_location(rsc, constraint);
-}
-
 /*!
  * \internal
  * \brief Check whether a node is a multiply active resource's expected node

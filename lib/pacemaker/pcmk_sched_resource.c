@@ -26,7 +26,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_apply_coloc_score,
         pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
-        native_rsc_location,
+        pcmk__apply_location,
         pcmk__primitive_action_flags,
         pcmk__update_ordered_actions,
         pcmk__output_resource_actions,
