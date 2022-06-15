@@ -547,47 +547,52 @@ schedule_role_transition_actions(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create all actions needed for a given primitive resource
+ *
+ * \param[in,out] rsc  Primitive resource to create actions for
+ */
 void
-native_create_actions(pe_resource_t *rsc)
+pcmk__primitive_create_actions(pe_resource_t *rsc)
 {
-    pe_node_t *chosen = NULL;
-    pe_node_t *current = NULL;
-    gboolean need_stop = FALSE;
-    bool need_promote = FALSE;
-    gboolean is_moving = FALSE;
-    gboolean allow_migrate = FALSE;
+    bool need_stop = false;
+    bool need_promote = false;
+    bool is_moving = false;
+    bool allow_migrate = false;
+    bool multiply_active = false;
 
+    pe_node_t *current = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
-    bool multiply_active = FALSE;
     const char *next_role_source = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
-    chosen = rsc->allocated_to;
     next_role_source = set_default_next_role(rsc);
     pe_rsc_trace(rsc,
                  "Creating all actions for %s transition from %s to %s "
                  "(%s) on %s",
                  rsc->id, role2text(rsc->role), role2text(rsc->next_role),
-                 next_role_source, pe__node_name(chosen));
+                 next_role_source, pe__node_name(rsc->allocated_to));
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);
 
-    if ((current != NULL) && (chosen != NULL)
-        && (current->details != chosen->details)
+    if ((current != NULL) && (rsc->allocated_to != NULL)
+        && (current->details != rsc->allocated_to->details)
         && (rsc->next_role >= RSC_ROLE_STARTED)) {
 
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, pe__node_name(current), pe__node_name(chosen));
-        is_moving = TRUE;
+                     rsc->id, pe__node_name(current),
+                     pe__node_name(rsc->allocated_to));
+        is_moving = true;
         allow_migrate = pcmk__rsc_can_migrate(rsc, current);
 
         // This is needed even if migrating (though I'm not sure why ...)
-        need_stop = TRUE;
+        need_stop = true;
     }
 
     // Check whether resource is partially migrated and/or multiply active
@@ -595,7 +600,7 @@ native_create_actions(pe_resource_t *rsc)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
         && (current->details == rsc->partial_migration_source->details)
-        && (chosen->details == rsc->partial_migration_target->details)) {
+        && (rsc->allocated_to->details == rsc->partial_migration_target->details)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -620,11 +625,13 @@ native_create_actions(pe_resource_t *rsc)
                        rsc->id, pe__node_name(rsc->partial_migration_source),
                        pe__node_name(rsc->partial_migration_target));
         }
-        need_stop = TRUE;
+        need_stop = true;
         rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-        allow_migrate = FALSE;
+        allow_migrate = false;
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        multiply_active = (num_all_active > 1);
+    } else {
         /* If a resource has "requires" set to nothing or quorum, don't consider
          * it active on unclean nodes (similar to how all resources behave when
          * stonith-enabled is false). We can start such resources elsewhere
@@ -633,8 +640,6 @@ native_create_actions(pe_resource_t *rsc)
          * multiple nodes.
          */
         multiply_active = (num_clean_active > 1);
-    } else {
-        multiply_active = (num_all_active > 1);
     }
 
     if (multiply_active) {
@@ -644,14 +649,15 @@ native_create_actions(pe_resource_t *rsc)
         pe_proc_err("%s resource %s might be active on %u nodes (%s)",
                     pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                     recovery2text(rsc->recovery_type));
-        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
+        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
+                   "#Resource_is_Too_Active for more information");
 
         switch (rsc->recovery_type) {
             case recovery_stop_start:
-                need_stop = TRUE;
+                need_stop = true;
                 break;
             case recovery_stop_unexpected:
-                need_stop = TRUE; // StopRsc() will skip expected node
+                need_stop = true; // StopRsc() will skip expected node
                 pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
                 break;
             default:
@@ -671,36 +677,36 @@ native_create_actions(pe_resource_t *rsc)
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
-            need_stop = TRUE;
+            need_stop = true;
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
             pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
             if (rsc->next_role == RSC_ROLE_PROMOTED) {
-                need_promote = TRUE;
+                need_promote = true;
             }
         }
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
-        need_stop = TRUE;
+        need_stop = true;
 
-    } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
+    } else if ((rsc->role > RSC_ROLE_STARTED) && (current != NULL)
+               && (rsc->allocated_to != NULL)) {
         pe_action_t *start = NULL;
 
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
-        start = start_action(rsc, chosen, TRUE);
+        start = start_action(rsc, rsc->allocated_to, TRUE);
         if (!pcmk_is_set(start->flags, pe_action_optional)) {
             // Recovery of a promoted resource
             pe_rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
-            need_stop = TRUE;
+            need_stop = true;
         }
     }
 
-    /* Create any additional actions required when bringing resource down and
-     * back up to same level.
-     */
-    schedule_restart_actions(rsc, current, chosen, need_stop, need_promote);
+    // Create any actions needed to bring resource down and back up to same role
+    schedule_restart_actions(rsc, current, rsc->allocated_to, need_stop,
+                             need_promote);
 
     // Create any actions needed to take resource from this role to the next
     schedule_role_transition_actions(rsc);

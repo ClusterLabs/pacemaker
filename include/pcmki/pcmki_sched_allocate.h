@@ -19,7 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-void native_create_actions(pe_resource_t *rsc);
 void native_internal_constraints(pe_resource_t *rsc);
 extern enum pe_action_flags native_action_flags(pe_action_t * action, pe_node_t * node);
 

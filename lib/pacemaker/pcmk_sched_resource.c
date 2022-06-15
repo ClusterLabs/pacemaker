@@ -20,7 +20,7 @@
 static resource_alloc_functions_t allocation_methods[] = {
     {
         pcmk__primitive_assign,
-        native_create_actions,
+        pcmk__primitive_create_actions,
         pcmk__probe_rsc_on_node,
         native_internal_constraints,
         pcmk__primitive_apply_coloc_score,
@@ -295,9 +295,8 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     if (rsc->running_on) {
         current = pe__current_node(rsc);
         if (rsc->role == RSC_ROLE_STOPPED) {
-            /*
-             * This can occur when resources are being recovered
-             * We fiddle with the current role in native_create_actions()
+            /* This can occur when resources are being recovered because
+             * the current role can change in pcmk__primitive_create_actions()
              */
             rsc->role = RSC_ROLE_STARTED;
         }

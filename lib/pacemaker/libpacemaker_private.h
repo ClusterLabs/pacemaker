@@ -65,6 +65,12 @@ struct resource_alloc_functions_s {
      */
     pe_node_t *(*assign)(pe_resource_t *rsc, pe_node_t *prefer);
 
+    /*!
+     * \internal
+     * \brief Create all actions needed for a given resource
+     *
+     * \param[in,out] rsc  Resource to create actions for
+     */
     void (*create_actions)(pe_resource_t *rsc);
 
     /*!
@@ -540,6 +546,9 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 
 G_GNUC_INTERNAL
 pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_create_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
