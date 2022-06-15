@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:SystemHealth resource agent
 #
-# Copyright 2009-2019 the Pacemaker project contributors
+# Copyright 2009-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,8 +22,7 @@
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="SystemHealth" version="0.1">
+<resource-agent name="SystemHealth" version="1.0">
 <version>1.0</version>
 
 <longdesc lang="en">
@@ -33,6 +32,11 @@ the health of a system via IPMI.
 <shortdesc lang="en">SystemHealth resource agent</shortdesc>
 
 <parameters>
+  <parameter name="program">
+    <longdesc lang="en">Path to notifyServicelogEvent command</longdesc>
+    <shortdesc lang="en">Path to notify command</shortdesc>
+    <content type="string" default="/usr/sbin/notifyServicelogEvent"/>
+  </parameter>
 </parameters>
 
 <actions>

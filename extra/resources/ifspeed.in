@@ -64,7 +64,6 @@ OCF_RESKEY_dampen_default=5
 meta_data() {
         cat <<END
 <?xml version="1.0"?>
-<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="ifspeed" version="1.0">
 <version>1.0</version>
 
