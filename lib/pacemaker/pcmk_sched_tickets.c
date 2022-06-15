@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,21 @@
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
+
+enum loss_ticket_policy {
+    loss_ticket_stop,
+    loss_ticket_demote,
+    loss_ticket_fence,
+    loss_ticket_freeze
+};
+
+typedef struct {
+    const char *id;
+    pe_resource_t *rsc_lh;
+    pe_ticket_t *ticket;
+    enum loss_ticket_policy loss_policy;
+    int role_lh;
+} rsc_ticket_t;
 
 /*!
  * \brief Check whether a ticket constraint matches a resource by role
@@ -482,5 +497,28 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     if (!any_sets) {
         unpack_simple_rsc_ticket(xml_obj, data_set);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Ban resource from a node if it doesn't have a promotion ticket
+ *
+ * If a resource has tickets for the promoted role, and the ticket is either not
+ * granted or set to standby, then ban the resource from all nodes.
+ *
+ * \param[in] rsc  Resource to check
+ */
+void
+pcmk__require_promotion_tickets(pe_resource_t *rsc)
+{
+    for (GList *item = rsc->rsc_tickets; item != NULL; item = item->next) {
+        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) item->data;
+
+        if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
+            && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
+            resource_location(rsc, NULL, -INFINITY,
+                              "__stateful_without_ticket__", rsc->cluster);
+        }
     }
 }

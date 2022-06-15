@@ -110,7 +110,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
  *
  * \param[in,out] data_set  Working set for cluster
  */
-void
+static void
 add_maintenance_update(pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;

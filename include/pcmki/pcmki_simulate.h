@@ -46,9 +46,9 @@ void pcmk__profile_dir(const char *dir, long long repeat, pe_working_set_t *data
  *
  * \return Transition status after simulated execution
  */
-enum transition_status pcmk__simulate_transition(pe_working_set_t *data_set,
-                                                 cib_t *cib,
-                                                 GList *op_fail_list);
+enum pcmk__graph_status pcmk__simulate_transition(pe_working_set_t *data_set,
+                                                  cib_t *cib,
+                                                  GList *op_fail_list);
 
 /**
  * \internal

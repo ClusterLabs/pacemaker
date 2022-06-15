@@ -13,6 +13,9 @@
 
 #include "libpacemaker_private.h"
 
+// Name for a pseudo-op to use in ordering constraints for utilization
+#define LOAD_STOPPED "load_stopped"
+
 /*!
  * \internal
  * \brief Get integer utilization from a string

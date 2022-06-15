@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define CONTROLD_FENCING__H
 
 #include <stdbool.h>                // bool
-#include <pacemaker-internal.h>     // crm_graph_t, crm_action_t
+#include <pacemaker-internal.h>     // pcmk__graph_t, pcmk__graph_action_t
 
 // reaction to notification of local node being fenced
 void set_fence_reaction(const char *reaction_s);
@@ -23,7 +23,8 @@ void update_stonith_max_attempts(const char* value);
 // stonith API client
 void controld_trigger_fencer_connect(void);
 void controld_disconnect_fencer(bool destroy);
-gboolean te_fence_node(crm_graph_t *graph, crm_action_t *action);
+int controld_execute_fence_action(pcmk__graph_t *graph,
+                                  pcmk__graph_action_t *action);
 bool controld_verify_stonith_watchdog_timeout(const char *value);
 
 // stonith cleanup list
