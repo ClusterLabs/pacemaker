@@ -768,19 +768,25 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
     return allowed_nodes;
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a primitive resource
+ *
+ * \param[in,out] rsc  Primitive resource to create implicit constraints for
+ */
 void
-native_internal_constraints(pe_resource_t *rsc)
+pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 {
-    /* This function is on the critical path and worth optimizing as much as possible */
-
     pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
-    bool check_unfencing = FALSE;
+    bool check_unfencing = false;
     bool check_utilization = false;
+
+    CRM_ASSERT(rsc != NULL);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
-                     "Skipping native constraints for unmanaged resource: %s",
+                     "Skipping implicit constraints for unmanaged resource %s",
                      rsc->id);
         return;
     }
@@ -823,12 +829,12 @@ native_internal_constraints(pe_resource_t *rsc)
                        rsc->cluster);
 
     // Certain checks need allowed nodes
-    if (check_unfencing || check_utilization || rsc->container) {
+    if (check_unfencing || check_utilization || (rsc->container != NULL)) {
         allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
     }
 
     if (check_unfencing) {
-        /* Check if the node needs to be unfenced first */
+        // Check whether the node needs to be unfenced
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *node = item->data;
@@ -869,15 +875,14 @@ native_internal_constraints(pe_resource_t *rsc)
         pcmk__create_utilization_constraints(rsc, allowed_nodes);
     }
 
-    if (rsc->container) {
+    if (rsc->container != NULL) {
         pe_resource_t *remote_rsc = NULL;
 
         if (rsc->is_remote_node) {
             // rsc is the implicit remote connection for a guest or bundle node
 
-            /* Do not allow a guest resource to live on a Pacemaker Remote node,
-             * to avoid nesting remotes. However, allow bundles to run on remote
-             * nodes.
+            /* Guest resources are not allowed to run on Pacemaker Remote nodes,
+             * to avoid nesting remotes. However, bundles are allowed.
              */
             if (!pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 rsc_avoids_remote_nodes(rsc->container);
@@ -906,7 +911,7 @@ native_internal_constraints(pe_resource_t *rsc)
                                                           rsc->container);
         }
 
-        if (remote_rsc) {
+        if (remote_rsc != NULL) {
             /* Force the resource on the Pacemaker Remote node instead of
              * colocating the resource with the container resource.
              */
@@ -946,13 +951,15 @@ native_internal_constraints(pe_resource_t *rsc)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, true, rsc->cluster);
+                                 rsc->container, NULL, NULL, true,
+                                 rsc->cluster);
         }
     }
 
     if (rsc->is_remote_node || pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
-        /* don't allow remote nodes to run stonith devices
-         * or remote connection resources.*/
+        /* Remote connections and fencing devices are not allowed to run on
+         * Pacemaker Remote nodes
+         */
         rsc_avoids_remote_nodes(rsc);
     }
     g_list_free(allowed_nodes);

@@ -84,6 +84,12 @@ struct resource_alloc_functions_s {
      */
     bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node);
 
+    /*!
+     * \internal
+     * \brief Create implicit constraints needed for a resource
+     *
+     * \param[in,out] rsc  Resource to create implicit constraints for
+     */
     void (*internal_constraints)(pe_resource_t *rsc);
 
     /*!
@@ -549,6 +555,9 @@ pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_internal_constraints(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,

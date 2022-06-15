@@ -22,7 +22,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_assign,
         pcmk__primitive_create_actions,
         pcmk__probe_rsc_on_node,
-        native_internal_constraints,
+        pcmk__primitive_internal_constraints,
         pcmk__primitive_apply_coloc_score,
         pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
