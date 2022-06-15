@@ -18,7 +18,7 @@
 
 gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
                    pe_working_set_t *data_set);
-static void StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static void DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static void PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
@@ -85,7 +85,7 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
      * ------------         -------------------             ----------
      */
     /* Unknown */       {   RoleError,                      /* Unknown */
-                            StopRsc,                        /* Stopped */
+                            stop_resource,                  /* Stopped */
                             RoleError,                      /* Started */
                             RoleError,                      /* Unpromoted */
                             RoleError,                      /* Promoted */
@@ -97,14 +97,14 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                             RoleError,                      /* Promoted */
                         },
     /* Started */       {   RoleError,                      /* Unknown */
-                            StopRsc,                        /* Stopped */
+                            stop_resource,                  /* Stopped */
                             NULL,                           /* Started */
                             NULL,                           /* Unpromoted */
                             PromoteRsc,                     /* Promoted */
                         },
     /* Unpromoted */    {   RoleError,                      /* Unknown */
-                            StopRsc,                        /* Stopped */
-                            StopRsc,                        /* Started */
+                            stop_resource,                  /* Stopped */
+                            stop_resource,                  /* Started */
                             NULL,                           /* Unpromoted */
                             PromoteRsc,                     /* Promoted */
                         },
@@ -724,7 +724,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                 need_stop = true;
                 break;
             case recovery_stop_unexpected:
-                need_stop = true; // StopRsc() will skip expected node
+                need_stop = true; // stop_resource() will skip expected node
                 pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
                 break;
             default:
@@ -1119,16 +1119,20 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
            && (rsc->allocated_to->details == node->details);
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions needed to stop a resource wherever it is active
+ *
+ * \param[in,out] rsc       Resource being stopped
+ * \param[in]     node      Node where resource is being stopped (ignored)
+ * \param[in]     optional  Whether actions should be optional
+ */
 static void
-StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    GList *gIter = NULL;
-
-    CRM_ASSERT(rsc);
-
-    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *current = (pe_node_t *) gIter->data;
-        pe_action_t *stop;
+    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        pe_node_t *current = (pe_node_t *) iter->data;
+        pe_action_t *stop = NULL;
 
         if (is_expected_node(rsc, current)) {
             /* We are scheduling restart actions for a multiply active resource
@@ -1142,16 +1146,15 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
             continue;
         }
 
-        if (rsc->partial_migration_target) {
-            if (rsc->partial_migration_target->details == current->details
-                // Only if the allocated node still is the migration target.
-                && rsc->allocated_to
+        if (rsc->partial_migration_target != NULL) {
+            if ((rsc->partial_migration_target->details == current->details)
+                // Only if the allocated node still is the migration target
+                && (rsc->allocated_to != NULL)
                 && rsc->allocated_to->details == rsc->partial_migration_target->details) {
                 pe_rsc_trace(rsc,
                              "Skipping stop of %s on %s "
-                             "because migration to %s in progress",
-                             rsc->id, pe__node_name(current),
-                             pe__node_name(next));
+                             "because partial migration there will continue",
+                             rsc->id, pe__node_name(current));
                 continue;
             } else {
                 pe_rsc_trace(rsc,
@@ -1166,15 +1169,15 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
                      rsc->id, pe__node_name(current));
         stop = stop_action(rsc, current, optional);
 
-        if(rsc->allocated_to == NULL) {
-            pe_action_set_reason(stop, "node availability", TRUE);
+        if (rsc->allocated_to == NULL) {
+            pe_action_set_reason(stop, "node availability", true);
         } else if (pcmk_all_flags_set(rsc->flags, pe_rsc_restarting
                                                   |pe_rsc_stop_unexpected)) {
             /* We are stopping a multiply active resource on a node that is
              * not its expected node, and we are still scheduling restart
              * actions, so the stop is for being multiply active.
              */
-            pe_action_set_reason(stop, "being multiply active", TRUE);
+            pe_action_set_reason(stop, "being multiply active", true);
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -1186,7 +1189,7 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE,
+            pe_action_t *unfence = pe_fence_op(current, "on", true, NULL, false,
                                                rsc->cluster);
 
             order_actions(stop, unfence, pe_order_implies_first);
