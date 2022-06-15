@@ -918,7 +918,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
-    pcmk__apply_location(constraint, rsc);
+    pcmk__apply_location(rsc, constraint);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;

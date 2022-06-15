@@ -362,7 +362,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc);
+void pcmk__apply_location(pe_resource_t *rsc, pe__location_t *constraint);
 
 
 // Colocation constraints (pcmk_sched_colocation.c)

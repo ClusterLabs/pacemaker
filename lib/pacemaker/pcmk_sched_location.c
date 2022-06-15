@@ -613,11 +613,11 @@ pcmk__apply_locations(pe_working_set_t *data_set)
  * \internal
  * \brief Apply a location constraint to a resource's allowed node weights
  *
- * \param[in] constraint  Location constraint to apply
  * \param[in] rsc         Resource to apply constraint to
+ * \param[in] constraint  Location constraint to apply
  */
 void
-pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
+pcmk__apply_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     bool need_role = false;
 
