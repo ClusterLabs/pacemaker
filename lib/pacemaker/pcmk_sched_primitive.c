@@ -19,7 +19,7 @@
 gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
                    pe_working_set_t *data_set);
 static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
-static void StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static void PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static void RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
@@ -92,8 +92,8 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                         },
     /* Stopped */       {   RoleError,                      /* Unknown */
                             NULL,                           /* Stopped */
-                            StartRsc,                       /* Started */
-                            StartRsc,                       /* Unpromoted */
+                            start_resource,                 /* Started */
+                            start_resource,                 /* Unpromoted */
                             RoleError,                      /* Promoted */
                         },
     /* Started */       {   RoleError,                      /* Unknown */
@@ -1201,33 +1201,40 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     }
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions needed to start a resource on a node
+ *
+ * \param[in,out] rsc       Resource being started
+ * \param[in]     node      Node where resource should be started
+ * \param[in]     optional  Whether actions should be optional
+ */
 static void
-StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
     pe_action_t *start = NULL;
 
-    CRM_ASSERT(rsc);
+    CRM_ASSERT(node != NULL);
 
-    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (weight=%d)",
+    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (score %d)",
                  (optional? "optional" : "required"), rsc->id,
-                 pe__node_name(next),
-                 ((next == NULL)? 0 : next->weight));
-    start = start_action(rsc, next, TRUE);
+                 pe__node_name(node), node->weight);
+    start = start_action(rsc, node, TRUE);
 
-    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then);
+    pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
     }
 
-    if (is_expected_node(rsc, next)) {
+    if (is_expected_node(rsc, node)) {
         /* This could be a problem if the start becomes necessary for other
          * reasons later.
          */
         pe_rsc_trace(rsc,
                      "Start of multiply active resouce %s "
                      "on expected node %s will be a pseudo-action",
-                     rsc->id, pe__node_name(next));
+                     rsc->id, pe__node_name(node));
         pe__set_action_flags(start, pe_action_pseudo);
     }
 }
