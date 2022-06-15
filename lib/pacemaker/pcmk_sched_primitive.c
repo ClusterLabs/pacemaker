@@ -503,10 +503,27 @@ set_default_next_role(pe_resource_t *rsc)
     return "implicit";
 }
 
+/*!
+ * \internal
+ * \brief Create an action to represent an already pending start
+ *
+ * \param[in,out] rsc  Resource to create start action for
+ */
+static void
+create_pending_start(pe_resource_t *rsc)
+{
+    pe_action_t *start = NULL;
+
+    pe_rsc_trace(rsc,
+                 "Creating action for %s to represent already pending start",
+                 rsc->id);
+    start = start_action(rsc, rsc->allocated_to, TRUE);
+    pe__set_action_flags(start, pe_action_print_always);
+}
+
 void
 native_create_actions(pe_resource_t *rsc)
 {
-    pe_action_t *start = NULL;
     pe_node_t *chosen = NULL;
     pe_node_t *current = NULL;
     gboolean need_stop = FALSE;
@@ -621,10 +638,7 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "Creating start action for %s to represent already pending start",
-                     rsc->id);
-        start = start_action(rsc, chosen, TRUE);
-        pe__set_action_flags(start, pe_action_print_always);
+        create_pending_start(rsc);
     }
 
     if (is_moving) {
@@ -646,6 +660,8 @@ native_create_actions(pe_resource_t *rsc)
         need_stop = TRUE;
 
     } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
+        pe_action_t *start = NULL;
+
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
         start = start_action(rsc, chosen, TRUE);
