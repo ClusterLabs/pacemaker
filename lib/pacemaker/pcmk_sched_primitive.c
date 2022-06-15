@@ -480,6 +480,29 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
     pe__clear_resource_flags(rsc, pe_rsc_restarting);
 }
 
+/*!
+ * \internal
+ * \brief If a resource's next role is not explicitly specified, set a default
+ *
+ * \param[in,out] rsc  Resource to set next role for
+ *
+ * \return "explicit" if next role was explicitly set, otherwise "implicit"
+ */
+static const char *
+set_default_next_role(pe_resource_t *rsc)
+{
+    if (rsc->next_role != RSC_ROLE_UNKNOWN) {
+        return "explicit";
+    }
+
+    if (rsc->allocated_to == NULL) {
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "assignment");
+    } else {
+        pe__set_next_role(rsc, RSC_ROLE_STARTED, "assignment");
+    }
+    return "implicit";
+}
+
 void
 native_create_actions(pe_resource_t *rsc)
 {
@@ -495,21 +518,17 @@ native_create_actions(pe_resource_t *rsc)
     unsigned int num_clean_active = 0;
     bool multiply_active = FALSE;
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
-    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
+    const char *next_role_source = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
     chosen = rsc->allocated_to;
-    next_role = rsc->next_role;
-    if (next_role == RSC_ROLE_UNKNOWN) {
-        pe__set_next_role(rsc,
-                          (chosen == NULL)? RSC_ROLE_STOPPED : RSC_ROLE_STARTED,
-                          "allocation");
-    }
-    pe_rsc_trace(rsc, "Creating all actions for %s transition from %s to %s (%s) on %s",
+    next_role_source = set_default_next_role(rsc);
+    pe_rsc_trace(rsc,
+                 "Creating all actions for %s transition from %s to %s "
+                 "(%s) on %s",
                  rsc->id, role2text(rsc->role), role2text(rsc->next_role),
-                 ((next_role == RSC_ROLE_UNKNOWN)? "implicit" : "explicit"),
-                 pe__node_name(chosen));
+                 next_role_source, pe__node_name(chosen));
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
@@ -645,7 +664,8 @@ native_create_actions(pe_resource_t *rsc)
     /* Required steps from this role to the next */
     role = rsc->role;
     while (role != rsc->next_role) {
-        next_role = rsc_state_matrix[role][rsc->next_role];
+        enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
+
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
                      rsc->id, role2text(role), role2text(next_role),
                      role2text(rsc->next_role));
