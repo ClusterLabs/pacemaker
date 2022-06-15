@@ -521,6 +521,32 @@ create_pending_start(pe_resource_t *rsc)
     pe__set_action_flags(start, pe_action_print_always);
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions needed to take a resource to its next role
+ *
+ * \param[in,out] rsc  Resource to schedule actions for
+ */
+static void
+schedule_role_transition_actions(pe_resource_t *rsc)
+{
+    enum rsc_role_e role = rsc->role;
+
+    while (role != rsc->next_role) {
+        enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
+
+        pe_rsc_trace(rsc,
+                     "Creating action to take %s from %s to %s (ending at %s)",
+                     rsc->id, role2text(role), role2text(next_role),
+                     role2text(rsc->next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
+                                                false)) {
+            break;
+        }
+        role = next_role;
+    }
+}
+
 void
 native_create_actions(pe_resource_t *rsc)
 {
@@ -534,7 +560,6 @@ native_create_actions(pe_resource_t *rsc)
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
     bool multiply_active = FALSE;
-    enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     const char *next_role_source = NULL;
 
     CRM_ASSERT(rsc != NULL);
@@ -677,19 +702,8 @@ native_create_actions(pe_resource_t *rsc)
      */
     schedule_restart_actions(rsc, current, chosen, need_stop, need_promote);
 
-    /* Required steps from this role to the next */
-    role = rsc->role;
-    while (role != rsc->next_role) {
-        enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
-
-        pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
-                     rsc->id, role2text(role), role2text(next_role),
-                     role2text(rsc->next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, false)) {
-            break;
-        }
-        role = next_role;
-    }
+    // Create any actions needed to take resource from this role to the next
+    schedule_role_transition_actions(rsc);
 
     pcmk__create_recurring_actions(rsc);
 
