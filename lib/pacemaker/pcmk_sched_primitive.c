@@ -25,34 +25,88 @@ static bool PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional);
 
-/* This array says what the *next* role should be when transitioning from one
- * role to another. For example going from Stopped to Promoted, the next role is
- * RSC_ROLE_UNPROMOTED, because the resource must be started before being promoted.
- * The current state then becomes Started, which is fed into this array again,
- * giving a next role of RSC_ROLE_PROMOTED.
- */
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current state  Next state*/
-/*                 Unknown           Stopped           Started           Unpromoted           Promoted */
-/* Unknown */    { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED,    RSC_ROLE_STOPPED },
-/* Stopped */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED },
-/* Started */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
-/* Unpromoted */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
-/* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+    /* This array lists the immediate next role when transitioning from one role
+     * to a target role. For example, when going from Stopped to Promoted, the
+     * next role is Unpromoted, because the resource must be started before it
+     * can be promoted. The current state then becomes Started, which is fed
+     * into this array again, giving a next role of Promoted.
+     *
+     * Current role       Immediate next role   Final target role
+     * ------------       -------------------   -----------------
+     */
+    /* Unknown */       { RSC_ROLE_UNKNOWN,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STOPPED,     /* Started */
+                          RSC_ROLE_STOPPED,     /* Unpromoted */
+                          RSC_ROLE_STOPPED,     /* Promoted */
+                        },
+    /* Stopped */       { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STARTED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_UNPROMOTED,  /* Promoted */
+                        },
+    /* Started */       { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STARTED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
+    /* Unpromoted */    { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STOPPED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
+    /* Promoted  */     { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_UNPROMOTED,  /* Stopped */
+                          RSC_ROLE_UNPROMOTED,  /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
 };
 
 typedef bool (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
                                   bool optional);
 
-// This array picks the function needed to transition from one role to another
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current state   Next state                                            */
-/*                 Unknown    Stopped    Started    Unpromoted Promoted  */
-/* Unknown */    { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
-/* Stopped */    { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
-/* Started */    { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
-/* Unpromoted */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
-/* Promoted  */  { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp,       },
+    /* This array lists the function needed to transition directly from one role
+     * to another.
+     *
+     * Current role         Transition function             Next role
+     * ------------         -------------------             ----------
+     */
+    /* Unknown */       {   RoleError,                      /* Unknown */
+                            StopRsc,                        /* Stopped */
+                            RoleError,                      /* Started */
+                            RoleError,                      /* Unpromoted */
+                            RoleError,                      /* Promoted */
+                        },
+    /* Stopped */       {   RoleError,                      /* Unknown */
+                            NullOp,                         /* Stopped */
+                            StartRsc,                       /* Started */
+                            StartRsc,                       /* Unpromoted */
+                            RoleError,                      /* Promoted */
+                        },
+    /* Started */       {   RoleError,                      /* Unknown */
+                            StopRsc,                        /* Stopped */
+                            NullOp,                         /* Started */
+                            NullOp,                         /* Unpromoted */
+                            PromoteRsc,                     /* Promoted */
+                        },
+    /* Unpromoted */    {   RoleError,                      /* Unknown */
+                            StopRsc,                        /* Stopped */
+                            StopRsc,                        /* Started */
+                            NullOp,                         /* Unpromoted */
+                            PromoteRsc,                     /* Promoted */
+                        },
+    /* Promoted  */     {   RoleError,                      /* Unknown */
+                            DemoteRsc,                      /* Stopped */
+                            DemoteRsc,                      /* Started */
+                            DemoteRsc,                      /* Unpromoted */
+                            NullOp,                         /* Promoted */
+                        },
 };
 
 /*!
