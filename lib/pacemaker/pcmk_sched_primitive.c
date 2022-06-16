@@ -23,7 +23,8 @@ static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void promote_resource(pe_resource_t *rsc, pe_node_t *node,
                              bool optional);
-static void RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static void assert_role_error(pe_resource_t *rsc, pe_node_t *node,
+                              bool optional);
 
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* This array lists the immediate next role when transitioning from one role
@@ -85,31 +86,31 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
      * Current role         Transition function             Next role
      * ------------         -------------------             ----------
      */
-    /* Unknown */       {   RoleError,                      /* Unknown */
+    /* Unknown */       {   assert_role_error,              /* Unknown */
                             stop_resource,                  /* Stopped */
-                            RoleError,                      /* Started */
-                            RoleError,                      /* Unpromoted */
-                            RoleError,                      /* Promoted */
+                            assert_role_error,              /* Started */
+                            assert_role_error,              /* Unpromoted */
+                            assert_role_error,              /* Promoted */
                         },
-    /* Stopped */       {   RoleError,                      /* Unknown */
+    /* Stopped */       {   assert_role_error,              /* Unknown */
                             NULL,                           /* Stopped */
                             start_resource,                 /* Started */
                             start_resource,                 /* Unpromoted */
-                            RoleError,                      /* Promoted */
+                            assert_role_error,              /* Promoted */
                         },
-    /* Started */       {   RoleError,                      /* Unknown */
+    /* Started */       {   assert_role_error,              /* Unknown */
                             stop_resource,                  /* Stopped */
                             NULL,                           /* Started */
                             NULL,                           /* Unpromoted */
                             promote_resource,               /* Promoted */
                         },
-    /* Unpromoted */    {   RoleError,                      /* Unknown */
+    /* Unpromoted */    {   assert_role_error,              /* Unknown */
                             stop_resource,                  /* Stopped */
                             stop_resource,                  /* Started */
                             NULL,                           /* Unpromoted */
                             promote_resource,               /* Promoted */
                         },
-    /* Promoted  */     {   RoleError,                      /* Unknown */
+    /* Promoted  */     {   assert_role_error,              /* Unknown */
                             demote_resource,                /* Stopped */
                             demote_resource,                /* Started */
                             demote_resource,                /* Unpromoted */
@@ -1332,7 +1333,7 @@ demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 }
 
 static void
-RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional)
+assert_role_error(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
     CRM_ASSERT(false);
 }
