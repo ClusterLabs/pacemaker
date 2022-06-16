@@ -21,7 +21,8 @@ gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
 static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static void PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static void promote_resource(pe_resource_t *rsc, pe_node_t *node,
+                             bool optional);
 static void RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
 
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
@@ -100,13 +101,13 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
                             stop_resource,                  /* Stopped */
                             NULL,                           /* Started */
                             NULL,                           /* Unpromoted */
-                            PromoteRsc,                     /* Promoted */
+                            promote_resource,               /* Promoted */
                         },
     /* Unpromoted */    {   RoleError,                      /* Unknown */
                             stop_resource,                  /* Stopped */
                             stop_resource,                  /* Started */
                             NULL,                           /* Unpromoted */
-                            PromoteRsc,                     /* Promoted */
+                            promote_resource,               /* Promoted */
                         },
     /* Promoted  */     {   RoleError,                      /* Unknown */
                             DemoteRsc,                      /* Stopped */
@@ -1239,56 +1240,62 @@ start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     }
 }
 
+/*!
+ * \internal
+ * \brief Schedule actions needed to promote a resource on a node
+ *
+ * \param[in,out] rsc       Resource being promoted
+ * \param[in]     node      Node where resource should be promoted
+ * \param[in]     optional  Whether actions should be optional
+ */
 static void
-PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    GList *gIter = NULL;
-    gboolean runnable = TRUE;
+    GList *iter = NULL;
     GList *action_list = NULL;
+    bool runnable = true;
 
-    CRM_ASSERT((rsc != NULL) && (next != NULL));
+    CRM_ASSERT(node != NULL);
 
-    pe_rsc_trace(rsc, "%s on %s", rsc->id, pe__node_name(next));
-
-    action_list = pe__resource_actions(rsc, next, RSC_START, TRUE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *start = (pe_action_t *) gIter->data;
+    // Any start must be runnable for promotion to be runnable
+    action_list = pe__resource_actions(rsc, node, RSC_START, true);
+    for (iter = action_list; iter != NULL; iter = iter->next) {
+        pe_action_t *start = (pe_action_t *) iter->data;
 
         if (!pcmk_is_set(start->flags, pe_action_runnable)) {
-            runnable = FALSE;
+            runnable = false;
         }
     }
     g_list_free(action_list);
 
     if (runnable) {
-        pe_action_t *promote = promote_action(rsc, next, optional);
+        pe_action_t *promote = promote_action(rsc, node, optional);
 
-        if (is_expected_node(rsc, next)) {
+        pe_rsc_trace(rsc, "Scheduling %s promotion of %s on %s",
+                     (optional? "optional" : "required"), rsc->id,
+                     pe__node_name(node));
+
+        if (is_expected_node(rsc, node)) {
             /* This could be a problem if the promote becomes necessary for
              * other reasons later.
              */
             pe_rsc_trace(rsc,
                          "Promotion of multiply active resouce %s "
                          "on expected node %s will be a pseudo-action",
-                         rsc->id, pe__node_name(next));
+                         rsc->id, pe__node_name(node));
             pe__set_action_flags(promote, pe_action_pseudo);
         }
-        return;
+    } else {
+        pe_rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",
+                     rsc->id, pe__node_name(node));
+        action_list = pe__resource_actions(rsc, node, RSC_PROMOTE, true);
+        for (iter = action_list; iter != NULL; iter = iter->next) {
+            pe_action_t *promote = (pe_action_t *) iter->data;
+
+            pe__clear_action_flags(promote, pe_action_runnable);
+        }
+        g_list_free(action_list);
     }
-
-    pe_rsc_debug(rsc, "%s\tPromote %s (canceled)",
-                 pe__node_name(next), rsc->id);
-
-    action_list = pe__resource_actions(rsc, next, RSC_PROMOTE, TRUE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *promote = (pe_action_t *) gIter->data;
-
-        pe__clear_action_flags(promote, pe_action_runnable);
-    }
-
-    g_list_free(action_list);
 }
 
 static void
