@@ -19,11 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-void pcmk__primitive_add_utilization(pe_resource_t *rsc,
-                                     pe_resource_t *orig_rsc, GList *all_rscs,
-                                     GHashTable *utilization);
-void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
-
 pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer);
 void group_create_actions(pe_resource_t *rsc);
 void group_internal_constraints(pe_resource_t *rsc);
@@ -60,8 +55,6 @@ extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
 void pcmk__clone_shutdown_lock(pe_resource_t *rsc);
-
-void pcmk__add_promotion_scores(pe_resource_t *rsc);
 
 uint32_t group_update_actions(pe_action_t *first, pe_action_t *then,
                               pe_node_t *node, uint32_t flags, uint32_t filter,

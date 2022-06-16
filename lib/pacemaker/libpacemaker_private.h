@@ -532,6 +532,9 @@ void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 // Promotable clone resources (pcmk_sched_promotable.c)
 
 G_GNUC_INTERNAL
+void pcmk__add_promotion_scores(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__require_promotion_tickets(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
@@ -605,6 +608,14 @@ void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
 
 G_GNUC_INTERNAL
 void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_add_utilization(pe_resource_t *rsc,
+                                     pe_resource_t *orig_rsc, GList *all_rscs,
+                                     GHashTable *utilization);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 
 
 // Groups (pcmk_sched_group.c)
