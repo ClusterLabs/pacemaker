@@ -19,7 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-extern void native_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__primitive_add_utilization(pe_resource_t *rsc,
                                      pe_resource_t *orig_rsc, GList *all_rscs,
                                      GHashTable *utilization);

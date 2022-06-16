@@ -1376,32 +1376,49 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
     pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START, flag);
 }
 
+/*!
+ * \internal
+ * \brief Add primitive meta-attributes relevant to graph actions to XML
+ *
+ * \param[in]     rsc  Primitive resource whose meta-attributes should be added
+ * \param[in,out] xml  Transition graph action attributes XML to add to
+ */
 void
-native_append_meta(pe_resource_t * rsc, xmlNode * xml)
+pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 {
-    char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
-    pe_resource_t *parent;
+    char *name = NULL;
+    char *value = NULL;
+    pe_resource_t *parent = NULL;
 
-    if (value) {
-        char *name = NULL;
+    CRM_ASSERT((rsc != NULL) && (xml != NULL));
 
+    /* Clone instance numbers get set internally as meta-attributes, and are
+     * needed in the transition graph (for example, to tell unique clone
+     * instances apart).
+     */
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
+    if (value != NULL) {
         name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
         crm_xml_add(xml, name, value);
         free(name);
     }
 
+    // Not sure if this one is really needed ...
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_REMOTE_NODE);
-    if (value) {
-        char *name = NULL;
-
+    if (value != NULL) {
         name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
     }
 
+    /* The container meta-attribute can be set on the primitive itself or one of
+     * its parents (for example, a group inside a container resource), so check
+     * them all, and keep the highest one found.
+     */
     for (parent = rsc; parent != NULL; parent = parent->parent) {
-        if (parent->container) {
-            crm_xml_add(xml, CRM_META"_"XML_RSC_ATTR_CONTAINER, parent->container->id);
+        if (parent->container != NULL) {
+            crm_xml_add(xml, CRM_META "_" XML_RSC_ATTR_CONTAINER,
+                        parent->container->id);
         }
     }
 }

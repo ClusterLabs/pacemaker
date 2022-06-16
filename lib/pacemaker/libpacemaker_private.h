@@ -603,6 +603,9 @@ G_GNUC_INTERNAL
 void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
                             bool optional);
 
+G_GNUC_INTERNAL
+void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+
 
 // Groups (pcmk_sched_group.c)
 
