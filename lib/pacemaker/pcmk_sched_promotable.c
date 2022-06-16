@@ -17,34 +17,28 @@
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
-extern bool pcmk__is_daemon;
-
+/*!
+ * \internal
+ * \brief Add implicit promotion ordering for a promotable instance
+ *
+ * \param[in] clone  Clone resource
+ * \param[in] child  Instance of \p clone being ordered
+ * \param[in] last   Previous instance ordered (NULL if \p child is first)
+ */
 static void
-child_promoting_constraints(pe_resource_t *rsc, pe_resource_t *child,
-                            pe_resource_t *last)
+order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
+                         pe_resource_t *last)
 {
-    /* child promote before global promoted */
-    pcmk__order_resource_actions(child, RSC_PROMOTE, rsc, RSC_PROMOTED, pe_order_optional,
-                                 rsc->cluster);
+    // "Promote clone" -> promote instance -> "clone promoted"
+    pcmk__order_resource_actions(clone, RSC_PROMOTE, child, RSC_PROMOTE,
+                                 pe_order_optional, clone->cluster);
+    pcmk__order_resource_actions(child, RSC_PROMOTE, clone, RSC_PROMOTED,
+                                 pe_order_optional, clone->cluster);
 
-    /* global promote before child promote */
-    pcmk__order_resource_actions(rsc, RSC_PROMOTE, child, RSC_PROMOTE, pe_order_optional,
-                                 rsc->cluster);
-
-    if (pe__clone_is_ordered(rsc)) {
-        pe_rsc_trace(rsc, "Ordered version");
-        if (last == NULL) {
-            /* global promote before first child promote */
-            last = rsc;
-
-        }
-        /* else: child/child relative promote */
-        pcmk__order_starts(last, child, pe_order_optional, rsc->cluster);
+    // If clone is ordered, order this instance relative to last
+    if ((last != NULL) && pe__clone_is_ordered(clone)) {
         pcmk__order_resource_actions(last, RSC_PROMOTE, child, RSC_PROMOTE,
-                                     pe_order_optional, rsc->cluster);
-
-    } else {
-        pe_rsc_trace(rsc, "Un-ordered version");
+                                     pe_order_optional, clone->cluster);
     }
 }
 
@@ -918,7 +912,7 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
                                      RSC_PROMOTE, pe_order_optional, data_set);
 
-        child_promoting_constraints(rsc, child_rsc, last_rsc);
+        order_instance_promotion(rsc, child_rsc, last_rsc);
 
         child_demoting_constraints(pe_order_optional,
                                    rsc, child_rsc, last_rsc, data_set);
