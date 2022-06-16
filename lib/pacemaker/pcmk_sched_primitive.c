@@ -16,8 +16,6 @@
 
 #include "libpacemaker_private.h"
 
-gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
-                   pe_working_set_t *data_set);
 static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
 static void demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
@@ -1187,7 +1185,7 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         }
 
         if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, current, optional, rsc->cluster);
+            pcmk__schedule_cleanup(rsc, current, optional);
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
@@ -1338,36 +1336,44 @@ assert_role_error(pe_resource_t *rsc, pe_node_t *node, bool optional)
     CRM_ASSERT(false);
 }
 
-gboolean
-DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
-          pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Schedule cleanup of a resource
+ *
+ * \param[in,out] rsc       Resource to clean up
+ * \param[in]     node      Node to clean up on
+ * \param[in]     optional  Whether clean-up should be optional
+ */
+void
+pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
 {
+    /* If the cleanup is required, its orderings are optional, because they're
+     * relevant only if both actions are required. Conversely, if the cleanup is
+     * optional, the orderings make the then action required if the first action
+     * becomes required.
+     */
+    enum pe_ordering flag = optional? pe_order_implies_then : pe_order_optional;
+
+    CRM_CHECK((rsc != NULL) && (node != NULL), return);
+
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed",
+        pe_rsc_trace(rsc, "Skipping clean-up of %s on %s: resource failed",
                      rsc->id, pe__node_name(node));
-        return FALSE;
-
-    } else if (node == NULL) {
-        pe_rsc_trace(rsc, "Resource %s not deleted: NULL node", rsc->id);
-        return FALSE;
-
-    } else if (node->details->unclean || node->details->online == FALSE) {
-        pe_rsc_trace(rsc, "Resource %s not deleted from %s: unrunnable",
-                     rsc->id, pe__node_name(node));
-        return FALSE;
+        return;
     }
 
-    crm_notice("Removing %s from %s", rsc->id, pe__node_name(node));
+    if (node->details->unclean || !node->details->online) {
+        pe_rsc_trace(rsc, "Skipping clean-up of %s on %s: node unavailable",
+                     rsc->id, pe__node_name(node));
+        return;
+    }
 
+    crm_notice("Scheduling clean-up of %s on %s", rsc->id, pe__node_name(node));
     delete_action(rsc, node, optional);
 
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
-                                 optional? pe_order_implies_then : pe_order_optional);
-
-    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
-                                 optional? pe_order_implies_then : pe_order_optional);
-
-    return TRUE;
+    // stop -> clean-up -> start
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE, flag);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START, flag);
 }
 
 void

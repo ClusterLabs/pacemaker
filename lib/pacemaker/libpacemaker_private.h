@@ -589,6 +589,11 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        pcmk__colocation_t *colocation,
                                        bool for_dependent);
 
+G_GNUC_INTERNAL
+void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
+                            bool optional);
+
+
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL

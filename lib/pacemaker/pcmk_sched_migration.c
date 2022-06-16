@@ -16,9 +16,6 @@
 
 #include "libpacemaker_private.h"
 
-extern gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node,
-                          gboolean optional, pe_working_set_t *data_set);
-
 /*!
  * \internal
  * \brief Add migration source and target meta-attributes to an action
@@ -160,7 +157,7 @@ pcmk__abort_dangling_migration(void *data, void *user_data)
     stop = stop_action(rsc, dangling_source, FALSE);
     pe__set_action_flags(stop, pe_action_dangle);
     if (cleanup) {
-        DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
+        pcmk__schedule_cleanup(rsc, dangling_source, false);
     }
 }
 
