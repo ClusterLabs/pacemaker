@@ -42,34 +42,29 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
     }
 }
 
+/*!
+ * \internal
+ * \brief Add implicit demotion ordering for a promotable instance
+ *
+ * \param[in] clone  Clone resource
+ * \param[in] child  Instance of \p clone being ordered
+ * \param[in] last   Previous instance ordered (NULL if \p child is first)
+ */
 static void
-child_demoting_constraints(pe_resource_t *rsc, pe_resource_t *child,
-                           pe_resource_t *last)
+order_instance_demotion(pe_resource_t *clone, pe_resource_t *child,
+                        pe_resource_t *last)
 {
+    // "Demote clone" -> demote instance -> "clone demoted"
+    pcmk__order_resource_actions(clone, RSC_DEMOTE, child, RSC_DEMOTE,
+                                 pe_order_implies_first_printed,
+                                 clone->cluster);
+    pcmk__order_resource_actions(child, RSC_DEMOTE, clone, RSC_DEMOTED,
+                                 pe_order_implies_then_printed, clone->cluster);
 
-    /* child demote before global demoted */
-    pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_implies_then_printed, rsc->cluster);
-
-    /* global demote before child demote */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, child, RSC_DEMOTE,
-                                 pe_order_implies_first_printed, rsc->cluster);
-
-    if (!pe__clone_is_ordered(rsc)) {
-        pe_rsc_trace(rsc, "Un-ordered version");
-
-    } else if (last == NULL) {
-        pe_rsc_trace(rsc, "Ordered version (1st node)");
-        /* first child stop before global stopped */
-        pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_optional,
-                                     rsc->cluster);
-
-    } else {
-        pe_rsc_trace(rsc, "Ordered version");
-
-        /* child/child relative demote */
-        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, pe_order_optional,
-                                     rsc->cluster);
+    // If clone is ordered, order this instance relative to last
+    if ((last != NULL) && pe__clone_is_ordered(clone)) {
+        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE,
+                                     pe_order_optional, clone->cluster);
     }
 }
 
@@ -900,7 +895,7 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                      RSC_PROMOTE, pe_order_optional, data_set);
 
         order_instance_promotion(rsc, child_rsc, last_rsc);
-        child_demoting_constraints(rsc, child_rsc, last_rsc);
+        order_instance_demotion(rsc, child_rsc, last_rsc);
 
         last_rsc = child_rsc;
     }
