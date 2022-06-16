@@ -380,18 +380,11 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
-        const char *value = g_hash_table_lookup(action->rsc->meta,
-                                                "external-ip");
         pe_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
             parent->cmds->add_graph_meta(parent, args_xml);
             parent = parent->parent;
-        }
-
-        if (value != NULL) {
-            hash2smartfield((gpointer) "pcmk_external_ip", (gpointer) value,
-                            (gpointer) args_xml);
         }
 
         pcmk__add_bundle_meta_to_xml(args_xml, action);

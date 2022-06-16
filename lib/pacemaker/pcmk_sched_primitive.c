@@ -1421,6 +1421,15 @@ pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
                         parent->container->id);
         }
     }
+
+    /* Bundle replica children will get their external-ip set internally as a
+     * meta-attribute. The graph action needs it, but under a different naming
+     * convention than other meta-attributes.
+     */
+    value = g_hash_table_lookup(rsc->meta, "external-ip");
+    if (value != NULL) {
+        crm_xml_add(xml, "pcmk_external_ip", value);
+    }
 }
 
 // Primitive implementation of resource_alloc_functions_t:add_utilization()
