@@ -43,27 +43,26 @@ order_instance_promotion(pe_resource_t *clone, pe_resource_t *child,
 }
 
 static void
-child_demoting_constraints(enum pe_ordering type,
-                           pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
-                           pe_working_set_t * data_set)
+child_demoting_constraints(pe_resource_t *rsc, pe_resource_t *child,
+                           pe_resource_t *last)
 {
     if (child == NULL) {
         if (pe__clone_is_ordered(rsc) && (last != NULL)) {
             pe_rsc_trace(rsc, "Ordered version (last node)");
             /* global demote before first child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
-                                         pe_order_optional, data_set);
+                                         pe_order_optional, rsc->cluster);
         }
         return;
     }
 
     /* child demote before global demoted */
     pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_implies_then_printed, data_set);
+                                 pe_order_implies_then_printed, rsc->cluster);
 
     /* global demote before child demote */
     pcmk__order_resource_actions(rsc, RSC_DEMOTE, child, RSC_DEMOTE,
-                                 pe_order_implies_first_printed, data_set);
+                                 pe_order_implies_first_printed, rsc->cluster);
 
     if (!pe__clone_is_ordered(rsc)) {
         pe_rsc_trace(rsc, "Un-ordered version");
@@ -71,15 +70,15 @@ child_demoting_constraints(enum pe_ordering type,
     } else if (last == NULL) {
         pe_rsc_trace(rsc, "Ordered version (1st node)");
         /* first child stop before global stopped */
-        pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, type,
-                                     data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED, pe_order_optional,
+                                     rsc->cluster);
 
     } else {
         pe_rsc_trace(rsc, "Ordered version");
 
         /* child/child relative demote */
-        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, type,
-                                     data_set);
+        pcmk__order_resource_actions(child, RSC_DEMOTE, last, RSC_DEMOTE, pe_order_optional,
+                                     rsc->cluster);
     }
 }
 
@@ -829,7 +828,7 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                   !any_demoting, true);
     action_complete->priority = INFINITY;
 
-    child_demoting_constraints(pe_order_optional, rsc, NULL, last_demote_rsc, data_set);
+    child_demoting_constraints(rsc, NULL, last_demote_rsc);
 
     if (clone_data->demote_notify == NULL) {
         clone_data->demote_notify = pcmk__clone_notif_pseudo_ops(rsc,
@@ -913,9 +912,7 @@ promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                      RSC_PROMOTE, pe_order_optional, data_set);
 
         order_instance_promotion(rsc, child_rsc, last_rsc);
-
-        child_demoting_constraints(pe_order_optional,
-                                   rsc, child_rsc, last_rsc, data_set);
+        child_demoting_constraints(rsc, child_rsc, last_rsc);
 
         last_rsc = child_rsc;
     }
