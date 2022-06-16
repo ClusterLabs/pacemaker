@@ -46,15 +46,6 @@ static void
 child_demoting_constraints(pe_resource_t *rsc, pe_resource_t *child,
                            pe_resource_t *last)
 {
-    if (child == NULL) {
-        if (pe__clone_is_ordered(rsc) && (last != NULL)) {
-            pe_rsc_trace(rsc, "Ordered version (last node)");
-            /* global demote before first child demote */
-            pcmk__order_resource_actions(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
-                                         pe_order_optional, rsc->cluster);
-        }
-        return;
-    }
 
     /* child demote before global demoted */
     pcmk__order_resource_actions(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
@@ -785,7 +776,6 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *action_complete = NULL;
     gboolean any_promoting = FALSE;
     gboolean any_demoting = FALSE;
-    pe_resource_t *last_demote_rsc = NULL;
 
     clone_variant_data_t *clone_data = NULL;
 
@@ -827,8 +817,6 @@ create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     action_complete = pcmk__new_rsc_pseudo_action(rsc, RSC_DEMOTED,
                                                   !any_demoting, true);
     action_complete->priority = INFINITY;
-
-    child_demoting_constraints(rsc, NULL, last_demote_rsc);
 
     if (clone_data->demote_notify == NULL) {
         clone_data->demote_notify = pcmk__clone_notif_pseudo_ops(rsc,
