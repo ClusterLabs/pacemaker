@@ -1303,22 +1303,12 @@ promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
  * \brief Schedule actions needed to demote a resource wherever it is active
  *
  * \param[in,out] rsc       Resource being demoted
- * \param[in]     node      Node where resource should be demoted
+ * \param[in]     node      Node where resource should be demoted (ignored)
  * \param[in]     optional  Whether actions should be optional
  */
 static void
 demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    CRM_ASSERT(node != NULL);
-
-    if (is_expected_node(rsc, node)) {
-        pe_rsc_trace(rsc,
-                     "Skipping demote of multiply active resource %s "
-                     "on expected node %s",
-                     rsc->id, pe__node_name(node));
-        return;
-    }
-
     /* Since this will only be called for a primitive (possibly as an instance
      * of a collective resource), the resource is multiply active if it is
      * running on more than one node, so we want to demote on all of them as
@@ -1327,10 +1317,17 @@ demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
     for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
         pe_node_t *current = (pe_node_t *) iter->data;
 
-        pe_rsc_trace(rsc, "Scheduling %s demotion of %s on %s",
-                     (optional? "optional" : "required"), rsc->id,
-                     pe__node_name(current));
-        demote_action(rsc, current, optional);
+        if (is_expected_node(rsc, current)) {
+            pe_rsc_trace(rsc,
+                         "Skipping demote of multiply active resource %s "
+                         "on expected node %s",
+                         rsc->id, pe__node_name(current));
+        } else {
+            pe_rsc_trace(rsc, "Scheduling %s demotion of %s on %s",
+                         (optional? "optional" : "required"), rsc->id,
+                         pe__node_name(current));
+            demote_action(rsc, current, optional);
+        }
     }
 }
 
