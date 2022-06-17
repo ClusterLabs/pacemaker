@@ -33,6 +33,11 @@ bool pe__clone_is_ordered(pe_resource_t *clone);
 int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
 
 
+enum pe__group_flags {
+    pe__group_ordered       = (1 << 0), // Members start sequentially
+    pe__group_colocated     = (1 << 1), // Members must be on same node
+};
+
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)

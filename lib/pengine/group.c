@@ -107,6 +107,7 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     // @COMPAT: group_colocated is deprecated since 2.1.5
     const char *group_colocated = g_hash_table_lookup(rsc->meta, "collocated");
     const char *clone_id = NULL;
+    int value = 0;
 
     if (group_ordered != NULL) {
         pe_warn_once(pe_wo_group_order,
@@ -131,12 +132,12 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // We don't actually need the null checks but it speeds up the common case
     if ((group_ordered == NULL)
-        || (crm_str_to_boolean(group_ordered, &(group_data->ordered)) < 0)) {
-        group_data->ordered = TRUE;
+        || (crm_str_to_boolean(group_ordered, &value) < 0) || value) {
+        group_data->flags |= pe__group_ordered;
     }
     if ((group_colocated == NULL)
-        || (crm_str_to_boolean(group_colocated, &(group_data->colocated)) < 0)) {
-        group_data->colocated = TRUE;
+        || (crm_str_to_boolean(group_colocated, &value) < 0) || value) {
+        group_data->flags |= pe__group_colocated;
     }
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);

@@ -115,11 +115,9 @@ typedef struct pe__bundle_variant_data_s {
 #  elif VARIANT_GROUP
 
 typedef struct group_variant_data_s {
-    pe_resource_t *first_child;
-    pe_resource_t *last_child;
-
-    gboolean colocated;
-    gboolean ordered;
+    pe_resource_t *first_child; // First group member
+    pe_resource_t *last_child;  // Last group member
+    uint32_t flags;             // Group of enum pe__group_flags
 } group_variant_data_t;
 
 #    define get_group_variant_data(data, rsc)				\
