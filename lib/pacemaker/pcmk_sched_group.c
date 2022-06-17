@@ -154,17 +154,24 @@ create_group_pseudo_op(pe_resource_t *group, const char *action)
     return op;
 }
 
+/*!
+ * \internal
+ * \brief Create all actions needed for a given group resource
+ *
+ * \param[in,out] rsc  Group resource to create actions for
+ */
 void
-group_create_actions(pe_resource_t *rsc)
+pcmk__group_create_actions(pe_resource_t *rsc)
 {
-    GList *gIter = rsc->children;
+    CRM_ASSERT(rsc != NULL);
 
-    pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
+    pe_rsc_trace(rsc, "Creating actions for group %s", rsc->id);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Create actions for individual group members
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->create_actions(child_rsc);
+        member->cmds->create_actions(member);
     }
 
     // Create pseudo-actions for group itself to serve as ordering points
