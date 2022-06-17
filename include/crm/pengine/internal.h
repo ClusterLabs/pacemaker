@@ -39,6 +39,7 @@ enum pe__group_flags {
 };
 
 bool pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags);
+pe_resource_t *pe__last_group_member(const pe_resource_t *group);
 
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)

@@ -17,9 +17,6 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_GROUP 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Expand a group's colocations to its members
@@ -29,11 +26,8 @@
 static void
 expand_group_colocations(pe_resource_t *rsc)
 {
-    group_variant_data_t *group_data = NULL;
     pe_resource_t *member = NULL;
     bool any_unmanaged = false;
-
-    get_group_variant_data(group_data, rsc);
 
     // Treat "group with R" colocations as "first member with R"
     member = (pe_resource_t *) rsc->children->data;
@@ -75,7 +69,7 @@ expand_group_colocations(pe_resource_t *rsc)
     rsc->rsc_cons = NULL;
 
     // Treat "R with group" colocations as "R with last member"
-    member = group_data->last_child;
+    member = pe__last_group_member(rsc);
     member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
                                          rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
@@ -333,7 +327,6 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                               bool for_dependent)
 {
     GList *gIter = NULL;
-    group_variant_data_t *group_data = NULL;
     pe_resource_t *member = NULL;
 
     CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
@@ -368,7 +361,6 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
 
 for_primary:
     gIter = primary->children;
-    get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
     pe_rsc_trace(primary,
@@ -384,14 +376,9 @@ for_primary:
                && (member != NULL)) {
         if (colocation->score >= INFINITY) {
             // Dependent can't start until group is fully up
-            group_data->last_child->cmds->apply_coloc_score(dependent,
-                                                            group_data->last_child,
-                                                            colocation, false);
-        } else {
-            // Dependent can start as long as group is partially up
-            member->cmds->apply_coloc_score(dependent, member, colocation,
-                                            false);
-        }
+            member = pe__last_group_member(primary);
+        } // else dependent can start as long as group is partially up
+        member->cmds->apply_coloc_score(dependent, member, colocation, false);
         return;
 
     } else if (colocation->score >= INFINITY) {

@@ -25,6 +25,26 @@
 
 /*!
  * \internal
+ * \brief Get a group's last member
+ *
+ * \param[in] group  Group resource to check
+ *
+ * \return Last member of \p group if any, otherwise NULL
+ */
+pe_resource_t *
+pe__last_group_member(const pe_resource_t *group)
+{
+    if (group != NULL) {
+        group_variant_data_t *group_data = NULL;
+
+        get_group_variant_data(group_data, group);
+        return group_data->last_child;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
  * \brief Check whether a group flag is set
  *
  * \param[in] group  Group resource to check
