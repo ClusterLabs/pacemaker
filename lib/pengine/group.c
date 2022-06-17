@@ -20,8 +20,10 @@
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
-#define VARIANT_GROUP 1
-#include "./variant.h"
+typedef struct group_variant_data_s {
+    pe_resource_t *last_child;  // Last group member
+    uint32_t flags;             // Group of enum pe__group_flags
+} group_variant_data_t;
 
 /*!
  * \internal
@@ -35,10 +37,9 @@ pe_resource_t *
 pe__last_group_member(const pe_resource_t *group)
 {
     if (group != NULL) {
-        group_variant_data_t *group_data = NULL;
-
-        get_group_variant_data(group_data, group);
-        return group_data->last_child;
+        CRM_CHECK((group->variant == pe_group)
+                  && (group->variant_opaque != NULL), return NULL);
+        return ((group_variant_data_t *) group->variant_opaque)->last_child;
     }
     return NULL;
 }
@@ -57,7 +58,9 @@ pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags)
 {
     group_variant_data_t *group_data = NULL;
 
-    get_group_variant_data(group_data, group);
+    CRM_CHECK((group != NULL) && (group->variant == pe_group)
+              && (group->variant_opaque != NULL), return false);
+    group_data = (group_variant_data_t *) group->variant_opaque;
     return pcmk_all_flags_set(group_data->flags, flags);
 }
 
@@ -82,10 +85,8 @@ set_group_flag(pe_resource_t *group, const char *option, uint32_t flag,
     // We don't actually need the null check but it speeds up the common case
     if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)
         || (value != 0)) {
-        group_variant_data_t *group_data = NULL;
 
-        get_group_variant_data(group_data, group);
-        group_data->flags |= flag;
+        ((group_variant_data_t *) group->variant_opaque)->flags |= flag;
 
     } else {
         pe_warn_once(wo_bit,

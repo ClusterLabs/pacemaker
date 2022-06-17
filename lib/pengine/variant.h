@@ -112,19 +112,6 @@ typedef struct pe__bundle_variant_data_s {
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (pe__bundle_variant_data_t *)rsc->variant_opaque;		\
 
-#  elif VARIANT_GROUP
-
-typedef struct group_variant_data_s {
-    pe_resource_t *last_child;  // Last group member
-    uint32_t flags;             // Group of enum pe__group_flags
-} group_variant_data_t;
-
-#    define get_group_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_group);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (group_variant_data_t *)rsc->variant_opaque;		\
-
 #  elif VARIANT_NATIVE
 
 typedef struct native_variant_data_s {
