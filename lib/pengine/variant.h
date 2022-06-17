@@ -115,7 +115,6 @@ typedef struct pe__bundle_variant_data_s {
 #  elif VARIANT_GROUP
 
 typedef struct group_variant_data_s {
-    int num_children;
     pe_resource_t *first_child;
     pe_resource_t *last_child;
 

@@ -125,7 +125,6 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     group_data = calloc(1, sizeof(group_variant_data_t));
-    group_data->num_children = 0;
     group_data->first_child = NULL;
     group_data->last_child = NULL;
     rsc->variant_opaque = group_data;
@@ -159,7 +158,6 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                 continue;
             }
 
-            group_data->num_children++;
             rsc->children = g_list_append(rsc->children, new_rsc);
 
             if (group_data->first_child == NULL) {
@@ -170,13 +168,10 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (group_data->num_children == 0) {
+    if (group_data->first_child == NULL) {
+        // Allow empty groups, children can be added later
         pcmk__config_warn("Group %s does not have any children", rsc->id);
-        return TRUE; // Allow empty groups, children can be added later
     }
-
-    pe_rsc_trace(rsc, "Added %d children to resource %s...", group_data->num_children, rsc->id);
-
     return TRUE;
 }
 
