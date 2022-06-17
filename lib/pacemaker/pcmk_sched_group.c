@@ -208,10 +208,6 @@ group_internal_constraints(pe_resource_t *rsc)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         uint32_t stop = pe_order_none;
         uint32_t stopped = pe_order_implies_then_printed;
-        uint32_t start = pe_order_implies_then|pe_order_runnable_left;
-        uint32_t started = pe_order_runnable_left
-                           |pe_order_implies_then
-                           |pe_order_implies_then_printed;
 
         child_rsc->cmds->internal_constraints(child_rsc);
 
@@ -236,7 +232,10 @@ group_internal_constraints(pe_resource_t *rsc)
                                          RSC_DEMOTED, stopped);
 
             pcmk__order_resource_actions(child_rsc, RSC_PROMOTE, rsc,
-                                         RSC_PROMOTED, started);
+                                         RSC_PROMOTED,
+                                         pe_order_runnable_left
+                                         |pe_order_implies_then
+                                         |pe_order_implies_then_printed);
 
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                          RSC_PROMOTE,
@@ -251,25 +250,34 @@ group_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
                                      stopped);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     started);
+                                     pe_order_runnable_left
+                                     |pe_order_implies_then
+                                     |pe_order_implies_then_printed);
 
         if (!ordered) {
             pcmk__order_starts(rsc, child_rsc,
-                               start|pe_order_implies_first_printed);
+                               pe_order_implies_then
+                               |pe_order_runnable_left
+                               |pe_order_implies_first_printed);
             if (promotable) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE,
-                                             start|pe_order_implies_first_printed);
+                                             pe_order_implies_then
+                                             |pe_order_runnable_left
+                                             |pe_order_implies_first_printed);
             }
 
         } else if (last_rsc != NULL) {
-            pcmk__order_starts(last_rsc, child_rsc, start);
+            pcmk__order_starts(last_rsc, child_rsc, pe_order_implies_then
+                                                    |pe_order_runnable_left);
             pcmk__order_stops(child_rsc, last_rsc,
                               pe_order_optional|pe_order_restart);
 
             if (promotable) {
                 pcmk__order_resource_actions(last_rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, start);
+                                             RSC_PROMOTE,
+                                             pe_order_implies_then
+                                             |pe_order_runnable_left);
                 pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, last_rsc,
                                              RSC_DEMOTE, pe_order_optional);
             }
@@ -297,18 +305,15 @@ group_internal_constraints(pe_resource_t *rsc)
     }
 
     if (ordered && (last_rsc != NULL)) {
-        uint32_t stop_stop_flags = pe_order_implies_then;
-        uint32_t stop_stopped_flags = pe_order_optional;
-
-        pcmk__order_stops(rsc, last_rsc, stop_stop_flags);
+        pcmk__order_stops(rsc, last_rsc, pe_order_implies_then);
         pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stop_stopped_flags);
+                                     pe_order_optional);
 
         if (promotable) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE,
-                                         stop_stop_flags);
+                                         pe_order_implies_then);
             pcmk__order_resource_actions(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                         stop_stopped_flags);
+                                         pe_order_optional);
         }
     }
 }
