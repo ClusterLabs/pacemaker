@@ -282,7 +282,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     if (pcmk__str_eq(first_task, RSC_START, pcmk__str_none)
         && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
 
-        int flags = pe_order_optional;
+        uint32_t flags = pe_order_optional;
 
         if (first_migratable && then_migratable) {
             /* A start then B start
@@ -314,7 +314,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
                && pcmk__str_eq(first_task, RSC_STOP, pcmk__str_none)
                && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_none)) {
 
-        int flags = pe_order_optional;
+        uint32_t flags = pe_order_optional;
 
         if (first_migratable) {
             pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
@@ -341,7 +341,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
 
-        int flags = pe_order_optional;
+        uint32_t flags = pe_order_optional;
 
         if (then_migratable) {
             /* A promote then B start
@@ -356,7 +356,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order)
     } else if (pcmk__str_eq(first_task, RSC_DEMOTE, pcmk__str_none)
                && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_none)) {
 
-        int flags = pe_order_optional;
+        uint32_t flags = pe_order_optional;
 
         if (then_migratable) {
             /* A demote then B stop

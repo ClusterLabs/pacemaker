@@ -206,11 +206,12 @@ group_internal_constraints(pe_resource_t *rsc)
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        int stop = pe_order_none;
-        int stopped = pe_order_implies_then_printed;
-        int start = pe_order_implies_then | pe_order_runnable_left;
-        int started =
-            pe_order_runnable_left | pe_order_implies_then | pe_order_implies_then_printed;
+        uint32_t stop = pe_order_none;
+        uint32_t stopped = pe_order_implies_then_printed;
+        uint32_t start = pe_order_implies_then|pe_order_runnable_left;
+        uint32_t started = pe_order_runnable_left
+                           |pe_order_implies_then
+                           |pe_order_implies_then_printed;
 
         child_rsc->cmds->internal_constraints(child_rsc);
 
@@ -296,8 +297,8 @@ group_internal_constraints(pe_resource_t *rsc)
     }
 
     if (ordered && (last_rsc != NULL)) {
-        int stop_stop_flags = pe_order_implies_then;
-        int stop_stopped_flags = pe_order_optional;
+        uint32_t stop_stop_flags = pe_order_implies_then;
+        uint32_t stop_stopped_flags = pe_order_optional;
 
         pcmk__order_stops(rsc, last_rsc, stop_stop_flags);
         pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,

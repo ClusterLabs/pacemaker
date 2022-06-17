@@ -1318,7 +1318,7 @@ pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
      * optional, the orderings make the then action required if the first action
      * becomes required.
      */
-    enum pe_ordering flag = optional? pe_order_implies_then : pe_order_optional;
+    uint32_t flag = optional? pe_order_implies_then : pe_order_optional;
 
     CRM_CHECK((rsc != NULL) && (node != NULL), return);
 

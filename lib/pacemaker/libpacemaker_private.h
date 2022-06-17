@@ -480,7 +480,7 @@ G_GNUC_INTERNAL
 void pcmk__new_ordering(pe_resource_t *first_rsc, char *first_task,
                         pe_action_t *first_action, pe_resource_t *then_rsc,
                         char *then_task, pe_action_t *then_action,
-                        enum pe_ordering type, pe_working_set_t *data_set);
+                        uint32_t flags, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_ordering(xmlNode *xml_obj, pe_working_set_t *data_set);
@@ -519,13 +519,13 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
                        NULL, (flags), (first_rsc)->cluster)
 
-#define pcmk__order_starts(rsc1, rsc2, type)                 \
+#define pcmk__order_starts(rsc1, rsc2, flags)                \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
-                                 (rsc2), CRMD_ACTION_START, (type))
+                                 (rsc2), CRMD_ACTION_START, (flags))
 
-#define pcmk__order_stops(rsc1, rsc2, type)                  \
+#define pcmk__order_stops(rsc1, rsc2, flags)                 \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
-                                 (rsc2), CRMD_ACTION_STOP, (type))
+                                 (rsc2), CRMD_ACTION_STOP, (flags))
 
 
 // Ticket constraints (pcmk_sched_tickets.c)
