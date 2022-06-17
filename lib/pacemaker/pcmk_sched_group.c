@@ -193,9 +193,9 @@ group_internal_constraints(pe_resource_t *rsc)
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
     pe_resource_t *last_active = NULL;
-    pe_resource_t *top = uber_parent(rsc);
     bool ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
     bool colocated = pe__group_flag_is_set(rsc, pe__group_colocated);
+    bool promotable = pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable);
 
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
@@ -228,7 +228,7 @@ group_internal_constraints(pe_resource_t *rsc)
                                  rsc->cluster);
         }
 
-        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
+        if (promotable) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
                                          stop|pe_order_implies_first_printed);
 
@@ -256,7 +256,7 @@ group_internal_constraints(pe_resource_t *rsc)
         if (!ordered) {
             pcmk__order_starts(rsc, child_rsc,
                                start|pe_order_implies_first_printed);
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
+            if (promotable) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE,
                                              start|pe_order_implies_first_printed);
@@ -267,7 +267,7 @@ group_internal_constraints(pe_resource_t *rsc)
             pcmk__order_stops(child_rsc, last_rsc,
                               pe_order_optional|pe_order_restart);
 
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
+            if (promotable) {
                 pcmk__order_resource_actions(last_rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE, start);
                 pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, last_rsc,
@@ -276,7 +276,7 @@ group_internal_constraints(pe_resource_t *rsc)
 
         } else {
             pcmk__order_starts(rsc, child_rsc, pe_order_none);
-            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
+            if (promotable) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE, pe_order_none);
             }
@@ -304,7 +304,7 @@ group_internal_constraints(pe_resource_t *rsc)
         pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,
                                      stop_stopped_flags);
 
-        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
+        if (promotable) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE,
                                          stop_stop_flags);
             pcmk__order_resource_actions(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
