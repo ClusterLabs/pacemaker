@@ -36,7 +36,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_shutdown_lock,
     },
     {
-        pcmk__group_allocate,
+        pcmk__group_assign,
         group_create_actions,
         pcmk__probe_rsc_on_node,
         group_internal_constraints,

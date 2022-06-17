@@ -14,7 +14,6 @@
 #include <crm/msg_xml.h>
 
 #include <pacemaker-internal.h>
-
 #include "libpacemaker_private.h"
 
 /*!
@@ -79,29 +78,30 @@ expand_group_colocations(pe_resource_t *rsc)
  * \internal
  * \brief Assign a group resource to a node
  *
- * \param[in,out] rsc     Resource to assign to a node
+ * \param[in,out] rsc     Group resource to assign to a node
  * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    pe_node_t *node = NULL;
-    pe_node_t *group_node = NULL;
+    pe_node_t *first_assigned_node = NULL;
     pe_resource_t *first_member = NULL;
-    GList *gIter = NULL;
+
+    CRM_ASSERT(rsc != NULL);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->allocated_to;
+        return rsc->allocated_to; // Assignment already done
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
+        pe_rsc_debug(rsc, "Assignment dependency loop detected involving %s",
+                     rsc->id);
         return NULL;
     }
 
     if (rsc->children == NULL) {
-        // Nothing to allocate
+        // No members to assign
         pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
@@ -115,22 +115,25 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+        pe_node_t *node = NULL;
 
-        pe_rsc_trace(rsc, "Allocating group %s member %s",
-                     rsc->id, child_rsc->id);
-        node = child_rsc->cmds->assign(child_rsc, prefer);
-        if (group_node == NULL) {
-            group_node = node;
+        pe_rsc_trace(rsc, "Assigning group %s member %s",
+                     rsc->id, member->id);
+        node = member->cmds->assign(member, prefer);
+        if (first_assigned_node == NULL) {
+            first_assigned_node = node;
         }
     }
 
     pe__set_next_role(rsc, first_member->next_role, "first group member");
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
-    return pe__group_flag_is_set(rsc, pe__group_colocated)? group_node : NULL;
+    if (!pe__group_flag_is_set(rsc, pe__group_colocated)) {
+        return NULL;
+    }
+    return first_assigned_node;
 }
 
 void

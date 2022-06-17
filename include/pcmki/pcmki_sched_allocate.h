@@ -19,7 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
 void group_create_actions(pe_resource_t *rsc);
 void group_internal_constraints(pe_resource_t *rsc);
 enum pe_action_flags group_action_flags(pe_action_t *action,

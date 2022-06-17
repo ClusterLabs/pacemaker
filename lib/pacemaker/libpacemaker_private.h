@@ -626,6 +626,9 @@ void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 // Groups (pcmk_sched_group.c)
 
 G_GNUC_INTERNAL
+pe_node_t *pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+
+G_GNUC_INTERNAL
 void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,
