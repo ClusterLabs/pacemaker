@@ -121,10 +121,6 @@ typedef struct group_variant_data_s {
 
     gboolean colocated;
     gboolean ordered;
-
-    gboolean child_starting;
-    gboolean child_stopping;
-
 } group_variant_data_t;
 
 #    define get_group_variant_data(data, rsc)				\

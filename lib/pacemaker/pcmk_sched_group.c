@@ -144,8 +144,6 @@ pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     return NULL;
 }
 
-void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
-
 void
 group_create_actions(pe_resource_t *rsc)
 {
@@ -159,25 +157,20 @@ group_create_actions(pe_resource_t *rsc)
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->create_actions(child_rsc);
-        group_update_pseudo_status(rsc, child_rsc);
     }
 
-    op = start_action(rsc, NULL, TRUE /* !group_data->child_starting */ );
+    op = start_action(rsc, NULL, TRUE);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = custom_action(rsc, started_key(rsc),
-                       RSC_STARTED, NULL,
-                       TRUE /* !group_data->child_starting */ ,
-                       TRUE, rsc->cluster);
+    op = custom_action(rsc, started_key(rsc), RSC_STARTED, NULL,
+                       TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
+    op = stop_action(rsc, NULL, TRUE);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-    op = custom_action(rsc, stopped_key(rsc),
-                       RSC_STOPPED, NULL,
-                       TRUE /* !group_data->child_stopping */ ,
-                       TRUE, rsc->cluster);
+    op = custom_action(rsc, stopped_key(rsc), RSC_STOPPED, NULL,
+                       TRUE, TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
@@ -197,43 +190,6 @@ group_create_actions(pe_resource_t *rsc)
         op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
                            TRUE, rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-    }
-}
-
-void
-group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
-{
-    GList *gIter = child->actions;
-    group_variant_data_t *group_data = NULL;
-
-    get_group_variant_data(group_data, parent);
-
-    if (group_data->ordered == FALSE) {
-        /* If this group is not ordered, then leave the meta-actions as optional */
-        return;
-    }
-
-    if (group_data->child_stopping && group_data->child_starting) {
-        return;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        if (pcmk_is_set(action->flags, pe_action_optional)) {
-            continue;
-        }
-        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)
-            && pcmk_is_set(action->flags, pe_action_runnable)) {
-
-            group_data->child_stopping = TRUE;
-            pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
-
-        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
-                   && pcmk_is_set(action->flags, pe_action_runnable)) {
-            group_data->child_starting = TRUE;
-            pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
-        }
     }
 }
 
