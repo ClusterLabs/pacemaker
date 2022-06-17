@@ -136,11 +136,27 @@ pcmk__group_assign(pe_resource_t *rsc, const pe_node_t *prefer)
     return first_assigned_node;
 }
 
+/*!
+ * \internal
+ * \brief Create a pseudo-operation for a group as an ordering point
+ *
+ * \param[in,out] group   Group resource to create action for
+ * \param[in]     action  Action name
+ *
+ * \return Newly created pseudo-operation
+ */
+static pe_action_t *
+create_group_pseudo_op(pe_resource_t *group, const char *action)
+{
+    pe_action_t *op = custom_action(group, pcmk__op_key(group->id, action, 0),
+                                    action, NULL, TRUE, TRUE, group->cluster);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+    return op;
+}
+
 void
 group_create_actions(pe_resource_t *rsc)
 {
-    pe_action_t *op = NULL;
-    const char *value = NULL;
     GList *gIter = rsc->children;
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
@@ -151,37 +167,16 @@ group_create_actions(pe_resource_t *rsc)
         child_rsc->cmds->create_actions(child_rsc);
     }
 
-    op = start_action(rsc, NULL, TRUE);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = custom_action(rsc, started_key(rsc), RSC_STARTED, NULL,
-                       TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = stop_action(rsc, NULL, TRUE);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    op = custom_action(rsc, stopped_key(rsc), RSC_STOPPED, NULL,
-                       TRUE, TRUE, rsc->cluster);
-    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
-    if (crm_is_true(value)) {
-        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE,
-                           rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
-
-        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
-                           TRUE, rsc->cluster);
-        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+    // Create pseudo-actions for group itself to serve as ordering points
+    create_group_pseudo_op(rsc, RSC_START);
+    create_group_pseudo_op(rsc, RSC_STARTED);
+    create_group_pseudo_op(rsc, RSC_STOP);
+    create_group_pseudo_op(rsc, RSC_STOPPED);
+    if (crm_is_true(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE))) {
+        create_group_pseudo_op(rsc, RSC_DEMOTE);
+        create_group_pseudo_op(rsc, RSC_DEMOTED);
+        create_group_pseudo_op(rsc, RSC_PROMOTE);
+        create_group_pseudo_op(rsc, RSC_PROMOTED);
     }
 }
 
