@@ -1,12 +1,12 @@
 
-pcmk__group_allocate: group-1 allocation score on pcmk-1: 0
-pcmk__group_allocate: group-1 allocation score on pcmk-2: 0
-pcmk__group_allocate: r192.168.122.113 allocation score on pcmk-1: 0
-pcmk__group_allocate: r192.168.122.113 allocation score on pcmk-2: 0
-pcmk__group_allocate: r192.168.122.114 allocation score on pcmk-1: INFINITY
-pcmk__group_allocate: r192.168.122.114 allocation score on pcmk-2: 0
-pcmk__group_allocate: r192.168.122.115 allocation score on pcmk-1: 0
-pcmk__group_allocate: r192.168.122.115 allocation score on pcmk-2: 0
+pcmk__group_assign: group-1 allocation score on pcmk-1: 0
+pcmk__group_assign: group-1 allocation score on pcmk-2: 0
+pcmk__group_assign: r192.168.122.113 allocation score on pcmk-1: 0
+pcmk__group_assign: r192.168.122.113 allocation score on pcmk-2: 0
+pcmk__group_assign: r192.168.122.114 allocation score on pcmk-1: INFINITY
+pcmk__group_assign: r192.168.122.114 allocation score on pcmk-2: 0
+pcmk__group_assign: r192.168.122.115 allocation score on pcmk-1: 0
+pcmk__group_assign: r192.168.122.115 allocation score on pcmk-2: 0
 pcmk__primitive_assign: r192.168.122.113 allocation score on pcmk-1: INFINITY
 pcmk__primitive_assign: r192.168.122.113 allocation score on pcmk-2: 0
 pcmk__primitive_assign: r192.168.122.114 allocation score on pcmk-1: INFINITY

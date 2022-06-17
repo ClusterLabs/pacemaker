@@ -1,10 +1,10 @@
 
-pcmk__group_allocate: grpDummy allocation score on rh72-01: 200
-pcmk__group_allocate: grpDummy allocation score on rh72-02: 100
-pcmk__group_allocate: prmDummy1 allocation score on rh72-01: INFINITY
-pcmk__group_allocate: prmDummy1 allocation score on rh72-02: 100
-pcmk__group_allocate: prmDummy2 allocation score on rh72-01: 0
-pcmk__group_allocate: prmDummy2 allocation score on rh72-02: 0
+pcmk__group_assign: grpDummy allocation score on rh72-01: 200
+pcmk__group_assign: grpDummy allocation score on rh72-02: 100
+pcmk__group_assign: prmDummy1 allocation score on rh72-01: INFINITY
+pcmk__group_assign: prmDummy1 allocation score on rh72-02: 100
+pcmk__group_assign: prmDummy2 allocation score on rh72-01: 0
+pcmk__group_assign: prmDummy2 allocation score on rh72-02: 0
 pcmk__primitive_assign: prmDummy1 allocation score on rh72-01: -INFINITY
 pcmk__primitive_assign: prmDummy1 allocation score on rh72-02: 100
 pcmk__primitive_assign: prmDummy2 allocation score on rh72-01: -INFINITY

@@ -1,5 +1,5 @@
 
-pcmk__group_allocate: vg_tags allocation score on 18builder: 100
+pcmk__group_assign: vg_tags allocation score on 18builder: 100
 pcmk__primitive_assign: 18node2 allocation score on 18builder: 0
 pcmk__primitive_assign: 18node2 allocation score on 18node2: -INFINITY
 pcmk__primitive_assign: container2 allocation score on 18builder: 100
