@@ -38,6 +38,9 @@ enum pe__group_flags {
     pe__group_colocated     = (1 << 1), // Members must be on same node
 };
 
+bool pe__group_flag_is_set(const pe_resource_t *group, uint32_t flags);
+
+
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
