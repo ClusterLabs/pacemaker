@@ -2507,7 +2507,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  *                         child of this XML node that matches \p update
  * \param[in,out] target   If not NULL, update this XML
  * \param[in]     update   Make the desired XML match this (must not be NULL)
- * \param[in]     as_diff  If true, expand "++" when making attributes match
+ * \param[in]     as_diff  If false, expand "++" when making attributes match
  *
  * \note At least one of \parent and \target must be non-NULL
  */
