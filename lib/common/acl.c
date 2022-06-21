@@ -384,6 +384,17 @@ test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Rid XML tree of all unreadable nodes and node properties
+ *
+ * \param[in]     xml root node to be purged of attributes
+ *
+ * \return true if this node or any of its children are readable
+ *         if false is returned, xml will be freed
+ *
+ * \note This function is recursive
+ */
 static bool
 purge_xml_attributes(xmlNode *xml)
 {
@@ -596,6 +607,13 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
     }
 }
 
+/*!
+ * \brief Check whether or not an XML node is ACL-denied
+ *
+ * \param[in]  xml node to check
+ *
+ * \return true if XML node exists and is ACL-denied, false otherwise
+ */
 bool
 xml_acl_denied(xmlNode *xml)
 {
@@ -620,6 +638,13 @@ xml_acl_disable(xmlNode *xml)
     }
 }
 
+/*!
+ * \brief Check whether or not an XML node is ACL-enabled
+ *
+ * \param[in]  xml node to check
+ *
+ * \return true if XML node exists and is ACL-enabled, false otherwise
+ */
 bool
 xml_acl_enabled(xmlNode *xml)
 {

@@ -541,6 +541,14 @@ copy_in_properties(xmlNode * target, xmlNode * src)
     return;
 }
 
+/*!
+ * \brief Parse integer assignment statements on this node and all its child
+ *        nodes
+ *
+ * \param[in]  target  root XML node to be processed
+ *
+ * \note This function is recursive
+ */
 void
 fix_plus_plus_recursive(xmlNode * target)
 {
@@ -559,6 +567,15 @@ fix_plus_plus_recursive(xmlNode * target)
     }
 }
 
+/*!
+ * \brief Parse integer assignment statement and update current XML attribute
+ *        value
+ * 
+ * \param[in]  target  XML node to be processed
+ * \param[in]  name    name of the variable to change, e.g. value
+ * \param[in]  value   assignment statement to apply, e.g. "value++" or
+ *                     "value+=5"
+ */
 void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
 {
