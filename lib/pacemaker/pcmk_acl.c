@@ -100,6 +100,8 @@ pcmk__acl_mark_node_with_namespace(xmlNode *i_node, const xmlChar *ns, int *ret,
  *          - pcmk_rc_schema_validation if the validation schema version
  *              is unsupported (see note), or
  *          - EINVAL or ENOMEM as appropriate;
+ *
+ * \note This function is recursive
  */
 static int
 pcmk__acl_annotate_permissions_recursive(xmlNode *xml_modify)

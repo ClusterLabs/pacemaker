@@ -142,6 +142,8 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
  * \param[in,out] acls       List of ACLs unpacked so far
  *
  * \return New head of (possibly modified) acls
+ *
+ * \note This function is recursive
  */
 static GList *
 parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
@@ -556,6 +558,8 @@ implicitly_allowed(xmlNode *xml)
  * \param[in,out] xml        XML to check
  * \param[in]     check_top  Whether to apply checks to argument itself
  *                           (if true, xml might get freed)
+ * 
+ * \note This function is recursive
  */
 void
 pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
