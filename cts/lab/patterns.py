@@ -270,6 +270,7 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
@@ -326,7 +327,7 @@ class crm_corosync(BasePatterns):
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Fencer connection failed \(will retry\)",
-            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
