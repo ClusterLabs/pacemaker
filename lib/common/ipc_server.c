@@ -69,11 +69,11 @@ pcmk__find_client(qb_ipcs_connection_t *c)
 pcmk__client_t *
 pcmk__find_client_by_id(const char *id)
 {
-    gpointer key;
-    pcmk__client_t *client;
-    GHashTableIter iter;
+    if ((client_connections != NULL) && (id != NULL)) {
+        gpointer key;
+        pcmk__client_t *client = NULL;
+        GHashTableIter iter;
 
-    if (client_connections && id) {
         g_hash_table_iter_init(&iter, client_connections);
         while (g_hash_table_iter_next(&iter, &key, (gpointer *) & client)) {
             if (strcmp(client->id, id) == 0) {
@@ -81,8 +81,7 @@ pcmk__find_client_by_id(const char *id)
             }
         }
     }
-
-    crm_trace("No client found with id=%s", id);
+    crm_trace("No client found with id='%s'", pcmk__s(id, ""));
     return NULL;
 }
 
