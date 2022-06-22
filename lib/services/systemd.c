@@ -322,7 +322,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
     }
 
     crm_info("DBus request for %s of systemd unit %s%s%s failed: %s",
-             op->action, op->agent, pcmk__s(op->rsc, "(unspecified)"),
+             op->action, op->agent,
              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""),
              error->message);
 }
