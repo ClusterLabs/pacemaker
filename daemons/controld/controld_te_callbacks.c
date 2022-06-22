@@ -568,6 +568,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
 {
     const char *value = NULL;
     xmlXPathObject *xpathObj = NULL;
+    int nmatches = 0;
 
     CRM_CHECK(msg != NULL, return);
 
@@ -601,20 +602,18 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
               pcmk__s(crm_element_value(msg, F_ORIG), ""));
 
     xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
-    if (numXpathResults(xpathObj)) {
-        int lpc = 0, max = numXpathResults(xpathObj);
-
-        for (lpc = 0; lpc < max; lpc++) {
+    nmatches = numXpathResults(xpathObj);
+    if (nmatches == 0) {
+        crm_err("Received transition request with no results (bug?)");
+    } else {
+        for (int lpc = 0; lpc < nmatches; lpc++) {
             xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
             const char *node = get_node_id(rsc_op);
 
             process_graph_event(rsc_op, node);
         }
-        freeXpathObject(xpathObj);
-    } else {
-        crm_err("Received transition request with no results (bug?)");
-        freeXpathObject(xpathObj);
     }
+    freeXpathObject(xpathObj);
 }
 
 void
