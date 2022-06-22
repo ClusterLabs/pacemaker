@@ -399,8 +399,9 @@ update_cib_object(xmlNode * parent, xmlNode * update)
     CRM_CHECK(object_name != NULL, return -EINVAL);
 
     object_id = ID(update);
-    crm_trace("Processing update for <%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id="), pcmk__s(object_id, ""));
+    crm_trace("Processing update for <%s%s%s%s>", object_name,
+              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
         /*  placeholder object */
@@ -414,8 +415,9 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = create_xml_node(parent, object_name);
     }
 
-    crm_trace("Found node <%s%s%s> to update", object_name,
-              ((object_id == NULL)? "" : " id="), pcmk__s(object_id, ""));
+    crm_trace("Found node <%s%s%s%s> to update", object_name,
+              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : "'"));
 
     replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
     if (replace != NULL) {
@@ -453,22 +455,27 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     copy_in_properties(target, update);
 
-    crm_trace("Processing children of <%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id="), pcmk__s(object_id, ""));
+    crm_trace("Processing children of <%s%s%s%s>", object_name,
+              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : "'"));
 
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
         int tmp_result = 0;
 
-        crm_trace("Updating child <%s%s%s>", crm_element_name(a_child),
-                  ((ID(a_child) == NULL)? "" : " id="),
-                  pcmk__s(ID(a_child), ""));
+        crm_trace("Updating child <%s%s%s%s>", crm_element_name(a_child),
+                  ((ID(a_child) == NULL)? "" : " id='"),
+                  pcmk__s(ID(a_child), ""), ((ID(a_child) == NULL)? "" : "'"));
 
         tmp_result = update_cib_object(target, a_child);
 
         /*  only the first error is likely to be interesting */
         if (tmp_result != pcmk_ok) {
-            crm_err("Error updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
+            crm_err("Error updating child <%s%s%s%s>",
+                    crm_element_name(a_child),
+                    ((ID(a_child) == NULL)? "" : " id='"),
+                    pcmk__s(ID(a_child), ""),
+                    ((ID(a_child) == NULL)? "" : "'"));
 
             if (result == pcmk_ok) {
                 result = tmp_result;
@@ -476,8 +483,9 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         }
     }
 
-    crm_trace("Finished handling update for <%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id="), pcmk__s(object_id, ""));
+    crm_trace("Finished handling update for <%s%s%s%s>", object_name,
+              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : "'"));
 
     return result;
 }
@@ -500,8 +508,9 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
 
     object_id = ID(new_obj);
 
-    crm_trace("Processing creation of <%s%s%s>", object_name,
-              ((object_id == NULL)? "" : " id="), pcmk__s(object_id, ""));
+    crm_trace("Processing creation of <%s%s%s%s>", object_name,
+              ((object_id == NULL)? "" : " id='"), pcmk__s(object_id, ""),
+              ((object_id == NULL)? "" : "'"));
 
     if (object_id == NULL) {
         equiv_node = find_xml_node(parent, object_name, FALSE);
