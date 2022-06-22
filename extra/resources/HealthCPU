@@ -141,11 +141,16 @@ healthcpu_reload_agent() {
 }
 
 healthcpu_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_ARGS
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+        if [ $? -ne 0 ]; then
+            ocf_log err "Invalid location for 'state': $state_dir is not writable"
+            return $OCF_ERR_ARGS
+        fi
     fi
     return $OCF_SUCCESS
 }
