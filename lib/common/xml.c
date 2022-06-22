@@ -593,7 +593,7 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
 
     const char *old_value = NULL;
 
-    if (value == NULL || name == NULL) {
+    if (target == NULL || value == NULL || name == NULL) {
         return;
     }
 
