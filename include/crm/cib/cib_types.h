@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -113,8 +113,11 @@ typedef struct cib_api_operations_s {
     int (*remove) (cib_t *cib, const char *section, xmlNode *data,
                    int call_options);
     int (*erase) (cib_t *cib, xmlNode **output_data, int call_options);
+
+    //! \deprecated This method does nothing and should not be called
     int (*delete_absolute) (cib_t *cib, const char *section, xmlNode *data,
                             int call_options);
+
     int (*quit) (cib_t *cib, int call_options);
     int (*register_notification) (cib_t *cib, const char *callback,
                                   int enabled);
