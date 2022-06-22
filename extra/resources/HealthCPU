@@ -73,6 +73,7 @@ the #health-cpu will go red if the %idle of the CPU falls below 10%.
 <action name="start"        timeout="10s" />
 <action name="stop"         timeout="10s" />
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="reload-agent" timeout="20s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all"   timeout="10s" />
 </actions>
@@ -134,6 +135,11 @@ healthcpu_monitor() {
     return $OCF_NOT_RUNNING
 }
 
+healthcpu_reload_agent() {
+    # No action required
+    :;
+}
+
 healthcpu_validate() {
     # Is the state directory writable?
     state_dir=$(dirname "$OCF_RESKEY_state")
@@ -172,6 +178,7 @@ meta-data)      meta_data
 start)          healthcpu_start;;
 stop)           healthcpu_stop;;
 monitor)        healthcpu_monitor;;
+reload-agent)   healthcpu_reload_agent;;
 validate-all)   healthcpu_validate;;
 usage|help)     healthcpu_usage
                 exit $OCF_SUCCESS
