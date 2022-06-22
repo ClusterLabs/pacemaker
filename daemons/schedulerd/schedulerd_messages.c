@@ -197,8 +197,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 
     } else if (pcmk__str_empty(sys_to)
                || !pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
-        crm_info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_PENGINE,
-                 pcmk__s(sys_to, ""));
+        crm_info("Ignoring invalid IPC message: to '%s' not "
+                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 
     } else if (pcmk__str_eq(op, CRM_OP_PECALC, pcmk__str_none)) {
         handle_pecalc_op(msg, xml_data, sender);
