@@ -1199,9 +1199,11 @@ handle_shutdown_request(xmlNode * stored_msg)
 static void
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
-    pcmk__client_t *client_channel = pcmk__find_client_by_id(sys);
+    pcmk__client_t *client_channel = NULL;
 
     CRM_CHECK(sys != NULL, return);
+
+    client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
         crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
