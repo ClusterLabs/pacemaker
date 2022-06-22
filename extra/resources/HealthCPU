@@ -49,7 +49,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/health-cpu-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="yellow_limit">
+<parameter name="yellow_limit" reloadable="1">
 <longdesc lang="en">
 Lower (!) limit of idle percentage to switch the health attribute to yellow. I.e.
 the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
@@ -58,7 +58,7 @@ the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
 <content type="string" default="50"/>
 </parameter>
 
-<parameter name="red_limit">
+<parameter name="red_limit" reloadable="1">
 <longdesc lang="en">
 Lower (!) limit of idle percentage to switch the health attribute to red. I.e.
 the #health-cpu will go red if the %idle of the CPU falls below 10%.
