@@ -41,7 +41,7 @@ System health agent that measures the CPU idling and updates the #health-cpu att
 <shortdesc lang="en">System health CPU usage</shortdesc>
 
 <parameters>
-<parameter name="state">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
