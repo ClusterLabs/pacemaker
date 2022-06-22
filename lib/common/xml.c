@@ -568,13 +568,20 @@ fix_plus_plus_recursive(xmlNode * target)
 }
 
 /*!
- * \brief Parse integer assignment statement and update current XML attribute
- *        value
+ * \brief Update current XML attribute value per parsed integer assignment
+          statement
  * 
- * \param[in]  target  XML node to be processed
- * \param[in]  name    name of the variable to change, e.g. value
- * \param[in]  value   assignment statement to apply, e.g. "value++" or
- *                     "value+=5"
+ * \param[in,out]   target  an XML node, containing a XML attribute that is
+ *                          initialized to some numeric value, to be processed
+ * \param[in]       name    name of the XML attribute, e.g. X, whose value
+ *                          should be updated
+ * \param[in]       value   assignment statement, e.g. "X++" or
+ *                          "X+=5", to be applied to the initialized value.
+ *
+ * \note The original XML attribute value is treated as 0 if non-numeric and
+ *       truncated to be an integer if decimal-point-containing.
+ * \note The final XML attribute value is truncated to not exceed 1000000.
+ * \note Undefined behavior if unexpected input. 
  */
 void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
