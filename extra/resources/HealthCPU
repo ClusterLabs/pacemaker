@@ -33,7 +33,7 @@ meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <resource-agent name="HealthCPU" version="1.0">
-<version>1.0</version>
+<version>1.1</version>
 
 <longdesc lang="en">
 System health agent that measures the CPU idling and updates the #health-cpu attribute.
