@@ -126,7 +126,9 @@
 
     <define name="resource-and-uname">
         <element name="reason">
-            <attribute name="running_on"> <text/> </attribute>
+            <optional>
+                <attribute name="running_on"> <text/> </attribute>
+            </optional>
             <ref name="resource-check"/>
         </element>
     </define>
