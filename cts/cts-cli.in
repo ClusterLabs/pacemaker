@@ -657,8 +657,8 @@ function test_tools() {
     test_assert_validate $CRM_EX_OK 0
 
     desc="Show why a resource is not running"
-    cmd="crm_resource -Y -r dummy"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -Y -r dummy --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Remove another resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role --output-as=xml"

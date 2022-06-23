@@ -888,8 +888,12 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Create another resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Create another resource meta attribute
 =#=#=#= Begin test: Show why a resource is not running =#=#=#=
-Resource dummy is not running
-Configuration specifies 'dummy' should remain stopped
+<pacemaker-result api-version="X" request="crm_resource -Y -r dummy --output-as=xml">
+  <reason running="false">
+    <check id="dummy" remain_stopped="true"/>
+  </reason>
+  <status code="0" message="OK"/>
+</pacemaker-result>
 =#=#=#= End test: Show why a resource is not running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show why a resource is not running
 =#=#=#= Begin test: Remove another resource meta attribute =#=#=#=
