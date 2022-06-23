@@ -914,6 +914,61 @@ check_locked(resource_checks_t *checks)
     }
 }
 
+static bool
+node_is_unhealthy(pe_node_t *node)
+{
+    switch (pe__health_strategy(node->details->data_set)) {
+        case pcmk__health_strategy_none:
+            break;
+
+        case pcmk__health_strategy_no_red:
+            if (pe__node_health(node) < 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_only_green:
+            if (pe__node_health(node) <= 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_progressive:
+        case pcmk__health_strategy_custom:
+            /* @TODO These are finite scores, possibly with rules, and possibly
+             * combining with other scores, so attributing these as a cause is
+             * nontrivial.
+             */
+            break;
+    }
+    return false;
+}
+
+static void
+check_node_health(resource_checks_t *checks, pe_node_t *node)
+{
+    if (node == NULL) {
+        GHashTableIter iter;
+        bool allowed = false;
+        bool all_nodes_unhealthy = true;
+
+        g_hash_table_iter_init(&iter, checks->rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            allowed = true;
+            if (!node_is_unhealthy(node)) {
+                all_nodes_unhealthy = false;
+                break;
+            }
+        }
+        if (allowed && all_nodes_unhealthy) {
+            checks->flags |= rsc_node_health;
+        }
+
+    } else if (node_is_unhealthy(node)) {
+        checks->flags |= rsc_node_health;
+    }
+}
+
 int
 cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
@@ -922,6 +977,7 @@ cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
     check_role(&checks);
     check_managed(&checks);
     check_locked(&checks);
+    check_node_health(&checks, node);
 
     return out->message(out, "resource-check-list", &checks);
 }

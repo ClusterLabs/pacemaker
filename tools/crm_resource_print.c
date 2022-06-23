@@ -477,6 +477,15 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
                        parent->id, checks->lock_node);
     }
 
+    if (pcmk_is_set(checks->flags, rsc_node_health)) {
+        out->list_item(out, "check",
+                       "'%s' cannot run on unhealthy nodes due to "
+                       PCMK__OPT_NODE_HEALTH_STRATEGY "='%s'",
+                       parent->id,
+                       pe_pref(checks->rsc->cluster->config_hash,
+                               PCMK__OPT_NODE_HEALTH_STRATEGY));
+    }
+
     out->end_list(out);
     return pcmk_rc_ok;
 }
@@ -506,6 +515,10 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(checks->flags, rsc_locked)) {
         crm_xml_add(node, "locked-to", checks->lock_node);
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_node_health)) {
+        pcmk__xe_set_bool_attr(node, "unhealthy", true);
     }
 
     return pcmk_rc_ok;

@@ -37,6 +37,7 @@ enum resource_check_flags {
     rsc_unpromotable    = (1 << 1),
     rsc_unmanaged       = (1 << 2),
     rsc_locked          = (1 << 3),
+    rsc_node_health     = (1 << 4),
 };
 
 typedef struct resource_checks_s {
