@@ -609,7 +609,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
                 out->list_item(out, "reason", "Resource %s is running", rsc->id);
             }
 
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, NULL);
             g_list_free(hosts);
             hosts = NULL;
         }
@@ -623,7 +623,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
                            rsc->id, host_uname);
         }
 
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->details->uname;
@@ -636,14 +636,14 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
             out->list_item(out, "reason", "Resource %s is running on host %s",
                            rsc->id, host_uname);
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, node);
         }
 
         for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
             out->list_item(out, "reason", "Resource %s is assigned to host %s but not running",
                            rsc->id, host_uname);
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, node);
         }
 
         g_list_free(allResources);
@@ -656,7 +656,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
         rsc->fns->location(rsc, &hosts, TRUE);
         out->list_item(out, "reason", "Resource %s is %srunning",
                        rsc->id, (hosts? "" : "not "));
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
     }
 
@@ -693,7 +693,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
                                            "running", pcmk__btoa(hosts != NULL),
                                            NULL);
 
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, NULL);
             pcmk__output_xml_pop_parent(out);
             g_list_free(hosts);
             hosts = NULL;
@@ -706,7 +706,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
             crm_xml_add(xml_node, "running_on", host_uname);
         }
 
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, node);
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->details->uname;
@@ -726,7 +726,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
                                            "host", host_uname,
                                            NULL);
 
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, node);
             pcmk__output_xml_pop_parent(out);
         }
 
@@ -739,7 +739,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
                                            "host", host_uname,
                                            NULL);
 
-            cli_resource_check(out, rsc);
+            cli_resource_check(out, rsc, node);
             pcmk__output_xml_pop_parent(out);
         }
 
@@ -753,7 +753,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
         rsc->fns->location(rsc, &hosts, TRUE);
         crm_xml_add(xml_node, "running", pcmk__btoa(hosts != NULL));
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
     }
 

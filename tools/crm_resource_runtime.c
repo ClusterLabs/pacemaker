@@ -915,7 +915,7 @@ check_locked(resource_checks_t *checks)
 }
 
 int
-cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc)
+cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
     resource_checks_t checks = { .rsc = rsc };
 

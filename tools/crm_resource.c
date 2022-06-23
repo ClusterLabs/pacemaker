@@ -1004,7 +1004,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 }
 
 static void
-cleanup(pcmk__output_t *out, pe_resource_t *rsc)
+cleanup(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1019,7 +1019,7 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, node);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1311,7 +1311,7 @@ refresh(pcmk__output_t *out)
 }
 
 static void
-refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
+refresh_resource(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
 {
     int rc = pcmk_rc_ok;
 
@@ -1326,7 +1326,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(out, rsc);
+        cli_resource_check(out, rsc, node);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -2075,7 +2075,7 @@ main(int argc, char **argv)
                     start_mainloop(controld_api);
                 }
             } else {
-                cleanup(out, rsc);
+                cleanup(out, rsc, node);
             }
             break;
 
@@ -2083,7 +2083,7 @@ main(int argc, char **argv)
             if (rsc == NULL) {
                 rc = refresh(out);
             } else {
-                refresh_resource(out, rsc);
+                refresh_resource(out, rsc, node);
             }
             break;
 

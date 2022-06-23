@@ -68,7 +68,8 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
                                   bool active, pe_working_set_t * data_set);
 
 /* runtime */
-int cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc);
+int cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc,
+                       pe_node_t *node);
 int cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
                       const char *rsc_id, pe_working_set_t *data_set);
 GList *cli_resource_search(pe_resource_t *rsc, const char *requested_name,
