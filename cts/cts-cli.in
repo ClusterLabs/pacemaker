@@ -883,6 +883,18 @@ function test_tools() {
     cmd="crm_resource -r dummy -U"
     test_assert $CRM_EX_OK
 
+    desc="Set a node health strategy"
+    cmd="crm_attribute -n node-health-strategy -v migrate-on-red"
+    test_assert $CRM_EX_OK
+
+    desc="Set a node health attribute"
+    cmd="crm_attribute -N node3 -n '#health-cts-cli' -v red"
+    test_assert $CRM_EX_OK
+
+    desc="Show why a resource is not running on an unhealthy node"
+    cmd="crm_resource -N node3 -Y -r dummy --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Delete a resource"
     cmd="crm_resource -D -r dummy -t primitive"
     test_assert $CRM_EX_OK

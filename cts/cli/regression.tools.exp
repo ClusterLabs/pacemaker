@@ -3406,13 +3406,14 @@ Removing constraint: cli-prefer-dummy
 </cib>
 =#=#=#= End test: Clear all implicit constraints for dummy - OK (0) =#=#=#=
 * Passed: crm_resource   - Clear all implicit constraints for dummy
-=#=#=#= Begin test: Delete a resource =#=#=#=
-=#=#=#= Current cib after: Delete a resource =#=#=#=
+=#=#=#= Begin test: Set a node health strategy =#=#=#=
+=#=#=#= Current cib after: Set a node health strategy =#=#=#=
 <cib epoch="55" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-node-health-strategy" name="node-health-strategy" value="migrate-on-red"/>
       </cluster_property_set>
       <cluster_property_set id="duplicate">
         <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
@@ -3426,6 +3427,113 @@ Removing constraint: cli-prefer-dummy
       </node>
       <node id="node2" uname="node2"/>
       <node id="node3" uname="node3"/>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Set a node health strategy - OK (0) =#=#=#=
+* Passed: crm_attribute  - Set a node health strategy
+=#=#=#= Begin test: Set a node health attribute =#=#=#=
+=#=#=#= Current cib after: Set a node health attribute =#=#=#=
+<cib epoch="56" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-node-health-strategy" name="node-health-strategy" value="migrate-on-red"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3">
+        <instance_attributes id="nodes-node3">
+          <nvpair id="nodes-node3-.health-cts-cli" name="#health-cts-cli" value="red"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+      <primitive id="Fence" class="stonith" type="fence_true"/>
+      <clone id="test-clone">
+        <primitive id="test-primitive" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="test-primitive-meta_attributes"/>
+        </primitive>
+        <meta_attributes id="test-clone-meta_attributes">
+          <nvpair id="test-clone-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Set a node health attribute - OK (0) =#=#=#=
+* Passed: crm_attribute  - Set a node health attribute
+=#=#=#= Begin test: Show why a resource is not running on an unhealthy node =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -N node3 -Y -r dummy --output-as=xml">
+  <reason>
+    <check id="dummy" unhealthy="true"/>
+  </reason>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show why a resource is not running on an unhealthy node - OK (0) =#=#=#=
+* Passed: crm_resource   - Show why a resource is not running on an unhealthy node
+=#=#=#= Begin test: Delete a resource =#=#=#=
+=#=#=#= Current cib after: Delete a resource =#=#=#=
+<cib epoch="57" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-node-health-strategy" name="node-health-strategy" value="migrate-on-red"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1">
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" uname="node2"/>
+      <node id="node3" uname="node3">
+        <instance_attributes id="nodes-node3">
+          <nvpair id="nodes-node3-.health-cts-cli" name="#health-cts-cli" value="red"/>
+        </instance_attributes>
+      </node>
     </nodes>
     <resources>
       <primitive id="Fence" class="stonith" type="fence_true"/>
