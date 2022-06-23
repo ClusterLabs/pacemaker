@@ -65,9 +65,7 @@ enum lsb_exitcode {
     PCMK_LSB_NOT_RUNNING         = 7,
 };
 
-/* The return codes for the status operation are not the same for other
- * operatios - go figure
- */
+// LSB uses different return codes for status actions
 enum lsb_status_exitcode {
     PCMK_LSB_STATUS_OK             = 0,
     PCMK_LSB_STATUS_VAR_PID        = 1,
