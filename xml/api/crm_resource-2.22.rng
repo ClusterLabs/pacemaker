@@ -102,56 +102,36 @@
     </define>
 
     <define name="reasons-list">
-        <choice>
-            <ref name="no-resource-or-uname"/>
-            <ref name="resource-and-uname"/>
-            <ref name="no-resource-but-uname"/>
-            <ref name="resource-but-no-uname"/>
-        </choice>
-    </define>
-
-    <define name="no-resource-or-uname">
         <element name="reason">
-            <element name="resources">
-                <zeroOrMore>
-                    <element name="resource">
-                        <attribute name="id"> <text/> </attribute>
-                        <attribute name="running"> <data type="boolean"/> </attribute>
-                        <ref name="resource-check"/>
-                    </element>
-                </zeroOrMore>
-            </element>
-        </element>
-    </define>
-
-    <define name="resource-and-uname">
-        <element name="reason">
+            <!-- set only when resource and node are both specified -->
             <optional>
                 <attribute name="running_on"> <text/> </attribute>
             </optional>
-            <ref name="resource-check"/>
+
+            <!-- set only when only a resource is specified -->
+            <optional>
+                <attribute name="running"> <data type="boolean"/> </attribute>
+            </optional>
+
+            <choice>
+                <ref name="reasons-with-no-resource"/>
+                <ref name="resource-check"/>
+            </choice>
         </element>
     </define>
 
-    <define name="no-resource-but-uname">
-        <element name="reason">
-            <element name="resources">
-                <zeroOrMore>
-                    <element name="resource">
-                        <attribute name="id"> <text/> </attribute>
-                        <attribute name="running"> <data type="boolean"/> </attribute>
+    <define name="reasons-with-no-resource">
+        <element name="resources">
+            <zeroOrMore>
+                <element name="resource">
+                    <attribute name="id"> <text/> </attribute>
+                    <attribute name="running"> <data type="boolean"/> </attribute>
+                    <optional>
                         <attribute name="host"> <text/> </attribute>
-                        <ref name="resource-check"/>
-                    </element>
-                </zeroOrMore>
-            </element>
-        </element>
-    </define>
-
-    <define name="resource-but-no-uname">
-        <element name="reason">
-            <attribute name="running"> <data type="boolean"/> </attribute>
-            <ref name="resource-check"/>
+                    </optional>
+                    <ref name="resource-check"/>
+                </element>
+            </zeroOrMore>
         </element>
     </define>
 
