@@ -157,6 +157,9 @@
             <optional>
                 <attribute name="locked-to"> <text/> </attribute>
             </optional>
+            <optional>
+                <attribute name="unhealthy"><value>true</value></attribute>
+            </optional>
         </element>
     </define>
 
