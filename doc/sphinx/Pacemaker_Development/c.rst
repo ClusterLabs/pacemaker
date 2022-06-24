@@ -324,40 +324,6 @@ Comments
 
 
 .. index::
-   single: C; pointer
-
-Variables
-#########
-
-* Pointers:
-
-.. code-block:: c
-
-   /* (1) The asterisk goes by the variable name, not the type;
-    * (2) Avoid leaving pointers uninitialized, to lessen the impact of
-    *     use-before-assignment bugs
-    */
-   char *my_string = NULL;
-
-   // Use space before asterisk and after closing parenthesis in a cast
-   char *foo = (char *) bar;
-
-* Global variables should be avoided in libraries when possible. State
-  information should instead be passed as function arguments (often as a
-  structure). This is not for thread safety -- Pacemaker's use of forking
-  ensures it will never be threaded -- but it does minimize overhead,
-  improve readability, and avoid obscure side effects.
-
-* Time intervals are sometimes represented in Pacemaker code as user-defined
-  text specifications (for example, "10s"), other times as an integer number of
-  seconds or milliseconds, and still other times as a string representation
-  of an integer number. Variables for these should be named with an indication
-  of which is being used (for example, use ``interval_spec``, ``interval_ms``,
-  or ``interval_ms_s`` instead of ``interval``).
-
-
-
-.. index::
    pair: C; operator
 
 Operators
@@ -466,6 +432,25 @@ Control Statements (if, else, while, for, switch)
 
 
 .. index::
+   pair: C; memory
+
+Memory Management
+#################
+
+* Always use ``calloc()`` rather than ``malloc()``. It has no additional cost on
+  modern operating systems, and reduces the severity and security risks of
+  uninitialized memory usage bugs.
+
+* Ensure that all dynamically allocated memory is freed when no longer needed,
+  and not used after it is freed. This can be challenging in the more
+  event-driven, callback-oriented sections of code.
+
+* Free dynamically allocated memory using the free function corresponding to
+  how it was allocated. For example, use ``free()`` with ``calloc()``, and
+  ``g_free()`` with most glib functions that allocate objects.
+
+
+.. index::
    single: C; struct
 
 Structures
@@ -486,6 +471,160 @@ API compatibility. However, there are exceptions:
   * Alternatively, the structure definition can be kept in an internal header,
     with only a pointer type definition kept in a public header, in which case
     the structure definition can be changed however needed.
+
+
+.. index::
+   single: C; variable
+
+Variables
+#########
+
+.. index::
+   single: C; pointer
+
+Pointers
+________
+
+.. code-block:: c
+
+   /* (1) The asterisk goes by the variable name, not the type;
+    * (2) Avoid leaving pointers uninitialized, to lessen the impact of
+    *     use-before-assignment bugs
+    */
+   char *my_string = NULL;
+
+   // Use space before asterisk and after closing parenthesis in a cast
+   char *foo = (char *) bar;
+
+.. index::
+   single: C; global variable
+
+Globals
+_______
+
+Global variables should be avoided in libraries when possible. State
+information should instead be passed as function arguments (often as a
+structure). This is not for thread safety -- Pacemaker's use of forking
+ensures it will never be threaded -- but it does minimize overhead,
+improve readability, and avoid obscure side effects.
+
+Variable Naming
+_______________
+
+Time intervals are sometimes represented in Pacemaker code as user-defined
+text specifications (for example, "10s"), other times as an integer number of
+seconds or milliseconds, and still other times as a string representation
+of an integer number. Variables for these should be named with an indication
+of which is being used (for example, use ``interval_spec``, ``interval_ms``,
+or ``interval_ms_s`` instead of ``interval``).
+
+.. index::
+   pair: C; booleans
+   pair: C; bool
+   pair: C; gboolean
+
+Booleans
+________
+
+Booleans in C can be represented by an integer type, ``bool``, or ``gboolean``.
+
+Integers are sometimes useful for storing booleans when they must be converted
+to and from a string, such as an XML attribute value (for which
+``crm_element_value_int()`` can be used). Integer booleans use 0 for false and
+nonzero (usually 1) for true.
+
+``gboolean`` should be used with glib APIs that specify it. ``gboolean`` should
+always be used with glib's ``TRUE`` and ``FALSE`` constants.
+
+Otherwise, ``bool`` should be preferred. ``bool`` should be used with the
+``true`` and ``false`` constants from the ``stdbool.h`` header.
+
+Do not use equality operators when testing booleans. For example:
+
+.. code-block:: c
+
+   // Do this
+   if (bool1) {
+       fn();
+   }
+   if (!bool2) {
+       fn2();
+   }
+
+   // Not this
+   if (bool1 == true) {
+       fn();
+   }
+   if (bool2 == false) {
+       fn2();
+   }
+
+   // Otherwise there's no logical end ...
+   if ((bool1 == false) == true) {
+       fn();
+   }
+
+
+.. index::
+   pair: C; strings
+
+String Handling
+###############
+
+Define Constants for Magic Strings
+__________________________________
+
+A "magic" string is one used for control purposes rather than human reading,
+and which must be exactly the same every time it is used. Examples would be
+configuration option names, XML attribute names, or environment variable names.
+
+These should always be defined constants, rather than using the string literal
+everywhere. If someone mistypes a defined constant, the code won't compile, but
+if they mistype a literal, it could go unnoticed until a user runs into a
+problem.
+
+
+String-Related Library Functions
+________________________________
+
+Pacemaker's libcrmcommon has a large number of functions to assist in string
+handling. The most commonly used ones are:
+
+* ``pcmk__str_eq()`` tests string equality (similar to ``strcmp()``), but can
+  handle NULL, and takes options for case-insensitive, whether NULL should be
+  considered a match, etc.
+* ``crm_strdup_printf()`` takes ``printf()``-style arguments and creates a
+  string from them (dynamically allocated, so it must be freed with
+  ``free()``). It asserts on memory failure, so the return value is always
+  non-NULL.
+
+String handling functions should almost always be internal API, since Pacemaker
+isn't intended to be used as a general-purpose library. Most are declared in
+``include/crm/common/strings_internal.h``. ``util.h`` has some older ones that
+are public API (for now, but will eventually be made internal).
+
+char*, gchar*, and GString
+__________________________
+
+When using dynamically allocated strings, be careful to always use the
+appropriate free function.
+
+* ``char*`` strings allocated with something like ``calloc()`` must be freed
+  with ``free()``. Most Pacemaker library functions that allocate strings use
+  this implementation.
+* glib functions often use ``gchar*`` instead, which must be freed with
+  ``g_free()``.
+* Occasionally, it's convenient to use glib's flexible ``GString*`` type, which
+  must be freed with ``g_string_free()``.
+
+.. index::
+   pair: C; regular expression
+
+Regular Expressions
+___________________
+
+- Use ``REG_NOSUB`` with ``regcomp()`` whenever possible, for efficiency.
+- Be sure to use ``regfree()`` appropriately.
 
 
 .. index::
@@ -559,76 +698,6 @@ clearing them (see ``pcmk__set_flags_as()`` and ``pcmk__clear_flags_as()``,
 usually used via wrapper macros defined for specific flag groups). These
 convenience functions should be preferred to direct bitwise arithmetic, for
 readability and logging consistency.
-
-
-.. index::
-   pair: C; booleans
-   pair: C; bool
-   pair: C; gboolean
-
-Booleans
-########
-
-Boolean Types
-_____________
-
-Booleans in C can be represented by an integer type, ``bool``, or ``gboolean``.
-
-Integers are sometimes useful for storing booleans when they must be converted
-to and from a string, such as an XML attribute value (for which
-``crm_element_value_int()`` can be used). Integer booleans use 0 for false and
-nonzero (usually 1) for true.
-
-``gboolean`` should be used with glib APIs that specify it. ``gboolean`` should
-always be used with glib's ``TRUE`` and ``FALSE`` constants.
-
-Otherwise, ``bool`` should be preferred. ``bool`` should be used with the
-``true`` and ``false`` constants from the ``stdbool.h`` header.
-
-Testing Booleans
-________________
-
-Do not use equality operators when testing booleans. For example:
-
-.. code-block:: c
-
-   // Do this
-   if (bool1) {
-       fn();
-   }
-   if (!bool2) {
-       fn2();
-   }
-
-   // Not this
-   if (bool1 == true) {
-       fn();
-   }
-   if (bool2 == false) {
-       fn2();
-   }
-
-   // Otherwise there's no logical end ...
-   if ((bool1 == false) == true) {
-       fn();
-   }
-
-Conversely, equality operators *should* be used with non-boolean variables,
-even when just testing zero or nonzero:
-
-.. code-block:: c
-
-   int var1 = fn();
-
-   // Prefer this, because it gives a hint to the type when reading it
-   if (var1 == 0) {
-       fn2();
-   }
-
-   // Not this, because a reader could mistakenly assume it is a boolean
-   if (!var1) {
-       fn2();
-   }
 
 
 .. index::
@@ -725,25 +794,6 @@ existing function can become a wrapper for a new function.
 
 
 .. index::
-   pair: C; memory
-
-Memory Management
-#################
-
-* Always use ``calloc()`` rather than ``malloc()``. It has no additional cost on
-  modern operating systems, and reduces the severity and security risks of
-  uninitialized memory usage bugs.
-
-* Ensure that all dynamically allocated memory is freed when no longer needed,
-  and not used after it is freed. This can be challenging in the more
-  event-driven, callback-oriented sections of code.
-
-* Free dynamically allocated memory using the free function corresponding to
-  how it was allocated. For example, use ``free()`` with ``calloc()``, and
-  ``g_free()`` with most glib functions that allocate objects.
-
-
-.. index::
    pair: C; logging
    pair: C; output
 
@@ -830,69 +880,6 @@ implementation function.
 The interface (most importantly ``pcmk__output_t``) is declared in
 ``include/crm/common/output*h``. See the API comments and existing tools for
 examples.
-
-
-.. index::
-   pair: C; strings
-
-String Handling
-###############
-
-Define Constants for Magic Strings
-__________________________________
-
-A "magic" string is one used for control purposes rather than human reading,
-and which must be exactly the same every time it is used. Examples would be
-configuration option names, XML attribute names, or environment variable names.
-
-These should always be defined constants, rather than using the string literal
-everywhere. If someone mistypes a defined constant, the code won't compile, but
-if they mistype a literal, it could go unnoticed until a user runs into a
-problem.
-
-
-Library Functions
-_________________
-
-Pacemaker's libcrmcommon has a large number of functions to assist in string
-handling. The most commonly used ones are:
-
-* ``pcmk__str_eq()`` tests string equality (similar to ``strcmp()``), but can
-  handle NULL, and takes options for case-insensitive, whether NULL should be
-  considered a match, etc.
-* ``crm_strdup_printf()`` takes ``printf()``-style arguments and creates a
-  string from them (dynamically allocated, so it must be freed with
-  ``free()``). It asserts on memory failure, so the return value is always
-  non-NULL.
-
-String handling functions should almost always be internal API, since Pacemaker
-isn't intended to be used as a general-purpose library. Most are declared in
-``include/crm/common/strings_internal.h``. ``util.h`` has some older ones that
-are public API (for now, but will eventually be made internal).
-
-
-char*, gchar*, and GString
-__________________________
-
-When using dynamically allocated strings, be careful to always use the
-appropriate free function.
-
-* ``char*`` strings allocated with something like ``calloc()`` must be freed
-  with ``free()``. Most Pacemaker library functions that allocate strings use
-  this implementation.
-* glib functions often use ``gchar*`` instead, which must be freed with
-  ``g_free()``.
-* Occasionally, it's convenient to use glib's flexible ``GString*`` type, which
-  must be freed with ``g_string_free()``.
-
-.. index::
-   pair: C; regular expression
-
-Regular Expressions
-###################
-
-- Use ``REG_NOSUB`` with ``regcomp()`` whenever possible, for efficiency.
-- Be sure to use ``regfree()`` appropriately.
 
 
 .. index::
