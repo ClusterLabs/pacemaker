@@ -432,6 +432,31 @@ Control Statements (if, else, while, for, switch)
 
 
 .. index::
+   pair: C; macro
+
+Macros
+######
+
+Macros are a powerful but easily misused feature of the C preprocessor, and
+Pacemaker uses a lot of obscure macro features. If you need to brush up, the
+`GCC documentation for macros
+<https://gcc.gnu.org/onlinedocs/cpp/Macros.html#Macros>`_ is excellent.
+
+Some common issues:
+
+* Beware of side effects in macro arguments that may be evaluated more than
+  once
+* Always parenthesize macro arguments used in the macro body to avoid
+  precedence issues if the argument is an expression
+* Multi-statement macro bodies should be enclosed in do...while(0) to make them
+  behave more like a single statement and avoid control flow issues
+
+Often, a static inline function defined in a header is preferable to a macro,
+to avoid the numerous issues that plague macros and gain the benefit of
+argument and return value type checking.
+
+
+.. index::
    pair: C; memory
 
 Memory Management
