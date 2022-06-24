@@ -137,6 +137,52 @@ External applications known to use Pacemaker's public C API include
 
 
 .. index::
+   pair: C; naming
+
+API Symbol Naming
+_________________
+
+Exposed API symbols (non-``static`` function names, ``struct`` and ``typedef``
+names in header files, etc.) must begin with the prefix appropriate to the
+library (shown in the table at the beginning of this section). This reduces the
+chance of naming collisions when external software links against the library.
+
+The prefix is usually lowercase but may be all-caps for some defined constants
+and macros.
+
+Public API symbols should follow the library prefix with a single underbar
+(for example, ``pcmk_something``), and internal API symbols with a double
+underbar (for example, ``pcmk__other_thing``).
+
+File-local symbols (such as static functions) and non-library code do not
+require a prefix, though a unique prefix indicating an executable (controld,
+crm_mon, etc.) can be helpful when symbols are shared between multiple
+source files for the executable.
+
+
+API Header File Naming
+______________________
+
+* Internal API headers should be named ending in ``_internal.h``, in the same
+  location as public headers, with the exception of libpacemaker, which for
+  historical reasons keeps internal headers in ``include/pcmki/pcmki_*.h``).
+
+* If a library needs to share symbols just within the library, header files for
+  these should be named ending in ``_private.h`` and located in the library
+  source directory (not ``include``). Such functions should be declared as
+  ``G_GNUC_INTERNAL``, to aid compiler efficiency (glib defines this
+  symbol appropriately for the compiler).
+
+Header files that are not library API are kept in the same directory as the
+source code they're included from.
+
+The easiest way to tell what kind of API a symbol is, is to see where it's
+declared. If it's in a public header, it's public API; if it's in an internal
+header, it's internal API; if it's in a library-private header, it's
+library-private API; otherwise, it's not an API.
+
+
+.. index::
    pair: C; API documentation
    single: Doxygen
 
@@ -170,46 +216,6 @@ Simple example of an internal function with a Doxygen comment block:
       return strlen(s) + 1;
    }
 
-
-API Header File Naming
-______________________
-
-* Internal API headers should be named ending in ``_internal.h``, in the same
-  location as public headers, with the exception of libpacemaker, which for
-  historical reasons keeps internal headers in ``include/pcmki/pcmki_*.h``).
-
-* If a library needs to share symbols just within the library, header files for
-  these should be named ending in ``_private.h`` and located in the library
-  source directory (not ``include``). Such functions should be declared as
-  ``G_GNUC_INTERNAL``, to aid compiler efficiency (glib defines this
-  symbol appropriately for the compiler).
-
-Header files that are not library API are located in the same locations as
-other source code.
-
-
-.. index::
-   pair: C; naming
-
-API Symbol Naming
-_________________
-
-Exposed API symbols (non-``static`` function names, ``struct`` and ``typedef``
-names in header files, etc.) must begin with the prefix appropriate to the
-library (shown in the table at the beginning of this section). This reduces the
-chance of naming collisions when external software links against the library.
-
-The prefix is usually lowercase but may be all-caps for some defined constants
-and macros.
-
-Public API symbols should follow the library prefix with a single underbar
-(for example, ``pcmk_something``), and internal API symbols with a double
-underbar (for example, ``pcmk__other_thing``).
-
-File-local symbols (such as static functions) and non-library code do not
-require a prefix, though a unique prefix indicating an executable (controld,
-crm_mon, etc.) can be helpful to indicate symbols shared between multiple
-source files for the executable.
 
 Public API Deprecation
 ______________________
