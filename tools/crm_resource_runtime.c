@@ -1962,7 +1962,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
             rsc = p;
 
         } else {
-            out->info(out, "Ignoring master option: %s is not promotable", rsc_id);
+            out->info(out, "Ignoring --promoted option: %s is not promotable",
+                      rsc_id);
             promoted_role_only = FALSE;
         }
     }
