@@ -56,7 +56,9 @@ attribute_text(pcmk__output_t *out, va_list args)
     char *host G_GNUC_UNUSED = va_arg(args, char *);
 
     if (out->quiet) {
-        pcmk__formatted_printf(out, "%s\n", value);
+        if (value != NULL) {
+            pcmk__formatted_printf(out, "%s\n", value);
+        }
     } else {
         out->info(out, "%s%s %s%s %s%s value=%s",
                   scope ? "scope=" : "", scope ? scope : "",
