@@ -24,6 +24,10 @@ A new shadow instance was created.  To begin using it paste the following into y
 </cib>
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin       - Validate CIB
+=#=#=#= Begin test: Query the value of an attribute that does not exist =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query the value of an attribute that does not exist - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Query the value of an attribute that does not exist
 =#=#=#= Begin test: Configure something before erasing =#=#=#=
 =#=#=#= Current cib after: Configure something before erasing =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
