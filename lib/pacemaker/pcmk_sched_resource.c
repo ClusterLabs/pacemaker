@@ -861,6 +861,7 @@ node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
                          rsc->id, (*node)->details->uname);
+            *node = NULL;
             return false;
         }
     }
