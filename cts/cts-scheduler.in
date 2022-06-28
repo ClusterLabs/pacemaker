@@ -378,6 +378,7 @@ TESTS = [
         [ "a-demote-then-b-migrate", "A demote then B stop. migrate B" ],
         [ "probe-target-of-failed-migrate_to-1", "Failed migrate_to, target rejoins" ],
         [ "probe-target-of-failed-migrate_to-2", "Failed migrate_to, target rejoined and probed" ],
+        [ "partial-live-migration-multiple-active", "Prevent running on multiple nodes due to partial live migration" ],
 
         # @TODO: If pacemaker implements versioned attributes, uncomment this test
         #[ "migrate-versioned", "Disable migration for versioned resources" ],

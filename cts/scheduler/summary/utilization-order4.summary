@@ -46,13 +46,13 @@ Executing Cluster Transition:
 
 Revised Cluster Status:
   * Node List:
-    * Node deglxen002: standby (with active resources)
+    * Node deglxen002: standby
     * Online: [ deglxen001 ]
 
   * Full List of Resources:
     * degllx62-vm	(ocf:heartbeat:Xen):	 Started deglxen001
     * degllx63-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
-    * degllx61-vm	(ocf:heartbeat:Xen):	 Stopped deglxen002
+    * degllx61-vm	(ocf:heartbeat:Xen):	 Stopped
     * degllx64-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
     * stonith_sbd	(stonith:external/sbd):	 Started deglxen001
     * Clone Set: clone-nfs [grp-nfs]:

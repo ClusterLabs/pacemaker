@@ -11,14 +11,15 @@ Current cluster status:
     * Clone Set: c-vm-fs [vm1]:
       * Started: [ castor kimball ]
     * xen-f	(ocf:heartbeat:VirtualDomain):	 Stopped (disabled)
-    * sle12-kvm	(ocf:heartbeat:VirtualDomain):	 FAILED castor
+    * sle12-kvm	(ocf:heartbeat:VirtualDomain):	 FAILED [ kimball castor ]
     * Clone Set: cl_sgdisk [sgdisk]:
       * Started: [ castor kimball ]
 
 Transition Summary:
-  * Recover    sle12-kvm     ( castor -> kimball )
+  * Recover    sle12-kvm     ( kimball )
 
 Executing Cluster Transition:
+  * Resource action: sle12-kvm       stop on kimball
   * Resource action: sle12-kvm       stop on castor
   * Resource action: sle12-kvm       start on kimball
   * Resource action: sle12-kvm       monitor=10000 on kimball

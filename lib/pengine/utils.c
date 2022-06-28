@@ -1734,7 +1734,8 @@ resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *
     } while(0)
 
 int
-pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
+pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
+                bool same_node_default)
 {
     int a_call_id = -1;
     int b_call_id = -1;
@@ -1747,7 +1748,21 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
 
     const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
     const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);
-    bool same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
+    bool same_node = true;
+
+    /* @COMPAT The on_node attribute was added to last_failure as of 1.1.13 (via
+     * 8b3ca1c) and the other entries as of 1.1.12 (via 0b07b5c).
+     *
+     * In case that any of the lrm_rsc_op entries doesn't have on_node
+     * attribute, we need to explicitly tell whether the two operations are on
+     * the same node.
+     */
+    if (a_node == NULL || b_node == NULL) {
+        same_node = same_node_default;
+
+    } else {
+        same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
+    }
 
     if (same_node && pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
         /* We have duplicate lrm_rsc_op entries in the status
@@ -1857,7 +1872,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     const xmlNode *xml_a = a;
     const xmlNode *xml_b = b;
 
-    return pe__is_newer_op(xml_a, xml_b);
+    return pe__is_newer_op(xml_a, xml_b, true);
 }
 
 time_t

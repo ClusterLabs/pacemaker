@@ -2063,7 +2063,10 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
         }
 
         if (rsc->partial_migration_target) {
-            if (rsc->partial_migration_target->details == current->details) {
+            if (rsc->partial_migration_target->details == current->details
+                // Only if the allocated node still is the migration target.
+                && rsc->allocated_to
+                && rsc->allocated_to->details == rsc->partial_migration_target->details) {
                 pe_rsc_trace(rsc,
                              "Skipping stop of %s on %s "
                              "because migration to %s in progress",

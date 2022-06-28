@@ -954,6 +954,13 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
             lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         }
 
+    /* Migration history is preserved separately, which usually matters for
+     * multiple nodes and is important for future cluster transitions.
+     */
+    } else if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE,
+                                CRMD_ACTION_MIGRATED, NULL)) {
+        op_id = strdup(key);
+
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = pcmk__op_key(op->rsc_id, "last_failure", 0);
         if (op->interval_ms == 0) {
