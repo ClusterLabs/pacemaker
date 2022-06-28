@@ -104,66 +104,23 @@ update_attrd_helper(const char *host, const char *name, const char *value,
         }
     }
 
-    for (int attempt = 1; attempt <= 4; ++attempt) {
-        rc = pcmk_rc_ok;
-
-        // If we're not already connected, try to connect
-        if (!pcmk_ipc_is_connected(attrd_api)) {
-            if (attempt == 1) {
-                // Start with a clean slate
-                pcmk_disconnect_ipc(attrd_api);
-            }
-
-            // Connect without a main loop, and with no callback either.
-            // We don't use any commands that expect a reply.
-            rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
-
-            crm_debug("Attribute manager connection attempt %d of 4: %s (%d)",
-                      attempt, pcmk_rc_str(rc), rc);
-        }
-
-        if (rc == pcmk_rc_ok) {
-            switch (command) {
-                case cmd_clear:
-                    /* name/value is really resource/operation */
-                    rc = pcmk__attrd_api_clear_failures(attrd_api, host, name,
-                                                        value, interval_spec,
-                                                        user_name, attrd_opts);
-                    break;
-
-                case cmd_update:
-                    rc = pcmk__attrd_api_update(attrd_api, host, name, value,
-                                                NULL, NULL, user_name,
-                                                attrd_opts | pcmk__node_attr_value);
-                    break;
-
-                case cmd_purge:
-                    rc = pcmk__attrd_api_purge(attrd_api, host);
-                    break;
-            }
-
-            crm_debug("Attribute manager request attempt %d of 4: %s (%d)",
-                      attempt, pcmk_rc_str(rc), rc);
-        }
-
-        if (rc == pcmk_rc_ok) {
-            // Success, we're done
+    switch (command) {
+        case cmd_clear:
+            /* name/value is really resource/operation */
+            rc = pcmk__attrd_api_clear_failures(attrd_api, host, name,
+                                                value, interval_spec,
+                                                user_name, attrd_opts);
             break;
 
-        } else if ((rc != EAGAIN) && (rc != EALREADY)) {
-            /* EAGAIN or EALREADY indicates a temporary block, so just try
-             * again. Otherwise, close the connection for a clean slate.
-             */
-            pcmk_disconnect_ipc(attrd_api);
-        }
+        case cmd_update:
+            rc = pcmk__attrd_api_update(attrd_api, host, name, value,
+                                        NULL, NULL, user_name,
+                                        attrd_opts | pcmk__node_attr_value);
+            break;
 
-        /* @TODO If the attribute manager remains unavailable the entire time,
-         * this function takes more than 6 seconds. Maybe set a timer for
-         * retries, to let the main loop do other work.
-         */
-        if (attempt < 4) {
-            sleep(attempt);
-        }
+        case cmd_purge:
+            rc = pcmk__attrd_api_purge(attrd_api, host);
+            break;
     }
 
     if (rc != pcmk_rc_ok) {
@@ -177,6 +134,13 @@ update_attrd(const char *host, const char *name, const char *value,
 {
     update_attrd_helper(host, name, value, NULL, user_name, is_remote_node,
                         cmd_update);
+}
+
+void
+update_attrd_list(GList *attrs, uint32_t opts)
+{
+    pcmk__attrd_api_update_list(attrd_api, attrs, NULL, NULL, NULL,
+                                opts | pcmk__node_attr_value);
 }
 
 void
