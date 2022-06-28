@@ -94,7 +94,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     int length = 0;
     bool result = false;
 
-    pcmk__ban_insufficient_capacity(rsc, &prefer, data_set);
+    pcmk__ban_insufficient_capacity(rsc, &prefer);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to != NULL;
@@ -2472,7 +2472,9 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+        || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);

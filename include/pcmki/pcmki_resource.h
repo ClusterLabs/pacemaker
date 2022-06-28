@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,6 @@
 #include <crm/pengine/pe_types.h>
 
 int pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
-                           pe_node_t *node, GHashTable *overrides,
-                           pe_working_set_t *data_set);
+                           pe_node_t *node, GHashTable *overrides);
 
 #endif /* PCMK__PCMKI_PCMKI_RESOURCE__H */

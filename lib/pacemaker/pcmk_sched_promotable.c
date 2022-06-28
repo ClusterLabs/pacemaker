@@ -17,8 +17,6 @@
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
-extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
-
 extern bool pcmk__is_daemon;
 
 static void
@@ -284,7 +282,7 @@ sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return 1;
     }
 
-    return sort_clone_instance(a, b, data_set);
+    return pcmk__cmp_instance(a, b);
 }
 
 static void

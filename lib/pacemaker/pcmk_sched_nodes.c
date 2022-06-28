@@ -313,3 +313,28 @@ pcmk__apply_node_health(pe_working_set_t *data_set)
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Check for a node in a resource's parent's allowed nodes
+ *
+ * \param[in] rsc   Resource whose parent should be checked
+ * \param[in] node  Node to check for
+ *
+ * \return Equivalent of \p node from \p rsc's parent's allowed nodes if any,
+ *         otherwise NULL
+ */
+pe_node_t *
+pcmk__top_allowed_node(const pe_resource_t *rsc, const pe_node_t *node)
+{
+    GHashTable *allowed_nodes = NULL;
+
+    if ((rsc == NULL) || (node == NULL)) {
+        return NULL;
+    } else if (rsc->parent == NULL) {
+        allowed_nodes = rsc->allowed_nodes;
+    } else {
+        allowed_nodes = rsc->parent->allowed_nodes;
+    }
+    return pe_hash_table_lookup(allowed_nodes, node->details->id);
+}
