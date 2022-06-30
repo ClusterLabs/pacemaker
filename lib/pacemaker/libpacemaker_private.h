@@ -645,6 +645,14 @@ enum pe_action_flags pcmk__group_action_flags(pe_action_t *action,
                                               const pe_node_t *node);
 
 G_GNUC_INTERNAL
+uint32_t pcmk__group_update_ordered_actions(pe_action_t *first,
+                                            pe_action_t *then,
+                                            const pe_node_t *node,
+                                            uint32_t flags, uint32_t filter,
+                                            uint32_t type,
+                                            pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
                                            const char *log_id,
                                            GHashTable **nodes, const char *attr,

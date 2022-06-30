@@ -572,28 +572,36 @@ pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-group_update_actions(pe_action_t *first, pe_action_t *then,
-                     const pe_node_t *node, uint32_t flags, uint32_t filter,
-                     uint32_t type, pe_working_set_t *data_set)
+pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                                   const pe_node_t *node, uint32_t flags,
+                                   uint32_t filter, uint32_t type,
+                                   pe_working_set_t *data_set)
 {
-    GList *gIter = then->rsc->children;
     uint32_t changed = pcmk__updated_none;
 
+    CRM_ASSERT((first != NULL) && (then != NULL) && (data_set != NULL));
+
+    // Group method can be called only for group action as "then" action
     CRM_ASSERT(then->rsc != NULL);
+
+    // Update the actions for the group itself
     changed |= pcmk__update_ordered_actions(first, then, node, flags, filter,
                                             type, data_set);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-        pe_action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
+    // Update the actions for each group member
+    for (GList *iter = then->rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
 
-        if (child_action) {
-            changed |= child->cmds->update_ordered_actions(first, child_action,
-                                                           node, flags, filter,
-                                                           type, data_set);
+        pe_action_t *member_action = find_first_action(member->actions, NULL,
+                                                       then->task, node);
+
+        if (member_action != NULL) {
+            changed |= member->cmds->update_ordered_actions(first,
+                                                            member_action, node,
+                                                            flags, filter, type,
+                                                            data_set);
         }
     }
-
     return changed;
 }
 
