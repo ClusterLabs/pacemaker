@@ -385,7 +385,7 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
         pe_resource_t *parent = action->rsc;
 
         while (parent != NULL) {
-            parent->cmds->append_meta(parent, args_xml);
+            parent->cmds->add_graph_meta(parent, args_xml);
             parent = parent->parent;
         }
 

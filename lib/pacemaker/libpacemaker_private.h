@@ -212,7 +212,17 @@ struct resource_alloc_functions_s {
      */
     void (*add_actions_to_graph)(pe_resource_t *rsc);
 
-    void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
+    /*!
+     * \internal
+     * \brief Add meta-attributes relevant to transition graph actions to XML
+     *
+     * If a given resource supports variant-specific meta-attributes that are
+     * needed for transition graph actions, add them to a given XML element.
+     *
+     * \param[in]     rsc  Resource whose meta-attributes should be added
+     * \param[in,out] xml  Transition graph action attributes XML to add to
+     */
+    void (*add_graph_meta)(pe_resource_t *rsc, xmlNode *xml);
 
     /*!
      * \internal
