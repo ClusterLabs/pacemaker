@@ -18,58 +18,86 @@
 
 static void append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all);
 
-static pe_node_t *
-can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
+/*!
+ * \internal
+ * \brief Check whether a node is allowed to run an instance
+ *
+ * \param[in] instance      Clone instance or bundle container to check
+ * \param[in] node          Node to check
+ * \param[in] max_per_node  Maximum number of instances allowed to run on a node
+ *
+ * \return true if \p node is allowed to run \p instance, otherwise false
+ */
+static bool
+can_run_instance(const pe_resource_t *instance, const pe_node_t *node,
+                 int max_per_node)
 {
-    pe_node_t *local_node = NULL;
+    pe_node_t *allowed_node = NULL;
 
-    if (node == NULL && rsc->allowed_nodes) {
-        GHashTableIter iter;
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&local_node)) {
-            can_run_instance(rsc, local_node, limit);
-        }
-        return NULL;
+    if (pcmk_is_set(instance->flags, pe_rsc_orphan)) {
+        pe_rsc_trace(instance, "%s cannot run on %s because it is an orphan",
+                     instance->id, pe__node_name(node));
+        return false;
     }
 
-    if (!node) {
-        /* make clang analyzer happy */
-        goto bail;
-
-    } else if (!pcmk__node_available(node, false, false)) {
-        goto bail;
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-        goto bail;
+    if (!pcmk__node_available(node, false, false)) {
+        pe_rsc_trace(instance,
+                     "%s cannot run on %s because it cannot run resources",
+                     instance->id, pe__node_name(node));
+        return false;
     }
 
-    local_node = pcmk__top_allowed_node(rsc, node);
-
-    if (local_node == NULL) {
+    allowed_node = pcmk__top_allowed_node(instance, node);
+    if (allowed_node == NULL) {
         crm_warn("%s cannot run on %s: node not allowed",
-                 rsc->id, pe__node_name(node));
-        goto bail;
-
-    } else if (local_node->weight < 0) {
-        common_update_score(rsc, node->details->id, local_node->weight);
-        pe_rsc_trace(rsc, "%s cannot run on %s: Parent node weight doesn't allow it.",
-                     rsc->id, pe__node_name(node));
-
-    } else if (local_node->count < limit) {
-        pe_rsc_trace(rsc, "%s can run on %s (already running %d)",
-                     rsc->id, pe__node_name(node), local_node->count);
-        return local_node;
-
-    } else {
-        pe_rsc_trace(rsc, "%s cannot run on %s: node full (%d >= %d)",
-                     rsc->id, pe__node_name(node), local_node->count, limit);
+                 instance->id, pe__node_name(node));
+        return false;
     }
 
-  bail:
-    if (node) {
-        common_update_score(rsc, node->details->id, -INFINITY);
+    if (allowed_node->weight < 0) {
+        pe_rsc_trace(instance, "%s cannot run on %s: parent score is %s there",
+                     instance->id, pe__node_name(node),
+                     pcmk_readable_score(allowed_node->weight));
+        return false;
     }
-    return NULL;
+
+    if (allowed_node->count >= max_per_node) {
+        pe_rsc_trace(instance,
+                     "%s cannot run on %s because it already has %d instance%s",
+                     instance->id, pe__node_name(node), max_per_node,
+                     pcmk__plural_s(max_per_node));
+        return false;
+    }
+
+    pe_rsc_trace(instance, "%s can run on %s (%d already running)",
+                 instance->id, pe__node_name(node), allowed_node->count);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Ban a clone instance from its allowed nodes that are unavailable
+ *
+ * \param[in,out] rsc           Clone instance
+ * \param[in]     max_per_node  Maximum instances allowed to run on a node
+ */
+static void
+ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
+{
+    if (instance->allowed_nodes != NULL) {
+        GHashTableIter iter;
+        pe_node_t *allowed_node = NULL;
+
+        g_hash_table_iter_init(&iter, instance->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL,
+                                      (void **) &allowed_node)) {
+            if (!can_run_instance(instance, allowed_node, max_per_node)) {
+                // Ban instance (and all its children) from node
+                common_update_score(instance, allowed_node->details->id,
+                                    -INFINITY);
+            }
+        }
+    }
 }
 
 static pe_node_t *
@@ -107,7 +135,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
         }
     }
 
-    can_run_instance(rsc, NULL, limit);
+    ban_unavailable_allowed_nodes(rsc, limit);
 
     backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
