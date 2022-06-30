@@ -666,6 +666,15 @@ GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
                                        pe_resource_t *orig_rsc,
                                        GList *colocated_rscs);
 
+G_GNUC_INTERNAL
+void pcmk__group_add_utilization(const pe_resource_t *rsc,
+                                 const pe_resource_t *orig_rsc, GList *all_rscs,
+                                 GHashTable *utilization);
+
+G_GNUC_INTERNAL
+void pcmk__group_shutdown_lock(pe_resource_t *rsc);
+
+
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL

@@ -19,11 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-void pcmk__group_add_utilization(const pe_resource_t *rsc,
-                                 const pe_resource_t *orig_rsc,
-                                 GList *all_rscs, GHashTable *utilization);
-void pcmk__group_shutdown_lock(pe_resource_t *rsc);
-
 pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
 bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
