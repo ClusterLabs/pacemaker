@@ -641,6 +641,10 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
+enum pe_action_flags pcmk__group_action_flags(pe_action_t *action,
+                                              const pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
                                            const char *log_id,
                                            GHashTable **nodes, const char *attr,

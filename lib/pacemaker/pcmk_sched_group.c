@@ -478,43 +478,69 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given group resource action
+ *
+ * \param[in,out] action  Group action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-group_action_flags(pe_action_t *action, const pe_node_t *node)
+pcmk__group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
-    GList *gIter = NULL;
-    enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
+    // Default flags for a group action
+    enum pe_action_flags flags = pe_action_optional
+                                 |pe_action_runnable
+                                 |pe_action_pseudo;
 
-    for (gIter = action->rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-        enum action_tasks task = get_complex_task(child, action->task, TRUE);
+    CRM_ASSERT(action != NULL);
+
+    // Update flags considering each member's own flags for same action
+    for (GList *iter = action->rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+
+        // Check whether member has the same action
+        enum action_tasks task = get_complex_task(member, action->task, TRUE);
         const char *task_s = task2text(task);
-        pe_action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
+        pe_action_t *member_action = find_first_action(member->actions, NULL,
+                                                       task_s, node);
 
-        if (child_action) {
-            enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
+        if (member_action != NULL) {
+            enum pe_action_flags member_flags;
 
+            member_flags = member->cmds->action_flags(member_action, node);
+
+            // Group action is mandatory if any member action is
             if (pcmk_is_set(flags, pe_action_optional)
-                && !pcmk_is_set(child_flags, pe_action_optional)) {
-                pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
-                             child_action->uuid);
+                && !pcmk_is_set(member_flags, pe_action_optional)) {
+                pe_rsc_trace(action->rsc, "%s is mandatory because %s is",
+                             action->uuid, member_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
                                            pe_action_optional);
                 pe__clear_action_flags(action, pe_action_optional);
             }
-            if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
-                && pcmk_is_set(flags, pe_action_runnable)
-                && !pcmk_is_set(child_flags, pe_action_runnable)) {
 
-                pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
-                             child_action->uuid);
+            // Group action is unrunnable if any member action is
+            if (!pcmk__str_eq(task_s, action->task, pcmk__str_none)
+                && pcmk_is_set(flags, pe_action_runnable)
+                && !pcmk_is_set(member_flags, pe_action_runnable)) {
+
+                pe_rsc_trace(action->rsc, "%s is unrunnable because %s is",
+                             action->uuid, member_action->uuid);
                 pe__clear_raw_action_flags(flags, "group action",
                                            pe_action_runnable);
                 pe__clear_action_flags(action, pe_action_runnable);
             }
 
-        } else if (task != stop_rsc && task != action_demote) {
-            pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)",
-                         action->uuid, task_s, child->id);
+        /* Group (pseudo-)actions other than stop or demote are unrunnable
+         * unless every member will do it.
+         */
+        } else if ((task != stop_rsc) && (task != action_demote)) {
+            pe_rsc_trace(action->rsc,
+                         "%s is not runnable because %s will not %s",
+                         action->uuid, member->id, task_s);
             pe__clear_raw_action_flags(flags, "group action",
                                        pe_action_runnable);
         }

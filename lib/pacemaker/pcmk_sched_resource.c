@@ -44,7 +44,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_add_colocated_node_scores,
         pcmk__group_colocated_resources,
         group_rsc_location,
-        group_action_flags,
+        pcmk__group_action_flags,
         group_update_actions,
         pcmk__output_resource_actions,
         pcmk__add_rsc_actions_to_graph,
