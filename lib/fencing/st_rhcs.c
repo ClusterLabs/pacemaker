@@ -132,9 +132,11 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
     int rc = stonith__execute(action);
     result = stonith__action_result(action);
 
-    if (rc < 0 && result == NULL) {
-        crm_warn("Could not execute metadata action for %s: %s "
-                 CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+    if (result == NULL) {
+        if (rc < 0) {
+            crm_warn("Could not execute metadata action for %s: %s "
+                     CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+        }
         stonith__destroy_action(action);
         return rc;
     }
