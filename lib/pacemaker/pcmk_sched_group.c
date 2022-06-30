@@ -350,6 +350,105 @@ pcmk__group_internal_constraints(pe_resource_t *rsc)
  * \internal
  * \brief Apply a colocation's score to node weights or resource priority
  *
+ * Given a colocation constraint for a group with some other resource, apply the
+ * score to the dependent's allowed node weights (if we are still placing
+ * resources) or priority (if we are choosing promotable clone instance roles).
+ *
+ * \param[in,out] dependent      Dependent group resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ */
+static void
+colocate_group_with(pe_resource_t *dependent, const pe_resource_t *primary,
+                    const pcmk__colocation_t *colocation)
+{
+    pe_resource_t *member = NULL;
+
+    pe_rsc_trace(primary, "Processing %s (group %s with %s) for dependent",
+                 colocation->id, dependent->id, primary->id);
+
+    if (pe__group_flag_is_set(dependent, pe__group_colocated)) {
+        // Colocate first member (internal colocations will handle the rest)
+        member = (pe_resource_t *) dependent->children->data;
+        member->cmds->apply_coloc_score(member, primary, colocation, true);
+        return;
+    }
+
+    if (colocation->score >= INFINITY) {
+        pcmk__config_err("%s: Cannot perform mandatory colocation between "
+                         "non-colocated group and %s",
+                         dependent->id, primary->id);
+        return;
+    }
+
+    // Colocate each member individually
+    for (GList *iter = dependent->children; iter != NULL; iter = iter->next) {
+        member = (pe_resource_t *) iter->data;
+        member->cmds->apply_coloc_score(member, primary, colocation, true);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint for some other resource with a group, apply the
+ * score to the dependent's allowed node weights (if we are still placing
+ * resources) or priority (if we are choosing promotable clone instance roles).
+ *
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary group resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ */
+static void
+colocate_with_group(pe_resource_t *dependent, const pe_resource_t *primary,
+                    const pcmk__colocation_t *colocation)
+{
+    pe_resource_t *member = NULL;
+
+    pe_rsc_trace(primary,
+                 "Processing colocation %s (%s with group %s) for primary",
+                 colocation->id, dependent->id, primary->id);
+
+    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+        return;
+    }
+
+    if (pe__group_flag_is_set(primary, pe__group_colocated)) {
+
+        if (colocation->score >= INFINITY) {
+            // Dependent can't start until group is fully up
+            member = pe__last_group_member(primary);
+        } else {
+            // Dependent can start as long as group is partially up
+            member = (pe_resource_t *) primary->children->data;
+        }
+        if (member == NULL) {
+            return; // Nothing to colocate with
+        }
+
+        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+        return;
+    }
+
+    if (colocation->score >= INFINITY) {
+        pcmk__config_err("%s: Cannot perform mandatory colocation with"
+                         " non-colocated group %s",
+                         dependent->id, primary->id);
+        return;
+    }
+
+    // Colocate dependent with each member individually
+    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
+        member = (pe_resource_t *) iter->data;
+        member->cmds->apply_coloc_score(dependent, member, colocation, false);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
  * Given a colocation constraint, apply its score to the dependent's
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
@@ -365,72 +464,17 @@ pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                               const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
-    GList *gIter = NULL;
-    pe_resource_t *member = NULL;
+    CRM_ASSERT((dependent != NULL) && (primary != NULL)
+               && (colocation != NULL));
 
-    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
-              return);
+    if (for_dependent) {
+        colocate_group_with(dependent, primary, colocation);
 
-    if (!for_dependent) {
-        goto for_primary;
-    }
+    } else {
+        // Method should only be called for primitive dependents
+        CRM_ASSERT(dependent->variant == pe_native);
 
-    gIter = dependent->children;
-    pe_rsc_trace(dependent, "Processing constraints from %s", dependent->id);
-
-    if (pe__group_flag_is_set(dependent, pe__group_colocated)) {
-        member = (pe_resource_t *) dependent->children->data;
-        member->cmds->apply_coloc_score(member, primary, colocation, true);
-        return;
-
-    } else if (colocation->score >= INFINITY) {
-        pcmk__config_err("%s: Cannot perform mandatory colocation "
-                         "between non-colocated group and %s",
-                         dependent->id, primary->id);
-        return;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->cmds->apply_coloc_score(child_rsc, primary, colocation,
-                                           true);
-    }
-    return;
-
-for_primary:
-    gIter = primary->children;
-    CRM_CHECK(dependent->variant == pe_native, return);
-
-    pe_rsc_trace(primary,
-                 "Processing colocation %s (%s with group %s) for primary",
-                 colocation->id, dependent->id, primary->id);
-
-    member = (pe_resource_t *) primary->children->data;
-
-    if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
-        return;
-
-    } else if (pe__group_flag_is_set(primary, pe__group_colocated)
-               && (member != NULL)) {
-        if (colocation->score >= INFINITY) {
-            // Dependent can't start until group is fully up
-            member = pe__last_group_member(primary);
-        } // else dependent can start as long as group is partially up
-        member->cmds->apply_coloc_score(dependent, member, colocation, false);
-        return;
-
-    } else if (colocation->score >= INFINITY) {
-        pcmk__config_err("%s: Cannot perform mandatory colocation with"
-                         " non-colocated group %s", dependent->id, primary->id);
-        return;
-    }
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
-                                           false);
+        colocate_with_group(dependent, primary, colocation);
     }
 }
 
