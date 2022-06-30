@@ -1763,9 +1763,14 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         default:
             rc = -EINVAL;
             errno = EINVAL;
-            crm_perror(LOG_ERR,
-                       "Agent %s not found or does not support validation",
-                       agent);
+
+            if (error_output) {
+                *error_output = crm_strdup_printf("Agent %s not found or does not support validation",
+                                                  agent);
+            } else {
+                crm_err("Agent %s not found or does not support validation", agent);
+            }
+
             break;
     }
     g_hash_table_destroy(params_table);
