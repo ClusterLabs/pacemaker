@@ -528,10 +528,9 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate",
-                                                   "agent", agent,
-                                                   "valid", pcmk__btoa(rc),
-                                                   NULL);
+    xmlNodePtr node = pcmk__output_create_xml_node(
+        out, "validate", "agent", agent, "valid", pcmk__btoa(rc == pcmk_ok),
+        NULL);
 
     if (device != NULL) {
         crm_xml_add(node, "device", device);
