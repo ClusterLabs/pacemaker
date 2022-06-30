@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include "pacemakerd.h"
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 
 #include <errno.h>
@@ -18,6 +19,20 @@
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
+
+static GHashTable *pcmkd_handlers = NULL;
+
+static xmlNode *
+handle_node_cache_request(pcmk__request_t *request)
+{
+    crm_trace("Ignoring request from client %s to purge node "
+              "because peer cache is not used",
+              pcmk__client_name(request->ipc_client));
+
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_OK);
+    return NULL;
+}
 
 static void
 handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
@@ -109,6 +124,29 @@ handle_shutdown_request(pcmk__client_t *c, xmlNode *msg, uint32_t id, uint32_t f
     }
 }
 
+static xmlNode *
+handle_unknown_request(pcmk__request_t *request)
+{
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_INVALID_PARAM);
+
+    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                        "Unknown IPC request type '%s' (bug?)",
+                        pcmk__client_name(request->ipc_client));
+    return NULL;
+}
+
+static void
+pcmkd_register_handlers(void)
+{
+    pcmk__server_command_t handlers[] = {
+        { CRM_OP_RM_NODE_CACHE, handle_node_cache_request },
+        { NULL, handle_unknown_request },
+    };
+
+    pcmkd_handlers = pcmk__register_handlers(handlers);
+}
+
 static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -157,6 +195,10 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     pcmk__client_t *c = pcmk__find_client(qbc);
 
     CRM_CHECK(c != NULL, return 0);
+
+    if (pcmkd_handlers == NULL) {
+        pcmkd_register_handlers();
+    }
 
     msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
