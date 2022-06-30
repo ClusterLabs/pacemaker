@@ -641,6 +641,9 @@ void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
+void pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location);
+
+G_GNUC_INTERNAL
 enum pe_action_flags pcmk__group_action_flags(pe_action_t *action,
                                               const pe_node_t *node);
 

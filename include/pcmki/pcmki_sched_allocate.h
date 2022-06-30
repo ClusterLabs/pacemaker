@@ -19,7 +19,6 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_append_meta(pe_resource_t * rsc, xmlNode * xml);
 void pcmk__group_add_utilization(const pe_resource_t *rsc,
                                  const pe_resource_t *orig_rsc,

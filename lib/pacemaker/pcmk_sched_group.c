@@ -605,30 +605,47 @@ pcmk__group_update_ordered_actions(pe_action_t *first, pe_action_t *then,
     return changed;
 }
 
+/*!
+ * \internal
+ * \brief Apply a location constraint to a group's allowed node scores
+ *
+ * \param[in,out] rsc       Group resource to apply constraint to
+ * \param[in,out] location  Location constraint to apply
+ */
 void
-group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
+pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
-    GList *gIter = rsc->children;
-    GList *saved = constraint->node_list_rh;
-    GList *zero = pcmk__copy_node_list(constraint->node_list_rh, true);
-    gboolean reset_scores = pe__group_flag_is_set(rsc, pe__group_colocated);
+    GList *node_list_orig = NULL;
+    GList *node_list_copy = NULL;
+    bool reset_scores = true;
 
-    pe_rsc_debug(rsc, "Processing rsc_location %s for %s", constraint->id, rsc->id);
+    CRM_ASSERT((rsc != NULL) && (location != NULL));
 
-    pcmk__apply_location(rsc, constraint);
+    node_list_orig = location->node_list_rh;
+    node_list_copy = pcmk__copy_node_list(node_list_orig, true);
+    reset_scores = pe__group_flag_is_set(rsc, pe__group_colocated);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Apply the constraint for the group itself (updates node scores)
+    pcmk__apply_location(rsc, location);
 
-        child_rsc->cmds->apply_location(child_rsc, constraint);
+    // Apply the constraint for each member
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+
+        member->cmds->apply_location(member, location);
+
         if (reset_scores) {
-            reset_scores = FALSE;
-            constraint->node_list_rh = zero;
+            /* The first member of colocated groups needs to use the original
+             * node scores, but subsequent members should work on a copy, since
+             * the first member's scores already incorporate theirs.
+             */
+            reset_scores = false;
+            location->node_list_rh = node_list_copy;
         }
     }
 
-    constraint->node_list_rh = saved;
-    g_list_free_full(zero, free);
+    location->node_list_rh = node_list_orig;
+    g_list_free_full(node_list_copy, free);
 }
 
 /*!
