@@ -652,11 +652,11 @@ pcmk__group_apply_location(pe_resource_t *rsc, pe__location_t *location)
  * \internal
  * \brief Update nodes with scores of colocated resources' nodes
  *
- * Given a table of nodes and a resource, update the nodes' scores with the
- * scores of the best nodes matching the attribute used for each of the
- * resource's relevant colocations.
+ * Given a table of nodes and a group resource, update the nodes' scores with
+ * the scores of the best nodes matching the attribute used for each of the
+ * group's relevant colocations.
  *
- * \param[in,out] rsc      Resource to check colocations for
+ * \param[in,out] rsc      Group resource to check colocations for
  * \param[in]     log_id   Resource ID to use in log messages
  * \param[in,out] nodes    Nodes to update
  * \param[in]     attr     Colocation attribute (NULL to use default)
@@ -670,33 +670,33 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                       GHashTable **nodes, const char *attr,
                                       float factor, uint32_t flags)
 {
-    GList *gIter = rsc->rsc_cons_lhs;
     pe_resource_t *member = NULL;
 
-    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+    CRM_ASSERT((rsc != NULL) && (nodes != NULL));
 
     if (log_id == NULL) {
         log_id = rsc->id;
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
-        pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
+        pe_rsc_info(rsc, "Breaking colocation dependency loop with %s at %s",
                     rsc->id, log_id);
         return;
     }
-
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
+    // Add first member's colocation scores (which incorporate other members')
     member = (pe_resource_t *) rsc->children->data;
     member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
                                             factor, flags);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+    // Add scores of dependent in each colocation with this group
+    for (GList *iter = rsc->rsc_cons_lhs; iter != NULL; iter = iter->next) {
+        pcmk__colocation_t *colocation = (pcmk__colocation_t *) iter->data;
 
-        pcmk__add_colocated_node_scores(constraint->dependent, rsc->id, nodes,
-                                        constraint->node_attribute,
-                                        constraint->score / (float) INFINITY,
+        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
                                         flags);
     }
 
