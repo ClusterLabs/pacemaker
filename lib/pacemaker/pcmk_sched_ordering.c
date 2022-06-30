@@ -1347,11 +1347,17 @@ pcmk__apply_orderings(pe_working_set_t *data_set)
 {
     crm_trace("Applying ordering constraints");
 
-    /* Don't ask me why, but apparently they need to be processed in
-     * the order they were created in... go figure
+    /* Ordering constraints need to be processed in the order they were created.
+     * rsc_order_first() and rsc_order_then() require the relevant actions to
+     * already exist in some cases, but rsc_order_first() will create the
+     * 'first' action in certain cases. Thus calling rsc_order_first() can
+     * change the behavior of later-created orderings.
      *
-     * Also g_list_append() has horrendous performance characteristics
-     * So we need to use g_list_prepend() and then reverse the list here
+     * Also, g_list_append() should be avoided for performance reasons, so we
+     * prepend orderings when creating them and reverse the list here.
+     *
+     * @TODO This is brittle and should be carefully redesigned so that the
+     * order of creation doesn't matter, and the reverse becomes unneeded.
      */
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
