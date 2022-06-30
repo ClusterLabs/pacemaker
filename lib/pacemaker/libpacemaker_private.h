@@ -753,6 +753,9 @@ GList *pcmk__colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *colocated_rscs);
 
 G_GNUC_INTERNAL
+void pcmk__noop_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+
+G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL

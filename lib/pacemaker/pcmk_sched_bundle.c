@@ -1092,11 +1092,6 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 }
 
 void
-pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
-{
-}
-
-void
 pcmk__output_bundle_actions(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;

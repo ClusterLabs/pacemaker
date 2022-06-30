@@ -703,11 +703,6 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     pe__clear_resource_flags(rsc, pe_rsc_merging);
 }
 
-void
-group_append_meta(pe_resource_t * rsc, xmlNode * xml)
-{
-}
-
 // Group implementation of resource_alloc_functions_t:colocated_resources()
 GList *
 pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
