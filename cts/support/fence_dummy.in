@@ -452,7 +452,7 @@ def main():
     if "-o" in options:
         action = options["-o"]
     else:
-        action = "action"
+        action = "reboot"
 
     # dump input to file
     if "-D" in options and action != "validate-all":
