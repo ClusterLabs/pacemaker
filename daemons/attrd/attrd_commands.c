@@ -175,12 +175,11 @@ create_attribute(xmlNode *xml)
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
 
-    if(value) {
+    if (value != NULL) {
         dampen = crm_get_msec(value);
-        crm_trace("Created attribute %s with delay %dms (%s)", a->id, dampen, value);
-    } else {
-        crm_trace("Created attribute %s with no delay", a->id);
     }
+    crm_trace("Created attribute %s with %s write delay", a->id,
+              (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
 
     if(dampen > 0) {
         a->timeout_ms = dampen;
@@ -868,9 +867,11 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
         v = broadcast_local_value(a);
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
-        crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
+        crm_notice("Setting %s[%s]: %s -> %s "
+                   CRM_XS " from %s with %s write delay",
                    attr, host, pcmk__s(v->current, "(unset)"),
-                   pcmk__s(value, "(unset)"), peer->uname);
+                   pcmk__s(value, "(unset)"), peer->uname,
+                   (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
         a->changed = TRUE;
 
@@ -1220,8 +1221,8 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
             if (!mainloop_timer_running(a->timer)) {
-                crm_trace("Delayed re-attempted write (%dms) for %s",
-                          a->timeout_ms, name);
+                crm_trace("Delayed re-attempted write for %s by %s",
+                          name, pcmk__readable_interval(a->timeout_ms));
                 mainloop_timer_start(a->timer);
             }
         } else {

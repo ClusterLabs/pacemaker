@@ -103,7 +103,12 @@ Frequently Asked Questions
       
     * Except for the most simple and obvious of changes, the summary should be
       followed by a blank line and a longer explanation of *why* the change was
-      made.  
+      made.
+
+    * If the commit is associated with a task in the `ClusterLabs project
+      manager` <https://projects.clusterlabs.org/>`, you can say "Closes T\ *n*"
+      in the commit message to automatically close task T\ *n* when the pull
+      request is merged.
 
 ----
 

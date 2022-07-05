@@ -513,6 +513,7 @@ cib_file_new(const char *cib_location)
 
     if (cib_location == NULL) {
         cib_location = getenv("CIB_file");
+        CRM_CHECK(cib_location != NULL, return NULL); // Shouldn't be possible
     }
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
