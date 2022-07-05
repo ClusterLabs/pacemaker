@@ -224,24 +224,41 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
     }
 }
 
-void
-distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
-                    int max, int per_host_max, pe_working_set_t * data_set) 
+/*!
+ * \internal
+ * \brief Reset the node counts of a resource's allowed nodes to zero
+ *
+ * \param[in,out] rsc  Resource to reset
+ *
+ * \return Number of nodes that are available to run resources
+ */
+static unsigned int
+reset_allowed_node_counts(pe_resource_t *rsc)
 {
-    int loop_max = 0;
-    int allocated = 0;
-    int available_nodes = 0;
-    bool all_coloc = false;
+    unsigned int available_nodes = 0;
+    pe_node_t *node = NULL;
+    GHashTableIter iter;
 
-    /* count now tracks the number of clones currently allocated */
-    for(GList *nIter = nodes; nIter != NULL; nIter = nIter->next) {
-        pe_node_t *node = nIter->data;
-
+    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->count = 0;
         if (pcmk__node_available(node, false, false)) {
             available_nodes++;
         }
     }
+    return available_nodes;
+}
+
+void
+distribute_children(pe_resource_t *rsc, GList *children, int max,
+                    int per_host_max, pe_working_set_t *data_set)
+{
+    // Reuse node count to track number of assigned instances
+    unsigned int available_nodes = reset_allowed_node_counts(rsc);
+
+    int loop_max = 0;
+    int allocated = 0;
+    bool all_coloc = false;
 
     /* Include positive colocation preferences of dependent resources
      * only if not every node will get a copy of the clone.
@@ -255,7 +272,9 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         loop_max = 1;
     }
 
-    pe_rsc_debug(rsc, "Allocating up to %d %s instances to a possible %d nodes (at most %d per host, %d optimal)",
+    pe_rsc_debug(rsc,
+                 "Allocating up to %d %s instances to a possible %u nodes "
+                 "(at most %d per host, %d optimal)",
                  max, rsc->id, available_nodes, per_host_max, loop_max);
 
     /* Pre-allocate as many instances as we can to their current location */

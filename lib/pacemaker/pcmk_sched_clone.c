@@ -29,7 +29,6 @@
 pe_node_t *
 pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -78,12 +77,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
-    nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL);
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    distribute_children(rsc, rsc->children, nodes, clone_data->clone_max,
+    distribute_children(rsc, rsc->children, clone_data->clone_max,
                         clone_data->clone_node_max, rsc->cluster);
-    g_list_free(nodes);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);
