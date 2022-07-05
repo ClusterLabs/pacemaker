@@ -1455,6 +1455,15 @@ class Tests(object):
                              "Run fence_watchdog -o metadata and check for valid xml", 0)
         test.add_cmd("fence_watchdog", "-o metadata", check_rng=False)
 
+    def build_validate_tests(self):
+        """ run stonith_admin --validate for the fence_dummy agent and check command output """
+
+        test = self.new_test("validate_dummy",
+                             "Run stonith_admin --validate-all and check output", 0)
+        test.add_expected_fail_cmd("stonith_admin", "-a fence_dummy --validate --output-as=xml")
+        test.add_cmd("stonith_admin", """-a fence_dummy --validate -o "delay=5" --output-as=xml""", check_rng=False)
+        test.add_expected_fail_cmd("stonith_admin", """-a fence_dummy --validate -o "delay=15" --output-as=xml""")
+
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
@@ -1588,6 +1597,7 @@ def main(argv):
         tests.build_remap_tests()
         tests.build_query_tests()
         tests.build_metadata_tests()
+        tests.build_validate_tests()
 
         if opts.options['list-tests']:
             tests.print_list()
