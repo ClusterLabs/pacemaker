@@ -2,7 +2,7 @@
 """Dummy fence agent for testing
 """
 
-__copyright__ = "Copyright 2012-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -14,7 +14,7 @@ import random
 import atexit
 import getopt
 
-AGENT_VERSION = "4.0.1"
+AGENT_VERSION = "4.1.0"
 OCF_VERSION = "1.0"
 SHORT_DESC = "Dummy fence agent"
 LONG_DESC = """fence_dummy is a fake fencing agent which reports success
@@ -62,7 +62,7 @@ ALL_OPT = {
     "action" : {
         "getopt" : "o:",
         "longopt" : "action",
-        "help" : "-o, --action=[action]          Action: status, list, reboot (default), off or on",
+        "help" : "-o, --action=[action]          Action: validate-all, status, list, reboot (default), off or on",
         "required" : "1",
         "shortdesc" : "Fencing Action",
         "default" : "reboot",
@@ -449,26 +449,26 @@ def main():
     options["device_opt"] = device_opt
     show_docs(options)
 
+    if "-o" in options:
+        action = options["-o"]
+    else:
+        action = "action"
+
     # dump input to file
-    if "-D" in options:
+    if "-D" in options and action != "validate-all":
         write_options(options)
 
-    if "-f" in options:
+    if "-f" in options and action != "validate-all":
         val = int(options["-f"])
         print("delay sleep for %d seconds" % val, file=sys.stderr)
         time.sleep(val)
 
     # random sleep for testing
-    if "-R" in options:
+    if "-R" in options and action != "validate-all":
         val = int(options["-R"])
         ran = random.randint(1, val)
         print("random sleep for %d seconds" % ran, file=sys.stderr)
         time.sleep(ran)
-
-    if "-o" in options:
-        action = options["-o"]
-    else:
-        action = "action"
 
     if action == "monitor":
         if "-d" in options:
@@ -483,6 +483,16 @@ def main():
         else:
             print("dynamic hostlist requires mock_dynamic_hosts to be set",
                   file=sys.stderr)
+            exitcode = 1
+
+    elif action == "validate-all":
+        if "-f" in options:
+            val = int(options["-f"])
+            if val > 10:
+                exitcode = 1
+            else:
+                exitcode = 0
+        else:
             exitcode = 1
 
     else:
