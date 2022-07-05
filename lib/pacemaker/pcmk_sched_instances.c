@@ -100,68 +100,100 @@ ban_unavailable_allowed_nodes(pe_resource_t *instance, int max_per_node)
     }
 }
 
-static pe_node_t *
-allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
-                  int limit, pe_working_set_t *data_set)
+/*!
+ * \internal
+ * \brief Choose a node for an instance
+ *
+ * \param[in,out] instance      Clone instance or bundle replica container
+ * \param[in]     prefer        If not NULL, node to prefer for early assignment
+ * \param[in]     all_coloc     If true (indicating that there are more
+ *                              available nodes than instances), add all parent
+ *                              colocations to instance, otherwise add only
+ *                              negative (and for "this with" colocations,
+ *                              infinite) colocations to avoid needless
+ *                              shuffling of instances among nodes
+ * \param[in]     max_per_node  Assign at most this many instances to one node
+ *
+ * \return true if \p instance could be assigned to a node, otherwise false
+ */
+static bool
+assign_instance(pe_resource_t *instance, const pe_node_t *prefer,
+                bool all_coloc, int max_per_node)
 {
     pe_node_t *chosen = NULL;
-    GHashTable *backup = NULL;
+    pe_node_t *allowed = NULL;
 
-    CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Checking allocation of %s (preferring %s, using %s parent colocations)",
-                 rsc->id, (prefer? prefer->details->uname: "none"),
-                 (all_coloc? "all" : "some"));
+    CRM_ASSERT(instance != NULL);
+    pe_rsc_trace(instance,
+                 "Assigning %s (preferring %s, using %s parent colocations)",
+                 instance->id,
+                 ((prefer == NULL)? "no node" : prefer->details->uname),
+                 (all_coloc? "all" : "essential"));
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->fns->location(rsc, NULL, FALSE);
+    if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+        // Instance is already assigned
+        return instance->fns->location(instance, NULL, FALSE) != NULL;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
-        return NULL;
+    } else if (pcmk_is_set(instance->flags, pe_rsc_allocating)) {
+        pe_rsc_debug(instance,
+                     "Dependency assignment loop detected involving %s",
+                     instance->id);
+        return false;
     }
 
-    if (prefer) {
-        pe_node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
+    if (prefer != NULL) { // Possible early assignment to preferred node
 
-        if (local_prefer == NULL || local_prefer->weight < 0) {
-            pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id,
-                         pe__node_name(prefer));
-            return NULL;
+        // Get preferred node with instance's scores
+        allowed = g_hash_table_lookup(instance->allowed_nodes,
+                                      prefer->details->id);
+
+        if ((allowed == NULL) || (allowed->weight < 0)) {
+            pe_rsc_trace(instance,
+                         "Not assigning %s to preferred node %s: unavailable",
+                         instance->id, pe__node_name(prefer));
+            return false;
         }
     }
 
-    ban_unavailable_allowed_nodes(rsc, limit);
+    ban_unavailable_allowed_nodes(instance, max_per_node);
 
-    backup = pcmk__copy_node_table(rsc->allowed_nodes);
-    pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
-    chosen = rsc->cmds->assign(rsc, prefer);
-    if (chosen && prefer && (chosen->details != prefer->details)) {
-        crm_info("Not pre-allocating %s to %s because %s is better",
-                 rsc->id, pe__node_name(prefer), pe__node_name(chosen));
-        g_hash_table_destroy(rsc->allowed_nodes);
-        rsc->allowed_nodes = backup;
-        pcmk__unassign_resource(rsc);
-        chosen = NULL;
-        backup = NULL;
-    }
-    if (chosen) {
-        pe_node_t *local_node = pcmk__top_allowed_node(rsc, chosen);
+    if (prefer == NULL) { // Final assignment
+        chosen = instance->cmds->assign(instance, NULL);
 
-        if (local_node) {
-            local_node->count++;
+    } else { // Possible early assignment to preferred node
+        GHashTable *backup = pcmk__copy_node_table(instance->allowed_nodes);
 
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            /* what to do? we can't enforce per-node limits in this case */
-            pcmk__config_err("%s not found in %s (list of %d)",
-                             chosen->details->id, rsc->parent->id,
-                             g_hash_table_size(rsc->parent->allowed_nodes));
+        chosen = instance->cmds->assign(instance, prefer);
+
+        // Revert nodes if preferred node won't be assigned
+        if ((chosen != NULL) && (chosen->details != prefer->details)) {
+            crm_info("Not assigning %s to preferred node %s: %s is better",
+                     instance->id, pe__node_name(prefer),
+                     pe__node_name(chosen));
+            g_hash_table_destroy(instance->allowed_nodes);
+            instance->allowed_nodes = backup;
+            pcmk__unassign_resource(instance);
+            chosen = NULL;
+        } else if (backup != NULL) {
+            g_hash_table_destroy(backup);
         }
     }
 
-    if(backup) {
-        g_hash_table_destroy(backup);
+    // The parent tracks how many instances have been assigned to each node
+    if (chosen != NULL) {
+        allowed = pcmk__top_allowed_node(instance, chosen);
+        if (allowed == NULL) {
+            /* The instance is allowed on the node, but its parent isn't. This
+             * shouldn't be possible if the resource is managed, and we won't be
+             * able to limit the number of instances assigned to the node.
+             */
+            CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pe_rsc_managed));
+
+        } else {
+            allowed->count++;
+        }
     }
-    return chosen;
+    return chosen != NULL;
 }
 
 static void
@@ -262,8 +294,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
             continue;
         }
 
-        if (allocate_instance(child, child_node, all_coloc, per_host_max,
-                              data_set)) {
+        if (assign_instance(child, child_node, all_coloc, per_host_max)) {
             pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
                          pe__node_name(child_node));
             allocated++;
@@ -290,8 +321,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
             resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
         } else {
-            if (allocate_instance(child, NULL, all_coloc, per_host_max,
-                                  data_set)) {
+            if (assign_instance(child, NULL, all_coloc, per_host_max)) {
                 allocated++;
             }
         }
