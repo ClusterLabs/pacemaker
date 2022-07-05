@@ -249,6 +249,51 @@ reset_allowed_node_counts(pe_resource_t *rsc)
     return available_nodes;
 }
 
+/*!
+ * \internal
+ * \brief Check whether an instance has a preferred node
+ *
+ * \param[in] rsc               Clone or bundle being assigned (for logs only)
+ * \param[in] instance          Clone instance or bundle replica container
+ * \param[in] optimal_per_node  Optimal number of instances per node
+ *
+ * \return Instance's current node if still available, otherwise NULL
+ */
+static pe_node_t *
+preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
+               int optimal_per_node)
+{
+    pe_node_t *node = NULL;
+    pe_node_t *parent_node = NULL;
+
+    // Check whether instance is active, healthy, and not yet assigned
+    if ((instance->running_on == NULL)
+        || !pcmk_is_set(instance->flags, pe_rsc_provisional)
+        || pcmk_is_set(instance->flags, pe_rsc_failed)) {
+        return NULL;
+    }
+
+    // Check whether instance's current node can run resources
+    node = pe__current_node(instance);
+    if (!pcmk__node_available(node, true, false)) {
+        pe_rsc_trace(rsc, "Not assigning %s to %s early (unavailable)",
+                     instance->id, pe__node_name(node));
+        return NULL;
+    }
+
+    // Check whether node already has optimal number of instances assigned
+    parent_node = pcmk__top_allowed_node(instance, node);
+    if ((parent_node != NULL) && (parent_node->count >= optimal_per_node)) {
+        pe_rsc_trace(rsc,
+                     "Not assigning %s to %s early "
+                     "(optimal instances already assigned)",
+                     instance->id, pe__node_name(node));
+        return NULL;
+    }
+
+    return node;
+}
+
 void
 distribute_children(pe_resource_t *rsc, GList *children, int max,
                     int per_host_max, pe_working_set_t *data_set)
@@ -281,39 +326,12 @@ distribute_children(pe_resource_t *rsc, GList *children, int max,
     for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
         pe_node_t *child_node = NULL;
-        pe_node_t *local_node = NULL;
 
         append_parent_colocation(child->parent, child, all_coloc);
 
-        if ((child->running_on == NULL)
-            || !pcmk_is_set(child->flags, pe_rsc_provisional)
-            || pcmk_is_set(child->flags, pe_rsc_failed)) {
-
-            continue;
-        }
-
-        child_node = pe__current_node(child);
-        local_node = pcmk__top_allowed_node(child, child_node);
-
-        pe_rsc_trace(rsc,
-                     "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                     child->id, pe__node_name(child_node), max - allocated,
-                     max);
-
-        if (!pcmk__node_available(child_node, true, false)) {
-            pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                         pe__node_name(child_node), child->id);
-            continue;
-        }
-
-        if ((local_node != NULL) && (local_node->count >= loop_max)) {
-            pe_rsc_trace(rsc,
-                         "Not pre-allocating because %s already allocated "
-                         "optimal instances", pe__node_name(child_node));
-            continue;
-        }
-
-        if (assign_instance(child, child_node, all_coloc, per_host_max)) {
+        child_node = preferred_node(rsc, child, loop_max);
+        if ((child_node != NULL)
+            && assign_instance(child, child_node, all_coloc, per_host_max)) {
             pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
                          pe__node_name(child_node));
             allocated++;
