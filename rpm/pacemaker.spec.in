@@ -328,6 +328,9 @@ BuildRequires: inkscape
 BuildRequires: %{python_name}-sphinx
 %endif
 
+# Booth requires this
+Provides:      pacemaker-ticket-support = 2.0
+
 Provides:      pcmk-cluster-manager = %{version}-%{release}
 Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 

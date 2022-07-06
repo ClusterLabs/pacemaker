@@ -2858,7 +2858,6 @@ crm_xml_init(void)
 void
 crm_xml_cleanup(void)
 {
-    crm_info("Cleaning up memory from libxml2");
     crm_schema_cleanup();
     xmlCleanupParser();
 }
