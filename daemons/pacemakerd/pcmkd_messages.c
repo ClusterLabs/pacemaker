@@ -216,19 +216,53 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         handle_shutdown_request(c, msg, id, flags);
 
-    } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
-        crm_trace("Ignoring request from client %s to purge node "
-                  "because peer cache is not used", pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_OK);
-
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         handle_ping_request(c, msg, id);
 
     } else {
-        crm_debug("Unrecognized IPC command '%s' from client %s",
-                  task, pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INVALID_PARAM);
+        char *log_msg = NULL;
+        const char *reason = NULL;
+        xmlNode *reply = NULL;
+
+        pcmk__request_t request = {
+            .ipc_client     = c,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        reply = pcmk__process_request(&request, pcmkd_handlers);
+
+        if (reply != NULL) {
+            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
+            free_xml(reply);
+        }
+
+        reason = request.result.exit_reason;
+
+        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
+                                    request.op, pcmk__request_origin_type(&request),
+                                    pcmk__request_origin(&request),
+                                    pcmk_exec_status_str(request.result.execution_status),
+                                    (reason == NULL)? "" : " (",
+                                    (reason == NULL)? "" : reason,
+                                    (reason == NULL)? "" : ")");
+
+        if (!pcmk__result_ok(&request.result)) {
+            crm_warn("%s", log_msg);
+        } else {
+            crm_debug("%s", log_msg);
+        }
+
+        free(log_msg);
+        pcmk__reset_request(&request);
     }
 
     free_xml(msg);
