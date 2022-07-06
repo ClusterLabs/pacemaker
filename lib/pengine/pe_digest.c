@@ -184,6 +184,20 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
+    /* Given a non-recurring operation with extra parameters configured,
+     * in case that the main digest doesn't match, even if the restart
+     * digest matches, enforce a restart rather than a reload-agent anyway.
+     * So that it ensures any changes of the extra parameters get applied
+     * for this specific operation, and the digests calculated for the
+     * resulting lrm_rsc_op will be correct.
+     * Mark the implied rc RSC_DIGEST_RESTART for the case that the main
+     * digest doesn't match.
+     */
+    if (*interval_ms == 0
+        && g_hash_table_size(action->extra) > 0) {
+        data->rc = RSC_DIGEST_RESTART;
+    }
+
     pe_free_action(action);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all,
@@ -329,6 +343,9 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
     if (data == NULL) {
         return NULL;
     }
+
+    data->rc = RSC_DIGEST_MATCH;
+
     if (xml_op != NULL) {
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     }
@@ -411,7 +428,6 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                              pcmk_is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
 
-    data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
         pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
                          "changed: hash was %s vs. now %s (restart:%s) %s",
@@ -427,14 +443,38 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
-        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                         "changed: hash was %s vs. now %s (%s:%s) %s",
-                    interval_ms, task, rsc->id, node->details->uname,
-                    pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                    (interval_ms > 0)? "reschedule" : "reload",
-                    op_version,
-                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-        data->rc = RSC_DIGEST_ALL;
+        /* Given a non-recurring operation with extra parameters configured,
+         * in case that the main digest doesn't match, even if the restart
+         * digest matches, enforce a restart rather than a reload-agent anyway.
+         * So that it ensures any changes of the extra parameters get applied
+         * for this specific operation, and the digests calculated for the
+         * resulting lrm_rsc_op will be correct.
+         * Preserve the implied rc RSC_DIGEST_RESTART for the case that the main
+         * digest doesn't match.
+         */
+        if (interval_ms == 0
+            && data->rc == RSC_DIGEST_RESTART) {
+            pe_rsc_info(rsc, "Parameters containing extra ones to %ums-interval"
+                             " %s action for %s on %s "
+                             "changed: hash was %s vs. now %s (restart:%s) %s",
+                        interval_ms, task, rsc->id, node->details->uname,
+                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
+                        op_version,
+                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+
+        } else {
+            pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
+                             "changed: hash was %s vs. now %s (%s:%s) %s",
+                        interval_ms, task, rsc->id, node->details->uname,
+                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
+                        (interval_ms > 0)? "reschedule" : "reload",
+                        op_version,
+                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            data->rc = RSC_DIGEST_ALL;
+        }
+
+    } else {
+        data->rc = RSC_DIGEST_MATCH;
     }
     return data;
 }
