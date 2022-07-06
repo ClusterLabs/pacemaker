@@ -34,9 +34,11 @@ handle_node_cache_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
+static xmlNode *
+handle_ping_request(pcmk__request_t *request)
 {
+    xmlNode *msg = request->xml;
+
     const char *value = NULL;
     xmlNode *ping = NULL;
     xmlNode *reply = NULL;
@@ -46,6 +48,10 @@ handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     crm_trace("Pinged from " F_CRM_SYS_FROM "='%s' " F_CRM_ORIGIN "='%s'",
               pcmk__s(from, ""),
               pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
+
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_INDETERMINATE);
+
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
     value = crm_element_value(msg, F_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
@@ -54,31 +60,34 @@ handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
                    (long long) subdaemon_check_progress);
     crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
     reply = create_reply(msg, ping);
+
     free_xml(ping);
-    if (reply) {
-        if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) !=
-                pcmk_rc_ok) {
-            crm_err("Failed sending ping reply to client %s",
-                    pcmk__client_name(c));
-        }
-        free_xml(reply);
+
+    if (reply == NULL) {
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Failed building ping reply for client %s",
+                            pcmk__client_name(request->ipc_client));
     } else {
-        crm_err("Failed building ping reply for client %s",
-                pcmk__client_name(c));
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
+
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
         if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE, pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
                 crm_notice("Shutdown-complete-state passed to SBD.");
             }
-            shutdown_complete_state_reported_to = c->pid;
+
+            shutdown_complete_state_reported_to = request->ipc_client->pid;
+
         } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
             crm_notice("Received startup-trigger from SBD.");
             pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
     }
+
+    return reply;
 }
 
 static void
@@ -141,6 +150,7 @@ pcmkd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { CRM_OP_RM_NODE_CACHE, handle_node_cache_request },
+        { CRM_OP_PING, handle_ping_request },
         { NULL, handle_unknown_request },
     };
 
@@ -215,10 +225,6 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     } else if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         handle_shutdown_request(c, msg, id, flags);
-
-    } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        handle_ping_request(c, msg, id);
 
     } else {
         char *log_msg = NULL;
