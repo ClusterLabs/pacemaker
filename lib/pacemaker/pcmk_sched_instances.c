@@ -394,68 +394,80 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
                  collective->id);
 }
 
+enum instance_state {
+    instance_starting   = (1 << 0),
+    instance_stopping   = (1 << 1),
+    instance_restarting = (1 << 2),
+    instance_active     = (1 << 3),
+};
+
+/*!
+ * \internal
+ * \brief Check whether an instance is active, starting, and/or stopping
+ *
+ * \param[in]     instance  Clone instance or bundle replica container
+ * \param[in,out] state     Whether any instance is starting, stopping, etc.
+ */
 static void
-clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * starting,
-                           gboolean * active)
+check_instance_state(const pe_resource_t *instance, uint32_t *state)
 {
-    GList *gIter = NULL;
+    const GList *iter = NULL;
+    uint32_t instance_state = 0; // State of just this instance
 
-    if (rsc->children) {
-
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-            clone_update_pseudo_status(child, stopping, starting, active);
+    // If the instance has its own children (a cloned group), check each one
+    if (instance->children != NULL) {
+        for (iter = instance->children; iter != NULL; iter = iter->next) {
+            check_instance_state((const pe_resource_t *) iter->data, state);
         }
-
         return;
     }
 
-    CRM_ASSERT(active != NULL);
-    CRM_ASSERT(starting != NULL);
-    CRM_ASSERT(stopping != NULL);
-
-    if (rsc->running_on) {
-        *active = TRUE;
+    if (instance->running_on != NULL) {
+        instance_state |= instance_active;
     }
 
-    gIter = rsc->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
+    // Check each of the instance's actions for runnable start or stop
+    for (iter = instance->actions;
+         (iter != NULL) && !pcmk_all_flags_set(instance_state,
+                                               instance_starting
+                                               |instance_stopping);
+         iter = iter->next) {
 
-        if (*starting && *stopping) {
-            return;
+        const pe_action_t *action = (const pe_action_t *) iter->data;
 
-        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
-            pe_rsc_trace(rsc, "Skipping optional: %s", action->uuid);
-            continue;
-
-        } else if (!pcmk_any_flags_set(action->flags,
-                                       pe_action_pseudo|pe_action_runnable)) {
-            pe_rsc_trace(rsc, "Skipping unrunnable: %s", action->uuid);
-            continue;
-
-        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)) {
-            pe_rsc_trace(rsc, "Stopping due to: %s", action->uuid);
-            *stopping = TRUE;
-
-        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)) {
-            if (!pcmk_is_set(action->flags, pe_action_runnable)) {
-                pe_rsc_trace(rsc, "Skipping pseudo-op: %s run=%d, pseudo=%d",
-                             action->uuid,
-                             pcmk_is_set(action->flags, pe_action_runnable),
-                             pcmk_is_set(action->flags, pe_action_pseudo));
+        if (pcmk__str_eq(RSC_START, action->task, pcmk__str_none)) {
+            if (!pcmk_is_set(action->flags, pe_action_optional)
+                && pcmk_is_set(action->flags, pe_action_runnable)) {
+                pe_rsc_trace(instance, "Instance is starting due to %s",
+                             action->uuid);
+                instance_state |= instance_starting;
             } else {
-                pe_rsc_trace(rsc, "Starting due to: %s", action->uuid);
-                pe_rsc_trace(rsc, "%s run=%d, pseudo=%d",
-                             action->uuid,
-                             pcmk_is_set(action->flags, pe_action_runnable),
-                             pcmk_is_set(action->flags, pe_action_pseudo));
-                *starting = TRUE;
+                pe_rsc_trace(instance,
+                             "%s doesn't affect %s state (unrunnable)",
+                             action->uuid, instance->id);
+            }
+
+        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_none)) {
+            if (!pcmk_is_set(action->flags, pe_action_optional)
+                && pcmk_any_flags_set(action->flags,
+                                      // Pseudo-stops are implied by fencing
+                                      pe_action_pseudo|pe_action_runnable)) {
+                pe_rsc_trace(instance, "Instance is stopping due to %s",
+                             action->uuid);
+                instance_state |= instance_stopping;
+            } else {
+                pe_rsc_trace(instance,
+                             "%s doesn't affect %s state (unrunnable)",
+                             action->uuid, instance->id);
             }
         }
     }
+
+    if (pcmk_all_flags_set(instance_state,
+                           instance_starting|instance_stopping)) {
+        instance_state |= instance_restarting;
+    }
+    *state |= instance_state;
 }
 
 void
@@ -463,10 +475,7 @@ clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
                             notify_data_t **start_notify,
                             notify_data_t **stop_notify)
 {
-    gboolean child_active = FALSE;
-    gboolean child_starting = FALSE;
-    gboolean child_stopping = FALSE;
-    gboolean allow_dependent_migrations = TRUE;
+    uint32_t state = 0;
 
     pe_action_t *stop = NULL;
     pe_action_t *stopped = NULL;
@@ -478,26 +487,21 @@ clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
 
     for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        gboolean starting = FALSE;
-        gboolean stopping = FALSE;
 
         child_rsc->cmds->create_actions(child_rsc);
-        clone_update_pseudo_status(child_rsc, &stopping, &starting, &child_active);
-        if (stopping && starting) {
-            allow_dependent_migrations = FALSE;
-        }
-
-        child_stopping |= stopping;
-        child_starting |= starting;
+        check_instance_state(child_rsc, &state);
     }
 
     /* start */
-    start = pe__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
-    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
+    start = pe__new_rsc_pseudo_action(rsc, RSC_START,
+                                      !pcmk_is_set(state, instance_starting),
+                                      true);
+    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED,
+                                        !pcmk_is_set(state, instance_starting),
                                         false);
     started->priority = INFINITY;
 
-    if (child_active || child_starting) {
+    if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
         pe__set_action_flags(started, pe_action_runnable);
     }
 
@@ -507,11 +511,14 @@ clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
     }
 
     /* stop */
-    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
-    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
+    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP,
+                                     !pcmk_is_set(state, instance_stopping),
+                                     true);
+    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED,
+                                        !pcmk_is_set(state, instance_stopping),
                                         true);
     stopped->priority = INFINITY;
-    if (allow_dependent_migrations) {
+    if (!pcmk_is_set(state, instance_restarting)) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
