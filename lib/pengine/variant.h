@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,10 +21,7 @@ typedef struct clone_variant_data_s {
 
     int total_clones;
 
-    // @TODO make these a bitmask
-    gboolean ordered;
-    bool added_promotion_scores;
-    bool added_promoted_constraints;
+    uint32_t flags; // Group of enum pe__clone_flags
 
     notify_data_t *stop_notify;
     notify_data_t *start_notify;

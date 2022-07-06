@@ -37,7 +37,7 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
         /* make clang analyzer happy */
         goto bail;
 
-    } else if (!pcmk__node_available(node)) {
+    } else if (!pcmk__node_available(node, false, false)) {
         goto bail;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -188,7 +188,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_node_t *node = nIter->data;
 
         node->count = 0;
-        if (pcmk__node_available(node)) {
+        if (pcmk__node_available(node, false, false)) {
             available_nodes++;
         }
     }
@@ -226,7 +226,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                      child->id, child_node->details->uname, max - allocated,
                      max);
 
-        if (!pcmk__node_available(child_node) || (child_node->weight < 0)) {
+        if (!pcmk__node_available(child_node, true, false)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
                          child_node->details->uname, child->id);
             continue;
@@ -438,13 +438,11 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *last_stop = NULL;
     pe_action_t *last_start = NULL;
     GList *gIter = NULL;
-    clone_variant_data_t *clone_data = NULL;
 
-    get_clone_variant_data(clone_data, rsc);
-
-    if (clone_data->ordered == FALSE) {
+    if (!pe__clone_is_ordered(rsc)) {
         return;
     }
+
     /* we have to maintain a consistent sorted child list when building order constraints */
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
 
@@ -555,9 +553,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_resource_t *last_rsc = NULL;
     GList *gIter;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
+    bool ordered = pe__clone_is_ordered(rsc);
 
     pe_rsc_trace(rsc, "Internal constraints for %s", rsc->id);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
@@ -574,7 +570,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
                                      pe_order_runnable_left, data_set);
     }
 
-    if (clone_data->ordered) {
+    if (ordered) {
         /* we have to maintain a consistent sorted child list when building order constraints */
         rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance_number);
     }
@@ -588,7 +584,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
                            data_set);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
                                      pe_order_implies_then_printed, data_set);
-        if (clone_data->ordered && last_rsc) {
+        if (ordered && (last_rsc != NULL)) {
             pcmk__order_starts(last_rsc, child_rsc, pe_order_optional,
                                data_set);
         }
@@ -597,7 +593,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
                           data_set);
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
                                      pe_order_implies_then_printed, data_set);
-        if (clone_data->ordered && last_rsc) {
+        if (ordered && (last_rsc != NULL)) {
             pcmk__order_stops(child_rsc, last_rsc, pe_order_optional, data_set);
         }
 

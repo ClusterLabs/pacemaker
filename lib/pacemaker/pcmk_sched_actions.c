@@ -1747,7 +1747,9 @@ pcmk__handle_rsc_config_changes(pe_working_set_t *data_set)
          * unless it's in maintenance mode, in which case we still need to
          * cancel any existing recurring monitors.
          */
-        if (node->details->maintenance || pcmk__node_available(node)) {
+        if (node->details->maintenance
+            || pcmk__node_available(node, false, false)) {
+
             char *xpath = NULL;
             xmlNode *history = NULL;
 

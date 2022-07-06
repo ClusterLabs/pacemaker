@@ -9,6 +9,7 @@
 
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
+
 #  include <stdint.h>
 #  include <string.h>
 #  include <crm/pengine/status.h>
@@ -16,6 +17,21 @@
 #  include <crm/common/internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/output_internal.h>
+
+enum pe__clone_flags {
+    // Whether instances should be started sequentially
+    pe__clone_ordered               = (1 << 0),
+
+    // Whether promotion scores have been added
+    pe__clone_promotion_added       = (1 << 1),
+
+    // Whether promotion constraints have been added
+    pe__clone_promotion_constrained = (1 << 2),
+};
+
+bool pe__clone_is_ordered(pe_resource_t *clone);
+int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
+
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
@@ -356,9 +372,7 @@ void pe__show_node_weights_as(const char *file, const char *function,
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes), (data_set))
 
-/* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
-extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
 
 extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
 
