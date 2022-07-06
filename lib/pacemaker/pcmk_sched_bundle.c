@@ -32,21 +32,27 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
     return FALSE;
 }
 
-static GList *
-get_container_list(const pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief Get a list of a bundle's containers
+ *
+ * \param[in] bundle  Bundle resource
+ *
+ * \return Newly created list of \p bundle's containers
+ * \note It is the caller's responsibility to free the result with
+ *       g_list_free().
+ */
+GList *
+pcmk__bundle_containers(const pe_resource_t *bundle)
 {
     GList *containers = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
 
-    if (rsc->variant == pe_container) {
-        pe__bundle_variant_data_t *data = NULL;
+    get_bundle_variant_data(data, bundle);
+    for (GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        pe__bundle_replica_t *replica = iter->data;
 
-        get_bundle_variant_data(data, rsc);
-        for (GList *gIter = data->replicas; gIter != NULL;
-             gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
-
-            containers = g_list_append(containers, replica->container);
-        }
+        containers = g_list_append(containers, replica->container);
     }
     return containers;
 }
@@ -55,7 +61,7 @@ static inline GList *
 get_containers_or_children(const pe_resource_t *rsc)
 {
     return (rsc->variant == pe_container)?
-           get_container_list(rsc) : rsc->children;
+           pcmk__bundle_containers(rsc) : rsc->children;
 }
 
 /*!
@@ -78,7 +84,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     get_bundle_variant_data(bundle_data, rsc);
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    containers = get_container_list(rsc);
+    containers = pcmk__bundle_containers(rsc);
 
     pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
@@ -172,7 +178,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
 
     CRM_CHECK(rsc != NULL, return);
 
-    containers = get_container_list(rsc);
+    containers = pcmk__bundle_containers(rsc);
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -558,7 +564,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
         }
     }
 
-    containers = get_container_list(action->rsc);
+    containers = pcmk__bundle_containers(action->rsc);
     flags = summary_action_flags(action, containers, node);
     g_list_free(containers);
     return flags;
