@@ -163,16 +163,14 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     clone_variant_data_t *clone_data = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
 
-            if (node_to_be_promoted_on(child) == NULL) {
-                pe_rsc_trace(rsc,
-                             "%s can't be promoted because member %s can't",
-                             rsc->id, child->id);
-                return NULL;
-            }
+        if (node_to_be_promoted_on(child) == NULL) {
+            pe_rsc_trace(rsc,
+                         "%s can't be promoted because member %s can't",
+                         rsc->id, child->id);
+            return NULL;
         }
     }
 
