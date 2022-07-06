@@ -215,7 +215,7 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
              * it is just as good as the chosen node.
              *
              * We don't do this for unique clone instances, because
-             * distribute_children() has already assigned instances to their
+             * pcmk__assign_instances() has already assigned instances to their
              * running nodes when appropriate, and if we get here, we don't want
              * remaining unassigned instances to prefer a node that's already
              * running another instance.

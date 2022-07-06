@@ -682,9 +682,8 @@ void pcmk__output_bundle_actions(pe_resource_t *rsc);
 // Clone instances or bundle replica containers (pcmk_sched_instances.c)
 
 G_GNUC_INTERNAL
-void distribute_children(pe_resource_t *collective, GList *instances,
-                         int max_total, int max_per_node,
-                         pe_working_set_t *data_set);
+void pcmk__assign_instances(pe_resource_t *collective, GList *instances,
+                            int max_total, int max_per_node);
 
 
 // Injections (pcmk_injections.c)

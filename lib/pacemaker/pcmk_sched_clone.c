@@ -78,8 +78,8 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    distribute_children(rsc, rsc->children, clone_data->clone_max,
-                        clone_data->clone_node_max, rsc->cluster);
+    pcmk__assign_instances(rsc, rsc->children, clone_data->clone_max,
+                           clone_data->clone_node_max);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);

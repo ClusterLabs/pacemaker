@@ -296,9 +296,18 @@ preferred_node(const pe_resource_t *rsc, const pe_resource_t *instance,
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Assign collective instances to nodes
+ *
+ * \param[in,out] collective    Clone or bundle resource being assigned
+ * \param[in,out] instances     List of clone instances or bundle containers
+ * \param[in]     max_total     Maximum instances to assign in total
+ * \param[in]     max_per_node  Maximum instances to assign to any one node
+ */
 void
-distribute_children(pe_resource_t *collective, GList *instances, int max_total,
-                    int max_per_node, pe_working_set_t *data_set)
+pcmk__assign_instances(pe_resource_t *collective, GList *instances,
+                       int max_total, int max_per_node)
 {
     // Reuse node count to track number of assigned instances
     unsigned int available_nodes = reset_allowed_node_counts(collective);
@@ -314,7 +323,7 @@ distribute_children(pe_resource_t *collective, GList *instances, int max_total,
     pe_resource_t *instance = NULL;
     const pe_node_t *current = NULL;
 
-    if(available_nodes) {
+    if (available_nodes > 0) {
         optimal_per_node = max_total / available_nodes;
     }
     if (optimal_per_node < 1) {
@@ -322,13 +331,15 @@ distribute_children(pe_resource_t *collective, GList *instances, int max_total,
     }
 
     pe_rsc_debug(collective,
-                 "Allocating up to %d %s instances to a possible %u nodes "
+                 "Assigning up to %d %s instance%s to up to %d node%s "
                  "(at most %d per host, %d optimal)",
-                 max_total, collective->id, available_nodes, max_per_node,
-                 optimal_per_node);
+                 max_total, collective->id, pcmk__plural_s(max_total),
+                 available_nodes, pcmk__plural_s(available_nodes),
+                 max_per_node, optimal_per_node);
 
-    /* Pre-allocate as many instances as we can to their current location */
-    for (iter = instances; iter != NULL && assigned < max_total; iter = iter->next) {
+    // Assign as many instances as possible to their current location
+    for (iter = instances; (iter != NULL) && (assigned < max_total);
+         iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
         append_parent_colocation(instance->parent, instance, all_coloc);
@@ -336,45 +347,46 @@ distribute_children(pe_resource_t *collective, GList *instances, int max_total,
         current = preferred_node(collective, instance, optimal_per_node);
         if ((current != NULL)
             && assign_instance(instance, current, all_coloc, max_per_node)) {
-            pe_rsc_trace(collective, "Pre-allocated %s to %s", instance->id,
-                         pe__node_name(current));
+            pe_rsc_trace(collective, "Assigned %s to current node %s",
+                         instance->id, pe__node_name(current));
             assigned++;
         }
     }
 
-    pe_rsc_trace(collective, "Done pre-allocating (%d of %d)",
-                 assigned, max_total);
+    pe_rsc_trace(collective, "Assigned %d of %d instance%s to current node",
+                 assigned, max_total, pcmk__plural_s(max_total));
 
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
         if (instance->running_on != NULL) {
-            pe_node_t *parent_node = NULL;
-
             current = pe__current_node(instance);
-            parent_node = pcmk__top_allowed_node(instance, current);
-            if (parent_node == NULL) {
+            if (pcmk__top_allowed_node(instance, current) == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
                         instance->id, pe__node_name(current));
             }
         }
 
         if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
-        } else if (assigned >= max_total) {
+            continue; // Already assigned
+        }
+
+        if (assigned >= max_total) {
             pe_rsc_debug(collective,
-                         "Child %s not allocated - limit reached %d %d",
-                         instance->id, assigned, max_total);
-            resource_location(instance, NULL, -INFINITY, "clone:limit_reached",
-                              data_set);
-        } else {
-            if (assign_instance(instance, NULL, all_coloc, max_per_node)) {
-                assigned++;
-            }
+                         "Not assigning %s because maximum %d instances "
+                         "already assigned",
+                         instance->id, max_total);
+            resource_location(instance, NULL, -INFINITY,
+                              "collective_limit_reached", collective->cluster);
+
+        } else if (assign_instance(instance, NULL, all_coloc, max_per_node)) {
+            assigned++;
         }
     }
 
-    pe_rsc_debug(collective, "Allocated %d %s instances of a possible %d",
-                 assigned, collective->id, max_total);
+    pe_rsc_debug(collective, "Assigned %d of %d possible instance%s of %s",
+                 assigned, max_total, pcmk__plural_s(max_total),
+                 collective->id);
 }
 
 static void

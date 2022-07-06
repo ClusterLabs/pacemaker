@@ -84,8 +84,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     containers = g_list_sort(containers, pcmk__cmp_instance);
-    distribute_children(rsc, containers, bundle_data->nreplicas,
-                        bundle_data->nreplicas_per_host, rsc->cluster);
+    pcmk__assign_instances(rsc, containers, bundle_data->nreplicas,
+                           bundle_data->nreplicas_per_host);
     g_list_free(containers);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
