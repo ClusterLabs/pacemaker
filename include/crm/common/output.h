@@ -65,12 +65,14 @@ typedef enum {
     pcmk_show_pending       = 1 << 7,
     pcmk_show_rsc_only      = 1 << 8,
     pcmk_show_failed_detail = 1 << 9,
+    pcmk_show_feature_set   = 1 << 10,
 } pcmk_show_opt_e;
 
 #define pcmk_show_details   (pcmk_show_clone_detail     \
                              | pcmk_show_node_id        \
                              | pcmk_show_implicit_rscs  \
-                             | pcmk_show_failed_detail)
+                             | pcmk_show_failed_detail  \
+                             | pcmk_show_feature_set)
 
 #ifdef __cplusplus
 }

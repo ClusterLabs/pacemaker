@@ -1,0 +1,3 @@
+
+pcmk__native_allocate: migrator allocation score on node1: 0
+pcmk__native_allocate: migrator allocation score on node2: -INFINITY

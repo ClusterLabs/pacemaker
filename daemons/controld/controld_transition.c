@@ -15,21 +15,21 @@
 
 #include <pacemaker-controld.h>
 
-extern crm_graph_functions_t te_graph_fns;
+extern pcmk__graph_functions_t te_graph_fns;
 
 static void
 global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
 {
 }
 
-static crm_graph_t *
+static pcmk__graph_t *
 create_blank_graph(void)
 {
-    crm_graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
+    pcmk__graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
 
-    a_graph->complete = TRUE;
+    a_graph->complete = true;
     a_graph->abort_reason = "DC Takeover";
-    a_graph->completion_action = tg_restart;
+    a_graph->completion_action = pcmk__graph_restart;
     return a_graph;
 }
 
@@ -126,14 +126,14 @@ do_te_invoke(long long action,
     if (action & A_TE_CANCEL) {
         crm_debug("Cancelling the transition: %s",
                   transition_graph->complete ? "inactive" : "active");
-        abort_transition(INFINITY, tg_restart, "Peer Cancelled", NULL);
-        if (transition_graph->complete == FALSE) {
+        abort_transition(INFINITY, pcmk__graph_restart, "Peer Cancelled", NULL);
+        if (!transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
     } else if (action & A_TE_HALT) {
-        abort_transition(INFINITY, tg_stop, "Peer Halt", NULL);
-        if (transition_graph->complete == FALSE) {
+        abort_transition(INFINITY, pcmk__graph_wait, "Peer Halt", NULL);
+        if (!transition_graph->complete) {
             crmd_fsa_stall(FALSE);
         }
 
@@ -151,15 +151,20 @@ do_te_invoke(long long action,
             return;
         }
 
-        if (transition_graph->complete == FALSE) {
+        if (!transition_graph->complete) {
             crm_info("Another transition is already active");
-            abort_transition(INFINITY, tg_restart, "Transition Active", NULL);
+            abort_transition(INFINITY, pcmk__graph_restart, "Transition Active",
+                             NULL);
             return;
         }
 
-        if (fsa_pe_ref == NULL || !pcmk__str_eq(fsa_pe_ref, ref, pcmk__str_casei)) {
-            crm_info("Transition is redundant: %s vs. %s", crm_str(fsa_pe_ref), crm_str(ref));
-            abort_transition(INFINITY, tg_restart, "Transition Redundant", NULL);
+        if ((fsa_pe_ref == NULL)
+            || !pcmk__str_eq(fsa_pe_ref, ref, pcmk__str_none)) {
+            crm_info("Transition is redundant: %s expected but %s received",
+                     pcmk__s(fsa_pe_ref, "no reference"),
+                     pcmk__s(ref, "no reference"));
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Transition Redundant", NULL);
         }
 
         graph_data = input->xml;

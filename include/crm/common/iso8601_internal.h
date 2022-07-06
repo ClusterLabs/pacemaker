@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,8 +19,7 @@ typedef struct pcmk__time_us pcmk__time_hr_t;
 
 pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt);
 void pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt);
-pcmk__time_hr_t *pcmk__time_timeval_hr_convert(pcmk__time_hr_t *target,
-                                               struct timeval *tv);
+pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
 pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
 char *pcmk__time_format_hr(const char *format, pcmk__time_hr_t *hr_dt);

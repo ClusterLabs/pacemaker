@@ -94,7 +94,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     int length = 0;
     bool result = false;
 
-    pcmk__ban_insufficient_capacity(rsc, &prefer, data_set);
+    pcmk__ban_insufficient_capacity(rsc, &prefer);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to != NULL;
@@ -125,12 +125,12 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
          * An alternative would be to favor the preferred node even if the best
          * node is better, when the best node's weight is less than INFINITY.
          */
-        } else if ((chosen->weight < 0) || (chosen->weight < best->weight)) {
+        } else if (chosen->weight < best->weight) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unsuitable",
                          chosen->details->uname, rsc->id);
             chosen = NULL;
 
-        } else if (!pcmk__node_available(chosen)) {
+        } else if (!pcmk__node_available(chosen, true, false)) {
             pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
                          chosen->details->uname, rsc->id);
             chosen = NULL;
@@ -152,7 +152,8 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                      chosen ? chosen->details->uname : "<none>", rsc->id, length);
 
         if (!pe_rsc_is_unique_clone(rsc->parent)
-            && chosen && (chosen->weight > 0) && pcmk__node_available(chosen)) {
+            && (chosen != NULL) && (chosen->weight > 0) // Zero not acceptable
+            && pcmk__node_available(chosen, false, false)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
              *
@@ -164,9 +165,11 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
              */
             pe_node_t *running = pe__current_node(rsc);
 
-            if ((running != NULL) && !pcmk__node_available(running)) {
+            if ((running != NULL)
+                && !pcmk__node_available(running, true, false)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
+
             } else if (running) {
                 for (GList *iter = nodes->next; iter; iter = iter->next) {
                     pe_node_t *tmp = (pe_node_t *) iter->data;
@@ -221,7 +224,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
-        if ((node->weight > best_score) && pcmk__node_available(node)
+        if ((node->weight > best_score) && pcmk__node_available(node, false, false)
             && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;
@@ -988,17 +991,18 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         }
 
         pe_rsc_trace(rsc, "Creating recurring action %s for %s on %s",
-                     ID(operation), rsc->id, crm_str(stop_node_uname));
+                     ID(operation), rsc->id,
+                     pcmk__s(stop_node_uname, "unknown node"));
 
         /* start a monitor for an already stopped resource */
         possible_matches = find_actions_exact(rsc->actions, key, stop_node);
         if (possible_matches == NULL) {
             pe_rsc_trace(rsc, "Marking %s mandatory on %s: not active", key,
-                         crm_str(stop_node_uname));
+                         pcmk__s(stop_node_uname, "unknown node"));
             is_optional = FALSE;
         } else {
             pe_rsc_trace(rsc, "Marking %s optional on %s: already active", key,
-                         crm_str(stop_node_uname));
+                         pcmk__s(stop_node_uname, "unknown node"));
             is_optional = TRUE;
             g_list_free(possible_matches);
         }
@@ -1035,7 +1039,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
                 crm_debug("%s\t   %s (cancelled : stop un-runnable)",
-                          crm_str(stop_node_uname), stopped_mon->uuid);
+                          pcmk__s(stop_node_uname, "<null>"),
+                          stopped_mon->uuid);
                 pe__clear_action_flags(stopped_mon, pe_action_runnable);
             }
 
@@ -1055,24 +1060,28 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         if (is_optional == FALSE && probe_is_optional && stop_is_optional
             && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             pe_rsc_trace(rsc, "Marking %s optional on %s due to unmanaged",
-                         key, crm_str(stop_node_uname));
+                         key, pcmk__s(stop_node_uname, "unknown node"));
             pe__set_action_flags(stopped_mon, pe_action_optional);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
-            pe_rsc_trace(rsc, "%s\t   %s (optional)", crm_str(stop_node_uname), stopped_mon->uuid);
+            pe_rsc_trace(rsc, "%s\t   %s (optional)",
+                         pcmk__s(stop_node_uname, "<null>"),
+                         stopped_mon->uuid);
         }
 
         if (stop_node->details->online == FALSE || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
-                         crm_str(stop_node_uname), stopped_mon->uuid);
+                         pcmk__s(stop_node_uname, "<null>"),
+                         stopped_mon->uuid);
             pe__clear_action_flags(stopped_mon, pe_action_runnable);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
             && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             crm_notice(" Start recurring %s (%us) for %s on %s", stopped_mon->task,
-                       interval_ms / 1000, rsc->id, crm_str(stop_node_uname));
+                       interval_ms / 1000, rsc->id,
+                       pcmk__s(stop_node_uname, "unknown node"));
         }
     }
 
@@ -1332,7 +1341,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
             // Resource was (possibly) incorrectly multiply active
             pe_proc_err("%s resource %s might be active on %u nodes (%s)",
-                        crm_str(class), rsc->id, num_all_active,
+                        pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                         recovery2text(rsc->recovery_type));
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
@@ -1369,8 +1378,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     if (current && chosen && current->details != chosen->details) {
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, crm_str(current->details->uname),
-                     crm_str(chosen->details->uname));
+                     rsc->id, pcmk__s(current->details->uname, "unknown node"),
+                     pcmk__s(chosen->details->uname, "unknown node"));
         is_moving = TRUE;
         need_stop = TRUE;
 
@@ -2057,7 +2066,10 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
         }
 
         if (rsc->partial_migration_target) {
-            if (rsc->partial_migration_target->details == current->details) {
+            if (rsc->partial_migration_target->details == current->details
+                // Only if the allocated node still is the migration target.
+                && rsc->allocated_to
+                && rsc->allocated_to->details == rsc->partial_migration_target->details) {
                 pe_rsc_trace(rsc,
                              "Skipping stop of %s on %s "
                              "because migration to %s in progress",
@@ -2463,7 +2475,9 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if (pcmk__is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+        || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);

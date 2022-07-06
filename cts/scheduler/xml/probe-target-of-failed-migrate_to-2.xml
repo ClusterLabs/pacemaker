@@ -1,0 +1,55 @@
+<cib crm_feature_set="3.15.0" validate-with="pacemaker-3.8" epoch="54" num_updates="11" admin_epoch="0" cib-last-written="Mon May  9 12:26:45 2022" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="have-watchdog" value="true" id="cib-bootstrap-options-have-watchdog"/>
+        <nvpair name="dc-version" value="2.1.2+20220509.89fa32d09-150300.1378.1-2.1.2+20220509.89fa32d09" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1648809766"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+    </nodes>
+    <resources>
+      <primitive id="st-sbd" class="stonith" type="external/sbd"/>
+      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy1-meta_attributes">
+          <nvpair name="allow-migrate" value="true" id="dummy1-meta_attributes-allow-migrate"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy1" rsc="dummy1" role="Started" score="INFINITY" node="node1"/>
+    </constraints>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.15.0" transition-key="3:1:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" transition-magic="0:0;3:1:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1652091783" exec-time="1344" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_failure_0" operation_key="dummy1_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.15.0" transition-key="5:2:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" transition-magic="0:1;5:2:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" exit-reason="" on_node="node1" call-id="12" rc-code="1" op-status="0" interval="0" last-rc-change="1652091880" exec-time="142" queue-time="0" migrate_source="node1" migrate_target="node2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.15.0" transition-key="5:4:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" transition-magic="0:0;5:4:0:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" exit-reason="" on_node="node1" call-id="14" rc-code="0" op-status="0" interval="0" last-rc-change="1652091894" exec-time="61" queue-time="0" migrate_source="node1" migrate_target="node2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params="  passwd  " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" uname="node2" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="st-sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="st-sbd_last_0" operation_key="st-sbd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.15.0" transition-key="1:6:7:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" transition-magic="0:7;1:6:7:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1652092136" exec-time="4" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.15.0" transition-key="2:6:7:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" transition-magic="0:7;2:6:7:dbc3dbdf-240c-4c26-8cfc-0d86416529e6" exit-reason="" on_node="node2" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1652092136" exec-time="25" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="  state  " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params="  passwd  " op-secure-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

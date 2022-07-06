@@ -108,20 +108,21 @@ print_patch(xmlNode *patch)
 {
     char *buffer = dump_xml_formatted(patch);
 
-    printf("%s\n", crm_str(buffer));
+    printf("%s", pcmk__s(buffer, "<null>\n"));
     free(buffer);
     fflush(stdout);
 }
 
+// \return Standard Pacemaker return code
 static int
 apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 {
-    int rc;
     xmlNode *output = copy_xml(input);
+    int rc = xml_apply_patchset(output, patch, as_cib);
 
-    rc = xml_apply_patchset(output, patch, as_cib);
-    if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not apply patch: %s\n", pcmk_strerror(rc));
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Could not apply patch: %s\n", pcmk_rc_str(rc));
         free_xml(output);
         return rc;
     }
@@ -134,11 +135,11 @@ apply_patch(xmlNode *input, xmlNode *patch, gboolean as_cib)
 
         version = crm_element_value(output, XML_ATTR_CRM_VERSION);
         buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, version);
-        crm_trace("Digest: %s\n", crm_str(buffer));
+        crm_trace("Digest: %s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
         free_xml(output);
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -202,6 +203,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
     }
 }
 
+// \return Standard Pacemaker return code
 static int
 generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
                gboolean as_cib, gboolean no_version)
@@ -238,7 +240,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     xml_accept_changes(object_2);
 
     if (output == NULL) {
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     patchset_process_digest(output, object_1, object_2, as_cib);
@@ -253,7 +255,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     xml_log_patchset(LOG_NOTICE, __func__, output);
     print_patch(output);
     free_xml(output);
-    return -pcmk_err_generic;
+    return pcmk_rc_error;
 }
 
 static GOptionContext *
@@ -295,6 +297,8 @@ main(int argc, char **argv)
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
     GOptionContext *context = build_arg_context(args);
+
+    int rc = pcmk_rc_ok;
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -352,12 +356,11 @@ main(int argc, char **argv)
     }
 
     if (options.apply) {
-        int ret = apply_patch(object_1, object_2, options.as_cib);
-        exit_code = crm_errno2exit(ret);
+        rc = apply_patch(object_1, object_2, options.as_cib);
     } else {
-        int ret = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
-        exit_code = crm_errno2exit(ret);
+        rc = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
     }
+    exit_code = pcmk_rc2exitc(rc);
 
 done:
     g_strfreev(processed_args);

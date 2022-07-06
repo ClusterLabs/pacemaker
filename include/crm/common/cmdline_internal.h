@@ -104,6 +104,20 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
 
 /*!
  * \internal
+ * \brief Prepare the command line for being added to a pcmk__output_t as the
+ *        request
+ *
+ * This performs various transformations on the command line arguments, such
+ * as surrounding arguments containing spaces with quotes and escaping any
+ * single quotes in the string.
+ *
+ * \param[in] argv The command line, typically as returned from
+ *                 pcmk__cmdline_preproc.
+ */
+gchar *pcmk__quote_cmdline(gchar **argv);
+
+/*!
+ * \internal
  * \brief Pre-process command line arguments to preserve compatibility with
  *        getopt behavior.
  *

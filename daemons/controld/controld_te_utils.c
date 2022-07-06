@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,15 +15,15 @@
 #include <pacemaker-controld.h>
 
 gboolean
-stop_te_timer(crm_action_timer_t * timer)
+stop_te_timer(pcmk__graph_action_t *action)
 {
-    if (timer == NULL) {
+    if (action == NULL) {
         return FALSE;
     }
-    if (timer->source_id != 0) {
+    if (action->timer != 0) {
         crm_trace("Stopping action timer");
-        g_source_remove(timer->source_id);
-        timer->source_id = 0;
+        g_source_remove(action->timer);
+        action->timer = 0;
     } else {
         crm_trace("Action timer was already stopped");
         return FALSE;
@@ -54,24 +54,24 @@ te_graph_trigger(gpointer user_data)
             break;
     }
 
-    if (transition_graph->complete == FALSE) {
-        enum transition_status graph_rc;
+    if (!transition_graph->complete) {
+        enum pcmk__graph_status graph_rc;
         int limit = transition_graph->batch_limit;
 
         transition_graph->batch_limit = throttle_get_total_job_limit(limit);
         graph_rc = pcmk__execute_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
-        if (graph_rc == transition_active) {
+        if (graph_rc == pcmk__graph_active) {
             crm_trace("Transition not yet complete");
             return TRUE;
 
-        } else if (graph_rc == transition_pending) {
+        } else if (graph_rc == pcmk__graph_pending) {
             crm_trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
-        if (graph_rc != transition_complete) {
+        if (graph_rc != pcmk__graph_complete) {
             crm_warn("Transition failed: %s",
                      pcmk__graph_status2text(graph_rc));
             pcmk__log_graph(LOG_NOTICE, transition_graph);
@@ -79,7 +79,7 @@ te_graph_trigger(gpointer user_data)
     }
 
     crm_debug("Transition %d is now complete", transition_graph->id);
-    transition_graph->complete = TRUE;
+    transition_graph->complete = true;
     notify_crmd(transition_graph);
 
     return TRUE;
@@ -96,7 +96,7 @@ static struct abort_timer_s {
     bool aborted;
     guint id;
     int priority;
-    enum transition_action action;
+    enum pcmk__graph_next action;
     const char *text;
 } abort_timer = { 0, };
 
@@ -118,7 +118,7 @@ abort_timer_popped(gpointer data)
  * \param[in] abort_text  Must be literal string
  */
 void
-abort_after_delay(int abort_priority, enum transition_action abort_action,
+abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                   const char *abort_text, guint delay_ms)
 {
     if (abort_timer.id) {
@@ -133,24 +133,20 @@ abort_after_delay(int abort_priority, enum transition_action abort_action,
 }
 
 static const char *
-abort2text(enum transition_action abort_action)
+abort2text(enum pcmk__graph_next abort_action)
 {
     switch (abort_action) {
-        case tg_done:
-            return "done";
-        case tg_stop:
-            return "stop";
-        case tg_restart:
-            return "restart";
-        case tg_shutdown:
-            return "shutdown";
+        case pcmk__graph_done:      return "done";
+        case pcmk__graph_wait:      return "stop";
+        case pcmk__graph_restart:   return "restart";
+        case pcmk__graph_shutdown:  return "shutdown";
     }
     return "unknown";
 }
 
 static bool
-update_abort_priority(crm_graph_t *graph, int priority,
-                      enum transition_action action, const char *abort_reason)
+update_abort_priority(pcmk__graph_t *graph, int priority,
+                      enum pcmk__graph_next action, const char *abort_reason)
 {
     bool change = FALSE;
 
@@ -179,7 +175,7 @@ update_abort_priority(crm_graph_t *graph, int priority,
 }
 
 void
-abort_transition_graph(int abort_priority, enum transition_action abort_action,
+abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
 {
     int add[] = { 0, 0, 0 };
@@ -198,8 +194,9 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         case S_ILLEGAL:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort %s suppressed: state=%s (complete=%d)",
-                     abort_text, fsa_state2string(fsa_state), transition_graph->complete);
+            crm_info("Abort %s suppressed: state=%s (%scomplete)",
+                     abort_text, fsa_state2string(fsa_state),
+                     (transition_graph->complete? "" : "in"));
             return;
         default:
             break;
@@ -208,7 +205,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
     abort_timer.aborted = TRUE;
     controld_expect_sched_reply(NULL);
 
-    if (transition_graph->complete == FALSE) {
+    if (!transition_graph->complete) {
         if(update_abort_priority(transition_graph, abort_priority, abort_action, abort_text)) {
             level = LOG_NOTICE;
         }

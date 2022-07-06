@@ -104,7 +104,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     request = pcmk__client_data2xml(c, data, &id, &flags);
     if (request == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "nack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, "nack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
@@ -297,7 +297,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
     if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
-                                    crm_ipc_server_event|crm_ipc_server_error);
+                                    crm_ipc_server_event);
 
         if (rc != pcmk_rc_ok) {
             crm_warn("%s notification of client %s failed: %s "
@@ -475,22 +475,26 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
 }
 
 static void
-handle_topology_change(xmlNode *match, bool remove) 
+remove_topology_level(xmlNode *match)
+{
+    int index = 0;
+    char *key = NULL;
+
+    CRM_CHECK(match != NULL, return);
+
+    key = stonith_level_key(match, fenced_target_by_unknown);
+    crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
+    topology_remove_helper(key, index);
+    free(key);
+}
+
+static void
+add_topology_level(xmlNode *match)
 {
     char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(match != NULL, return);
-    crm_trace("Updating %s", ID(match));
-
-    if(remove) {
-        int index = 0;
-        char *key = stonith_level_key(match, fenced_target_by_unknown);
-
-        crm_element_value_int(match, XML_ATTR_STONITH_INDEX, &index);
-        topology_remove_helper(key, index);
-        free(key);
-    }
 
     fenced_register_level(match, &desc, &result);
     fenced_send_level_notification(STONITH_OP_LEVEL_ADD, &result, desc);
@@ -535,7 +539,8 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
     for (lpc = 0; lpc < max; lpc++) {
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
-        handle_topology_change(match, TRUE);
+        remove_topology_level(match);
+        add_topology_level(match);
     }
 }
 
@@ -624,7 +629,7 @@ watchdog_device_update(void)
                              so we can skip that here
                            */
                     NULL);
-            rc = stonith_device_register(xml, NULL, TRUE);
+            rc = stonith_device_register(xml, TRUE);
             free_xml(xml);
             if (rc != pcmk_ok) {
                 crm_crit("Cannot register watchdog pseudo fence agent");
@@ -643,31 +648,21 @@ watchdog_device_update(void)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    xmlNode *stonith_enabled_xml = NULL;
-    bool stonith_enabled = false;
-    int rc = pcmk_rc_ok;
     long timeout_ms = 0;
+    xmlNode *stonith_watchdog_xml = NULL;
+    const char *value = NULL;
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
-                                           cib, LOG_NEVER);
-    rc = pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &stonith_enabled);
+    stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
+					    cib, LOG_NEVER);
+    if (stonith_watchdog_xml) {
+        value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+    if (value) {
+        timeout_ms = crm_get_msec(value);
+    }
 
-    if (rc != pcmk_rc_ok || stonith_enabled) {
-        xmlNode *stonith_watchdog_xml = NULL;
-        const char *value = NULL;
-
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
-                                                cib, LOG_NEVER);
-        if (stonith_watchdog_xml) {
-            value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
-        }
-        if (value) {
-            timeout_ms = crm_get_msec(value);
-        }
-
-        if (timeout_ms < 0) {
-            timeout_ms = pcmk__auto_watchdog_timeout();
-        }
+    if (timeout_ms < 0) {
+        timeout_ms = pcmk__auto_watchdog_timeout();
     }
 
     stonith_watchdog_timeout_ms = timeout_ms;
@@ -780,7 +775,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
                                               agent, params, rsc_provides);
         stonith_key_value_freeall(params, 1, 1);
-        rc = stonith_device_register(data, NULL, TRUE);
+        rc = stonith_device_register(data, TRUE);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(data);
     }
@@ -1083,13 +1078,14 @@ update_fencing_topology(const char *event, xmlNode * msg)
                     continue;
 
                 } else if(strcmp(op, "create") == 0) {
-                    handle_topology_change(change->children, FALSE);
+                    add_topology_level(change->children);
 
                 } else if(strcmp(op, "modify") == 0) {
                     xmlNode *match = first_named_child(change, XML_DIFF_RESULT);
 
                     if(match) {
-                        handle_topology_change(match->children, TRUE);
+                        remove_topology_level(match->children);
+                        add_topology_level(match->children);
                     }
 
                 } else if(strcmp(op, "delete") == 0) {
@@ -1136,11 +1132,8 @@ static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
-    xmlNode *stonith_enabled_xml = NULL;
-    static gboolean stonith_enabled_saved = TRUE;
     long timeout_ms_saved = stonith_watchdog_timeout_ms;
     gboolean need_full_refresh = FALSE;
-    bool value = false;
 
     if(!have_cib_devices) {
         crm_trace("Skipping updates until we get a full dump");
@@ -1191,32 +1184,18 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             return;
         }
         CRM_ASSERT(local_cib != NULL);
-        stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
+        need_full_refresh = TRUE;
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
     update_stonith_watchdog_timeout_ms(local_cib);
 
-    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
-                                           local_cib, LOG_NEVER);
-    if (pcmk__xe_get_bool_attr(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE, &value) == pcmk_rc_ok && !value) {
-        crm_trace("Ignoring CIB updates while fencing is disabled");
-        stonith_enabled_saved = FALSE;
-
-    } else if (stonith_enabled_saved == FALSE) {
-        crm_info("Updating fencing device and topology lists "
-                 "now that fencing is enabled");
-        stonith_enabled_saved = TRUE;
-        need_full_refresh = TRUE;
-
-    } else {
-        if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
+    if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
             need_full_refresh = TRUE;
-        } else {
+    } else {
             update_fencing_topology(event, msg);
             update_cib_stonith_devices(event, msg);
             watchdog_device_update();
-        }
     }
 
     if (need_full_refresh) {
@@ -1300,11 +1279,13 @@ static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
     {
         "stand-alone", no_argument, 0, 's',
-        NULL, pcmk__option_default
+        "\tDeprecated (will be removed in a future release)",
+        pcmk__option_default
     },
     {
         "stand-alone-w-cpg", no_argument, 0, 'c',
-        NULL, pcmk__option_default
+        "\tIntended for use in regression testing only",
+        pcmk__option_default
     },
     {
         "logfile", required_argument, 0, 'l',
@@ -1685,6 +1666,8 @@ main(int argc, char **argv)
 
     } else {
         stonith_our_uname = strdup("localhost");
+        crm_warn("Stand-alone mode is deprecated and will be removed "
+                 "in a future release");
     }
 
     init_device_list();

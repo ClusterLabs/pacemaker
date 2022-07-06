@@ -1,0 +1,59 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.5" epoch="130" num_updates="1" admin_epoch="0" cib-last-written="Tue Mar  2 22:28:10 2021" update-origin="node2" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2" execution-date="1614720501">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cts-batch-limit" name="batch-limit" value="1"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="true"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.24+20210224.d9b5dc705"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="migrator" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="migrator-meta">
+          <nvpair name="allow-migrate" value="true" id="migrator-allow-migrate"/>
+        </meta_attributes>
+        <instance_attributes id="migrator-params">
+          <nvpair name="op_sleep" value="15" id="migrator-params-op_sleep"/>
+        </instance_attributes>
+        <operations>
+          <op name="monitor" interval="10" id="migrator-monitor-20"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-migrator-on-node2" rsc="migrator" role="Started" node="node2" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="migrator_migrate_to_0" operation_key="migrator_migrate_to_0" operation="migrate_to" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:77:0:2e2d3490-f760-4654-a4e6-806dce73f515" transition-magic="0:0;5:77:0:2e2d3490-f760-4654-a4e6-806dce73f515" exit-reason="" on_node="node1" call-id="135" rc-code="0" op-status="0" interval="0" last-run="1614720480" last-rc-change="1614720480" exec-time="15358" queue-time="0" op-digest="1ac33e38474987b68b10b050ecc7f656" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="1ac33e38474987b68b10b050ecc7f656" op-secure-params=" passwd " op-secure-digest="1dcdc006c7875a75073c55ab07ebe16c" migrate_source="node1" migrate_target="node2"/>
+            <lrm_rsc_op id="migrator_monitor_10000" operation_key="migrator_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:74:0:2e2d3490-f760-4654-a4e6-806dce73f515" transition-magic="0:0;3:74:0:2e2d3490-f760-4654-a4e6-806dce73f515" exit-reason="" on_node="node1" call-id="132" rc-code="0" op-status="0" interval="10000" last-rc-change="1614720434" exec-time="15015" queue-time="0" op-digest="f97d45e6372eaffdbba0411797517b38" op-secure-params=" passwd " op-secure-digest="1dcdc006c7875a75073c55ab07ebe16c"/>
+            <lrm_rsc_op id="migrator_last_0" operation_key="migrator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:78:0:2e2d3490-f760-4654-a4e6-806dce73f515" transition-magic="0:0;3:78:0:2e2d3490-f760-4654-a4e6-806dce73f515" exit-reason="" on_node="node1" call-id="138" rc-code="0" op-status="0" interval="0" last-run="1614720496" last-rc-change="1614720496" exec-time="15016" queue-time="0" op-digest="1ac33e38474987b68b10b050ecc7f656" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="1ac33e38474987b68b10b050ecc7f656" op-secure-params=" passwd " op-secure-digest="1dcdc006c7875a75073c55ab07ebe16c" migrate_source="node1" migrate_target="node2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" uname="node2" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="migrator" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="migrator_last_0" operation_key="migrator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:72:0:2e2d3490-f760-4654-a4e6-806dce73f515" transition-magic="0:0;3:72:0:2e2d3490-f760-4654-a4e6-806dce73f515" exit-reason="" on_node="node2" call-id="158" rc-code="0" op-status="0" interval="0" last-run="1614720294" last-rc-change="1614720294" exec-time="15019" queue-time="0" op-digest="cbeaaa16c2714cbf081e2e15d7ebc4cd" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="cbeaaa16c2714cbf081e2e15d7ebc4cd" op-secure-params=" passwd " op-secure-digest="686a82d5c709da4aff75424cdb900012" migrate_source="node1" migrate_target="node2"/>
+            <lrm_rsc_op id="migrator_monitor_10000" operation_key="migrator_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:61:0:2e2d3490-f760-4654-a4e6-806dce73f515" transition-magic="0:0;3:61:0:2e2d3490-f760-4654-a4e6-806dce73f515" exit-reason="" on_node="node2" call-id="142" rc-code="0" op-status="0" interval="10000" last-rc-change="1614719260" exec-time="15017" queue-time="0" op-digest="7d9053a08587834c0e555c7e90239f22" op-secure-params=" passwd " op-secure-digest="686a82d5c709da4aff75424cdb900012"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -575,25 +575,42 @@ main(int argc, char **argv)
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
                                            options.params);
             rc = pcmk_legacy2rc(rc);
+            if (rc != pcmk_rc_ok) {
+                out->err(out, "Can't register device %s using agent %s: %s",
+                         device, options.agent, pcmk_rc_str(rc));
+            }
             break;
 
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
             rc = pcmk_legacy2rc(rc);
+            if (rc != pcmk_rc_ok) {
+                out->err(out, "Can't unregister device %s: %s",
+                         device, pcmk_rc_str(rc));
+            }
             break;
 
         case 'd':
             rc = pcmk__fence_unregister_level(st, target, options.fence_level);
+            if (rc != pcmk_rc_ok) {
+                out->err(out, "Can't unregister topology level %d for %s: %s",
+                         options.fence_level, target, pcmk_rc_str(rc));
+            }
             break;
 
         case 'r':
             rc = pcmk__fence_register_level(st, target, options.fence_level, options.devices);
+            if (rc != pcmk_rc_ok) {
+                out->err(out, "Can't register topology level %d for %s: %s",
+                         options.fence_level, target, pcmk_rc_str(rc));
+            }
             break;
 
         case 'M':
             rc = pcmk__fence_metadata(out, st, options.agent, options.timeout*1000);
             if (rc != pcmk_rc_ok) {
-                out->err(out, "Can't get fence agent meta-data: %s", pcmk_strerror(rc));
+                out->err(out, "Can't get fence agent meta-data: %s",
+                         pcmk_rc_str(rc));
             }
 
             break;

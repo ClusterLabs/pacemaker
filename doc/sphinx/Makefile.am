@@ -155,7 +155,7 @@ if BUILD_SPHINX_DOCS
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
 	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
-		"$(RSYNC_DEST)"
+		"$(RSYNC_DEST)/$(PACKAGE)/doc"
 
 all-local:
 	@for book in $(BOOKS); do					\

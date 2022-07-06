@@ -1587,30 +1587,40 @@ pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt)
     };
 }
 
+/*!
+ * \internal
+ * \brief Return the current time as a high-resolution time
+ *
+ * \param[out] epoch  If not NULL, this will be set to seconds since epoch
+ *
+ * \return Newly allocated high-resolution time set to the current time
+ */
 pcmk__time_hr_t *
-pcmk__time_timeval_hr_convert(pcmk__time_hr_t *target, struct timeval *tv)
+pcmk__time_hr_now(time_t *epoch)
 {
+    struct timespec tv;
     crm_time_t dt;
-    pcmk__time_hr_t *ret;
+    pcmk__time_hr_t *hr;
 
-    crm_time_set_timet(&dt, &tv->tv_sec);
-    ret = pcmk__time_hr_convert(target, &dt);
-    if (ret) {
-        ret->useconds = tv->tv_usec;
+    qb_util_timespec_from_epoch_get(&tv);
+    if (epoch != NULL) {
+        *epoch = tv.tv_sec;
     }
-    return ret;
+    crm_time_set_timet(&dt, &(tv.tv_sec));
+    hr = pcmk__time_hr_convert(NULL, &dt);
+    if (hr != NULL) {
+        hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
+    }
+    return hr;
 }
 
 pcmk__time_hr_t *
 pcmk__time_hr_new(const char *date_time)
 {
     pcmk__time_hr_t *hr_dt = NULL;
-    struct timeval tv_now;
 
-    if (!date_time) {
-        if (gettimeofday(&tv_now, NULL) == 0) {
-            hr_dt = pcmk__time_timeval_hr_convert(NULL, &tv_now);
-        }
+    if (date_time == NULL) {
+        hr_dt = pcmk__time_hr_now(NULL);
     } else {
         crm_time_t *dt;
 

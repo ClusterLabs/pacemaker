@@ -1435,7 +1435,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
     p_name = (const char *)attr->name;
     p_value = crm_xml_escape((const char *)attr->children->content);
     buffer_print(*buffer, *max, *offset, " %s=\"%s\"",
-                 p_name, crm_str(p_value));
+                 p_name, pcmk__s(p_value, "<null>"));
     free(p_value);
 }
 
@@ -1493,7 +1493,7 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
                 }
 
                 buffer_print(buffer, max, offset, " %s=\"%s\"",
-                             p_name, crm_str(p_copy));
+                             p_name, pcmk__s(p_copy, "<null>"));
                 free(p_copy);
             }
 
@@ -2507,7 +2507,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
  *                         child of this XML node that matches \p update
  * \param[in,out] target   If not NULL, update this XML
  * \param[in]     update   Make the desired XML match this (must not be NULL)
- * \param[in]     as_diff  If true, expand "++" when making attributes match
+ * \param[in]     as_diff  If false, expand "++" when making attributes match
  *
  * \note At least one of \parent and \target must be non-NULL
  */
@@ -2553,14 +2553,15 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         target = create_xml_node(parent, object_name);
         CRM_CHECK(target != NULL, return);
 #if XML_PARSER_DEBUG
-        crm_trace("Added  <%s%s%s%s%s/>", crm_str(object_name),
+        crm_trace("Added  <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
                   object_href ? "=" : "",
                   object_href ? object_href_val : "");
 
     } else {
-        crm_trace("Found node <%s%s%s%s%s/> to update", crm_str(object_name),
+        crm_trace("Found node <%s%s%s%s%s/> to update",
+                  pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
                   object_href ? "=" : "",
@@ -2591,7 +2592,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     for (a_child = pcmk__xml_first_child(update); a_child != NULL;
          a_child = pcmk__xml_next(a_child)) {
 #if XML_PARSER_DEBUG
-        crm_trace("Updating child <%s%s%s%s%s/>", crm_str(object_name),
+        crm_trace("Updating child <%s%s%s%s%s/>",
+                  pcmk__s(object_name, "<null>"),
                   object_href ? " " : "",
                   object_href ? object_href : "",
                   object_href ? "=" : "",
@@ -2601,7 +2603,7 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
     }
 
 #if XML_PARSER_DEBUG
-    crm_trace("Finished with <%s%s%s%s%s/>", crm_str(object_name),
+    crm_trace("Finished with <%s%s%s%s%s/>", pcmk__s(object_name, "<null>"),
               object_href ? " " : "",
               object_href ? object_href : "",
               object_href ? "=" : "",
@@ -2856,7 +2858,6 @@ crm_xml_init(void)
 void
 crm_xml_cleanup(void)
 {
-    crm_info("Cleaning up memory from libxml2");
     crm_schema_cleanup();
     xmlCleanupParser();
 }
@@ -2887,8 +2888,8 @@ expand_idref(xmlNode * input, xmlNode * top)
         if (result == NULL) {
             char *nodePath = (char *)xmlGetNodePath(top);
 
-            crm_err("No match for %s found in %s: Invalid configuration", xpath_string,
-                    crm_str(nodePath));
+            crm_err("No match for %s found in %s: Invalid configuration",
+                    xpath_string, pcmk__s(nodePath, "unrecognizable path"));
             free(nodePath);
         }
         free(xpath_string);

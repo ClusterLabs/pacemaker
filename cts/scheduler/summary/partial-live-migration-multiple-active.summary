@@ -1,0 +1,25 @@
+Using the original execution date of: 2021-03-02 21:28:21Z
+Current cluster status:
+  * Node List:
+    * Node node2: standby (with active resources)
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * migrator	(ocf:pacemaker:Dummy):	 Started node2
+
+Transition Summary:
+  * Move       migrator     ( node2 -> node1 )
+
+Executing Cluster Transition:
+  * Resource action: migrator        stop on node2
+  * Resource action: migrator        start on node1
+  * Resource action: migrator        monitor=10000 on node1
+Using the original execution date of: 2021-03-02 21:28:21Z
+
+Revised Cluster Status:
+  * Node List:
+    * Node node2: standby
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * migrator	(ocf:pacemaker:Dummy):	 Started node1

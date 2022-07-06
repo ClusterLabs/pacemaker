@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ void te_update_confirm(const char *event, xmlNode * msg);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
-crm_graph_t *transition_graph;
+pcmk__graph_t *transition_graph;
 crm_trigger_t *transition_trigger = NULL;
 
 /* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
@@ -50,7 +50,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     xml_log_patchset(LOG_TRACE, __func__, diff);
     if (cib_config_changed(NULL, NULL, &diff)) {
-        abort_transition(INFINITY, tg_restart, "Non-status change", diff);
+        abort_transition(INFINITY, pcmk__graph_restart, "Non-status change",
+                         diff);
         goto bail;              /* configuration changed */
     }
 
@@ -61,7 +62,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Ticket attribute: update", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Ticket attribute: update", aborted);
         goto bail;
 
     }
@@ -74,7 +76,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Ticket attribute: removal", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Ticket attribute: removal", aborted);
         goto bail;
     }
     freeXpathObject(xpathObj);
@@ -87,7 +90,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     if (numXpathResults(xpathObj) > 0) {
         xmlNode *aborted = getXpathResult(xpathObj, 0);
 
-        abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Transient attribute: removal", aborted);
         goto bail;
 
     }
@@ -114,7 +118,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
                   max);
         crm_log_xml_trace(diff, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
+        abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
+                         NULL);
         goto bail;
     }
 
@@ -123,8 +128,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
         if (shutdown_lock_cleared(lrm_resource)) {
             // @TODO would be more efficient to abort once after transition done
-            abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
-                             lrm_resource);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Shutdown lock cleared", lrm_resource);
             // Still process results, so we stop timers and update failcounts
         }
     }
@@ -170,12 +175,13 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         if (numXpathResults(op_match) == 0) {
             /* Prevent false positives by matching cancelations too */
             const char *node = get_node_id(match);
-            crm_action_t *cancelled = get_cancel_action(op_id, node);
+            pcmk__graph_action_t *cancelled = get_cancel_action(op_id, node);
 
             if (cancelled == NULL) {
                 crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
                           node);
-                abort_transition(INFINITY, tg_restart, "Resource op removal", match);
+                abort_transition(INFINITY, pcmk__graph_restart,
+                                 "Resource op removal", match);
                 freeXpathObject(op_match);
                 free(rsc_op_xpath);
                 goto bail;
@@ -203,7 +209,7 @@ process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
     }
     if (shutdown_lock_cleared(lrm_resource)) {
         // @TODO would be more efficient to abort once after transition done
-        abort_transition(INFINITY, tg_restart, "Shutdown lock cleared",
+        abort_transition(INFINITY, pcmk__graph_restart, "Shutdown lock cleared",
                          lrm_resource);
     }
 }
@@ -241,7 +247,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         && xml->children && xml->children->next) {
 
         crm_log_xml_trace(change, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
+        abort_transition(INFINITY, pcmk__graph_restart, "History refresh",
+                         NULL);
         return;
     }
 
@@ -283,24 +290,24 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
                   const char *reason)
 {
     char *node_uuid = NULL;
-    crm_action_t *down = NULL;
+    pcmk__graph_action_t *down = NULL;
 
     if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
 
     node_uuid = extract_node_uuid(xpath);
     if(node_uuid == NULL) {
         crm_err("Could not extract node ID from %s", xpath);
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
         return;
     }
 
     down = match_down_event(node_uuid);
     if (down == NULL) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
-        abort_transition(INFINITY, tg_restart, reason, change);
+        abort_transition(INFINITY, pcmk__graph_restart, reason, change);
     } else {
         crm_trace("Expecting changes to %s (%s)", node_uuid, xpath);
     }
@@ -330,8 +337,8 @@ process_op_deletion(const char *xpath, xmlNode *change)
 
     node_uuid = extract_node_uuid(xpath);
     if (confirm_cancel_action(key, node_uuid) == FALSE) {
-        abort_transition(INFINITY, tg_restart, "Resource operation removal",
-                         change);
+        abort_transition(INFINITY, pcmk__graph_restart,
+                         "Resource operation removal", change);
     }
     free(mutable_key);
     free(node_uuid);
@@ -384,7 +391,7 @@ process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
         process_status_diff(status, change, op, xpath);
     }
     if (config) {
-        abort_transition(INFINITY, tg_restart,
+        abort_transition(INFINITY, pcmk__graph_restart,
                          "Non-status-only change", change);
     }
 }
@@ -446,13 +453,14 @@ te_update_diff_v2(xmlNode *diff)
                   (name? " matched by " : ""), (name? name : ""));
 
         if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION)) {
-            abort_transition(INFINITY, tg_restart, "Configuration change",
-                             change);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Configuration change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
                    || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-            abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
@@ -529,8 +537,7 @@ te_update_diff(const char *event, xmlNode * msg)
                && fsa_state != S_IDLE
                && fsa_state != S_TRANSITION_ENGINE
                && fsa_state != S_POLICY_ENGINE) {
-        crm_trace("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
-                  transition_graph->complete);
+        crm_trace("Filter state=%s (complete)", fsa_state2string(fsa_state));
         return;
     }
 
@@ -556,60 +563,57 @@ te_update_diff(const char *event, xmlNode * msg)
     }
 }
 
-gboolean
+void
 process_te_message(xmlNode * msg, xmlNode * xml_data)
 {
-    const char *from = crm_element_value(msg, F_ORIG);
-    const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
-    const char *op = crm_element_value(msg, F_CRM_TASK);
-    const char *type = crm_element_value(msg, F_CRM_MSG_TYPE);
+    const char *value = NULL;
+    xmlXPathObject *xpathObj = NULL;
+    int nmatches = 0;
 
-    crm_trace("Processing %s (%s) message", op, ref);
-    crm_log_xml_trace(msg, "ipc");
+    CRM_CHECK(msg != NULL, return);
 
-    if (op == NULL) {
-        /* error */
-
-    } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-        crm_trace("Bad sys-to %s", crm_str(sys_to));
-        return FALSE;
-
-    } else if (pcmk__str_eq(op, CRM_OP_INVOKE_LRM, pcmk__str_casei)
-               && pcmk__str_eq(sys_from, CRM_SYSTEM_LRMD, pcmk__str_casei)
-/* 		  && pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_casei) */
-        ) {
-        xmlXPathObject *xpathObj = NULL;
-
-        crm_log_xml_trace(msg, "Processing (N)ACK");
-        crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, F_CRM_REFERENCE), from);
-
-        xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
-        if (numXpathResults(xpathObj)) {
-            int lpc = 0, max = numXpathResults(xpathObj);
-
-            for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-                const char *node = get_node_id(rsc_op);
-
-                process_graph_event(rsc_op, node);
-            }
-            freeXpathObject(xpathObj);
-
-        } else {
-            crm_log_xml_err(msg, "Invalid (N)ACK");
-            freeXpathObject(xpathObj);
-            return FALSE;
-        }
-
-    } else {
-        crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
+    // Transition requests must specify transition engine as subsystem
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    if (pcmk__str_empty(value)
+        || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
+        crm_info("Received invalid transition request: subsystem '%s' not '"
+                 CRM_SYSTEM_TENGINE "'", pcmk__s(value, ""));
+        return;
     }
 
-    crm_trace("finished processing message");
+    // Only the lrm_invoke command is supported as a transition request
+    value = crm_element_value(msg, F_CRM_TASK);
+    if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
+        crm_info("Received invalid transition request: command '%s' not '"
+                 CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
+        return;
+    }
 
-    return TRUE;
+    // Transition requests must be marked as coming from the executor
+    value = crm_element_value(msg, F_CRM_SYS_FROM);
+    if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
+        crm_info("Received invalid transition request: from '%s' not '"
+                 CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
+        return;
+    }
+
+    crm_debug("Processing transition request with ref='%s' origin='%s'",
+              pcmk__s(crm_element_value(msg, F_CRM_REFERENCE), ""),
+              pcmk__s(crm_element_value(msg, F_ORIG), ""));
+
+    xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
+    nmatches = numXpathResults(xpathObj);
+    if (nmatches == 0) {
+        crm_err("Received transition request with no results (bug?)");
+    } else {
+        for (int lpc = 0; lpc < nmatches; lpc++) {
+            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+            const char *node = get_node_id(rsc_op);
+
+            process_graph_event(rsc_op, node);
+        }
+    }
+    freeXpathObject(xpathObj);
 }
 
 void
@@ -623,34 +627,31 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 /*!
  * \brief Handle a timeout in node-to-node communication
  *
- * \param[in] data  Pointer to action timer
+ * \param[in] data  Pointer to graph action
  *
  * \return FALSE (indicating that source should be not be re-added)
  */
 gboolean
 action_timer_callback(gpointer data)
 {
-    crm_action_timer_t *timer = NULL;
+    pcmk__graph_action_t *action = (pcmk__graph_action_t *) data;
     const char *task = NULL;
     const char *on_node = NULL;
     const char *via_node = NULL;
 
     CRM_CHECK(data != NULL, return FALSE);
 
-    timer = (crm_action_timer_t *) data;
-    stop_te_timer(timer);
+    stop_te_timer(action);
 
-    CRM_CHECK(timer->action != NULL, return FALSE);
-
-    task = crm_element_value(timer->action->xml, XML_LRM_ATTR_TASK);
-    on_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_TARGET);
-    via_node = crm_element_value(timer->action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    via_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
     if (transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "
                    "(ignoring because transition not in progress)",
                    (on_node? on_node : ""), (task? task : "unknown action"),
-                   (via_node? via_node : "controller"), timer->timeout);
+                   (via_node? via_node : "controller"), action->timeout);
     } else {
         /* fail the action */
 
@@ -658,18 +659,18 @@ action_timer_callback(gpointer data)
                 "(action timeout plus cluster-delay)",
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
-                timer->timeout + transition_graph->network_delay);
-        pcmk__log_graph_action(LOG_ERR, timer->action);
+                action->timeout + transition_graph->network_delay);
+        pcmk__log_graph_action(LOG_ERR, action);
 
-        crm__set_graph_action_flags(timer->action, pcmk__graph_action_failed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
 
-        te_action_confirmed(timer->action, transition_graph);
-        abort_transition(INFINITY, tg_restart, "Action lost", NULL);
+        te_action_confirmed(action, transition_graph);
+        abort_transition(INFINITY, pcmk__graph_restart, "Action lost", NULL);
 
         // Record timeout in the CIB if appropriate
-        if ((timer->action->type == action_type_rsc)
+        if ((action->type == pcmk__rsc_graph_action)
             && controld_action_is_recordable(task)) {
-            controld_record_action_timeout(timer->action);
+            controld_record_action_timeout(action);
         }
     }
 

@@ -143,7 +143,7 @@ struct sigchld_data_s {
 volatile struct sigchld_data_s *last_sigchld_data = NULL;
 
 static void
-sigchld_handler()
+sigchld_handler(void)
 {
     // We received a SIGCHLD, so trigger pipe polling
     if ((last_sigchld_data != NULL)
@@ -179,7 +179,7 @@ sigchld_setup(struct sigchld_data_s *data)
     }
 
     // Set SIGCHLD handler
-    data->sa.sa_handler = sigchld_handler;
+    data->sa.sa_handler = (sighandler_t) sigchld_handler;
     data->sa.sa_flags = 0;
     sigemptyset(&(data->sa.sa_mask));
     if (sigaction(SIGCHLD, &(data->sa), &(data->old_sa)) < 0) {

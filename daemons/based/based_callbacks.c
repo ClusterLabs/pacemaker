@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -196,7 +196,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             }
         }
 
-        pcmk__ipc_send_ack(cib_client, id, flags, "ack", status);
+        pcmk__ipc_send_ack(cib_client, id, flags, "ack", NULL, status);
         return;
     }
 
@@ -218,7 +218,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
     if (op_request == NULL) {
         crm_trace("Invalid message from %p", c);
-        pcmk__ipc_send_ack(cib_client, id, flags, "nack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(cib_client, id, flags, "nack", NULL, CRM_EX_PROTOCOL);
         return 0;
 
     } else if(cib_client == NULL) {
@@ -666,11 +666,11 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     } else if (host != NULL) {
         /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring msg for instance on %s", crm_str(host));
+        crm_trace("Ignoring msg for instance on %s", host);
 
     } else if (reply_to == NULL && cib_is_master == FALSE) {
         /* this is for the master instance and we're not it */
-        crm_trace("Ignoring reply to %s", crm_str(reply_to));
+        crm_trace("Ignoring reply for primary instance");
 
     } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
         if (reply_to != NULL) {
@@ -798,7 +798,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     } else if (host != NULL) {
         /* this is for a specific instance and we're not it */
-        crm_trace("Ignoring %s operation for instance on %s", op, crm_str(host));
+        crm_trace("Ignoring %s operation for instance on %s", op, host);
         return FALSE;
 
     } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {

@@ -381,111 +381,12 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
     return rc;
 }
 
-static int
-delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
-{
-    const char *object_name = NULL;
-    const char *object_id = NULL;
-    xmlNode *equiv_node = NULL;
-    int result = pcmk_ok;
-
-    if (delete_spec != NULL) {
-        object_name = crm_element_name(delete_spec);
-    }
-    object_id = crm_element_value(delete_spec, XML_ATTR_ID);
-
-    crm_trace("Processing: <%s id=%s>", crm_str(object_name), crm_str(object_id));
-
-    if (delete_spec == NULL) {
-        result = -EINVAL;
-
-    } else if (parent == NULL) {
-        result = -EINVAL;
-
-    } else if (object_id == NULL) {
-        /*  placeholder object */
-        equiv_node = find_xml_node(parent, object_name, FALSE);
-
-    } else {
-        equiv_node = pcmk__xe_match(parent, object_name, XML_ATTR_ID,
-                                    object_id);
-    }
-
-    if (result != pcmk_ok) {
-        ;                       /* nothing */
-
-    } else if (equiv_node == NULL) {
-        result = pcmk_ok;
-
-    } else if (xml_has_children(delete_spec) == FALSE) {
-        /*  only leaves are deleted */
-        crm_debug("Removing leaf: <%s id=%s>", crm_str(object_name), crm_str(object_id));
-        free_xml(equiv_node);
-        equiv_node = NULL;
-
-    } else {
-        xmlNode *child = NULL;
-
-        for (child = pcmk__xml_first_child(delete_spec); child != NULL;
-             child = pcmk__xml_next(child)) {
-            int tmp_result = delete_cib_object(equiv_node, child);
-
-            /*  only the first error is likely to be interesting */
-            if (tmp_result != pcmk_ok && result == pcmk_ok) {
-                result = tmp_result;
-            }
-        }
-    }
-
-    return result;
-}
-
 int
 cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
                             xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                             xmlNode ** answer)
 {
-    xmlNode *failed = NULL;
-    int result = pcmk_ok;
-    xmlNode *update_section = NULL;
-
-    crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
-    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
-        section = NULL;
-    }
-
-    CRM_CHECK(strcasecmp(CIB_OP_DELETE, op) == 0, return -EINVAL);
-
-    if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    failed = create_xml_node(NULL, XML_TAG_FAILED);
-
-    update_section = pcmk_find_cib_element(*result_cib, section);
-    result = delete_cib_object(update_section, input);
-    update_results(failed, input, op, result);
-
-    if ((result == pcmk_ok) && xml_has_children(failed)) {
-        result = -EINVAL;
-    }
-
-    if (result != pcmk_ok) {
-        crm_log_xml_err(failed, "CIB Update failures");
-        *answer = failed;
-
-    } else {
-        free_xml(failed);
-    }
-
-    return result;
+    return -EINVAL;
 }
 
 int

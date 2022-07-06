@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,11 +16,6 @@
 extern "C" {
 #endif
 
-extern pcmk__supported_format_t pcmk__out_formats[];
-
-int pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml);
-void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
-
 /* This function registers only the formatted output messages that are a part
  * of libpacemaker.  It is not to be confused with pcmk__register_messages,
  * which is a part of formatted output support and registers a whole table of
@@ -29,8 +24,6 @@ void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
 void pcmk__register_lib_messages(pcmk__output_t *out);
 
 int pcmk__cluster_status_text(pcmk__output_t *out, va_list args);
-
-pcmk__output_t *pcmk__new_logger(void);
 
 #ifdef __cplusplus
 }

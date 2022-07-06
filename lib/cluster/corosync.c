@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -178,17 +178,17 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 
         if (nodeid == id) {
             crm_trace("Searching for node name for %u in nodelist.node.%d %s",
-                      nodeid, lpc, crm_str(name));
+                      nodeid, lpc, pcmk__s(name, "<null>"));
             if (name == NULL) {
                 key = crm_strdup_printf("nodelist.node.%d.name", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, crm_str(name));
+                crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
                 free(key);
             }
             if (name == NULL) {
                 key = crm_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, crm_str(name));
+                crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
 
                 if (!node_name_is_valid(key, name)) {
                     free(name);

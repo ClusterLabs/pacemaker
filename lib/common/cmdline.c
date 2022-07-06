@@ -144,6 +144,76 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
     // cppcheck-suppress memleak
 }
 
+static gchar *
+string_replace(gchar *str, const gchar *sub, const gchar *repl)
+{
+    /* This function just replaces all occurrences of a substring
+     * with some other string.  It doesn't handle cases like overlapping,
+     * so don't get clever with it.
+     *
+     * FIXME: When glib >= 2.68 is supported, we can get rid of this
+     * function and use g_string_replace instead.
+     */
+    gchar **split = g_strsplit(str, sub, 0);
+    gchar *retval = g_strjoinv(repl, split);
+
+    g_strfreev(split);
+    return retval;
+}
+
+gchar *
+pcmk__quote_cmdline(gchar **argv)
+{
+    GString *gs = NULL;
+    gchar *retval = NULL;
+
+    if (argv == NULL || argv[0] == NULL) {
+        return NULL;
+    }
+
+    gs = g_string_sized_new(100);
+
+    for (int i = 0; argv[i] != NULL; i++) {
+        if (i > 0) {
+            g_string_append(gs, " ");
+        }
+
+        if (strchr(argv[i], ' ') == NULL) {
+            /* The arg does not contain a space. */
+            g_string_append_printf(gs, "%s", argv[i]);
+        } else if (strchr(argv[i], '\'') == NULL) {
+            /* The arg contains a space, but not a single quote. */
+            g_string_append_printf(gs, "'%s'", argv[i]);
+        } else {
+            /* The arg contains both a space and a single quote, which needs to
+             * be replaced with an escaped version.  We do this instead of counting
+             * on libxml to handle the escaping for various reasons:
+             *
+             * (1) This keeps the string as valid shell.
+             * (2) We don't want to use XML entities in formats besides XML and HTML.
+             * (3) The string we are feeding to libxml is something like:  "a b 'c d' e".
+             *     It won't escape the single quotes around 'c d' here because there is
+             *     no need to escape quotes inside a different form of quote.  If we
+             *     change the string to "a b 'c'd' e", we haven't changed anything - it's
+             *     still single quotes inside double quotes.
+             *
+             *     On the other hand, if we replace the single quote with "&apos;", then
+             *     we have introduced an ampersand which libxml will escape.  This leaves
+             *     us with "&amp;apos;" which is not what we want.
+             *
+             * It's simplest to just escape with a backslash.
+             */
+            gchar *repl = string_replace(argv[i], "'", "\\\'");
+            g_string_append_printf(gs, "'%s'", repl);
+            g_free(repl);
+        }
+    }
+
+    retval = gs->str;
+    g_string_free(gs, FALSE);
+    return retval;
+}
+
 gchar **
 pcmk__cmdline_preproc(char **argv, const char *special) {
     GPtrArray *arr = NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,10 +260,12 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     if (add_updates != del_updates) {
         crm_info("Replaced: %d.%d.%d -> %d.%d.%d from %s",
                  del_admin_epoch, del_epoch, del_updates,
-                 add_admin_epoch, add_epoch, add_updates, crm_str(origin));
+                 add_admin_epoch, add_epoch, add_updates,
+                 pcmk__s(origin, "unspecified peer"));
     } else if (diff != NULL) {
         crm_info("Local-only Replace: %d.%d.%d from %s",
-                 add_admin_epoch, add_epoch, add_updates, crm_str(origin));
+                 add_admin_epoch, add_epoch, add_updates,
+                 pcmk__s(origin, "unspecified peer"));
     }
 
     replace_msg = create_xml_node(NULL, "notify-replace");

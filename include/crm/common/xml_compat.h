@@ -27,6 +27,9 @@ extern "C" {
  *             release.
  */
 
+//! \deprecated Do not use (will be removed in a future release)
+#define XML_PARANOIA_CHECKS 0
+
 //! \deprecated This function will be removed in a future release
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 

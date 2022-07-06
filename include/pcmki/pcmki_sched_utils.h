@@ -22,10 +22,6 @@
 #include <pacemaker.h>
 
 /* Constraint helper functions */
-pcmk__colocation_t *invert_constraint(pcmk__colocation_t *constraint);
-
-pe__location_t *copy_constraint(pe__location_t *constraint);
-
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
 pe_resource_t *find_compatible_child(pe_resource_t *local_child,
@@ -42,7 +38,5 @@ int copies_per_node(pe_resource_t * rsc);
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,
                                  const char *node, const char *origin);
-
-#  define LOAD_STOPPED "load_stopped"
 
 #endif

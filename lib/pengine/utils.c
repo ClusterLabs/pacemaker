@@ -331,33 +331,6 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
 }
 
 gint
-sort_rsc_index(gconstpointer a, gconstpointer b)
-{
-    const pe_resource_t *resource1 = (const pe_resource_t *)a;
-    const pe_resource_t *resource2 = (const pe_resource_t *)b;
-
-    if (a == NULL && b == NULL) {
-        return 0;
-    }
-    if (a == NULL) {
-        return 1;
-    }
-    if (b == NULL) {
-        return -1;
-    }
-
-    if (resource1->sort_index > resource2->sort_index) {
-        return -1;
-    }
-
-    if (resource1->sort_index < resource2->sort_index) {
-        return 1;
-    }
-
-    return 0;
-}
-
-gint
 sort_rsc_priority(gconstpointer a, gconstpointer b)
 {
     const pe_resource_t *resource1 = (const pe_resource_t *)a;
@@ -1236,7 +1209,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_standby;
         value = "node standby";
 
-    } else if (pcmk__strcase_any_of(value, "ignore", "nothing", NULL)) {
+    } else if (pcmk__strcase_any_of(value, "ignore", PCMK__VALUE_NOTHING,
+                                    NULL)) {
         action->on_fail = action_fail_ignore;
         value = "ignore";
 
@@ -1732,8 +1706,9 @@ resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *
 	return an_int;							\
     } while(0)
 
-gint
-sort_op_by_callid(gconstpointer a, gconstpointer b)
+int
+pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b,
+                bool same_node_default)
 {
     int a_call_id = -1;
     int b_call_id = -1;
@@ -1741,13 +1716,28 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     char *a_uuid = NULL;
     char *b_uuid = NULL;
 
-    const xmlNode *xml_a = a;
-    const xmlNode *xml_b = b;
-
     const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
-    if (pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_casei)) {
+    const char *a_node = crm_element_value(xml_a, XML_LRM_ATTR_TARGET);
+    const char *b_node = crm_element_value(xml_b, XML_LRM_ATTR_TARGET);
+    bool same_node = true;
+
+    /* @COMPAT The on_node attribute was added to last_failure as of 1.1.13 (via
+     * 8b3ca1c) and the other entries as of 1.1.12 (via 0b07b5c).
+     *
+     * In case that any of the lrm_rsc_op entries doesn't have on_node
+     * attribute, we need to explicitly tell whether the two operations are on
+     * the same node.
+     */
+    if (a_node == NULL || b_node == NULL) {
+        same_node = same_node_default;
+
+    } else {
+        same_node = pcmk__str_eq(a_node, b_node, pcmk__str_casei);
+    }
+
+    if (same_node && pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_none)) {
         /* We have duplicate lrm_rsc_op entries in the status
          * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
@@ -1766,13 +1756,14 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          */
         sort_return(0, "pending");
 
-    } else if (a_call_id >= 0 && a_call_id < b_call_id) {
+    } else if (same_node && a_call_id >= 0 && a_call_id < b_call_id) {
         sort_return(-1, "call id");
 
-    } else if (b_call_id >= 0 && a_call_id > b_call_id) {
+    } else if (same_node && b_call_id >= 0 && a_call_id > b_call_id) {
         sort_return(1, "call id");
 
-    } else if (b_call_id >= 0 && a_call_id == b_call_id) {
+    } else if (a_call_id >= 0 && b_call_id >= 0
+               && (!same_node || a_call_id == b_call_id)) {
         /*
          * The op and last_failed_op are the same
          * Order on last-rc-change
@@ -1846,7 +1837,15 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 
     /* we should never end up here */
     CRM_CHECK(FALSE, sort_return(0, "default"));
+}
 
+gint
+sort_op_by_callid(gconstpointer a, gconstpointer b)
+{
+    const xmlNode *xml_a = a;
+    const xmlNode *xml_b = b;
+
+    return pe__is_newer_op(xml_a, xml_b, true);
 }
 
 time_t
@@ -2049,16 +2048,20 @@ find_unfencing_devices(GList *candidates, GList *matches)
 {
     for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *candidate = gIter->data;
-        const char *provides = g_hash_table_lookup(candidate->meta,
-                                                   PCMK_STONITH_PROVIDES);
-        const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
-        if(candidate->children) {
+        if (candidate->children != NULL) {
             matches = find_unfencing_devices(candidate->children, matches);
+
         } else if (!pcmk_is_set(candidate->flags, pe_rsc_fence_device)) {
             continue;
 
-        } else if (pcmk__str_eq(provides, "unfencing", pcmk__str_casei) || pcmk__str_eq(requires, "unfencing", pcmk__str_casei)) {
+        } else if (pcmk_is_set(candidate->flags, pe_rsc_needs_unfencing)) {
+            matches = g_list_prepend(matches, candidate);
+
+        } else if (pcmk__str_eq(g_hash_table_lookup(candidate->meta,
+                                                    PCMK_STONITH_PROVIDES),
+                                PCMK__VALUE_UNFENCING,
+                                pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
     }
@@ -2350,10 +2353,10 @@ void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrit
 {
     if (action->reason != NULL && overwrite) {
         pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'",
-                     action->uuid, action->reason, crm_str(reason));
+                     action->uuid, action->reason, pcmk__s(reason, "(none)"));
     } else if (action->reason == NULL) {
         pe_rsc_trace(action->rsc, "Set %s reason to '%s'",
-                     action->uuid, crm_str(reason));
+                     action->uuid, pcmk__s(reason, "(none)"));
     } else {
         // crm_assert(action->reason != NULL && !overwrite);
         return;

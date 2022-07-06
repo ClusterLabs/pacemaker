@@ -1,5 +1,5 @@
 #
-# Copyright 2021 the Pacemaker project contributors
+# Copyright 2021-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -14,3 +14,13 @@ AM_TESTS_ENVIRONMENT= \
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tests/tap-driver.sh
 LOG_COMPILER = $(top_srcdir)/tests/tap-test
 CLEANFILES = *.log *.trs
+
+WRAPPED = calloc		\
+	  endgrent		\
+	  getenv		\
+	  getgrent		\
+	  getpwnam_r		\
+	  readlink		\
+	  setgrent		\
+	  uname
+LDFLAGS_WRAP = $(foreach fn,$(WRAPPED),-Wl,--wrap=$(fn))

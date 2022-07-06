@@ -60,10 +60,9 @@ new_output_object(const char *ty)
 }
 
 static int
-find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section,
-          const char *node_uuid, const char *attr_set_type, const char *set_name,
-          const char *attr_id, const char *attr_name, char **value,
-          const char *user_name)
+find_attr(cib_t *cib, const char *section, const char *node_uuid,
+          const char *attr_set_type, const char *set_name, const char *attr_id,
+          const char *attr_name, const char *user_name, xmlNode **result)
 {
     int offset = 0;
     int rc = pcmk_rc_ok;
@@ -79,9 +78,6 @@ find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section
     } else {
         set_type = XML_TAG_ATTR_SETS;
     }
-
-    CRM_ASSERT(value != NULL);
-    *value = NULL;
 
     if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
         node_uuid = NULL;
@@ -135,18 +131,17 @@ find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section
         attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", set_type);
     }
 
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair[");
-    if (attr_id) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "@id='%s'", attr_id);
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair");
+
+    if (attr_id && attr_name) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s' and @name='%.128s']",
+                      attr_id, attr_name);
+    } else if (attr_id) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s']", attr_id);
+    } else if (attr_name) {
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@name='%.128s']", attr_name);
     }
 
-    if (attr_name) {
-        if (attr_id) {
-            attr_snprintf(xpath_string, offset, XPATH_MAX, " and ");
-        }
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "@name='%.128s'", attr_name);
-    }
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = cib_internal_op(cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
@@ -154,7 +149,8 @@ find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
-                  attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
+                  attr_name, section, pcmk__s(node_uuid, "<null>"),
+                  pcmk__s(set_name, "<null>"), xpath_string,
                   pcmk_rc_str(rc));
         goto done;
     } else {
@@ -162,26 +158,31 @@ find_attr(pcmk__output_t *out, cib_t *cib, const char *attr, const char *section
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
-        xmlNode *child = NULL;
 
-        rc = ENOTUNIQ;
+  done:
+    free(xpath_string);
+    *result = xml_search;
+    return rc;
+}
+
+static int
+handle_multiples(pcmk__output_t *out, xmlNode *search, const char *attr_name)
+{
+    if (xml_has_children(search)) {
+        xmlNode *child = NULL;
         out->info(out, "Multiple attributes match name=%s", attr_name);
 
-        for (child = pcmk__xml_first_child(xml_search); child != NULL;
+        for (child = pcmk__xml_first_child(search); child != NULL;
              child = pcmk__xml_next(child)) {
             out->info(out, "  Value: %s \t(id=%s)",
                       crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
 
-    } else {
-        pcmk__str_update(value, crm_element_value(xml_search, attr));
-    }
+        return ENOTUNIQ;
 
-  done:
-    free(xpath_string);
-    free_xml(xml_search);
-    return rc;
+    } else {
+        return pcmk_rc_ok;
+    }
 }
 
 int
@@ -194,6 +195,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     int rc = pcmk_rc_ok;
     xmlNode *xml_top = NULL;
     xmlNode *xml_obj = NULL;
+    xmlNode *xml_search = NULL;
 
     char *local_attr_id = NULL;
     char *local_set_name = NULL;
@@ -202,19 +204,29 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     CRM_CHECK(attr_value != NULL, return EINVAL);
     CRM_CHECK(attr_name != NULL || attr_id != NULL, return EINVAL);
 
-    rc = find_attr(out, cib, XML_ATTR_ID, section, node_uuid, set_type, set_name,
-                   attr_id, attr_name, &local_attr_id, user_name);
+    rc = find_attr(cib, section, node_uuid, set_type, set_name, attr_id,
+                   attr_name, user_name, &xml_search);
+
     if (rc == pcmk_rc_ok) {
-        attr_id = local_attr_id;
-        goto do_modify;
+        if (handle_multiples(out, xml_search, attr_name) == ENOTUNIQ) {
+            free_xml(xml_search);
+            return ENOTUNIQ;
+        } else {
+            pcmk__str_update(&local_attr_id, crm_element_value(xml_search, XML_ATTR_ID));
+            attr_id = local_attr_id;
+            free_xml(xml_search);
+            goto do_modify;
+        }
 
     } else if (rc != ENXIO) {
+        free_xml(xml_search);
         return rc;
 
         /* } else if(attr_id == NULL) { */
         /*     return EINVAL; */
 
     } else {
+        free_xml(xml_search);
         crm_trace("%s does not exist, create it", attr_name);
         if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
@@ -330,7 +342,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         rc = pcmk_legacy2rc(rc);
 
         out->err(out, "Error setting %s=%s (section=%s, set=%s): %s",
-                 attr_name, attr_value, section, crm_str(set_name), pcmk_rc_str(rc));
+                 attr_name, attr_value, section, pcmk__s(set_name, "<null>"),
+                 pcmk_rc_str(rc));
         crm_log_xml_info(xml_top, "Update");
     } else {
         rc = pcmk_rc_ok;
@@ -344,24 +357,26 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 }
 
 int
-cib__read_node_attr(pcmk__output_t *out, cib_t *cib, const char *section,
+cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
                     const char *node_uuid, const char *set_type, const char *set_name,
-                    const char *attr_id, const char *attr_name, char **attr_value,
-                    const char *user_name)
+                    const char *attr_id, const char *attr_name, const char *user_name,
+                    xmlNode **result)
 {
     int rc = pcmk_rc_ok;
 
-    CRM_ASSERT(attr_value != NULL);
+    CRM_ASSERT(result != NULL);
     CRM_CHECK(section != NULL, return EINVAL);
-    CRM_CHECK(attr_name != NULL || attr_id != NULL, return EINVAL);
 
-    *attr_value = NULL;
+    *result = NULL;
 
-    rc = find_attr(out, cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_type,
-                   set_name, attr_id, attr_name, attr_value, user_name);
+    rc = find_attr(cib, section, node_uuid, set_type, set_name, attr_id, attr_name,
+                   user_name, result);
+
     if (rc != pcmk_rc_ok) {
-        crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
-                  attr_name, section, crm_str(set_name), crm_str(node_uuid), pcmk_strerror(rc));
+        crm_trace("Query failed for attribute %s (section=%s node=%s set=%s): %s",
+                  pcmk__s(attr_name, "with unspecified name"),
+                  section, pcmk__s(set_name, "<null>"),
+                  pcmk__s(node_uuid, "<null>"), pcmk_strerror(rc));
     }
 
     return rc;
@@ -375,19 +390,24 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
 {
     int rc = pcmk_rc_ok;
     xmlNode *xml_obj = NULL;
+    xmlNode *xml_search = NULL;
     char *local_attr_id = NULL;
 
     CRM_CHECK(section != NULL, return EINVAL);
     CRM_CHECK(attr_name != NULL || attr_id != NULL, return EINVAL);
 
     if (attr_id == NULL) {
-        rc = find_attr(out, cib, XML_ATTR_ID, section, node_uuid, set_type,
-                       set_name, attr_id, attr_name, &local_attr_id,
-                       user_name);
-        if (rc != pcmk_rc_ok) {
+        rc = find_attr(cib, section, node_uuid, set_type, set_name, attr_id,
+                       attr_name, user_name, &xml_search);
+
+        if (rc != pcmk_rc_ok || handle_multiples(out, xml_search, attr_name) == ENOTUNIQ) {
+            free_xml(xml_search);
             return rc;
+        } else {
+            pcmk__str_update(&local_attr_id, crm_element_value(xml_search, XML_ATTR_ID));
+            attr_id = local_attr_id;
+            free_xml(xml_search);
         }
-        attr_id = local_attr_id;
     }
 
     xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
@@ -416,6 +436,7 @@ find_nvpair_attr_delegate(cib_t *cib, const char *attr, const char *section,
                           char **value, const char *user_name)
 {
     pcmk__output_t *out = NULL;
+    xmlNode *xml_search = NULL;
     int rc = pcmk_ok;
 
     out = new_output_object(to_console ? "text" : "log");
@@ -423,10 +444,19 @@ find_nvpair_attr_delegate(cib_t *cib, const char *attr, const char *section,
         return pcmk_err_generic;
     }
 
-    rc = find_attr(out, cib, attr, section, node_uuid, attr_set_type,
-                   set_name, attr_id, attr_name, value, user_name);
+    rc = find_attr(cib, section, node_uuid, attr_set_type, set_name, attr_id,
+                   attr_name, user_name, &xml_search);
+
+    if (rc == pcmk_rc_ok) {
+        rc = handle_multiples(out, xml_search, attr_name);
+
+        if (rc == pcmk_rc_ok) {
+            pcmk__str_update(value, crm_element_value(xml_search, attr));
+        }
+    }
 
     out->finish(out, CRM_EX_OK, true, NULL);
+    free_xml(xml_search);
     pcmk__output_free(out);
     return pcmk_rc2legacy(rc);
 }
@@ -461,6 +491,7 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
                    const char *user_name)
 {
     pcmk__output_t *out = NULL;
+    xmlNode *result = NULL;
     int rc = pcmk_ok;
 
     out = new_output_object(to_console ? "text" : "log");
@@ -468,10 +499,19 @@ read_attr_delegate(cib_t *cib, const char *section, const char *node_uuid,
         return pcmk_err_generic;
     }
 
-    rc = cib__read_node_attr(out, cib, section, node_uuid, set_type, set_name,
-                             attr_id, attr_name, attr_value, user_name);
+    rc = cib__get_node_attrs(out, cib, section, node_uuid, set_type, set_name,
+                             attr_id, attr_name, user_name, &result);
+
+    if (rc == pcmk_rc_ok) {
+        if (!xml_has_children(result)) {
+            pcmk__str_update(attr_value, crm_element_value(result, XML_NVPAIR_ATTR_VALUE));
+        } else {
+            rc = ENOTUNIQ;
+        }
+    }
 
     out->finish(out, CRM_EX_OK, true, NULL);
+    free_xml(result);
     pcmk__output_free(out);
     return pcmk_rc2legacy(rc);
 }

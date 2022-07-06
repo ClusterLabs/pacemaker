@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1089,10 +1089,13 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
     type = crm_element_value(expr, XML_EXPR_ATTR_TYPE);
     value_source = crm_element_value(expr, XML_EXPR_ATTR_VALUE_SOURCE);
 
-    if (attr == NULL || op == NULL) {
-        pe_err("Invalid attribute or operation in expression"
-               " (\'%s\' \'%s\' \'%s\')", crm_str(attr), crm_str(op), crm_str(value));
+    if (attr == NULL) {
+        pe_err("Expression %s invalid: " XML_EXPR_ATTR_ATTRIBUTE
+               " not specified", pcmk__s(ID(expr), "without ID"));
         return FALSE;
+    } else if (op == NULL) {
+        pe_err("Expression %s invalid: " XML_EXPR_ATTR_OPERATION
+               " not specified", pcmk__s(ID(expr), "without ID"));
     }
 
     if (rule_data->match_data != NULL) {

@@ -1,0 +1,42 @@
+<cib crm_feature_set="3.15.1" validate-with="pacemaker-3.5" epoch="1" num_updates="0" admin_epoch="0" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+      <node id="3" uname="cluster03"/>
+      <node id="4" type="remote" uname="remote01"/>
+    </nodes>
+    <resources>
+      <bundle id="guest01">
+        <docker image="pcmk:http"/>
+        <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0"/>
+        <primitive class="ocf" id="httpd" provider="heartbeat" type="apache"/>
+      </bundle>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="cluster01" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-.feature-set" name="#feature-set" value="3.15.1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="cluster02" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-.feature-set" name="#feature-set" value="3.15.1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="cluster03" in_ccm="true" crmd="offline" join="down" expected="down"/>
+    <node_state id="4" uname="remote01" in_ccm="true" remote_node="true">
+  </status>
+</cib>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -166,4 +166,73 @@ pcmk__output_and_clear_error(GError *error, pcmk__output_t *out)
     }
 
     g_clear_error(&error);
+}
+
+/*!
+ * \internal
+ * \brief Create an XML-only output object
+ *
+ * Create an output object that supports only the XML format, and free
+ * existing XML if supplied (particularly useful for libpacemaker public API
+ * functions that want to free any previous result supplied by the caller).
+ *
+ * \param[out]     out  Where to put newly created output object
+ * \param[in,out]  xml  If non-NULL, this will be freed
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
+    pcmk__supported_format_t xml_format[] = {
+        PCMK__SUPPORTED_FORMAT_XML,
+        { NULL, NULL, NULL }
+    };
+
+    if (*xml != NULL) {
+        xmlFreeNode(*xml);
+        *xml = NULL;
+    }
+    pcmk__register_formats(NULL, xml_format);
+    return pcmk__output_new(out, "xml", NULL, NULL);
+}
+
+/*!
+ * \internal
+ * \brief  Finish and free an XML-only output object
+ *
+ * \param[in]  out     Output object to free
+ * \param[out] xml     Where to store XML output
+ */
+void
+pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml) {
+    out->finish(out, 0, FALSE, (void **) xml);
+    pcmk__output_free(out);
+}
+
+/*!
+ * \internal
+ * \brief Create a new output object using the "log" format
+ *
+ * \param[out] out  Where to store newly allocated output object
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__log_output_new(pcmk__output_t **out)
+{
+    int rc = pcmk_rc_ok;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(out, "log", NULL, (char **) argv);
+    if ((rc != pcmk_rc_ok) || (*out == NULL)) {
+        crm_err("Can't log certain messages due to internal error: %s",
+                pcmk_rc_str(rc));
+        return rc;
+    }
+    return pcmk_rc_ok;
 }

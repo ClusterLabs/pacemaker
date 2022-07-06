@@ -461,19 +461,19 @@ set_effective_date(pe_working_set_t *data_set, bool print_original,
  * \param[in] graph   Graph to update with pseudo-action result
  * \param[in] action  Pseudo-action to simulate executing
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
-simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
+static int
+simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
 
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -483,10 +483,10 @@ simulate_pseudo_action(crm_graph_t *graph, crm_action_t *action)
  * \param[in] graph   Graph to update with resource action result
  * \param[in] action  Resource action to simulate executing
  *
- * \return TRUE if action is validly specified, otherwise FALSE
+ * \return Standard Pacemaker return code
  */
-static gboolean
-simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
+static int
+simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     int rc;
     lrmd_event_data_t *op = NULL;
@@ -519,7 +519,7 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
     if (action_rsc == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "Bad");
         free(node);
-        return FALSE;
+        return EPROTO;
     }
 
     /* A resource might be known by different names in the configuration and in
@@ -531,7 +531,7 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
     if (resource_config_name == NULL) { // Shouldn't be possible
         crm_log_xml_err(action->xml, "No ID");
         free(node);
-        return FALSE;
+        return EPROTO;
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
@@ -575,7 +575,7 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
                 action->id, resource);
         free(node);
         free_xml(cib_node);
-        return FALSE;
+        return EINVAL;
     }
 
     // Simulate and display an executor event for the action result
@@ -624,7 +624,7 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
 
         out->info(out, "Pretending action %d failed with rc=%d",
                   action->id, op->rc);
-        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = INFINITY;
         pcmk__inject_failcount(out, cib_node, match_name, op->op_type,
                                op->interval_ms, op->rc);
@@ -640,9 +640,9 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
   done:
     free(node);
     free_xml(cib_node);
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -652,19 +652,19 @@ simulate_resource_action(crm_graph_t *graph, crm_action_t *action)
  * \param[in] graph   Graph to update with action result
  * \param[in] action  Cluster action to simulate
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
-simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
+static int
+simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-cluster-action", node, task, rsc);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -674,10 +674,10 @@ simulate_cluster_action(crm_graph_t *graph, crm_action_t *action)
  * \param[in] graph   Graph to update with action result
  * \param[in] action  Fencing action to simulate
  *
- * \return TRUE
+ * \return Standard Pacemaker return code
  */
-static gboolean
-simulate_fencing_action(crm_graph_t *graph, crm_action_t *action)
+static int
+simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, "stonith_action");
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
@@ -712,20 +712,20 @@ simulate_fencing_action(crm_graph_t *graph, crm_action_t *action)
         free_xml(cib_node);
     }
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
     free(target);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-enum transition_status
+enum pcmk__graph_status
 pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
                           GList *op_fail_list)
 {
-    crm_graph_t *transition = NULL;
-    enum transition_status graph_rc;
+    pcmk__graph_t *transition = NULL;
+    enum pcmk__graph_status graph_rc;
 
-    crm_graph_functions_t simulation_fns = {
+    pcmk__graph_functions_t simulation_fns = {
         simulate_pseudo_action,
         simulate_resource_action,
         simulate_cluster_action,
@@ -748,10 +748,10 @@ pcmk__simulate_transition(pe_working_set_t *data_set, cib_t *cib,
     fake_resource_list = data_set->resources;
     do {
         graph_rc = pcmk__execute_graph(transition);
-    } while (graph_rc == transition_active);
+    } while (graph_rc == pcmk__graph_active);
     fake_resource_list = NULL;
 
-    if (graph_rc != transition_complete) {
+    if (graph_rc != pcmk__graph_complete) {
         out->err(out, "Transition failed: %s",
                  pcmk__graph_status2text(graph_rc));
         pcmk__log_graph(LOG_ERR, transition);
@@ -880,11 +880,12 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
             printed = pcmk_rc_ok;
 
         } else {
-            logger_out = pcmk__new_logger();
-            if (logger_out == NULL) {
-                rc = pcmk_rc_error;
+            rc = pcmk__log_output_new(&logger_out);
+            if (rc != pcmk_rc_ok) {
                 goto simulate_done;
             }
+            pe__register_messages(logger_out);
+            pcmk__register_lib_messages(logger_out);
             data_set->priv = logger_out;
         }
 
@@ -931,7 +932,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
 
     PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
     if (pcmk__simulate_transition(data_set, cib,
-                                  injections->op_fail) != transition_complete) {
+                                  injections->op_fail) != pcmk__graph_complete) {
         rc = pcmk_rc_invalid_transition;
     }
 
@@ -966,7 +967,7 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__out_prologue(&out, xml);
+    rc = pcmk__xml_output_new(&out, xml);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -976,6 +977,6 @@ pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
 
     rc = pcmk__simulate(data_set, out, injections, flags, section_opts,
                         use_date, input_file, graph_file, dot_file);
-    pcmk__out_epilogue(out, xml, rc);
+    pcmk__xml_output_finish(out, xml);
     return rc;
 }

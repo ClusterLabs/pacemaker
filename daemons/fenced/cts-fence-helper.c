@@ -121,18 +121,15 @@ dispatch_helper(int timeout)
 static void
 st_callback(stonith_t * st, stonith_event_t * e)
 {
+    char *desc = NULL;
+
     if (st->state == stonith_disconnected) {
         crm_exit(CRM_EX_DISCONNECT);
     }
 
-    crm_notice("Operation '%s' targeting %s by %s for %s: %s (exit=%d, ref=%s)",
-               ((e->operation == NULL)? "unknown" : e->operation),
-               ((e->target == NULL)? "no node" : e->target),
-               ((e->executioner == NULL)? "any node" : e->executioner),
-               ((e->origin == NULL)? "unknown client" : e->origin),
-               pcmk_exec_status_str(stonith__event_execution_status(e)),
-               stonith__event_exit_status(e),
-               ((e->id == NULL)? "none" : e->id));
+    desc = stonith__event_description(e);
+    crm_notice("%s", desc);
+    free(desc);
 
     if (expected_notifications) {
         expected_notifications--;
@@ -145,7 +142,7 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
     crm_notice("Call %d exited %d: %s (%s)",
                data->call_id, stonith__exit_status(data),
                stonith__execution_status(data),
-               crm_str(stonith__exit_reason(data)));
+               pcmk__s(stonith__exit_reason(data), "unspecified reason"));
 }
 
 static void

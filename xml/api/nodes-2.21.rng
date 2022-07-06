@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-full-node"/>
+    </start>
+
+    <define name="element-full-node">
+        <element name="node">
+            <attribute name="name"> <text/> </attribute>
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="online"> <data type="boolean" /> </attribute>
+            <attribute name="standby"> <data type="boolean" /> </attribute>
+            <attribute name="standby_onfail"> <data type="boolean" /> </attribute>
+            <attribute name="maintenance"> <data type="boolean" /> </attribute>
+            <attribute name="pending"> <data type="boolean" /> </attribute>
+            <attribute name="unclean"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="health">
+                    <choice>
+                        <value>red</value>
+                        <value>yellow</value>
+                        <value>green</value>
+                    </choice>
+                </attribute>
+            </optional>
+            <optional>
+                <attribute name="feature_set"> <text/> </attribute>
+            </optional>
+            <attribute name="shutdown"> <data type="boolean" /> </attribute>
+            <attribute name="expected_up"> <data type="boolean" /> </attribute>
+            <attribute name="is_dc"> <data type="boolean" /> </attribute>
+            <attribute name="resources_running"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="type">
+                <choice>
+                    <value>unknown</value>
+                    <value>member</value>
+                    <value>remote</value>
+                    <value>ping</value>
+                </choice>
+            </attribute>
+            <optional>
+                <!-- for virtualized pacemaker_remote nodes, crm_mon 1.1.13 uses
+                     "container_id" while later versions use "id_as_resource" -->
+                <choice>
+                    <attribute name="container_id"> <text/> </attribute>
+                    <attribute name="id_as_resource"> <text/> </attribute>
+                </choice>
+            </optional>
+            <externalRef href="resources-2.4.rng" />
+        </element>
+    </define>
+</grammar>

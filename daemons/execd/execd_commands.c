@@ -1076,52 +1076,55 @@ void
 stonith_connection_failed(void)
 {
     GHashTableIter iter;
-    GList *cmd_list = NULL;
-    GList *cmd_iter = NULL;
     lrmd_rsc_t *rsc = NULL;
-    char *key = NULL;
+
+    crm_warn("Connection to fencer lost (any pending operations for "
+             "fence devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-            /* If we registered this fence device, we don't know whether the
-             * fencer still has the registration or not. Cause future probes to
-             * return an error until the resource is stopped or started
-             * successfully. This is especially important if the controller also
-             * went away (possibly due to a cluster layer restart) and won't
-             * receive our client notification of any monitors finalized below.
-             */
-            if (rsc->fence_probe_result.execution_status == PCMK_EXEC_DONE) {
-                pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
-                                 PCMK_EXEC_NOT_CONNECTED,
-                                 "Lost connection to fencer");
-            }
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {
+        if (!pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                          pcmk__str_none)) {
+            continue;
+        }
 
-            if (rsc->active) {
-                cmd_list = g_list_append(cmd_list, rsc->active);
-            }
-            if (rsc->recurring_ops) {
-                cmd_list = g_list_concat(cmd_list, rsc->recurring_ops);
-            }
-            if (rsc->pending_ops) {
-                cmd_list = g_list_concat(cmd_list, rsc->pending_ops);
-            }
-            rsc->pending_ops = rsc->recurring_ops = NULL;
+        /* If we registered this fence device, we don't know whether the
+         * fencer still has the registration or not. Cause future probes to
+         * return an error until the resource is stopped or started
+         * successfully. This is especially important if the controller also
+         * went away (possibly due to a cluster layer restart) and won't
+         * receive our client notification of any monitors finalized below.
+         */
+        if (rsc->fence_probe_result.execution_status == PCMK_EXEC_DONE) {
+            pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
+                             PCMK_EXEC_NOT_CONNECTED,
+                             "Lost connection to fencer");
+        }
+
+        // Consider any active, pending, or recurring operations as failed
+
+        for (GList *op = rsc->recurring_ops; op != NULL; op = op->next) {
+            lrmd_cmd_t *cmd = op->data;
+
+            /* This won't free a recurring op but instead restart its timer.
+             * If cmd is rsc->active, this will set rsc->active to NULL, so we
+             * don't have to worry about finalizing it a second time below.
+             */
+            stonith_action_complete(cmd,
+                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                    "Lost connection to fencer");
+        }
+
+        if (rsc->active != NULL) {
+            rsc->pending_ops = g_list_prepend(rsc->pending_ops, rsc->active);
+        }
+        while (rsc->pending_ops != NULL) {
+            // This will free the op and remove it from rsc->pending_ops
+            stonith_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
+                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                    "Lost connection to fencer");
         }
     }
-
-    if (!cmd_list) {
-        return;
-    }
-
-    crm_err("Connection to fencer failed, finalizing %d pending operations",
-            g_list_length(cmd_list));
-    for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
-        stonith_action_complete((lrmd_cmd_t *) cmd_iter->data,
-                                CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                "Lost connection to fencer");
-    }
-    g_list_free(cmd_list);
 }
 
 /*!

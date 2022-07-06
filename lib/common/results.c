@@ -465,6 +465,8 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_NOT_INSTALLED: return "CRM_EX_NOT_INSTALLED";
         case CRM_EX_NOT_CONFIGURED: return "CRM_EX_NOT_CONFIGURED";
         case CRM_EX_NOT_RUNNING: return "CRM_EX_NOT_RUNNING";
+        case CRM_EX_PROMOTED: return "CRM_EX_PROMOTED";
+        case CRM_EX_FAILED_PROMOTED: return "CRM_EX_FAILED_PROMOTED";
         case CRM_EX_USAGE: return "CRM_EX_USAGE";
         case CRM_EX_DATAERR: return "CRM_EX_DATAERR";
         case CRM_EX_NOINPUT: return "CRM_EX_NOINPUT";
@@ -497,6 +499,7 @@ crm_exit_name(crm_exit_t exit_code)
         case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
         case CRM_EX_DEGRADED: return "CRM_EX_DEGRADED";
         case CRM_EX_DEGRADED_PROMOTED: return "CRM_EX_DEGRADED_PROMOTED";
+        case CRM_EX_NONE: return "CRM_EX_NONE";
         case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
     }
     return "CRM_EX_UNKNOWN";
@@ -514,6 +517,8 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_NOT_INSTALLED: return "Not installed";
         case CRM_EX_NOT_CONFIGURED: return "Not configured";
         case CRM_EX_NOT_RUNNING: return "Not running";
+        case CRM_EX_PROMOTED: return "Promoted";
+        case CRM_EX_FAILED_PROMOTED: return "Failed in promoted role";
         case CRM_EX_USAGE: return "Incorrect usage";
         case CRM_EX_DATAERR: return "Invalid data given";
         case CRM_EX_NOINPUT: return "Input file not available";
@@ -546,49 +551,13 @@ crm_exit_str(crm_exit_t exit_code)
         case CRM_EX_TIMEOUT: return "Timeout occurred";
         case CRM_EX_DEGRADED: return "Service is active but might fail soon";
         case CRM_EX_DEGRADED_PROMOTED: return "Service is promoted but might fail soon";
+        case CRM_EX_NONE: return "No exit status available";
         case CRM_EX_MAX: return "Error occurred";
     }
     if ((exit_code > 128) && (exit_code < CRM_EX_MAX)) {
         return "Interrupted by signal";
     }
     return "Unknown exit status";
-}
-
-//! \deprecated Use standard return codes and pcmk_rc2exitc() instead
-crm_exit_t
-crm_errno2exit(int rc)
-{
-    rc = abs(rc); // Convenience for functions that return -errno
-    switch (rc) {
-        case pcmk_ok:
-            return CRM_EX_OK;
-
-        case pcmk_err_no_quorum:
-            return CRM_EX_QUORUM;
-
-        case pcmk_err_old_data:
-            return CRM_EX_OLD;
-
-        case pcmk_err_schema_validation:
-        case pcmk_err_transform_failed:
-            return CRM_EX_CONFIG;
-
-        case pcmk_err_bad_nvpair:
-            return CRM_EX_INVALID_PARAM;
-
-        case pcmk_err_already:
-            return CRM_EX_EXISTS;
-
-        case pcmk_err_multiple:
-            return CRM_EX_MULTIPLE;
-
-        case pcmk_err_node_unknown:
-        case pcmk_err_unknown_format:
-            return CRM_EX_NOSUCH;
-
-        default:
-            return pcmk_rc2exitc(rc); // system errno
-    }
 }
 
 /*!
@@ -933,3 +902,17 @@ pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
     pcmk__str_update(&src->action_stdout, dst->action_stdout);
     pcmk__str_update(&src->action_stderr, dst->action_stderr);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/results_compat.h>
+
+crm_exit_t
+crm_errno2exit(int rc)
+{
+    return pcmk_rc2exitc(pcmk_legacy2rc(rc));
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

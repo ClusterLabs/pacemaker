@@ -24,6 +24,10 @@ A new shadow instance was created.  To begin using it paste the following into y
 </cib>
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin       - Validate CIB
+=#=#=#= Begin test: Query the value of an attribute that does not exist =#=#=#=
+crm_attribute: Error performing operation: No such device or address
+=#=#=#= End test: Query the value of an attribute that does not exist - No such object (105) =#=#=#=
+* Passed: crm_attribute  - Query the value of an attribute that does not exist
 =#=#=#= Begin test: Configure something before erasing =#=#=#=
 =#=#=#= Current cib after: Configure something before erasing =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="0">
@@ -3500,7 +3504,6 @@ Removing constraint: cli-prefer-dummy
     <!-- test: move this comment to end of configuration -->
   </change>
 </diff>
-
 =#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
 * Passed: crm_diff       - Create an XML patchset
 =#=#=#= Begin test: Check locations and constraints for prim1 =#=#=#=
@@ -4115,8 +4118,8 @@ Resources colocated with clone:
 <pacemaker-result api-version="X" request="crm_mon.xml --show-scores --output-as=xml">
   <cluster_status>
     <nodes>
-      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
-      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+      <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+      <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
       <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
       <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
       <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>

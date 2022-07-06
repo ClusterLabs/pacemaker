@@ -438,7 +438,7 @@ class StonithdTest(CTSTest):
         is_dc = self.CM.is_node_dc(node)
 
         watchpats = []
-        watchpats.append(self.templates["Pat:FenceOpOK"] % node)
+        watchpats.append(self.templates["Pat:Fencing_ok"] % node)
         watchpats.append(self.templates["Pat:NodeFenced"] % node)
 
         if self.Env["at-boot"] == 0:
@@ -2802,7 +2802,7 @@ class RemoteDriver(CTSTest):
             return
 
         watchpats = [ ]
-        watchpats.append(self.templates["Pat:FenceOpOK"] % self.remote_node)
+        watchpats.append(self.templates["Pat:Fencing_ok"] % self.remote_node)
         watchpats.append(self.templates["Pat:NodeFenced"] % self.remote_node)
 
         watch = self.create_watch(watchpats, 120)

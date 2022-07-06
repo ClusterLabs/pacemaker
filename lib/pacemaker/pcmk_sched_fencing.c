@@ -317,7 +317,8 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * only quorum. However, fence agents that unfence often don't have enough
      * information to even probe or start unless the node is first unfenced.
      */
-    if (pcmk__is_unfence_device(rsc, data_set)
+    if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
@@ -344,12 +345,11 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
  * \brief Create pseudo-op for guest node fence, and order relative to it
  *
  * \param[in] node      Guest node to fence
- * \param[in] data_set  Working set of CIB state
  */
 void
-pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
+pcmk__fence_guest(pe_node_t *node)
 {
-    pe_resource_t *container = node->details->remote_rsc->container;
+    pe_resource_t *container = NULL;
     pe_action_t *stop = NULL;
     pe_action_t *stonith_op = NULL;
 
@@ -361,9 +361,12 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      */
     const char *fence_action = "off";
 
+    CRM_ASSERT(node != NULL);
+
     /* Check whether guest's container resource has any explicit stop or
      * start (the stop may be implied by fencing of the guest's host).
      */
+    container = node->details->remote_rsc->container;
     if (container) {
         stop = find_first_action(container->actions, NULL, CRMD_ACTION_STOP,
                                  NULL);
@@ -378,7 +381,7 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      * against, and the controller can always detect it.
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
-                             FALSE, data_set);
+                             FALSE, node->details->data_set);
     pe__set_action_flags(stonith_op, pe_action_pseudo|pe_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
@@ -387,7 +390,8 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      */
     if ((stop != NULL) && pcmk_is_set(stop->flags, pe_action_pseudo)) {
         pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
-                                                     NULL, FALSE, data_set);
+                                                     NULL, FALSE,
+                                                     node->details->data_set);
 
         crm_info("Implying guest node %s is down (action %d) after %s fencing",
                  node->details->uname, stonith_op->id,
@@ -428,7 +432,7 @@ pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set)
     }
 
     // Order/imply other actions relative to pseudo-fence as with real fence
-    pcmk__order_vs_fence(stonith_op, data_set);
+    pcmk__order_vs_fence(stonith_op, node->details->data_set);
 }
 
 /*!
@@ -446,22 +450,4 @@ pcmk__node_unfenced(pe_node_t *node)
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
-}
-
-/*!
- * \internal
- * \brief Check whether a resource is a fencing device that supports unfencing
- *
- * \param[in] rsc       Resource to check
- * \param[in] data_set  Cluster working set
- *
- * \return true if \p rsc is a fencing device that supports unfencing,
- *         otherwise false
- */
-bool
-pcmk__is_unfence_device(const pe_resource_t *rsc,
-                        const pe_working_set_t *data_set)
-{
-    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }

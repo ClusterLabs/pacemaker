@@ -75,7 +75,6 @@ class BasePatterns(object):
             "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
             "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
-            "Pat:FenceOpOK"     : "Operation .* targeting %s using .* returned 0",
         }
 
     def get_component(self, key):
@@ -271,6 +270,7 @@ class crm_corosync(BasePatterns):
         ]
         self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on
@@ -324,11 +324,10 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*Fencer successfully connected",
         ]
         self.components["pacemaker-fenced-ignore"] = [
-            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Fencer connection failed \(will retry\)",
-            r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
-            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error (Lost connection to fencer)",
             # This is overbroad, but we don't have a way to say that only
             # certain transition errors are acceptable (if the fencer respawns,
             # fence devices may appear multiply active). We have to rely on

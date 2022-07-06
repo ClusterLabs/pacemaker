@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
@@ -391,7 +392,7 @@ pcmk__mk_html_output(char **argv) {
     }
 
     retval->fmt_name = "html";
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = html_init;
     retval->free_priv = html_free_priv;

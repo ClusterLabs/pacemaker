@@ -10,8 +10,6 @@
 #ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
 #  define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
-typedef struct rsc_ticket_s rsc_ticket_t;
-
 #  include <glib.h>
 #  include <crm/crm.h>
 #  include <crm/common/iso8601.h>
@@ -42,54 +40,9 @@ typedef struct {
     bool influence; // Whether dependent influences active primary placement
 } pcmk__colocation_t;
 
-enum loss_ticket_policy_e {
-    loss_ticket_stop,
-    loss_ticket_demote,
-    loss_ticket_fence,
-    loss_ticket_freeze
-};
-
-struct rsc_ticket_s {
-    const char *id;
-    pe_resource_t *rsc_lh;
-    pe_ticket_t *ticket;
-    enum loss_ticket_policy_e loss_policy;
-
-    int role_lh;
-};
-
 void pcmk__unpack_constraints(pe_working_set_t *data_set);
 
-extern void add_maintenance_update(pe_working_set_t *data_set);
 void pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
                             pe_working_set_t *data_set);
-
-extern const char *transition_idle_timeout;
-
-/*!
- * \internal
- * \brief Check whether colocation's left-hand preferences should be considered
- *
- * \param[in] colocation  Colocation constraint
- * \param[in] rsc         Right-hand instance (normally this will be
- *                        colocation->primary, which NULL will be treated as,
- *                        but for clones or bundles with multiple instances
- *                        this can be a particular instance)
- *
- * \return true if colocation influence should be effective, otherwise false
- */
-static inline bool
-pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
-                               const pe_resource_t *rsc)
-{
-    if (rsc == NULL) {
-        rsc = colocation->primary;
-    }
-
-    /* The left hand of a colocation influences the right hand's location
-     * if the influence option is true, or the right hand is not yet active.
-     */
-    return colocation->influence || (rsc->running_on == NULL);
-}
 
 #endif

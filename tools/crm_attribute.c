@@ -32,6 +32,7 @@
 #include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/output_internal.h>
 #include <sys/utsname.h>
@@ -55,7 +56,9 @@ attribute_text(pcmk__output_t *out, va_list args)
     char *host G_GNUC_UNUSED = va_arg(args, char *);
 
     if (out->quiet) {
-        pcmk__formatted_printf(out, "%s\n", value);
+        if (value != NULL) {
+            pcmk__formatted_printf(out, "%s\n", value);
+        }
     } else {
         out->info(out, "%s%s %s%s %s%s value=%s",
                   scope ? "scope=" : "", scope ? scope : "",
@@ -104,12 +107,7 @@ struct {
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'D';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = NULL;
+    pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
 
@@ -136,7 +134,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.command = 'v';
+    options.command = 'u';
     pcmk__str_update(&options.attr_value, optarg);
     return TRUE;
 }
@@ -148,24 +146,14 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     }
 
     options.type = g_strdup(XML_CIB_TAG_NODES);
-
-    if (options.set_type) {
-        free(options.set_type);
-    }
-
-    options.set_type = strdup(XML_TAG_UTILIZATION);
+    pcmk__str_update(&options.attr_value, XML_TAG_UTILIZATION);
     return TRUE;
 }
 
 static gboolean
 value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'G';
-
-    if (options.attr_value) {
-        free(options.attr_value);
-    }
-
-    options.attr_value = NULL;
+    pcmk__str_update(&options.attr_value, NULL);
     return TRUE;
 }
 
@@ -177,13 +165,15 @@ static GOptionEntry selecting_entries[] = {
     },
 
     { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
-      "Operate on attribute or option with this name",
+      "Operate on attribute or option with this name.  For queries, this\n"
+      INDENT "is optional, in which case all matching attributes will be\n"
+      INDENT "returned.",
       "NAME"
     },
 
     { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
       "Operate on all attributes matching this pattern\n"
-      INDENT "(with -v/-D and -l reboot)",
+      INDENT "(with -G, or with -v/-D and -l reboot)",
       "PATTERN"
     },
 
@@ -211,7 +201,8 @@ static GOptionEntry command_entries[] = {
     },
 
     { "query", 'G', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
-      "Query the current value of the attribute/option",
+      "Query the current value of the attribute/option.\n"
+      INDENT "See also: -n, -P",
       NULL
     },
 
@@ -378,7 +369,208 @@ get_node_name_from_controller(void)
 
     pcmk_disconnect_ipc(controld_api);
     pcmk_free_ipc_api(controld_api);
+
     return rc;
+}
+
+static int
+send_attrd_update(char command, const char *attr_node, const char *attr_name,
+                  const char *attr_value, const char *attr_set,
+                  const char *attr_dampen, uint32_t attr_options)
+{
+    int rc = pcmk_rc_ok;
+    uint32_t opts = attr_options;
+
+    if (options.attr_pattern) {
+        opts |= pcmk__node_attr_pattern;
+    }
+
+    switch (command) {
+        case 'D':
+            rc = pcmk__attrd_api_delete(NULL, attr_node, attr_name, opts);
+            break;
+
+        case 'u':
+            rc = pcmk__attrd_api_update(NULL, attr_node, attr_name,
+                                        attr_value, NULL, attr_set, NULL,
+                                        opts | pcmk__node_attr_value);
+            break;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not update %s=%s: %s (%d)",
+                    attr_name, attr_value, pcmk_rc_str(rc), rc);
+    }
+
+    return rc;
+}
+
+static int
+command_delete(pcmk__output_t *out, cib_t *cib)
+{
+    int rc = pcmk_rc_ok;
+
+    rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
+                               options.set_type, options.set_name, options.attr_id,
+                               options.attr_name, options.attr_value, NULL);
+
+    if (rc == ENXIO) {
+        /* Nothing to delete...
+         * which means it's not there...
+         * which is what the admin wanted
+         */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+static int
+command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
+{
+    int rc = pcmk_rc_ok;
+
+    CRM_LOG_ASSERT(options.type != NULL);
+    CRM_LOG_ASSERT(options.attr_name != NULL);
+    CRM_LOG_ASSERT(options.attr_value != NULL);
+
+    rc = cib__update_node_attr(out, cib, cib_opts, options.type, options.dest_node,
+                               options.set_type, options.set_name, options.attr_id,
+                               options.attr_name, options.attr_value, NULL,
+                               is_remote_node ? "remote" : NULL);
+
+    return rc;
+}
+
+static bool
+output_one_attribute(pcmk__output_t *out, xmlNode *node, bool use_pattern)
+{
+    const char *name = crm_element_value(node, XML_NVPAIR_ATTR_NAME);
+    const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
+    const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
+
+    if (use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
+        return false;
+    }
+
+    out->message(out, "attribute", options.type, options.attr_id, name, value, host);
+    crm_info("Read %s='%s' %s%s",
+             pcmk__s(name, "<null>"), pcmk__s(value, ""),
+             options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+    return true;
+}
+
+static int
+command_query(pcmk__output_t *out, cib_t *cib)
+{
+    int rc = pcmk_rc_ok;
+
+    xmlNode *result = NULL;
+    bool use_pattern = options.attr_pattern != NULL;
+
+    /* libxml2 doesn't support regular expressions in xpath queries (which is how
+     * cib__get_node_attrs -> find_attr finds attributes).  So instead, we'll just
+     * find all the attributes for a given node here by passing NULL for attr_id
+     * and attr_name, and then later see if they match the given pattern.
+     */
+    if (use_pattern) {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, NULL,
+                                 NULL, NULL, &result);
+    } else {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, options.attr_id,
+                                 options.attr_name, NULL, &result);
+    }
+
+    if (rc == ENXIO && options.attr_default) {
+        out->message(out, "attribute", options.type, options.attr_id,
+                     options.attr_name, options.attr_default, options.dest_uname);
+        rc = pcmk_rc_ok;
+
+    } else if (rc != pcmk_rc_ok) {
+        // Don't do anything.
+
+    } else if (xml_has_children(result)) {
+        xmlNode *child = NULL;
+        bool did_output = false;
+
+        for (child = pcmk__xml_first_child(result); child != NULL;
+             child = pcmk__xml_next(child)) {
+            if (output_one_attribute(out, child, use_pattern)) {
+                did_output = true;
+            }
+        }
+
+        if (!did_output) {
+            rc = ENXIO;
+        }
+
+    } else {
+        output_one_attribute(out, result, use_pattern);
+    }
+
+    free_xml(result);
+    return rc;
+}
+
+static void
+set_type(void)
+{
+    if (options.type == NULL) {
+        if (options.promotion_score) {
+            // Updating a promotion score node attribute
+            options.type = g_strdup(XML_CIB_TAG_STATUS);
+
+        } else if (options.dest_uname != NULL) {
+            // Updating some other node attribute
+            options.type = g_strdup(XML_CIB_TAG_NODES);
+
+        } else {
+            // Updating cluster options
+            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
+        }
+
+    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+        options.type = g_strdup(XML_CIB_TAG_STATUS);
+
+    } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
+        options.type = g_strdup(XML_CIB_TAG_NODES);
+    }
+}
+
+static bool
+use_attrd(void)
+{
+    /* Only go through the attribute manager for transient attributes, and
+     * then only if we're not using a file as the CIB.
+     */
+    return pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei) &&
+           getenv("CIB_file") == NULL && getenv("CIB_shadow") == NULL;
+}
+
+static bool
+try_ipc_update(void)
+{
+    return use_attrd() && (options.command == 'D' || options.command == 'u');
+}
+
+static bool
+pattern_used_correctly(void)
+{
+    /* --pattern can only be used with:
+     * -G (query), or
+     * -v (update) or -D (delete), with till-reboot
+     */
+    return options.command == 'G' ||
+           ((options.command == 'u' || options.command == 'D') &&
+            pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei));
+}
+
+static bool
+delete_used_correctly(void)
+{
+    return options.command != 'D' || options.attr_name != NULL || options.attr_pattern != NULL;
 }
 
 static GOptionContext *
@@ -432,7 +624,6 @@ main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
     int is_remote_node = 0;
-    bool try_attrd = true;
     int attrd_opts = pcmk__node_attr_none;
 
     int rc = pcmk_rc_ok;
@@ -494,26 +685,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    // Use default CIB location if not given
-    if (options.type == NULL) {
-        if (options.promotion_score) {
-            // Updating a promotion score node attribute
-            options.type = g_strdup(XML_CIB_TAG_STATUS);
-
-        } else if (options.dest_uname != NULL) {
-            // Updating some other node attribute
-            options.type = g_strdup(XML_CIB_TAG_NODES);
-
-        } else {
-            // Updating cluster options
-            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
-        }
-    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_STATUS);
-
-    } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
-        options.type = g_strdup(XML_CIB_TAG_NODES);
-    }
+    set_type();
 
     // Use default node if not given (except for cluster options and tickets)
     if (!pcmk__strcase_any_of(options.type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
@@ -559,7 +731,7 @@ main(int argc, char **argv)
         }
     }
 
-    if ((options.command == 'D') && (options.attr_name == NULL) && (options.attr_pattern == NULL)) {
+    if (!delete_used_correctly()) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error: must specify attribute name or pattern to delete");
@@ -567,92 +739,36 @@ main(int argc, char **argv)
     }
 
     if (options.attr_pattern) {
-        if (((options.command != 'v') && (options.command != 'D'))
-            || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
-
+        if (!pattern_used_correctly()) {
             exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: pattern can only be used with till-reboot update or delete");
+                        "Error: pattern can only be used with query, or with "
+                        "till-reboot update or delete");
             goto done;
         }
-        options.command = 'u';
+
         g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
-    }
-
-    // Only go through attribute manager for transient attributes
-    try_attrd = pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei);
-
-    // Don't try to contact attribute manager if we're using a file as CIB
-    if (getenv("CIB_file") || getenv("CIB_shadow")) {
-        try_attrd = false;
     }
 
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
-    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u')) && try_attrd
-        && (pcmk__node_attr_request(NULL, options.command, options.dest_uname, options.attr_name,
-                                    options.attr_value, options.type, options.set_name, NULL, NULL,
-                                    attrd_opts) == pcmk_rc_ok)) {
+
+    if (try_ipc_update() &&
+        (send_attrd_update(options.command, options.dest_uname, options.attr_name,
+                           options.attr_value, options.set_name, NULL, attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
                  options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
     } else if (options.command == 'D') {
-        rc = cib__delete_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
-                                   options.set_type, options.set_name, options.attr_id,
-                                   options.attr_name, options.attr_value, NULL);
+        rc = command_delete(out, the_cib);
 
-        if (rc == ENXIO) {
-            /* Nothing to delete...
-             * which means it's not there...
-             * which is what the admin wanted
-             */
-            rc = pcmk_rc_ok;
-        }
+    } else if (options.command == 'u') {
+        rc = command_update(out, the_cib, is_remote_node);
 
-    } else if (options.command == 'v') {
-        CRM_LOG_ASSERT(options.type != NULL);
-        CRM_LOG_ASSERT(options.attr_name != NULL);
-        CRM_LOG_ASSERT(options.attr_value != NULL);
-
-        rc = cib__update_node_attr(out, the_cib, cib_opts, options.type, options.dest_node,
-                                   options.set_type, options.set_name, options.attr_id,
-                                   options.attr_name, options.attr_value, NULL,
-                                   is_remote_node ? "remote" : NULL);
-
-    } else {                    /* query */
-
-        char *read_value = NULL;
-
-        if (options.attr_id == NULL && options.attr_name == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Error: must specify attribute name or pattern to query");
-            goto done;
-        }
-
-        rc = cib__read_node_attr(out, the_cib, options.type, options.dest_node,
-                                 options.set_type, options.set_name, options.attr_id,
-                                 options.attr_name, &read_value, NULL);
-
-        if (rc == ENXIO && options.attr_default) {
-            read_value = strdup(options.attr_default);
-            rc = pcmk_rc_ok;
-        }
-
-        crm_info("Read %s=%s %s%s",
-                 options.attr_name, crm_str(read_value), options.set_name ? "in " : "", options.set_name ? options.set_name : "");
-
-        if (rc == ENOTUNIQ) {
-            // Multiple matches (already displayed) are not error for queries
-            rc = pcmk_rc_ok;
-        } else {
-            out->message(out, "attribute", options.type, options.attr_id,
-                         options.attr_name, read_value);
-        }
-
-        free(read_value);
+    } else {
+        rc = command_query(out, the_cib);
     }
 
     if (rc == ENOTUNIQ) {

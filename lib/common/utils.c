@@ -27,6 +27,7 @@
 #include <time.h>
 #include <libgen.h>
 #include <signal.h>
+#include <grp.h>
 
 #include <qb/qbdefs.h>
 
@@ -52,6 +53,38 @@ CRM_TRACE_INIT_DATA(common);
 gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
+
+bool
+pcmk__is_user_in_group(const char *user, const char *group)
+{
+    struct group *grent;
+    char **gr_mem;
+
+    if (user == NULL || group == NULL) {
+        return false;
+    }
+    
+    setgrent();
+    while ((grent = getgrent()) != NULL) {
+        if (grent->gr_mem == NULL) {
+            continue;
+        }
+
+        if(strcmp(group, grent->gr_name) != 0) {
+            continue;
+        }
+
+        gr_mem = grent->gr_mem;
+        while (*gr_mem != NULL) {
+            if (!strcmp(user, *gr_mem++)) {
+                endgrent();
+                return true;
+            }
+        }
+    }
+    endgrent();
+    return false;
+}
 
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)

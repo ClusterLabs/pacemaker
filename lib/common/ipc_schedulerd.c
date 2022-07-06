@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,15 +89,16 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if ((value == NULL) || (strcmp(value, XML_ATTR_RESPONSE))) {
-        crm_debug("Unrecognizable schedulerd message: invalid message type '%s'",
-                  crm_str(value));
+    if (!pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
+        crm_info("Unrecognizable message from schedulerd: "
+                  "message type '%s' not '" XML_ATTR_RESPONSE "'",
+                  pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (crm_element_value(reply, XML_ATTR_REFERENCE) == NULL) {
-        crm_debug("Unrecognizable schedulerd message: no reference");
+    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+        crm_info("Unrecognizable message from schedulerd: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -112,7 +113,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.data.graph.input = crm_element_value(reply, F_CRM_TGRAPH_INPUT);
         reply_data.data.graph.tgraph = msg_data;
     } else {
-        crm_debug("Unrecognizable pacemakerd message: '%s'", crm_str(value));
+        crm_info("Unrecognizable message from schedulerd: "
+                  "unknown command '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <glib.h>
 
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 static gboolean legacy_xml = FALSE;
@@ -400,7 +401,7 @@ pcmk__mk_xml_output(char **argv) {
     }
 
     retval->fmt_name = "xml";
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = xml_init;
     retval->free_priv = xml_free_priv;

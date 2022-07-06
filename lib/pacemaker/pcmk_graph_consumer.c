@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,19 +42,19 @@
  *       synapse_state_str().
  */
 static void
-update_synapse_ready(synapse_t *synapse, int action_id)
+update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
 {
     if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
         return; // All inputs have already been confirmed
     }
     pcmk__set_synapse_flags(synapse, pcmk__synapse_ready); // Presume ready until proven otherwise
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *prereq = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *prereq = (pcmk__graph_action_t *) lpc->data;
 
         if (prereq->id == action_id) {
             crm_trace("Confirming input %d of synapse %d",
                       action_id, synapse->id);
-            crm__set_graph_action_flags(prereq, pcmk__graph_action_confirmed);
+            pcmk__set_graph_action_flags(prereq, pcmk__graph_action_confirmed);
 
         } else if (!(pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed))) {
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
@@ -75,17 +75,17 @@ update_synapse_ready(synapse_t *synapse, int action_id)
  * \param[in] action_id  ID of action that completed
  */
 static void
-update_synapse_confirmed(synapse_t *synapse, int action_id)
+update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
 {
     bool all_confirmed = true;
 
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *action = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc->data;
 
         if (action->id == action_id) {
             crm_trace("Confirmed action %d of synapse %d",
                       action_id, synapse->id);
-            crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+            pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
 
         } else if (all_confirmed && !(pcmk_is_set(action->flags, pcmk__graph_action_confirmed))) {
             all_confirmed = false;
@@ -108,10 +108,10 @@ update_synapse_confirmed(synapse_t *synapse, int action_id)
  * \param[in]     action  Action that completed
  */
 void
-pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
+pcmk__update_graph(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             continue; // This synapse already completed
@@ -134,7 +134,7 @@ pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
  * registers execution functions for each action type, which will be stored
  * here.
  */
-static crm_graph_functions_t *graph_fns = NULL;
+static pcmk__graph_functions_t *graph_fns = NULL;
 
 /*!
  * \internal
@@ -143,16 +143,16 @@ static crm_graph_functions_t *graph_fns = NULL;
  * \param[in]  Execution functions to use
  */
 void
-pcmk__set_graph_functions(crm_graph_functions_t *fns)
+pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
 {
     crm_debug("Setting custom functions for executing transition graphs");
     graph_fns = fns;
 
     CRM_ASSERT(graph_fns != NULL);
     CRM_ASSERT(graph_fns->rsc != NULL);
-    CRM_ASSERT(graph_fns->crmd != NULL);
+    CRM_ASSERT(graph_fns->cluster != NULL);
     CRM_ASSERT(graph_fns->pseudo != NULL);
-    CRM_ASSERT(graph_fns->stonith != NULL);
+    CRM_ASSERT(graph_fns->fence != NULL);
 }
 
 /*!
@@ -165,13 +165,13 @@ pcmk__set_graph_functions(crm_graph_functions_t *fns)
  * \return true if synapse is ready, false otherwise
  */
 static bool
-should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
+should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
 {
     GList *lpc = NULL;
 
     pcmk__set_synapse_flags(synapse, pcmk__synapse_ready);
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *prereq = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *prereq = (pcmk__graph_action_t *) lpc->data;
 
         if (!(pcmk_is_set(prereq->flags, pcmk__graph_action_confirmed))) {
             crm_trace("Input %d for synapse %d not yet confirmed",
@@ -193,9 +193,9 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
     }
 
     for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *a = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *a = (pcmk__graph_action_t *) lpc->data;
 
-        if (a->type == action_type_pseudo) {
+        if (a->type == pcmk__pseudo_graph_action) {
             /* None of the below applies to pseudo ops */
 
         } else if (synapse->priority < graph->abort_priority) {
@@ -224,7 +224,7 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \return Standard Pacemaker return code
  */
 static int
-initiate_action(crm_graph_t *graph, crm_action_t *action)
+initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *id = ID(action->xml);
 
@@ -232,25 +232,25 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
     CRM_CHECK(!pcmk_is_set(action->flags, pcmk__graph_action_executed),
               return pcmk_rc_already);
 
-    crm__set_graph_action_flags(action, pcmk__graph_action_executed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
     switch (action->type) {
-        case action_type_pseudo:
+        case pcmk__pseudo_graph_action:
             crm_trace("Executing pseudo-action %d (%s)", action->id, id);
-            return graph_fns->pseudo(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            return graph_fns->pseudo(graph, action);
 
-        case action_type_rsc:
+        case pcmk__rsc_graph_action:
             crm_trace("Executing resource action %d (%s)", action->id, id);
-            return graph_fns->rsc(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            return graph_fns->rsc(graph, action);
 
-        case action_type_crm:
+        case pcmk__cluster_graph_action:
             if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                              CRM_OP_FENCE, pcmk__str_casei)) {
                 crm_trace("Executing fencing action %d (%s)",
                           action->id, id);
-                return graph_fns->stonith(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+                return graph_fns->fence(graph, action);
             }
-            crm_trace("Executing control action %d (%s)", action->id, id);
-            return graph_fns->crmd(graph, action)? pcmk_rc_ok : pcmk_rc_error;
+            crm_trace("Executing cluster action %d (%s)", action->id, id);
+            return graph_fns->cluster(graph, action);
 
         default:
             crm_err("Unsupported graph action type <%s id='%s'> (bug?)",
@@ -269,17 +269,21 @@ initiate_action(crm_graph_t *graph, crm_action_t *action)
  * \return Standard Pacemaker return value
  */
 static int
-fire_synapse(crm_graph_t *graph, synapse_t *synapse)
+fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
 {
     pcmk__set_synapse_flags(synapse, pcmk__synapse_executed);
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
-        crm_action_t *action = (crm_action_t *) lpc->data;
+        pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc->data;
+        int rc = initiate_action(graph, action);
 
-        if (initiate_action(graph, action) != pcmk_rc_ok) {
-            crm_err("Failed initiating <%s id=%d> in synapse %d",
-                    crm_element_name(action->xml), action->id, synapse->id);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Failed initiating <%s id=%d> in synapse %d: %s",
+                    crm_element_name(action->xml), action->id, synapse->id,
+                    pcmk_rc_str(rc));
             pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
-            crm__set_graph_action_flags(action, pcmk__graph_action_confirmed | pcmk__graph_action_failed);
+            pcmk__set_graph_action_flags(action,
+                                         pcmk__graph_action_confirmed
+                                         |pcmk__graph_action_failed);
             return pcmk_rc_error;
         }
     }
@@ -291,14 +295,14 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \brief Dummy graph method that can be used with simulations
  *
  * \param[in] graph   Transition graph containing action
- * \param[in] action  Action to be initiated
+ * \param[in] action  Graph action to be initiated
  *
- * \retval TRUE   Action initiation was (simulated to be) successful
- * \retval FALSE  Action initiation was (simulated to be) failed (due to the
- *                PE_fail environment variable being set to the action ID)
+ * \return Standard Pacemaker return code
+ * \note If the PE_fail environment variable is set to the action ID,
+ *       then the graph action will be marked as failed.
  */
-static gboolean
-pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
+static int
+pseudo_action_dummy(pcmk__graph_t * graph, pcmk__graph_action_t *action)
 {
     static int fail = -1;
 
@@ -315,17 +319,17 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
 
     if (action->id == fail) {
         crm_err("Dummy event handler: pretending action %d failed", action->id);
-        crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+        pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = INFINITY;
     } else {
         crm_trace("Dummy event handler: action %d initiated", action->id);
     }
-    crm__set_graph_action_flags(action, pcmk__graph_action_confirmed);
+    pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-static crm_graph_functions_t default_fns = {
+static pcmk__graph_functions_t default_fns = {
     pseudo_action_dummy,
     pseudo_action_dummy,
     pseudo_action_dummy,
@@ -340,19 +344,19 @@ static crm_graph_functions_t default_fns = {
  *
  * \return Status of transition after execution
  */
-enum transition_status
-pcmk__execute_graph(crm_graph_t *graph)
+enum pcmk__graph_status
+pcmk__execute_graph(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     int log_level = LOG_DEBUG;
-    enum transition_status pass_result = transition_active;
+    enum pcmk__graph_status pass_result = pcmk__graph_active;
     const char *status = "In progress";
 
     if (graph_fns == NULL) {
         graph_fns = &default_fns;
     }
     if (graph == NULL) {
-        return transition_complete;
+        return pcmk__graph_complete;
     }
 
     graph->fired = 0;
@@ -363,7 +367,7 @@ pcmk__execute_graph(crm_graph_t *graph)
 
     // Count completed and in-flight synapses
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
             graph->completed++;
@@ -377,7 +381,7 @@ pcmk__execute_graph(crm_graph_t *graph)
 
     // Execute any synapses that are ready
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) lpc->data;
 
         if ((graph->batch_limit > 0)
             && (graph->pending >= graph->batch_limit)) {
@@ -414,26 +418,26 @@ pcmk__execute_graph(crm_graph_t *graph)
     }
 
     if ((graph->pending == 0) && (graph->fired == 0)) {
-        graph->complete = TRUE;
+        graph->complete = true;
 
         if ((graph->incomplete != 0) && (graph->abort_priority <= 0)) {
             log_level = LOG_WARNING;
-            pass_result = transition_terminated;
+            pass_result = pcmk__graph_terminated;
             status = "Terminated";
 
         } else if (graph->skipped != 0) {
             log_level = LOG_NOTICE;
-            pass_result = transition_complete;
+            pass_result = pcmk__graph_complete;
             status = "Stopped";
 
         } else {
             log_level = LOG_NOTICE;
-            pass_result = transition_complete;
+            pass_result = pcmk__graph_complete;
             status = "Complete";
         }
 
     } else if (graph->fired == 0) {
-        pass_result = transition_pending;
+        pass_result = pcmk__graph_pending;
     }
 
     do_crm_log(log_level,
@@ -459,11 +463,11 @@ pcmk__execute_graph(crm_graph_t *graph)
  *
  * \return Newly allocated action on success, or NULL otherwise
  */
-static crm_action_t *
-unpack_action(synapse_t *parent, xmlNode *xml_action)
+static pcmk__graph_action_t *
+unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
 {
-    action_type_e action_type;
-    crm_action_t *action = NULL;
+    enum pcmk__graph_action_type action_type;
+    pcmk__graph_action_t *action = NULL;
     const char *element = TYPE(xml_action);
     const char *value = ID(xml_action);
 
@@ -474,15 +478,15 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
     }
 
     if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
-        action_type = action_type_rsc;
+        action_type = pcmk__rsc_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
                             pcmk__str_casei)) {
-        action_type = action_type_pseudo;
+        action_type = pcmk__pseudo_graph_action;
 
     } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT,
                             pcmk__str_casei)) {
-        action_type = action_type_crm;
+        action_type = pcmk__cluster_graph_action;
 
     } else {
         crm_err("Ignoring transition graph action of unknown type '%s' (bug?)",
@@ -491,7 +495,7 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
-    action = calloc(1, sizeof(crm_action_t));
+    action = calloc(1, sizeof(pcmk__graph_action_t));
     if (action == NULL) {
         crm_perror(LOG_CRIT, "Cannot unpack transition graph action");
         crm_log_xml_trace(xml_action, "lost");
@@ -499,7 +503,7 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
     }
 
     pcmk__scan_min_int(value, &(action->id), -1);
-    action->type = action_type_rsc;
+    action->type = pcmk__rsc_graph_action;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
     action->type = action_type;
@@ -529,9 +533,9 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
         gboolean can_fail = FALSE;
         crm_str_to_boolean(value, &can_fail);
         if (can_fail) {
-            crm__set_graph_action_flags(action, pcmk__graph_action_can_fail);
+            pcmk__set_graph_action_flags(action, pcmk__graph_action_can_fail);
         } else {
-            crm__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
+            pcmk__clear_graph_action_flags(action, pcmk__graph_action_can_fail);
         }
 
 #ifndef PCMK__COMPAT_2_0
@@ -556,16 +560,16 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
  *
  * \return Newly allocated synapse on success, or NULL otherwise
  */
-static synapse_t *
-unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
+static pcmk__graph_synapse_t *
+unpack_synapse(pcmk__graph_t *new_graph, xmlNode *xml_synapse)
 {
     const char *value = NULL;
     xmlNode *action_set = NULL;
-    synapse_t *new_synapse = NULL;
+    pcmk__graph_synapse_t *new_synapse = NULL;
 
     crm_trace("Unpacking synapse %s", ID(xml_synapse));
 
-    new_synapse = calloc(1, sizeof(synapse_t));
+    new_synapse = calloc(1, sizeof(pcmk__graph_synapse_t));
     if (new_synapse == NULL) {
         return NULL;
     }
@@ -589,7 +593,8 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
         for (xmlNode *action = pcmk__xml_first_child(action_set);
              action != NULL; action = pcmk__xml_next(action)) {
 
-            crm_action_t *new_action = unpack_action(new_synapse, action);
+            pcmk__graph_action_t *new_action = unpack_action(new_synapse,
+                                                             action);
 
             if (new_action == NULL) {
                 continue;
@@ -614,7 +619,8 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
             for (xmlNode *input = pcmk__xml_first_child(trigger);
                  input != NULL; input = pcmk__xml_next(input)) {
 
-                crm_action_t *new_input = unpack_action(new_synapse, input);
+                pcmk__graph_action_t *new_input = unpack_action(new_synapse,
+                                                                input);
 
                 if (new_input == NULL) {
                     continue;
@@ -657,14 +663,14 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
            ...
          </transition_graph>
  */
-crm_graph_t *
+pcmk__graph_t *
 pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 {
-    crm_graph_t *new_graph = NULL;
+    pcmk__graph_t *new_graph = NULL;
     const char *t_id = NULL;
     const char *time = NULL;
 
-    new_graph = calloc(1, sizeof(crm_graph_t));
+    new_graph = calloc(1, sizeof(pcmk__graph_t));
     if (new_graph == NULL) {
         return NULL;
     }
@@ -679,7 +685,7 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
     new_graph->abort_priority = 0;
     new_graph->network_delay = 0;
     new_graph->stonith_timeout = 0;
-    new_graph->completion_action = tg_done;
+    new_graph->completion_action = pcmk__graph_done;
 
     // Parse top-level attributes from <transition_graph>
     if (xml_graph != NULL) {
@@ -716,7 +722,8 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
     for (xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
          synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
 
-        synapse_t *new_synapse = unpack_synapse(new_graph, synapse_xml);
+        pcmk__graph_synapse_t *new_synapse = unpack_synapse(new_graph,
+                                                            synapse_xml);
 
         if (new_synapse != NULL) {
             new_graph->synapses = g_list_append(new_graph->synapses,
@@ -745,17 +752,16 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 static void
 free_graph_action(gpointer user_data)
 {
-    crm_action_t *action = user_data;
+    pcmk__graph_action_t *action = user_data;
 
-    if ((action->timer != NULL) && (action->timer->source_id != 0)) {
+    if (action->timer != 0) {
         crm_warn("Cancelling timer for graph action %d", action->id);
-        g_source_remove(action->timer->source_id);
+        g_source_remove(action->timer);
     }
     if (action->params != NULL) {
         g_hash_table_destroy(action->params);
     }
     free_xml(action->xml);
-    free(action->timer);
     free(action);
 }
 
@@ -768,7 +774,7 @@ free_graph_action(gpointer user_data)
 static void
 free_graph_synapse(gpointer user_data)
 {
-    synapse_t *synapse = user_data;
+    pcmk__graph_synapse_t *synapse = user_data;
 
     g_list_free_full(synapse->actions, free_graph_action);
     g_list_free_full(synapse->inputs, free_graph_action);
@@ -782,7 +788,7 @@ free_graph_synapse(gpointer user_data)
  * \param[in] graph  Transition graph to free
  */
 void
-pcmk__free_graph(crm_graph_t *graph)
+pcmk__free_graph(pcmk__graph_t *graph)
 {
     if (graph != NULL) {
         g_list_free_full(graph->synapses, free_graph_synapse);
@@ -809,7 +815,7 @@ pcmk__free_graph(crm_graph_t *graph)
  * \return Newly allocated executor event on success, or NULL otherwise
  */
 lrmd_event_data_t *
-pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
+pcmk__event_from_graph_action(xmlNode *resource, pcmk__graph_action_t *action,
                               int status, int rc, const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
@@ -819,7 +825,7 @@ pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
     xmlNode *action_resource = NULL;
 
     CRM_CHECK(action != NULL, return NULL);
-    CRM_CHECK(action->type == action_type_rsc, return NULL);
+    CRM_CHECK(action->type == pcmk__rsc_graph_action, return NULL);
 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");

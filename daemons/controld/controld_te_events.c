@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,11 +17,14 @@
 
 #include <pacemaker-controld.h>
 
+#include <crm/common/attrd_internal.h>
+#include <crm/common/ipc_attrd_internal.h>
+
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
 gboolean
-fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
+fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
 {
     const char *target_uuid = NULL;
     const char *router = NULL;
@@ -37,7 +40,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 
     gIter = graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
         if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
@@ -46,11 +49,12 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 
         gIter2 = synapse->actions;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
-            if (action->type == action_type_pseudo || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+            if ((action->type == pcmk__pseudo_graph_action)
+                || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
-            } else if (action->type == action_type_crm) {
+            } else if (action->type == pcmk__cluster_graph_action) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
                 if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
@@ -68,10 +72,10 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
             }
 
             if (pcmk__str_eq(target_uuid, down_node, pcmk__str_casei) || pcmk__str_eq(router_uuid, down_node, pcmk__str_casei)) {
-                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 pcmk__set_synapse_flags(synapse, pcmk__synapse_failed);
                 last_action = action->xml;
-                stop_te_timer(action->timer);
+                stop_te_timer(action);
                 pcmk__update_graph(graph, action);
 
                 if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
@@ -87,7 +91,8 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
 
     if (last_action != NULL) {
         crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
-        abort_transition(INFINITY, tg_restart, "Node failure", last_action);
+        abort_transition(INFINITY, pcmk__graph_restart, "Node failure",
+                         last_action);
         return TRUE;
     }
 
@@ -161,12 +166,18 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     if (do_update) {
+        pcmk__attrd_query_pair_t *fail_pair = NULL;
+        pcmk__attrd_query_pair_t *last_pair = NULL;
+        char *fail_name = NULL;
+        char *last_name = NULL;
+        GList *attrs = NULL;
+
+        uint32_t opts = pcmk__node_attr_none;
+
         char *now = pcmk__ttoa(time(NULL));
-        char *attr_name = NULL;
-        gboolean is_remote_node = FALSE;
 
         if (g_hash_table_lookup(crm_remote_peer_cache, event_node_uuid)) {
-            is_remote_node = TRUE;
+            opts |= pcmk__node_attr_remote;
         }
 
         crm_info("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
@@ -175,17 +186,40 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = pcmk__failcount_name(rsc_id, task, interval_ms);
-            update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
-            free(attr_name);
+            fail_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+            CRM_ASSERT(fail_pair != NULL);
+
+            fail_name = pcmk__failcount_name(rsc_id, task, interval_ms);
+            fail_pair->name = fail_name;
+            fail_pair->value = value;
+            fail_pair->node = on_uname;
+
+            attrs = g_list_prepend(attrs, fail_pair);
         }
 
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
-        update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
-        free(attr_name);
+        last_pair = calloc(1, sizeof(pcmk__attrd_query_pair_t));
+        CRM_ASSERT(last_pair != NULL);
+
+        last_name = pcmk__lastfailure_name(rsc_id, task, interval_ms);
+        last_pair->name = last_name;
+        last_pair->value = now;
+        last_pair->node = on_uname;
+
+        attrs = g_list_prepend(attrs, last_pair);
+
+        update_attrd_list(attrs, opts);
+
+        if (!ignore_failures) {
+            free(fail_name);
+            free(fail_pair);
+        }
+
+        free(last_name);
+        free(last_pair);
+        g_list_free(attrs);
 
         free(now);
     }
@@ -196,14 +230,14 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     return TRUE;
 }
 
-crm_action_t *
+pcmk__graph_action_t *
 controld_get_action(int id)
 {
     for (GList *item = transition_graph->synapses; item; item = item->next) {
-        synapse_t *synapse = (synapse_t *) item->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) item->data;
 
         for (GList *item2 = synapse->actions; item2; item2 = item2->next) {
-            crm_action_t *action = (crm_action_t *) item2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) item2->data;
 
             if (action->id == id) {
                 return action;
@@ -213,7 +247,7 @@ controld_get_action(int id)
     return NULL;
 }
 
-crm_action_t *
+pcmk__graph_action_t *
 get_cancel_action(const char *id, const char *node)
 {
     GList *gIter = NULL;
@@ -221,13 +255,13 @@ get_cancel_action(const char *id, const char *node)
 
     gIter = transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
-        synapse_t *synapse = (synapse_t *) gIter->data;
+        pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
         gIter2 = synapse->actions;
         for (; gIter2 != NULL; gIter2 = gIter2->next) {
             const char *task = NULL;
             const char *target = NULL;
-            crm_action_t *action = (crm_action_t *) gIter2->data;
+            pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
             if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
@@ -259,7 +293,7 @@ confirm_cancel_action(const char *id, const char *node_id)
 {
     const char *op_key = NULL;
     const char *node_name = NULL;
-    crm_action_t *cancel = get_cancel_action(id, node_id);
+    pcmk__graph_action_t *cancel = get_cancel_action(id, node_id);
 
     if (cancel == NULL) {
         return FALSE;
@@ -267,7 +301,7 @@ confirm_cancel_action(const char *id, const char *node_id)
     op_key = crm_element_value(cancel->xml, XML_LRM_ATTR_TASK_KEY);
     node_name = crm_element_value(cancel->xml, XML_LRM_ATTR_TARGET);
 
-    stop_te_timer(cancel->timer);
+    stop_te_timer(cancel);
     te_action_confirmed(cancel, transition_graph);
 
     crm_info("Cancellation of %s on %s confirmed (action %d)",
@@ -286,10 +320,10 @@ confirm_cancel_action(const char *id, const char *node_id)
  *
  * \return Matching event if found, NULL otherwise
  */
-crm_action_t *
+pcmk__graph_action_t *
 match_down_event(const char *target)
 {
-    crm_action_t *match = NULL;
+    pcmk__graph_action_t *match = NULL;
     xmlXPathObjectPtr xpath_ret = NULL;
     GList *gIter, *gIter2;
 
@@ -299,11 +333,11 @@ match_down_event(const char *target)
          gIter != NULL && match == NULL;
          gIter = gIter->next) {
 
-        for (gIter2 = ((synapse_t*)gIter->data)->actions;
+        for (gIter2 = ((pcmk__graph_synapse_t * ) gIter->data)->actions;
              gIter2 != NULL && match == NULL;
              gIter2 = gIter2->next) {
 
-            match = (crm_action_t*)gIter2->data;
+            match = (pcmk__graph_action_t *) gIter2->data;
             if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
                 xpath_ret = xpath_search(match->xml, xpath);
                 if (numXpathResults(xpath_ret) < 1) {
@@ -372,21 +406,22 @@ process_graph_event(xmlNode *event, const char *event_node)
         // decode_transition_key() already logged the bad key
         crm_err("Can't process action %s result: Incompatible versions? "
                 CRM_XS " call-id=%d", id, callid);
-        abort_transition(INFINITY, tg_restart, "Bad event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Bad event", event);
         return;
     }
 
     if (transition_num == -1) {
         // E.g. crm_resource --fail
         desc = "initiated outside of the cluster";
-        abort_transition(INFINITY, tg_restart, "Unexpected event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Unexpected event",
+                         event);
 
     } else if ((action_num < 0) || !pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none)) {
         desc = "initiated by a different DC";
-        abort_transition(INFINITY, tg_restart, "Foreign event", event);
+        abort_transition(INFINITY, pcmk__graph_restart, "Foreign event", event);
 
     } else if ((transition_graph->id != transition_num)
-               || (transition_graph->complete)) {
+               || transition_graph->complete) {
 
         // Action is not from currently active transition
 
@@ -404,25 +439,27 @@ process_graph_event(xmlNode *event, const char *event_node)
             }
 
             desc = "arrived after initial scheduling";
-            abort_transition(INFINITY, tg_restart, "Change in recurring result",
-                             event);
+            abort_transition(INFINITY, pcmk__graph_restart,
+                             "Change in recurring result", event);
 
         } else if (transition_graph->id != transition_num) {
             desc = "arrived really late";
-            abort_transition(INFINITY, tg_restart, "Old event", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Old event", event);
         } else {
             desc = "arrived late";
-            abort_transition(INFINITY, tg_restart, "Inactive graph", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Inactive graph",
+                             event);
         }
 
     } else {
         // Event is result of an action from currently active transition
-        crm_action_t *action = controld_get_action(action_num);
+        pcmk__graph_action_t *action = controld_get_action(action_num);
 
         if (action == NULL) {
             // Should never happen
             desc = "unknown";
-            abort_transition(INFINITY, tg_restart, "Unknown event", event);
+            abort_transition(INFINITY, pcmk__graph_restart, "Unknown event",
+                             event);
 
         } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been
@@ -443,15 +480,15 @@ process_graph_event(xmlNode *event, const char *event_node)
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {
-                crm__set_graph_action_flags(action, pcmk__graph_action_failed);
+                pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
             }
 
-            stop_te_timer(action->timer);
+            stop_te_timer(action);
             te_action_confirmed(action, transition_graph);
 
             if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
-                abort_transition(action->synapse->priority + 1, tg_restart,
-                                 "Event failed", event);
+                abort_transition(action->synapse->priority + 1,
+                                 pcmk__graph_restart, "Event failed", event);
             }
         }
     }

@@ -379,7 +379,6 @@ fencing_result2xml(remote_fencing_op_t *op)
     crm_xml_add(notify_data, F_STONITH_CLIENTID, op->client_id);
     crm_xml_add(notify_data, F_STONITH_CLIENTNAME, op->client_name);
 
-    stonith__xe_set_result(notify_data, &op->result);
     return notify_data;
 }
 
@@ -407,6 +406,8 @@ fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
     if (op_merged) {
         pcmk__xe_set_bool_attr(bcast, F_STONITH_MERGED, true);
     }
+
+    stonith__xe_set_result(notify_data, &op->result);
 
     add_message_xml(bcast, F_STONITH_CALLDATA, notify_data);
     send_cluster_message(NULL, crm_msg_stonith_ng, bcast, FALSE);
@@ -956,9 +957,9 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return pcmk_rc_ok;
     }
 
-    crm_notice("All fencing options targeting %s for client %s@%s failed "
-               CRM_XS " id=%.8s",
-               op->target, op->client_name, op->originator, op->id);
+    crm_info("All fencing options targeting %s for client %s@%s failed "
+             CRM_XS " id=%.8s",
+             op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
 
@@ -1079,7 +1080,8 @@ fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
     CRM_CHECK(dev != NULL, return EPROTO);
 
     crm_notice("Received manual confirmation that %s has been fenced",
-               crm_str(crm_element_value(dev, F_STONITH_TARGET)));
+               pcmk__s(crm_element_value(dev, F_STONITH_TARGET),
+                       "unknown target"));
     op = initiate_remote_stonith_op(client, msg, TRUE);
     if (op == NULL) {
         return EPROTO;
@@ -2276,9 +2278,12 @@ fenced_process_fencing_reply(xmlNode *msg)
                      op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
-            crm_notice("Action '%s' targeting %s using %s on behalf of %s@%s: "
+            crm_notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "
                        "%s%s%s%s",
-                       op->action, op->target, device, op->client_name,
+                       op->action, op->target,
+                       ((device == NULL)? "" : " using "),
+                       ((device == NULL)? "" : device),
+                       op->client_name,
                        op->originator,
                        pcmk_exec_status_str(op->result.execution_status),
                        (reason == NULL)? "" : " (",

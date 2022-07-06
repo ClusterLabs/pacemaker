@@ -385,10 +385,10 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
-    pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_INDETERMINATE);
+    pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
 
     CRM_ASSERT(client->user != NULL);
     pcmk__update_acl_user(msg, F_CRM_USER, client->user);
@@ -522,109 +522,109 @@ static pcmk__cluster_option_t crmd_opts[] = {
      */
     {
         "dc-version", NULL, "string", NULL, PCMK__VALUE_NONE, NULL,
-        "Pacemaker version on cluster node elected Designated Controller (DC)",
-        "Includes a hash which identifies the exact changeset the code was "
-            "built from. Used for diagnostic purposes."
+        N_("Pacemaker version on cluster node elected Designated Controller (DC)"),
+        N_("Includes a hash which identifies the exact changeset the code was "
+            "built from. Used for diagnostic purposes.")
     },
     {
         "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
-        "The messaging stack on which Pacemaker is currently running",
-        "Used for informational and diagnostic purposes."
+        N_("The messaging stack on which Pacemaker is currently running"),
+        N_("Used for informational and diagnostic purposes.")
     },
     {
         "cluster-name", NULL, "string", NULL, NULL, NULL,
-        "An arbitrary name for the cluster",
-        "This optional value is mostly for users' convenience as desired "
+        N_("An arbitrary name for the cluster"),
+        N_("This optional value is mostly for users' convenience as desired "
             "in administration, but may also be used in Pacemaker "
             "configuration rules via the #cluster-name node attribute, and "
-            "by higher-level tools and resource agents."
+            "by higher-level tools and resource agents.")
     },
     {
         XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time",
         NULL, "20s", pcmk__valid_interval_spec,
-        "How long to wait for a response from other nodes during start-up",
-        "The optimal value will depend on the speed and load of your network "
-            "and the type of switches used."
+        N_("How long to wait for a response from other nodes during start-up"),
+        N_("The optimal value will depend on the speed and load of your network "
+            "and the type of switches used.")
     },
     {
         XML_CONFIG_ATTR_RECHECK, NULL, "time",
         N_("Zero disables polling, while positive values are an interval in seconds"
             "(unless other units are specified, for example \"5min\")"),
         "15min", pcmk__valid_interval_spec,
-        "Polling interval to recheck cluster state and evaluate rules "
-            "with date specifications",
-        "Pacemaker is primarily event-driven, and looks ahead to know when to "
+        N_("Polling interval to recheck cluster state and evaluate rules "
+            "with date specifications"),
+        N_("Pacemaker is primarily event-driven, and looks ahead to know when to "
             "recheck cluster state for failure timeouts and most time-based "
             "rules. However, it will also recheck the cluster after this "
             "amount of inactivity, to evaluate rules with date specifications "
-            "and serve as a fail-safe for certain types of scheduler bugs."
+            "and serve as a fail-safe for certain types of scheduler bugs.")
     },
     {
         "load-threshold", NULL, "percentage", NULL,
         "80%", pcmk__valid_percentage,
-        "Maximum amount of system load that should be used by cluster nodes",
-        "The cluster will slow down its recovery process when the amount of "
-            "system resources used (currently CPU) approaches this limit",
+        N_("Maximum amount of system load that should be used by cluster nodes"),
+        N_("The cluster will slow down its recovery process when the amount of "
+            "system resources used (currently CPU) approaches this limit"),
     },
     {
         "node-action-limit", NULL, "integer", NULL,
         "0", pcmk__valid_number,
-        "Maximum number of jobs that can be scheduled per node "
-            "(defaults to 2x cores)"
+        N_("Maximum number of jobs that can be scheduled per node "
+            "(defaults to 2x cores)")
     },
     { XML_CONFIG_ATTR_FENCE_REACTION, NULL, "string", NULL, "stop", NULL,
-        "How a cluster node should react if notified of its own fencing",
-        "A cluster node may receive notification of its own fencing if fencing "
+        N_("How a cluster node should react if notified of its own fencing"),
+        N_("A cluster node may receive notification of its own fencing if fencing "
         "is misconfigured, or if fabric fencing is in use that doesn't cut "
         "cluster communication. Allowed values are \"stop\" to attempt to "
         "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
-        "to immediately reboot the local node, falling back to stop on failure."
+        "to immediately reboot the local node, falling back to stop on failure.")
     },
     {
         XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL,
         "2min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "Declare an election failed if it is not decided within this much "
+        N_("Declare an election failed if it is not decided within this much "
             "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug."
+            "the presence of a bug.")
     },
     {
         XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL,
         "20min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "Exit immediately if shutdown does not complete within this much "
+        N_("Exit immediately if shutdown does not complete within this much "
             "time. If you need to adjust this value, it probably indicates "
-            "the presence of a bug."
+            "the presence of a bug.")
     },
     {
         "join-integration-timeout", "crmd-integration-timeout", "time", NULL,
         "3min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "If you need to adjust this value, it probably indicates "
-            "the presence of a bug."
+        N_("If you need to adjust this value, it probably indicates "
+            "the presence of a bug.")
     },
     {
         "join-finalization-timeout", "crmd-finalization-timeout", "time", NULL,
         "30min", pcmk__valid_interval_spec,
         "*** Advanced Use Only ***",
-        "If you need to adjust this value, it probably indicates "
-            "the presence of a bug."
+        N_("If you need to adjust this value, it probably indicates "
+            "the presence of a bug.")
     },
     {
         "transition-delay", "crmd-transition-delay", "time", NULL,
         "0s", pcmk__valid_interval_spec,
-        "*** Advanced Use Only *** Enabling this option will slow down "
-            "cluster recovery under all conditions",
-        "Delay cluster recovery for this much time to allow for additional "
+        N_("*** Advanced Use Only *** Enabling this option will slow down "
+            "cluster recovery under all conditions"),
+        N_("Delay cluster recovery for this much time to allow for additional "
             "events to occur. Useful if your configuration is sensitive to "
-            "the order in which ping updates arrive."
+            "the order in which ping updates arrive.")
     },
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
         "0", controld_verify_stonith_watchdog_timeout,
-        "How long to wait before we can assume nodes are safely down "
-            "when watchdog-based self-fencing via SBD is in use",
-        "If nonzero, along with `have-watchdog=true` automatically set by the "
+        N_("How long to wait before we can assume nodes are safely down "
+            "when watchdog-based self-fencing via SBD is in use"),
+        N_("If nonzero, along with `have-watchdog=true` automatically set by the "
             "cluster, when fencing is required, watchdog-based self-fencing "
             "will be performed via SBD without requiring a fencing resource "
             "explicitly configured. "
@@ -640,13 +640,13 @@ static pcmk__cluster_option_t crmd_opts[] = {
             "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
             "+WARNING:+ In this case, it's essential (currently not verified by "
             "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
-            "all nodes."
+            "all nodes.")
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
         "10", pcmk__valid_positive_number,
-        "How many times fencing can fail before it will no longer be "
-            "immediately re-attempted on a target"
+        N_("How many times fencing can fail before it will no longer be "
+            "immediately re-attempted on a target")
     },
 
     // Already documented in libpe_status (other values must be kept identical)

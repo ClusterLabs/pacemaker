@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm_resource.h>
+#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
@@ -715,9 +716,10 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
     if (pe__is_guest_or_remote_node(node)) {
         attr_options |= pcmk__node_attr_remote;
     }
-    rc = pcmk__node_attr_request_clear(NULL, node->details->uname, rsc_name,
-                                       operation, interval_spec, NULL,
-                                       attr_options);
+
+    rc = pcmk__attrd_api_clear_failures(NULL, node->details->uname, rsc_name,
+                                        operation, interval_spec, NULL,
+                                        attr_options);
     free(rsc_name);
     return rc;
 }
@@ -743,8 +745,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             pe_resource_t *child = (pe_resource_t *) lpc->data;
 
             rc = cli_resource_delete(controld_api, host_uname, child, operation,
-                                     interval_spec, just_failures, data_set,
-                                     force);
+                                     interval_spec, just_failures, data_set, force);
             if (rc != pcmk_rc_ok) {
                 return rc;
             }
@@ -777,9 +778,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             node = (pe_node_t *) lpc->data;
 
             if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->details->uname,
-                                         rsc, operation, interval_spec,
-                                         just_failures, data_set, force);
+                rc = cli_resource_delete(controld_api, node->details->uname, rsc,
+                                         operation, interval_spec, just_failures,
+                                         data_set, force);
             }
             if (rc != pcmk_rc_ok) {
                 g_list_free(nodes);
@@ -862,8 +863,8 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         }
     }
 
-    rc = pcmk__node_attr_request_clear(NULL, node_name, NULL, operation,
-                                       interval_spec, NULL, attr_options);
+    rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, operation,
+                                        interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Unable to clean up all failures on %s: %s",
                  display_name, pcmk_rc_str(rc));
@@ -1844,8 +1845,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     if (!pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_OCF,
                               PCMK_RESOURCE_CLASS_LSB, NULL)) {
         services__format_result(op, CRM_EX_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                                "Manual execution of the %s standard "
-                                "is unsupported", crm_str(class));
+                                "Manual execution of the %s standard is "
+                                "unsupported", pcmk__s(class, "unspecified"));
     }
 
     if (op->rc != PCMK_OCF_UNKNOWN) {
@@ -1961,7 +1962,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
             rsc = p;
 
         } else {
-            out->info(out, "Ignoring master option: %s is not promotable", rsc_id);
+            out->info(out, "Ignoring --promoted option: %s is not promotable",
+                      rsc_id);
             promoted_role_only = FALSE;
         }
     }

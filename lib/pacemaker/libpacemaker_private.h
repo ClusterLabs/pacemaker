@@ -34,8 +34,7 @@ pe_action_t *pcmk__new_cancel_action(pe_resource_t *rsc, const char *name,
                                      guint interval_ms, pe_node_t *node);
 
 G_GNUC_INTERNAL
-pe_action_t *pcmk__new_shutdown_action(pe_node_t *node,
-                                       pe_working_set_t *data_set);
+pe_action_t *pcmk__new_shutdown_action(pe_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_locks_rsc_to_node(const pe_action_t *action);
@@ -77,14 +76,10 @@ void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
                             pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__fence_guest(pe_node_t *node, pe_working_set_t *data_set);
+void pcmk__fence_guest(pe_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__node_unfenced(pe_node_t *node);
-
-G_GNUC_INTERNAL
-bool pcmk__is_unfence_device(const pe_resource_t *rsc,
-                             const pe_working_set_t *data_set);
 
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
@@ -169,6 +164,32 @@ G_GNUC_INTERNAL
 void pcmk__block_colocated_starts(pe_action_t *action,
                                   pe_working_set_t *data_set);
 
+/*!
+ * \internal
+ * \brief Check whether colocation's left-hand preferences should be considered
+ *
+ * \param[in] colocation  Colocation constraint
+ * \param[in] rsc         Right-hand instance (normally this will be
+ *                        colocation->primary, which NULL will be treated as,
+ *                        but for clones or bundles with multiple instances
+ *                        this can be a particular instance)
+ *
+ * \return true if colocation influence should be effective, otherwise false
+ */
+static inline bool
+pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                               const pe_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        rsc = colocation->primary;
+    }
+
+    /* The left hand of a colocation influences the right hand's location
+     * if the influence option is true, or the right hand is not yet active.
+     */
+    return colocation->influence || (rsc->running_on == NULL);
+}
+
 
 // Ordering constraints (pcmk_sched_ordering.c)
 
@@ -226,6 +247,9 @@ G_GNUC_INTERNAL
 void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+void pcmk__require_promotion_tickets(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 bool pcmk__is_failed_remote_node(pe_node_t *node);
 
 G_GNUC_INTERNAL
@@ -238,8 +262,7 @@ G_GNUC_INTERNAL
 pe_node_t *pcmk__connection_host_for_action(pe_action_t *action);
 
 G_GNUC_INTERNAL
-void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params,
-                                  pe_working_set_t *data_set);
+void pcmk__substitute_remote_addr(pe_resource_t *rsc, GHashTable *params);
 
 G_GNUC_INTERNAL
 void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
@@ -289,7 +312,8 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 // Nodes (pcmk_sched_nodes.c)
 
 G_GNUC_INTERNAL
-bool pcmk__node_available(const pe_node_t *node);
+bool pcmk__node_available(const pe_node_t *node, bool consider_score,
+                          bool consider_guest);
 
 G_GNUC_INTERNAL
 bool pcmk__any_node_available(GHashTable *nodes);
@@ -303,6 +327,10 @@ GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
 
 G_GNUC_INTERNAL
 void pcmk__apply_node_health(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+pe_node_t *pcmk__top_allowed_node(const pe_resource_t *rsc,
+                                  const pe_node_t *node);
 
 
 // Clone notifictions (pcmk_sched_notif.c)
@@ -359,6 +387,12 @@ bool pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
 G_GNUC_INTERNAL
 void pcmk__sort_resources(pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+gint pcmk__cmp_instance(gconstpointer a, gconstpointer b);
+
+G_GNUC_INTERNAL
+gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
+
 
 // Functions related to probes (pcmk_sched_probes.c)
 
@@ -384,8 +418,7 @@ void pcmk__release_node_capacity(GHashTable *current_utilization,
                                  pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
-                                     pe_working_set_t *data_set);
+void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,

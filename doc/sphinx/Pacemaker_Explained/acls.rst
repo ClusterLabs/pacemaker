@@ -199,11 +199,22 @@ ACL targets correspond to user accounts on the system.
    |                  |    single: id; acl_target attribute                       |
    |                  |    single: attribute; id (acl_target)                     |
    |                  |                                                           |
-   |                  | The name of a user on the system *(required)*             |
+   |                  | A unique identifier for the target (if ``name`` is not    |
+   |                  | specified, this must be the name of the user account)     |
+   |                  | *(required)*                                              |
+   +------------------+-----------------------------------------------------------+
+   | name             | .. index::                                                |
+   |                  |    single: acl_target; name (attribute)                   |
+   |                  |    single: name; acl_target attribute                     |
+   |                  |    single: attribute; name (acl_target)                   |
+   |                  |                                                           |
+   |                  | If specified, the user account name (this allows you to   |
+   |                  | specify a user name that is already used as the ``id``    |
+   |                  | for some other configuration element) *(since 2.1.5)*     |
    +------------------+-----------------------------------------------------------+
 
-ACL groups may be specified, but are not currently used by Pacemaker. This is
-expected to change in a future version.
+ACL groups correspond to groups on the system. Any role configured for these
+groups apply to all users in that group *(since 2.1.5)*.
    
 .. index::
    single: Access Control List (ACL); acl_group
@@ -220,12 +231,29 @@ expected to change in a future version.
    |                  |    single: id; acl_group attribute                        |
    |                  |    single: attribute; id (acl_group)                      |
    |                  |                                                           |
-   |                  | The name of a group on the system *(required)*            |
+   |                  | A unique identifier for the group (if ``name`` is not     |
+   |                  | specified, this must be the group name) *(required)*      |
+   +------------------+-----------------------------------------------------------+
+   | name             | .. index::                                                |
+   |                  |    single: acl_group; name (attribute)                    |
+   |                  |    single: name; acl_group attribute                      |
+   |                  |    single: attribute; name (acl_group)                    |
+   |                  |                                                           |
+   |                  | If specified, the group name (this allows you to specify  |
+   |                  | a group name that is already used as the ``id`` for some  |
+   |                  | other configuration element)                              |
    +------------------+-----------------------------------------------------------+
 
 Each ``acl_target`` and ``acl_group`` element may contain any number of ``role``
 elements.
-   
+
+.. note::
+
+   If the system users and groups are defined by some network service (such as
+   LDAP), the cluster itself will be unaffected by outages in the service, but
+   affected users and groups will not be able to make changes to the CIB.
+
+
 .. index::
    single: Access Control List (ACL); role
    pair: role; XML element

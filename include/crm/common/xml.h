@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,8 +46,6 @@ extern "C" {
 #  define CRM_BZ2_BLOCKS		4
 #  define CRM_BZ2_WORK		20
 #  define CRM_BZ2_THRESHOLD	128 * 1024
-
-#  define XML_PARANOIA_CHECKS 0
 
 typedef const xmlChar *pcmkXmlStr;
 

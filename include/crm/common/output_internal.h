@@ -28,7 +28,7 @@ extern "C" {
  */
 
 
-#  define PCMK__API_VERSION "2.20"
+#  define PCMK__API_VERSION "2.21"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
@@ -857,6 +857,10 @@ G_GNUC_NULL_TERMINATED;
  *                      will simply be printed to stderr.
  */
 void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
+
+int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
+void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
+int pcmk__log_output_new(pcmk__output_t **out);
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

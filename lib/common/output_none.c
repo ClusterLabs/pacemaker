@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/cmdline_internal.h>
 
 GOptionEntry pcmk__none_output_entries[] = {
     { NULL }
@@ -120,7 +121,7 @@ pcmk__mk_none_output(char **argv) {
     }
 
     retval->fmt_name = PCMK__VALUE_NONE;
-    retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
+    retval->request = pcmk__quote_cmdline(argv);
 
     retval->init = none_init;
     retval->free_priv = none_free_priv;

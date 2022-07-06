@@ -132,12 +132,12 @@ main(int argc, char **argv)
         goto done;
     }
 
-    logger_out = pcmk__new_logger();
-    if (logger_out == NULL) {
+    if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
         goto done;
     }
-
+    pe__register_messages(logger_out);
+    pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
     /* Create the mainloop and run it... */

@@ -2139,6 +2139,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/lists/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/operations/Makefile                \
+                lib/common/tests/procfs/Makefile                    \
                 lib/common/tests/results/Makefile                   \
                 lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \

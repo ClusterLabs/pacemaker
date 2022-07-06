@@ -130,15 +130,16 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
     stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0,
                                                      5, NULL, NULL, NULL);
     int rc = stonith__execute(action);
+    result = stonith__action_result(action);
 
-    if (rc < 0) {
-        crm_warn("Could not execute metadata action for %s: %s "
-                 CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+    if (result == NULL) {
+        if (rc < 0) {
+            crm_warn("Could not execute metadata action for %s: %s "
+                     CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+        }
         stonith__destroy_action(action);
         return rc;
     }
-
-    result = stonith__action_result(action);
 
     if (result->execution_status != PCMK_EXEC_DONE) {
         crm_warn("Could not execute metadata action for %s: %s",
@@ -262,6 +263,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
     int remaining_timeout = timeout;
     xmlNode *metadata = NULL;
     stonith_action_t *action = NULL;
+    pcmk__action_result_t *result = NULL;
 
     if (host_arg == NULL) {
         time_t start_time = time(NULL);
@@ -298,9 +300,9 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
                                    NULL, host_arg);
 
     rc = stonith__execute(action);
-    if (rc == pcmk_ok) {
-        pcmk__action_result_t *result = stonith__action_result(action);
+    result = stonith__action_result(action);
 
+    if (result != NULL) {
         rc = pcmk_rc2legacy(stonith__result2rc(result));
 
         // Take ownership of output so stonith__destroy_action() doesn't free it

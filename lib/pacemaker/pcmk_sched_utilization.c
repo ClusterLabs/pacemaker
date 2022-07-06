@@ -13,6 +13,9 @@
 
 #include "libpacemaker_private.h"
 
+// Name for a pseudo-op to use in ordering constraints for utilization
+#define LOAD_STOPPED "load_stopped"
+
 /*!
  * \internal
  * \brief Get integer utilization from a string
@@ -286,11 +289,9 @@ sum_resource_utilization(pe_resource_t *orig_rsc, GList *rscs)
  *
  * \param[in]     rsc       Resource to check
  * \param[in,out] prefer    Resource's preferred node (might be updated)
- * \param[in]     data_set  Cluster working set
  */
 void
-pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
-                                pe_working_set_t *data_set)
+pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer)
 {
     bool any_capable = false;
     char *rscs_id = NULL;
@@ -300,10 +301,10 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
     GHashTable *unallocated_utilization = NULL;
     GHashTableIter iter;
 
-    CRM_CHECK((rsc != NULL) && (prefer != NULL) && (data_set != NULL), return);
+    CRM_CHECK((rsc != NULL) && (prefer != NULL), return);
 
     // The default placement strategy ignores utilization
-    if (pcmk__str_eq(data_set->placement_strategy, "default",
+    if (pcmk__str_eq(rsc->cluster->placement_strategy, "default",
                      pcmk__str_casei)) {
         return;
     }
@@ -327,7 +328,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
     // Check whether any node has enough capacity for all the resources
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-        if (!pcmk__node_available(node) || (node->weight < 0)) {
+        if (!pcmk__node_available(node, true, false)) {
             continue;
         }
 
@@ -346,13 +347,13 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
         // If so, ban resource from any node with insufficient capacity
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if ((node->weight >= 0) && pcmk__node_available(node)
+            if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rscs_id,
                                          unallocated_utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
                              node->details->uname, rscs_id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  data_set);
+                                  rsc->cluster);
             }
         }
 
@@ -363,12 +364,12 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
         }
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if ((node->weight >= 0) && pcmk__node_available(node)
+            if (pcmk__node_available(node, true, false)
                 && !have_enough_capacity(node, rsc->id, rsc->utilization)) {
                 pe_rsc_debug(rsc, "%s does not have enough capacity for %s",
                              node->details->uname, rsc->id);
                 resource_location(rsc, node, -INFINITY, "__limit_utilization__",
-                                  data_set);
+                                  rsc->cluster);
             }
         }
     }
@@ -378,7 +379,7 @@ pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer,
     free(rscs_id);
 
     pe__show_node_weights(true, rsc, "Post-utilization",
-                          rsc->allowed_nodes, data_set);
+                          rsc->allowed_nodes, rsc->cluster);
 }
 
 /*!

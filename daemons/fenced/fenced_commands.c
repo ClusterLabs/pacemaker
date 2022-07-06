@@ -1000,10 +1000,9 @@ target_list_type(stonith_device_t * dev)
 }
 
 static stonith_device_t *
-build_device_from_xml(xmlNode * msg)
+build_device_from_xml(xmlNode *dev)
 {
     const char *value;
-    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
     char *agent = crm_element_value_copy(dev, "agent");
 
@@ -1061,7 +1060,7 @@ build_device_from_xml(xmlNode * msg)
     }
 
     value = crm_element_value(dev, "rsc_provides");
-    if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
+    if (pcmk__str_eq(value, PCMK__VALUE_UNFENCING, pcmk__str_casei)) {
         device->automatic_unfencing = TRUE;
     }
 
@@ -1308,10 +1307,10 @@ device_has_duplicate(stonith_device_t * device)
 }
 
 int
-stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
+stonith_device_register(xmlNode *dev, gboolean from_cib)
 {
     stonith_device_t *dup = NULL;
-    stonith_device_t *device = build_device_from_xml(msg);
+    stonith_device_t *device = build_device_from_xml(dev);
     guint ndevices = 0;
     int rv = pcmk_ok;
 
@@ -1400,9 +1399,6 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
         ndevices = g_hash_table_size(device_list);
         crm_notice("Added '%s' to device list (%d active device%s)",
                    device->id, ndevices, pcmk__plural_s(ndevices));
-    }
-    if (desc) {
-        *desc = device->id;
     }
 
     if (from_cib) {
@@ -1584,6 +1580,65 @@ parse_device_list(const char *devices)
 
 /*!
  * \internal
+ * \brief Unpack essential information from topology request XML
+ *
+ * \param[in]  xml     Request XML to search
+ * \param[out] mode    If not NULL, where to store level kind
+ * \param[out] target  If not NULL, where to store representation of target
+ * \param[out] id      If not NULL, where to store level number
+ * \param[out] desc    If not NULL, where to store log-friendly level description
+ *
+ * \return Topology level XML from within \p xml, or NULL if not found
+ * \note The caller is responsible for freeing \p *target and \p *desc if set.
+ */
+static xmlNode *
+unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
+                     int *id, char **desc)
+{
+    enum fenced_target_by local_mode = fenced_target_by_unknown;
+    char *local_target = NULL;
+    int local_id = 0;
+
+    /* The level element can be the top element or lower. If top level, don't
+     * search by xpath, because it might give multiple hits if the XML is the
+     * CIB.
+     */
+    if ((xml != NULL)
+        && !pcmk__str_eq(TYPE(xml), XML_TAG_FENCING_LEVEL, pcmk__str_none)) {
+        xml = get_xpath_object("//" XML_TAG_FENCING_LEVEL, xml, LOG_WARNING);
+    }
+
+    if (xml == NULL) {
+        if (desc != NULL) {
+            *desc = crm_strdup_printf("missing");
+        }
+    } else {
+        local_mode = unpack_level_kind(xml);
+        local_target = stonith_level_key(xml, local_mode);
+        crm_element_value_int(xml, XML_ATTR_STONITH_INDEX, &local_id);
+        if (desc != NULL) {
+            *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
+        }
+    }
+
+    if (mode != NULL) {
+        *mode = local_mode;
+    }
+    if (id != NULL) {
+        *id = local_id;
+    }
+
+    if (target != NULL) {
+        *target = local_target;
+    } else {
+        free(local_target);
+    }
+
+    return xml;
+}
+
+/*!
+ * \internal
  * \brief Register a fencing topology level for a target
  *
  * Given an XML request specifying the target name, level index, and device IDs
@@ -1607,44 +1662,33 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     stonith_key_value_t *dIter = NULL;
     stonith_key_value_t *devices = NULL;
 
-    CRM_CHECK(result != NULL, return);
+    CRM_CHECK((msg != NULL) && (result != NULL), return);
 
-    if (msg == NULL) {
-        fenced_set_protocol_error(result);
-        return;
-    }
-
-    /* Allow the XML here to point to the level tag directly, or wrapped in
-     * another tag. If directly, don't search by xpath, because it might give
-     * multiple hits (e.g. if the XML is the CIB).
-     */
-    if (pcmk__str_eq(TYPE(msg), XML_TAG_FENCING_LEVEL, pcmk__str_casei)) {
-        level = msg;
-    } else {
-        level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
-    }
+    level = unpack_level_request(msg, &mode, &target, &id, desc);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
     }
 
-    mode = unpack_level_kind(level);
-    target = stonith_level_key(level, mode);
-    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
-
-    if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", target, id);
+    // Ensure an ID was given (even the client API adds an ID)
+    if (pcmk__str_empty(ID(level))) {
+        crm_warn("Ignoring registration for topology level without ID");
+        free(target);
+        crm_log_xml_trace(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Topology level is invalid without ID");
+        return;
     }
 
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
         crm_warn("Ignoring registration for topology level '%s' "
-                 "without valid target", crm_str(ID(level)));
+                 "without valid target", ID(level));
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
-                            crm_str(ID(level)));
+                            ID(level));
         return;
     }
 
@@ -1653,12 +1697,13 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         crm_warn("Ignoring topology registration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
-                            crm_str(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX)),
-                            crm_str(ID(level)));
+                            pcmk__s(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX),
+                                    ""),
+                            ID(level));
         return;
     }
 
@@ -1732,37 +1777,27 @@ fenced_unregister_level(xmlNode *msg, char **desc,
 
     CRM_CHECK(result != NULL, return);
 
-    if (msg == NULL) {
-        fenced_set_protocol_error(result);
-        return;
-    }
-
-    // Unlike additions, removal requests should always have one level tag
-    level = get_xpath_object("//" XML_TAG_FENCING_LEVEL, msg, LOG_WARNING);
+    level = unpack_level_request(msg, NULL, &target, &id, desc);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
     }
-
-    target = stonith_level_key(level, fenced_target_by_unknown);
-    crm_element_value_int(level, XML_ATTR_STONITH_INDEX, &id);
 
     // Ensure level ID is in allowed range
     if ((id < 0) || (id >= ST_LEVEL_MAX)) {
         crm_warn("Ignoring topology unregistration for %s with invalid level %d",
                   target, id);
         free(target);
-        crm_log_xml_info(level, "Bad level");
+        crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                            "Invalid level number '%s' for topology level '%s'",
-                            crm_str(crm_element_value(level,
-                                                      XML_ATTR_STONITH_INDEX)),
-                            crm_str(ID(level)));
-        return;
-    }
+                            "Invalid level number '%s' for topology level %s",
+                            pcmk__s(crm_element_value(level,
+                                                      XML_ATTR_STONITH_INDEX),
+                                    "<null>"),
 
-    if (desc) {
-        *desc = crm_strdup_printf("%s[%d]", target, id);
+                            // Client API doesn't add ID to unregistration XML
+                            pcmk__s(ID(level), ""));
+        return;
     }
 
     tp = g_hash_table_lookup(topology, target);
@@ -2069,13 +2104,12 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     }
 
     if (pcmk__str_eq(host, alias, pcmk__str_casei)) {
-        crm_notice("%s is%s eligible to fence (%s) %s: %s",
-                   dev->id, (can? "" : " not"), search->action, host,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s: %s",
+                 dev->id, (can? "" : " not"), search->action, host, check_type);
     } else {
-        crm_notice("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
-                   dev->id, (can? "" : " not"), search->action, host, alias,
-                   check_type);
+        crm_info("%s is%s eligible to fence (%s) %s (aka. '%s'): %s",
+                 dev->id, (can? "" : " not"), search->action, host, alias,
+                 check_type);
     }
 
   search_report_results:
@@ -2390,7 +2424,9 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     if (cmd->victim != NULL) {
         g_string_append_printf(msg, "targeting %s ", cmd->victim);
     }
-    g_string_append_printf(msg, "using %s ", cmd->device);
+    if (cmd->device != NULL) {
+        g_string_append_printf(msg, "using %s ", cmd->device);
+    }
 
     // Add exit status or execution status as appropriate
     if (result->execution_status == PCMK_EXEC_DONE) {
@@ -2986,7 +3022,7 @@ is_privileged(pcmk__client_t *c, const char *op)
         return true;
     } else {
         crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 crm_str(op), pcmk__client_name(c));
+                 pcmk__s(op, ""), pcmk__client_name(c));
         return false;
     }
 }
@@ -3062,7 +3098,7 @@ handle_query_request(pcmk__request_t *request)
         action = crm_element_value(dev, F_STONITH_ACTION);
     }
 
-    crm_log_xml_debug(request->xml, "Query");
+    crm_log_xml_trace(request->xml, "Query");
 
     query = calloc(1, sizeof(struct st_query_data));
     CRM_ASSERT(query != NULL);
@@ -3106,7 +3142,7 @@ handle_notify_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
 
-    return pcmk__ipc_create_ack(request->ipc_flags, "ack", CRM_EX_OK);
+    return pcmk__ipc_create_ack(request->ipc_flags, "ack", NULL, CRM_EX_OK);
 }
 
 // STONITH_OP_RELAY
@@ -3253,11 +3289,12 @@ handle_history_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_add_request(pcmk__request_t *request)
 {
-    const char *device_id = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
+    xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request->xml,
+                                    LOG_ERR);
 
     if (is_privileged(request->ipc_client, op)) {
-        int rc = stonith_device_register(request->xml, &device_id, FALSE);
+        int rc = stonith_device_register(dev, FALSE);
 
         pcmk__set_result(&request->result,
                          ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
@@ -3268,7 +3305,8 @@ handle_device_add_request(pcmk__request_t *request)
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must register device via CIB");
     }
-    fenced_send_device_notification(op, &request->result, device_id);
+    fenced_send_device_notification(op, &request->result,
+                                    (dev == NULL)? NULL : ID(dev));
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3297,18 +3335,19 @@ handle_device_delete_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_add_request(pcmk__request_t *request)
 {
-    char *device_id = NULL;
+    char *desc = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_register_level(request->xml, &device_id, &request->result);
+        fenced_register_level(request->xml, &desc, &request->result);
     } else {
+        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must add level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, device_id);
-    free(device_id);
+    fenced_send_level_notification(op, &request->result, desc);
+    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3316,18 +3355,19 @@ handle_level_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_delete_request(pcmk__request_t *request)
 {
-    char *device_id = NULL;
+    char *desc = NULL;
     const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_unregister_level(request->xml, &device_id, &request->result);
+        fenced_unregister_level(request->xml, &desc, &request->result);
     } else {
+        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete level via CIB");
     }
-    fenced_send_level_notification(op, &request->result, device_id);
-    free(device_id);
+    fenced_send_level_notification(op, &request->result, desc);
+    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3348,13 +3388,11 @@ handle_cache_request(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
-
     crm_err("Unknown IPC request %s from %s %s",
-            op, pcmk__request_origin_type(request),
+            request->op, pcmk__request_origin_type(request),
             pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                        "Unknown IPC request type '%s' (bug?)", crm_str(op));
+                        "Unknown IPC request type '%s' (bug?)", request->op);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3439,7 +3477,7 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
         fenced_process_fencing_reply(request);
     } else {
         crm_err("Ignoring unknown %s reply from %s %s",
-                crm_str(op), ((client == NULL)? "peer" : "client"),
+                pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
         crm_log_xml_warn(request, "UnknownOp");
         free(op);

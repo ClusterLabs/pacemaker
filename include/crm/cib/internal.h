@@ -247,10 +247,10 @@ int cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options,
                           const char *attr_value, const char *user_name,
                           const char *node_type);
 
-int cib__read_node_attr(pcmk__output_t *out, cib_t *cib, const char *section,
+int cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
                         const char *node_uuid, const char *set_type, const char *set_name,
-                        const char *attr_id, const char *attr_name, char **attr_value,
-                        const char *user_name);
+                        const char *attr_id, const char *attr_name, const char *user_name,
+                        xmlNode **result);
 
 int cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options,
                           const char *section, const char *node_uuid, const char *set_type,

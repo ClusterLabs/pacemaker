@@ -561,7 +561,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
         if (pe__is_guest_node(node)) {
             if (node->details->remote_requires_reset && have_managed
                 && pe_can_fence(data_set, node)) {
-                pcmk__fence_guest(node, data_set);
+                pcmk__fence_guest(node);
             }
             continue;
         }
@@ -577,7 +577,7 @@ schedule_fencing_and_shutdowns(pe_working_set_t *data_set)
             }
 
         } else if (needs_shutdown(node)) {
-            pe_action_t *down_op = pcmk__new_shutdown_action(node, data_set);
+            pe_action_t *down_op = pcmk__new_shutdown_action(node);
 
             // Track DC and non-DC shutdown actions separately
             if (node->details->is_dc) {
@@ -672,12 +672,14 @@ log_all_actions(pe_working_set_t *data_set)
      * previously set and just log instead.
      */
     pcmk__output_t *prev_out = data_set->priv;
-    pcmk__output_t *out = pcmk__new_logger();
+    pcmk__output_t *out = NULL;
 
-    if (out == NULL) {
+    if (pcmk__log_output_new(&out) != pcmk_rc_ok) {
         return;
     }
 
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
     pcmk__output_set_log_level(out, LOG_NOTICE);
     data_set->priv = out;
 

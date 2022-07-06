@@ -7,19 +7,13 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/lib/common
-LDADD = $(top_builddir)/lib/common/libcrmcommon.la -lcmocka
+AM_CPPFLAGS = -I$(top_srcdir)/include		\
+	      -I$(top_builddir)/include		\
+	      -I$(top_srcdir)/lib/common
+LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+AM_LDFLAGS = $(LDFLAGS_WRAP)
 
 include $(top_srcdir)/mk/tap.mk
-
-crm_user_lookup_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
-crm_user_lookup_test_LDFLAGS = -Wl,--wrap=calloc -Wl,--wrap=getpwnam_r
-
-pcmk_daemon_user_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
-pcmk_daemon_user_test_LDFLAGS = -Wl,--wrap=getpwnam_r
-
-pcmk_hostname_test_LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
-pcmk_hostname_test_LDFLAGS = -Wl,--wrap=uname
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS =				\

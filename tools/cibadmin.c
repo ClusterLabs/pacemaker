@@ -400,7 +400,7 @@ print_xml_output(xmlNode * xml)
 
     } else {
         buffer = dump_xml_formatted(xml);
-        fprintf(stdout, "%s", crm_str(buffer));
+        fprintf(stdout, "%s", pcmk__s(buffer, "<null>\n"));
         free(buffer);
     }
 }
@@ -605,7 +605,7 @@ main(int argc, char **argv)
                     crm_xml_add(output, XML_ATTR_VALIDATION, argv[optind]);
                 }
                 admin_input_xml = dump_xml_formatted(output);
-                fprintf(stdout, "%s\n", crm_str(admin_input_xml));
+                fprintf(stdout, "%s", pcmk__s(admin_input_xml, "<null>\n"));
                 crm_exit(CRM_EX_OK);
                 break;
             default:
@@ -708,7 +708,7 @@ main(int argc, char **argv)
 
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
-        fprintf(stdout, "%s\n", crm_str(digest));
+        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         free_xml(input);
         crm_exit(CRM_EX_OK);
@@ -725,7 +725,7 @@ main(int argc, char **argv)
         version = crm_element_value(input, XML_ATTR_CRM_VERSION);
         digest = calculate_xml_versioned_digest(input, FALSE, TRUE, version);
         fprintf(stderr, "Versioned (%s) digest: ", version);
-        fprintf(stdout, "%s\n", crm_str(digest));
+        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         free_xml(input);
         crm_exit(CRM_EX_OK);
@@ -736,7 +736,7 @@ main(int argc, char **argv)
         crm_err("Init failed, could not perform requested operations");
         fprintf(stderr, "Init failed, could not perform requested operations\n");
         free_xml(input);
-        crm_exit(crm_errno2exit(rc));
+        crm_exit(pcmk_rc2exitc(pcmk_legacy2rc(rc)));
     }
 
     rc = do_work(input, command_options, &output);
@@ -761,16 +761,17 @@ main(int argc, char **argv)
         report_schema_unchanged();
 
     } else if (rc < 0) {
-        crm_err("Call failed: %s", pcmk_strerror(rc));
-        fprintf(stderr, "Call failed: %s\n", pcmk_strerror(rc));
+        rc = pcmk_legacy2rc(rc);
+        crm_err("Call failed: %s", pcmk_rc_str(rc));
+        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
-        if (rc == -pcmk_err_schema_validation) {
+        if (rc == pcmk_rc_schema_validation) {
             if (pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
                 xmlNode *obj = NULL;
-                int version = 0, rc = 0;
+                int version = 0;
 
-                rc = the_cib->cmds->query(the_cib, NULL, &obj, command_options);
-                if (rc == pcmk_ok) {
+                if (the_cib->cmds->query(the_cib, NULL, &obj,
+                                         command_options) == pcmk_ok) {
                     update_validation(&obj, &version, 0, TRUE, FALSE);
                 }
 
@@ -778,7 +779,7 @@ main(int argc, char **argv)
                 validate_xml_verbose(output);
             }
         }
-        exit_code = crm_errno2exit(rc);
+        exit_code = pcmk_rc2exitc(rc);
     }
 
     if (output != NULL && acl_eval_how != acl_eval_unused) {
@@ -882,14 +883,16 @@ do_init(void)
 void
 cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    exit_code = crm_errno2exit(rc);
+    rc = pcmk_legacy2rc(rc);
+    exit_code = pcmk_rc2exitc(rc);
 
-    if (rc == -pcmk_err_schema_unchanged) {
+    if (rc == pcmk_rc_schema_unchanged) {
         report_schema_unchanged();
 
-    } else if (rc != pcmk_ok) {
-        crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
-        fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
+    } else if (rc != pcmk_rc_ok) {
+        crm_warn("Call %s failed: %s " CRM_XS " rc=%d",
+                 cib_action, pcmk_rc_str(rc), rc);
+        fprintf(stderr, "Call %s failed: %s\n", cib_action, pcmk_rc_str(rc));
         print_xml_output(output);
 
     } else if (pcmk__str_eq(cib_action, CIB_OP_QUERY, pcmk__str_casei) && output == NULL) {

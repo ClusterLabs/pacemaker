@@ -1,65 +1,65 @@
 =#=#=#= Begin test: Invalid period - [] =#=#=#=
-Invalid interval specified: 
+iso8601: Invalid interval specified: 
 =#=#=#= End test: Invalid period - [] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - []
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z] =#=#=#=
-Invalid interval specified: 2019-01-01 00:00:00Z
+iso8601: Invalid interval specified: 2019-01-01 00:00:00Z
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z/] =#=#=#=
-Invalid interval specified: 2019-01-01 00:00:00Z/
+iso8601: Invalid interval specified: 2019-01-01 00:00:00Z/
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z/] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z/]
 =#=#=#= Begin test: Invalid period - [PT2S/P1M] =#=#=#=
-Invalid interval specified: PT2S/P1M
+iso8601: Invalid interval specified: PT2S/P1M
 =#=#=#= End test: Invalid period - [PT2S/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [PT2S/P1M]
 =#=#=#= Begin test: Invalid period - [2019-13-01 00:00:00Z/P1M] =#=#=#=
-Invalid interval specified: 2019-13-01 00:00:00Z/P1M
+iso8601: Invalid interval specified: 2019-13-01 00:00:00Z/P1M
 =#=#=#= End test: Invalid period - [2019-13-01 00:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-13-01 00:00:00Z/P1M]
 =#=#=#= Begin test: Invalid period - [20191077T15/P1M] =#=#=#=
-Invalid interval specified: 20191077T15/P1M
+iso8601: Invalid interval specified: 20191077T15/P1M
 =#=#=#= End test: Invalid period - [20191077T15/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [20191077T15/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T25:00:00Z/P1M] =#=#=#=
-Invalid interval specified: 2019-10-01T25:00:00Z/P1M
+iso8601: Invalid interval specified: 2019-10-01T25:00:00Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T25:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01T25:00:00Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T24:00:01Z/P1M] =#=#=#=
-Invalid interval specified: 2019-10-01T24:00:01Z/P1M
+iso8601: Invalid interval specified: 2019-10-01T24:00:01Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T24:00:01Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01T24:00:01Z/P1M]
 =#=#=#= Begin test: Invalid period - [PT5H/20191001T007000Z] =#=#=#=
-Invalid interval specified: PT5H/20191001T007000Z
+iso8601: Invalid interval specified: PT5H/20191001T007000Z
 =#=#=#= End test: Invalid period - [PT5H/20191001T007000Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [PT5H/20191001T007000Z]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:80Z/P1M] =#=#=#=
-Invalid interval specified: 2019-10-01 00:00:80Z/P1M
+iso8601: Invalid interval specified: 2019-10-01 00:00:80Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:80Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01 00:00:80Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] =#=#=#=
-Invalid interval specified: 2019-10-01 00:00:10 +25:00/P1M
+iso8601: Invalid interval specified: 2019-10-01 00:00:10 +25:00/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-10-01 00:00:10 +25:00/P1M]
 =#=#=#= Begin test: Invalid period - [20191001T000010 -00:61/P1M] =#=#=#=
-Invalid interval specified: 20191001T000010 -00:61/P1M
+iso8601: Invalid interval specified: 20191001T000010 -00:61/P1M
 =#=#=#= End test: Invalid period - [20191001T000010 -00:61/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [20191001T000010 -00:61/P1M]
 =#=#=#= Begin test: Invalid period - [P1Y/2019-02-29 00:00:00Z] =#=#=#=
-Invalid interval specified: P1Y/2019-02-29 00:00:00Z
+iso8601: Invalid interval specified: P1Y/2019-02-29 00:00:00Z
 =#=#=#= End test: Invalid period - [P1Y/2019-02-29 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1Y/2019-02-29 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z/P] =#=#=#=
-Invalid interval specified: 2019-01-01 00:00:00Z/P
+iso8601: Invalid interval specified: 2019-01-01 00:00:00Z/P
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z/P] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [2019-01-01 00:00:00Z/P]
 =#=#=#= Begin test: Invalid period - [P1Z/2019-02-20 00:00:00Z] =#=#=#=
-Invalid interval specified: P1Z/2019-02-20 00:00:00Z
+iso8601: Invalid interval specified: P1Z/2019-02-20 00:00:00Z
 =#=#=#= End test: Invalid period - [P1Z/2019-02-20 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1Z/2019-02-20 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [P1YM/2019-02-20 00:00:00Z] =#=#=#=
-Invalid interval specified: P1YM/2019-02-20 00:00:00Z
+iso8601: Invalid interval specified: P1YM/2019-02-20 00:00:00Z
 =#=#=#= End test: Invalid period - [P1YM/2019-02-20 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601        - Invalid period - [P1YM/2019-02-20 00:00:00Z]
 =#=#=#= Begin test: 2014-01-01 00:30:00 - 1 Hour =#=#=#=

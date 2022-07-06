@@ -267,6 +267,10 @@ do_cl_join_finalize_respond(long long action,
 
     update_dc_expected(input->msg);
 
+    /* record the node's feature set as a transient attribute */
+    update_attrd(fsa_our_uname, CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, NULL,
+                 FALSE);
+
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state(fsa_our_uname);
     if (tmp1 != NULL) {

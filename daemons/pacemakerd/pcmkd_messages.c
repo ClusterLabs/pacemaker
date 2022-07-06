@@ -28,9 +28,9 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from %s.%s",
-              crm_str(crm_element_value(msg, F_CRM_ORIGIN)),
-              from?from:"unknown");
+    crm_trace("Pinged from " F_CRM_SYS_FROM "='%s' " F_CRM_ORIGIN "='%s'",
+              pcmk__s(from, ""),
+              pcmk__s(crm_element_value(msg, F_CRM_ORIGIN), ""));
     ping = create_xml_node(NULL, XML_CRM_TAG_PING);
     value = crm_element_value(msg, F_CRM_SYS_TO);
     crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
@@ -160,28 +160,33 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
     task = crm_element_value(msg, F_CRM_TASK);
-    if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+    if (pcmk__str_empty(task)) {
+        crm_debug("IPC command from client %s is missing task",
+                  pcmk__client_name(c));
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INVALID_PARAM);
+
+    } else if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         pcmk_handle_shutdown_request(c, msg, id, flags);
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring request from client %s to purge node "
                   "because peer cache is not used", pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_OK);
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         pcmk_handle_ping_request(c, msg, id);
 
     } else {
         crm_debug("Unrecognized IPC command '%s' from client %s",
-                  crm_str(task), pcmk__client_name(c));
-        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
+                  task, pcmk__client_name(c));
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INVALID_PARAM);
     }
 
     free_xml(msg);

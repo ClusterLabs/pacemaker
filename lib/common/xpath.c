@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -230,7 +230,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     if (max < 1) {
         if (error_level < LOG_NEVER) {
             do_crm_log(error_level, "No match for %s in %s",
-                       xpath, crm_str(nodePath));
+                       xpath, pcmk__s(nodePath, "unknown path"));
             crm_log_xml_explicit(xml_obj, "Unexpected Input");
         }
 
@@ -239,7 +239,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
             int lpc = 0;
 
             do_crm_log(error_level, "Too many matches for %s in %s",
-                       xpath, crm_str(nodePath));
+                       xpath, pcmk__s(nodePath, "unknown path"));
 
             for (lpc = 0; lpc < max; lpc++) {
                 xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -248,7 +248,8 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
                 if (match != NULL) {
                     matchNodePath = (char *) xmlGetNodePath(match);
                     do_crm_log(error_level, "%s[%d] = %s",
-                               xpath, lpc, crm_str(matchNodePath));
+                               xpath, lpc,
+                               pcmk__s(matchNodePath, "unrecognizable match"));
                     free(matchNodePath);
                 }
             }

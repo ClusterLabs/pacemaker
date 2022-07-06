@@ -1151,7 +1151,7 @@ get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
 {
     copy_gnutls_datum(key, &(key_cache->key));
     crm_debug("Using cached Pacemaker Remote key from %s",
-              crm_str(key_cache->location));
+              pcmk__s(key_cache->location, "unknown location"));
 }
 
 static void
@@ -1162,7 +1162,7 @@ cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key,
     key_cache->location = location;
     copy_gnutls_datum(&(key_cache->key), key);
     crm_debug("Using (and cacheing) Pacemaker Remote key from %s",
-              crm_str(location));
+              pcmk__s(location, "unknown location"));
 }
 
 /*!
