@@ -359,16 +359,21 @@ pcmk__assign_instances(pe_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pe_resource_t *) iter->data;
 
+        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
+            continue; // Already assigned
+        }
+
         if (instance->running_on != NULL) {
             current = pe__current_node(instance);
             if (pcmk__top_allowed_node(instance, current) == NULL) {
-                crm_err("%s is running on %s which isn't allowed",
-                        instance->id, pe__node_name(current));
-            }
-        }
+                const char *unmanaged = "";
 
-        if (!pcmk_is_set(instance->flags, pe_rsc_provisional)) {
-            continue; // Already assigned
+                if (!pcmk_is_set(instance->flags, pe_rsc_managed)) {
+                    unmanaged = "Unmanaged resource ";
+                }
+                crm_notice("%s%s is running on %s which is no longer allowed",
+                           unmanaged, instance->id, pe__node_name(current));
+            }
         }
 
         if (assigned >= max_total) {
