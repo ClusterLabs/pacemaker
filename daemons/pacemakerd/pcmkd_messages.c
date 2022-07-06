@@ -19,8 +19,8 @@
 #include <time.h>
 #include <sys/types.h>
 
-void
-pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
+static void
+handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
 {
     const char *value = NULL;
     xmlNode *ping = NULL;
@@ -66,8 +66,8 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     }
 }
 
-void
-pcmk_handle_shutdown_request(pcmk__client_t *c, xmlNode *msg, uint32_t id, uint32_t flags)
+static void
+handle_shutdown_request(pcmk__client_t *c, xmlNode *msg, uint32_t id, uint32_t flags)
 {
     xmlNode *shutdown = NULL;
     xmlNode *reply = NULL;
@@ -172,7 +172,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     } else if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        pcmk_handle_shutdown_request(c, msg, id, flags);
+        handle_shutdown_request(c, msg, id, flags);
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring request from client %s to purge node "
@@ -181,7 +181,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        pcmk_handle_ping_request(c, msg, id);
+        handle_ping_request(c, msg, id);
 
     } else {
         crm_debug("Unrecognized IPC command '%s' from client %s",
