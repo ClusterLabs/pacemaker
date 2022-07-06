@@ -685,6 +685,11 @@ G_GNUC_INTERNAL
 void pcmk__assign_instances(pe_resource_t *collective, GList *instances,
                             int max_total, int max_per_node);
 
+G_GNUC_INTERNAL
+void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances,
+                                   notify_data_t **start_notify,
+                                   notify_data_t **stop_notify);
+
 
 // Injections (pcmk_injections.c)
 

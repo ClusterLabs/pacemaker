@@ -470,10 +470,19 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
     *state |= instance_state;
 }
 
+/*!
+ * \internal
+ * \brief Create actions for collective resource instances
+ *
+ * \param[in,out] collective    Clone or bundle resource to create actions for
+ * \param[in,out] instances     List of clone instances or bundle containers
+ * \param[out]    start_notify  If not NULL, create start notification actions
+ * \param[out]    stop_notify   If not NULL, create stop notification actions
+ */
 void
-clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
-                            notify_data_t **start_notify,
-                            notify_data_t **stop_notify)
+pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
+                              notify_data_t **start_notify,
+                              notify_data_t **stop_notify)
 {
     uint32_t state = 0;
 
@@ -483,38 +492,39 @@ clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
     pe_action_t *start = NULL;
     pe_action_t *started = NULL;
 
-    pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
+    pe_rsc_trace(collective, "Creating collective instance actions for %s",
+                 collective->id);
 
-    for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
+    // Create actions for each instance appropriate to its variant
+    for (GList *iter = instances; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-        child_rsc->cmds->create_actions(child_rsc);
-        check_instance_state(child_rsc, &state);
+        instance->cmds->create_actions(instance);
+        check_instance_state(instance, &state);
     }
 
-    /* start */
-    start = pe__new_rsc_pseudo_action(rsc, RSC_START,
+    // Create pseudo-actions for rsc start and started
+    start = pe__new_rsc_pseudo_action(collective, RSC_START,
                                       !pcmk_is_set(state, instance_starting),
                                       true);
-    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED,
+    started = pe__new_rsc_pseudo_action(collective, RSC_STARTED,
                                         !pcmk_is_set(state, instance_starting),
                                         false);
     started->priority = INFINITY;
-
     if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
         pe__set_action_flags(started, pe_action_runnable);
     }
 
-    if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = pe__clone_notif_pseudo_ops(rsc, RSC_START, start,
+    if ((start_notify != NULL) && (*start_notify == NULL)) {
+        *start_notify = pe__clone_notif_pseudo_ops(collective, RSC_START, start,
                                                    started);
     }
 
-    /* stop */
-    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP,
+    // Create pseudo-actions for rsc stop and stopped
+    stop = pe__new_rsc_pseudo_action(collective, RSC_STOP,
                                      !pcmk_is_set(state, instance_stopping),
                                      true);
-    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED,
+    stopped = pe__new_rsc_pseudo_action(collective, RSC_STOPPED,
                                         !pcmk_is_set(state, instance_stopping),
                                         true);
     stopped->priority = INFINITY;
@@ -522,11 +532,13 @@ clone_create_pseudo_actions(pe_resource_t *rsc, GList *children,
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
-    if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, stop, stopped);
-
-        if (start_notify && *start_notify && *stop_notify) {
-            order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
+    if ((stop_notify != NULL) && (*stop_notify == NULL)) {
+        *stop_notify = pe__clone_notif_pseudo_ops(collective, RSC_STOP, stop,
+                                                  stopped);
+        if ((start_notify != NULL) && (*start_notify != NULL)
+            && (*stop_notify != NULL)) {
+            order_actions((*stop_notify)->post_done, (*start_notify)->pre,
+                          pe_order_optional);
         }
     }
 }

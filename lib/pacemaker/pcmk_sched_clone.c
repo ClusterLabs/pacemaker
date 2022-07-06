@@ -159,8 +159,8 @@ clone_create_actions(pe_resource_t *rsc)
     get_clone_variant_data(clone_data, rsc);
 
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
-    clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify,
-                                &clone_data->stop_notify);
+    pcmk__create_instance_actions(rsc, rsc->children, &clone_data->start_notify,
+                                  &clone_data->stop_notify);
     child_ordering_constraints(rsc, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {

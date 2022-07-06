@@ -190,7 +190,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc)
         }
     }
 
-    clone_create_pseudo_actions(rsc, containers, NULL, NULL);
+    pcmk__create_instance_actions(rsc, containers, NULL, NULL);
 
     if (bundle_data->child) {
         bundle_data->child->cmds->create_actions(bundle_data->child);
