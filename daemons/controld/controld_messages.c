@@ -348,18 +348,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         return TRUE;
 
     } else if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
-        /* quietly ignore */
         crm_trace("No routing needed for hello message %s", ref);
         return TRUE;
 
     } else if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
-        crm_warn("Cannot route message %s: Type is '%s' not '" T_CRM "'",
-                 ref, (type? type : "missing"));
+        crm_warn("Received invalid message %s: type '%s' not '" T_CRM "'",
+                 ref, pcmk__s(type, ""));
         crm_log_xml_warn(msg, "[bad message type]");
         return TRUE;
 
     } else if (sys_to == NULL) {
-        crm_warn("Cannot route message %s: No subsystem specified", ref);
+        crm_warn("Received invalid message %s: no subsystem", ref);
         crm_log_xml_warn(msg, "[no subsystem]");
         return TRUE;
     }
@@ -1197,13 +1196,14 @@ handle_shutdown_request(xmlNode * stored_msg)
     return I_NULL;
 }
 
-/* msg is deleted by the time this returns */
-extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);
-
 static void
 send_msg_via_ipc(xmlNode * msg, const char *sys)
 {
-    pcmk__client_t *client_channel = pcmk__find_client_by_id(sys);
+    pcmk__client_t *client_channel = NULL;
+
+    CRM_CHECK(sys != NULL, return);
+
+    client_channel = pcmk__find_client_by_id(sys);
 
     if (crm_element_value(msg, F_CRM_HOST_FROM) == NULL) {
         crm_xml_add(msg, F_CRM_HOST_FROM, fsa_our_uname);
@@ -1213,12 +1213,12 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         /* Transient clients such as crmadmin */
         pcmk__ipc_send_xml(client_channel, 0, msg, crm_ipc_server_event);
 
-    } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_TENGINE) == 0) {
+    } else if (pcmk__str_eq(sys, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         xmlNode *data = get_message_xml(msg, F_CRM_DATA);
 
         process_te_message(msg, data);
 
-    } else if (sys != NULL && strcmp(sys, CRM_SYSTEM_LRMD) == 0) {
+    } else if (pcmk__str_eq(sys, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         fsa_data_t fsa_data;
         ha_msg_input_t fsa_input;
 
@@ -1235,12 +1235,11 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
 
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);
 
-    } else if (sys != NULL && crmd_is_proxy_session(sys)) {
+    } else if (crmd_is_proxy_session(sys)) {
         crmd_proxy_send(sys, msg);
 
     } else {
-        crm_debug("Ignoring message for unknown subsystem %s",
-                  pcmk__s(sys, "<null>"));
+        crm_info("Received invalid request: unknown subsystem '%s'", sys);
     }
 }
 

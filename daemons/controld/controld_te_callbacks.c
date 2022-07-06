@@ -563,60 +563,57 @@ te_update_diff(const char *event, xmlNode * msg)
     }
 }
 
-gboolean
+void
 process_te_message(xmlNode * msg, xmlNode * xml_data)
 {
-    const char *from = crm_element_value(msg, F_ORIG);
-    const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
-    const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
-    const char *op = crm_element_value(msg, F_CRM_TASK);
-    const char *type = crm_element_value(msg, F_CRM_MSG_TYPE);
+    const char *value = NULL;
+    xmlXPathObject *xpathObj = NULL;
+    int nmatches = 0;
 
-    crm_trace("Processing %s (%s) message", op, ref);
-    crm_log_xml_trace(msg, "ipc");
+    CRM_CHECK(msg != NULL, return);
 
-    if (op == NULL) {
-        /* error */
-
-    } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_TENGINE) != 0) {
-        crm_trace("Bad sys-to: %s", pcmk__s(sys_to, "missing"));
-        return FALSE;
-
-    } else if (pcmk__str_eq(op, CRM_OP_INVOKE_LRM, pcmk__str_casei)
-               && pcmk__str_eq(sys_from, CRM_SYSTEM_LRMD, pcmk__str_casei)
-/* 		  && pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_casei) */
-        ) {
-        xmlXPathObject *xpathObj = NULL;
-
-        crm_log_xml_trace(msg, "Processing (N)ACK");
-        crm_debug("Processing (N)ACK %s from %s", crm_element_value(msg, F_CRM_REFERENCE), from);
-
-        xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
-        if (numXpathResults(xpathObj)) {
-            int lpc = 0, max = numXpathResults(xpathObj);
-
-            for (lpc = 0; lpc < max; lpc++) {
-                xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-                const char *node = get_node_id(rsc_op);
-
-                process_graph_event(rsc_op, node);
-            }
-            freeXpathObject(xpathObj);
-
-        } else {
-            crm_log_xml_err(msg, "Invalid (N)ACK");
-            freeXpathObject(xpathObj);
-            return FALSE;
-        }
-
-    } else {
-        crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
+    // Transition requests must specify transition engine as subsystem
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    if (pcmk__str_empty(value)
+        || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
+        crm_info("Received invalid transition request: subsystem '%s' not '"
+                 CRM_SYSTEM_TENGINE "'", pcmk__s(value, ""));
+        return;
     }
 
-    crm_trace("finished processing message");
+    // Only the lrm_invoke command is supported as a transition request
+    value = crm_element_value(msg, F_CRM_TASK);
+    if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
+        crm_info("Received invalid transition request: command '%s' not '"
+                 CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
+        return;
+    }
 
-    return TRUE;
+    // Transition requests must be marked as coming from the executor
+    value = crm_element_value(msg, F_CRM_SYS_FROM);
+    if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
+        crm_info("Received invalid transition request: from '%s' not '"
+                 CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
+        return;
+    }
+
+    crm_debug("Processing transition request with ref='%s' origin='%s'",
+              pcmk__s(crm_element_value(msg, F_CRM_REFERENCE), ""),
+              pcmk__s(crm_element_value(msg, F_ORIG), ""));
+
+    xpathObj = xpath_search(xml_data, "//" XML_LRM_TAG_RSC_OP);
+    nmatches = numXpathResults(xpathObj);
+    if (nmatches == 0) {
+        crm_err("Received transition request with no results (bug?)");
+    } else {
+        for (int lpc = 0; lpc < nmatches; lpc++) {
+            xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+            const char *node = get_node_id(rsc_op);
+
+            process_graph_event(rsc_op, node);
+        }
+    }
+    freeXpathObject(xpathObj);
 }
 
 void

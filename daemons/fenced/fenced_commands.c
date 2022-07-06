@@ -1662,7 +1662,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     stonith_key_value_t *dIter = NULL;
     stonith_key_value_t *devices = NULL;
 
-    CRM_CHECK(result != NULL, return);
+    CRM_CHECK((msg != NULL) && (result != NULL), return);
 
     level = unpack_level_request(msg, &mode, &target, &id, desc);
     if (level == NULL) {
@@ -1670,15 +1670,25 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         return;
     }
 
+    // Ensure an ID was given (even the client API adds an ID)
+    if (pcmk__str_empty(ID(level))) {
+        crm_warn("Ignoring registration for topology level without ID");
+        free(target);
+        crm_log_xml_trace(level, "Bad level");
+        pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
+                            "Topology level is invalid without ID");
+        return;
+    }
+
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
         crm_warn("Ignoring registration for topology level '%s' "
-                 "without valid target", pcmk__s(ID(level), "<null>"));
+                 "without valid target", ID(level));
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
-                            pcmk__s(ID(level), "<null>"));
+                            ID(level));
         return;
     }
 
@@ -1692,8 +1702,8 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
                             "Invalid level number '%s' for topology level '%s'",
                             pcmk__s(crm_element_value(level,
                                                       XML_ATTR_STONITH_INDEX),
-                                    "<null>"),
-                            pcmk__s(ID(level), "<null>"));
+                                    ""),
+                            ID(level));
         return;
     }
 
@@ -1780,11 +1790,13 @@ fenced_unregister_level(xmlNode *msg, char **desc,
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
-                            "Invalid level number '%s' for topology level '%s'",
+                            "Invalid level number '%s' for topology level %s",
                             pcmk__s(crm_element_value(level,
                                                       XML_ATTR_STONITH_INDEX),
                                     "<null>"),
-                            pcmk__s(ID(level), "<null>"));
+
+                            // Client API doesn't add ID to unregistration XML
+                            pcmk__s(ID(level), ""));
         return;
     }
 
@@ -3010,7 +3022,7 @@ is_privileged(pcmk__client_t *c, const char *op)
         return true;
     } else {
         crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 pcmk__s(op, "<null>"), pcmk__client_name(c));
+                 pcmk__s(op, ""), pcmk__client_name(c));
         return false;
     }
 }
@@ -3376,14 +3388,11 @@ handle_cache_request(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    const char *op = crm_element_value(request->xml, F_STONITH_OPERATION);
-
     crm_err("Unknown IPC request %s from %s %s",
-            op, pcmk__request_origin_type(request),
+            request->op, pcmk__request_origin_type(request),
             pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                        "Unknown IPC request type '%s' (bug?)",
-                        pcmk__s(op, "<null>"));
+                        "Unknown IPC request type '%s' (bug?)", request->op);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 

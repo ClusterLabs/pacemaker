@@ -114,25 +114,25 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     gboolean no_wait = FALSE;
 
     id = ID(action->xml);
-    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-    router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    CRM_CHECK(!pcmk__str_empty(id), return EPROTO);
 
-    if (!router_node) {
+    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+    CRM_CHECK(!pcmk__str_empty(task), return EPROTO);
+
+    on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+    CRM_CHECK(!pcmk__str_empty(on_node), return pcmk_rc_node_unknown);
+
+    router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
+    if (router_node == NULL) {
         router_node = on_node;
-        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_none)) {
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
-            if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
+            if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_none)) {
                 router_node = fsa_our_uname;
             }
         }
     }
-
-    CRM_CHECK(!pcmk__str_empty(on_node),
-              crm_err("Corrupted command (id=%s) %s: no node",
-                      pcmk__s(id, "<null>"), pcmk__s(task, "without task"));
-              return pcmk_rc_node_unknown);
 
     if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
         is_local = TRUE;
@@ -143,20 +143,19 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         no_wait = TRUE;
     }
 
-    crm_info("Executing crm-event (%s)%s%s: %s on %s",
-             pcmk__s(id, "<null>"), (is_local? " locally" : ""),
-             (no_wait? " without waiting" : ""),
-             pcmk__s(task, "unspecified task"), on_node);
+    crm_info("Handling controller request '%s' (%s on %s)%s%s",
+             id, task, on_node, (is_local? " locally" : ""),
+             (no_wait? " without waiting" : ""));
 
-    if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
         /* defer until everything else completes */
-        crm_info("crm-event (%s) is a local shutdown", pcmk__s(id, "<null>"));
+        crm_info("Controller request '%s' is a local shutdown", id);
         graph->completion_action = pcmk__graph_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
         return pcmk_rc_ok;
 
-    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_none)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
 
         pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);

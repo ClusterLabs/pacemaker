@@ -144,22 +144,24 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     const char *value = NULL;
     long long value_ll = 0;
 
-    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_casei)) {
+    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_none)) {
         long long int ack_status = 0;
         pcmk__scan_ll(crm_element_value(reply, "status"), &ack_status, CRM_EX_OK);
         return ack_status == CRM_EX_INDETERMINATE;
     }
 
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
-    if ((value == NULL) || (strcmp(value, XML_ATTR_RESPONSE))) {
-        crm_debug("Unrecognizable pacemakerd message: invalid message type '%s'",
-                  pcmk__s(value, "(unspecified)"));
+    if (pcmk__str_empty(value)
+        || !pcmk__str_eq(value, XML_ATTR_RESPONSE, pcmk__str_none)) {
+        crm_info("Unrecognizable message from pacemakerd: "
+                 "message type '%s' not '" XML_ATTR_RESPONSE "'",
+                 pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    if (crm_element_value(reply, XML_ATTR_REFERENCE) == NULL) {
-        crm_debug("Unrecognizable pacemakerd message: no reference");
+    if (pcmk__str_empty(crm_element_value(reply, XML_ATTR_REFERENCE))) {
+        crm_info("Unrecognizable message from pacemakerd: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -185,8 +187,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
     } else {
-        crm_debug("Unrecognizable pacemakerd message: '%s'",
-                  pcmk__s(value, "(unspecified)"));
+        crm_info("Unrecognizable message from pacemakerd: "
+                 "unknown command '%s'", pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

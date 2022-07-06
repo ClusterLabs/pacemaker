@@ -775,19 +775,25 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
          xml_obj = pcmk__xe_next(xml_obj)) {
 
         pe_resource_t *new_rsc = NULL;
+        const char *id = ID(xml_obj);
 
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, pcmk__str_none)) {
-            const char *template_id = ID(xml_obj);
+        if (pcmk__str_empty(id)) {
+            pcmk__config_err("Ignoring <%s> resource without ID",
+                             crm_element_name(xml_obj));
+            continue;
+        }
 
-            if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
-                                                            template_id, NULL, NULL) == FALSE) {
+        if (pcmk__str_eq((const char *) xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE,
+                         pcmk__str_none)) {
+            if (g_hash_table_lookup_extended(data_set->template_rsc_sets, id,
+                                             NULL, NULL) == FALSE) {
                 /* Record the template's ID for the knowledge of its existence anyway. */
-                g_hash_table_insert(data_set->template_rsc_sets, strdup(template_id), NULL);
+                g_hash_table_insert(data_set->template_rsc_sets, strdup(id), NULL);
             }
             continue;
         }
 
-        crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
+        crm_trace("Unpacking <%s id='%s'>", crm_element_name(xml_obj), id);
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set) && (new_rsc != NULL)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
@@ -795,8 +801,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         } else {
             pcmk__config_err("Ignoring <%s> resource '%s' "
                              "because configuration is invalid",
-                             crm_element_name(xml_obj),
-                             pcmk__s(ID(xml_obj), "(unnamed)"));
+                             crm_element_name(xml_obj), id);
             if (new_rsc != NULL && new_rsc->fns != NULL) {
                 new_rsc->fns->free(new_rsc);
             }
