@@ -605,23 +605,33 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
     return NULL;
 }
 
-static pe__bundle_replica_t *
-replica_for_container(const pe_resource_t *rsc, const pe_resource_t *container,
-                      const pe_node_t *node)
+/*!
+ * \internal
+ * \brief Get containerized resource corresponding to a given bundle container
+ *
+ * \param[in] instance  Collective instance that might be a bundle container
+ * \param[in] node      Node that \p instance might be running on
+ *
+ * \return Bundled resource instance inside \p instance if it is a bundle
+ *         container instance running on \p node, otherwise NULL
+ */
+const pe_resource_t *
+pcmk__get_rsc_in_container(const pe_resource_t *instance, const pe_node_t *node)
 {
-    if (rsc->variant == pe_container) {
-        const pe__bundle_variant_data_t *data = NULL;
+    const pe__bundle_variant_data_t *data = NULL;
+    const pe_resource_t *top = pe__const_top_resource(instance, true);
 
-        get_bundle_variant_data(data, rsc);
-        for (GList *gIter = data->replicas; gIter != NULL;
-             gIter = gIter->next) {
-            pe__bundle_replica_t *replica = gIter->data;
+    if ((node == NULL) || (top == NULL) || (top->variant != pe_container)) {
+        return NULL;
+    }
+    get_bundle_variant_data(data, top);
 
-            if (replica->child
-                && (container == replica->container)
-                && pe__same_node(node, replica->node)) {
-                return replica;
-            }
+    for (const GList *iter = data->replicas; iter != NULL; iter = iter->next) {
+        const pe__bundle_replica_t *replica = iter->data;
+
+        if ((replica->child != NULL) && (instance == replica->container)
+            && pe__same_node(node, replica->node)) {
+            return replica->child;
         }
     }
     return NULL;
@@ -676,26 +686,24 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             enum action_tasks task = clone_child_action(first);
             const char *first_task = task2text(task);
 
-            pe__bundle_replica_t *first_replica = NULL;
-            pe__bundle_replica_t *then_replica = NULL;
+            const pe_resource_t *first_rsc = NULL;
+            const pe_resource_t *then_rsc = NULL;
 
-            first_replica = replica_for_container(first->rsc, first_child,
-                                                  node);
-            if (strstr(first->task, "stop") && first_replica && first_replica->child) {
+            first_rsc = pcmk__get_rsc_in_container(first_child, node);
+            if ((first_rsc != NULL) && strstr(first->task, "stop")) {
                 /* Except for 'stopped' we should be looking at the
                  * in-container resource, actions for the child will
                  * happen later and are therefor more likely to align
                  * with the user's intent.
                  */
-                first_action = find_first_action(first_replica->child->actions,
-                                                 NULL, task2text(task), node);
+                first_action = find_first_action(first_rsc->actions, NULL,
+                                                 task2text(task), node);
             } else {
                 first_action = find_first_action(first_child->actions, NULL, task2text(task), node);
             }
 
-            then_replica = replica_for_container(then->rsc, then_child, node);
-            if (strstr(then->task, "mote")
-                && then_replica && then_replica->child) {
+            then_rsc = pcmk__get_rsc_in_container(then_child, node);
+            if ((then_rsc != NULL) && strstr(then->task, "mote")) {
                 /* Promote/demote actions will never be found for the
                  * container resource, look in the child instead
                  *
@@ -703,8 +711,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                  *  'XXXX then promote YYYY' as 'XXXX then start container for YYYY', and
                  *  'demote XXXX then stop YYYY' as 'stop container for XXXX then stop YYYY'
                  */
-                then_action = find_first_action(then_replica->child->actions,
-                                                NULL, then->task, node);
+                then_action = find_first_action(then_rsc->actions, NULL,
+                                                then->task, node);
             } else {
                 then_action = find_first_action(then_child->actions, NULL, then->task, node);
             }

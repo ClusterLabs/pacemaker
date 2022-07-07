@@ -673,6 +673,10 @@ G_GNUC_INTERNAL
 GList *pcmk__bundle_containers(const pe_resource_t *bundle);
 
 G_GNUC_INTERNAL
+const pe_resource_t *pcmk__get_rsc_in_container(const pe_resource_t *instance,
+                                                const pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
                                     const pe_resource_t *primary,
                                     const pcmk__colocation_t *colocation,
