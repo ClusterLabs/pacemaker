@@ -702,6 +702,12 @@ bool pcmk__instance_is_compatible(const pe_resource_t *instance,
                                   const pe_node_t *node, enum rsc_role_e role,
                                   bool current);
 
+G_GNUC_INTERNAL
+pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
+                                              const pe_resource_t *rsc,
+                                              enum rsc_role_e role,
+                                              bool current);
+
 
 // Injections (pcmk_injections.c)
 

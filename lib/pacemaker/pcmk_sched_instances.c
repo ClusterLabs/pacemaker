@@ -695,40 +695,49 @@ find_compatible_instance_on_node(const pe_resource_t *match_rsc,
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Find a clone instance or bundle container compatible with a resource
+ *
+ * \param[in] match_rsc  Resource that instance must match
+ * \param[in] rsc        Clone or bundle resource to check for matching instance
+ * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current    If true, compare instance's original node and role,
+ *                       otherwise compare assigned next node and role
+ *
+ * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
+ */
 pe_resource_t *
-find_compatible_child(const pe_resource_t *local_child,
-                      const pe_resource_t *rsc, enum rsc_role_e filter,
-                      gboolean current)
+pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
+                               const pe_resource_t *rsc, enum rsc_role_e role,
+                               bool current)
 {
-    pe_resource_t *pair = NULL;
-    GList *gIter = NULL;
-    GList *scratch = NULL;
-    pe_node_t *local_node = NULL;
+    pe_resource_t *instance = NULL;
+    GList *nodes = NULL;
+    pe_node_t *node = match_rsc->fns->location(match_rsc, NULL, current);
 
-    local_node = local_child->fns->location(local_child, NULL, current);
-    if (local_node) {
-        return find_compatible_instance_on_node(local_child, rsc, local_node,
-                                                filter, current);
-    }
-
-    scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL);
-
-    gIter = scratch;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-
-        pair = find_compatible_instance_on_node(local_child, rsc, node, filter,
+    // If match_rsc has a node, check only that node
+    if (node != NULL) {
+        return find_compatible_instance_on_node(match_rsc, rsc, node, role,
                                                 current);
-        if (pair) {
-            goto done;
-        }
     }
 
-    pe_rsc_debug(rsc, "Can't pair %s with %s", local_child->id, rsc->id);
-  done:
-    g_list_free(scratch);
-    return pair;
+    // Otherwise check for an instance matching any of match_rsc's allowed nodes
+    nodes = pcmk__sort_nodes(g_hash_table_get_values(match_rsc->allowed_nodes),
+                             NULL);
+    for (GList *iter = nodes; (iter != NULL) && (instance == NULL);
+         iter = iter->next) {
+        instance = find_compatible_instance_on_node(match_rsc, rsc,
+                                                    (pe_node_t *) iter->data,
+                                                    role, current);
+    }
+
+    if (instance == NULL) {
+        pe_rsc_debug(rsc, "No %s instance found compatible with %s",
+                     rsc->id, match_rsc->id);
+    }
+    g_list_free(nodes);
+    return instance;
 }
 
 static uint32_t
@@ -750,10 +759,10 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     children = get_instance_list(then->rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *then_child = gIter->data;
-        pe_resource_t *first_child = find_compatible_child(then_child,
-                                                           first->rsc,
-                                                           RSC_ROLE_UNKNOWN,
-                                                           current);
+        pe_resource_t *first_child = NULL;
+
+        first_child = pcmk__find_compatible_instance(then_child, first->rsc,
+                                                     RSC_ROLE_UNKNOWN, current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 

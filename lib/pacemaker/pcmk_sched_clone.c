@@ -308,8 +308,9 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
     } else if (do_interleave) {
         pe_resource_t *primary_instance = NULL;
 
-        primary_instance = find_compatible_child(dependent, primary,
-                                                 RSC_ROLE_UNKNOWN, FALSE);
+        primary_instance = pcmk__find_compatible_instance(dependent, primary,
+                                                          RSC_ROLE_UNKNOWN,
+                                                          false);
         if (primary_instance != NULL) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_instance->id);

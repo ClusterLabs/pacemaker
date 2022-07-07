@@ -24,9 +24,6 @@
 /* Constraint helper functions */
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
-pe_resource_t *find_compatible_child(const pe_resource_t *local_child,
-                                     const pe_resource_t *rsc,
-                                     enum rsc_role_e filter, gboolean current);
 enum pe_action_flags summary_action_flags(pe_action_t *action, GList *children,
                                           const pe_node_t *node);
 enum action_tasks clone_child_action(pe_action_t * action);
