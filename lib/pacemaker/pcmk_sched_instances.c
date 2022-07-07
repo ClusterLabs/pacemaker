@@ -740,6 +740,43 @@ pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
     return instance;
 }
 
+/*!
+ * \internal
+ * \brief Unassign an instance if ordering without interleave match is mandatory
+ *
+ * \param[in] first          'First' action in an ordering
+ * \param[in] then           'Then' action in an ordering
+ * \param[in] then_instance  'Then' instance that has no interleave match
+ * \param[in] type           Group of enum pe_ordering flags to apply
+ * \param[in] current        If true, "then" action is stopped or demoted
+ *
+ * \return true if \p then_instance was unassigned, otherwise false
+ */
+static bool
+unassign_if_mandatory(pe_action_t *first, pe_action_t *then,
+                      pe_resource_t *then_instance, uint32_t type, bool current)
+{
+    // Allow "then" instance to go down even without an interleave match
+    if (current) {
+        pe_rsc_trace(then->rsc,
+                     "%s has no instance to order before stopping "
+                     "or demoting %s",
+                     first->rsc->id, then_instance->id);
+
+    /* If the "first" action must be runnable, but there is no "first"
+     * instance, the "then" instance must not be allowed to come up.
+     */
+    } else if (pcmk_any_flags_set(type, pe_order_runnable_left
+                                        |pe_order_implies_then)) {
+        pe_rsc_info(then->rsc,
+                    "Inhibiting %s from being active "
+                    "because there is no %s instance to interleave",
+                    then_instance->id, first->rsc->id);
+        return pcmk__assign_resource(then_instance, NULL, true);
+    }
+    return false;
+}
+
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 const pe_node_t *node, uint32_t filter,
@@ -763,23 +800,9 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
 
         first_child = pcmk__find_compatible_instance(then_child, first->rsc,
                                                      RSC_ROLE_UNKNOWN, current);
-        if (first_child == NULL && current) {
-            crm_trace("Ignore");
-
-        } else if (first_child == NULL) {
-            crm_debug("No match found for %s (%d / %s / %s)", then_child->id, current, first->uuid, then->uuid);
-
-            /* Me no like this hack - but what else can we do?
-             *
-             * If there is no-one active or about to be active
-             *   on the same node as then_child, then they must
-             *   not be allowed to start
-             */
-            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
-                pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
-                if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
-                }
+        if (first_child == NULL) { // No instance can be interleaved
+            if (unassign_if_mandatory(first, then, then_child, type, current)) {
+                pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
 
         } else {
