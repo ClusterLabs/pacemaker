@@ -661,8 +661,8 @@ function test_tools() {
     test_assert_validate $CRM_EX_OK 0
 
     desc="Show why a resource is not running"
-    cmd="crm_resource -Y -r dummy"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -Y -r dummy --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Remove another resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role --output-as=xml"
@@ -886,6 +886,18 @@ function test_tools() {
     desc="Clear all implicit constraints for dummy"
     cmd="crm_resource -r dummy -U"
     test_assert $CRM_EX_OK
+
+    desc="Set a node health strategy"
+    cmd="crm_attribute -n node-health-strategy -v migrate-on-red"
+    test_assert $CRM_EX_OK
+
+    desc="Set a node health attribute"
+    cmd="crm_attribute -N node3 -n '#health-cts-cli' -v red"
+    test_assert $CRM_EX_OK
+
+    desc="Show why a resource is not running on an unhealthy node"
+    cmd="crm_resource -N node3 -Y -r dummy --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Delete a resource"
     cmd="crm_resource -D -r dummy -t primitive"

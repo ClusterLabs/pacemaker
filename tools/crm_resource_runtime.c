@@ -15,35 +15,6 @@
 #include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
 
-resource_checks_t *
-cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
-{
-    pe_resource_t *parent = uber_parent(rsc);
-    resource_checks_t *rc = calloc(1, sizeof(resource_checks_t));
-
-    if (role_s) {
-        enum rsc_role_e role = text2role(role_s);
-
-        if (role == RSC_ROLE_STOPPED) {
-            rc->flags |= rsc_remain_stopped;
-        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
-                   (role == RSC_ROLE_UNPROMOTED)) {
-            rc->flags |= rsc_unpromotable;
-        }
-    }
-
-    if (managed && !crm_is_true(managed)) {
-        rc->flags |= rsc_unmanaged;
-    }
-
-    if (rsc->lock_node) {
-        rc->lock_node = rsc->lock_node->details->uname;
-    }
-
-    rc->rsc = rsc;
-    return rc;
-}
-
 static GList *
 build_node_info_list(pe_resource_t *rsc)
 {
@@ -897,31 +868,118 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     return rc;
 }
 
-int
-cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
+static void
+check_role(resource_checks_t *checks)
 {
-    char *role_s = NULL;
-    char *managed = NULL;
-    pe_resource_t *parent = uber_parent(rsc);
-    int rc = pcmk_rc_no_output;
-    resource_checks_t *checks = NULL;
+    const char *role_s = g_hash_table_lookup(checks->rsc->meta,
+                                             XML_RSC_ATTR_TARGET_ROLE);
 
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
-
-    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
-                       NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
-
-    checks = cli_check_resource(rsc, role_s, managed);
-
-    if (checks->flags != 0 || checks->lock_node != NULL) {
-        rc = out->message(out, "resource-check-list", checks);
+    if (role_s == NULL) {
+        return;
     }
+    switch (text2role(role_s)) {
+        case RSC_ROLE_STOPPED:
+            checks->flags |= rsc_remain_stopped;
+            break;
 
-    free(role_s);
-    free(managed);
-    free(checks);
-    return rc;
+        case RSC_ROLE_UNPROMOTED:
+            if (pcmk_is_set(uber_parent(checks->rsc)->flags,
+                            pe_rsc_promotable)) {
+                checks->flags |= rsc_unpromotable;
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+static void
+check_managed(resource_checks_t *checks)
+{
+    const char *managed_s = g_hash_table_lookup(checks->rsc->meta,
+                                                XML_RSC_ATTR_MANAGED);
+
+    if ((managed_s != NULL) && !crm_is_true(managed_s)) {
+        checks->flags |= rsc_unmanaged;
+    }
+}
+
+static void
+check_locked(resource_checks_t *checks)
+{
+    if (checks->rsc->lock_node != NULL) {
+        checks->flags |= rsc_locked;
+        checks->lock_node = checks->rsc->lock_node->details->uname;
+    }
+}
+
+static bool
+node_is_unhealthy(pe_node_t *node)
+{
+    switch (pe__health_strategy(node->details->data_set)) {
+        case pcmk__health_strategy_none:
+            break;
+
+        case pcmk__health_strategy_no_red:
+            if (pe__node_health(node) < 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_only_green:
+            if (pe__node_health(node) <= 0) {
+                return true;
+            }
+            break;
+
+        case pcmk__health_strategy_progressive:
+        case pcmk__health_strategy_custom:
+            /* @TODO These are finite scores, possibly with rules, and possibly
+             * combining with other scores, so attributing these as a cause is
+             * nontrivial.
+             */
+            break;
+    }
+    return false;
+}
+
+static void
+check_node_health(resource_checks_t *checks, pe_node_t *node)
+{
+    if (node == NULL) {
+        GHashTableIter iter;
+        bool allowed = false;
+        bool all_nodes_unhealthy = true;
+
+        g_hash_table_iter_init(&iter, checks->rsc->allowed_nodes);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+            allowed = true;
+            if (!node_is_unhealthy(node)) {
+                all_nodes_unhealthy = false;
+                break;
+            }
+        }
+        if (allowed && all_nodes_unhealthy) {
+            checks->flags |= rsc_node_health;
+        }
+
+    } else if (node_is_unhealthy(node)) {
+        checks->flags |= rsc_node_health;
+    }
+}
+
+int
+cli_resource_check(pcmk__output_t *out, pe_resource_t *rsc, pe_node_t *node)
+{
+    resource_checks_t checks = { .rsc = rsc };
+
+    check_role(&checks);
+    check_managed(&checks);
+    check_locked(&checks);
+    check_node_health(&checks, node);
+
+    return out->message(out, "resource-check-list", &checks);
 }
 
 // \return Standard Pacemaker return code
