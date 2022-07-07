@@ -654,37 +654,44 @@ pcmk__instance_is_compatible(const pe_resource_t *instance,
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Find an instance that matches a given resource by node and role
+ *
+ * \param[in] match_rsc  Resource that instance must match (for logging only)
+ * \param[in] rsc        Clone or bundle resource to check for matching instance
+ * \param[in] node       Instance must match this node
+ * \param[in] role       If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current    If true, compare instance's original node and role,
+ *                       otherwise compare assigned next node and role
+ *
+ * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
+ */
 static pe_resource_t *
-find_compatible_child_by_node(const pe_resource_t *local_child,
-                              const pe_node_t *local_node,
-                              const pe_resource_t *rsc, enum rsc_role_e filter,
-                              gboolean current)
+find_compatible_instance_on_node(const pe_resource_t *match_rsc,
+                                 const pe_resource_t *rsc,
+                                 const pe_node_t *node, enum rsc_role_e role,
+                                 bool current)
 {
-    GList *gIter = NULL;
-    GList *children = NULL;
+    GList *instances = NULL;
 
-    if (local_node == NULL) {
-        crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
-        return NULL;
-    }
+    instances = get_instance_list(rsc);
+    for (GList *iter = instances; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-    crm_trace("Looking for compatible child from %s for %s on %s",
-              local_child->id, rsc->id, pe__node_name(local_node));
-
-    children = get_instance_list(rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        if (pcmk__instance_is_compatible(child_rsc, local_node, filter,
-                                         current)) {
-            crm_trace("Pairing %s with %s on %s",
-                      local_child->id, child_rsc->id, pe__node_name(local_node));
-            return child_rsc;
+        if (pcmk__instance_is_compatible(instance, node, role, current)) {
+            pe_rsc_trace(match_rsc,
+                         "Found %s instance %s compatible with %s on %s",
+                         rsc->id, instance->id, match_rsc->id,
+                         pe__node_name(node));
+            return instance;
         }
     }
+    free_instance_list(rsc, instances);
 
-    crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
-    free_instance_list(rsc, children);
+    pe_rsc_trace(match_rsc,
+                 "No %s instance found compatible with %s on %s",
+                 rsc->id, match_rsc->id, pe__node_name(node));
     return NULL;
 }
 
@@ -700,7 +707,8 @@ find_compatible_child(const pe_resource_t *local_child,
 
     local_node = local_child->fns->location(local_child, NULL, current);
     if (local_node) {
-        return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
+        return find_compatible_instance_on_node(local_child, rsc, local_node,
+                                                filter, current);
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
@@ -710,7 +718,8 @@ find_compatible_child(const pe_resource_t *local_child,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        pair = find_compatible_child_by_node(local_child, node, rsc, filter, current);
+        pair = find_compatible_instance_on_node(local_child, rsc, node, filter,
+                                                current);
         if (pair) {
             goto done;
         }
