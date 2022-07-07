@@ -601,35 +601,57 @@ free_instance_list(const pe_resource_t *rsc, GList *list)
     }
 }
 
-gboolean
-is_child_compatible(const pe_resource_t *child_rsc, const pe_node_t *local_node,
-                    enum rsc_role_e filter, gboolean current)
+/*!
+ * \internal
+ * \brief Check whether an instance is compatible with a role and node
+ *
+ * \param[in] instance  Clone instance or bundle replica container
+ * \param[in] node      Instance must match this node
+ * \param[in] role      If not RSC_ROLE_UNKNOWN, instance must match this role
+ * \param[in] current   If true, compare instance's original node and role,
+ *                      otherwise compare assigned next node and role
+ *
+ * \return true if \p instance is compatible with \p node and \p role,
+ *         otherwise false
+ */
+bool
+pcmk__instance_is_compatible(const pe_resource_t *instance,
+                             const pe_node_t *node, enum rsc_role_e role,
+                             bool current)
 {
-    pe_node_t *node = NULL;
-    enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
+    pe_node_t *instance_node = NULL;
 
-    CRM_CHECK(child_rsc && local_node, return FALSE);
-    if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
-        /* We only want instances that haven't failed */
-        node = child_rsc->fns->location(child_rsc, NULL, current);
+    CRM_CHECK((instance != NULL) && (node != NULL), return false);
+
+    if ((role != RSC_ROLE_UNKNOWN)
+        && (role != instance->fns->state(instance, current))) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (role is not %s)",
+                     instance->id, role2text(role));
+        return false;
     }
 
-    if (filter != RSC_ROLE_UNKNOWN && next_role != filter) {
-        crm_trace("Filtered %s", child_rsc->id);
-        return FALSE;
+    if (!is_set_recursive(instance, pe_rsc_block, true)) {
+        // We only want instances that haven't failed
+        instance_node = instance->fns->location(instance, NULL, current);
     }
 
-    if (node && (node->details == local_node->details)) {
-        return TRUE;
-
-    } else if (node) {
-        crm_trace("%s - %s vs %s", child_rsc->id, pe__node_name(node),
-                  pe__node_name(local_node));
-
-    } else {
-        crm_trace("%s - not allocated %d", child_rsc->id, current);
+    if (instance_node == NULL) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (not assigned to a node)",
+                     instance->id);
+        return false;
     }
-    return FALSE;
+
+    if (instance_node->details != node->details) {
+        pe_rsc_trace(instance,
+                     "%s is not a compatible instance (assigned to %s not %s)",
+                     instance->id, pe__node_name(instance_node),
+                     pe__node_name(node));
+        return false;
+    }
+
+    return true;
 }
 
 static pe_resource_t *
@@ -653,7 +675,8 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        if(is_child_compatible(child_rsc, local_node, filter, current)) {
+        if (pcmk__instance_is_compatible(child_rsc, local_node, filter,
+                                         current)) {
             crm_trace("Pairing %s with %s on %s",
                       local_child->id, child_rsc->id, pe__node_name(local_node));
             return child_rsc;

@@ -697,6 +697,11 @@ void pcmk__create_instance_actions(pe_resource_t *rsc, GList *instances,
                                    notify_data_t **start_notify,
                                    notify_data_t **stop_notify);
 
+G_GNUC_INTERNAL
+bool pcmk__instance_is_compatible(const pe_resource_t *instance,
+                                  const pe_node_t *node, enum rsc_role_e role,
+                                  bool current);
+
 
 // Injections (pcmk_injections.c)
 
