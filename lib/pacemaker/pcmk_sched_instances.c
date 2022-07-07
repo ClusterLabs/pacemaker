@@ -565,11 +565,40 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
     }
 }
 
+/*!
+ * \internal
+ * \brief Get a list of clone instances or bundle replica containers
+ *
+ * \param[in] rsc  Clone or bundle resource
+ *
+ * \return Clone instances if \p rsc is a clone, or a newly created list of
+ *         \p rsc's replica containers if \p rsc is a bundle
+ * \note The caller must call free_instance_list() on the result when the list
+ *       is no longer needed.
+ */
 static inline GList *
-get_containers_or_children(const pe_resource_t *rsc)
+get_instance_list(const pe_resource_t *rsc)
 {
-    return (rsc->variant == pe_container)?
-           pcmk__bundle_containers(rsc) : rsc->children;
+    if (rsc->variant == pe_container) {
+        return pcmk__bundle_containers(rsc);
+    } else {
+        return rsc->children;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free any memory created by get_instance_list()
+ *
+ * \param[in] rsc   Clone or bundle resource passed to get_instance_list()
+ * \param[in] list  Return value of get_instance_list() for \p rsc
+ */
+static inline void
+free_instance_list(const pe_resource_t *rsc, GList *list)
+{
+    if (list != rsc->children) {
+        g_list_free(list);
+    }
 }
 
 gboolean
@@ -620,7 +649,7 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
     crm_trace("Looking for compatible child from %s for %s on %s",
               local_child->id, rsc->id, pe__node_name(local_node));
 
-    children = get_containers_or_children(rsc);
+    children = get_instance_list(rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
@@ -632,9 +661,7 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
     }
 
     crm_trace("Can't pair %s with %s", local_child->id, rsc->id);
-    if(children != rsc->children) {
-        g_list_free(children);
-    }
+    free_instance_list(rsc, children);
     return NULL;
 }
 
@@ -688,7 +715,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
         current = TRUE;
     }
 
-    children = get_containers_or_children(then->rsc);
+    children = get_instance_list(then->rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *then_child = gIter->data;
         pe_resource_t *first_child = find_compatible_child(then_child,
@@ -807,10 +834,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             }
         }
     }
-
-    if(children != then->rsc->children) {
-        g_list_free(children);
-    }
+    free_instance_list(then->rsc, children);
     return changed;
 }
 
@@ -892,7 +916,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                                                 filter, type, data_set);
 
         // Now any children (or containers in the case of a bundle)
-        children = get_containers_or_children(then->rsc);
+        children = get_instance_list(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
             uint32_t then_child_changed = pcmk__updated_none;
@@ -922,10 +946,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 }
             }
         }
-
-        if(children != then->rsc->children) {
-            g_list_free(children);
-        }
+        free_instance_list(then->rsc, children);
     }
     return changed;
 }
