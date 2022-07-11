@@ -47,7 +47,7 @@ build: init
 ## RPM-related targets (deprecated; use targets in rpm subdirectory instead)
 
 # Pass option depending on whether automake has been run or not
-USE_FILE	= $(shell test -z "$(srcdir)" && echo "-f Makefile.am")
+USE_FILE = $(shell test -e rpm/Makefile || echo "-f Makefile.am")
 
 .PHONY: $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm
 $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:
