@@ -37,8 +37,8 @@ PACKAGE		?= pacemaker
 
 .PHONY: init
 init:
-	test -e $(top_srcdir)/configure || ./autogen.sh
-	test -e $(abs_builddir)/Makefile || $(abs_builddir)/configure
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
 
 .PHONY: build
 build: init
