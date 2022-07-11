@@ -50,7 +50,7 @@ metadata_free(void *metadata)
 }
 
 GHashTable *
-metadata_cache_new()
+metadata_cache_new(void)
 {
     return pcmk__strkey_table(free, metadata_free);
 }
@@ -106,7 +106,7 @@ valid_version_format(const char *version)
 #endif
 
 void
-metadata_cache_fini()
+metadata_cache_fini(void)
 {
 #if ENABLE_VERSIONED_ATTRS
     if (version_format_regex) {

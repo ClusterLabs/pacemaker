@@ -105,7 +105,7 @@ free_remote_query(gpointer data)
 }
 
 void
-free_stonith_remote_op_list()
+free_stonith_remote_op_list(void)
 {
     if (stonith_remote_op_list != NULL) {
         g_hash_table_destroy(stonith_remote_op_list);

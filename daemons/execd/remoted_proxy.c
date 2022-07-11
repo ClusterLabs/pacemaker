@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ static GHashTable *ipc_clients = NULL;
  *       use it.
  */
 pcmk__client_t *
-ipc_proxy_get_provider()
+ipc_proxy_get_provider(void)
 {
     return ipc_providers? (pcmk__client_t *) (ipc_providers->data) : NULL;
 }

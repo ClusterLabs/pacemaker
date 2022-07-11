@@ -33,7 +33,7 @@ static GHashTable *client_connections = NULL;
  * \return Number of active IPC client connections
  */
 guint
-pcmk__ipc_client_count()
+pcmk__ipc_client_count(void)
 {
     return client_connections? g_hash_table_size(client_connections) : 0;
 }

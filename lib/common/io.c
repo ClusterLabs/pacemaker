@@ -537,7 +537,7 @@ pcmk__set_nonblocking(int fd)
  * \return Name of directory to be used for temporary files
  */
 const char *
-pcmk__get_tmpdir()
+pcmk__get_tmpdir(void)
 {
     const char *dir = getenv("TMPDIR");
 

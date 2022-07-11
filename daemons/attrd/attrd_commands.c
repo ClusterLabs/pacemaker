@@ -630,7 +630,7 @@ process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
     \brief Broadcast private attribute for local node with protocol version
 */
 void
-attrd_broadcast_protocol()
+attrd_broadcast_protocol(void)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 

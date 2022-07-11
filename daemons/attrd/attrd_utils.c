@@ -33,7 +33,7 @@ static GMainLoop *mloop = NULL;
  * \brief  Set requesting_shutdown state
  */
 void
-attrd_set_requesting_shutdown()
+attrd_set_requesting_shutdown(void)
 {
     requesting_shutdown = TRUE;
 }
@@ -43,7 +43,7 @@ attrd_set_requesting_shutdown()
  * \brief  Clear requesting_shutdown state
  */
 void
-attrd_clear_requesting_shutdown()
+attrd_clear_requesting_shutdown(void)
 {
     requesting_shutdown = FALSE;
 }
@@ -55,7 +55,7 @@ attrd_clear_requesting_shutdown()
  * \return TRUE if requesting shutdown, FALSE otherwise
  */
 gboolean
-attrd_requesting_shutdown()
+attrd_requesting_shutdown(void)
 {
     return requesting_shutdown;
 }
@@ -67,7 +67,7 @@ attrd_requesting_shutdown()
  * \return TRUE if shutting down, FALSE otherwise
  */
 gboolean
-attrd_shutting_down()
+attrd_shutting_down(void)
 {
     return shutting_down;
 }
@@ -108,7 +108,7 @@ attrd_shutdown(int nsig)
  * \brief Create a main loop for attrd
  */
 void
-attrd_init_mainloop()
+attrd_init_mainloop(void)
 {
     mloop = g_main_loop_new(NULL, FALSE);
 }
@@ -118,7 +118,7 @@ attrd_init_mainloop()
  * \brief Run attrd main loop
  */
 void
-attrd_run_mainloop()
+attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
 }
@@ -211,7 +211,7 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 }
 
 void
-attrd_cib_disconnect()
+attrd_cib_disconnect(void)
 {
     CRM_CHECK(the_cib != NULL, return);
     the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);

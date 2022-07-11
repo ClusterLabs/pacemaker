@@ -125,7 +125,7 @@ done:
 }
 
 pcmk__ipc_methods_t *
-pcmk__schedulerd_api_methods()
+pcmk__schedulerd_api_methods(void)
 {
     pcmk__ipc_methods_t *cmds = calloc(1, sizeof(pcmk__ipc_methods_t));
 

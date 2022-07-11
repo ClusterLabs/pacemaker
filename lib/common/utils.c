@@ -535,7 +535,7 @@ crm_gnutls_global_init(void)
  * \return Newly allocated string with name, or NULL (and set errno) on error
  */
 char *
-pcmk_hostname()
+pcmk_hostname(void)
 {
     struct utsname hostinfo;
 

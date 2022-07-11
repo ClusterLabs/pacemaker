@@ -51,7 +51,7 @@ controld_remove_voter(const char *uname)
 }
 
 void
-controld_election_fini()
+controld_election_fini(void)
 {
     election_fini(fsa_election);
     fsa_election = NULL;
@@ -64,7 +64,7 @@ controld_set_election_period(const char *value)
 }
 
 void
-controld_stop_election_timer()
+controld_stop_election_timer(void)
 {
     election_timeout_stop(fsa_election);
 }

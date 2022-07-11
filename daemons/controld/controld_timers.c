@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -165,7 +165,7 @@ crm_timer_popped(gpointer data)
 }
 
 bool
-controld_init_fsa_timers()
+controld_init_fsa_timers(void)
 {
     transition_timer = calloc(1, sizeof(fsa_timer_t));
     if (transition_timer == NULL) {
@@ -259,7 +259,7 @@ controld_init_fsa_timers()
 }
 
 void
-controld_free_fsa_timers()
+controld_free_fsa_timers(void)
 {
     controld_stop_timer(transition_timer);
     controld_stop_timer(integration_timer);
@@ -301,7 +301,7 @@ controld_start_timer(fsa_timer_t *timer)
 }
 
 void
-controld_start_recheck_timer()
+controld_start_recheck_timer(void)
 {
     // Default to recheck interval configured in CIB (if any)
     guint period_ms = recheck_interval_ms;

@@ -26,7 +26,7 @@ enum attrd_command {
 };
 
 void
-controld_close_attrd_ipc()
+controld_close_attrd_ipc(void)
 {
     if (attrd_api != NULL) {
         crm_trace("Closing connection to pacemaker-attrd");
