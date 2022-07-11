@@ -163,16 +163,14 @@ node_to_be_promoted_on(pe_resource_t *rsc)
     clone_variant_data_t *clone_data = NULL;
 
     // If this is a cloned group, bail if any group member can't be promoted
-    if (rsc->children != NULL) {
-        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            pe_resource_t *child = (pe_resource_t *) iter->data;
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
 
-            if (node_to_be_promoted_on(child) == NULL) {
-                pe_rsc_trace(rsc,
-                             "%s can't be promoted because member %s can't",
-                             rsc->id, child->id);
-                return NULL;
-            }
+        if (node_to_be_promoted_on(child) == NULL) {
+            pe_rsc_trace(rsc,
+                         "%s can't be promoted because member %s can't",
+                         rsc->id, child->id);
+            return NULL;
         }
     }
 
@@ -296,8 +294,6 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     GList *gIter = NULL;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
-    char score[33];
-    size_t len = sizeof(score);
 
     if (pe__set_clone_flag(rsc, pe__clone_promotion_constrained)
             == pcmk_rc_already) {
@@ -326,8 +322,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
         // Add promotion preferences and rsc_location scores when role=Promoted
-        score2char_stack(child->sort_index, score, len);
-        pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
+        pe_rsc_trace(rsc, "Adding %s to %s from %s",
+                     pcmk_readable_score(child->sort_index),
                      node->details->uname, child->id);
         node->weight = pcmk__add_scores(child->sort_index, node->weight);
     }
@@ -656,8 +652,6 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
-    char score[33];
-    size_t len = sizeof(score);
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -745,18 +739,19 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     // Choose the first N eligible instances to be promoted
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
         if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && !pcmk__is_daemon) {
             if (data_set->priv != NULL) {
                 pcmk__output_t *out = data_set->priv;
-                out->message(out, "promotion-score", child_rsc, chosen, score);
+                out->message(out, "promotion-score", child_rsc, chosen,
+                             pcmk_readable_score(child_rsc->sort_index));
             }
 
         } else {
             pe_rsc_trace(rsc, "%s promotion score on %s: %s", child_rsc->id,
-                         (chosen? chosen->details->uname : "none"), score);
+                         (chosen? chosen->details->uname : "none"),
+                         pcmk_readable_score(child_rsc->sort_index));
         }
 
         chosen = NULL;          /* nuke 'chosen' so that we don't promote more than the

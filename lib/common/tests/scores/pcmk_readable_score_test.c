@@ -18,33 +18,18 @@
 static void
 outside_limits(void **state)
 {
-    char *a = NULL;
-
-    a = score2char(CRM_SCORE_INFINITY * 2);
-    assert_string_equal(a, CRM_INFINITY_S);
-    free(a);
-
-    a = score2char(-CRM_SCORE_INFINITY * 2);
-    assert_string_equal(a, CRM_MINUS_INFINITY_S);
-    free(a);
+    assert_string_equal(pcmk_readable_score(CRM_SCORE_INFINITY * 2),
+                        CRM_INFINITY_S);
+    assert_string_equal(pcmk_readable_score(-CRM_SCORE_INFINITY * 2),
+                        CRM_MINUS_INFINITY_S);
 }
 
 static void
 inside_limits(void **state)
 {
-    char *a = NULL;
-
-    a = score2char(1024);
-    assert_string_equal(a, "1024");
-    free(a);
-
-    a = score2char(0);
-    assert_string_equal(a, "0");
-    free(a);
-
-    a = score2char(-1024);
-    assert_string_equal(a, "-1024");
-    free(a);
+    assert_string_equal(pcmk_readable_score(0), "0");
+    assert_string_equal(pcmk_readable_score(1024), "1024");
+    assert_string_equal(pcmk_readable_score(-1024), "-1024");
 }
 
 int main(int argc, char **argv)

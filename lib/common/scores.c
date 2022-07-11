@@ -70,63 +70,36 @@ char2score(const char *score)
 }
 
 /*!
- * \brief Convert an integer score to a string, using a provided buffer
+ * \brief Return a displayable static string for a score value
  *
- * Store the string equivalent of a given integer score in a given string
- * buffer, using "INFINITY" and "-INFINITY" when appropriate.
+ * Given a score value, return a pointer to a static string representation of
+ * the score suitable for log messages, output, etc.
  *
- * \param[in]  score  Integer score to convert
- * \param[out] buf    Where to store string representation of \p score
- * \param[in]  len    Size of \p buf (in bytes)
+ * \param[in] score  Score to display
  *
- * \return \p buf (or NULL if \p len is too small)
+ * \return Pointer to static memory containing string representation of \p score
+ * \note Subsequent calls to this function will overwrite the returned value, so
+ *       it should be used only in a local context such as a printf()-style
+ *       statement.
  */
-char *
-score2char_stack(int score, char *buf, size_t len)
+const char *
+pcmk_readable_score(int score)
 {
-    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
-              return NULL);
+    // The longest possible result is "-INFINITY"
+    static char score_s[sizeof(CRM_MINUS_INFINITY_S)];
 
     if (score >= CRM_SCORE_INFINITY) {
-        strcpy(buf, CRM_INFINITY_S);
-    } else if (score <= -CRM_SCORE_INFINITY) {
-        strcpy(buf, CRM_MINUS_INFINITY_S);
-    } else {
-        snprintf(buf, len, "%d", score);
-    }
-    return buf;
-}
-
-/*!
- * \brief Return the string equivalent of an integer score
- *
- * Return the string equivalent of a given integer score, using "INFINITY" and
- * "-INFINITY" when appropriate.
- *
- * \param[in]  score  Integer score to convert
- *
- * \return Newly allocated string equivalent of \p score
- * \note The caller is responsible for freeing the return value. This function
- *       asserts on memory errors, so the return value can be assumed to be
- *       non-NULL.
- */
-char *
-score2char(int score)
-{
-    char *result = NULL;
-
-    if (score >= CRM_SCORE_INFINITY) {
-        result = strdup(CRM_INFINITY_S);
-        CRM_ASSERT(result != NULL);
+        strcpy(score_s, CRM_INFINITY_S);
 
     } else if (score <= -CRM_SCORE_INFINITY) {
-        result = strdup(CRM_MINUS_INFINITY_S);
-        CRM_ASSERT(result != NULL);
+        strcpy(score_s, CRM_MINUS_INFINITY_S);
 
     } else {
-        result = pcmk__itoa(score);
+        // Range is limited to +/-1000000, so no chance of overflow
+        snprintf(score_s, sizeof(score_s), "%d", score);
     }
-    return result;
+
+    return score_s;
 }
 
 /*!
@@ -198,3 +171,29 @@ pcmk__add_scores(int score1, int score2)
     crm_trace("%d + %d = %d", score1, score2, result);
     return result;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/util_compat.h>
+
+char *
+score2char(int score)
+{
+    char *result = strdup(pcmk_readable_score(score));
+
+    CRM_ASSERT(result != NULL);
+    return result;
+}
+
+char *
+score2char_stack(int score, char *buf, size_t len)
+{
+    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
+              return NULL);
+    strcpy(buf, pcmk_readable_score(score));
+    return buf;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

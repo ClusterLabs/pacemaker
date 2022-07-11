@@ -22,35 +22,31 @@
 static char *
 colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
                    gboolean dependents) {
-    char *score = NULL;
     char *retval = NULL;
 
-    score = score2char(cons->score);
     if (cons->primary_role > RSC_ROLE_STARTED) {
-            retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
-                                       rsc->id, score, dependents ? "needs" : "with",
-                                       role2text(cons->primary_role), cons->id);
+        retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
+                                   rsc->id, pcmk_readable_score(cons->score),
+                                   (dependents? "needs" : "with"),
+                                   role2text(cons->primary_role), cons->id);
     } else {
         retval = crm_strdup_printf("%s (score=%s, id=%s)",
-                                   rsc->id, score, cons->id);
+                                   rsc->id, pcmk_readable_score(cons->score),
+                                   cons->id);
     }
-
-    free(score);
     return retval;
 }
 
 static void
 colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
                      pcmk__colocation_t *cons) {
-    char *score = NULL;
     xmlNodePtr node = NULL;
 
-    score = score2char(cons->score);
     node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
                                         "id", cons->id,
                                         "rsc", cons->dependent->id,
                                         "with-rsc", cons->primary->id,
-                                        "score", score,
+                                        "score", pcmk_readable_score(cons->score),
                                         NULL);
 
     if (cons->node_attribute) {
@@ -66,8 +62,6 @@ colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
         xmlSetProp(node, (pcmkXmlStr) "with-rsc-role",
                    (pcmkXmlStr) role2text(cons->primary_role));
     }
-
-    free(score);
 }
 
 static int
@@ -84,7 +78,6 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
-            char *score = score2char(node->weight);
 
             if (add_header) {
                 PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "locations");
@@ -94,9 +87,8 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
                                          "node", node->details->uname,
                                          "rsc", rsc->id,
                                          "id", cons->id,
-                                         "score", score,
+                                         "score", pcmk_readable_score(node->weight),
                                          NULL);
-            free(score);
         }
     }
 
@@ -523,12 +515,12 @@ locations_list(pcmk__output_t *out, va_list args) {
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
-            char *score = score2char(node->weight);
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
-                           node->details->uname, score, cons->id, rsc->id);
-            free(score);
+                           node->details->uname,
+                           pcmk_readable_score(node->weight), cons->id,
+                           rsc->id);
         }
     }
 

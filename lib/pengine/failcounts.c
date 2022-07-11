@@ -331,22 +331,16 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
         }
 
         if (failcount > 0) {
-            char *score = score2char(failcount);
-
             crm_info("Container %s and the resources within it "
                      "have failed %s time%s on %s",
-                     rsc->id, score, pcmk__plural_s(failcount),
-                     node->details->uname);
-            free(score);
+                     rsc->id, pcmk_readable_score(failcount),
+                     pcmk__plural_s(failcount), node->details->uname);
         }
 
     } else if (failcount > 0) {
-        char *score = score2char(failcount);
-
         crm_info("%s has failed %s time%s on %s",
-                 rsc->id, score, pcmk__plural_s(failcount),
-                 node->details->uname);
-        free(score);
+                 rsc->id, pcmk_readable_score(failcount),
+                 pcmk__plural_s(failcount), node->details->uname);
     }
 
     return failcount;
