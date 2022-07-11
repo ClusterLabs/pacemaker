@@ -1,84 +1,59 @@
 Using the original execution date of: 2020-11-17 07:03:16Z
-
 Current cluster status:
-Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
-RemoteOnline: [ compute-0 compute-1 ]
-GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-0:ovn-dbs-bundle-podman-0 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
+  * Node List:
+    * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+    * RemoteOnline: [ compute-0 compute-1 ]
+    * GuestOnline: [ galera-bundle-0@database-0 galera-bundle-1@database-1 galera-bundle-2@database-2 ovn-dbs-bundle-0@controller-2 ovn-dbs-bundle-1@controller-0 ovn-dbs-bundle-2@controller-1 rabbitmq-bundle-0@messaging-0 rabbitmq-bundle-1@messaging-1 rabbitmq-bundle-2@messaging-2 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
 
- compute-0	(ocf::pacemaker:remote):	 Started controller-0
- compute-1	(ocf::pacemaker:remote):	 Started controller-1
- Container bundle set: galera-bundle [cluster.common.tag/mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Master database-0
-   galera-bundle-1	(ocf::heartbeat:galera):	 Master database-1
-   galera-bundle-2	(ocf::heartbeat:galera):	 Master database-2
- Container bundle set: rabbitmq-bundle [cluster.common.tag/rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-2
- Container bundle set: redis-bundle [cluster.common.tag/redis:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-2
-   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-0
-   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-1
- ip-192.168.24.150	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-10.0.0.150	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.1.151	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.1.150	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.3.150	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.4.150	(ocf::heartbeat:IPaddr2):	 Started controller-1
- Container bundle set: haproxy-bundle [cluster.common.tag/haproxy:pcmklatest]
-   haproxy-bundle-podman-0	(ocf::heartbeat:podman):	 Started controller-2
-   haproxy-bundle-podman-1	(ocf::heartbeat:podman):	 Started controller-0
-   haproxy-bundle-podman-2	(ocf::heartbeat:podman):	 Started controller-1
- Container bundle set: ovn-dbs-bundle [cluster.common.tag/ovn-northd:pcmklatest]
-   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Master controller-2
-   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Slave controller-0
-   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-1
- ip-172.17.1.57	(ocf::heartbeat:IPaddr2):	 Started controller-2
- stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Stopped
- Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]
-     Started: [ compute-0 compute-1 ]
-     Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
- nova-evacuate	(ocf::openstack:NovaEvacuate):	 Started database-0
- stonith-fence_ipmilan-52540033df9c	(stonith:fence_ipmilan):	 Started database-1
- stonith-fence_ipmilan-5254001f5f3c	(stonith:fence_ipmilan):	 Started database-2
- stonith-fence_ipmilan-5254003f88b4	(stonith:fence_ipmilan):	 Started messaging-0
- stonith-fence_ipmilan-5254007b7920	(stonith:fence_ipmilan):	 Started messaging-1
- stonith-fence_ipmilan-525400642894	(stonith:fence_ipmilan):	 Started messaging-2
- stonith-fence_ipmilan-525400d5382b	(stonith:fence_ipmilan):	 Started database-2
- stonith-fence_ipmilan-525400bb150b	(stonith:fence_ipmilan):	 Started messaging-0
- stonith-fence_ipmilan-525400ffc780	(stonith:fence_ipmilan):	 Started messaging-2
- stonith-fence_ipmilan-5254009cb549	(stonith:fence_ipmilan):	 Started database-0
- stonith-fence_ipmilan-525400e10267	(stonith:fence_ipmilan):	 Started messaging-1
- stonith-fence_ipmilan-525400dc0f81	(stonith:fence_ipmilan):	 Started database-1
- Container bundle: openstack-cinder-volume [cluster.common.tag/cinder-volume:pcmklatest]
-   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
+  * Full List of Resources:
+    * compute-0	(ocf:pacemaker:remote):	 Started controller-0
+    * compute-1	(ocf:pacemaker:remote):	 Started controller-1
+    * Container bundle set: galera-bundle [cluster.common.tag/mariadb:pcmklatest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
+    * Container bundle set: rabbitmq-bundle [cluster.common.tag/rabbitmq:pcmklatest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-0
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-1
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
+    * Container bundle set: redis-bundle [cluster.common.tag/redis:pcmklatest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
+    * ip-192.168.24.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-10.0.0.150	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.1.151	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-172.17.1.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.3.150	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.4.150	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * Container bundle set: haproxy-bundle [cluster.common.tag/haproxy:pcmklatest]:
+      * haproxy-bundle-podman-0	(ocf:heartbeat:podman):	 Started controller-2
+      * haproxy-bundle-podman-1	(ocf:heartbeat:podman):	 Started controller-0
+      * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
+    * Container bundle set: ovn-dbs-bundle [cluster.common.tag/ovn-northd:pcmklatest]:
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Promoted controller-2
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
+    * ip-172.17.1.57	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Stopped
+    * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
+      * Started: [ compute-0 compute-1 ]
+      * Stopped: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+    * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started database-0
+    * stonith-fence_ipmilan-52540033df9c	(stonith:fence_ipmilan):	 Started database-1
+    * stonith-fence_ipmilan-5254001f5f3c	(stonith:fence_ipmilan):	 Started database-2
+    * stonith-fence_ipmilan-5254003f88b4	(stonith:fence_ipmilan):	 Started messaging-0
+    * stonith-fence_ipmilan-5254007b7920	(stonith:fence_ipmilan):	 Started messaging-1
+    * stonith-fence_ipmilan-525400642894	(stonith:fence_ipmilan):	 Started messaging-2
+    * stonith-fence_ipmilan-525400d5382b	(stonith:fence_ipmilan):	 Started database-2
+    * stonith-fence_ipmilan-525400bb150b	(stonith:fence_ipmilan):	 Started messaging-0
+    * stonith-fence_ipmilan-525400ffc780	(stonith:fence_ipmilan):	 Started messaging-2
+    * stonith-fence_ipmilan-5254009cb549	(stonith:fence_ipmilan):	 Started database-0
+    * stonith-fence_ipmilan-525400e10267	(stonith:fence_ipmilan):	 Started messaging-1
+    * stonith-fence_ipmilan-525400dc0f81	(stonith:fence_ipmilan):	 Started database-1
+    * Container bundle: openstack-cinder-volume [cluster.common.tag/cinder-volume:pcmklatest]:
+      * openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0
 
-Only 'private' parameters to stonith-fence_compute-fence-nova for unfencing compute-0 changed
-Only 'private' parameters to stonith-fence_compute-fence-nova for unfencing compute-1 changed
-Only 'private' parameters to stonith-fence_ipmilan-5254009cb549_start_0 on database-0 changed: 0:0;322:1375:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254009cb549_monitor_60000 on database-0 changed: 0:0;323:1375:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to nova-evacuate_start_0 on database-0 changed: 0:0;258:1420:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to nova-evacuate_monitor_10000 on database-0 changed: 0:0;259:1420:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400dc0f81_start_0 on database-1 changed: 0:0;330:1380:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400dc0f81_monitor_60000 on database-1 changed: 0:0;331:1380:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-52540033df9c_start_0 on database-1 changed: 0:0;261:1420:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-52540033df9c_monitor_60000 on database-1 changed: 0:0;263:1420:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400d5382b_start_0 on database-2 changed: 0:0;319:1374:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400d5382b_monitor_60000 on database-2 changed: 0:0;320:1374:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254001f5f3c_start_0 on database-2 changed: 0:0;263:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254001f5f3c_monitor_60000 on database-2 changed: 0:0;265:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400e10267_start_0 on messaging-1 changed: 0:0;320:1317:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400e10267_monitor_60000 on messaging-1 changed: 0:0;326:1318:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254007b7920_start_0 on messaging-1 changed: 0:0;271:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254007b7920_monitor_60000 on messaging-1 changed: 0:0;273:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400bb150b_start_0 on messaging-0 changed: 0:0;324:70:0:40f880e4-b328-4380-9703-47856390a1e0
-Only 'private' parameters to stonith-fence_ipmilan-525400bb150b_monitor_60000 on messaging-0 changed: 0:0;325:70:0:40f880e4-b328-4380-9703-47856390a1e0
-Only 'private' parameters to stonith-fence_ipmilan-5254003f88b4_start_0 on messaging-0 changed: 0:0;267:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-5254003f88b4_monitor_60000 on messaging-0 changed: 0:0;269:1422:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400642894_start_0 on messaging-2 changed: 0:0;272:1424:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400642894_monitor_60000 on messaging-2 changed: 0:0;274:1424:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400ffc780_start_0 on messaging-2 changed: 0:0;321:49:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
-Only 'private' parameters to stonith-fence_ipmilan-525400ffc780_monitor_60000 on messaging-2 changed: 0:0;323:50:0:51c2f6fa-d5ae-4ae7-b8df-b121f8ea9269
 Transition Summary:
  * Stop       compute-0                            (               controller-0 )   due to node availability
  * Start      stonith-fence_compute-fence-nova     (                 database-0 )  
@@ -91,7 +66,7 @@ Transition Summary:
  * Move       stonith-fence_ipmilan-525400ffc780   (  messaging-2 -> database-0 )  
  * Move       stonith-fence_ipmilan-5254009cb549   (   database-0 -> database-1 )  
 
-Executing cluster transition:
+Executing Cluster Transition:
  * Resource action: stonith-fence_compute-fence-nova start on database-0
  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-2
  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-0
@@ -130,57 +105,58 @@ Executing cluster transition:
  * Resource action: stonith-fence_ipmilan-5254009cb549 monitor=60000 on database-1
 Using the original execution date of: 2020-11-17 07:03:16Z
 
-Revised cluster status:
-Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
-RemoteOnline: [ compute-1 ]
-RemoteOFFLINE: [ compute-0 ]
-GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-0:ovn-dbs-bundle-podman-0 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+    * RemoteOnline: [ compute-1 ]
+    * RemoteOFFLINE: [ compute-0 ]
+    * GuestOnline: [ galera-bundle-0@database-0 galera-bundle-1@database-1 galera-bundle-2@database-2 ovn-dbs-bundle-0@controller-2 ovn-dbs-bundle-1@controller-0 ovn-dbs-bundle-2@controller-1 rabbitmq-bundle-0@messaging-0 rabbitmq-bundle-1@messaging-1 rabbitmq-bundle-2@messaging-2 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
 
- compute-0	(ocf::pacemaker:remote):	 Stopped
- compute-1	(ocf::pacemaker:remote):	 Started controller-1
- Container bundle set: galera-bundle [cluster.common.tag/mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Master database-0
-   galera-bundle-1	(ocf::heartbeat:galera):	 Master database-1
-   galera-bundle-2	(ocf::heartbeat:galera):	 Master database-2
- Container bundle set: rabbitmq-bundle [cluster.common.tag/rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started messaging-2
- Container bundle set: redis-bundle [cluster.common.tag/redis:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-2
-   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-0
-   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-1
- ip-192.168.24.150	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-10.0.0.150	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.1.151	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.1.150	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.3.150	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.4.150	(ocf::heartbeat:IPaddr2):	 Started controller-1
- Container bundle set: haproxy-bundle [cluster.common.tag/haproxy:pcmklatest]
-   haproxy-bundle-podman-0	(ocf::heartbeat:podman):	 Started controller-2
-   haproxy-bundle-podman-1	(ocf::heartbeat:podman):	 Started controller-0
-   haproxy-bundle-podman-2	(ocf::heartbeat:podman):	 Started controller-1
- Container bundle set: ovn-dbs-bundle [cluster.common.tag/ovn-northd:pcmklatest]
-   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Master controller-2
-   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Slave controller-0
-   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-1
- ip-172.17.1.57	(ocf::heartbeat:IPaddr2):	 Started controller-2
- stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-0
- Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]
-     Started: [ compute-1 ]
-     Stopped: [ compute-0 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
- nova-evacuate	(ocf::openstack:NovaEvacuate):	 Started database-1
- stonith-fence_ipmilan-52540033df9c	(stonith:fence_ipmilan):	 Started database-2
- stonith-fence_ipmilan-5254001f5f3c	(stonith:fence_ipmilan):	 Started messaging-0
- stonith-fence_ipmilan-5254003f88b4	(stonith:fence_ipmilan):	 Started messaging-1
- stonith-fence_ipmilan-5254007b7920	(stonith:fence_ipmilan):	 Started messaging-2
- stonith-fence_ipmilan-525400642894	(stonith:fence_ipmilan):	 Started messaging-2
- stonith-fence_ipmilan-525400d5382b	(stonith:fence_ipmilan):	 Started database-2
- stonith-fence_ipmilan-525400bb150b	(stonith:fence_ipmilan):	 Started messaging-0
- stonith-fence_ipmilan-525400ffc780	(stonith:fence_ipmilan):	 Started database-0
- stonith-fence_ipmilan-5254009cb549	(stonith:fence_ipmilan):	 Started database-1
- stonith-fence_ipmilan-525400e10267	(stonith:fence_ipmilan):	 Started messaging-1
- stonith-fence_ipmilan-525400dc0f81	(stonith:fence_ipmilan):	 Started database-1
- Container bundle: openstack-cinder-volume [cluster.common.tag/cinder-volume:pcmklatest]
-   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
-
+  * Full List of Resources:
+    * compute-0	(ocf:pacemaker:remote):	 Stopped
+    * compute-1	(ocf:pacemaker:remote):	 Started controller-1
+    * Container bundle set: galera-bundle [cluster.common.tag/mariadb:pcmklatest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
+    * Container bundle set: rabbitmq-bundle [cluster.common.tag/rabbitmq:pcmklatest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-0
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-1
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
+    * Container bundle set: redis-bundle [cluster.common.tag/redis:pcmklatest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
+    * ip-192.168.24.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-10.0.0.150	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.1.151	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-172.17.1.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.3.150	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.4.150	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * Container bundle set: haproxy-bundle [cluster.common.tag/haproxy:pcmklatest]:
+      * haproxy-bundle-podman-0	(ocf:heartbeat:podman):	 Started controller-2
+      * haproxy-bundle-podman-1	(ocf:heartbeat:podman):	 Started controller-0
+      * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
+    * Container bundle set: ovn-dbs-bundle [cluster.common.tag/ovn-northd:pcmklatest]:
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Promoted controller-2
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
+    * ip-172.17.1.57	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-0
+    * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
+      * Started: [ compute-1 ]
+      * Stopped: [ compute-0 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+    * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started database-1
+    * stonith-fence_ipmilan-52540033df9c	(stonith:fence_ipmilan):	 Started database-2
+    * stonith-fence_ipmilan-5254001f5f3c	(stonith:fence_ipmilan):	 Started messaging-0
+    * stonith-fence_ipmilan-5254003f88b4	(stonith:fence_ipmilan):	 Started messaging-1
+    * stonith-fence_ipmilan-5254007b7920	(stonith:fence_ipmilan):	 Started messaging-2
+    * stonith-fence_ipmilan-525400642894	(stonith:fence_ipmilan):	 Started messaging-2
+    * stonith-fence_ipmilan-525400d5382b	(stonith:fence_ipmilan):	 Started database-2
+    * stonith-fence_ipmilan-525400bb150b	(stonith:fence_ipmilan):	 Started messaging-0
+    * stonith-fence_ipmilan-525400ffc780	(stonith:fence_ipmilan):	 Started database-0
+    * stonith-fence_ipmilan-5254009cb549	(stonith:fence_ipmilan):	 Started database-1
+    * stonith-fence_ipmilan-525400e10267	(stonith:fence_ipmilan):	 Started messaging-1
+    * stonith-fence_ipmilan-525400dc0f81	(stonith:fence_ipmilan):	 Started database-1
+    * Container bundle: openstack-cinder-volume [cluster.common.tag/cinder-volume:pcmklatest]:
+      * openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0

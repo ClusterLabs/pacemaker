@@ -1011,6 +1011,7 @@ TESTS = [
         [ "remote-reconnect-delay", "Waiting for remote reconnect interval to expire" ],
         [ "remote-connection-unrecoverable",
           "Remote connection host must be fenced, with connection unrecoverable" ],
+        [ "remote-connection-shutdown", "Remote connection shutdown" ],
         [ "cancel-behind-moving-remote",
           "Route recurring monitor cancellations through original node of a moving remote connection" ],
     ],

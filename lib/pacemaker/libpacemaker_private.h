@@ -127,7 +127,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc);
 
 
-// Colocation constraints
+// Colocation constraints (pcmk_sched_colocation.c)
 
 enum pcmk__coloc_affects {
     pcmk__coloc_affects_nothing = 0,
@@ -150,6 +150,11 @@ G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    pe_resource_t *primary,
                                    pcmk__colocation_t *constraint);
+
+G_GNUC_INTERNAL
+void pcmk__apply_colocation(pcmk__colocation_t *colocation,
+                            pe_resource_t *rsc1, pe_resource_t *rsc2,
+                            uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
