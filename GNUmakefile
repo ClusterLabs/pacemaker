@@ -37,7 +37,7 @@ PACKAGE		?= pacemaker
 
 .PHONY: init
 init:
-	test -e configure || ./autogen.sh
+	test -e configure && test -e libltdl || ./autogen.sh
 	test -e Makefile || ./configure
 
 .PHONY: build
