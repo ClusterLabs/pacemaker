@@ -907,19 +907,11 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                 pcmk__set_updated_flags(changed, first,
                                         pcmk__updated_first|pcmk__updated_then);
             }
-            if(first_action && then_action) {
-                changed |= then_child->cmds->update_ordered_actions(first_action,
-                                                                    then_action,
-                                                                    node,
-                                                                    first_child->cmds->action_flags(first_action, node),
-                                                                    filter,
-                                                                    type,
-                                                                    data_set);
-            } else {
-                crm_err("Nothing found either for %s (%p) or %s (%p) %s",
-                        first_child->id, first_action,
-                        then_child->id, then_action, task2text(task));
-            }
+
+            changed |= then_child->cmds->update_ordered_actions(
+                first_action, then_action, node,
+                first_child->cmds->action_flags(first_action, node), filter,
+                type, data_set);
         }
     }
     free_instance_list(then->rsc, children);
