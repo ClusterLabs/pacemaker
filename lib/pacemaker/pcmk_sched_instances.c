@@ -885,69 +885,84 @@ orig_action_name(const pe_action_t *action)
     return task2text(orig_task);
 }
 
+/*!
+ * \brief Update two interleaved actions according to an ordering between them
+ *
+ * Given information about an ordering of two interleaved actions, update the
+ * actions' flags (and runnable_before members if appropriate) as appropriate.
+ * In some cases, the ordering could be disabled.
+ *
+ * \param[in,out] first     'First' action in an ordering
+ * \param[in,out] then      'Then' action in an ordering
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
 static uint32_t
-multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                const pe_node_t *node, uint32_t filter,
-                                uint32_t type, pe_working_set_t *data_set)
+update_interleaved_actions(pe_action_t *first, pe_action_t *then,
+                           const pe_node_t *node, uint32_t filter,
+                           uint32_t type)
 {
-    GList *gIter = NULL;
-    GList *children = NULL;
-    gboolean current = FALSE;
+    GList *instances = NULL;
     uint32_t changed = pcmk__updated_none;
     const char *orig_first_task = orig_action_name(first);
 
-    /* Fix this - lazy */
-    if (pcmk__ends_with(first->uuid, "_stopped_0")
-        || pcmk__ends_with(first->uuid, "_demoted_0")) {
-        current = TRUE;
-    }
+    // Stops and demotes must be interleaved with instance on current node
+    bool current = pcmk__ends_with(first->uuid, "_stopped_0")
+                   || pcmk__ends_with(first->uuid, "_demoted_0");
 
-    children = get_instance_list(then->rsc);
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *then_child = gIter->data;
-        pe_resource_t *first_child = NULL;
+    // Update the specified actions for each "then" instance individually
+    instances = get_instance_list(then->rsc);
+    for (GList *iter = instances; iter != NULL; iter = iter->next) {
+        pe_resource_t *first_instance = NULL;
+        pe_resource_t *then_instance = iter->data;
 
-        first_child = pcmk__find_compatible_instance(then_child, first->rsc,
-                                                     RSC_ROLE_UNKNOWN, current);
-        if (first_child == NULL) { // No instance can be interleaved
-            if (unassign_if_mandatory(first, then, then_child, type, current)) {
+        pe_action_t *first_action = NULL;
+        pe_action_t *then_action = NULL;
+
+        // Find a "first" instance to interleave with this "then" instance
+        first_instance = pcmk__find_compatible_instance(then_instance,
+                                                        first->rsc,
+                                                        RSC_ROLE_UNKNOWN,
+                                                        current);
+
+        if (first_instance == NULL) { // No instance can be interleaved
+            if (unassign_if_mandatory(first, then, then_instance, type,
+                                      current)) {
                 pcmk__set_updated_flags(changed, first, pcmk__updated_then);
             }
-
-        } else {
-            pe_action_t *first_action = NULL;
-            pe_action_t *then_action = NULL;
-
-            first_action = find_instance_action(first, first_child,
-                                                orig_first_task, node, true);
-            if (first_action == NULL) {
-                continue;
-            }
-
-            then_action = find_instance_action(then, then_child, then->task,
-                                               node, false);
-            if (then_action == NULL) {
-                continue;
-            }
-
-            if (order_actions(first_action, then_action, type)) {
-                crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
-                          first_action->uuid,
-                          pcmk_is_set(first_action->flags, pe_action_optional),
-                          then_action->uuid,
-                          pcmk_is_set(then_action->flags, pe_action_optional),
-                          type);
-                pcmk__set_updated_flags(changed, first,
-                                        pcmk__updated_first|pcmk__updated_then);
-            }
-
-            changed |= then_child->cmds->update_ordered_actions(
-                first_action, then_action, node,
-                first_child->cmds->action_flags(first_action, node), filter,
-                type, data_set);
+            continue;
         }
+
+        first_action = find_instance_action(first, first_instance,
+                                            orig_first_task, node, true);
+        if (first_action == NULL) {
+            continue;
+        }
+
+        then_action = find_instance_action(then, then_instance, then->task,
+                                           node, false);
+        if (then_action == NULL) {
+            continue;
+        }
+
+        if (order_actions(first_action, then_action, type)) {
+            pcmk__set_updated_flags(changed, first,
+                                    pcmk__updated_first|pcmk__updated_then);
+        }
+
+        changed |= then_instance->cmds->update_ordered_actions(
+            first_action, then_action, node,
+            first_instance->cmds->action_flags(first_action, node), filter,
+            type, then->rsc->cluster);
     }
-    free_instance_list(then->rsc, children);
+    free_instance_list(then->rsc, instances);
     return changed;
 }
 
@@ -1017,8 +1032,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, filter,
-                                                  type, data_set);
+        changed = update_interleaved_actions(first, then, node, filter, type);
 
     } else if(then->rsc) {
         GList *gIter = NULL;
