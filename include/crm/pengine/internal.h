@@ -272,15 +272,15 @@ int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_
                          , size_t pairs_count, ...);
 char *pe__node_display_name(pe_node_t *node, bool print_detail);
 
+
 // Clone notifications (pe_notif.c)
-void pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
-notify_data_t *pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc,
-                                            const char *task,
-                                            pe_action_t *action,
-                                            pe_action_t *complete);
-void pcmk__free_notification_data(notify_data_t *n_data);
-void pcmk__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
-                                      pe_action_t *stonith_op);
+void pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                                          pe_action_t *action,
+                                          pe_action_t *complete);
+void pe__free_notification_data(notify_data_t *n_data);
+void pe__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
+                                    pe_action_t *stonith_op);
 
 
 static inline const char *
