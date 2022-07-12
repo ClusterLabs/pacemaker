@@ -894,6 +894,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
     GList *children = NULL;
     gboolean current = FALSE;
     uint32_t changed = pcmk__updated_none;
+    const char *orig_first_task = orig_action_name(first);
 
     /* Fix this - lazy */
     if (pcmk__ends_with(first->uuid, "_stopped_0")
@@ -917,10 +918,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             pe_action_t *first_action = NULL;
             pe_action_t *then_action = NULL;
 
-            const char *first_task = orig_action_name(first);
-
             first_action = find_instance_action(first, first_child,
-                                                first_task, node, true);
+                                                orig_first_task, node, true);
             if (first_action == NULL) {
                 continue;
             }
