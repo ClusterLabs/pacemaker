@@ -966,22 +966,37 @@ update_interleaved_actions(pe_action_t *first, pe_action_t *then,
     return changed;
 }
 
+/*!
+ * \internal
+ * \brief Check whether two actions in an ordering can be interleaved
+ *
+ * \param[in] first  'First' action in the ordering
+ * \param[in] then   'Then' action in the ordering
+ *
+ * \return true if \p first and \p then can be interleaved, otherwise false
+ */
 static bool
-can_interleave_actions(pe_action_t *first, pe_action_t *then)
+can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
 {
-    bool interleave = FALSE;
+    bool interleave = false;
     pe_resource_t *rsc = NULL;
-    const char *interleave_s = NULL;
 
-    if(first->rsc == NULL || then->rsc == NULL) {
-        crm_trace("Not interleaving %s with %s (both must be resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc == then->rsc) {
-        crm_trace("Not interleaving %s with %s (must belong to different resources)", first->uuid, then->uuid);
-        return FALSE;
-    } else if(first->rsc->variant < pe_clone || then->rsc->variant < pe_clone) {
-        crm_trace("Not interleaving %s with %s (both sides must be clones or bundles)", first->uuid, then->uuid);
-        return FALSE;
+    if ((first->rsc == NULL) || (then->rsc == NULL)) {
+        crm_trace("Not interleaving %s with %s: not resource actions",
+                  first->uuid, then->uuid);
+        return false;
+    }
+
+    if (first->rsc == then->rsc) {
+        crm_trace("Not interleaving %s with %s: same resource",
+                  first->uuid, then->uuid);
+        return false;
+    }
+
+    if ((first->rsc->variant < pe_clone) || (then->rsc->variant < pe_clone)) {
+        crm_trace("Not interleaving %s with %s: not clones or bundles",
+                  first->uuid, then->uuid);
+        return false;
     }
 
     if (pcmk__ends_with(then->uuid, "_stop_0")
@@ -991,11 +1006,10 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
         rsc = then->rsc;
     }
 
-    interleave_s = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERLEAVE);
-    interleave = crm_is_true(interleave_s);
-    crm_trace("Interleave %s -> %s: %s (based on %s)",
-              first->uuid, then->uuid, interleave ? "yes" : "no", rsc->id);
-
+    interleave = crm_is_true(g_hash_table_lookup(rsc->meta,
+                                                 XML_RSC_ATTR_INTERLEAVE));
+    pe_rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
+                 first->uuid, then->uuid, (interleave? "" : "not "), rsc->id);
     return interleave;
 }
 
