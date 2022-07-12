@@ -149,7 +149,7 @@ create_api(pcmk_ipc_api_t **api)
     int rc = pcmk_new_ipc_api(api, pcmk_ipc_attrd);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+        crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
     }
 
     return rc;
@@ -180,7 +180,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
             sleep(5 - max);
             max--;
         } else {
-            crm_err("error: Could not connect to attrd: %s", pcmk_rc_str(rc));
+            crm_err("Could not connect to attrd: %s", pcmk_rc_str(rc));
             break;
         }
     }
