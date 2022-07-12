@@ -333,7 +333,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     g_list_free(nodes);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        pcmk__set_instance_roles(rsc, data_set);
+        pcmk__set_instance_roles(rsc);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
@@ -1093,23 +1093,26 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
     free(name);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+        int promoted_max = pe__clone_promoted_max(rsc);
+        int promoted_node_max = pe__clone_promoted_node_max(rsc);
+
         name = crm_meta_name(XML_RSC_ATTR_PROMOTED_MAX);
-        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
         name = crm_meta_name(XML_RSC_ATTR_PROMOTED_NODEMAX);
-        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
 
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
         name = crm_meta_name(PCMK_XE_PROMOTED_MAX_LEGACY);
-        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
         name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
-        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        crm_xml_add_int(xml, name, promoted_node_max);
         free(name);
     }
 }

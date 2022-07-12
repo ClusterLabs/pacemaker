@@ -30,6 +30,40 @@
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
 
+/*!
+ * \internal
+ * \brief Return the maximum number of clone instances allowed to be promoted
+ *
+ * \param[in] clone  Promotable clone or clone instance to check
+ *
+ * \return Maximum promoted instances for \p clone
+ */
+int
+pe__clone_promoted_max(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, uber_parent(clone));
+    return clone_data->promoted_max;
+}
+
+/*!
+ * \internal
+ * \brief Return the maximum number of clone instances allowed to be promoted
+ *
+ * \param[in] clone  Promotable clone or clone instance to check
+ *
+ * \return Maximum promoted instances for \p clone
+ */
+int
+pe__clone_promoted_node_max(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, uber_parent(clone));
+    return clone_data->promoted_node_max;
+}
+
 static GList *
 sorted_hash_table_values(GHashTable *table)
 {
