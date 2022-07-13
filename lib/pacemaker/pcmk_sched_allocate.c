@@ -724,10 +724,16 @@ log_unrunnable_actions(pe_working_set_t *data_set)
 static void
 unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
 {
+    const char* localhost_save = NULL;
+
     if (pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         crm_trace("Reusing previously calculated cluster status");
         pe__set_working_set_flags(data_set, flags);
         return;
+    }
+
+    if (data_set->localhost) {
+        localhost_save = data_set->localhost;
     }
 
     CRM_ASSERT(cib != NULL);
@@ -739,6 +745,10 @@ unpack_cib(xmlNode *cib, unsigned long long flags, pe_working_set_t *data_set)
      * previously called, whether directly or via pcmk__schedule_actions()).
      */
     set_working_set_defaults(data_set);
+
+    if (localhost_save) {
+        data_set->localhost = localhost_save;
+    }
 
     pe__set_working_set_flags(data_set, flags);
     data_set->input = cib;
