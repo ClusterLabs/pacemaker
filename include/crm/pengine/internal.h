@@ -458,8 +458,8 @@ extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
 
 pe_action_t *find_first_action(const GList *input, const char *uuid,
                                const char *task, const pe_node_t *on_node);
-extern enum action_tasks get_complex_task(pe_resource_t * rsc, const char *name,
-                                          gboolean allow_non_atomic);
+
+enum action_tasks get_complex_task(const pe_resource_t *rsc, const char *name);
 
 extern GList *find_actions(GList *input, const char *key, const pe_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,

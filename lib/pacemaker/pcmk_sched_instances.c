@@ -1065,14 +1065,14 @@ clone_child_action(pe_action_t * action)
                 task_mutable[stop - lpc] = 0;
 
                 crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
-                result = get_complex_task(child, task_mutable, TRUE);
+                result = get_complex_task(child, task_mutable);
                 free(task_mutable);
                 break;
             }
         }
 
     } else {
-        result = get_complex_task(child, action->task, TRUE);
+        result = get_complex_task(child, action->task);
     }
     return result;
 }

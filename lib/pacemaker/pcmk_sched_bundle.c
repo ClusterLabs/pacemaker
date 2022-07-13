@@ -543,7 +543,7 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 
     get_bundle_variant_data(data, action->rsc);
     if(data->child) {
-        enum action_tasks task = get_complex_task(data->child, action->task, TRUE);
+        enum action_tasks task = get_complex_task(data->child, action->task);
         switch(task) {
             case no_action:
             case action_notify:
