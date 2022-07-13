@@ -141,6 +141,18 @@ healthcpu_reload_agent() {
 }
 
 healthcpu_validate() {
+    # If specified, is yellow_limit a non-negative integer?
+    case "$OCF_RESKEY_yellow_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # If specified, is red_limit a non-negative integer?
+    case "$OCF_RESKEY_red_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
     # Host-specific checks
     if [ "$OCF_CHECK_LEVEL" = "10" ]; then
 
@@ -152,6 +164,7 @@ healthcpu_validate() {
             return $OCF_ERR_ARGS
         fi
     fi
+
     return $OCF_SUCCESS
 }
 
