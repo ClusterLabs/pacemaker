@@ -195,32 +195,45 @@ handle_unknown_request(pcmk__request_t *request)
 }
 
 static void
-process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
+                   uint32_t id, uint32_t flags)
 {
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
 
     if (pcmk__str_empty(op)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring invalid IPC message: no " F_CRM_TASK);
+        free_xml(msg);
 
     } else if (pcmk__str_eq(op, CRM_OP_HELLO, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_trace("Received IPC hello from %s", pcmk__client_name(c));
+        free_xml(msg);
 
     } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
                             XML_ATTR_RESPONSE, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
+        free_xml(msg);
 
     } else if (pcmk__str_empty(sys_to)
                || !pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring invalid IPC message: to '%s' not "
                  CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
+        free_xml(msg);
 
     } else if (pcmk__str_eq(op, CRM_OP_PECALC, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         handle_pecalc_op(msg, xml_data, c);
+        free_xml(msg);
 
     } else {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_trace("Ignoring invalid IPC message: unknown request type '%s' ",
                   op);
+        free_xml(msg);
     }
 }
 
@@ -256,13 +269,10 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         schedulerd_register_handlers();
     }
 
-    pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-
     if (msg != NULL) {
         xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
 
-        process_pe_message(msg, data_xml, c);
-        free_xml(msg);
+        process_pe_message(msg, data_xml, c, id, flags);
     }
     return 0;
 }
