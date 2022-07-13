@@ -39,8 +39,8 @@ init_working_set(void)
     return data_set;
 }
 
-static void
-handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
+static xmlNode *
+handle_pecalc_request(pcmk__request_t *request)
 {
     static struct series_s {
         const char *name;
@@ -55,6 +55,10 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         { "pe-warn",  "pe-warn-series-max",  5000 },
         { "pe-input", "pe-input-series-max", 4000 },
     };
+
+    xmlNode *msg = request->xml;
+    xmlNode *xml_data = get_message_xml(msg, F_CRM_DATA);
+
     static char *last_digest = NULL;
     static char *filename = NULL;
 
@@ -69,6 +73,9 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     bool is_repoke = false;
     bool process = true;
     pe_working_set_t *data_set = init_working_set();
+
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_INDETERMINATE);
 
     digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
                                             CRM_FEATURE_SET);
@@ -121,7 +128,13 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 
     data_set->input = NULL;
     reply = create_reply(msg, data_set->graph);
-    CRM_ASSERT(reply != NULL);
+
+    if (reply == NULL) {
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Failed building ping reply for client %s",
+                            pcmk__client_name(request->ipc_client));
+        goto done;
+    }
 
     if (series_wrap == 0) { // Don't save any inputs of this kind
         free(filename);
@@ -139,9 +152,6 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     crm_xml_add_int(reply, "config-errors", crm_config_error);
     crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
-    pcmk__ipc_send_xml(sender, 0, reply, crm_ipc_server_event);
-
-    free_xml(reply);
     pcmk__log_transition_summary(filename);
 
     if (series_wrap == 0) {
@@ -158,8 +168,13 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
                                     ++seq, series_wrap);
     }
 
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
+done:
     free_xml(converted);
     pe_free_working_set(data_set);
+
+    return reply;
 }
 
 static xmlNode *
@@ -202,11 +217,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring invalid IPC message: to '%s' not "
                  CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
-        free_xml(msg);
-
-    } else if (pcmk__str_eq(op, CRM_OP_PECALC, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        handle_pecalc_op(msg, xml_data, c);
         free_xml(msg);
 
     } else {
@@ -261,6 +271,7 @@ static void
 schedulerd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { CRM_OP_PECALC, handle_pecalc_request },
         { NULL, handle_unknown_request },
     };
 
