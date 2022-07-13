@@ -189,6 +189,18 @@ handle_unknown_request(pcmk__request_t *request)
     return NULL;
 }
 
+static xmlNode *
+handle_hello_request(pcmk__request_t *request)
+{
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_INDETERMINATE);
+
+    crm_trace("Received IPC hello from %s", pcmk__client_name(request->ipc_client));
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
+}
+
 static void
 process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
                    uint32_t id, uint32_t flags)
@@ -199,11 +211,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
     if (pcmk__str_empty(op)) {
         pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
         crm_info("Ignoring invalid IPC message: no " F_CRM_TASK);
-        free_xml(msg);
-
-    } else if (pcmk__str_eq(op, CRM_OP_HELLO, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        crm_trace("Received IPC hello from %s", pcmk__client_name(c));
         free_xml(msg);
 
     } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
@@ -271,6 +278,7 @@ static void
 schedulerd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { CRM_OP_HELLO, handle_hello_request },
         { CRM_OP_PECALC, handle_pecalc_request },
         { NULL, handle_unknown_request },
     };
