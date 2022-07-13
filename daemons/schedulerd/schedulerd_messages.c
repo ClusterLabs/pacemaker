@@ -195,7 +195,7 @@ handle_unknown_request(pcmk__request_t *request)
 }
 
 static void
-process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c)
 {
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
@@ -204,11 +204,11 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         crm_info("Ignoring invalid IPC message: no " F_CRM_TASK);
 
     } else if (pcmk__str_eq(op, CRM_OP_HELLO, pcmk__str_none)) {
-        crm_trace("Received IPC hello from %s", pcmk__client_name(sender));
+        crm_trace("Received IPC hello from %s", pcmk__client_name(c));
 
     } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
                             XML_ATTR_RESPONSE, pcmk__str_none)) {
-        crm_info("Ignoring IPC reply from %s", pcmk__client_name(sender));
+        crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
 
     } else if (pcmk__str_empty(sys_to)
                || !pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
@@ -216,7 +216,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
                  CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 
     } else if (pcmk__str_eq(op, CRM_OP_PECALC, pcmk__str_none)) {
-        handle_pecalc_op(msg, xml_data, sender);
+        handle_pecalc_op(msg, xml_data, c);
 
     } else {
         crm_trace("Ignoring invalid IPC message: unknown request type '%s' ",
