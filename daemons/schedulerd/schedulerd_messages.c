@@ -139,27 +139,7 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     crm_xml_add_int(reply, "config-errors", crm_config_error);
     crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
-    if (pcmk__ipc_send_xml(sender, 0, reply,
-                           crm_ipc_server_event) != pcmk_rc_ok) {
-        int graph_file_fd = 0;
-        char *graph_file = NULL;
-        umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-        graph_file = crm_strdup_printf("%s/pengine.graph.XXXXXX",
-                                       PE_STATE_DIR);
-        graph_file_fd = mkstemp(graph_file);
-
-        crm_err("Couldn't send transition graph to peer, writing to %s instead",
-                graph_file);
-
-        crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
-        write_xml_fd(data_set->graph, graph_file, graph_file_fd, FALSE);
-
-        free(graph_file);
-        free_xml(first_named_child(reply, F_CRM_DATA));
-        CRM_ASSERT(pcmk__ipc_send_xml(sender, 0, reply,
-                                      crm_ipc_server_event) == pcmk_rc_ok);
-    }
+    pcmk__ipc_send_xml(sender, 0, reply, crm_ipc_server_event);
 
     free_xml(reply);
     pcmk__log_transition_summary(filename);
