@@ -850,7 +850,7 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     return NULL;
 }
 
-static enum action_tasks
+static const char *
 clone_child_action(pe_action_t * action)
 {
     enum action_tasks result = no_action;
@@ -885,7 +885,7 @@ clone_child_action(pe_action_t * action)
     } else {
         result = get_complex_task(child, action->task);
     }
-    return result;
+    return task2text(result);
 }
 
 static uint32_t
@@ -920,8 +920,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             pe_action_t *first_action = NULL;
             pe_action_t *then_action = NULL;
 
-            enum action_tasks task = clone_child_action(first);
-            const char *first_task = task2text(task);
+            const char *first_task = clone_child_action(first);
 
             first_action = find_instance_action(first, first_child,
                                                 first_task, node, true);
@@ -1082,9 +1081,8 @@ summary_action_flags(pe_action_t *action, GList *children,
     GList *gIter = NULL;
     gboolean any_runnable = FALSE;
     gboolean check_runnable = TRUE;
-    enum action_tasks task = clone_child_action(action);
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
-    const char *task_s = task2text(task);
+    const char *task_s = clone_child_action(action);
 
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_action_t *child_action = NULL;
