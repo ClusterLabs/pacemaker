@@ -230,9 +230,49 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
         free_xml(msg);
 
     } else {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        crm_trace("Ignoring invalid IPC message: unknown request type '%s' ",
-                  op);
+        char *log_msg = NULL;
+        const char *reason = NULL;
+        xmlNode *reply = NULL;
+
+        pcmk__request_t request = {
+            .ipc_client     = c,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        CRM_CHECK(request.op != NULL, return);
+
+        reply = pcmk__process_request(&request, schedulerd_handlers);
+
+        if (reply != NULL) {
+            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
+            free_xml(reply);
+        }
+
+        reason = request.result.exit_reason;
+
+        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
+                                    request.op, pcmk__request_origin_type(&request),
+                                    pcmk__request_origin(&request),
+                                    pcmk_exec_status_str(request.result.execution_status),
+                                    (reason == NULL)? "" : " (",
+                                    (reason == NULL)? "" : reason,
+                                    (reason == NULL)? "" : ")");
+
+        if (!pcmk__result_ok(&request.result)) {
+            crm_warn("%s", log_msg);
+        } else {
+            crm_debug("%s", log_msg);
+        }
+
+        free(log_msg);
+        pcmk__reset_request(&request);
+
         free_xml(msg);
     }
 }
