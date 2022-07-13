@@ -202,79 +202,6 @@ handle_hello_request(pcmk__request_t *request)
 }
 
 static void
-process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *c,
-                   uint32_t id, uint32_t flags)
-{
-    const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
-    const char *op = crm_element_value(msg, F_CRM_TASK);
-
-    if (pcmk__str_empty(op)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        crm_info("Ignoring invalid IPC message: no " F_CRM_TASK);
-        free_xml(msg);
-
-    } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
-                            XML_ATTR_RESPONSE, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
-        free_xml(msg);
-
-    } else if (pcmk__str_empty(sys_to)
-               || !pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
-        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
-        crm_info("Ignoring invalid IPC message: to '%s' not "
-                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
-        free_xml(msg);
-
-    } else {
-        char *log_msg = NULL;
-        const char *reason = NULL;
-        xmlNode *reply = NULL;
-
-        pcmk__request_t request = {
-            .ipc_client     = c,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = msg,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
-        CRM_CHECK(request.op != NULL, return);
-
-        reply = pcmk__process_request(&request, schedulerd_handlers);
-
-        if (reply != NULL) {
-            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
-            free_xml(reply);
-        }
-
-        reason = request.result.exit_reason;
-
-        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                    request.op, pcmk__request_origin_type(&request),
-                                    pcmk__request_origin(&request),
-                                    pcmk_exec_status_str(request.result.execution_status),
-                                    (reason == NULL)? "" : " (",
-                                    (reason == NULL)? "" : reason,
-                                    (reason == NULL)? "" : ")");
-
-        if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
-        } else {
-            crm_debug("%s", log_msg);
-        }
-
-        free(log_msg);
-        pcmk__reset_request(&request);
-
-        free_xml(msg);
-    }
-}
-
-static void
 schedulerd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
@@ -301,18 +228,80 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
+    xmlNode *msg = NULL;
     pcmk__client_t *c = pcmk__find_client(qbc);
-    xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
+    const char *sys_to = NULL;
+
+    CRM_CHECK(c != NULL, return 0);
 
     if (schedulerd_handlers == NULL) {
         schedulerd_register_handlers();
     }
 
-    if (msg != NULL) {
-        xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
-
-        process_pe_message(msg, data_xml, c, id, flags);
+    msg = pcmk__client_data2xml(c, data, &id, &flags);
+    if (msg == NULL) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
+        return 0;
     }
+
+    sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+
+    if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
+                            XML_ATTR_RESPONSE, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+        crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
+
+    } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+        crm_info("Ignoring invalid IPC message: to '%s' not "
+                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
+
+    } else {
+        char *log_msg = NULL;
+        const char *reason = NULL;
+        xmlNode *reply = NULL;
+
+        pcmk__request_t request = {
+            .ipc_client     = c,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, F_CRM_TASK);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        reply = pcmk__process_request(&request, schedulerd_handlers);
+
+        if (reply != NULL) {
+            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
+            free_xml(reply);
+        }
+
+        reason = request.result.exit_reason;
+
+        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
+                                    request.op, pcmk__request_origin_type(&request),
+                                    pcmk__request_origin(&request),
+                                    pcmk_exec_status_str(request.result.execution_status),
+                                    (reason == NULL)? "" : " (",
+                                    (reason == NULL)? "" : reason,
+                                    (reason == NULL)? "" : ")");
+
+        if (!pcmk__result_ok(&request.result)) {
+            crm_warn("%s", log_msg);
+        } else {
+            crm_debug("%s", log_msg);
+        }
+
+        free(log_msg);
+        pcmk__reset_request(&request);
+    }
+
+    free_xml(msg);
     return 0;
 }
 
