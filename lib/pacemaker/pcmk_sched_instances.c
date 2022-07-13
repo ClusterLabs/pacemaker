@@ -850,6 +850,44 @@ find_instance_action(const pe_action_t *action, const pe_resource_t *instance,
     return NULL;
 }
 
+static enum action_tasks
+clone_child_action(pe_action_t * action)
+{
+    enum action_tasks result = no_action;
+    pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
+
+    if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
+
+        /* Find the action we're notifying about instead */
+
+        int stop = 0;
+        char *key = action->uuid;
+        int lpc = strlen(key);
+
+        for (; lpc > 0; lpc--) {
+            if (key[lpc] == '_' && stop == 0) {
+                stop = lpc;
+
+            } else if (key[lpc] == '_') {
+                char *task_mutable = NULL;
+
+                lpc++;
+                task_mutable = strdup(key + lpc);
+                task_mutable[stop - lpc] = 0;
+
+                crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
+                result = get_complex_task(child, task_mutable);
+                free(task_mutable);
+                break;
+            }
+        }
+
+    } else {
+        result = get_complex_task(child, action->task);
+    }
+    return result;
+}
+
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 const pe_node_t *node, uint32_t filter,
@@ -1029,44 +1067,6 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         free_instance_list(then->rsc, children);
     }
     return changed;
-}
-
-enum action_tasks
-clone_child_action(pe_action_t * action)
-{
-    enum action_tasks result = no_action;
-    pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
-
-    if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
-
-        /* Find the action we're notifying about instead */
-
-        int stop = 0;
-        char *key = action->uuid;
-        int lpc = strlen(key);
-
-        for (; lpc > 0; lpc--) {
-            if (key[lpc] == '_' && stop == 0) {
-                stop = lpc;
-
-            } else if (key[lpc] == '_') {
-                char *task_mutable = NULL;
-
-                lpc++;
-                task_mutable = strdup(key + lpc);
-                task_mutable[stop - lpc] = 0;
-
-                crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
-                result = get_complex_task(child, task_mutable);
-                free(task_mutable);
-                break;
-            }
-        }
-
-    } else {
-        result = get_complex_task(child, action->task);
-    }
-    return result;
 }
 
 #define pe__clear_action_summary_flags(flags, action, flag) do {        \

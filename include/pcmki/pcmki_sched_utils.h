@@ -26,7 +26,6 @@ GList *pcmk__copy_node_list(const GList *list, bool reset);
 
 enum pe_action_flags summary_action_flags(pe_action_t *action, GList *children,
                                           const pe_node_t *node);
-enum action_tasks clone_child_action(pe_action_t * action);
 int copies_per_node(pe_resource_t * rsc);
 
 xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
