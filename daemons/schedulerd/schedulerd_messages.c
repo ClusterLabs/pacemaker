@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
@@ -18,6 +19,8 @@
 #include <unistd.h>
 
 #include "pacemaker-schedulerd.h"
+
+static GHashTable *schedulerd_handlers = NULL;
 
 static pe_working_set_t *
 init_working_set(void)
@@ -179,6 +182,18 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     pe_free_working_set(data_set);
 }
 
+static xmlNode *
+handle_unknown_request(pcmk__request_t *request)
+{
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       "ack", NULL, CRM_EX_INVALID_PARAM);
+
+    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                        "Unknown IPC request type '%s' (bug?)",
+                        pcmk__client_name(request->ipc_client));
+    return NULL;
+}
+
 static void
 process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
@@ -209,6 +224,16 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     }
 }
 
+static void
+schedulerd_register_handlers(void)
+{
+    pcmk__server_command_t handlers[] = {
+        { NULL, handle_unknown_request },
+    };
+
+    schedulerd_handlers = pcmk__register_handlers(handlers);
+}
+
 static int32_t
 pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -227,7 +252,12 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     pcmk__client_t *c = pcmk__find_client(qbc);
     xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
 
+    if (schedulerd_handlers == NULL) {
+        schedulerd_register_handlers();
+    }
+
     pcmk__ipc_send_ack(c, id, flags, "ack", NULL, CRM_EX_INDETERMINATE);
+
     if (msg != NULL) {
         xmlNode *data_xml = get_message_xml(msg, F_CRM_DATA);
 
