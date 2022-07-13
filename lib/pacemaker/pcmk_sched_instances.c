@@ -1015,6 +1015,67 @@ can_interleave_actions(const pe_action_t *first, const pe_action_t *then)
 
 /*!
  * \internal
+ * \brief Update non-interleaved instance actions according to an ordering
+ *
+ * Given information about an ordering of two non-interleaved actions, update
+ * the action flags and runnable_before members as appropriate for a given clone
+ * instance or bundle container. In some cases, the ordering could be disabled.
+ *
+ * \param[in,out] instance  Clone instance or bundle container
+ * \param[in,out] first     "First" action in ordering
+ * \param[in]     then      "Then" action in ordering (for \p instance's parent)
+ * \param[in]     node      If not NULL, limit scope of ordering to this node
+ * \param[in]     flags     Action flags for \p first for ordering purposes
+ * \param[in]     filter    Action flags to limit scope of certain updates (may
+ *                          include pe_action_optional to affect only mandatory
+ *                          actions, and pe_action_runnable to affect only
+ *                          runnable actions)
+ * \param[in]     type      Group of enum pe_ordering flags to apply
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+static uint32_t
+update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
+                              const pe_action_t *then, const pe_node_t *node,
+                              uint32_t flags, uint32_t filter, uint32_t type)
+{
+    pe_action_t *instance_action = NULL;
+    uint32_t instance_flags = 0;
+    uint32_t changed = pcmk__updated_none;
+
+    // Check whether instance has an equivalent of "then" action
+    instance_action = find_first_action(instance->actions, NULL, then->task,
+                                        node);
+    if (instance_action == NULL) {
+        return changed;
+    }
+
+    // Check whether action is runnable
+    instance_flags = instance->cmds->action_flags(instance_action, node);
+    if (!pcmk_is_set(instance_flags, pe_action_runnable)) {
+        return changed;
+    }
+
+    // If so, update actions for the instance
+    changed = instance->cmds->update_ordered_actions(first, instance_action,
+                                                     node, flags, filter, type,
+                                                     instance->cluster);
+
+    // Propagate any changes to later actions
+    if (pcmk_is_set(changed, pcmk__updated_then)) {
+        for (GList *after_iter = instance_action->actions_after;
+             after_iter != NULL; after_iter = after_iter->next) {
+            pe_action_wrapper_t *after = after_iter->data;
+
+            pcmk__update_action_for_orderings(after->action, instance->cluster);
+        }
+    }
+
+    return changed;
+}
+
+/*!
+ * \internal
  * \brief Update two actions according to an ordering between them
  *
  * Given information about an ordering of two actions, update the actions'
@@ -1059,33 +1120,9 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
         // Now any children (or containers in the case of a bundle)
         children = get_instance_list(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            uint32_t then_child_changed = pcmk__updated_none;
-            pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
-
-            if (then_child_action) {
-                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
-                                                                           node);
-
-                if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |= then_child->cmds->update_ordered_actions(first,
-                                                                                   then_child_action,
-                                                                                   node,
-                                                                                   flags,
-                                                                                   filter,
-                                                                                   type,
-                                                                                   data_set);
-                }
-                changed |= then_child_changed;
-                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
-                    for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
-                        pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
-
-                        pcmk__update_action_for_orderings(next->action,
-                                                          data_set);
-                    }
-                }
-            }
+            changed |= update_noninterleaved_actions((pe_resource_t *) gIter->data,
+                                                     first, then, node, flags,
+                                                     filter, type);
         }
         free_instance_list(then->rsc, children);
     }
