@@ -8,6 +8,9 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# e.g. /etc/sysconfig or /etc/default
+CONFIG_DIR=@CONFIGDIR@
+
 if [ -e $PWD/cts/CTSlab.py ]; then
     cts_root=$PWD/cts
 elif [ -e $PWD/CTSlab.py ]; then
@@ -213,7 +216,7 @@ case $cluster_name in
 esac
 
 if [ x$cmd != x ]; then
-    config=/etc/sysconfig/pacemaker
+    config="${CONFIG_DIR}/pacemaker"
     case $cmd in
 	trace-ls|tls)
 	    cluster-helper -g $cluster_name -- grep PCMK_trace_functions $config
