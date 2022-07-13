@@ -707,6 +707,14 @@ pe_resource_t *pcmk__find_compatible_instance(const pe_resource_t *match_rsc,
                                               enum rsc_role_e role,
                                               bool current);
 
+G_GNUC_INTERNAL
+uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
+                                               pe_action_t *then,
+                                               const pe_node_t *node,
+                                               uint32_t flags, uint32_t filter,
+                                               uint32_t type,
+                                               pe_working_set_t *data_set);
+
 
 // Injections (pcmk_injections.c)
 

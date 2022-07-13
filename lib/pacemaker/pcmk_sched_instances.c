@@ -1097,36 +1097,34 @@ update_noninterleaved_actions(pe_resource_t *instance, pe_action_t *first,
  * \return Group of enum pcmk__updated flags indicating what was updated
  */
 uint32_t
-pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           const pe_node_t *node, uint32_t flags,
-                           uint32_t filter, uint32_t type,
-                           pe_working_set_t *data_set)
+pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                                      const pe_node_t *node, uint32_t flags,
+                                      uint32_t filter, uint32_t type,
+                                      pe_working_set_t *data_set)
 {
-    uint32_t changed = pcmk__updated_none;
+    if (then->rsc == NULL) {
+        return pcmk__updated_none;
 
-    crm_trace("%s -> %s", first->uuid, then->uuid);
+    } else if (can_interleave_actions(first, then)) {
+        return update_interleaved_actions(first, then, node, filter, type);
 
-    if(can_interleave_actions(first, then)) {
-        changed = update_interleaved_actions(first, then, node, filter, type);
+    } else {
+        uint32_t changed = pcmk__updated_none;
+        GList *instances = get_instance_list(then->rsc);
 
-    } else if(then->rsc) {
-        GList *gIter = NULL;
-        GList *children = NULL;
-
-        // Handle the 'primitive' ordering case
+        // Update actions for the clone or bundle resource itself
         changed |= pcmk__update_ordered_actions(first, then, node, flags,
                                                 filter, type, data_set);
 
-        // Now any children (or containers in the case of a bundle)
-        children = get_instance_list(then->rsc);
-        for (gIter = children; gIter != NULL; gIter = gIter->next) {
-            changed |= update_noninterleaved_actions((pe_resource_t *) gIter->data,
-                                                     first, then, node, flags,
-                                                     filter, type);
+        // Update the 'then' clone instances or bundle containers individually
+        for (GList *iter = instances; iter != NULL; iter = iter->next) {
+            changed |= update_noninterleaved_actions((pe_resource_t *)
+                                                     iter->data, first, then,
+                                                     node, flags, filter, type);
         }
-        free_instance_list(then->rsc, children);
+        free_instance_list(then->rsc, instances);
+        return changed;
     }
-    return changed;
 }
 
 #define pe__clear_action_summary_flags(flags, action, flag) do {        \
