@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
-#include "libpacemaker_private.h"
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
@@ -432,8 +431,8 @@ new_post_notify_action(pe_resource_t *rsc, pe_node_t *node,
  * \return Newly created notification data
  */
 notify_data_t *
-pcmk__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                             pe_action_t *action, pe_action_t *complete)
+pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                           pe_action_t *action, pe_action_t *complete)
 {
     notify_data_t *n_data = NULL;
 
@@ -920,7 +919,7 @@ create_notify_actions(pe_resource_t *rsc, notify_data_t *n_data)
  * \param[in] n_data  Clone notification data for some action
  */
 void
-pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
+pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
 {
     if ((rsc == NULL) || (n_data == NULL)) {
         return;
@@ -937,7 +936,7 @@ pcmk__create_notifications(pe_resource_t *rsc, notify_data_t *n_data)
  * \param[in] n_data  Notification data to free
  */
 void
-pcmk__free_notification_data(notify_data_t *n_data)
+pe__free_notification_data(notify_data_t *n_data)
 {
     if (n_data == NULL) {
         return;
@@ -969,16 +968,16 @@ pcmk__free_notification_data(notify_data_t *n_data)
  * \param[in] stonith_op  Fencing action that implies \p stop
  */
 void
-pcmk__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
-                                 pe_action_t *stonith_op)
+pe__order_notifs_after_fencing(pe_action_t *stop, pe_resource_t *rsc,
+                               pe_action_t *stonith_op)
 {
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
+    n_data = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, NULL, stonith_op);
     collect_resource_data(rsc, false, n_data);
     add_notify_env(n_data, "notify_stop_resource", rsc->id);
     add_notify_env(n_data, "notify_stop_uname", stop->node->details->uname);
     create_notify_actions(uber_parent(rsc), n_data);
-    pcmk__free_notification_data(n_data);
+    pe__free_notification_data(n_data);
 }

@@ -53,7 +53,6 @@ libpacemaker_la_SOURCES += pcmk_sched_group.c
 libpacemaker_la_SOURCES += pcmk_sched_location.c
 libpacemaker_la_SOURCES += pcmk_sched_native.c
 libpacemaker_la_SOURCES += pcmk_sched_nodes.c
-libpacemaker_la_SOURCES += pcmk_sched_notif.c
 libpacemaker_la_SOURCES += pcmk_sched_ordering.c
 libpacemaker_la_SOURCES += pcmk_sched_probes.c
 libpacemaker_la_SOURCES += pcmk_sched_promotable.c

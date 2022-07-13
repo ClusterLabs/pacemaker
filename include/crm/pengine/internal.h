@@ -232,6 +232,9 @@ typedef struct notify_data_s {
 int pe__clone_promoted_max(pe_resource_t *clone);
 int pe__clone_promoted_node_max(pe_resource_t *clone);
 
+pe_action_t *pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
+                                       bool optional, bool runnable);
+
 bool pe_can_fence(pe_working_set_t *data_set, pe_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
@@ -271,6 +274,17 @@ gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
 char *pe__node_display_name(pe_node_t *node, bool print_detail);
+
+
+// Clone notifications (pe_notif.c)
+void pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
+notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
+                                          pe_action_t *action,
+                                          pe_action_t *complete);
+void pe__free_notification_data(notify_data_t *n_data);
+void pe__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
+                                    pe_action_t *stonith_op);
+
 
 static inline const char *
 pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
@@ -439,7 +453,6 @@ extern enum action_tasks get_complex_task(pe_resource_t * rsc, const char *name,
 extern GList *find_actions(GList *input, const char *key, const pe_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,
                           const pe_node_t *on_node);
-extern GList *find_recurring_actions(GList *input, pe_node_t * not_on_node);
 GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                             const char *task, bool require_node);
 

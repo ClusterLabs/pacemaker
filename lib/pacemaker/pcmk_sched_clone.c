@@ -512,9 +512,9 @@ clone_create_pseudo_actions(
     }
 
     /* start */
-    start = pcmk__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
-    started = pcmk__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
-                                          false);
+    start = pe__new_rsc_pseudo_action(rsc, RSC_START, !child_starting, true);
+    started = pe__new_rsc_pseudo_action(rsc, RSC_STARTED, !child_starting,
+                                        false);
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
@@ -522,22 +522,21 @@ clone_create_pseudo_actions(
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
-        *start_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_START, start,
-                                                     started);
+        *start_notify = pe__clone_notif_pseudo_ops(rsc, RSC_START, start,
+                                                   started);
     }
 
     /* stop */
-    stop = pcmk__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
-    stopped = pcmk__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
-                                          true);
+    stop = pe__new_rsc_pseudo_action(rsc, RSC_STOP, !child_stopping, true);
+    stopped = pe__new_rsc_pseudo_action(rsc, RSC_STOPPED, !child_stopping,
+                                        true);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
-        *stop_notify = pcmk__clone_notif_pseudo_ops(rsc, RSC_STOP, stop,
-                                                    stopped);
+        *stop_notify = pe__clone_notif_pseudo_ops(rsc, RSC_STOP, stop, stopped);
 
         if (start_notify && *start_notify && *stop_notify) {
             order_actions((*stop_notify)->post_done, (*start_notify)->pre, pe_order_optional);
@@ -906,10 +905,10 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    pcmk__create_notifications(rsc, clone_data->start_notify);
-    pcmk__create_notifications(rsc, clone_data->stop_notify);
-    pcmk__create_notifications(rsc, clone_data->promote_notify);
-    pcmk__create_notifications(rsc, clone_data->demote_notify);
+    pe__create_notifications(rsc, clone_data->start_notify);
+    pe__create_notifications(rsc, clone_data->stop_notify);
+    pe__create_notifications(rsc, clone_data->promote_notify);
+    pe__create_notifications(rsc, clone_data->demote_notify);
 
     /* Now that the notifcations have been created we can expand the children */
 
@@ -923,13 +922,13 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     native_expand(rsc, data_set);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    pcmk__free_notification_data(clone_data->demote_notify);
+    pe__free_notification_data(clone_data->demote_notify);
     clone_data->demote_notify = NULL;
-    pcmk__free_notification_data(clone_data->stop_notify);
+    pe__free_notification_data(clone_data->stop_notify);
     clone_data->stop_notify = NULL;
-    pcmk__free_notification_data(clone_data->start_notify);
+    pe__free_notification_data(clone_data->start_notify);
     clone_data->start_notify = NULL;
-    pcmk__free_notification_data(clone_data->promote_notify);
+    pe__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
 
