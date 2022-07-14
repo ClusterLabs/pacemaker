@@ -349,7 +349,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
  *  - Active instance whose parent is allowed on current node
  *  - Active instance whose current node has fewer other instances
  *  - Active instance
- *  - Failed instance
+ *  - Instance that isn't failed
  *  - Instance whose colocations result in higher score on current node
  *  - Instance with lower ID in lexicographic order
  *
@@ -489,14 +489,15 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    // Prefer failed instance
+    // Prefer instance that isn't failed
     can1 = did_fail(instance1);
     can2 = did_fail(instance2);
     if (!can1 && can2) {
-        crm_trace("Assign %s before %s: failed", instance1->id, instance2->id);
+        crm_trace("Assign %s before %s: not failed",
+                  instance1->id, instance2->id);
         return -1;
     } else if (can1 && !can2) {
-        crm_trace("Assign %s after %s: not failed",
+        crm_trace("Assign %s after %s: failed",
                   instance1->id, instance2->id);
         return 1;
     }
