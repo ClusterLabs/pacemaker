@@ -47,6 +47,12 @@ enum test_modes {
     test_api_mainloop,  // sanity-test mainloop code with async responses
 };
 
+struct {
+    enum test_modes mode;
+} options = {
+    .mode = test_standard
+};
+
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
     {
@@ -610,8 +616,6 @@ main(int argc, char **argv)
     int flag;
     int option_index = 0;
 
-    enum test_modes mode = test_standard;
-
     pcmk__cli_init_logging("cts-fence-helper", 0);
     pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
                           "inject commands into the Pacemaker fencer, "
@@ -632,13 +636,13 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'p':
-                mode = test_passive;
+                options.mode = test_passive;
                 break;
             case 't':
-                mode = test_api_sanity;
+                options.mode = test_api_sanity;
                 break;
             case 'm':
-                mode = test_api_mainloop;
+                options.mode = test_api_mainloop;
                 break;
             default:
                 ++argerr;
@@ -663,7 +667,7 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_DISCONNECT);
     }
 
-    switch (mode) {
+    switch (options.mode) {
         case test_standard:
             standard_dev_test();
             break;
