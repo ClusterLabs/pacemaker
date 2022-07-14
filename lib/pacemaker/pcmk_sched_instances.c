@@ -1138,8 +1138,7 @@ summary_action_flags(pe_action_t *action, GList *children,
                      const pe_node_t *node)
 {
     GList *gIter = NULL;
-    gboolean any_runnable = FALSE;
-    gboolean check_runnable = TRUE;
+    bool any_runnable = false;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
     const char *task_s = orig_action_name(action);
 
@@ -1161,12 +1160,12 @@ summary_action_flags(pe_action_t *action, GList *children,
                 pe__clear_action_flags(action, pe_action_optional);
             }
             if (pcmk_is_set(child_flags, pe_action_runnable)) {
-                any_runnable = TRUE;
+                any_runnable = true;
             }
         }
     }
 
-    if (check_runnable && any_runnable == FALSE) {
+    if (!any_runnable) {
         pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
         pe__clear_action_summary_flags(flags, action, pe_action_runnable);
         if (node == NULL) {
