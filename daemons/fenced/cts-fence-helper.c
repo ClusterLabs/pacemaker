@@ -612,6 +612,9 @@ mainloop_tests(void)
 int
 main(int argc, char **argv)
 {
+    GError *error = NULL;
+    crm_exit_t exit_code = CRM_EX_OK;
+
     int argerr = 0;
     int flag;
     int option_index = 0;
@@ -663,8 +666,10 @@ main(int argc, char **argv)
 
     st = stonith_api_new();
     if (st == NULL) {
-        crm_err("Could not connect to fencer: API memory allocation failed");
-        crm_exit(CRM_EX_DISCONNECT);
+        exit_code = CRM_EX_DISCONNECT;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to fencer: API memory allocation failed");
+        goto done;
     }
 
     switch (options.mode) {
@@ -683,5 +688,9 @@ main(int argc, char **argv)
     }
 
     test_shutdown(0);
-    return CRM_EX_OK;
+
+done:
+    pcmk__output_and_clear_error(error, NULL);
+
+    crm_exit(exit_code);
 }
