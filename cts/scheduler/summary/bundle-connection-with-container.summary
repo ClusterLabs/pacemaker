@@ -1,0 +1,63 @@
+Using the original execution date of: 2022-07-13 22:13:26Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-3 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-2 ]
+    * RemoteOnline: [ remote-rhel8-2 ]
+    * GuestOnline: [ httpd-bundle-1@rhel8-3 httpd-bundle-2@rhel8-1 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-3
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-5
+    * remote-rhel8-2	(ocf:pacemaker:remote):	 Started rhel8-1
+    * remote-rsc	(ocf:pacemaker:Dummy):	 Started remote-rhel8-2
+    * Container bundle set: httpd-bundle [localhost/pcmktest:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 FAILED rhel8-1
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started rhel8-3
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Started remote-rhel8-2
+
+Transition Summary:
+  * Fence (reboot) httpd-bundle-0 (resource: httpd-bundle-podman-0) 'guest is unclean'
+  * Recover    httpd-bundle-podman-0     (        rhel8-1 )
+  * Recover    httpd-bundle-0            (        rhel8-1 )
+  * Recover    httpd:0                   ( httpd-bundle-0 )
+
+Executing Cluster Transition:
+  * Resource action: httpd-bundle-0  stop on rhel8-1
+  * Pseudo action:   httpd-bundle_stop_0
+  * Pseudo action:   httpd-bundle_start_0
+  * Resource action: httpd-bundle-podman-0 stop on rhel8-1
+  * Pseudo action:   stonith-httpd-bundle-0-reboot on httpd-bundle-0
+  * Pseudo action:   httpd-bundle-clone_stop_0
+  * Resource action: httpd-bundle-podman-0 start on rhel8-1
+  * Resource action: httpd-bundle-podman-0 monitor=60000 on rhel8-1
+  * Resource action: httpd-bundle-0  start on rhel8-1
+  * Resource action: httpd-bundle-0  monitor=30000 on rhel8-1
+  * Pseudo action:   httpd_stop_0
+  * Pseudo action:   httpd-bundle-clone_stopped_0
+  * Pseudo action:   httpd-bundle-clone_start_0
+  * Pseudo action:   httpd-bundle_stopped_0
+  * Resource action: httpd           start on httpd-bundle-0
+  * Pseudo action:   httpd-bundle-clone_running_0
+  * Pseudo action:   httpd-bundle_running_0
+  * Resource action: httpd           monitor=15000 on httpd-bundle-0
+Using the original execution date of: 2022-07-13 22:13:26Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-3 rhel8-4 rhel8-5 ]
+    * OFFLINE: [ rhel8-2 ]
+    * RemoteOnline: [ remote-rhel8-2 ]
+    * GuestOnline: [ httpd-bundle-0@rhel8-1 httpd-bundle-1@rhel8-3 httpd-bundle-2@rhel8-1 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel8-3
+    * FencingPass	(stonith:fence_dummy):	 Started rhel8-4
+    * FencingFail	(stonith:fence_dummy):	 Started rhel8-5
+    * remote-rhel8-2	(ocf:pacemaker:remote):	 Started rhel8-1
+    * remote-rsc	(ocf:pacemaker:Dummy):	 Started remote-rhel8-2
+    * Container bundle set: httpd-bundle [localhost/pcmktest:http]:
+      * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel8-1
+      * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started rhel8-3
+      * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Started remote-rhel8-2
