@@ -552,14 +552,16 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
             case action_promoted:
             case action_demote:
             case action_demoted:
-                return summary_action_flags(action, data->child->children, node);
+                return pcmk__collective_action_flags(action,
+                                                     data->child->children,
+                                                     node);
             default:
                 break;
         }
     }
 
     containers = pcmk__bundle_containers(action->rsc);
-    flags = summary_action_flags(action, containers, node);
+    flags = pcmk__collective_action_flags(action, containers, node);
     g_list_free(containers);
     return flags;
 }

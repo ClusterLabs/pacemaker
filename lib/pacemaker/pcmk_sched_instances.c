@@ -1133,40 +1133,69 @@ pcmk__instance_update_ordered_actions(pe_action_t *first, pe_action_t *then,
                                      flags, flag, #flag);               \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Return action flags for a given clone or bundle action
+ *
+ * \param[in,out] action     Action for a clone or bundle
+ * \param[in]     instances  Clone instances or bundle containers
+ * \param[in]     node       If not NULL, limit effects to this node
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-summary_action_flags(pe_action_t *action, GList *children,
-                     const pe_node_t *node)
+pcmk__collective_action_flags(pe_action_t *action, const GList *instances,
+                              const pe_node_t *node)
 {
-    GList *gIter = NULL;
     bool any_runnable = false;
-    enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
-    const char *task_s = orig_action_name(action);
+    enum pe_action_flags flags;
+    const char *action_name = orig_action_name(action);
 
-    for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *child_action = NULL;
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
+    // Set original assumptions (optional and runnable may be cleared below)
+    flags = pe_action_optional|pe_action_runnable|pe_action_pseudo;
 
-        child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
-        pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
-                     pe__node_name(node), child_action?child_action->uuid:"NA");
-        if (child_action) {
-            enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
+    for (const GList *iter = instances; iter != NULL; iter = iter->next) {
+        const pe_resource_t *instance = iter->data;
+        const pe_node_t *instance_node = NULL;
+        pe_action_t *instance_action = NULL;
+        enum pe_action_flags instance_flags;
 
-            if (pcmk_is_set(flags, pe_action_optional)
-                && !pcmk_is_set(child_flags, pe_action_optional)) {
-                pe_rsc_trace(child, "%s is mandatory because of %s", action->uuid,
-                             child_action->uuid);
-                pe__clear_action_summary_flags(flags, action, pe_action_optional);
-                pe__clear_action_flags(action, pe_action_optional);
-            }
-            if (pcmk_is_set(child_flags, pe_action_runnable)) {
-                any_runnable = true;
-            }
+        // Node is relevant only to primitive instances
+        if (instance->variant == pe_native) {
+            instance_node = node;
+        }
+
+        instance_action = find_first_action(instance->actions, NULL,
+                                            action_name, instance_node);
+        pe_rsc_trace(action->rsc, "%s has %s for %s on %s",
+                     instance->id,
+                     (instance_action == NULL)? "no action" : instance_action->uuid,
+                     action_name, pe__node_name(node));
+        if (instance_action == NULL) {
+            continue;
+        }
+
+        instance_flags = instance->cmds->action_flags(instance_action, node);
+
+        // If any instance action is mandatory, so is the collective action
+        if (pcmk_is_set(flags, pe_action_optional)
+            && !pcmk_is_set(instance_flags, pe_action_optional)) {
+            pe_rsc_trace(instance, "%s is mandatory because %s is",
+                         action->uuid, instance_action->uuid);
+            pe__clear_action_summary_flags(flags, action, pe_action_optional);
+            pe__clear_action_flags(action, pe_action_optional);
+        }
+
+        // If any instance action is runnable, so is the collective action
+        if (pcmk_is_set(instance_flags, pe_action_runnable)) {
+            any_runnable = true;
         }
     }
 
     if (!any_runnable) {
-        pe_rsc_trace(action->rsc, "%s is not runnable because no children are", action->uuid);
+        pe_rsc_trace(action->rsc,
+                     "%s is not runnable because no instance can run %s",
+                     action->uuid, action_name);
         pe__clear_action_summary_flags(flags, action, pe_action_runnable);
         if (node == NULL) {
             pe__clear_action_flags(action, pe_action_runnable);

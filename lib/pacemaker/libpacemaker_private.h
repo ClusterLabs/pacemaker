@@ -715,6 +715,11 @@ uint32_t pcmk__instance_update_ordered_actions(pe_action_t *first,
                                                uint32_t type,
                                                pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__collective_action_flags(pe_action_t *action,
+                                                   const GList *instances,
+                                                   const pe_node_t *node);
+
 
 // Injections (pcmk_injections.c)
 
