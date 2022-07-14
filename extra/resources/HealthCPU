@@ -32,8 +32,8 @@
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<resource-agent name="HealthCPU" version="1.0">
-<version>1.0</version>
+<resource-agent name="HealthCPU" version="1.1">
+<version>1.1</version>
 
 <longdesc lang="en">
 System health agent that measures the CPU idling and updates the #health-cpu attribute.
@@ -41,7 +41,7 @@ System health agent that measures the CPU idling and updates the #health-cpu att
 <shortdesc lang="en">System health CPU usage</shortdesc>
 
 <parameters>
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
@@ -49,7 +49,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/health-cpu-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="yellow_limit" unique="1">
+<parameter name="yellow_limit" reloadable="1">
 <longdesc lang="en">
 Lower (!) limit of idle percentage to switch the health attribute to yellow. I.e.
 the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
@@ -58,7 +58,7 @@ the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
 <content type="string" default="50"/>
 </parameter>
 
-<parameter name="red_limit" unique="1">
+<parameter name="red_limit" reloadable="1">
 <longdesc lang="en">
 Lower (!) limit of idle percentage to switch the health attribute to red. I.e.
 the #health-cpu will go red if the %idle of the CPU falls below 10%.
@@ -73,6 +73,7 @@ the #health-cpu will go red if the %idle of the CPU falls below 10%.
 <action name="start"        timeout="10s" />
 <action name="stop"         timeout="10s" />
 <action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="reload-agent" timeout="20s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all"   timeout="10s" />
 </actions>
@@ -134,13 +135,36 @@ healthcpu_monitor() {
     return $OCF_NOT_RUNNING
 }
 
+healthcpu_reload_agent() {
+    # No action required
+    :;
+}
+
 healthcpu_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_ARGS
+    # If specified, is yellow_limit a non-negative integer?
+    case "$OCF_RESKEY_yellow_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # If specified, is red_limit a non-negative integer?
+    case "$OCF_RESKEY_red_limit" in
+        0|[1-9]|[1-9][0-9]|100) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+        if [ $? -ne 0 ]; then
+            ocf_log err "Invalid location for 'state': $state_dir is not writable"
+            return $OCF_ERR_ARGS
+        fi
     fi
+
     return $OCF_SUCCESS
 }
 
@@ -172,6 +196,7 @@ meta-data)      meta_data
 start)          healthcpu_start;;
 stop)           healthcpu_stop;;
 monitor)        healthcpu_monitor;;
+reload-agent)   healthcpu_reload_agent;;
 validate-all)   healthcpu_validate;;
 usage|help)     healthcpu_usage
                 exit $OCF_SUCCESS
