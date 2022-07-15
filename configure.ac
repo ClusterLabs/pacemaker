@@ -613,49 +613,42 @@ AS_IF([test "$prefix" = "NONE"],
       ])
 
 AC_MSG_NOTICE([Sanitizing exec_prefix: ${exec_prefix}])
-case $exec_prefix in
-    prefix|NONE)
-        exec_prefix=$prefix
-        ;;
-esac
+AS_CASE([$exec_prefix],
+        [prefix|NONE], [exec_prefix=$prefix])
 
 AC_MSG_NOTICE([Sanitizing INITDIR: ${INITDIR}])
-case $INITDIR in
-    prefix) INITDIR=$prefix;;
-    "")
-        AC_MSG_CHECKING([which init (rc) directory to use])
-        for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
-            /usr/local/etc/rc.d /etc/rc.d
-        do
-            if
-                test -d $initdir
-            then
-                INITDIR=$initdir
-                break
-            fi
-        done
-        AC_MSG_RESULT([$INITDIR])
-        ;;
-esac
+AS_CASE([$INITDIR],
+        [prefix], [INITDIR=$prefix],
+        [""], [
+            AC_MSG_CHECKING([which init (rc) directory to use])
+            for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
+                /usr/local/etc/rc.d /etc/rc.d
+            do
+                AS_IF([test -d $initdir],
+                      [
+                          INITDIR=$initdir
+                          break
+                      ])
+            done
+            AC_MSG_RESULT([$INITDIR])
+        ])
 AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE([Sanitizing libdir: ${libdir}])
-case $libdir in
-    prefix|NONE)
-        AC_MSG_CHECKING([which lib directory to use])
-        for aDir in lib64 lib
-        do
-            trydir="${exec_prefix}/${aDir}"
-            if
-                test -d ${trydir}
-            then
-                libdir=${trydir}
-                break
-            fi
-        done
-        AC_MSG_RESULT([$libdir]);
-        ;;
-esac
+AS_CASE([$libdir],
+        [prefix|NONE], [
+            AC_MSG_CHECKING([which lib directory to use])
+            for aDir in lib64 lib
+            do
+                trydir="${exec_prefix}/${aDir}"
+                AS_IF([test -d ${trydir}],
+                      [
+                          libdir=${trydir}
+                          break
+                      ])
+            done
+            AC_MSG_RESULT([$libdir])
+        ])
 
 dnl Expand values of autoconf-provided directory options
 expand_path_option prefix
@@ -718,9 +711,8 @@ AS_IF([test x"${PCMK_GNUTLS_PRIORITIES}" != x""], [],
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
                    [GnuTLS cipher priorities])
 
-if test x"${BUG_URL}" = x""; then
-    BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"
-fi
+AS_IF([test x"${BUG_URL}" = x""],
+      [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 AC_SUBST(BUG_URL)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
@@ -728,11 +720,8 @@ for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     mandir INITDIR docdir CONFIGDIR localedir
 do
     dirname=`eval echo '${'${j}'}'`
-    if
-        test ! -d "$dirname"
-    then
-        AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])
-    fi
+    AS_IF([test ! -d "$dirname"],
+          [AC_MSG_WARN([$j directory ($dirname) does not exist (yet)])])
 done
 
 us_auth=
@@ -782,37 +771,26 @@ dnl mechanisms are strongly preferred. Keep this section to a bare minimum;
 dnl regard as a "necessary evil".
 INIT_EXT=""
 PROCFS=0
-case "$host_os" in
-    dnl Solaris and some *BSD versions support procfs but not files we need
-    *bsd*)
-        INIT_EXT=".sh"
-        ;;
-    *linux*)
-        PROCFS=1
-        ;;
-    darwin*)
-        LIBS="$LIBS -L${prefix}/lib"
-        CFLAGS="$CFLAGS -I${prefix}/include"
-        ;;
-esac
+dnl Solaris and some *BSD versions support procfs but not files we need
+AS_CASE(["$host_os"],
+        [*bsd*], [INIT_EXT=".sh"],
+        [*linux*], [PROCFS=1],
+        [darwin*], [
+            LIBS="$LIBS -L${prefix}/lib"
+            CFLAGS="$CFLAGS -I${prefix}/include"
+        ])
 
 AC_SUBST(INIT_EXT)
 AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 
-case "$host_cpu" in
-    ppc64|powerpc64)
-        case $CFLAGS in
-         *powerpc64*)
-             ;;
-         *)
-             if test "$GCC" = yes; then
-                 CFLAGS="$CFLAGS -m64"
-             fi
-             ;;
-        esac
-        ;;
-esac
+AS_CASE(["$host_cpu"],
+        [ppc64|powerpc64], [
+            AS_CASE([$CFLAGS],
+                    [*powerpc64*], [],
+                    [*], [AS_IF([test "$GCC" = yes], [CFLAGS="$CFLAGS -m64"])
+                    ])
+        ])
 
 # C99 doesn't guarantee uint64_t type and related format specifiers, but
 # prerequisites, corosync + libqb, use that widely, so the target platforms
@@ -828,15 +806,14 @@ AC_CACHE_VAL(
             [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32 SCNu64"],
             [
                 # test shall only react on "no" cached result & error out respectively
-                if test "x$ac_cv_have_decl_PRIu64" = xno; then
-                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])
-                elif test "x$ac_cv_have_decl_PRIu32" = xno; then
-                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])
-                elif test "x$ac_cv_have_decl_PRIx32" = xno; then
-                    AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])
-                elif test "x$ac_cv_have_decl_SCNu64" = xno; then
-                    AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])
-                fi
+                AS_IF([test "x$ac_cv_have_decl_PRIu64" = xno],
+                      [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])],
+                      [test "x$ac_cv_have_decl_PRIu32" = xno],
+                      [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])],
+                      [test "x$ac_cv_have_decl_PRIx32" = xno],
+                      [AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])],
+                      [test "x$ac_cv_have_decl_SCNu64" = xno],
+                      [AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])])
             ],
             [[#include <inttypes.h>]]
         )
@@ -892,45 +869,45 @@ AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
-if test x"${HELP2MAN}" != x""; then
-    PCMK_FEATURES="$PCMK_FEATURES generated-manpages"
-fi
+AS_IF([test x"${HELP2MAN}" != x""],
+      [PCMK_FEATURES="$PCMK_FEATURES generated-manpages"])
 
 MANPAGE_XSLT=""
-if test x"${XSLTPROC}" != x""; then
-    AC_MSG_CHECKING([for DocBook-to-manpage transform])
-    # first try to figure out correct template using xmlcatalog query,
-    # resort to extensive (semi-deterministic) file search if that fails
-    DOCBOOK_XSL_URI='http://docbook.sourceforge.net/release/xsl/current'
-    DOCBOOK_XSL_PATH='manpages/docbook.xsl'
-    MANPAGE_XSLT=$(${XMLCATALOG} "" ${DOCBOOK_XSL_URI}/${DOCBOOK_XSL_PATH} \
-                   | sed -n 's|^file://||p;q')
-    if test x"${MANPAGE_XSLT}" = x""; then
-        DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
-               -type d 2>/dev/null | LC_ALL=C sort)
-        XSLT=$(basename ${DOCBOOK_XSL_PATH})
-        for d in ${DIRS}
-        do
-            if test -f "${d}/${XSLT}"; then
-                 MANPAGE_XSLT="${d}/${XSLT}"
-                 break
-            fi
-        done
-    fi
-fi
+AS_IF([test x"${XSLTPROC}" != x""],
+      [
+          AC_MSG_CHECKING([for DocBook-to-manpage transform])
+          # first try to figure out correct template using xmlcatalog query,
+          # resort to extensive (semi-deterministic) file search if that fails
+          DOCBOOK_XSL_URI='http://docbook.sourceforge.net/release/xsl/current'
+          DOCBOOK_XSL_PATH='manpages/docbook.xsl'
+          MANPAGE_XSLT=$(${XMLCATALOG} "" ${DOCBOOK_XSL_URI}/${DOCBOOK_XSL_PATH} \
+                         | sed -n 's|^file://||p;q')
+          AS_IF([test x"${MANPAGE_XSLT}" = x""],
+                [
+                    DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
+                           -type d 2>/dev/null | LC_ALL=C sort)
+                    XSLT=$(basename ${DOCBOOK_XSL_PATH})
+                    for d in ${DIRS}
+                    do
+                        AS_IF([test -f "${d}/${XSLT}"],
+                              [
+                                  MANPAGE_XSLT="${d}/${XSLT}"
+                                  break
+                              ])
+                    done
+                ])
+      ])
 AC_MSG_RESULT([$MANPAGE_XSLT])
 AC_SUBST(MANPAGE_XSLT)
 
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
-if test x"${MANPAGE_XSLT}" != x""; then
-    PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
-fi
+AS_IF([test x"${MANPAGE_XSLT}" != x""],
+      [PCMK_FEATURES="$PCMK_FEATURES agent-manpages"])
 
 AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
 AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
-if test "x${ASCIIDOC_CONV}" != x; then
-    PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
-fi
+AS_IF([test "x${ASCIIDOC_CONV}" != x],
+      [PCMK_FEATURES="$PCMK_FEATURES ascii-docs"])
 
 AM_CONDITIONAL([BUILD_SPHINX_DOCS],
                [test x"${SPHINX}" != x"" && test x"${INKSCAPE}" != x""])
@@ -944,12 +921,11 @@ for PATH_DIR in $PATH
 do
     IFS=$IFS_orig
     GETOPT_PATH="${PATH_DIR}/getopt"
-    if test -f "$GETOPT_PATH" && test -x "$GETOPT_PATH" ; then
-        $GETOPT_PATH -T >/dev/null 2>/dev/null
-        if test $? -eq 4; then
-            break
-        fi
-    fi
+    AS_IF([test -f "$GETOPT_PATH" && test -x "$GETOPT_PATH"],
+          [
+              $GETOPT_PATH -T >/dev/null 2>/dev/null
+              AS_IF([test $? -eq 4], [break])
+          ])
     GETOPT_PATH=""
 done
 IFS=$IFS_orig
@@ -998,11 +974,9 @@ PKG_CHECK_MODULES([UUID], [uuid],
                    LIBS="${LIBS} ${UUID_LIBS}"])
 
 AC_CHECK_FUNCS([sched_setscheduler])
-if test "$ac_cv_func_sched_setscheduler" != yes; then
-        PC_LIBS_RT=""
-else
-        PC_LIBS_RT="-lrt"
-fi
+AS_IF([test "$ac_cv_func_sched_setscheduler" != yes],
+      [PC_LIBS_RT=""],
+      [PC_LIBS_RT="-lrt"])
 AC_SUBST(PC_LIBS_RT)
 
 # Require minimum glib version
@@ -1016,13 +990,11 @@ AC_CHECK_FUNCS([nanosleep usleep])
 #
 # Where is dlopen?
 #
-if test "$ac_cv_lib_c_dlopen" = yes; then
-    LIBADD_DL=""
-elif test "$ac_cv_lib_dl_dlopen" = yes; then
-    LIBADD_DL=-ldl
-else
-    LIBADD_DL=${lt_cv_dlopen_libs}
-fi
+AS_IF([test "$ac_cv_lib_c_dlopen" = yes],
+      [LIBADD_DL=""],
+      [test "$ac_cv_lib_dl_dlopen" = yes],
+      [LIBADD_DL=-ldl],
+      [LIBADD_DL=${lt_cv_dlopen_libs}])
 
 PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
@@ -1235,9 +1207,8 @@ AS_IF([test X"$CURSESLIBS" = X"" && test "$ac_cv_header_curses_curses_h" = "yes"
     PC_LIBS_CURSES="$CURSESLIBS"
 ])
 
-if test "x$CURSESLIBS" != "x"; then
-    PCMK_FEATURES="$PCMK_FEATURES ncurses"
-fi
+AS_IF([test "x$CURSESLIBS" != "x"],
+      [PCMK_FEATURES="$PCMK_FEATURES ncurses"])
 
 dnl Check for printw() prototype compatibility
 AS_IF([test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual], [
@@ -1346,9 +1317,8 @@ CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
 
 dnl Support Linux-HA fence agents if available
-if test "$cross_compiling" != "yes"; then
-    CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
-fi
+AS_IF([test "$cross_compiling" != "yes"],
+      [CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"])
 AC_CHECK_HEADERS([stonith/stonith.h],
                  [
                      AC_CHECK_LIB([pils], [PILLoadPlugin])
@@ -1369,15 +1339,13 @@ AC_DEFINE_UNQUOTED([CRM_CORE_DIR], ["$CRM_CORE_DIR"],
 		   [Directory Pacemaker daemons should change to (without systemd, core files will go here)])
 AC_SUBST(CRM_CORE_DIR)
 
-if test x"${CRM_DAEMON_USER}" = x""; then
-    CRM_DAEMON_USER="hacluster"
-fi
+AS_IF([test x"${CRM_DAEMON_USER}" = x""],
+      [CRM_DAEMON_USER="hacluster"])
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-if test x"${CRM_DAEMON_GROUP}" = x""; then
-    CRM_DAEMON_GROUP="haclient"
-fi
+AS_IF([test x"${CRM_DAEMON_GROUP}" = x""],
+      [CRM_DAEMON_GROUP="haclient"])
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
@@ -1420,18 +1388,20 @@ AC_PATH_PROGS(GIT, git false)
 
 AC_MSG_CHECKING([build version])
 BUILD_VERSION=$Format:%h$
-if test $BUILD_VERSION != ":%h$"; then
-    AC_MSG_RESULT([$BUILD_VERSION (archive hash)])
-elif test -x $GIT && test -d .git; then
-    BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
-    AC_MSG_RESULT([$BUILD_VERSION (git hash)])
-else
-    # The current directory name make a reasonable default
-    # Most generated archives will include the hash or tag
-    BASE=`basename $PWD`
-    BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
-    AC_MSG_RESULT([$BUILD_VERSION (directory name)])
-fi
+AS_IF([test $BUILD_VERSION != ":%h$"],
+      [AC_MSG_RESULT([$BUILD_VERSION (archive hash)])],
+      [test -x $GIT && test -d .git],
+      [
+          BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
+          AC_MSG_RESULT([$BUILD_VERSION (git hash)])
+      ],
+      [
+          # The current directory name make a reasonable default
+          # Most generated archives will include the hash or tag
+          BASE=`basename $PWD`
+          BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
+          AC_MSG_RESULT([$BUILD_VERSION (directory name)])
+      ])
 
 AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
@@ -1444,11 +1414,9 @@ AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
-if test $HAVE_dbus = 0; then
-        PC_NAME_DBUS=""
-else
-        PC_NAME_DBUS="dbus-1"
-fi
+AS_IF([test $HAVE_dbus = 0],
+      [PC_NAME_DBUS=""],
+      [PC_NAME_DBUS="dbus-1"])
 AC_SUBST(PC_NAME_DBUS)
 
 AS_CASE([$enable_systemd],
@@ -1554,16 +1522,14 @@ AS_IF([test $with_nagios -eq $REQUIRED], [PCMK_FEATURES="$PCMK_FEATURES nagios"]
 AC_DEFINE_UNQUOTED([SUPPORT_NAGIOS], [$with_nagios], [Support nagios plugins])
 AM_CONDITIONAL([BUILD_NAGIOS], [test $with_nagios -eq $REQUIRED])
 
-if test x"$NAGIOS_PLUGIN_DIR" = x""; then
-    NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"
-fi
+AS_IF([test x"$NAGIOS_PLUGIN_DIR" = x""],
+      [NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"])
 
 AC_DEFINE_UNQUOTED(NAGIOS_PLUGIN_DIR, "$NAGIOS_PLUGIN_DIR", Directory for nagios plugins)
 AC_SUBST(NAGIOS_PLUGIN_DIR)
 
-if test x"$NAGIOS_METADATA_DIR" = x""; then
-    NAGIOS_METADATA_DIR="${datadir}/nagios/plugins-metadata"
-fi
+AS_IF([test x"$NAGIOS_METADATA_DIR" = x""],
+      [NAGIOS_METADATA_DIR="${datadir}/nagios/plugins-metadata"])
 
 AC_DEFINE_UNQUOTED(NAGIOS_METADATA_DIR, "$NAGIOS_METADATA_DIR", Directory for nagios plugins metadata)
 AC_SUBST(NAGIOS_METADATA_DIR)
@@ -1682,13 +1648,12 @@ dnl Check if servicelog development package is installed
 SERVICELOG=servicelog-1
 SERVICELOG_EXISTS="no"
 AC_MSG_CHECKING([for $SERVICELOG packages])
-if
-    $PKG_CONFIG --exists $SERVICELOG
-then
-    PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
-    SERVICELOG_EXISTS="yes"
-    PCMK_FEATURES="$PCMK_FEATURES servicelog"
-fi
+AS_IF([$PKG_CONFIG --exists $SERVICELOG],
+      [
+          PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
+          SERVICELOG_EXISTS="yes"
+          PCMK_FEATURES="$PCMK_FEATURES servicelog"
+      ])
 AC_MSG_RESULT([$SERVICELOG_EXISTS])
 AM_CONDITIONAL(BUILD_SERVICELOG, test "$SERVICELOG_EXISTS" = "yes")
 
@@ -1696,14 +1661,13 @@ dnl Check if OpenIMPI packages and servicelog are installed
 OPENIPMI="OpenIPMI OpenIPMIposix"
 OPENIPMI_SERVICELOG_EXISTS="no"
 AC_MSG_CHECKING([for $SERVICELOG $OPENIPMI packages])
-if
-    $PKG_CONFIG --exists $OPENIPMI $SERVICELOG
-then
-    PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
-    REQUIRE_HEADER([malloc.h])
-    OPENIPMI_SERVICELOG_EXISTS="yes"
-    PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
-fi
+AS_IF([$PKG_CONFIG --exists $OPENIPMI $SERVICELOG],
+      [
+          PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
+          REQUIRE_HEADER([malloc.h])
+          OPENIPMI_SERVICELOG_EXISTS="yes"
+          PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
+      ])
 AC_MSG_RESULT([$OPENIPMI_SERVICELOG_EXISTS])
 AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
 
@@ -1750,12 +1714,13 @@ dnl not have CFLAGS in their environment then this should have
 dnl no effect. However if CFLAGS was exported from the user's
 dnl environment, then the new CFLAGS will also be exported
 dnl to sub processes.
-if export | fgrep " CFLAGS=" > /dev/null; then
-    SAVED_CFLAGS="$CFLAGS"
-    unset CFLAGS
-    CFLAGS="$SAVED_CFLAGS"
-    unset SAVED_CFLAGS
-fi
+AS_IF([export | fgrep " CFLAGS=" > /dev/null],
+      [
+          SAVED_CFLAGS="$CFLAGS"
+          unset CFLAGS
+          CFLAGS="$SAVED_CFLAGS"
+          unset SAVED_CFLAGS
+      ])
 
 CC_EXTRAS=""
 
