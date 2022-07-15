@@ -123,7 +123,6 @@ static pcmk__cli_option_t long_options[] = {
 };
 
 static int exec_call_id = 0;
-static int exec_call_opts = 0;
 static gboolean start_test(gpointer user_data);
 static void try_connect(void);
 
@@ -134,9 +133,10 @@ static struct {
     int timeout;
     int start_delay;
     int cancel_call_id;
-    int no_wait;
-    int is_running;
-    int no_connect;
+    gboolean no_wait;
+    gboolean is_running;
+    gboolean no_connect;
+    int exec_call_opts;
     const char *api_call;
     const char *rsc_id;
     const char *provider;
@@ -144,6 +144,7 @@ static struct {
     const char *type;
     const char *action;
     const char *listen;
+    gboolean use_tls;
     lrmd_key_value_t *params;
 } options;
 
@@ -286,7 +287,9 @@ start_test(gpointer user_data)
                                    NULL,
                                    options.interval_ms,
                                    options.timeout,
-                                   options.start_delay, exec_call_opts, options.params);
+                                   options.start_delay,
+                                   options.exec_call_opts,
+                                   options.params);
 
         if (rc > 0) {
             exec_call_id = rc;
@@ -516,7 +519,6 @@ main(int argc, char **argv)
     int flag;
     char *key = NULL;
     char *val = NULL;
-    gboolean use_tls = FALSE;
     crm_trigger_t *trig;
 
     pcmk__cli_init_logging("cts-exec-helper", 0);
@@ -545,16 +547,16 @@ main(int argc, char **argv)
                 options.listen = optarg;
                 break;
             case 'w':
-                options.no_wait = 1;
+                options.no_wait = TRUE;
                 break;
             case 'R':
-                options.is_running = 1;
+                options.is_running = TRUE;
                 break;
             case 'n':
-                exec_call_opts = lrmd_opt_notify_orig_only;
+                options.exec_call_opts = lrmd_opt_notify_orig_only;
                 break;
             case 'o':
-                exec_call_opts = lrmd_opt_notify_changes_only;
+                options.exec_call_opts = lrmd_opt_notify_changes_only;
                 break;
             case 'c':
                 options.api_call = optarg;
@@ -609,7 +611,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'S':
-                use_tls = TRUE;
+                options.use_tls = TRUE;
                 break;
             default:
                 ++argerr;
@@ -626,7 +628,7 @@ main(int argc, char **argv)
 
     if (!options.listen && pcmk__strcase_any_of(options.api_call, "metadata", "list_agents",
                                                 "list_standards", "list_ocf_providers", NULL)) {
-        options.no_connect = 1;
+        options.no_connect = TRUE;
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, (options.verbose? TRUE : FALSE),
@@ -651,7 +653,7 @@ main(int argc, char **argv)
         }
         options.api_call = "exec";
         options.action = "monitor";
-        exec_call_opts = lrmd_opt_notify_orig_only;
+        options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
     /* if we can't perform an api_call or listen for events, 
@@ -662,7 +664,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (use_tls) {
+    if (options.use_tls) {
         lrmd_conn = lrmd_remote_api_new(NULL, "localhost", 0);
     } else {
         lrmd_conn = lrmd_api_new();
