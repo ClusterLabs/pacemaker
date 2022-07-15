@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -508,6 +508,9 @@ generate_params(void)
 int
 main(int argc, char **argv)
 {
+    GError *error = NULL;
+    crm_exit_t exit_code = CRM_EX_OK;
+
     int option_index = 0;
     int argerr = 0;
     int flag;
@@ -635,14 +638,16 @@ main(int argc, char **argv)
         }
         options.interval_ms = 0;
         if (!options.rsc_id) {
-            crm_err("rsc-id must be given when is-running is used");
-            test_exit(CRM_EX_ERROR);
+            exit_code = CRM_EX_ERROR;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "rsc-id must be given when is-running is used");
+            goto done;
         }
 
         if (generate_params()) {
+            exit_code = CRM_EX_ERROR;
             print_result(printf
                          ("Failed to retrieve rsc parameters from cib, can not determine if rsc is running.\n"));
-            test_exit(CRM_EX_ERROR);
+            goto done;
         }
         options.api_call = "exec";
         options.action = "monitor";
@@ -652,8 +657,9 @@ main(int argc, char **argv)
     /* if we can't perform an api_call or listen for events, 
      * there is nothing to do */
     if (!options.api_call && !options.listen) {
-        crm_err("Nothing to be done.  Please specify 'api-call' and/or 'listen'");
-        return CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Nothing to be done.  Please specify 'api-call' and/or 'listen'");
+        goto done;
     }
 
     if (use_tls) {
@@ -669,6 +675,7 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 
+done:
+    pcmk__output_and_clear_error(error, NULL);
     test_exit(CRM_EX_OK);
-    return CRM_EX_OK;
 }
