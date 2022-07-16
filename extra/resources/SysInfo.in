@@ -78,19 +78,19 @@ Units:
 
 <parameters>
 
-<parameter name="pidfile" unique="1">
+<parameter name="pidfile">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
 <content type="string" default="$OCF_RESKEY_pidfile" />
 </parameter>
 
-<parameter name="delay" unique="0">
+<parameter name="delay">
 <longdesc lang="en">Interval to allow values to stabilize</longdesc>
 <shortdesc lang="en">Dampening Delay</shortdesc>
 <content type="string" default="0s" />
 </parameter>
 
-<parameter name="disks" unique="0">
+<parameter name="disks">
 <longdesc lang="en">
 Filesystems or Paths to be queried for free disk space as a SPACE
 separated list - e.g "/dev/sda1 /tmp".
@@ -104,7 +104,7 @@ named 'root_free'
 <content type="string" />
 </parameter>
 
-<parameter name="disk_unit" unique="0">
+<parameter name="disk_unit">
 <longdesc lang="en">
 Unit to report disk free space in.
 Can be one of: B, K, M, G, T, P (case-insensitive)
@@ -113,7 +113,7 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 <content type="string" default="G"/>
 </parameter>
 
-<parameter name="min_disk_free" unique="0">
+<parameter name="min_disk_free">
 <longdesc lang="en">
 The amount of free space required in monitored disks. If any
 of the monitored disks has less than this amount of free space,
