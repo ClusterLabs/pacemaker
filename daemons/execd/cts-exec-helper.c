@@ -162,11 +162,11 @@ static lrmd_t *lrmd_conn = NULL;
 
 static char event_buf_v0[1024];
 
-static void
+static crm_exit_t
 test_exit(crm_exit_t exit_code)
 {
     lrmd_api_delete(lrmd_conn);
-    crm_exit(exit_code);
+    return crm_exit(exit_code);
 }
 
 #define print_result(result) \
@@ -619,5 +619,5 @@ done:
     free(val);
 
     pcmk__output_and_clear_error(error, NULL);
-    test_exit(CRM_EX_OK);
+    return test_exit(CRM_EX_OK);
 }
