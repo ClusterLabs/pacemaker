@@ -1201,12 +1201,8 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
         add_hash_param(stonith_op->meta, XML_LRM_ATTR_TARGET_UUID, node->details->id);
         add_hash_param(stonith_op->meta, "stonith_action", op);
 
-        if (pe__is_guest_or_remote_node(node)
-            && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
-            /* Extra work to detect device changes on remotes
-             *
-             * We may do this for all nodes in the future, but for now
-             * the pcmk__check_action_config() based stuff works fine.
+        if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
+            /* Extra work to detect device changes
              */
             long max = 1024;
             long digests_all_offset = 0;
