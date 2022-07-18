@@ -27,9 +27,12 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/agents.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>
+
+#define SUMMARY "cts-fence-helper - inject commands into the Pacemaker fencer and watch for events"
 
 static GMainLoop *mainloop = NULL;
 static crm_trigger_t *trig = NULL;
@@ -47,33 +50,39 @@ enum test_modes {
     test_api_mainloop,  // sanity-test mainloop code with async responses
 };
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "verbose", no_argument, NULL, 'V',
-        NULL, pcmk__option_default
+struct {
+    enum test_modes mode;
+} options = {
+    .mode = test_standard
+};
+
+static gboolean
+mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (pcmk__str_any_of(option_name, "--mainloop_api_test", "-m", NULL)) {
+        options.mode = test_api_mainloop;
+    } else if (pcmk__str_any_of(option_name, "--api_test", "-t", NULL)) {
+        options.mode = test_api_sanity;
+    } else if (pcmk__str_any_of(option_name, "--passive", "-p", NULL)) {
+        options.mode = test_passive;
+    }
+
+    return TRUE;
+}
+
+static GOptionEntry entries[] = {
+    { "mainloop_api_test", 'm', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
+      NULL, NULL,
     },
-    {
-        "version", no_argument, NULL, '$',
-        NULL, pcmk__option_default
+
+    { "api_test", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
+      NULL, NULL,
     },
-    {
-        "help", no_argument, NULL, '?',
-        NULL, pcmk__option_default
+
+    { "passive", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
+      NULL, NULL,
     },
-    {
-        "passive", no_argument, NULL, 'p',
-        NULL, pcmk__option_default
-    },
-    {
-        "api_test", no_argument, NULL, 't',
-        NULL, pcmk__option_default
-    },
-    {
-        "mainloop_api_test", no_argument, NULL, 'm',
-        NULL, pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
+
+    { NULL }
 };
 
 static stonith_t *st = NULL;
@@ -603,67 +612,50 @@ mainloop_tests(void)
     g_main_loop_run(mainloop);
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, NULL, group, NULL);
+    pcmk__add_main_args(context, entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int argerr = 0;
-    int flag;
-    int option_index = 0;
+    GError *error = NULL;
+    crm_exit_t exit_code = CRM_EX_OK;
 
-    enum test_modes mode = test_standard;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
+    GOptionContext *context = build_arg_context(args, NULL);
 
-    pcmk__cli_init_logging("cts-fence-helper", 0);
-    pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
-                          "inject commands into the Pacemaker fencer, "
-                          "and watch for events");
-
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1) {
-            break;
-        }
-
-        switch (flag) {
-            case 'V':
-                verbose = 1;
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'p':
-                mode = test_passive;
-                break;
-            case 't':
-                mode = test_api_sanity;
-                break;
-            case 'm':
-                mode = test_api_mainloop;
-                break;
-            default:
-                ++argerr;
-                break;
-        }
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
+    /* We have to use crm_log_init here to set up the logging because there's
+     * different handling for daemons vs. command line programs, and
+     * pcmk__cli_init_logging is set up to only handle the latter.
+     */
     crm_log_init(NULL, LOG_INFO, TRUE, (verbose? TRUE : FALSE), argc, argv,
                  FALSE);
 
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    for (int i = 0; i < args->verbosity; i++) {
+        crm_bump_log_level(argc, argv);
     }
 
     st = stonith_api_new();
     if (st == NULL) {
-        crm_err("Could not connect to fencer: API memory allocation failed");
-        crm_exit(CRM_EX_DISCONNECT);
+        exit_code = CRM_EX_DISCONNECT;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to fencer: API memory allocation failed");
+        goto done;
     }
 
-    switch (mode) {
+    switch (options.mode) {
         case test_standard:
             standard_dev_test();
             break;
@@ -679,5 +671,11 @@ main(int argc, char **argv)
     }
 
     test_shutdown(0);
-    return CRM_EX_OK;
+
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
+    crm_exit(exit_code);
 }
