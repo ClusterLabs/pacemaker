@@ -1625,20 +1625,26 @@ main(int argc, char **argv)
 
         CRM_ASSERT(len > 0);
 
-        strv = calloc(len, sizeof(char *));
-        strv[0] = strdup("non-option ARGV-elements:");
+        /* Add 1 for the strv[0] string below, and add another 1 for the NULL
+         * at the end of the array so g_strjoinv knows when to stop.
+         */
+        strv = calloc(len+2, sizeof(char *));
+        strv[0] = strdup("non-option ARGV-elements:\n");
 
         for (gchar **s = options.remainder; *s; s++) {
             strv[i] = crm_strdup_printf("[%d of %d] %s\n", i, len, *s);
             i++;
         }
 
+        strv[i] = NULL;
+
         exit_code = CRM_EX_USAGE;
         msg = g_strjoinv("", strv);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
         g_free(msg);
 
-        for(i = 0; i < len; i++) {
+        /* Don't try to free the last element, which is just NULL. */
+        for(i = 0; i < len+1; i++) {
             free(strv[i]);
         }
         free(strv);
