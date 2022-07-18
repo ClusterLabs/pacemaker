@@ -333,8 +333,8 @@ expression matching:
        const char *s1 = "abcd";
        const char *s2 = "ABCD";
 
-       assert_int_equal(pcmk__strcmp(NULL, "a..d", pcmk__str_regex), 1);
-       assert_int_equal(pcmk__strcmp(s1, NULL, pcmk__str_regex), 1);
+       assert_true(pcmk__strcmp(NULL, "a..d", pcmk__str_regex) < 0);
+       assert_true(pcmk__strcmp(s1, NULL, pcmk__str_regex) > 0);
        assert_int_equal(pcmk__strcmp(s1, "a..d", pcmk__str_regex), 0);
    }
 

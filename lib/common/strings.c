@@ -1090,10 +1090,10 @@ pcmk__numeric_strcasecmp(const char *s1, const char *s2)
  *                  match if pcmk__str_regex is set
  * \param[in] flags A bitfield of pcmk__str_flags to modify operation
  *
- * \retval -1 \p s1 is NULL or comes before \p s2
+ * \retval  negative \p s1 is NULL or comes before \p s2
  * \retval  0 \p s1 and \p s2 are equal, or \p s1 is found in \p s2 if
  *            pcmk__str_regex is set
- * \retval  1 \p s2 is NULL or \p s1 comes after \p s2, or if \p s2
+ * \retval  positive \p s2 is NULL or \p s1 comes after \p s2, or \p s2
  *            is an invalid regular expression, or \p s1 was not found
  *            in \p s2 if pcmk__str_regex is set.
  */
