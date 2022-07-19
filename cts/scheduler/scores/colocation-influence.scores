@@ -46,7 +46,7 @@ pcmk__bundle_allocate: bundle10-clone allocation score on rhel7-5: 0
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-1: 0
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-1: 0
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-2: 10
-pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-2: 21
+pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-2: 20
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-3: 0
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-3: 0
 pcmk__bundle_allocate: bundle10-docker-0 allocation score on rhel7-4: 0
@@ -58,7 +58,7 @@ pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-1: 0
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-2: -INFINITY
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-2: 0
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-3: 10
-pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-3: 21
+pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-3: 20
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-4: 0
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-4: 0
 pcmk__bundle_allocate: bundle10-docker-1 allocation score on rhel7-5: -INFINITY
@@ -350,13 +350,13 @@ pcmk__native_allocate: bundle10-1 allocation score on rhel7-3: 10010
 pcmk__native_allocate: bundle10-1 allocation score on rhel7-4: 0
 pcmk__native_allocate: bundle10-1 allocation score on rhel7-5: 0
 pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-1: 0
-pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-2: 21
+pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-2: 20
 pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-3: 0
 pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-4: 0
 pcmk__native_allocate: bundle10-docker-0 allocation score on rhel7-5: -INFINITY
 pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-1: 0
 pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-2: -INFINITY
-pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-3: 21
+pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-3: 20
 pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-4: 0
 pcmk__native_allocate: bundle10-docker-1 allocation score on rhel7-5: -INFINITY
 pcmk__native_allocate: bundle10-ip-192.168.122.131 allocation score on rhel7-1: -INFINITY
@@ -379,7 +379,7 @@ pcmk__native_allocate: bundle11-1 allocation score on rhel7-2: 0
 pcmk__native_allocate: bundle11-1 allocation score on rhel7-3: 0
 pcmk__native_allocate: bundle11-1 allocation score on rhel7-4: 0
 pcmk__native_allocate: bundle11-1 allocation score on rhel7-5: 0
-pcmk__native_allocate: bundle11-docker-0 allocation score on rhel7-1: 21
+pcmk__native_allocate: bundle11-docker-0 allocation score on rhel7-1: 20
 pcmk__native_allocate: bundle11-docker-0 allocation score on rhel7-2: -INFINITY
 pcmk__native_allocate: bundle11-docker-0 allocation score on rhel7-3: -INFINITY
 pcmk__native_allocate: bundle11-docker-0 allocation score on rhel7-4: -INFINITY

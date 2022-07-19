@@ -216,8 +216,8 @@ pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-ga
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-galera-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-galera-2: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-rabbit-0: INFINITY
-pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-rabbit-1: -9999
-pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-rabbit-2: -9999
+pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-rabbit-1: 1
+pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on overcloud-rabbit-2: 1
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-controller-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-controller-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-controller-2: -INFINITY
@@ -226,7 +226,7 @@ pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-ga
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-galera-2: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-rabbit-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-rabbit-1: INFINITY
-pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-rabbit-2: -9999
+pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on overcloud-rabbit-2: 1
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on overcloud-controller-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on overcloud-controller-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on overcloud-controller-2: -INFINITY
