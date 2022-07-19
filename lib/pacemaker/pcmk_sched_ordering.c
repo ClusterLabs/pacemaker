@@ -1565,3 +1565,35 @@ pcmk__order_after_each(pe_action_t *after, GList *list)
         order_actions(before, after, pe_order_optional);
     }
 }
+
+/*!
+ * \internal
+ * \brief Order promotions and demotions for restarts of a clone or bundle
+ *
+ * \param[in] rsc  Clone or bundle to order
+ */
+void
+pcmk__promotable_restart_ordering(pe_resource_t *rsc)
+{
+    // Order start and promote after all instances are stopped
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
+                                 pe_order_optional, rsc->cluster);
+    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, rsc->cluster);
+
+    // Order stop, start, and promote after all instances are demoted
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
+                                 pe_order_optional, rsc->cluster);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
+                                 pe_order_optional, rsc->cluster);
+    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, rsc->cluster);
+
+    // Order promote after all instances are started
+    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
+                                 pe_order_optional, rsc->cluster);
+
+    // Order demote after all instances are demoted
+    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
+                                 pe_order_optional, rsc->cluster);
+}

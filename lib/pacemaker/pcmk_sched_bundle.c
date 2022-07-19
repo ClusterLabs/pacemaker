@@ -316,7 +316,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     if (bundle_data->child) {
         bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
-            promote_demote_constraints(rsc, data_set);
+            pcmk__promotable_restart_ordering(rsc);
 
             /* child demoted before global demoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,

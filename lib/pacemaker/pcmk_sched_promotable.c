@@ -14,9 +14,6 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_CLONE 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Add implicit promotion ordering for a promotable instance
@@ -1027,224 +1024,235 @@ pcmk__set_instance_roles(pe_resource_t *rsc)
                 rsc->id, promoted, pe__clone_promoted_max(rsc));
 }
 
-void
-create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+/*!
+ *
+ * \internal
+ * \brief Create actions for promotable clone instances
+ *
+ * \param[in]  clone          Promotable clone to create actions for
+ * \param[out] any_promoting  Will be set true if any instance is promoting
+ * \param[out] any_demoting   Will be set true if any instance is demoting
+ */
+static void
+create_promotable_instance_actions(pe_resource_t *clone,
+                                   bool *any_promoting, bool *any_demoting)
 {
-    pe_action_t *action = NULL;
-    GList *gIter = rsc->children;
-    pe_action_t *action_complete = NULL;
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+
+        instance->cmds->create_actions(instance, clone->cluster);
+        check_for_role_change(instance, any_demoting, any_promoting);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Reset each promotable instance's resource priority
+ *
+ * Reset the priority of each instance of a promotable clone to the clone's
+ * priority (after promotion actions are scheduled, when instance priorities
+ * were repurposed as promotion scores).
+ *
+ * \param[in] clone  Promotable clone to reset
+ */
+static void
+reset_instance_priorities(pe_resource_t *clone)
+{
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+
+        instance->priority = clone->priority;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create actions specific to promotable clones
+ *
+ * \param[in] clone  Promotable clone to create actions for
+ */
+void
+pcmk__create_promotable_actions(pe_resource_t *clone)
+{
     bool any_promoting = false;
     bool any_demoting = false;
 
-    clone_variant_data_t *clone_data = NULL;
+    // Create actions for each clone instance individually
+    create_promotable_instance_actions(clone, &any_promoting, &any_demoting);
 
-    get_clone_variant_data(clone_data, rsc);
+    // Create pseudo-actions for clone as a whole
+    pe__create_promotable_pseudo_ops(clone, any_promoting, any_demoting);
 
-    pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "Creating actions for %s", child_rsc->id);
-        child_rsc->cmds->create_actions(child_rsc, data_set);
-        check_for_role_change(child_rsc, &any_demoting, &any_promoting);
-    }
-
-    /* promote */
-    action = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTE, !any_promoting, true);
-    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_PROMOTED,
-                                                !any_promoting, true);
-    action_complete->priority = INFINITY;
-
-    if (clone_data->promote_notify == NULL) {
-        clone_data->promote_notify = pe__clone_notif_pseudo_ops(rsc,
-                                                                RSC_PROMOTE,
-                                                                action,
-                                                                action_complete);
-    }
-
-    /* demote */
-    action = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTE, !any_demoting, true);
-    action_complete = pe__new_rsc_pseudo_action(rsc, RSC_DEMOTED, !any_demoting,
-                                                true);
-    action_complete->priority = INFINITY;
-
-    if (clone_data->demote_notify == NULL) {
-        clone_data->demote_notify = pe__clone_notif_pseudo_ops(rsc, RSC_DEMOTE,
-                                                               action,
-                                                               action_complete);
-
-        if (clone_data->promote_notify) {
-            /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
-             * Requires exposing *_notify
-             */
-            order_actions(clone_data->stop_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->start_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->promote_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,
-                          pe_order_optional);
-            order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,
-                          pe_order_optional);
-        }
-    }
-
-    /* restore the correct priority */
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->priority = rsc->priority;
-    }
+    // Undo our temporary repurposing of resource priority for instances
+    reset_instance_priorities(clone);
 }
 
+/*!
+ * \internal
+ * \brief Create internal orderings for a promotable clone's instances
+ *
+ * \param[in] clone  Promotable clone instance to order
+ */
 void
-promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__order_promotable_instances(pe_resource_t *clone)
 {
-    /* global stopped before start */
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+    pe_resource_t *previous = NULL; // Needed for ordered clones
 
-    /* global stopped before promote */
-    pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
+    pcmk__promotable_restart_ordering(clone);
 
-    /* global demoted before start */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+    for (GList *iter = clone->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
 
-    /* global started before promote */
-    pcmk__order_resource_actions(rsc, RSC_STARTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
+        // Demote before promote
+        pcmk__order_resource_actions(instance, RSC_DEMOTE,
+                                     instance, RSC_PROMOTE,
+                                     pe_order_optional, instance->cluster);
 
-    /* global demoted before stop */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_STOP,
-                                 pe_order_optional, data_set);
-
-    /* global demote before demoted */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                 pe_order_optional, data_set);
-
-    /* global demoted before promote */
-    pcmk__order_resource_actions(rsc, RSC_DEMOTED, rsc, RSC_PROMOTE,
-                                 pe_order_optional, data_set);
-}
-
-
-void
-promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
-{
-    GList *gIter = rsc->children;
-    pe_resource_t *last_rsc = NULL;
-
-    promote_demote_constraints(rsc, data_set);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        /* child demote before promote */
-        pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, child_rsc,
-                                     RSC_PROMOTE, pe_order_optional, data_set);
-
-        order_instance_promotion(rsc, child_rsc, last_rsc);
-        order_instance_demotion(rsc, child_rsc, last_rsc);
-
-        last_rsc = child_rsc;
+        order_instance_promotion(clone, instance, previous);
+        order_instance_demotion(clone, instance, previous);
+        previous = instance;
     }
 }
 
+/*!
+ * \internal
+ * \brief Update dependent's allowed nodes for colocation with promotable
+ *
+ * \param[in] dependent     Dependent resource to update
+ * \param[in] primary_node  Node where an instance of the primary will be
+ * \param[in] colocation    Colocation constraint to apply
+ */
 static void
-node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int score)
+update_dependent_allowed_nodes(pe_resource_t *dependent,
+                               pe_node_t *primary_node,
+                               pcmk__colocation_t *colocation)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    const char *value = NULL;
+    const char *primary_value = NULL;
+    const char *attr = NULL;
 
-    if (other == NULL) {
-        return;
+    if (colocation->score >= INFINITY) {
+        return; // Colocation is mandatory, so allowed node scores don't matter
+    }
 
-    } else if (attr == NULL) {
+    // Get value of primary's colocation node attribute
+    attr = colocation->node_attribute;
+    if (attr == NULL) {
         attr = CRM_ATTR_UNAME;
     }
- 
-    value = pe_node_attribute_raw(other, attr);
-    g_hash_table_iter_init(&iter, hash);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        const char *tmp = pe_node_attribute_raw(node, attr);
+    primary_value = pe_node_attribute_raw(primary_node, attr);
 
-        if (pcmk__str_eq(value, tmp, pcmk__str_casei)) {
-            crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
-            node->weight = pcmk__add_scores(node->weight, score);
+    pe_rsc_trace(colocation->primary,
+                 "Applying %s (%s with %s on %s by %s @%d) to %s",
+                 colocation->id, colocation->dependent->id,
+                 colocation->primary->id, primary_node->details->uname, attr,
+                 colocation->score, dependent->id);
+
+    g_hash_table_iter_init(&iter, dependent->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        const char *dependent_value = pe_node_attribute_raw(node, attr);
+
+        if (pcmk__str_eq(primary_value, dependent_value, pcmk__str_casei)) {
+            pe_rsc_trace(colocation->primary, "%s: %d + %d",
+                         node->details->uname, node->weight, colocation->score);
+            node->weight = pcmk__add_scores(node->weight, colocation->score);
         }
     }
 }
 
+/*!
+ * \brief Update dependent for a colocation with a promotable clone
+ *
+ * \param[in] primary     Primary resource in the colocation
+ * \param[in] dependent   Dependent resource in the colocation
+ * \param[in] colocation  Colocation constraint to apply
+ */
 void
-promotable_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                         pcmk__colocation_t *constraint,
-                         pe_working_set_t *data_set)
+pcmk__update_dependent_with_promotable(pe_resource_t *primary,
+                                       pe_resource_t *dependent,
+                                       pcmk__colocation_t *colocation)
 {
-    GList *gIter = NULL;
+    GList *affected_nodes = NULL;
 
-    if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
-        GList *affected_nodes = NULL;
+    /* Build a list of all nodes where an instance of the primary will be, and
+     * (for optional colocations) update the dependent's allowed node scores for
+     * each one.
+     */
+    for (GList *iter = primary->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *instance = (pe_resource_t *) iter->data;
+        pe_node_t *node = instance->fns->location(instance, NULL, FALSE);
 
-        for (gIter = primary->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-            pe_node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-            enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
-
-            pe_rsc_trace(primary, "Processing: %s", child_rsc->id);
-            if ((chosen != NULL) && (next_role == constraint->primary_role)) {
-                pe_rsc_trace(primary, "Applying: %s %s %s %d", child_rsc->id,
-                             role2text(next_role), chosen->details->uname, constraint->score);
-                if (constraint->score < INFINITY) {
-                    node_hash_update_one(dependent->allowed_nodes, chosen,
-                                         constraint->node_attribute, constraint->score);
-                }
-                affected_nodes = g_list_prepend(affected_nodes, chosen);
-            }
+        if (node == NULL) {
+            continue;
         }
-
-        /* Only do this if it's not a promoted-with-promoted colocation. Doing
-         * this unconditionally would prevent unpromoted instances from being
-         * started.
-         */
-        if ((constraint->dependent_role != RSC_ROLE_PROMOTED)
-            || (constraint->primary_role != RSC_ROLE_PROMOTED)) {
-
-            if (constraint->score >= INFINITY) {
-                node_list_exclude(dependent->allowed_nodes, affected_nodes,
-                                  TRUE);
-            }
-        }
-        g_list_free(affected_nodes);
-
-    } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
-        pe_resource_t *primary_instance;
-
-        primary_instance = find_compatible_child(dependent, primary,
-                                                 constraint->primary_role,
-                                                 FALSE, data_set);
-        if ((primary_instance == NULL) && (constraint->score >= INFINITY)) {
-            pe_rsc_trace(dependent, "%s can't be promoted %s",
-                         dependent->id, constraint->id);
-            dependent->priority = -INFINITY;
-
-        } else if (primary_instance != NULL) {
-            int new_priority = pcmk__add_scores(dependent->priority,
-                                                constraint->score);
-
-            pe_rsc_debug(dependent, "Applying %s to %s",
-                         constraint->id, dependent->id);
-            pe_rsc_debug(dependent, "\t%s: %d->%d",
-                         dependent->id, dependent->priority, new_priority);
-            dependent->priority = new_priority;
+        if (instance->fns->state(instance, FALSE) == colocation->primary_role) {
+            update_dependent_allowed_nodes(dependent, node, colocation);
+            affected_nodes = g_list_prepend(affected_nodes, node);
         }
     }
 
-    return;
+    /* For mandatory colocations, add the primary's node weight to the
+     * dependent's node weight for each affected node, and ban the dependent
+     * from all other nodes.
+     *
+     * However, skip this for promoted-with-promoted colocations, otherwise
+     * inactive dependent instances can't start (in the unpromoted role).
+     */
+    if ((colocation->score >= INFINITY)
+        && ((colocation->dependent_role != RSC_ROLE_PROMOTED)
+            || (colocation->primary_role != RSC_ROLE_PROMOTED))) {
+
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (mandatory %s with %s) to %s",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id);
+        node_list_exclude(dependent->allowed_nodes, affected_nodes,
+                          TRUE);
+    }
+    g_list_free(affected_nodes);
+}
+
+/*!
+ * \internal
+ * \brief Update dependent priority for colocation with promotable
+ *
+ * \param[in] primary     Primary resource in the colocation
+ * \param[in] dependent   Dependent resource in the colocation
+ * \param[in] colocation  Colocation constraint to apply
+ */
+void
+pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
+                                           pe_resource_t *dependent,
+                                           pcmk__colocation_t *colocation)
+{
+    pe_resource_t *primary_instance = NULL;
+
+    // Look for a primary instance where dependent will be
+    primary_instance = find_compatible_child(dependent, primary,
+                                             colocation->primary_role, FALSE,
+                                             primary->cluster);
+
+    if (primary_instance != NULL) {
+        // Add primary instance's priority to dependent's
+        int new_priority = pcmk__add_scores(dependent->priority,
+                                            colocation->score);
+
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (%s with %s) to %s priority (%s + %s = %s)",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id,
+                     pcmk_readable_score(dependent->priority),
+                     pcmk_readable_score(colocation->score),
+                     pcmk_readable_score(new_priority));
+        dependent->priority = new_priority;
+
+    } else if (colocation->score >= INFINITY) {
+        // Mandatory colocation, but primary won't be here
+        pe_rsc_trace(colocation->primary,
+                     "Applying %s (%s with %s) to %s: can't be promoted",
+                     colocation->id, colocation->dependent->id,
+                     colocation->primary->id, dependent->id);
+        dependent->priority = -INFINITY;
+    }
 }

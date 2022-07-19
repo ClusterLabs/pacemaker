@@ -235,6 +235,9 @@ int pe__clone_promoted_node_max(pe_resource_t *clone);
 pe_action_t *pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
                                        bool optional, bool runnable);
 
+void pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
+                                      bool any_demoting);
+
 bool pe_can_fence(pe_working_set_t *data_set, pe_node_t *node);
 
 void add_hash_param(GHashTable * hash, const char *name, const char *value);

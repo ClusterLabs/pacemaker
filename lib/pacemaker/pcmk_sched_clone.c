@@ -472,10 +472,13 @@ clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
+
+    pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
     clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
     child_ordering_constraints(rsc, data_set);
+
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        create_promotable_actions(rsc, data_set);
+        pcmk__create_promotable_actions(rsc);
     }
 }
 
@@ -596,7 +599,7 @@ clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
         last_rsc = child_rsc;
     }
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        promotable_constraints(rsc, data_set);
+        pcmk__order_promotable_instances(rsc);
     }
 }
 
@@ -697,13 +700,25 @@ clone_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
     if (pcmk_is_set(primary->flags, pe_rsc_promotable)) {
         if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
+            // We haven't placed the primary yet, so we can't apply colocation
             pe_rsc_trace(primary, "%s is still provisional", primary->id);
             return;
+
         } else if (constraint->primary_role == RSC_ROLE_UNKNOWN) {
+            // This isn't a role-specfic colocation, so handle normally
             pe_rsc_trace(primary, "Handling %s as a clone colocation",
                          constraint->id);
-        } else {
-            promotable_colocation_rh(dependent, primary, constraint, data_set);
+
+        } else if (pcmk_is_set(dependent->flags, pe_rsc_provisional)) {
+            // We're placing the dependent
+            pcmk__update_dependent_with_promotable(primary, dependent,
+                                                   constraint);
+            return;
+
+        } else if (constraint->dependent_role == RSC_ROLE_PROMOTED) {
+            // We're choosing roles for the dependent
+            pcmk__update_promotable_dependent_priority(primary, dependent,
+                                                       constraint);
             return;
         }
     }
