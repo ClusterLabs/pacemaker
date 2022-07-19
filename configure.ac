@@ -67,7 +67,7 @@ AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
 
 dnl Require minimum version of pkg-config
 PKG_PROG_PKG_CONFIG(0.27)
-AS_IF([test "x${PKG_CONFIG}" != x], [],
+AS_IF([test x"${PKG_CONFIG}" != x""], [],
       [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.27 or later)])])
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
@@ -302,7 +302,7 @@ AC_DEFUN([AM_NLS],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
-AS_IF([test "$enable_nls" = "yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
+AS_IF([test x"$enable_nls" = x"yes"], [PCMK_FEATURES="$PCMK_FEATURES nls"])
 
 dnl --with-* options: external software support, and custom locations
 
@@ -589,7 +589,7 @@ AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
 # Check for fatal warning support
-AS_IF([test $enable_fatal_warnings -ne $DISABLED && test "$GCC" = "yes" && cc_supports_flag -Werror],
+AS_IF([test $enable_fatal_warnings -ne $DISABLED && test x"$GCC" = x"yes" && cc_supports_flag -Werror],
       [WERROR="-Werror"],
       [
           WERROR=""
@@ -602,13 +602,13 @@ AS_IF([test $enable_fatal_warnings -ne $DISABLED && test "$GCC" = "yes" && cc_su
       ])
 
 AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
-AS_IF([test "$prefix" = "NONE"],
+AS_IF([test x"$prefix" = x"NONE"],
       [
           prefix=/usr
           dnl Fix default variables - "prefix" variable if not specified
-          AS_IF([test "$localstatedir" = "\${prefix}/var"],
+          AS_IF([test x"$localstatedir" = x"\${prefix}/var"],
                 [localstatedir="/var"])
-          AS_IF([test "$sysconfdir" = "\${prefix}/etc"],
+          AS_IF([test x"$sysconfdir" = x"\${prefix}/etc"],
                 [sysconfdir="/etc"])
       ])
 
@@ -788,7 +788,7 @@ AS_CASE(["$host_cpu"],
         [ppc64|powerpc64], [
             AS_CASE([$CFLAGS],
                     [*powerpc64*], [],
-                    [*], [AS_IF([test "$GCC" = yes], [CFLAGS="$CFLAGS -m64"])
+                    [*], [AS_IF([test x"$GCC" = x"yes"], [CFLAGS="$CFLAGS -m64"])
                     ])
         ])
 
@@ -806,13 +806,13 @@ AC_CACHE_VAL(
             [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32 SCNu64"],
             [
                 # test shall only react on "no" cached result & error out respectively
-                AS_IF([test "x$ac_cv_have_decl_PRIu64" = xno],
+                AS_IF([test "x$ac_cv_have_decl_PRIu64" = x"no"],
                       [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])],
-                      [test "x$ac_cv_have_decl_PRIu32" = xno],
+                      [test "x$ac_cv_have_decl_PRIu32" = x"no"],
                       [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])],
-                      [test "x$ac_cv_have_decl_PRIx32" = xno],
+                      [test "x$ac_cv_have_decl_PRIx32" = x"no"],
                       [AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])],
-                      [test "x$ac_cv_have_decl_SCNu64" = xno],
+                      [test "x$ac_cv_have_decl_SCNu64" = x"no"],
                       [AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])])
             ],
             [[#include <inttypes.h>]]
@@ -837,7 +837,7 @@ export PATH
 dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
 dnl was NOT being expanded all the time thus causing things to fail.
 AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
-AS_IF([test "x${LIBTOOL}" != "x"], [],
+AS_IF([test x"${LIBTOOL}" != x""], [],
       [AC_MSG_FAILURE([Could not find required build tool libtool (or equivalent)])])
 
 dnl Pacemaker's executable python scripts will invoke the python specified by
@@ -862,7 +862,7 @@ AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl Bash is needed for building man pages and running regression tests.
 dnl BASH is already an environment variable, so use something else.
 AC_PATH_PROG([BASH_PATH], [bash])
-AS_IF([test "x${BASH_PATH}" != "x"], [],
+AS_IF([test x"${BASH_PATH}" != x""], [],
       [AC_MSG_FAILURE([Could not find required build tool bash])])
 
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
@@ -906,7 +906,7 @@ AS_IF([test x"${MANPAGE_XSLT}" != x""],
 
 AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
 AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
-AS_IF([test "x${ASCIIDOC_CONV}" != x],
+AS_IF([test x"${ASCIIDOC_CONV}" != x""],
       [PCMK_FEATURES="$PCMK_FEATURES ascii-docs"])
 
 AM_CONDITIONAL([BUILD_SPHINX_DOCS],
@@ -974,7 +974,7 @@ PKG_CHECK_MODULES([UUID], [uuid],
                    LIBS="${LIBS} ${UUID_LIBS}"])
 
 AC_CHECK_FUNCS([sched_setscheduler])
-AS_IF([test "$ac_cv_func_sched_setscheduler" != yes],
+AS_IF([test x"$ac_cv_func_sched_setscheduler" != x"yes"],
       [PC_LIBS_RT=""],
       [PC_LIBS_RT="-lrt"])
 AC_SUBST(PC_LIBS_RT)
@@ -990,9 +990,9 @@ AC_CHECK_FUNCS([nanosleep usleep])
 #
 # Where is dlopen?
 #
-AS_IF([test "$ac_cv_lib_c_dlopen" = yes],
+AS_IF([test x"$ac_cv_lib_c_dlopen" = x"yes"],
       [LIBADD_DL=""],
-      [test "$ac_cv_lib_dl_dlopen" = yes],
+      [test x"$ac_cv_lib_dl_dlopen" = x"yes"],
       [LIBADD_DL=-ldl],
       [LIBADD_DL=${lt_cv_dlopen_libs}])
 
@@ -1067,7 +1067,7 @@ AC_CACHE_CHECK([whether __progname and __progname_full are available],
                                    [pf_cv_var_progname="yes"],
                                    [pf_cv_var_progname="no"])
                ]))
-AS_IF([test "$pf_cv_var_progname" = "yes"], [AC_DEFINE(HAVE___PROGNAME,1,[ ])])
+AS_IF([test x"$pf_cv_var_progname" = x"yes"], [AC_DEFINE(HAVE___PROGNAME,1,[ ])])
 
 dnl ========================================================================
 dnl Generic declarations
@@ -1105,7 +1105,7 @@ return uname(&x) == 100 ? 0 : 1;
 ]])],
                    [ WRAPPABLE_UNAME="yes" ], [ WRAPPABLE_UNAME="no"])
 AC_MSG_RESULT([$WRAPPABLE_UNAME])
-AM_CONDITIONAL([WRAPPABLE_UNAME], [test "$WRAPPABLE_UNAME" = "yes"])
+AM_CONDITIONAL([WRAPPABLE_UNAME], [test x"$WRAPPABLE_UNAME" = x"yes"])
 
 cc_restore_flags
 
@@ -1140,7 +1140,7 @@ return n == 1 ? 0 : 1;
 ]])],
                                  pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
 
-AS_IF([test "$pf_cv_var_sscanf" = "yes"], [AC_DEFINE(SSCANF_HAS_M, 1, [ ])])
+AS_IF([test x"$pf_cv_var_sscanf" = x"yes"], [AC_DEFINE(SSCANF_HAS_M, 1, [ ])])
 
 dnl ========================================================================
 dnl   bzip2
@@ -1179,14 +1179,14 @@ dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
 PC_NAME_CURSES=""
 PC_LIBS_CURSES=""
-AS_IF([test "$ac_cv_header_ncurses_h" = "yes"], [
+AS_IF([test x"$ac_cv_header_ncurses_h" = x"yes"], [
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
     PC_NAME_CURSES="ncurses"
 ])
 
-AS_IF([test "$ac_cv_header_ncurses_ncurses_h" = "yes"], [
+AS_IF([test x"$ac_cv_header_ncurses_ncurses_h" = x"yes"], [
     AC_CHECK_LIB(ncurses, printw,
                  [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
     CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
@@ -1194,24 +1194,24 @@ AS_IF([test "$ac_cv_header_ncurses_ncurses_h" = "yes"], [
 ])
 
 dnl Only look for non-n-library if there was no n-library.
-AS_IF([test X"$CURSESLIBS" = X"" && test "$ac_cv_header_curses_h" = "yes"], [
+AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_h" = x"yes"], [
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
     PC_LIBS_CURSES="$CURSESLIBS"
 ])
 
 dnl Only look for non-n-library if there was no n-library.
-AS_IF([test X"$CURSESLIBS" = X"" && test "$ac_cv_header_curses_curses_h" = "yes"], [
+AS_IF([test x"$CURSESLIBS" = x"" && test x"$ac_cv_header_curses_curses_h" = x"yes"], [
     AC_CHECK_LIB(curses, printw,
                  [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
     PC_LIBS_CURSES="$CURSESLIBS"
 ])
 
-AS_IF([test "x$CURSESLIBS" != "x"],
+AS_IF([test x"$CURSESLIBS" != x""],
       [PCMK_FEATURES="$PCMK_FEATURES ncurses"])
 
 dnl Check for printw() prototype compatibility
-AS_IF([test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual], [
+AS_IF([test x"$CURSESLIBS" != x"" && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
 
@@ -1317,7 +1317,7 @@ CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
 
 dnl Support Linux-HA fence agents if available
-AS_IF([test "$cross_compiling" != "yes"],
+AS_IF([test x"$cross_compiling" != x"yes"],
       [CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"])
 AC_CHECK_HEADERS([stonith/stonith.h],
                  [
@@ -1325,7 +1325,7 @@ AC_CHECK_HEADERS([stonith/stonith.h],
                      AC_CHECK_LIB([plumb], [G_main_add_IPC_Channel])
                      PCMK_FEATURES="$PCMK_FEATURES lha"
                  ])
-AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test "$ac_cv_header_stonith_stonith_h" = "yes"])
+AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test x"$ac_cv_header_stonith_stonith_h" = x"yes"])
 
 dnl ===============================================
 dnl Variables needed for substitution
@@ -1430,7 +1430,7 @@ AS_CASE([$enable_systemd],
         ],
         [$OPTIONAL], [
             AS_IF([test $HAVE_dbus = 0 \
-                   || test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+                   || test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
                   [enable_systemd=$DISABLED],
                   [
                       AC_MSG_CHECKING([for systemd version (using dbus-send)])
@@ -1445,7 +1445,7 @@ AS_CASE([$enable_systemd],
                       # ret is intentionally unenquoted so as to normalize whitespace
                       ret=$(echo ${ret} | cut -d' ' -f2-)
                       AC_MSG_RESULT([${ret}])
-                      AS_IF([test "$ret" != "unavailable" \
+                      AS_IF([test x"$ret" != x"unavailable" \
                              || systemctl --version 2>/dev/null | grep -q systemd],
                             [
                                 AS_IF([check_systemdsystemunitdir],
@@ -1488,7 +1488,7 @@ AS_CASE([$enable_upstart],
                       # ret is intentionally unenquoted so as to normalize whitespace
                       ret=$(echo ${ret} | cut -d' ' -f2-)
                       AC_MSG_RESULT([${ret}])
-                      AS_IF([test "$ret" != "unavailable" \
+                      AS_IF([test x"$ret" != x"unavailable" \
                              || initctl --version 2>/dev/null | grep -q upstart],
                             [enable_upstart=$REQUIRED],
                             [enable_upstart=$DISABLED]
@@ -1510,11 +1510,11 @@ AC_SUBST(SUPPORT_UPSTART)
 
 AS_CASE([$with_nagios],
         [$REQUIRED], [
-            AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
                   [AC_MSG_FAILURE([Cannot support nagios resources without monotonic clock])])
         ],
         [$OPTIONAL], [
-            AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+            AS_IF([test x"$ac_cv_have_decl_CLOCK_MONOTONIC" = x"no"],
                   [with_nagios=$DISABLED], [with_nagios=$REQUIRED])
         ]
 )
@@ -1589,7 +1589,7 @@ dnl
 dnl    Cluster stack - Sanity
 dnl
 
-AS_IF([test "x$STACKS" != "x"], [AC_MSG_NOTICE([Supported stacks:${STACKS}])],
+AS_IF([test x"$STACKS" != x""], [AC_MSG_NOTICE([Supported stacks:${STACKS}])],
       [AC_MSG_FAILURE([At least one cluster stack must be supported])])
 
 PCMK_FEATURES="${PCMK_FEATURES}${STACKS}"
@@ -1655,7 +1655,7 @@ AS_IF([$PKG_CONFIG --exists $SERVICELOG],
           PCMK_FEATURES="$PCMK_FEATURES servicelog"
       ])
 AC_MSG_RESULT([$SERVICELOG_EXISTS])
-AM_CONDITIONAL(BUILD_SERVICELOG, test "$SERVICELOG_EXISTS" = "yes")
+AM_CONDITIONAL(BUILD_SERVICELOG, test x"$SERVICELOG_EXISTS" = x"yes")
 
 dnl Check if OpenIMPI packages and servicelog are installed
 OPENIPMI="OpenIPMI OpenIPMIposix"
@@ -1669,7 +1669,7 @@ AS_IF([$PKG_CONFIG --exists $OPENIPMI $SERVICELOG],
           PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
       ])
 AC_MSG_RESULT([$OPENIPMI_SERVICELOG_EXISTS])
-AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
+AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test x"$OPENIPMI_SERVICELOG_EXISTS" = x"yes")
 
 # --- ASAN/UBSAN/TSAN (see man gcc) ---
 # when using SANitizers, we need to pass the -fsanitize..
@@ -1724,7 +1724,7 @@ AS_IF([export | fgrep " CFLAGS=" > /dev/null],
 
 CC_EXTRAS=""
 
-AS_IF([test "$GCC" != yes], [CFLAGS="$CFLAGS -g"], [
+AS_IF([test x"$GCC" != x"yes"], [CFLAGS="$CFLAGS -g"], [
     CFLAGS="$CFLAGS -ggdb"
 
 dnl When we don't have diagnostic push / pull, we can't explicitly disable
@@ -1778,13 +1778,13 @@ dnl otherwise none of both
     EXTRA_FLAGS="$EXTRA_FLAGS -Wunused-but-set-variable"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wunsigned-char"
 
-    AS_IF([test "x$gcc_diagnostic_push_pull" = "xyes"],
+    AS_IF([test x"$gcc_diagnostic_push_pull" = x"yes"],
           [
               AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
                         [gcc can complain about nonliterals in format])
               EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2 -Wformat-nonliteral"
           ],
-          [test "x$gcc_format_nonliteral" = "xyes"],
+          [test x"$gcc_format_nonliteral" = x"yes"],
           [EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2"])
 
 # Additional warnings it might be nice to enable one day
@@ -1942,7 +1942,7 @@ AS_CASE([$enable_hardening],
                   ]
             )
             # Log a summary
-            AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" != "none"],
+            AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test x"${stackprot}" != x"none"],
                   [AC_MSG_NOTICE(m4_normalize([Hardening:
                         relro=${relro}
                         pie=${pie}
