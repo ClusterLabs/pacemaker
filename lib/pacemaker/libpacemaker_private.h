@@ -185,6 +185,24 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
         rsc = colocation->primary;
     }
 
+    /* A bundle replica colocates its remote connection with its container,
+     * using a finite score so that the container can run on Pacemaker Remote
+     * nodes.
+     *
+     * Moving a connection is lightweight and does not interrupt the service,
+     * while moving a container is heavyweight and does interrupt the service,
+     * so don't move a clean, active container based solely on the preferences
+     * of its connection.
+     *
+     * This also avoids problematic scenarios where two containers want to
+     * perpetually swap places.
+     */
+    if (pcmk_is_set(colocation->dependent->flags, pe_rsc_allow_remote_remotes)
+        && !pcmk_is_set(rsc->flags, pe_rsc_failed)
+        && pcmk__list_of_1(rsc->running_on)) {
+        return false;
+    }
+
     /* The left hand of a colocation influences the right hand's location
      * if the influence option is true, or the right hand is not yet active.
      */
