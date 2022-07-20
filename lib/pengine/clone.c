@@ -19,9 +19,6 @@
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 
-#define VARIANT_CLONE 1
-#include "./variant.h"
-
 #ifdef PCMK__COMPAT_2_0
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
@@ -29,6 +26,29 @@
 #define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
+
+typedef struct clone_variant_data_s {
+    int clone_max;
+    int clone_node_max;
+
+    int promoted_max;
+    int promoted_node_max;
+
+    int total_clones;
+
+    uint32_t flags; // Group of enum pe__clone_flags
+
+    notify_data_t *stop_notify;
+    notify_data_t *start_notify;
+    notify_data_t *demote_notify;
+    notify_data_t *promote_notify;
+
+    xmlNode *xml_obj_child;
+} clone_variant_data_t;
+
+#define get_clone_variant_data(data, rsc)                       \
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));    \
+    data = (clone_variant_data_t *) rsc->variant_opaque;
 
 /*!
  * \internal
@@ -190,9 +210,7 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
-
-        get_clone_variant_data(clone_data, rsc);
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
         pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
                 "such as %s can be used only as anonymous clones",
@@ -1212,9 +1230,8 @@ pe__is_universal_clone(const pe_resource_t *rsc,
                        const pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
-        clone_variant_data_t *clone_data = NULL;
+        clone_variant_data_t *clone_data = rsc->variant_opaque;
 
-        get_clone_variant_data(clone_data, rsc);
         if (clone_data->clone_max == g_list_length(data_set->nodes)) {
             return TRUE;
         }
