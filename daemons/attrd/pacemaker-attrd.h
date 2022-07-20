@@ -51,8 +51,7 @@ void attrd_clear_requesting_shutdown(void);
 bool attrd_requesting_shutdown(void);
 bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
-void attrd_init_ipc(qb_ipcs_service_t **ipcs,
-                    qb_ipcs_msg_process_fn dispatch_fn);
+void attrd_init_ipc(void);
 void attrd_ipc_fini(void);
 
 void attrd_cib_disconnect(void);
@@ -140,9 +139,6 @@ typedef struct attribute_value_s {
 
 extern crm_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
-
-#define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 
 #define CIB_OP_TIMEOUT_S 120
 

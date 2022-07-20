@@ -28,6 +28,7 @@ pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
 						  attrd_commands.c 	\
 						  attrd_elections.c \
+						  attrd_ipc.c 		\
 						  attrd_utils.c 	\
 						  pacemaker-attrd.c
 

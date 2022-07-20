@@ -228,86 +228,6 @@ attrd_cib_init(void)
     mainloop_set_trigger(attrd_config_read);
 }
 
-static qb_ipcs_service_t *ipcs = NULL;
-
-static int32_t
-attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *xml = NULL;
-    const char *op;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK((c != NULL) && (client != NULL), return 0);
-    if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-    xml = pcmk__client_data2xml(client, data, &id, &flags);
-    if (xml == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-
-    op = crm_element_value(xml, PCMK__XA_TASK);
-
-    if (client->name == NULL) {
-        const char *value = crm_element_value(xml, F_ORIG);
-        client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
-    }
-
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_clear_failure(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_refresh();
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
-        /* queries will get reply, so no ack is necessary */
-        attrd_client_query(client, id, flags, xml);
-
-    } else {
-        crm_info("Ignoring request from client %s with unknown operation %s",
-                 pcmk__client_name(client), op);
-    }
-
-    free_xml(xml);
-    return 0;
-}
-
-void
-attrd_ipc_fini(void)
-{
-    if (ipcs != NULL) {
-        pcmk__drop_all_clients(ipcs);
-        qb_ipcs_destroy(ipcs);
-        ipcs = NULL;
-    }
-}
-
 static int
 attrd_cluster_connect(void)
 {
@@ -429,7 +349,7 @@ main(int argc, char **argv)
      */
     attrd_broadcast_protocol();
 
-    attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
+    attrd_init_ipc();
     crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
     attrd_run_mainloop();
 
