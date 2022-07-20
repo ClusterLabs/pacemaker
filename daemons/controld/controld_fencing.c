@@ -310,7 +310,7 @@ remove_stonith_cleanup(const char *target)
  * \brief Purge all entries from the stonith cleanup list
  */
 void
-purge_stonith_cleanup()
+purge_stonith_cleanup(void)
 {
     if (stonith_cleanup_list) {
         GList *iter = NULL;
@@ -331,7 +331,7 @@ purge_stonith_cleanup()
  * \brief Send stonith updates for all entries in cleanup list, then purge it
  */
 void
-execute_stonith_cleanup()
+execute_stonith_cleanup(void)
 {
     GList *iter;
 
@@ -677,7 +677,7 @@ te_connect_stonith(gpointer user_data)
     \brief Schedule fencer connection attempt in main loop
 */
 void
-controld_trigger_fencer_connect()
+controld_trigger_fencer_connect(void)
 {
     if (stonith_reconnect == NULL) {
         stonith_reconnect = mainloop_add_trigger(G_PRIORITY_LOW,

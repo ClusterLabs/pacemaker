@@ -271,7 +271,7 @@ pcmk__get_sbd_sync_resource_startup(void)
 }
 
 long
-pcmk__auto_watchdog_timeout()
+pcmk__auto_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_timeout();
 

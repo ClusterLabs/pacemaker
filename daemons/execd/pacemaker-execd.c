@@ -292,7 +292,8 @@ lrmd_exit(gpointer data)
  *
  * \return Doesn't return
  */
-void execd_exit_if_shutting_down()
+void
+execd_exit_if_shutting_down(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
@@ -360,7 +361,8 @@ lrmd_shutdown(int nsig)
  * \internal
  * \brief Defuse short exit timer if shutting down
  */
-void handle_shutdown_ack()
+void
+handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
@@ -379,7 +381,8 @@ void handle_shutdown_ack()
  * \internal
  * \brief Make short exit timer fire immediately
  */
-void handle_shutdown_nack()
+void
+handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {

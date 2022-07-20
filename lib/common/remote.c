@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2021 the Pacemaker project contributors
+ * Copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1246,7 +1246,7 @@ pcmk__accept_remote_connection(int ssock, int *csock)
  * \return Remote connection TCP port number
  */
 int
-crm_default_remote_port()
+crm_default_remote_port(void)
 {
     static int port = 0;
 

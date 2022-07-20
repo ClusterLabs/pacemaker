@@ -36,7 +36,7 @@ static const char *crm_app_description = NULL;
 static const char *crm_app_usage = NULL;
 
 void
-pcmk__cli_option_cleanup()
+pcmk__cli_option_cleanup(void)
 {
     free(crm_short_options);
     crm_short_options = NULL;

@@ -113,7 +113,7 @@ crm_time_new(const char *date_time)
  *       crm_time_free().
  */
 crm_time_t *
-crm_time_new_undefined()
+crm_time_new_undefined(void)
 {
     crm_time_t *result = calloc(1, sizeof(crm_time_t));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -158,7 +158,8 @@ do_cib_control(long long action,
  *
  * \return CIB call options
  */
-int crmd_cib_smart_opt()
+int
+crmd_cib_smart_opt(void)
 {
     int call_opt = cib_quorum_override;
 

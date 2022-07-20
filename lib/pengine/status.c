@@ -31,7 +31,7 @@
  *       pe_free_working_set() when the instance is no longer needed.
  */
 pe_working_set_t *
-pe_new_working_set()
+pe_new_working_set(void)
 {
     pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
 

@@ -37,8 +37,8 @@ PACKAGE		?= pacemaker
 
 .PHONY: init
 init:
-	test -e $(top_srcdir)/configure || ./autogen.sh
-	test -e $(abs_builddir)/Makefile || $(abs_builddir)/configure
+	test -e configure && test -e libltdl || ./autogen.sh
+	test -e Makefile || ./configure
 
 .PHONY: build
 build: init
@@ -47,7 +47,7 @@ build: init
 ## RPM-related targets (deprecated; use targets in rpm subdirectory instead)
 
 # Pass option depending on whether automake has been run or not
-USE_FILE	= $(shell test -z "$(srcdir)" && echo "-f Makefile.am")
+USE_FILE = $(shell test -e rpm/Makefile || echo "-f Makefile.am")
 
 .PHONY: $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm
 $(PACKAGE).spec chroot dirty export mock rc release rpm rpmlint srpm:

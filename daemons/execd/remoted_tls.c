@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,7 +332,7 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
 }
 
 int
-lrmd_init_remote_tls_server()
+lrmd_init_remote_tls_server(void)
 {
     int filter;
     int port = crm_default_remote_port();
