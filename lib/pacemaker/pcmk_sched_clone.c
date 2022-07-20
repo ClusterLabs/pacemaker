@@ -29,10 +29,6 @@
 pe_node_t *
 pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return NULL;
 
@@ -83,8 +79,8 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
                           rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     rsc->children = g_list_sort(rsc->children, pcmk__cmp_instance);
-    pcmk__assign_instances(rsc, rsc->children, clone_data->clone_max,
-                           clone_data->clone_node_max);
+    pcmk__assign_instances(rsc, rsc->children, pe__clone_max(rsc),
+                           pe__clone_node_max(rsc));
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__set_instance_roles(rsc);
@@ -582,9 +578,6 @@ void
 clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
     crm_xml_add(xml, name, pe__rsc_bool_str(rsc, pe_rsc_unique));
@@ -595,11 +588,11 @@ clone_append_meta(const pe_resource_t *rsc, xmlNode *xml)
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
-    crm_xml_add_int(xml, name, clone_data->clone_max);
+    crm_xml_add_int(xml, name, pe__clone_max(rsc));
     free(name);
 
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
-    crm_xml_add_int(xml, name, clone_data->clone_node_max);
+    crm_xml_add_int(xml, name, pe__clone_node_max(rsc));
     free(name);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
