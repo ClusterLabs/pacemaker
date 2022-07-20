@@ -726,6 +726,9 @@ void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 // Clones (pcmk_sched_clone.c)
 
 G_GNUC_INTERNAL
+pe_node_t *pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer);
+
+G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
                                    const pe_resource_t *primary,
                                    const pcmk__colocation_t *colocation,

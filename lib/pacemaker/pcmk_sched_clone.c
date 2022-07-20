@@ -39,39 +39,45 @@ add_dependent_scores(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Assign a clone resource to a node
+ * \brief Assign a clone resource's instances to nodes
  *
- * \param[in,out] rsc     Resource to assign to a node
+ * \param[in,out] rsc     Clone resource to assign
  * \param[in]     prefer  Node to prefer, if all else is equal
  *
- * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ * \return NULL (clones are not assigned to a single node)
  */
 pe_node_t *
-pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
+pcmk__clone_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
-    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return NULL;
+    GList *iter = NULL;
 
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
-        return NULL;
+    CRM_ASSERT((rsc != NULL) && (rsc->variant == pe_clone));
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
+        return NULL; // Assignment has already been done
     }
 
+    // Detect assignment loops
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        pe_rsc_debug(rsc, "Breaking assignment loop involving %s", rsc->id);
+        return NULL;
+    }
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
+
+    // If this clone is promotable, consider nodes' promotion scores
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pcmk__add_promotion_scores(rsc);
     }
-
-    pe__set_resource_flags(rsc, pe_rsc_allocating);
 
     /* If this clone is colocated with any other resources, assign those first.
      * Since the this_with_colocations() method boils down to a copy of rsc_cons
      * for clones, we can use that here directly for efficiency.
      */
-    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+    for (iter = rsc->rsc_cons; iter != NULL; iter = iter->next) {
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) iter->data;
 
-        pe_rsc_trace(rsc, "%s: Allocating %s first",
-                     rsc->id, constraint->primary->id);
+        pe_rsc_trace(rsc, "%s: Assigning colocation %s primary %s first",
+                     rsc->id, constraint->id, constraint->primary->id);
         constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
@@ -93,7 +99,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
-    pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
+    pe_rsc_trace(rsc, "Assigned clone %s", rsc->id);
     return NULL;
 }
 

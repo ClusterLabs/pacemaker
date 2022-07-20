@@ -55,7 +55,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_shutdown_lock,
     },
     {
-        pcmk__clone_allocate,
+        pcmk__clone_assign,
         clone_create_actions,
         clone_create_probe,
         clone_internal_constraints,
