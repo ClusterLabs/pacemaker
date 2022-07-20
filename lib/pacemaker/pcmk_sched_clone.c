@@ -426,10 +426,7 @@ clone_expand(pe_resource_t *rsc)
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
-    pe__create_notifications(rsc, clone_data->start_notify);
-    pe__create_notifications(rsc, clone_data->stop_notify);
-    pe__create_notifications(rsc, clone_data->promote_notify);
-    pe__create_notifications(rsc, clone_data->demote_notify);
+    pe__create_clone_notifications(rsc);
 
     /* Now that the notifcations have been created we can expand the children */
 

@@ -1371,3 +1371,22 @@ pe__create_promotable_pseudo_ops(pe_resource_t *clone, bool any_promoting,
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Create all notification data and actions for a clone
+ *
+ * \param[in,out] clone  Clone to create notifications for
+ */
+void
+pe__create_clone_notifications(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__create_notifications(clone, clone_data->start_notify);
+    pe__create_notifications(clone, clone_data->stop_notify);
+    pe__create_notifications(clone, clone_data->promote_notify);
+    pe__create_notifications(clone, clone_data->demote_notify);
+}
