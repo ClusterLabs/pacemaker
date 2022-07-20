@@ -1416,3 +1416,38 @@ pe__free_clone_notification_data(pe_resource_t *clone)
     pe__free_notification_data(clone_data->promote_notify);
     clone_data->promote_notify = NULL;
 }
+
+/*!
+ * \internal
+ * \brief Create pseudo-actions for clone start/stop notifications
+ *
+ * \param[in,out] clone    Clone to create pseudo-actions for
+ * \param[in,out] start    Start action for \p clone
+ * \param[in,out] stop     Stop action for \p clone
+ * \param[in,out] started  Started action for \p clone
+ * \param[in,out] stopped  Stopped action for \p clone
+ */
+void
+pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
+                                  pe_action_t *start, pe_action_t *started,
+                                  pe_action_t *stop, pe_action_t *stopped)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    if (clone_data->start_notify == NULL) {
+        clone_data->start_notify = pe__clone_notif_pseudo_ops(clone, RSC_START,
+                                                              start, started);
+    }
+
+    if (clone_data->stop_notify == NULL) {
+        clone_data->stop_notify = pe__clone_notif_pseudo_ops(clone, RSC_STOP,
+                                                             stop, stopped);
+        if ((clone_data->start_notify != NULL)
+            && (clone_data->stop_notify != NULL)) {
+            order_actions(clone_data->stop_notify->post_done,
+                          clone_data->start_notify->pre, pe_order_optional);
+        }
+    }
+}

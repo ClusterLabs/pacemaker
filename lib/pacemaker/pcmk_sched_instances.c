@@ -878,13 +878,9 @@ check_instance_state(const pe_resource_t *instance, uint32_t *state)
  *
  * \param[in,out] collective    Clone or bundle resource to create actions for
  * \param[in,out] instances     List of clone instances or bundle containers
- * \param[in,out] start_notify  If not NULL, create start notification actions
- * \param[in,out] stop_notify   If not NULL, create stop notification actions
  */
 void
-pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
-                              notify_data_t **start_notify,
-                              notify_data_t **stop_notify)
+pcmk__create_instance_actions(pe_resource_t *collective, GList *instances)
 {
     uint32_t state = 0;
 
@@ -929,19 +925,9 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
         pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
-    if ((start_notify != NULL) && (*start_notify == NULL)) {
-        *start_notify = pe__clone_notif_pseudo_ops(collective, RSC_START, start,
-                                                   started);
-    }
-
-    if ((stop_notify != NULL) && (*stop_notify == NULL)) {
-        *stop_notify = pe__clone_notif_pseudo_ops(collective, RSC_STOP, stop,
-                                                  stopped);
-        if ((start_notify != NULL) && (*start_notify != NULL)
-            && (*stop_notify != NULL)) {
-            order_actions((*stop_notify)->post_done, (*start_notify)->pre,
-                          pe_order_optional);
-        }
+    if (collective->variant == pe_clone) {
+        pe__create_clone_notif_pseudo_ops(collective, start, started, stop,
+                                          stopped);
     }
 }
 

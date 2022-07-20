@@ -209,28 +209,6 @@ typedef struct pe__order_constraint_s {
     char *rh_action_task;
 } pe__ordering_t;
 
-typedef struct notify_data_s {
-    GSList *keys;               // Environment variable name/value pairs
-
-    const char *action;
-
-    pe_action_t *pre;
-    pe_action_t *post;
-    pe_action_t *pre_done;
-    pe_action_t *post_done;
-
-    GList *active;            /* notify_entry_t*  */
-    GList *inactive;          /* notify_entry_t*  */
-    GList *start;             /* notify_entry_t*  */
-    GList *stop;              /* notify_entry_t*  */
-    GList *demote;            /* notify_entry_t*  */
-    GList *promote;           /* notify_entry_t*  */
-    GList *promoted;          /* notify_entry_t*  */
-    GList *unpromoted;        /* notify_entry_t*  */
-    GHashTable *allowed_nodes;
-
-} notify_data_t;
-
 const pe_resource_t *pe__const_top_resource(const pe_resource_t *rsc,
                                             bool include_bundle);
 
@@ -240,6 +218,10 @@ int pe__clone_promoted_max(const pe_resource_t *clone);
 int pe__clone_promoted_node_max(const pe_resource_t *clone);
 void pe__create_clone_notifications(pe_resource_t *clone);
 void pe__free_clone_notification_data(pe_resource_t *clone);
+void pe__create_clone_notif_pseudo_ops(pe_resource_t *clone,
+                                       pe_action_t *start, pe_action_t *started,
+                                       pe_action_t *stop, pe_action_t *stopped);
+
 
 pe_action_t *pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
                                        bool optional, bool runnable);
@@ -300,9 +282,6 @@ char *pe__node_display_name(pe_node_t *node, bool print_detail);
 
 
 // Clone notifications (pe_notif.c)
-notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
-                                          pe_action_t *action,
-                                          pe_action_t *complete);
 void pe__order_notifs_after_fencing(const pe_action_t *action,
                                     pe_resource_t *rsc,
                                     pe_action_t *stonith_op);

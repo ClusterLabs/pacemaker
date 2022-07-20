@@ -14,9 +14,6 @@
 
 #include "libpacemaker_private.h"
 
-#define VARIANT_CLONE 1
-#include <lib/pengine/variant.h>
-
 /*!
  * \internal
  * \brief Assign a clone resource to a node
@@ -155,13 +152,8 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 void
 clone_create_actions(pe_resource_t *rsc)
 {
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
     pe_rsc_debug(rsc, "Creating actions for clone %s", rsc->id);
-    pcmk__create_instance_actions(rsc, rsc->children, &clone_data->start_notify,
-                                  &clone_data->stop_notify);
+    pcmk__create_instance_actions(rsc, rsc->children);
     child_ordering_constraints(rsc, rsc->cluster);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
