@@ -420,9 +420,6 @@ void
 clone_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
 
     g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
@@ -440,14 +437,7 @@ clone_expand(pe_resource_t *rsc)
     pcmk__add_rsc_actions_to_graph(rsc);
 
     /* The notifications are in the graph now, we can destroy the notify_data */
-    pe__free_notification_data(clone_data->demote_notify);
-    clone_data->demote_notify = NULL;
-    pe__free_notification_data(clone_data->stop_notify);
-    clone_data->stop_notify = NULL;
-    pe__free_notification_data(clone_data->start_notify);
-    clone_data->start_notify = NULL;
-    pe__free_notification_data(clone_data->promote_notify);
-    clone_data->promote_notify = NULL;
+    pe__free_clone_notification_data(rsc);
 }
 
 // Check whether a resource or any of its children is known on node

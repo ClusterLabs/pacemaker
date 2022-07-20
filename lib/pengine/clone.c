@@ -1390,3 +1390,29 @@ pe__create_clone_notifications(pe_resource_t *clone)
     pe__create_notifications(clone, clone_data->promote_notify);
     pe__create_notifications(clone, clone_data->demote_notify);
 }
+
+/*!
+ * \internal
+ * \brief Free all notification data for a clone
+ *
+ * \param[in,out] clone  Clone to free notification data for
+ */
+void
+pe__free_clone_notification_data(pe_resource_t *clone)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, clone);
+
+    pe__free_notification_data(clone_data->demote_notify);
+    clone_data->demote_notify = NULL;
+
+    pe__free_notification_data(clone_data->stop_notify);
+    clone_data->stop_notify = NULL;
+
+    pe__free_notification_data(clone_data->start_notify);
+    clone_data->start_notify = NULL;
+
+    pe__free_notification_data(clone_data->promote_notify);
+    clone_data->promote_notify = NULL;
+}

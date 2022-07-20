@@ -239,6 +239,7 @@ int pe__clone_node_max(const pe_resource_t *clone);
 int pe__clone_promoted_max(const pe_resource_t *clone);
 int pe__clone_promoted_node_max(const pe_resource_t *clone);
 void pe__create_clone_notifications(pe_resource_t *clone);
+void pe__free_clone_notification_data(pe_resource_t *clone);
 
 pe_action_t *pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task,
                                        bool optional, bool runnable);
@@ -302,7 +303,6 @@ char *pe__node_display_name(pe_node_t *node, bool print_detail);
 notify_data_t *pe__clone_notif_pseudo_ops(pe_resource_t *rsc, const char *task,
                                           pe_action_t *action,
                                           pe_action_t *complete);
-void pe__free_notification_data(notify_data_t *n_data);
 void pe__order_notifs_after_fencing(const pe_action_t *action,
                                     pe_resource_t *rsc,
                                     pe_action_t *stonith_op);

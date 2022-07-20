@@ -46,6 +46,9 @@ G_GNUC_INTERNAL
 void pe__create_notifications(pe_resource_t *rsc, notify_data_t *n_data);
 
 G_GNUC_INTERNAL
+void pe__free_notification_data(notify_data_t *n_data);
+
+G_GNUC_INTERNAL
 void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                     pe_working_set_t *data_set);
 
