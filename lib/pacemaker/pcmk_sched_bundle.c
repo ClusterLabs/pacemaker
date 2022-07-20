@@ -936,8 +936,6 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                 GHashTable *params = pe_rsc_params(replica->remote,
                                                    NULL, data_set);
 
-                crm_trace("Set address for bundle connection %s to bundle host %s",
-                          replica->remote->id, calculated_addr);
                 g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                      strdup(calculated_addr));

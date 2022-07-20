@@ -148,11 +148,8 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
      * that themselves are Pacemaker Remote nodes
      */
-    if (pe__add_bundle_remote_name(rsc, data_set, data->params_all,
-                                   XML_RSC_ATTR_REMOTE_RA_ADDR)) {
-        crm_trace("Set address for bundle connection %s (on %s)",
-                  rsc->id, node->details->uname);
-    }
+    (void) pe__add_bundle_remote_name(rsc, data_set, data->params_all,
+                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
 
     // If interval was overridden, reset it
     if (overrides != NULL) {
