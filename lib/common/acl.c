@@ -142,6 +142,8 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
  * \param[in,out] acls       List of ACLs unpacked so far
  *
  * \return New head of (possibly modified) acls
+ *
+ * \note This function is recursive
  */
 static GList *
 parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
@@ -382,6 +384,17 @@ test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
     return false;
 }
 
+/*!
+ * \internal
+ * \brief Rid XML tree of all unreadable nodes and node properties
+ *
+ * \param[in]     xml root node to be purged of attributes
+ *
+ * \return true if this node or any of its children are readable
+ *         if false is returned, xml will be freed
+ *
+ * \note This function is recursive
+ */
 static bool
 purge_xml_attributes(xmlNode *xml)
 {
@@ -556,6 +569,8 @@ implicitly_allowed(xmlNode *xml)
  * \param[in,out] xml        XML to check
  * \param[in]     check_top  Whether to apply checks to argument itself
  *                           (if true, xml might get freed)
+ * 
+ * \note This function is recursive
  */
 void
 pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
@@ -592,6 +607,13 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
     }
 }
 
+/*!
+ * \brief Check whether or not an XML node is ACL-denied
+ *
+ * \param[in]  xml node to check
+ *
+ * \return true if XML node exists and is ACL-denied, false otherwise
+ */
 bool
 xml_acl_denied(xmlNode *xml)
 {
@@ -616,6 +638,13 @@ xml_acl_disable(xmlNode *xml)
     }
 }
 
+/*!
+ * \brief Check whether or not an XML node is ACL-enabled
+ *
+ * \param[in]  xml node to check
+ *
+ * \return true if XML node exists and is ACL-enabled, false otherwise
+ */
 bool
 xml_acl_enabled(xmlNode *xml)
 {
