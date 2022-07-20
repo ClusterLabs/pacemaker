@@ -953,6 +953,7 @@ TESTS = [
         [ "bundle-probe-order-3", "order 3" ],
         [ "bundle-probe-remotes", "Ensure remotes get probed too" ],
         [ "bundle-replicas-change", "Change bundle from 1 replica to multiple" ],
+        [ "bundle-connection-with-container", "Don't move a container due to connection preferences" ],
         [ "nested-remote-recovery", "Recover bundle's container hosted on remote node" ],
     ],
     [

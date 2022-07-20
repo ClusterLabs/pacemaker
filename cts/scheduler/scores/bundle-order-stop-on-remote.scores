@@ -599,9 +599,9 @@ pcmk__native_allocate: galera-bundle-docker-0 allocation score on messaging-2: -
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on controller-0: -INFINITY
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on controller-1: -INFINITY
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on controller-2: -INFINITY
-pcmk__native_allocate: galera-bundle-docker-1 allocation score on database-0: -10000
+pcmk__native_allocate: galera-bundle-docker-1 allocation score on database-0: 0
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on database-1: INFINITY
-pcmk__native_allocate: galera-bundle-docker-1 allocation score on database-2: -10000
+pcmk__native_allocate: galera-bundle-docker-1 allocation score on database-2: 0
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on messaging-0: -INFINITY
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on messaging-1: -INFINITY
 pcmk__native_allocate: galera-bundle-docker-1 allocation score on messaging-2: -INFINITY
@@ -768,8 +768,8 @@ pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on database-0: 
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on database-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on database-2: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on messaging-0: INFINITY
-pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on messaging-1: -10000
-pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on messaging-2: -10000
+pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on messaging-1: 0
+pcmk__native_allocate: rabbitmq-bundle-docker-0 allocation score on messaging-2: 0
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on controller-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on controller-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on controller-2: -INFINITY
@@ -778,7 +778,7 @@ pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on database-1: 
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on database-2: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on messaging-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on messaging-1: INFINITY
-pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on messaging-2: -10000
+pcmk__native_allocate: rabbitmq-bundle-docker-1 allocation score on messaging-2: 0
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on controller-0: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on controller-1: -INFINITY
 pcmk__native_allocate: rabbitmq-bundle-docker-2 allocation score on controller-2: -INFINITY
