@@ -917,11 +917,6 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
         pe__set_action_flags(started, pe_action_runnable);
     }
 
-    if ((start_notify != NULL) && (*start_notify == NULL)) {
-        *start_notify = pe__clone_notif_pseudo_ops(collective, RSC_START, start,
-                                                   started);
-    }
-
     // Create pseudo-actions for rsc stop and stopped
     stop = pe__new_rsc_pseudo_action(collective, RSC_STOP,
                                      !pcmk_is_set(state, instance_stopping),
@@ -932,6 +927,11 @@ pcmk__create_instance_actions(pe_resource_t *collective, GList *instances,
     stopped->priority = INFINITY;
     if (!pcmk_is_set(state, instance_restarting)) {
         pe__set_action_flags(stop, pe_action_migrate_runnable);
+    }
+
+    if ((start_notify != NULL) && (*start_notify == NULL)) {
+        *start_notify = pe__clone_notif_pseudo_ops(collective, RSC_START, start,
+                                                   started);
     }
 
     if ((stop_notify != NULL) && (*stop_notify == NULL)) {
