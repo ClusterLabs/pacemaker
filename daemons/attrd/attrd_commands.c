@@ -32,7 +32,7 @@ void write_attribute(attribute_t *a, bool ignore_delay);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
-void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
+void attrd_peer_remove(const char *host, bool uncache, const char *source);
 
 static void broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml);
 
@@ -421,7 +421,7 @@ void
 attrd_client_refresh(void)
 {
     crm_info("Updating all attributes");
-    write_attributes(TRUE, TRUE);
+    write_attributes(true, true);
 }
 
 /*!
@@ -582,7 +582,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
             crm_trace("Matched %s when clearing %s",
                       attr, pcmk__s(rsc, "all resources"));
             crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
-            attrd_peer_update(peer, xml, host, FALSE);
+            attrd_peer_update(peer, xml, host, false);
         }
     }
     regfree(&regex);
@@ -614,7 +614,7 @@ process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
          child = pcmk__xml_next(child)) {
         attrd_peer_update(peer, child,
                           crm_element_value(child, PCMK__XA_ATTR_NODE_NAME),
-                          TRUE);
+                          true);
     }
 
     if (peer_won) {
@@ -669,13 +669,13 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
                          PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-        attrd_peer_update(peer, xml, host, FALSE);
+        attrd_peer_update(peer, xml, host, false);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
         attrd_peer_sync(peer, xml);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_none)) {
-        attrd_peer_remove(host, TRUE, peer->uname);
+        attrd_peer_remove(host, true, peer->uname);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
         /* It is not currently possible to receive this as a peer command,
@@ -725,11 +725,11 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
  * \brief Remove all attributes and optionally peer cache entries for a node
  *
  * \param[in] host     Name of node to purge
- * \param[in] uncache  If TRUE, remove node from peer caches
+ * \param[in] uncache  If true, remove node from peer caches
  * \param[in] source   Who requested removal (only used for logging)
  */
 void
-attrd_peer_remove(const char *host, gboolean uncache, const char *source)
+attrd_peer_remove(const char *host, bool uncache, const char *source)
 {
     attribute_t *a = NULL;
     GHashTableIter aIter;
@@ -873,7 +873,7 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
                    pcmk__s(value, "(unset)"), peer->uname,
                    (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
         pcmk__str_update(&v->current, value);
-        a->changed = TRUE;
+        a->changed = true;
 
         if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
             && pcmk__str_eq(attr, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
@@ -1076,7 +1076,7 @@ void
 write_or_elect_attribute(attribute_t *a)
 {
     if (attrd_election_won()) {
-        write_attribute(a, FALSE);
+        write_attribute(a, false);
     } else {
         attrd_start_election_if_needed();
     }
@@ -1091,7 +1091,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    write_attributes(TRUE, FALSE);
+    write_attributes(true, false);
     return FALSE;
 }
 
@@ -1132,7 +1132,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->uname, FALSE, "loss");
+                attrd_peer_remove(peer->uname, false, "loss");
                 gone = true;
             }
             break;
@@ -1198,7 +1198,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         free(v->requested);
         v->requested = NULL;
         if (rc != pcmk_ok) {
-            a->changed = TRUE; /* Attempt write out again */
+            a->changed = true; /* Attempt write out again */
         }
     }
 
@@ -1207,7 +1207,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
-            write_attribute(a, FALSE);
+            write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
          * the next attempt so we don't potentially flood the CIB manager
@@ -1248,15 +1248,15 @@ write_attributes(bool all, bool ignore_delay)
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
         if (!all && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
-            a->changed = TRUE;
+            a->changed = true;
         } else if (a->force_write) {
             /* If the force_write flag is set, write the attribute. */
-            a->changed = TRUE;
+            a->changed = true;
         }
 
         if(all || a->changed) {
             /* When forced write flag is set, ignore delay. */
-            write_attribute(a, (a->force_write ? TRUE : ignore_delay));
+            write_attribute(a, (a->force_write ? true : ignore_delay));
         } else {
             crm_trace("Skipping unchanged attribute %s", a->id);
         }
@@ -1376,13 +1376,13 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     /* Attribute will be written shortly, so clear changed flag */
-    a->changed = FALSE;
+    a->changed = false;
 
     /* We will check all peers' uuids shortly, so initialize this to false */
-    a->unknown_peer_uuids = FALSE;
+    a->unknown_peer_uuids = false;
 
     /* Attribute will be written shortly, so clear forced write flag */
-    a->force_write = FALSE;    
+    a->force_write = FALSE;
 
     /* Make the table for the attribute trap */
     alert_attribute_value = pcmk__strikey_table(NULL, free_attribute_value);
@@ -1413,7 +1413,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         /* If the peer is found, but its uuid is unknown, defer write */
         if (peer->uuid == NULL) {
-            a->unknown_peer_uuids = TRUE;
+            a->unknown_peer_uuids = true;
             crm_notice("Cannot update %s[%s]=%s because peer UUID not known "
                        "(will retry if learned)",
                        a->id, v->nodename, v->current);

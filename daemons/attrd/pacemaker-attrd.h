@@ -48,8 +48,8 @@ void attrd_run_mainloop(void);
 
 void attrd_set_requesting_shutdown(void);
 void attrd_clear_requesting_shutdown(void);
-gboolean attrd_requesting_shutdown(void);
-gboolean attrd_shutting_down(void);
+bool attrd_requesting_shutdown(void);
+bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
                     qb_ipcs_msg_process_fn dispatch_fn);
@@ -57,7 +57,7 @@ void attrd_ipc_fini(void);
 
 void attrd_cib_disconnect(void);
 
-gboolean attrd_value_needs_expansion(const char *value);
+bool attrd_value_needs_expansion(const char *value);
 int attrd_expand_value(const char *value, const char *old_value);
 
 /* regular expression to clear failures of all resources */

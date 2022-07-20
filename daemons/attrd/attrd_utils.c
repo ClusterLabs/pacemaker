@@ -24,8 +24,8 @@
 
 cib_t *the_cib = NULL;
 
-static bool requesting_shutdown = FALSE;
-static bool shutting_down = FALSE;
+static bool requesting_shutdown = false;
+static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
 /*!
@@ -35,7 +35,7 @@ static GMainLoop *mloop = NULL;
 void
 attrd_set_requesting_shutdown(void)
 {
-    requesting_shutdown = TRUE;
+    requesting_shutdown = true;
 }
 
 /*!
@@ -45,16 +45,16 @@ attrd_set_requesting_shutdown(void)
 void
 attrd_clear_requesting_shutdown(void)
 {
-    requesting_shutdown = FALSE;
+    requesting_shutdown = false;
 }
 
 /*!
  * \internal
  * \brief Check whether we're currently requesting shutdown
  *
- * \return TRUE if requesting shutdown, FALSE otherwise
+ * \return true if requesting shutdown, false otherwise
  */
-gboolean
+bool
 attrd_requesting_shutdown(void)
 {
     return requesting_shutdown;
@@ -64,9 +64,9 @@ attrd_requesting_shutdown(void)
  * \internal
  * \brief Check whether we're currently shutting down
  *
- * \return TRUE if shutting down, FALSE otherwise
+ * \return true if shutting down, false otherwise
  */
-gboolean
+bool
 attrd_shutting_down(void)
 {
     return shutting_down;
@@ -82,7 +82,7 @@ void
 attrd_shutdown(int nsig)
 {
     // Tell various functions not to do anthing
-    shutting_down = TRUE;
+    shutting_down = true;
 
     // Don't respond to signals while shutting down
     mainloop_destroy_signal(SIGTERM);
@@ -233,7 +233,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
     if (attrd_election_won()) {
         if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
             crm_notice("Updating all attributes after %s event", event);
-            write_attributes(TRUE, FALSE);
+            write_attributes(true, false);
         }
     }
 
@@ -252,9 +252,9 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
  *
  * \param[in] value  Attribute value to check
  *
- * \return TRUE if value needs expansion, FALSE otherwise
+ * \return true if value needs expansion, false otherwise
  */
-gboolean
+bool
 attrd_value_needs_expansion(const char *value)
 {
     return ((strlen(value) >= (plus_plus_len + 2))
