@@ -346,7 +346,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
                       bool calc_secure, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
-    const char *op_version = CRM_FEATURE_SET;
+    const char *op_version = NULL;
     GHashTable *params = NULL;
 
     if (data == NULL) {
@@ -357,6 +357,14 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
 
     if (xml_op != NULL) {
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    }
+
+    if (op_version == NULL && data_set != NULL && data_set->input != NULL) {
+        op_version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
+    }
+
+    if (op_version == NULL) {
+        op_version = CRM_FEATURE_SET;
     }
 
     params = pe_rsc_params(rsc, node, data_set);
