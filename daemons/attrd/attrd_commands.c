@@ -30,9 +30,6 @@ GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a, bool ignore_delay);
 void write_or_elect_attribute(attribute_t *a);
-void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
-void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
-void attrd_peer_remove(const char *host, bool uncache, const char *source);
 
 static void broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml);
 
@@ -551,7 +548,7 @@ attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
  * \param[in] peer  Peer that sent clear request
  * \param[in] xml   Request XML
  */
-static void
+void
 attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 {
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
@@ -596,8 +593,8 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
  * \param[in] peer_won  Whether peer is the attribute writer
  * \param[in] xml       Request XML
  */
-static void
-process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
+void
+attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
 {
     crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
              peer->uname);
@@ -642,56 +639,6 @@ attrd_broadcast_protocol(void)
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
     attrd_client_update(attrd_op);
     free_xml(attrd_op);
-}
-
-void
-attrd_peer_message(crm_node_t *peer, xmlNode *xml)
-{
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
-    const char *election_op = crm_element_value(xml, F_CRM_TASK);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    bool peer_won = false;
-
-    if (election_op) {
-        attrd_handle_election_op(peer, xml);
-        return;
-    }
-
-    if (attrd_shutting_down()) {
-        /* If we're shutting down, we want to continue responding to election
-         * ops as long as we're a cluster member (because our vote may be
-         * needed). Ignore all other messages.
-         */
-        return;
-    }
-
-    peer_won = attrd_check_for_new_writer(peer, xml);
-
-    if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                         PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-        attrd_peer_update(peer, xml, host, false);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
-        attrd_peer_sync(peer, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_none)) {
-        attrd_peer_remove(host, true, peer->uname);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
-        /* It is not currently possible to receive this as a peer command,
-         * but will be, if we one day enable propagating this operation.
-         */
-        attrd_peer_clear_failure(peer, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)
-               && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-        process_peer_sync_response(peer, peer_won, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_none)) {
-        /* Ignore. The flush command was removed in 2.0.0 but may be
-         * received from peers running older versions.
-         */
-    }
 }
 
 void
