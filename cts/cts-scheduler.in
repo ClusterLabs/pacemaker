@@ -93,6 +93,7 @@ TESTS = [
         [ "not-reschedule-unneeded-monitor",
                      "Do not reschedule unneeded monitors while resource definitions have changed" ],
         [ "reload-becomes-restart", "Cancel reload if restart becomes required" ],
+        [ "restart-with-extra-op-params", "Restart if with extra operation parameters upon changes of any" ],
     ],
     [
         [ "target-0", "Target Role : baseline" ],

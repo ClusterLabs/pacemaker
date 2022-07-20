@@ -48,9 +48,9 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-// Return true if XML attribute name is substring of a given string
+// Return true if XML attribute name is not substring of a given string
 static bool
-attr_in_string(xmlAttrPtr a, void *user_data)
+attr_not_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -64,9 +64,9 @@ attr_in_string(xmlAttrPtr a, void *user_data)
     return filter;
 }
 
-// Return true if XML attribute name is not substring of a given string
+// Return true if XML attribute name is substring of a given string
 static bool
-attr_not_in_string(xmlAttrPtr a, void *user_data)
+attr_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -184,6 +184,20 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
+    /* Given a non-recurring operation with extra parameters configured,
+     * in case that the main digest doesn't match, even if the restart
+     * digest matches, enforce a restart rather than a reload-agent anyway.
+     * So that it ensures any changes of the extra parameters get applied
+     * for this specific operation, and the digests calculated for the
+     * resulting lrm_rsc_op will be correct.
+     * Mark the implied rc RSC_DIGEST_RESTART for the case that the main
+     * digest doesn't match.
+     */
+    if (*interval_ms == 0
+        && g_hash_table_size(action->extra) > 0) {
+        data->rc = RSC_DIGEST_RESTART;
+    }
+
     pe_free_action(action);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all,
@@ -215,6 +229,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *secure_list = NULL;
+    bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
@@ -222,22 +237,30 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
     }
 
-    data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    if (overrides != NULL) {
-        g_hash_table_foreach(overrides, hash2field, data->params_secure);
+    if (old_version) {
+        data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+        if (overrides != NULL) {
+            g_hash_table_foreach(overrides, hash2field, data->params_secure);
+        }
+
+        g_hash_table_foreach(params, hash2field, data->params_secure);
+
+    } else {
+        // Start with a copy of all parameters
+        data->params_secure = copy_xml(data->params_all);
     }
 
-    g_hash_table_foreach(params, hash2field, data->params_secure);
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
                                        (void *) secure_list);
     }
-    if (pcmk_is_set(pcmk_get_ra_caps(class),
-                    pcmk_ra_cap_fence_params)) {
+    if (old_version
+        && pcmk_is_set(pcmk_get_ra_caps(class),
+                       pcmk_ra_cap_fence_params)) {
         /* For stonith resources, Pacemaker adds special parameters,
-         * but these are not listed in fence agent meta-data, so the
-         * controller will not hash them. That means we have to filter
-         * them out before calculating our hash for comparison.
+         * but these are not listed in fence agent meta-data, so with older
+         * versions of DC, the controller will not hash them. That means we have
+         * to filter them out before calculating our hash for comparison.
          */
         pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
                                        NULL);
@@ -245,14 +268,14 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     pcmk__filter_op_for_digest(data->params_secure);
 
     /* CRM_meta_timeout *should* be part of a digest for recurring operations.
-     * However, currently the controller does not add timeout to secure digests,
-     * because it only includes parameters declared by the resource agent.
+     * However, with older versions of DC, the controller does not add timeout
+     * to secure digests, because it only includes parameters declared by the
+     * resource agent.
      * Remove any timeout that made it this far, to match.
-     *
-     * @TODO Update the controller to add the timeout (which will require
-     * bumping the feature set and checking that here).
      */
-    xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+    if (old_version) {
+        xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+    }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
@@ -291,7 +314,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
     if (value != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_restart, attr_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
                                        (void *) value);
     }
 
@@ -323,14 +346,25 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
                       bool calc_secure, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
-    const char *op_version = CRM_FEATURE_SET;
+    const char *op_version = NULL;
     GHashTable *params = NULL;
 
     if (data == NULL) {
         return NULL;
     }
+
+    data->rc = RSC_DIGEST_MATCH;
+
     if (xml_op != NULL) {
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    }
+
+    if (op_version == NULL && data_set != NULL && data_set->input != NULL) {
+        op_version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
+    }
+
+    if (op_version == NULL) {
+        op_version = CRM_FEATURE_SET;
     }
 
     params = pe_rsc_params(rsc, node, data_set);
@@ -411,7 +445,6 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                              pcmk_is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
 
-    data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
         pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
                          "changed: hash was %s vs. now %s (restart:%s) %s",
@@ -427,14 +460,38 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
-        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
-                         "changed: hash was %s vs. now %s (%s:%s) %s",
-                    interval_ms, task, rsc->id, node->details->uname,
-                    pcmk__s(digest_all, "missing"), data->digest_all_calc,
-                    (interval_ms > 0)? "reschedule" : "reload",
-                    op_version,
-                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-        data->rc = RSC_DIGEST_ALL;
+        /* Given a non-recurring operation with extra parameters configured,
+         * in case that the main digest doesn't match, even if the restart
+         * digest matches, enforce a restart rather than a reload-agent anyway.
+         * So that it ensures any changes of the extra parameters get applied
+         * for this specific operation, and the digests calculated for the
+         * resulting lrm_rsc_op will be correct.
+         * Preserve the implied rc RSC_DIGEST_RESTART for the case that the main
+         * digest doesn't match.
+         */
+        if (interval_ms == 0
+            && data->rc == RSC_DIGEST_RESTART) {
+            pe_rsc_info(rsc, "Parameters containing extra ones to %ums-interval"
+                             " %s action for %s on %s "
+                             "changed: hash was %s vs. now %s (restart:%s) %s",
+                        interval_ms, task, rsc->id, node->details->uname,
+                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
+                        op_version,
+                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+
+        } else {
+            pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
+                             "changed: hash was %s vs. now %s (%s:%s) %s",
+                        interval_ms, task, rsc->id, node->details->uname,
+                        pcmk__s(digest_all, "missing"), data->digest_all_calc,
+                        (interval_ms > 0)? "reschedule" : "reload",
+                        op_version,
+                        crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+            data->rc = RSC_DIGEST_ALL;
+        }
+
+    } else {
+        data->rc = RSC_DIGEST_MATCH;
     }
     return data;
 }

@@ -33,6 +33,10 @@ best_op(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
     char *xpath = NULL;
     xmlNode *history = NULL;
     xmlNode *best = NULL;
+    bool best_effective_op = false;
+    guint best_interval = 0;
+    bool best_failure = false;
+    const char *best_digest = NULL;
 
     // Find node's resource history
     xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->details->uname, rsc->id);
@@ -46,24 +50,54 @@ best_op(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
         const char *digest = crm_element_value(lrm_rsc_op,
                                                XML_LRM_ATTR_RESTART_DIGEST);
         guint interval_ms = 0;
+        const char *task = crm_element_value(lrm_rsc_op, XML_LRM_ATTR_TASK);
+        bool effective_op = false;
+        bool failure = pcmk__ends_with(ID(lrm_rsc_op), "_last_failure_0");
+
 
         crm_element_value_ms(lrm_rsc_op, XML_LRM_ATTR_INTERVAL, &interval_ms);
+        effective_op = interval_ms == 0
+                       && pcmk__strcase_any_of(task, RSC_STATUS,
+                                               RSC_START, RSC_PROMOTE,
+                                               RSC_MIGRATED, NULL);
 
-        if (pcmk__ends_with(ID(lrm_rsc_op), "_last_failure_0")
-            || (interval_ms != 0)) {
+        if (best == NULL) {
+            goto is_best;
+        }
 
-            // Only use last failure or recurring op if nothing else available
-            if (best == NULL) {
-                best = lrm_rsc_op;
+        if (best_effective_op) {
+            // Do not use an ineffective op if there's an effective one.
+            if (!effective_op) {
+                continue;
             }
+        // Do not use an ineffective non-recurring op if there's a recurring one.
+        } else if (best_interval != 0
+                   && !effective_op
+                   && interval_ms == 0) {
             continue;
         }
 
-        best = lrm_rsc_op;
-        if (digest != NULL) {
-            // Any non-recurring action with a restart digest is sufficient
-            break;
+        // Do not use last failure if there's a successful one.
+        if (!best_failure && failure) {
+            continue;
         }
+
+        // Do not use an op without a restart digest if there's one with.
+        if (best_digest != NULL && digest == NULL) {
+            continue;
+        }
+
+        // Do not use an older op if there's a newer one.
+        if (pe__is_newer_op(best, lrm_rsc_op, true) > 0) {
+            continue;
+        }
+
+is_best:
+         best = lrm_rsc_op;
+         best_effective_op = effective_op;
+         best_interval = interval_ms;
+         best_failure = failure;
+         best_digest = digest;
     }
     return best;
 }

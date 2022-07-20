@@ -1,0 +1,66 @@
+<cib crm_feature_set="3.16.0" validate-with="pacemaker-2.5" epoch="499" num_updates="0" admin_epoch="0" cib-last-written="Wed Mar 31 16:58:18 2021" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1084783225" execution-date="1617202698">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="dc-version" value="2.0.5+20210331.58281030f" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="last-lrm-refresh" value="1612537688" id="cib-bootstrap-options-last-lrm-refresh"/>
+        <nvpair name="have-watchdog" value="false" id="cib-bootstrap-options-have-watchdog"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1084783225" uname="node1"/>
+      <node id="1084783226" uname="node2"/>
+    </nodes>
+    <resources>
+      <primitive id="Fencing" class="stonith" type="fence_dummy"/>
+      <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+        <instance_attributes id="dummy1-instance_attributes">
+          <nvpair name="passwd" value="whatever" id="dummy1-instance_attributes-passwd"/>
+          <nvpair name="fake" value="foo" id="dummy1-instance_attributes-fake"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" timeout="20" interval="0" id="dummy1-start-0">
+            <instance_attributes id="dummy1-start-0-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="dummy1-start-0-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+          <op name="stop" timeout="20" interval="0" id="dummy1-stop-0"/>
+          <op name="monitor" timeout="20" interval="10" id="dummy1-monitor-10"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <op_defaults/>
+    <rsc_defaults/>
+    <alerts/>
+  </configuration>
+  <status>
+    <node_state id="1084783225" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1084783225">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_dummy" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.16.0" transition-key="5:2:0:139aac6e-3ce6-41bf-ab90-37d02a286128" transition-magic="0:0;5:2:0:139aac6e-3ce6-41bf-ab90-37d02a286128" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1617202600" exec-time="52" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.16.0" transition-key="6:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" transition-magic="0:0;6:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" exit-reason="" on_node="node1" call-id="14" rc-code="0" op-status="0" interval="0" last-rc-change="1617202608" exec-time="15" queue-time="0" op-digest="457016173e548c394dcf3896e3066412" op-force-restart="  envfile op_sleep passwd state  " op-restart-digest="5de129d7fe42dbcfe537f2c63b1921b6" op-secure-params="  passwd  " op-secure-digest="e989cbe4a0e9492305ffdc8c6391ffee"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.16.0" transition-key="8:2:0:139aac6e-3ce6-41bf-ab90-37d02a286128" transition-magic="0:0;8:2:0:139aac6e-3ce6-41bf-ab90-37d02a286128" exit-reason="" on_node="node1" call-id="12" rc-code="0" op-status="0" interval="10000" last-rc-change="1617202600" exec-time="10" queue-time="0" op-digest="f9a51bfe2c3d74c3b72202f3101682b7" op-secure-params="  passwd  " op-secure-digest="5bdf174ed64795a495a62489f1057eff"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1084783226" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1084783226">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_dummy" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.0" transition-key="2:2:7:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" transition-magic="0:7;2:2:7:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1617202608" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy1_last_0" operation_key="dummy1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.16.0" transition-key="7:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" transition-magic="0:0;7:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" exit-reason="" on_node="node2" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1617202608" exec-time="11" queue-time="0" op-digest="457016173e548c394dcf3896e3066412" op-force-restart="  envfile op_sleep passwd state  " op-restart-digest="5de129d7fe42dbcfe537f2c63b1921b6" op-secure-params="  passwd  " op-secure-digest="e989cbe4a0e9492305ffdc8c6391ffee"/>
+            <lrm_rsc_op id="dummy1_monitor_10000" operation_key="dummy1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.16.0" transition-key="8:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" transition-magic="0:0;8:2:0:e0b3e5e1-7483-4cc8-b9dd-d79b53cd2f77" exit-reason="" on_node="node2" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="1617202608" exec-time="10" queue-time="0" op-digest="f9a51bfe2c3d74c3b72202f3101682b7" op-secure-params="  passwd  " op-secure-digest="5bdf174ed64795a495a62489f1057eff"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
