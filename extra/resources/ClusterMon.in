@@ -189,16 +189,21 @@ fi
 }
 
 ClusterMon_validate() {
-# Existence of the user
-    if [ -n "$OCF_RESKEY_user" ]; then
-        getent passwd "$OCF_RESKEY_user" >/dev/null
-        if [ $? -eq 0 ]; then
-            : Yes, user exists. We can further check his permission on crm_mon if necessary
-        else
-            ocf_log err "The user $OCF_RESKEY_user does not exist!"
-            exit $OCF_ERR_ARGS
+# Host-specific checks
+if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+    # Existence of the user
+        if [ -n "$OCF_RESKEY_user" ]; then
+            getent passwd "$OCF_RESKEY_user" >/dev/null
+            if [ $? -eq 0 ]; then
+                : Yes, user exists. We can further check his permission on crm_mon if necessary
+            else
+                ocf_log err "The user $OCF_RESKEY_user does not exist!"
+                exit $OCF_ERR_ARGS
+            fi
         fi
-    fi
+
+fi
 
 # Pidfile better be an absolute path
     case "$OCF_RESKEY_pidfile" in
