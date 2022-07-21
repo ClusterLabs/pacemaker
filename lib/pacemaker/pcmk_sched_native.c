@@ -381,14 +381,16 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
             pe_rsc_trace(rsc, "%s: Merging scores from group %s "
                          "using last member %s (at %.6f)",
                          primary_id, rsc->id, last_rsc->id, factor);
-            work = pcmk__native_merge_weights(last_rsc, primary_id, NULL, attr,
-                                              factor, flags);
+            work = last_rsc->cmds->merge_weights(last_rsc, primary_id, NULL,
+                                                 attr, factor, flags);
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
         clear_node_weights_flags(flags, rsc, pe_weights_init);
 
     } else if (is_nonempty_group(rsc)) {
+        pe_resource_t *member = rsc->children->data;
+
         /* The first member of the group will recursively incorporate any
          * constraints involving other members (including the group internal
          * colocation).
@@ -402,8 +404,8 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *primary_id,
         pe_rsc_trace(rsc, "%s: Merging scores from first member of group %s "
                      "(at %.6f)", primary_id, rsc->id, factor);
         work = pcmk__copy_node_table(nodes);
-        work = pcmk__native_merge_weights(rsc->children->data, primary_id, work,
-                                          attr, factor, flags);
+        work = member->cmds->merge_weights(member, primary_id, work, attr,
+                                           factor, flags);
 
     } else {
         pe_rsc_trace(rsc, "%s: Merging scores from %s (at %.6f)",

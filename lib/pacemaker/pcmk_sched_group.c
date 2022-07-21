@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -567,6 +567,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
                           uint32_t flags)
 {
     GList *gIter = rsc->rsc_cons_lhs;
+    pe_resource_t *member = NULL;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
@@ -579,9 +580,9 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    nodes = group_data->first_child->cmds->merge_weights(group_data->first_child,
-                                                         primary_id, nodes,
-                                                         attr, factor, flags);
+    member = group_data->first_child;
+    nodes = member->cmds->merge_weights(member, primary_id, nodes, attr,
+                                        factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
