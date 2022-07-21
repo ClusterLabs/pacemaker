@@ -34,9 +34,9 @@ one_is_null(void **state) {
     assert_int_equal(pcmk__strcmp(s1, NULL, pcmk__str_null_matches), 0);
     assert_true(pcmk__str_eq(s1, NULL, pcmk__str_null_matches));
     assert_int_equal(pcmk__strcmp(NULL, s1, pcmk__str_null_matches), 0);
-    assert_in_range(pcmk__strcmp(s1, NULL, pcmk__str_none), 1, 255);
+    assert_true(pcmk__strcmp(s1, NULL, pcmk__str_none) > 0);
     assert_false(pcmk__str_eq(s1, NULL, pcmk__str_none));
-    assert_in_range(pcmk__strcmp(NULL, s1, pcmk__str_none), -255, -1);
+    assert_true(pcmk__strcmp(NULL, s1, pcmk__str_none) < 0);
 }
 
 static void
@@ -44,9 +44,9 @@ case_matters(void **state) {
     const char *s1 = "abcd";
     const char *s2 = "ABCD";
 
-    assert_in_range(pcmk__strcmp(s1, s2, pcmk__str_none), 1, 255);
+    assert_true(pcmk__strcmp(s1, s2, pcmk__str_none) > 0);
     assert_false(pcmk__str_eq(s1, s2, pcmk__str_none));
-    assert_in_range(pcmk__strcmp(s2, s1, pcmk__str_none), -255, -1);
+    assert_true(pcmk__strcmp(s2, s1, pcmk__str_none) < 0);
 }
 
 static void
@@ -63,8 +63,8 @@ regex(void **state) {
     const char *s1 = "abcd";
     const char *s2 = "ABCD";
 
-    assert_int_equal(pcmk__strcmp(NULL, "a..d", pcmk__str_regex), 1);
-    assert_int_equal(pcmk__strcmp(s1, NULL, pcmk__str_regex), 1);
+    assert_true(pcmk__strcmp(NULL, "a..d", pcmk__str_regex) > 0);
+    assert_true(pcmk__strcmp(s1, NULL, pcmk__str_regex) > 0);
     assert_int_equal(pcmk__strcmp(s1, "a..d", pcmk__str_regex), 0);
     assert_true(pcmk__str_eq(s1, "a..d", pcmk__str_regex));
     assert_int_not_equal(pcmk__strcmp(s1, "xxyy", pcmk__str_regex), 0);
@@ -73,7 +73,7 @@ regex(void **state) {
     assert_true(pcmk__str_eq(s2, "a..d", pcmk__str_regex|pcmk__str_casei));
     assert_int_not_equal(pcmk__strcmp(s2, "a..d", pcmk__str_regex), 0);
     assert_false(pcmk__str_eq(s2, "a..d", pcmk__str_regex));
-    assert_int_equal(pcmk__strcmp(s2, "*ab", pcmk__str_regex), 1);
+    assert_true(pcmk__strcmp(s2, "*ab", pcmk__str_regex) > 0);
 }
 
 int main(int argc, char **argv) {
