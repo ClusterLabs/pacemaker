@@ -271,7 +271,7 @@ attrd_client_update(xmlNode *xml)
              */
             for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
                  child = crm_next_same_xml(child)) {
-                attrd_client_update(xml);
+                attrd_client_update(child);
             }
         }
 
