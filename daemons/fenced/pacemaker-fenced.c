@@ -1262,6 +1262,7 @@ stonith_cleanup(void)
     crm_peer_destroy();
     pcmk__client_cleanup();
     free_stonith_remote_op_list();
+    free_check_async_reply_list();
     free_topology_list();
     free_device_list();
     free_metadata_cache();
