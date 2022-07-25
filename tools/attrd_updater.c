@@ -49,6 +49,7 @@ struct {
     char *attr_value;
     int attr_options;
     gboolean query_all;
+    gboolean quiet;
 } options = {
     .attr_options = pcmk__node_attr_none,
     .command = 'Q',
@@ -177,6 +178,10 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
+    { "quiet", 'q', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.quiet,
+      NULL,
+      NULL },
+
     { "update", 'v', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
       NULL,
       NULL },
