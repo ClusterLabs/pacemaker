@@ -622,25 +622,21 @@ static pcmk__cluster_option_t controller_options[] = {
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
         "0", controld_verify_stonith_watchdog_timeout,
-        N_("How long to wait before we can assume nodes are safely down "
-            "when watchdog-based self-fencing via SBD is in use"),
-        N_("If nonzero, along with `have-watchdog=true` automatically set by the "
-            "cluster, when fencing is required, watchdog-based self-fencing "
-            "will be performed via SBD without requiring a fencing resource "
-            "explicitly configured. "
-            "If `stonith-watchdog-timeout` is set to a positive value, unseen "
-            "nodes are assumed to self-fence within this much time. +WARNING:+ "
-            "It must be ensured that this value is larger than the "
-            "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes. "
-            "Pacemaker verifies the settings individually on all nodes and "
-            "prevents startup or shuts down if configured wrongly on the fly. "
-            "It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is set to "
-            "the same value on all nodes. "
-            "If `stonith-watchdog-timeout` is set to a negative value, and "
-            "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
-            "+WARNING:+ In this case, it's essential (currently not verified by "
-            "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
-            "all nodes.")
+        N_("How long before nodes can be assumed to be safely down when "
+           "watchdog-based self-fencing via SBD is in use"),
+        N_("If this is set to a positive value, lost nodes are assumed to "
+           "self-fence using watchdog-based SBD within this much time, without "
+           "requiring a fencing resource to be explicitly configured. If this "
+           "is set to 0 (the default), the cluster will never assume this. If "
+           "this is set to a negative value, the cluster will use twice the "
+           "local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if "
+           "that is positive, or otherwise treat this as 0. WARNING: When "
+           "used, this timeout must be larger than the value of the "
+           "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes, and "
+           "Pacemaker will refuse to start on any node where this is not true "
+           "for the local value or SBD is not active. When this is set to a "
+           "negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same "
+           "value on all nodes, otherwise data corruption or loss could occur.")
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
