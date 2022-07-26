@@ -158,7 +158,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_diff, cib_cleanup_data, cib_server_process_diff
     },
     {
-        CIB_OP_REPLACE, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_REPLACE, TRUE, TRUE, TRUE,
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {

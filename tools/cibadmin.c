@@ -516,7 +516,7 @@ main(int argc, char **argv)
                 cib_action = PCMK__CIB_REQUEST_MODIFY;
                 break;
             case 'R':
-                cib_action = CIB_OP_REPLACE;
+                cib_action = PCMK__CIB_REQUEST_REPLACE;
                 break;
             case 'C':
                 cib_action = PCMK__CIB_REQUEST_CREATE;
@@ -845,7 +845,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 {
     /* construct the request */
     the_cib->call_timeout = message_timeout_ms;
-    if (strcasecmp(CIB_OP_REPLACE, cib_action) == 0
+    if ((strcmp(cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 

@@ -704,7 +704,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
 
-    if(pcmk__str_eq(op, CIB_OP_REPLACE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
             delegated = reply_to;
@@ -1276,7 +1276,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         /* Calculate the hash value of the section before the change. */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             current_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, current_cib);
             current_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, current_cib);
             current_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, current_cib);
@@ -1305,7 +1305,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         /* Always write to disk for replace ops,
          * this also negates the need to detect ordering changes
          */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             config_changed = TRUE;
         }
     }
@@ -1326,7 +1326,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;

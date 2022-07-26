@@ -780,7 +780,7 @@ static struct cib_func_entry cib_file_ops[] = {
     { PCMK__CIB_REQUEST_MODIFY,     FALSE,  cib_process_modify},
     {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
     { PCMK__CIB_REQUEST_BUMP,       FALSE,  cib_process_bump },
-    {CIB_OP_REPLACE,    FALSE, cib_process_replace},
+    { PCMK__CIB_REQUEST_REPLACE,    FALSE,  cib_process_replace},
     { PCMK__CIB_REQUEST_CREATE,     FALSE,  cib_process_create },
     { PCMK__CIB_REQUEST_DELETE,     FALSE,  cib_process_delete},
     { PCMK__CIB_REQUEST_ERASE,      FALSE,  cib_process_erase},

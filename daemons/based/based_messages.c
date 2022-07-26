@@ -423,7 +423,7 @@ sync_our_cib(xmlNode * request, gboolean all)
         xml_remove_prop(replace_request, F_CIB_HOST);
     }
 
-    crm_xml_add(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
+    crm_xml_add(replace_request, F_CIB_OPERATION, PCMK__CIB_REQUEST_REPLACE);
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 

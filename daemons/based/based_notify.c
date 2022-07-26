@@ -271,7 +271,7 @@ cib_replace_notify(const char *origin, xmlNode * update, int result, xmlNode * d
     replace_msg = create_xml_node(NULL, "notify-replace");
     crm_xml_add(replace_msg, F_TYPE, T_CIB_NOTIFY);
     crm_xml_add(replace_msg, F_SUBTYPE, T_CIB_REPLACE_NOTIFY);
-    crm_xml_add(replace_msg, F_CIB_OPERATION, CIB_OP_REPLACE);
+    crm_xml_add(replace_msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_REPLACE);
     crm_xml_add_int(replace_msg, F_CIB_RC, result);
     crm_xml_add_int(replace_msg, F_CIB_CHANGE_SECTION, change_section);
     attach_cib_generation(replace_msg, "cib-replace-generation", update);

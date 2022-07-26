@@ -812,7 +812,8 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                 *answer = match;
             }
 
-        } else if (pcmk__str_eq(op, CIB_OP_REPLACE, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
+                                pcmk__str_none)) {
             xmlNode *parent = match->parent;
 
             free_xml(match);

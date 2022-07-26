@@ -163,7 +163,8 @@ static int
 cib_client_replace(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_REPLACE, NULL, section, data, NULL, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_REPLACE, NULL, section, data,
+                           NULL, call_options, NULL);
 }
 
 static int
