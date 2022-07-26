@@ -893,7 +893,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
-        crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+        crm_xml_add(msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {

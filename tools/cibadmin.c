@@ -507,7 +507,7 @@ main(int argc, char **argv)
                 cib_action = PCMK__CIB_REQUEST_QUERY;
                 break;
             case 'P':
-                cib_action = CIB_OP_APPLY_DIFF;
+                cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
                 break;
             case 'U':
                 cib_user = optarg;

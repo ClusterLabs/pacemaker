@@ -154,7 +154,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_modify
     },
     {
-        CIB_OP_APPLY_DIFF, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_APPLY_PATCH, TRUE, TRUE, TRUE,
         cib_prepare_diff, cib_cleanup_data, cib_server_process_diff
     },
     {
