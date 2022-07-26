@@ -476,7 +476,7 @@ main(int argc, char **argv)
                 dangerous_cmd = TRUE;
                 break;
             case 'E':
-                cib_action = CIB_OP_ERASE;
+                cib_action = PCMK__CIB_REQUEST_ERASE;
                 dangerous_cmd = TRUE;
                 break;
             case 'S':

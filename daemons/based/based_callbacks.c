@@ -1355,7 +1355,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             free(result_alerts_digest);
             free(result_status_digest);
 
-        } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK__CIB_REQUEST_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
         }
 

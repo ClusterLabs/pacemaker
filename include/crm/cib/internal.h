@@ -25,7 +25,7 @@
 #define PCMK__CIB_REQUEST_CREATE        "cib_create"
 #define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
 #define PCMK__CIB_REQUEST_DELETE        "cib_delete"
-#  define CIB_OP_ERASE	"cib_erase"
+#define PCMK__CIB_REQUEST_ERASE         "cib_erase"
 #  define CIB_OP_REPLACE	"cib_replace"
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
 #  define CIB_OP_UPGRADE    "cib_upgrade"

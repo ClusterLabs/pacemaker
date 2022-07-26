@@ -185,7 +185,8 @@ static int
 cib_client_erase(cib_t * cib, xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_ERASE, NULL, NULL, NULL, output_data, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_ERASE, NULL, NULL, NULL,
+                           output_data, call_options, NULL);
 }
 
 static void

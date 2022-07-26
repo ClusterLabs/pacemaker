@@ -178,7 +178,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_output, cib_process_bump
     },
     {
-        CIB_OP_ERASE, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_ERASE, TRUE, TRUE, TRUE,
         cib_prepare_none, cib_cleanup_output, cib_process_erase
     },
     {
