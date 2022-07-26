@@ -93,7 +93,7 @@ set_secondary(cib_t *cib, int call_options)
 }
 
 static int
-cib_client_set_slave_all(cib_t * cib, int call_options)
+set_all_secondary(cib_t * cib, int call_options)
 {
     return -EPROTONOSUPPORT;
 }
@@ -409,7 +409,7 @@ cib_new_variant(void)
     new_cib->cmds->is_master = is_primary;
     new_cib->cmds->set_master = set_primary;
     new_cib->cmds->set_slave = set_secondary;
-    new_cib->cmds->set_slave_all = cib_client_set_slave_all;
+    new_cib->cmds->set_slave_all = set_all_secondary;
 
     new_cib->cmds->upgrade = cib_client_upgrade;
     new_cib->cmds->bump_epoch = cib_client_bump_epoch;
