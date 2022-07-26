@@ -86,7 +86,8 @@ static int
 cib_client_set_slave(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_SLAVE, NULL, NULL, NULL, NULL, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
+                           NULL, call_options, NULL);
 }
 
 static int
