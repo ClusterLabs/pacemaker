@@ -154,7 +154,7 @@ do_cib_control(long long action,
 
 /*!
  * \internal
- * \brief Get CIB call options to use local scope if master unavailable
+ * \brief Get CIB call options to use local scope if primary is unavailable
  *
  * \return CIB call options
  */

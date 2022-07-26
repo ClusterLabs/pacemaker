@@ -317,7 +317,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
         sync_in_progress = 0;
     }
 
-    /* The master should never ignore a diff */
+    // The primary instance should never ignore a diff
     if (sync_in_progress && !based_is_primary) {
         int diff_add_updates = 0;
         int diff_add_epoch = 0;
@@ -340,7 +340,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
 
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
     crm_trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
-              (based_is_primary? "master": "slave"));
+              (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
         free_xml(*result_cib);
