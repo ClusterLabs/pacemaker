@@ -29,7 +29,7 @@
 #define PCMK__CIB_REQUEST_REPLACE       "cib_replace"
 #define PCMK__CIB_REQUEST_APPLY_PATCH   "cib_apply_diff"
 #define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
-#  define CIB_OP_DELETE_ALT	"cib_delete_alt"
+#define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -189,7 +189,7 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  * \internal
  * \brief Query or modify a CIB
  *
- * \param[in]     op            CIB_OP_* operation to be performed
+ * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
  * \param[in]     options       Flag set of \c cib_call_options
  * \param[in]     section       XPath to query or modify
  * \param[in]     req           unused
