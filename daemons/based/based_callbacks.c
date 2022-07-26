@@ -711,7 +711,9 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         }
         goto skip_is_reply;
 
-    } else if(pcmk__str_eq(op, CIB_OP_SYNC, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
+                            pcmk__str_none)) {
+        // Nothing to do
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         process_ping_reply(request);

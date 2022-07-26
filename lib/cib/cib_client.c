@@ -129,7 +129,8 @@ static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_SYNC, host, section, NULL, NULL, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC_TO_ALL, host, section,
+                           NULL, NULL, call_options, NULL);
 }
 
 static int

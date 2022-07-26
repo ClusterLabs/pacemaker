@@ -170,7 +170,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_delete
     },
     {
-        CIB_OP_SYNC, FALSE, TRUE, FALSE,
+        PCMK__CIB_REQUEST_SYNC_TO_ALL, FALSE, TRUE, FALSE,
         cib_prepare_sync, cib_cleanup_none, cib_process_sync
     },
     {
