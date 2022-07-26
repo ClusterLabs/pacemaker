@@ -784,7 +784,7 @@ static struct cib_func_entry cib_file_ops[] = {
     { PCMK__CIB_REQUEST_CREATE,     FALSE,  cib_process_create },
     { PCMK__CIB_REQUEST_DELETE,     FALSE,  cib_process_delete},
     { PCMK__CIB_REQUEST_ERASE,      FALSE,  cib_process_erase},
-    {CIB_OP_UPGRADE,    FALSE, cib_process_upgrade},
+    { PCMK__CIB_REQUEST_UPGRADE,    FALSE,  cib_process_upgrade},
 };
 /* *INDENT-ON* */
 

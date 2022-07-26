@@ -246,7 +246,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_notice("Upgrade request from %s verified", host);
 
             crm_xml_add(up, F_TYPE, "cib");
-            crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+            crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
             crm_xml_add(up, F_CIB_DELEGATED, host);
             crm_xml_add(up, F_CIB_CLIENTID, client_id);
@@ -279,7 +279,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 xmlNode *up = create_xml_node(NULL, __func__);
 
                 crm_xml_add(up, F_TYPE, "cib");
-                crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+                crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, F_CIB_DELEGATED, host);
                 crm_xml_add(up, F_CIB_ISREPLY, host);
                 crm_xml_add(up, F_CIB_CLIENTID, client_id);

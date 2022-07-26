@@ -190,7 +190,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_delete_absolute
     },
     {
-        CIB_OP_UPGRADE, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_UPGRADE, TRUE, TRUE, TRUE,
         cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server
     },
     {

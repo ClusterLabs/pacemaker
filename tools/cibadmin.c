@@ -472,7 +472,7 @@ main(int argc, char **argv)
                                       cib_xpath_address);
                 break;
             case 'u':
-                cib_action = CIB_OP_UPGRADE;
+                cib_action = PCMK__CIB_REQUEST_UPGRADE;
                 dangerous_cmd = TRUE;
                 break;
             case 'E':
@@ -757,7 +757,8 @@ main(int argc, char **argv)
         g_main_loop_run(mainloop);
 
     } else if ((rc == -pcmk_err_schema_unchanged)
-               && pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
+               && pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
+                               pcmk__str_none)) {
         report_schema_unchanged();
 
     } else if (rc < 0) {
@@ -766,7 +767,8 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
         if (rc == pcmk_rc_schema_validation) {
-            if (pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
+            if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
+                             pcmk__str_none)) {
                 xmlNode *obj = NULL;
                 int version = 0;
 

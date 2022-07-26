@@ -719,12 +719,12 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         process_ping_reply(request);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, CIB_OP_UPGRADE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if F_CIB_SCHEMA_MAX is unset
          *
          * If the DC is happy it will then send out another
-         * CIB_OP_UPGRADE which will tell all nodes to do the actual
+         * PCMK__CIB_REQUEST_UPGRADE which will tell all nodes to do the actual
          * upgrade.
          *
          * Except this time F_CIB_SCHEMA_MAX will be set which puts a
