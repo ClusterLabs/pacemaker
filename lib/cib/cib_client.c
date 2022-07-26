@@ -71,7 +71,8 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
                       xmlNode ** output_data, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_QUERY, host, section, NULL, output_data, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, host, section, NULL,
+                           output_data, call_options, NULL);
 }
 
 static int

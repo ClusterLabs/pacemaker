@@ -694,7 +694,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
     int lpc = 0;
     int max = 0;
     int rc = pcmk_ok;
-    gboolean is_query = pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei);
+    bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
 
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -761,7 +761,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
             add_node_copy(match, input);
             break;
 
-        } else if (pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
 
             if (options & cib_no_children) {
                 const char *tag = TYPE(match);

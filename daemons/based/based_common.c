@@ -146,7 +146,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_none, cib_process_default
     },
     {
-        CIB_OP_QUERY, FALSE, FALSE, FALSE,
+        PCMK__CIB_REQUEST_QUERY, FALSE, FALSE, FALSE,
         cib_prepare_none, cib_cleanup_query, cib_process_query
     },
     {

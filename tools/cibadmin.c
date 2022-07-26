@@ -504,7 +504,7 @@ main(int argc, char **argv)
                 command_options |= cib_sync_call;
                 break;
             case 'Q':
-                cib_action = CIB_OP_QUERY;
+                cib_action = PCMK__CIB_REQUEST_QUERY;
                 break;
             case 'P':
                 cib_action = CIB_OP_APPLY_DIFF;
@@ -895,7 +895,8 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         fprintf(stderr, "Call %s failed: %s\n", cib_action, pcmk_rc_str(rc));
         print_xml_output(output);
 
-    } else if (pcmk__str_eq(cib_action, CIB_OP_QUERY, pcmk__str_casei) && output == NULL) {
+    } else if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)
+               && (output == NULL)) {
         crm_err("Query returned no output");
         crm_log_xml_err(msg, "no output");
 

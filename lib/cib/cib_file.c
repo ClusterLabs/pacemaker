@@ -776,7 +776,7 @@ struct cib_func_entry {
 
 /* *INDENT-OFF* */
 static struct cib_func_entry cib_file_ops[] = {
-    {CIB_OP_QUERY,      TRUE,  cib_process_query},
+    { PCMK__CIB_REQUEST_QUERY,      TRUE,   cib_process_query},
     {CIB_OP_MODIFY,     FALSE, cib_process_modify},
     {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
     { PCMK__CIB_REQUEST_BUMP,       FALSE,  cib_process_bump },
