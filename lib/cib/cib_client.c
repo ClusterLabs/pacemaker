@@ -85,7 +85,7 @@ is_primary(cib_t *cib)
 }
 
 static int
-cib_client_set_slave(cib_t * cib, int call_options)
+set_secondary(cib_t *cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
@@ -408,7 +408,7 @@ cib_new_variant(void)
 
     new_cib->cmds->is_master = is_primary;
     new_cib->cmds->set_master = set_primary;
-    new_cib->cmds->set_slave = cib_client_set_slave;
+    new_cib->cmds->set_slave = set_secondary;
     new_cib->cmds->set_slave_all = cib_client_set_slave_all;
 
     new_cib->cmds->upgrade = cib_client_upgrade;
