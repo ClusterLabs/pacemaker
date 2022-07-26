@@ -144,7 +144,7 @@ send_sync_request(const char *host)
     sync_in_progress = 1;
 
     crm_xml_add(sync_me, F_TYPE, "cib");
-    crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
+    crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
     crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
     send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
