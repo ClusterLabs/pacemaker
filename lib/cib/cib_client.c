@@ -99,7 +99,7 @@ cib_client_set_slave_all(cib_t * cib, int call_options)
 }
 
 static int
-cib_client_set_master(cib_t * cib, int call_options)
+set_primary(cib_t *cib, int call_options)
 {
     op_common(cib);
     crm_trace("Adding cib_scope_local to options");
@@ -407,7 +407,7 @@ cib_new_variant(void)
     new_cib->cmds->sync_from = cib_client_sync_from;
 
     new_cib->cmds->is_master = is_primary;
-    new_cib->cmds->set_master = cib_client_set_master;
+    new_cib->cmds->set_master = set_primary;
     new_cib->cmds->set_slave = cib_client_set_slave;
     new_cib->cmds->set_slave_all = cib_client_set_slave_all;
 
