@@ -91,9 +91,8 @@ dnl ========================================================================
 dnl A particular compiler can be forced by setting the CC environment variable
 AC_PROG_CC
 
-dnl Use at least C99 if possible. This will generate an "obsolete" warning
-dnl since autoconf 2.70, but is needed for older versions.
-AC_PROG_CC_STDC
+dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
+m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 
 dnl C++ is not needed for build, just maintainer utilities
 AC_PROG_CXX
