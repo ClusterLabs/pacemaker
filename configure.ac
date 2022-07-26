@@ -834,12 +834,6 @@ dnl ===============================================
 PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
 export PATH
 
-dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
-dnl was NOT being expanded all the time thus causing things to fail.
-AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
-AS_IF([test x"${LIBTOOL}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool libtool (or equivalent)])])
-
 dnl Pacemaker's executable python scripts will invoke the python specified by
 dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
 dnl built-in list with (unversioned) "python" having precedence. To configure
