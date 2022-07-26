@@ -276,7 +276,7 @@ int sync_our_cib(xmlNode * request, gboolean all);
 static gboolean
 cib_digester_cb(gpointer data)
 {
-    if (cib_is_master) {
+    if (based_is_primary) {
         char buffer[32];
         xmlNode *ping = create_xml_node(NULL, "ping");
 
@@ -501,7 +501,7 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
-    } else if (host == NULL && cib_is_master) {
+    } else if ((host == NULL) && based_is_primary) {
         crm_trace("Processing master %s op locally from client %s",
                   op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
@@ -656,7 +656,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         *needs_reply = TRUE;
         return TRUE;
 
-    } else if (host == NULL && cib_is_master == TRUE) {
+    } else if ((host == NULL) && based_is_primary) {
         crm_trace("Processing %s request sent to master instance from %s", op, originator);
         return TRUE;
     }
@@ -669,7 +669,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         /* this is for a specific instance and we're not it */
         crm_trace("Ignoring msg for instance on %s", host);
 
-    } else if (reply_to == NULL && cib_is_master == FALSE) {
+    } else if ((reply_to == NULL) && !based_is_primary) {
         /* this is for the master instance and we're not it */
         crm_trace("Ignoring reply for primary instance");
 
@@ -735,14 +735,14 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
         crm_trace("Parsing %s operation%s for %s with max=%s and upgrade_rc=%s",
                   op, (is_reply? " reply" : ""),
-                  (cib_is_master? "master" : "slave"),
+                  (based_is_primary? "master" : "slave"),
                   (max? max : "none"), (upgrade_rc? upgrade_rc : "none"));
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
             crm_xml_add(request, F_CIB_RC, upgrade_rc);
 
-        } else if ((max == NULL) && cib_is_master) {
+        } else if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */
             goto skip_is_reply;
 
