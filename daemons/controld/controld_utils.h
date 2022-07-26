@@ -12,7 +12,7 @@
 
 #  include <crm/crm.h>
 #  include <crm/common/xml.h>
-#  include <crm/cib/internal.h>     // CIB_OP_MODIFY
+#  include <crm/cib/internal.h>     // PCMK__CIB_REQUEST_MODIFY
 #  include <controld_fsa.h>         // fsa_cib_conn
 #  include <controld_alerts.h>
 
@@ -22,7 +22,7 @@
 #  define fsa_cib_update(section, data, options, call_id, user_name)	\
 	if(fsa_cib_conn != NULL) {					\
 	    call_id = cib_internal_op(                                  \
-		fsa_cib_conn, CIB_OP_MODIFY, NULL, section, data,	\
+        fsa_cib_conn, PCMK__CIB_REQUEST_MODIFY, NULL, section, data,    \
 		NULL, options, user_name);				\
 									\
 	} else {							\

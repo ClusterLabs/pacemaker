@@ -337,8 +337,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     }
 
     crm_log_xml_trace(xml_top, "update_attr");
-    rc = cib_internal_op(cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
-                         call_options | cib_quorum_override, user_name);
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
+                         NULL, call_options|cib_quorum_override, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
 

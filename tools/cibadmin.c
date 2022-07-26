@@ -513,7 +513,7 @@ main(int argc, char **argv)
                 cib_user = optarg;
                 break;
             case 'M':
-                cib_action = CIB_OP_MODIFY;
+                cib_action = PCMK__CIB_REQUEST_MODIFY;
                 break;
             case 'R':
                 cib_action = CIB_OP_REPLACE;

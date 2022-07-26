@@ -23,7 +23,7 @@
 #define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
 #define PCMK__CIB_REQUEST_CREATE        "cib_create"
-#  define CIB_OP_MODIFY	"cib_modify"
+#define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
 #  define CIB_OP_DELETE	"cib_delete"
 #  define CIB_OP_ERASE	"cib_erase"
 #  define CIB_OP_REPLACE	"cib_replace"
@@ -194,11 +194,13 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  * \param[in]     section       XPath to query or modify
  * \param[in]     req           unused
  * \param[in]     input         Portion of CIB to modify (used with
- *                              PCMK__CIB_REQUEST_CREATE, CIB_OP_MODIFY, and
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY, and
  *                              CIB_OP_REPLACE)
  * \param[in]     existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
  * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              PCMK__CIB_REQUEST_CREATE, CIB_OP_MODIFY,
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY,
  *                              CIB_OP_DELETE, and CIB_OP_REPLACE)
  * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
  *

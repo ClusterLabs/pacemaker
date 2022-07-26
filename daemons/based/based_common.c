@@ -150,7 +150,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_query, cib_process_query
     },
     {
-        CIB_OP_MODIFY, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_MODIFY, TRUE, TRUE, TRUE,
         cib_prepare_data, cib_cleanup_data, cib_process_modify
     },
     {
