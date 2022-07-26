@@ -519,7 +519,7 @@ main(int argc, char **argv)
                 cib_action = CIB_OP_REPLACE;
                 break;
             case 'C':
-                cib_action = CIB_OP_CREATE;
+                cib_action = PCMK__CIB_REQUEST_CREATE;
                 break;
             case 'D':
                 cib_action = CIB_OP_DELETE;

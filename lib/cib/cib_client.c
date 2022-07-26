@@ -139,7 +139,8 @@ static int
 cib_client_create(cib_t * cib, const char *section, xmlNode * data, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_CREATE, NULL, section, data, NULL, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_CREATE, NULL, section, data,
+                           NULL, call_options, NULL);
 }
 
 static int

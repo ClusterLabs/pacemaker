@@ -343,7 +343,8 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
         }
 
         tmp_section = create_xml_node(NULL, section);
-        cib_process_xpath(CIB_OP_CREATE, 0, path, NULL, tmp_section, NULL, result_cib, answer);
+        cib_process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
+                          NULL, result_cib, answer);
         free_xml(tmp_section);
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
@@ -550,7 +551,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         section = NULL;
     }
 
-    CRM_CHECK(strcasecmp(CIB_OP_CREATE, op) == 0, return -EINVAL);
+    CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
 
     if (input == NULL) {
         crm_err("Cannot perform modification with no data");
@@ -757,7 +758,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                 break;
             }
 
-        } else if (pcmk__str_eq(op, CIB_OP_CREATE, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_CREATE, pcmk__str_none)) {
             add_node_copy(match, input);
             break;
 

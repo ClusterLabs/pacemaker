@@ -162,7 +162,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_replace_svr
     },
     {
-        CIB_OP_CREATE, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_CREATE, TRUE, TRUE, TRUE,
         cib_prepare_data, cib_cleanup_data, cib_process_create
     },
     {
