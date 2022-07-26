@@ -114,7 +114,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
         return result;
     }
 
-    if (pcmk__str_eq(op, CIB_OP_MASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
         if (cib_is_master == FALSE) {
             crm_info("We are now in R/W mode");
             cib_is_master = TRUE;

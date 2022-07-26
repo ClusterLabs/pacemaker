@@ -101,8 +101,8 @@ cib_client_set_master(cib_t * cib, int call_options)
 {
     op_common(cib);
     crm_trace("Adding cib_scope_local to options");
-    return cib_internal_op(cib, CIB_OP_MASTER, NULL, NULL, NULL, NULL,
-                           call_options | cib_scope_local, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_PRIMARY, NULL, NULL, NULL,
+                           NULL, call_options|cib_scope_local, NULL);
 }
 
 static int

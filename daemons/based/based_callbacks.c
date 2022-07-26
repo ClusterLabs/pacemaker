@@ -532,7 +532,7 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
                        gboolean *process, gboolean *needs_forward)
 {
     if (cib_op_modifies(call_type)) {
-        if (pcmk__str_any_of(op, CIB_OP_MASTER,
+        if (pcmk__str_any_of(op, PCMK__CIB_REQUEST_PRIMARY,
                              PCMK__CIB_REQUEST_SECONDARY, NULL)) {
             /* Always handle these locally */
             *process = TRUE;
