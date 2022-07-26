@@ -20,7 +20,7 @@
 #define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
 #define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
 #define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
-#  define CIB_OP_BUMP	"cib_bump"
+#define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #  define CIB_OP_QUERY	"cib_query"
 #  define CIB_OP_CREATE	"cib_create"
 #  define CIB_OP_MODIFY	"cib_modify"

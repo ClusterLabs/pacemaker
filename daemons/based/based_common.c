@@ -174,7 +174,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_sync, cib_cleanup_none, cib_process_sync
     },
     {
-        CIB_OP_BUMP, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_BUMP, TRUE, TRUE, TRUE,
         cib_prepare_none, cib_cleanup_output, cib_process_bump
     },
     {

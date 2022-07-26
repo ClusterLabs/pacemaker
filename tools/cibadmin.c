@@ -539,7 +539,7 @@ main(int argc, char **argv)
                                       cib_no_children);
                 break;
             case 'B':
-                cib_action = CIB_OP_BUMP;
+                cib_action = PCMK__CIB_REQUEST_BUMP;
                 crm_log_args(argc, argv);
                 break;
             case 'V':
