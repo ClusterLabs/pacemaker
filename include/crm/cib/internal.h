@@ -15,7 +15,7 @@
 
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
-#  define CIB_OP_SLAVEALL	"cib_slave_all"
+#define PCMK__CIB_REQUEST_ALL_SECONDARY "cib_slave_all"
 #  define CIB_OP_MASTER	"cib_master"
 #  define CIB_OP_SYNC	"cib_sync"
 #  define CIB_OP_SYNC_ONE	"cib_sync_one"

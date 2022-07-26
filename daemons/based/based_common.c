@@ -198,7 +198,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        CIB_OP_SLAVEALL, FALSE, TRUE, FALSE,
+        PCMK__CIB_REQUEST_ALL_SECONDARY, FALSE, TRUE, FALSE,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
