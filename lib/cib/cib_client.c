@@ -77,7 +77,7 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 }
 
 static int
-cib_client_is_master(cib_t * cib)
+is_primary(cib_t *cib)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
@@ -406,7 +406,7 @@ cib_new_variant(void)
     new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
-    new_cib->cmds->is_master = cib_client_is_master;
+    new_cib->cmds->is_master = is_primary;
     new_cib->cmds->set_master = cib_client_set_master;
     new_cib->cmds->set_slave = cib_client_set_slave;
     new_cib->cmds->set_slave_all = cib_client_set_slave_all;
