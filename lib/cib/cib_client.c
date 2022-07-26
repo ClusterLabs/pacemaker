@@ -78,8 +78,8 @@ static int
 cib_client_is_master(cib_t * cib)
 {
     op_common(cib);
-    return cib_internal_op(cib, CIB_OP_ISMASTER, NULL, NULL, NULL, NULL,
-                           cib_scope_local | cib_sync_call, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
+                           NULL, cib_scope_local|cib_sync_call, NULL);
 }
 
 static int

@@ -19,7 +19,7 @@
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
 #define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
 #define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
-#  define CIB_OP_ISMASTER	"cib_ismaster"
+#define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
 #  define CIB_OP_BUMP	"cib_bump"
 #  define CIB_OP_QUERY	"cib_query"
 #  define CIB_OP_CREATE	"cib_create"

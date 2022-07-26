@@ -210,7 +210,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_readwrite
     },
     {
-        CIB_OP_ISMASTER, FALSE, TRUE, FALSE,
+        PCMK__CIB_REQUEST_IS_PRIMARY, FALSE, TRUE, FALSE,
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {

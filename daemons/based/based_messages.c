@@ -105,7 +105,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
-    if (pcmk__str_eq(op, CIB_OP_ISMASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
         if (cib_is_master == TRUE) {
             result = pcmk_ok;
         } else {
