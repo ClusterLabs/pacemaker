@@ -24,7 +24,7 @@
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
 #define PCMK__CIB_REQUEST_CREATE        "cib_create"
 #define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
-#  define CIB_OP_DELETE	"cib_delete"
+#define PCMK__CIB_REQUEST_DELETE        "cib_delete"
 #  define CIB_OP_ERASE	"cib_erase"
 #  define CIB_OP_REPLACE	"cib_replace"
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
@@ -201,7 +201,7 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  * \param[in,out] result_cib    CIB copy to make changes in (used with
  *                              PCMK__CIB_REQUEST_CREATE,
  *                              PCMK__CIB_REQUEST_MODIFY,
- *                              CIB_OP_DELETE, and CIB_OP_REPLACE)
+ *                              PCMK__CIB_REQUEST_DELETE, and CIB_OP_REPLACE)
  * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
  *
  * \return Legacy Pacemaker return code

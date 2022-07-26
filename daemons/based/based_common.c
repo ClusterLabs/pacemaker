@@ -166,7 +166,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_data, cib_cleanup_data, cib_process_create
     },
     {
-        CIB_OP_DELETE, TRUE, TRUE, TRUE,
+        PCMK__CIB_REQUEST_DELETE, TRUE, TRUE, TRUE,
         cib_prepare_data, cib_cleanup_data, cib_process_delete
     },
     {

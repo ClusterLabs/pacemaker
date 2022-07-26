@@ -709,7 +709,8 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
     max = numXpathResults(xpathObj);
 
-    if (max < 1 && pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei)) {
+    if ((max < 1)
+        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
         crm_debug("%s was already removed", section);
 
     } else if (max < 1) {
@@ -722,7 +723,8 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
     }
 
-    if (pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei) && (options & cib_multiple)) {
+    if (pcmk_is_set(options, cib_multiple)
+        && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
         dedupXpathResults(xpathObj);
     }
 
@@ -738,7 +740,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         crm_debug("Processing %s op for %s with %s", op, section, path);
         free(path);
 
-        if (pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             if (match == *result_cib) {
                 /* Attempting to delete the whole "/cib" */
                 crm_warn("Cannot perform %s for %s: The xpath is addressing the whole /cib", op, section);

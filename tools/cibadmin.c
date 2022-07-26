@@ -522,7 +522,7 @@ main(int argc, char **argv)
                 cib_action = PCMK__CIB_REQUEST_CREATE;
                 break;
             case 'D':
-                cib_action = CIB_OP_DELETE;
+                cib_action = PCMK__CIB_REQUEST_DELETE;
                 break;
             case '5':
                 cib_action = "md5-sum";
@@ -579,7 +579,7 @@ main(int argc, char **argv)
                                       cib_scope_local);
                 break;
             case 'd':
-                cib_action = CIB_OP_DELETE;
+                cib_action = PCMK__CIB_REQUEST_DELETE;
                 cib__set_call_options(command_options, crm_system_name,
                                       cib_multiple);
                 dangerous_cmd = TRUE;
