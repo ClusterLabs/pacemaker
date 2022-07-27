@@ -145,6 +145,7 @@ If the unit is not specified, it defaults to disk_unit.
 <action name="start"   timeout="20s" />
 <action name="stop"    timeout="20s" />
 <action name="monitor" timeout="20s" interval="60s"/>
+<action name="reload-agent" timeout="20s" />
 <action name="meta-data"  timeout="5s" />
 <action name="validate-all"  timeout="30s" />
 </actions>
@@ -310,7 +311,7 @@ SysInfo_hdd_units() {
 
 SysInfo_usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|reload-agent|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -347,6 +348,11 @@ SysInfo_monitor() {
     exit $OCF_NOT_RUNNING
 }
 
+SysInfo_reload_agent() {
+    # No action required
+    :;
+}
+
 SysInfo_validate() {
     return $OCF_SUCCESS
 }
@@ -377,6 +383,8 @@ start)          SysInfo_start
 stop)           SysInfo_stop
                 ;;
 monitor)        SysInfo_monitor
+                ;;
+reload-agent)   SysInfo_reload_agent
                 ;;
 validate-all)   SysInfo_validate
                 ;;
