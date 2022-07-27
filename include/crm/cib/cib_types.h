@@ -99,7 +99,10 @@ typedef struct cib_api_operations_s {
 
     int (*set_master) (cib_t *cib, int call_options);
     int (*set_slave) (cib_t *cib, int call_options);
+
+    //! \deprecated This method will be removed and should not be used
     int (*set_slave_all) (cib_t *cib, int call_options);
+
     int (*sync) (cib_t *cib, const char *section, int call_options);
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
