@@ -406,7 +406,8 @@ cib_new_variant(void)
     new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
-    new_cib->cmds->is_master = is_primary;
+    new_cib->cmds->is_master = is_primary; // Deprecated method
+
     new_cib->cmds->set_master = set_primary;
     new_cib->cmds->set_slave = set_secondary;
     new_cib->cmds->set_slave_all = set_all_secondary;

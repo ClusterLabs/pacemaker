@@ -93,7 +93,10 @@ typedef struct cib_api_operations_s {
                   int call_options);
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
+
+    //! \deprecated This method will be removed and should not be used
     int (*is_master) (cib_t *cib);
+
     int (*set_master) (cib_t *cib, int call_options);
     int (*set_slave) (cib_t *cib, int call_options);
     int (*set_slave_all) (cib_t *cib, int call_options);
