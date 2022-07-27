@@ -28,7 +28,7 @@
 : ${OCF_RESKEY_clone:="0"}
 : ${OCF_RESKEY_disks:=""}
 : ${OCF_RESKEY_delay:=""}
-: ${OCF_RESKEY_mind_disk_free:=""}
+: ${OCF_RESKEY_min_disk_free:=""}
 
 #######################################################################
 
