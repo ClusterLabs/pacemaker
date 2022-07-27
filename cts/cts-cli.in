@@ -611,9 +611,25 @@ function test_tools() {
     cmd="crm_simulate --live-check --show-attrs"
     test_assert $CRM_EX_OK 0
 
-    desc="Delete a transient (fail-count) node attribute"
-    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    desc="Set a second transient node attribute"
+    cmd="crm_attribute -n fail-count-bar -v 5 -N node1 -t status"
     test_assert $CRM_EX_OK
+
+    desc="Query node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 --query"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -v 10"
+    test_assert $CRM_EX_OK
+
+    desc="Delete node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -D"
+    test_assert $CRM_EX_OK
+
+    desc="crm_attribute given invalid pattern usage"
+    cmd="crm_attribute -t nodes -P fail-count -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
 
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
