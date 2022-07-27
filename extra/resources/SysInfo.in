@@ -78,7 +78,7 @@ Units:
 
 <parameters>
 
-<parameter name="pidfile">
+<parameter name="pidfile" unique-group="pidfile">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
 <content type="string" default="$OCF_RESKEY_pidfile" />
