@@ -138,6 +138,16 @@ typedef struct cib_api_operations_s {
                                        void (*callback)(xmlNode *, int, int,
                                                         xmlNode *, void *),
                                        void (*free_func)(void *));
+
+    /*!
+     * \brief Set the local CIB manager as the cluster's primary instance
+     *
+     * \param[in] cib           CIB connection
+     * \param[in] call_options  Group of enum cib_call_options flags
+     *
+     * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
+     */
+    int (*set_primary)(cib_t *cib, int call_options);
 } cib_api_operations_t;
 
 struct cib_s {
