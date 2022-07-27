@@ -770,6 +770,21 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 </cib>
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a resource
+=#=#=#= Begin test: crm_resource run with extra arguments =#=#=#=
+crm_resource: non-option ARGV-elements:
+[1 of 2] foo
+[2 of 2] bar
+
+=#=#=#= End test: crm_resource run with extra arguments - Incorrect usage (64) =#=#=#=
+* Passed: crm_resource   - crm_resource run with extra arguments
+=#=#=#= Begin test: crm_resource given both -r and resource config =#=#=#=
+crm_resource: --resource cannot be used with --class, --agent, and --provider
+=#=#=#= End test: crm_resource given both -r and resource config - Incorrect usage (64) =#=#=#=
+* Passed: crm_resource   - crm_resource given both -r and resource config
+=#=#=#= Begin test: crm_resource given resource config with invalid action =#=#=#=
+crm_resource: --class, --agent, and --provider can only be used with --validate and --force-*
+=#=#=#= End test: crm_resource given resource config with invalid action - Incorrect usage (64) =#=#=#=
+* Passed: crm_resource   - crm_resource given resource config with invalid action
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
@@ -996,6 +1011,11 @@ Full List of Resources:
 </pacemaker-result>
 =#=#=#= End test: List the configured resources in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - List the configured resources in XML
+=#=#=#= Begin test: Implicitly list the configured resources =#=#=#=
+Full List of Resources:
+  * dummy	(ocf:pacemaker:Dummy):	 Stopped
+=#=#=#= End test: Implicitly list the configured resources - OK (0) =#=#=#=
+* Passed: crm_resource   - Implicitly list the configured resources
 =#=#=#= Begin test: List IDs of instantiated resources =#=#=#=
 dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
@@ -1259,6 +1279,11 @@ crm_resource: Error performing operation: Requested item already exists
 </cib>
 =#=#=#= End test: Try to move a resource to its existing location - Requested item already exists (108) =#=#=#=
 * Passed: crm_resource   - Try to move a resource to its existing location
+=#=#=#= Begin test: Try to move a resource that doesn't exist =#=#=#=
+crm_resource: Resource 'xyz' not found
+Error performing operation: No such object
+=#=#=#= End test: Try to move a resource that doesn't exist - No such object (105) =#=#=#=
+* Passed: crm_resource   - Try to move a resource that doesn't exist
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
@@ -4945,6 +4970,11 @@ resource promotable-rsc:1 is running on: cluster01
 </pacemaker-result>
 =#=#=#= End test: List another instance of a promotable clone resource in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - List another instance of a promotable clone resource in XML
+=#=#=#= Begin test: Try to move an instance of a cloned resource =#=#=#=
+crm_resource: Cannot operate on clone resource instance 'promotable-rsc:0'
+Error performing operation: Invalid parameter
+=#=#=#= End test: Try to move an instance of a cloned resource - Invalid parameter (2) =#=#=#=
+* Passed: crm_resource   - Try to move an instance of a cloned resource
 =#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
 Cluster Summary:
   * Stack: corosync
