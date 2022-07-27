@@ -410,9 +410,42 @@ command_delete(pcmk__output_t *out, cib_t *cib)
 {
     int rc = pcmk_rc_ok;
 
-    rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
-                               options.set_type, options.set_name, options.attr_id,
-                               options.attr_name, options.attr_value, NULL);
+    xmlNode *result = NULL;
+    bool use_pattern = options.attr_pattern != NULL;
+
+    /* See the comment in command_query regarding xpath and regular expressions. */
+    if (use_pattern) {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, NULL, NULL,
+                                 NULL, &result);
+
+        for (xmlNode *child = pcmk__xe_first_child(result); child != NULL;
+             child = pcmk__xe_next(child)) {
+            const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+
+            if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
+                continue;
+            }
+
+            rc = cib__delete_node_attr(out, cib, cib_opts, options.type,
+                                       options.dest_node, options.set_type,
+                                       options.set_name, options.attr_id,
+                                       attr_name, options.attr_value,
+                                       NULL);
+
+            if (rc != ENXIO && rc != pcmk_rc_ok) {
+                goto done_deleting;
+            }
+        }
+
+    } else {
+        rc = cib__delete_node_attr(out, cib, cib_opts, options.type, options.dest_node,
+                                   options.set_type, options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value, NULL);
+    }
+
+done_deleting:
+    free_xml(result);
 
     if (rc == ENXIO) {
         /* Nothing to delete...
@@ -430,15 +463,48 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
 {
     int rc = pcmk_rc_ok;
 
+    xmlNode *result = NULL;
+    bool use_pattern = options.attr_pattern != NULL;
+
     CRM_LOG_ASSERT(options.type != NULL);
     CRM_LOG_ASSERT(options.attr_name != NULL);
     CRM_LOG_ASSERT(options.attr_value != NULL);
 
-    rc = cib__update_node_attr(out, cib, cib_opts, options.type, options.dest_node,
-                               options.set_type, options.set_name, options.attr_id,
-                               options.attr_name, options.attr_value, NULL,
-                               is_remote_node ? "remote" : NULL);
+    /* See the comment in command_query regarding xpath and regular expressions. */
+    if (use_pattern) {
+        rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
+                                 options.set_type, options.set_name, NULL, NULL,
+                                 NULL, &result);
 
+        for (xmlNode *child = pcmk__xe_first_child(result); child != NULL;
+             child = pcmk__xe_next(child)) {
+            const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+
+            if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
+                continue;
+            }
+
+            rc = cib__update_node_attr(out, cib, cib_opts, options.type,
+                                       options.dest_node, options.set_type,
+                                       options.set_name, options.attr_id,
+                                       attr_name, options.attr_value,
+                                       NULL, is_remote_node ? "remote" : NULL);
+
+            if (rc != pcmk_rc_ok) {
+                goto done_updating;
+            }
+        }
+
+    } else {
+        rc = cib__update_node_attr(out, cib, cib_opts, options.type,
+                                   options.dest_node, options.set_type,
+                                   options.set_name, options.attr_id,
+                                   options.attr_name, options.attr_value,
+                                   NULL, is_remote_node ? "remote" : NULL);
+    }
+
+done_updating:
+    free_xml(result);
     return rc;
 }
 
