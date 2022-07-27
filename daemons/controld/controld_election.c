@@ -158,7 +158,8 @@ do_election_count_vote(long long action,
 
             if (fsa_input_register & R_THE_DC) {
                 register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-                fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+                fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
+                                                  cib_scope_local);
 
             } else if (cur_state != S_STARTING) {
                 register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);

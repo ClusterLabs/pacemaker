@@ -150,6 +150,16 @@ typedef struct cib_api_operations_s {
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
     int (*set_primary)(cib_t *cib, int call_options);
+
+    /*!
+     * \brief Set the local CIB manager as a secondary instance
+     *
+     * \param[in] cib           CIB connection
+     * \param[in] call_options  Group of enum cib_call_options flags
+     *
+     * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
+     */
+    int (*set_secondary)(cib_t *cib, int call_options);
 } cib_api_operations_t;
 
 struct cib_s {
