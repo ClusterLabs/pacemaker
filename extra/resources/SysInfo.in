@@ -90,7 +90,7 @@ Units:
 <content type="string" default="0s" />
 </parameter>
 
-<parameter name="disks">
+<parameter name="disks" reloadable="1">
 <longdesc lang="en">
 Filesystems or Paths to be queried for free disk space as a SPACE
 separated list - e.g "/dev/sda1 /tmp".
@@ -104,7 +104,7 @@ named 'root_free'
 <content type="string" />
 </parameter>
 
-<parameter name="disk_unit">
+<parameter name="disk_unit" reloadable="1">
 <longdesc lang="en">
 Unit to report disk free space in.
 Can be one of: B, K, M, G, T, P (case-insensitive)
@@ -126,7 +126,7 @@ Can be one of: B, K, M, G, T, P (case-insensitive)
 </content>
 </parameter>
 
-<parameter name="min_disk_free">
+<parameter name="min_disk_free" reloadable="1">
 <longdesc lang="en">
 The amount of free space required in monitored disks. If any
 of the monitored disks has less than this amount of free space,
