@@ -110,7 +110,20 @@ Unit to report disk free space in.
 Can be one of: B, K, M, G, T, P (case-insensitive)
 </longdesc>
 <shortdesc lang="en">Unit to report disk free space in</shortdesc>
-<content type="string" default="G"/>
+<content type="select" default="G">
+  <option value="B" />
+  <option value="b" />
+  <option value="K" />
+  <option value="k" />
+  <option value="M" />  
+  <option value="m" />
+  <option value="G" />
+  <option value="g" />
+  <option value="T" />
+  <option value="t" />
+  <option value="P" />
+  <option value="p" />
+</content>
 </parameter>
 
 <parameter name="min_disk_free">
