@@ -173,6 +173,11 @@ do
     p)  ocf_log warn "You should not have specified the -p option, since OCF_RESKEY_pidfile is set already!";;
     *)  return $OCF_ERR_ARGS;;
     esac
+
+    case "$OCF_RESKEY_extra_options" in
+    *--output-as*)  ocf_log warn "You should not have specified the -output-as option, since OCF_RESKEY_htmlfile is set already!";;
+    *--output-to*)  ocf_log warn "You should not have specified the -output-to option, since OCF_RESKEY_htmlfile is set already!";;
+    esac
 done
 
 if [ $? -ne 0 ]; then
@@ -245,7 +250,7 @@ if [ ${OCF_RESKEY_update} -ge 1000 ]; then
     OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
 fi
 
-CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h \"$OCF_RESKEY_htmlfile\""
+CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options --output-as=html --output-to=\"$OCF_RESKEY_htmlfile\""
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data
