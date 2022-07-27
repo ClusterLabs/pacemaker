@@ -100,6 +100,7 @@ typedef struct cib_api_operations_s {
     //! \deprecated Use the set_primary() method instead
     int (*set_master) (cib_t *cib, int call_options);
 
+    //! \deprecated Use the set_secondary() method instead
     int (*set_slave) (cib_t *cib, int call_options);
 
     //! \deprecated This method will be removed and should not be used
