@@ -1504,9 +1504,17 @@ main(int argc, char **argv)
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_HOST_LIST);
         printf("    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n");
+#ifdef ENABLE_NLS
+        printf(_("    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n"));
+#endif
         printf("    <shortdesc lang=\"en\">A list of machines controlled by "
                "this device (Optional unless %s=static-list).</shortdesc>\n",
                PCMK_STONITH_HOST_CHECK);
+#ifdef ENABLE_NLS
+        printf(_("    <shortdesc lang=\"en\">A list of machines controlled by "
+               "this device (Optional unless %s=static-list).</shortdesc>\n"),
+               PCMK_STONITH_HOST_CHECK);
+#endif
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
@@ -1520,6 +1528,10 @@ main(int argc, char **argv)
                "machine)</longdesc>\n");
         printf
             ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
+#ifdef ENABLE_NLS
+        printf
+            (_("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n"));
+#endif
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
@@ -1530,6 +1542,13 @@ main(int argc, char **argv)
                "delay for fencing actions.\nThe overall delay is derived from "
                "this random delay value adding a static delay so that the sum "
                "is kept below the maximum delay.</longdesc>\n");
+#ifdef ENABLE_NLS
+        printf(_("    <longdesc lang=\"en\">This prevents double fencing when "
+               "using slow devices such as sbd.\nUse this to enable a random "
+               "delay for fencing actions.\nThe overall delay is derived from "
+               "this random delay value adding a static delay so that the sum "
+               "is kept below the maximum delay.</longdesc>\n"));
+#endif
         printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
                "time specified before executing fencing actions. Pacemaker "
                "derives the overall delay by taking the value of "
@@ -1552,6 +1571,10 @@ main(int argc, char **argv)
                "    </longdesc>\n");
         printf("    <shortdesc lang=\"en\">Enable a base delay for "
                "fencing actions and specify base delay value.</shortdesc>\n");
+#ifdef ENABLE_NLS 
+        printf(_("    <shortdesc lang=\"en\">Enable a base delay for "
+               "fencing actions and specify base delay value.</shortdesc>\n"));
+#endif
         printf("    <content type=\"string\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
@@ -1560,6 +1583,11 @@ main(int argc, char **argv)
         printf
             ("    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to be configured first.\n"
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
+#ifdef ENABLE_NLS 
+        printf
+            (_("    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to be configured first.\n"
+             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n"));
+#endif
         printf
             ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
         printf("    <content type=\"integer\" default=\"1\"/>\n");
