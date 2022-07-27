@@ -409,7 +409,7 @@ cib_new_variant(void)
     new_cib->cmds->is_master = is_primary; // Deprecated method
 
     new_cib->cmds->set_primary = set_primary;
-    new_cib->cmds->set_master = set_primary;
+    new_cib->cmds->set_master = set_primary; // Deprecated method
     new_cib->cmds->set_slave = set_secondary;
 
     new_cib->cmds->set_slave_all = set_all_secondary; // Deprecated method
