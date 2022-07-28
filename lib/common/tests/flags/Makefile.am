@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include		\
 	      -I$(top_builddir)/include		\
 	      -I$(top_srcdir)/lib/common
 LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
-AM_LDFLAGS = $(LDFLAGS_WRAP)
+AM_LDFLAGS =
 
 include $(top_srcdir)/mk/tap.mk
 
