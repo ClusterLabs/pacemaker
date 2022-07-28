@@ -621,7 +621,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_trace("Processing %s request sent by %s", op, originator);
-    if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Always process these */
         *local_notify = FALSE;
         if (reply_to == NULL || is_reply) {
@@ -673,7 +673,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         /* this is for the master instance and we're not it */
         crm_trace("Ignoring reply for primary instance");
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         if (reply_to != NULL) {
             crm_debug("Processing %s from %s", op, originator);
             *needs_reply = FALSE;
@@ -765,7 +765,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Legacy handling */
         crm_debug("Legacy handling of %s message from %s", op, originator);
         *local_notify = FALSE;
@@ -1571,7 +1571,7 @@ initiate_exit(void)
 
     leaving = create_xml_node(NULL, "exit-notification");
     crm_xml_add(leaving, F_TYPE, "cib");
-    crm_xml_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
+    crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
 
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
     free_xml(leaving);

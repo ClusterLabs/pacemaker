@@ -31,6 +31,7 @@
 #define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
 #define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 #define PCMK__CIB_REQUEST_NOOP          "noop"
+#define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"

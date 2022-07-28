@@ -214,7 +214,7 @@ static cib_operation_t cib_server_ops[] = {
         cib_prepare_none, cib_cleanup_none, cib_process_readwrite
     },
     {
-        "cib_shutdown_req", FALSE, TRUE, FALSE,
+        PCMK__CIB_REQUEST_SHUTDOWN, FALSE, TRUE, FALSE,
         cib_prepare_sync, cib_cleanup_none, cib_process_shutdown_req
     },
     {
