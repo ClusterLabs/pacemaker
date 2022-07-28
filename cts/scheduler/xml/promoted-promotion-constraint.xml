@@ -56,7 +56,7 @@
     </resources>
     <constraints>
       <rsc_order first="g0" id="promote-after-g0" then="ms0" then-action="promote"/>
-      <rsc_colocation id="master-with-g0" rsc="ms0" rsc-role="Promoted" score="INFINITY" with-rsc="g0"/>
+      <rsc_colocation id="promoted-with-g0" rsc="ms0" rsc-role="Promoted" score="INFINITY" with-rsc="g0"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>
@@ -66,7 +66,7 @@
       <transient_attributes id="hex-14">
         <instance_attributes id="status-hex-14">
           <nvpair id="status-hex-14-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-14-master-s0:1" name="master-s0:1" value="10"/>
+          <nvpair id="status-hex-14-promoted-s0:1" name="master-s0:1" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hex-14">
@@ -108,7 +108,7 @@
       <transient_attributes id="hex-13">
         <instance_attributes id="status-hex-13">
           <nvpair id="status-hex-13-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-13-master-s0:0" name="master-s0:0" value="5"/>
+          <nvpair id="status-hex-13-promoted-s0:0" name="master-s0:0" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hex-13">

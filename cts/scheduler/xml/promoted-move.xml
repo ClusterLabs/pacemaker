@@ -63,10 +63,10 @@
     </resources>
     <constraints>
       <rsc_location id="rsc_location-1" rsc="msDRBD">
-        <rule id="rsc_location-1-rule" role="master" score="200">
+        <rule id="rsc_location-1-rule" role="Promoted" score="200">
           <expression attribute="#uname" id="rsc_location-1-expression" operation="eq" value="bl460g1n13"/>
         </rule>
-        <rule id="rsc_location-1-rule-0" role="master" score="100">
+        <rule id="rsc_location-1-rule-0" role="Promoted" score="100">
           <expression attribute="#uname" id="rsc_location-1-expression-0" operation="eq" value="bl460g1n14"/>
         </rule>
       </rsc_location>
@@ -86,7 +86,7 @@
         <instance_attributes id="status-11111111-1111-1111-1111-111111111111">
           <nvpair id="status-11111111-1111-1111-1111-111111111111-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-11111111-1111-1111-1111-111111111111-dstate-r0" name="dstate-r0" value="Connected:UpToDate/UpToDate"/>
-          <nvpair id="status-11111111-1111-1111-1111-111111111111-master-prmDRBD:0" name="master-prmDRBD:0" value="10000"/>
+          <nvpair id="status-11111111-1111-1111-1111-111111111111-promoted-prmDRBD:0" name="master-prmDRBD:0" value="10000"/>
           <nvpair id="status-11111111-1111-1111-1111-111111111111-fail-count-dummy01" name="fail-count-dummy01" value="1"/>
           <nvpair id="status-11111111-1111-1111-1111-111111111111-last-failure-dummy01" name="last-failure-dummy01" value="1315918021"/>
         </instance_attributes>
@@ -126,7 +126,7 @@
         <instance_attributes id="status-22222222-2222-2222-2222-222222222222">
           <nvpair id="status-22222222-2222-2222-2222-222222222222-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-22222222-2222-2222-2222-222222222222-dstate-r0" name="dstate-r0" value="Connected:UpToDate/UpToDate"/>
-          <nvpair id="status-22222222-2222-2222-2222-222222222222-master-prmDRBD:1" name="master-prmDRBD:1" value="10000"/>
+          <nvpair id="status-22222222-2222-2222-2222-222222222222-promoted-prmDRBD:1" name="master-prmDRBD:1" value="10000"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="22222222-2222-2222-2222-222222222222">

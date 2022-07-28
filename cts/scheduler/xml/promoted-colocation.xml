@@ -92,7 +92,7 @@
       <transient_attributes id="box1">
         <instance_attributes id="status-box1">
           <nvpair id="status-box1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-box1-master-conntrackd-stateful:0" name="master-conntrackd-stateful:0" value="5"/>
+          <nvpair id="status-box1-promoted-conntrackd-stateful:0" name="master-conntrackd-stateful:0" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -100,7 +100,7 @@
       <transient_attributes id="box2">
         <instance_attributes id="status-box2">
           <nvpair id="status-box2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-box2-master-conntrackd-stateful:1" name="master-conntrackd-stateful:1" value="5"/>
+          <nvpair id="status-box2-promoted-conntrackd-stateful:1" name="master-conntrackd-stateful:1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="box2">

@@ -27,7 +27,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="rsc1_master" rsc="rsc1">
+      <rsc_location id="rsc1_promoted" rsc="rsc1">
         <rule id="pref_rsc1_master-1" score="100" role="Promoted">
           <expression id="expression.id21950" attribute="#uname" operation="eq" value="node2"/>
         </rule>

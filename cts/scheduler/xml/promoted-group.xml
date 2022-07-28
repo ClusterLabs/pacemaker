@@ -64,7 +64,7 @@
           <primitive id="master_slave_Stateful" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
-              <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Promoted"/>
+              <op name="monitor" interval="6s" id="ms-sf_monitor_promoted" timeout="30s" role="Promoted"/>
             </operations>
           </primitive>
           <meta_attributes id="group-grp_ms_sf.meta"/>

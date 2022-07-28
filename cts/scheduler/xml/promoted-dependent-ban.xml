@@ -67,7 +67,7 @@
         <instance_attributes id="status-168822234">
           <nvpair id="status-168822234-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-168822234-last-failure-p_drbd-dtest1" name="last-failure-p_drbd-dtest1" value="1375207922"/>
-          <nvpair id="status-168822234-master-p_drbd-dtest1" name="master-p_drbd-dtest1" value="1000"/>
+          <nvpair id="status-168822234-promoted-p_drbd-dtest1" name="master-p_drbd-dtest1" value="1000"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="168822234">
@@ -87,7 +87,7 @@
         <instance_attributes id="status-168822233">
           <nvpair id="status-168822233-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-168822233-last-failure-p_drbd-dtest1" name="last-failure-p_drbd-dtest1" value="1375206707"/>
-          <nvpair id="status-168822233-master-p_drbd-dtest1" name="master-p_drbd-dtest1" value="5"/>
+          <nvpair id="status-168822233-promoted-p_drbd-dtest1" name="master-p_drbd-dtest1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="168822233">

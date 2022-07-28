@@ -16,8 +16,8 @@
     </nodes>
     <resources>
       <clone id="A-master">
-        <meta_attributes id="A-master-meta">
-          <nvpair id="A-master-meta-promotable" name="promotable" value="true"/>
+        <meta_attributes id="A-promoted-meta">
+          <nvpair id="A-promoted-meta-promotable" name="promotable" value="true"/>
         </meta_attributes>
         <primitive id="A" class="ocf" provider="pacemaker" type="Stateful">
           <operations>
@@ -47,7 +47,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="master-location" rsc="A-master">
+      <rsc_location id="promoted-location" rsc="A-master">
         <rule id="master-location-rule" score="INFINITY" role="Promoted">
           <expression id="master-location-expr" attribute="#uname" operation="eq" value="node2"/>
         </rule>

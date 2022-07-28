@@ -99,12 +99,12 @@
         </primitive>
       </clone>
       <clone id="master-1">
-        <meta_attributes id="master-1-meta">
-          <nvpair id="master-1-promotable" name="promotable" value="true"/>
-          <nvpair id="master-1-promoted-node-max" name="promoted-node-max" value="1"/>
-          <nvpair id="master-1-clone-max" name="clone-max" value="3"/>
-          <nvpair id="master-1-promoted-max" name="promoted-max" value="1"/>
-          <nvpair id="master-1-clone-node-max" name="clone-node-max" value="1"/>
+        <meta_attributes id="promoted-1-meta">
+          <nvpair id="promoted-1-promotable" name="promotable" value="true"/>
+          <nvpair id="promoted-1-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="promoted-1-clone-max" name="clone-max" value="3"/>
+          <nvpair id="promoted-1-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="promoted-1-clone-node-max" name="clone-node-max" value="1"/>
         </meta_attributes>
         <primitive id="stateful-1" class="ocf" type="Stateful" provider="pacemaker">
           <operations>
@@ -170,8 +170,8 @@
           <expression id="m1-connected-2" attribute="connected" operation="not_defined"/>
         </rule>
       </rsc_location>
-      <rsc_order id="group-1-after-master-1" first="master-1" then="group-1" kind="Mandatory" first-action="promote" then-action="start"/>
-      <rsc_colocation id="group-1-with-master-1" rsc="group-1" with-rsc="master-1" score="INFINITY" with-rsc-role="Promoted"/>
+      <rsc_order id="group-1-after-promoted-1" first="master-1" then="group-1" kind="Mandatory" first-action="promote" then-action="start"/>
+      <rsc_colocation id="group-1-with-promoted-1" rsc="group-1" with-rsc="master-1" score="INFINITY" with-rsc-role="Promoted"/>
       <rsc_order id="lsb-dummy-after-group-1" first="group-1" then="lsb-dummy" kind="Mandatory" first-action="start" then-action="start"/>
       <rsc_colocation id="lsb-dummy-with-group-1" rsc="lsb-dummy" with-rsc="group-1" score="INFINITY"/>
     </constraints>

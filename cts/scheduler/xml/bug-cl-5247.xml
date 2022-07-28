@@ -90,9 +90,9 @@
       <group id="master-group">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy">
           <operations>
-            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="vip-master-start-0s"/>
-            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="vip-master-monitor-10s"/>
-            <op name="stop" interval="0s" timeout="60s" on-fail="fence" id="vip-master-stop-0s"/>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="vip-promoted-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="vip-promoted-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="fence" id="vip-promoted-stop-0s"/>
           </operations>
         </primitive>
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy">
@@ -158,9 +158,9 @@
           <expression attribute="#uname" operation="eq" value="bl460g8n3" id="rsc_location-prmDB2-3-rule-expression"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="rsc_colocation-master-group-msPostgresql-1" score="INFINITY" rsc="master-group" with-rsc="msPostgresql" with-rsc-role="Promoted"/>
-      <rsc_order id="rsc_order-msPostgresql-master-group-1" symmetrical="false" first="msPostgresql" first-action="promote" then="master-group" then-action="start"/>
-      <rsc_order id="rsc_order-msPostgresql-master-group-2" kind="Optional" symmetrical="false" first="msPostgresql" first-action="demote" then="master-group" then-action="stop"/>
+      <rsc_colocation id="rsc_colocation-promoted-group-msPostgresql-1" score="INFINITY" rsc="master-group" with-rsc="msPostgresql" with-rsc-role="Promoted"/>
+      <rsc_order id="rsc_order-msPostgresql-promoted-group-1" symmetrical="false" first="msPostgresql" first-action="promote" then="master-group" then-action="start"/>
+      <rsc_order id="rsc_order-msPostgresql-promoted-group-2" kind="Optional" symmetrical="false" first="msPostgresql" first-action="demote" then="master-group" then-action="stop"/>
     </constraints>
     <fencing-topology>
       <fencing-level devices="prmStonith1-2" index="1" target="bl460g8n3" id="fencing"/>
@@ -258,7 +258,7 @@
     <node_state remote_node="true" id="pgsr02" uname="pgsr02" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="pgsr02">
         <instance_attributes id="status-pgsr02">
-          <nvpair id="status-pgsr02-master-pgsql" name="master-pgsql" value="10"/>
+          <nvpair id="status-pgsr02-promoted-pgsql" name="master-pgsql" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="pgsr02">
@@ -281,7 +281,7 @@
     <node_state remote_node="true" id="pgsr01" uname="pgsr01" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="pgsr01">
         <instance_attributes id="status-pgsr01">
-          <nvpair id="status-pgsr01-master-pgsql" name="master-pgsql" value="10"/>
+          <nvpair id="status-pgsr01-promoted-pgsql" name="master-pgsql" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="pgsr01">

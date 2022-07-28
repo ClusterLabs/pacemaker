@@ -141,12 +141,12 @@
     </resources>
     <constraints>
       <rsc_location id="location-rsc1-clone" rsc="rsc1-clone">
-        <rule id="location-rsc1-clone-rule" role="master" score="-INFINITY">
+        <rule id="location-rsc1-clone-rule" role="Promoted" score="-INFINITY">
           <expression attribute="fail-count-rsc1#monitor_10000" id="location-rsc1-clone-rule-expr" operation="gt" value="2"/>
         </rule>
       </rsc_location>
-      <rsc_location id="location-rsc2-master" rsc="rsc2-master">
-        <rule id="location-rsc2-master-rule" role="master" score="100">
+      <rsc_location id="location-rsc2-promoted" rsc="rsc2-master">
+        <rule id="location-rsc2-master-rule" role="Promoted" score="100">
           <expression id="location-rsc2-master-rule-expr" attribute="#uname" operation="eq" value="remote-rhel7-2"/>
         </rule>
       </rsc_location>
@@ -235,8 +235,8 @@
       </lrm>
       <transient_attributes id="4">
         <instance_attributes id="status-4">
-          <nvpair id="status-4-master-rsc1" name="master-rsc1" value="10"/>
-          <nvpair id="status-4-master-rsc2" name="master-rsc2" value="10"/>
+          <nvpair id="status-4-promoted-rsc1" name="master-rsc1" value="10"/>
+          <nvpair id="status-4-promoted-rsc2" name="master-rsc2" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -308,8 +308,8 @@
       </lrm>
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-3-master-rsc2" name="master-rsc2" value="5"/>
+          <nvpair id="status-3-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-3-promoted-rsc2" name="master-rsc2" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -379,8 +379,8 @@
       </lrm>
       <transient_attributes id="5">
         <instance_attributes id="status-5">
-          <nvpair id="status-5-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-5-master-rsc2" name="master-rsc2" value="5"/>
+          <nvpair id="status-5-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-5-promoted-rsc2" name="master-rsc2" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -451,8 +451,8 @@
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-1-master-rsc2" name="master-rsc2" value="5"/>
+          <nvpair id="status-1-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-1-promoted-rsc2" name="master-rsc2" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -499,8 +499,8 @@
       </lrm>
       <transient_attributes id="remote-rhel7-2">
         <instance_attributes id="status-remote-rhel7-2">
-          <nvpair id="status-remote-rhel7-2-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-remote-rhel7-2-master-rsc2" name="master-rsc2" value="10"/>
+          <nvpair id="status-remote-rhel7-2-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-remote-rhel7-2-promoted-rsc2" name="master-rsc2" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -533,9 +533,9 @@
       </lrm>
       <transient_attributes id="lxc2">
         <instance_attributes id="status-lxc2">
-          <nvpair id="status-lxc2-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-lxc2-master-rsc2" name="master-rsc2" value="5"/>
-          <nvpair id="status-lxc2-master-lxc-ms" name="master-lxc-ms" value="10"/>
+          <nvpair id="status-lxc2-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-lxc2-promoted-rsc2" name="master-rsc2" value="5"/>
+          <nvpair id="status-lxc2-promoted-lxc-ms" name="master-lxc-ms" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -568,9 +568,9 @@
       </lrm>
       <transient_attributes id="lxc1">
         <instance_attributes id="status-lxc1">
-          <nvpair id="status-lxc1-master-rsc1" name="master-rsc1" value="5"/>
-          <nvpair id="status-lxc1-master-rsc2" name="master-rsc2" value="5"/>
-          <nvpair id="status-lxc1-master-lxc-ms" name="master-lxc-ms" value="5"/>
+          <nvpair id="status-lxc1-promoted-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-lxc1-promoted-rsc2" name="master-rsc2" value="5"/>
+          <nvpair id="status-lxc1-promoted-lxc-ms" name="master-lxc-ms" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -585,7 +585,7 @@
       </lrm>
       <transient_attributes id="stateful-bundle-2">
         <instance_attributes id="status-stateful-bundle-2">
-          <nvpair id="status-stateful-bundle-2-master-bundled" name="master-bundled" value="5"/>
+          <nvpair id="status-stateful-bundle-2-promoted-bundled" name="master-bundled" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -601,7 +601,7 @@
       </lrm>
       <transient_attributes id="stateful-bundle-0">
         <instance_attributes id="status-stateful-bundle-0">
-          <nvpair id="status-stateful-bundle-0-master-bundled" name="master-bundled" value="10"/>
+          <nvpair id="status-stateful-bundle-0-promoted-bundled" name="master-bundled" value="10"/>
           <nvpair id="status-stateful-bundle-0-fail-count-bundled.monitor_10000" name="fail-count-bundled#monitor_10000" value="1"/>
           <nvpair id="status-stateful-bundle-0-last-failure-bundled.monitor_10000" name="last-failure-bundled#monitor_10000" value="1592409773"/>
         </instance_attributes>
@@ -618,7 +618,7 @@
       </lrm>
       <transient_attributes id="stateful-bundle-1">
         <instance_attributes id="status-stateful-bundle-1">
-          <nvpair id="status-stateful-bundle-1-master-bundled" name="master-bundled" value="5"/>
+          <nvpair id="status-stateful-bundle-1-promoted-bundled" name="master-bundled" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

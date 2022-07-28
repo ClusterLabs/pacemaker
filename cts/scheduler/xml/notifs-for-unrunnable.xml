@@ -130,7 +130,7 @@
         </storage>
         <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
           <instance_attributes id="redis-instance_attributes">
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -362,8 +362,8 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-1"/>
-          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-redis" name="master-redis" value="1"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
@@ -483,8 +483,8 @@
     <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-redis" name="master-redis" value="1000"/>
-          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-promoted-redis" name="master-redis" value="1000"/>
+          <nvpair id="status-3-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-2"/>
         </instance_attributes>
       </transient_attributes>

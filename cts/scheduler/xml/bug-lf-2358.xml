@@ -241,8 +241,8 @@
       <transient_attributes id="0af1add7-22b5-4342-9816-67e6351605de">
         <instance_attributes id="status-0af1add7-22b5-4342-9816-67e6351605de">
           <nvpair id="status-0af1add7-22b5-4342-9816-67e6351605de-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-0af1add7-22b5-4342-9816-67e6351605de-master-res_drbd_mysql2:1" name="master-res_drbd_mysql2:1" value="10000"/>
-          <nvpair id="status-0af1add7-22b5-4342-9816-67e6351605de-master-res_drbd_mysql1:0" name="master-res_drbd_mysql1:0" value="10000"/>
+          <nvpair id="status-0af1add7-22b5-4342-9816-67e6351605de-promoted-res_drbd_mysql2:1" name="master-res_drbd_mysql2:1" value="10000"/>
+          <nvpair id="status-0af1add7-22b5-4342-9816-67e6351605de-promoted-res_drbd_mysql1:0" name="master-res_drbd_mysql1:0" value="10000"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -305,7 +305,7 @@
       <transient_attributes id="df0d4306-9cf3-4c5c-a23a-027ac36da131">
         <instance_attributes id="status-df0d4306-9cf3-4c5c-a23a-027ac36da131">
           <nvpair id="status-df0d4306-9cf3-4c5c-a23a-027ac36da131-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-df0d4306-9cf3-4c5c-a23a-027ac36da131-master-res_drbd_mysql2:0" name="master-res_drbd_mysql2:0" value="10000"/>
+          <nvpair id="status-df0d4306-9cf3-4c5c-a23a-027ac36da131-promoted-res_drbd_mysql2:0" name="master-res_drbd_mysql2:0" value="10000"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

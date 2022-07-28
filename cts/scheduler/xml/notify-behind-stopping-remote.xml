@@ -36,7 +36,7 @@
         </storage>
         <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
           <instance_attributes id="redis-instance_attributes">
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -116,7 +116,7 @@
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-1-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -147,7 +147,7 @@
       </lrm>
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

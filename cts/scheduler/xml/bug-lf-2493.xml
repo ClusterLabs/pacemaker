@@ -50,7 +50,7 @@
           <nvpair id="status-hpn07-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-hpn07-last-failure-res_drbd_hpn78:0" name="last-failure-res_drbd_hpn78:0" value="1285592274"/>
           <nvpair id="status-hpn07-last-failure-res_exportfs_rootfs:0" name="last-failure-res_exportfs_rootfs:0" value="1285588575"/>
-          <nvpair id="status-hpn07-master-p_stateful1:0" name="master-p_stateful1:0" value="10"/>
+          <nvpair id="status-hpn07-promoted-p_stateful1:0" name="master-p_stateful1:0" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hpn07">
@@ -162,7 +162,7 @@
         <instance_attributes id="status-hpn08">
           <nvpair id="status-hpn08-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-hpn08-last-failure-res_exportfs_rootfs:1" name="last-failure-res_exportfs_rootfs:1" value="1285588575"/>
-          <nvpair id="status-hpn08-master-p_stateful1:1" name="master-p_stateful1:1" value="5"/>
+          <nvpair id="status-hpn08-promoted-p_stateful1:1" name="master-p_stateful1:1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="hpn08">

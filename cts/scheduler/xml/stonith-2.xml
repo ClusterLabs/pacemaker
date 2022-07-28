@@ -157,10 +157,10 @@
         <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
           <operations>
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
-            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Promoted"/>
+            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_promoted" role="Promoted"/>
           </operations>
         </primitive>
-        <meta_attributes id="clone-master_rsc_1.meta">
+        <meta_attributes id="clone-promoted_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-304" name="promotable" value="true"/>
           <nvpair id="nvpair.meta.auto-305" name="clone-max" value="12"/>
           <nvpair id="nvpair.meta.auto-307" name="clone-node-max" value="2"/>

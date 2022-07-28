@@ -13,7 +13,7 @@
         <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="controller-0"/>
       </cluster_property_set>
       <cluster_property_set id="ovn_ovsdb_master_server">
-        <nvpair id="ovn_ovsdb_master_server-OVN_REPL_INFO" name="OVN_REPL_INFO" value="controller-0"/>
+        <nvpair id="ovn_ovsdb_promoted_server-OVN_REPL_INFO" name="OVN_REPL_INFO" value="controller-0"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -139,7 +139,7 @@
         </storage>
         <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
           <instance_attributes id="redis-instance_attributes">
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -174,11 +174,11 @@
         <primitive class="ocf" id="ovndb_servers" provider="ovn" type="ovndb-servers">
           <instance_attributes id="ovndb_servers-instance_attributes">
             <nvpair id="ovndb_servers-instance_attributes-inactive_probe_interval" name="inactive_probe_interval" value="180000"/>
-            <nvpair id="ovndb_servers-instance_attributes-listen_on_master_ip_only" name="listen_on_master_ip_only" value="no"/>
+            <nvpair id="ovndb_servers-instance_attributes-listen_on_promoted_ip_only" name="listen_on_master_ip_only" value="no"/>
             <nvpair id="ovndb_servers-instance_attributes-manage_northd" name="manage_northd" value="yes"/>
-            <nvpair id="ovndb_servers-instance_attributes-master_ip" name="master_ip" value="172.17.1.247"/>
-            <nvpair id="ovndb_servers-instance_attributes-nb_master_port" name="nb_master_port" value="6641"/>
-            <nvpair id="ovndb_servers-instance_attributes-sb_master_port" name="sb_master_port" value="6642"/>
+            <nvpair id="ovndb_servers-instance_attributes-promoted_ip" name="master_ip" value="172.17.1.247"/>
+            <nvpair id="ovndb_servers-instance_attributes-nb_promoted_port" name="nb_master_port" value="6641"/>
+            <nvpair id="ovndb_servers-instance_attributes-sb_promoted_port" name="sb_master_port" value="6642"/>
           </instance_attributes>
           <meta_attributes id="ovndb_servers-meta_attributes">
             <nvpair id="ovndb_servers-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
@@ -320,10 +320,10 @@
     <node_state id="1" uname="controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-0"/>
-          <nvpair id="status-1-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
-          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-1-promoted-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-1-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">
@@ -430,10 +430,10 @@
     <node_state id="2" uname="controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-1"/>
-          <nvpair id="status-2-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
-          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-2-promoted-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-2-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
@@ -541,10 +541,10 @@
     <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-2"/>
-          <nvpair id="status-3-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
-          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-3-promoted-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-3-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">

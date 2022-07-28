@@ -480,8 +480,8 @@
     <node_state id="3" uname="rhel7-3" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-rsc13b" name="master-rsc13b" value="10"/>
-          <nvpair id="status-3-master-rsc14a" name="master-rsc14a" value="5"/>
+          <nvpair id="status-3-promoted-rsc13b" name="master-rsc13b" value="10"/>
+          <nvpair id="status-3-promoted-rsc14a" name="master-rsc14a" value="5"/>
           <nvpair id="status-3-fail-count-rsc7a2.asyncmon_0" name="fail-count-rsc7a2#asyncmon_0" value="2"/>
           <nvpair id="status-3-last-failure-rsc7a2.asyncmon_0" name="last-failure-rsc7a2#asyncmon_0" value="1608666508"/>
           <nvpair id="status-3-fail-count-rsc4a.asyncmon_0" name="fail-count-rsc4a#asyncmon_0" value="2"/>
@@ -639,7 +639,7 @@
     <node_state id="4" uname="rhel7-4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="4">
         <instance_attributes id="status-4">
-          <nvpair id="status-4-master-rsc13b" name="master-rsc13b" value="5"/>
+          <nvpair id="status-4-promoted-rsc13b" name="master-rsc13b" value="5"/>
           <nvpair id="status-4-fail-count-rsc2a.asyncmon_0" name="fail-count-rsc2a#asyncmon_0" value="2"/>
           <nvpair id="status-4-last-failure-rsc2a.asyncmon_0" name="last-failure-rsc2a#asyncmon_0" value="1608666673"/>
           <nvpair id="status-4-fail-count-rsc8a.monitor_10000" name="fail-count-rsc8a#monitor_10000" value="2"/>
@@ -650,7 +650,7 @@
           <nvpair id="status-4-last-failure-rsc14a.monitor_11000" name="last-failure-rsc14a#monitor_11000" value="1608667795"/>
           <nvpair id="status-4-fail-count-rsc14a.demote_0" name="fail-count-rsc14a#demote_0" value="2"/>
           <nvpair id="status-4-last-failure-rsc14a.demote_0" name="last-failure-rsc14a#demote_0" value="1608667796"/>
-          <nvpair id="status-4-master-rsc14a" name="master-rsc14a" value="10"/>
+          <nvpair id="status-4-promoted-rsc14a" name="master-rsc14a" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="4">
@@ -940,8 +940,8 @@
     <node_state id="1" uname="rhel7-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-rsc13b" name="master-rsc13b" value="5"/>
-          <nvpair id="status-1-master-rsc14a" name="master-rsc14a" value="5"/>
+          <nvpair id="status-1-promoted-rsc13b" name="master-rsc13b" value="5"/>
+          <nvpair id="status-1-promoted-rsc14a" name="master-rsc14a" value="5"/>
           <nvpair id="status-1-fail-count-rsc5a.asyncmon_0" name="fail-count-rsc5a#asyncmon_0" value="2"/>
           <nvpair id="status-1-last-failure-rsc5a.asyncmon_0" name="last-failure-rsc5a#asyncmon_0" value="1608666747"/>
           <nvpair id="status-1-fail-count-rsc12b.asyncmon_0" name="fail-count-rsc12b#asyncmon_0" value="2"/>
@@ -1099,8 +1099,8 @@
     <node_state id="2" uname="rhel7-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-rsc13b" name="master-rsc13b" value="5"/>
-          <nvpair id="status-2-master-rsc14a" name="master-rsc14a" value="5"/>
+          <nvpair id="status-2-promoted-rsc13b" name="master-rsc13b" value="5"/>
+          <nvpair id="status-2-promoted-rsc14a" name="master-rsc14a" value="5"/>
           <nvpair id="status-2-fail-count-rsc1a.asyncmon_0" name="fail-count-rsc1a#asyncmon_0" value="2"/>
           <nvpair id="status-2-last-failure-rsc1a.asyncmon_0" name="last-failure-rsc1a#asyncmon_0" value="1608666390"/>
           <nvpair id="status-2-fail-count-rsc6a1.asyncmon_0" name="fail-count-rsc6a1#asyncmon_0" value="2"/>

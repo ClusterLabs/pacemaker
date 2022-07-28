@@ -46,7 +46,7 @@
       <transient_attributes id="1031448768">
         <instance_attributes id="status-1031448768">
           <nvpair id="status-1031448768-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1031448768-master-MS_RSC_NATIVE.0" name="master-MS_RSC_NATIVE:0" value="10"/>
+          <nvpair id="status-1031448768-promoted-MS_RSC_NATIVE.0" name="master-MS_RSC_NATIVE:0" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1031448768">

@@ -34,9 +34,9 @@
       <primitive class="ocf" id="MASTER_IP" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>
-      <rsc_colocation id="master_ip_colocation" rsc="MASTER_IP" score="INFINITY" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
-      <rsc_colocation id="slave_ip_primary" rsc="SLAVE_IP" score="101" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
-      <rsc_colocation id="slave_ip_secondary" rsc="SLAVE_IP" score="1000" with-rsc="MS_DUMMY" with-rsc-role="Unpromoted"/>
+      <rsc_colocation id="promoted_ip_colocation" rsc="MASTER_IP" score="INFINITY" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
+      <rsc_colocation id="unpromoted_ip_primary" rsc="SLAVE_IP" score="101" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
+      <rsc_colocation id="unpromoted_ip_secondary" rsc="SLAVE_IP" score="1000" with-rsc="MS_DUMMY" with-rsc-role="Unpromoted"/>
     </constraints>
   </configuration>
   <status>
@@ -44,7 +44,7 @@
       <transient_attributes id="fc16-builder">
         <instance_attributes id="status-fc16-builder">
           <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder-master-DUMMY.0" name="master-DUMMY:0" value="10"/>
+          <nvpair id="status-fc16-builder-promoted-DUMMY.0" name="master-DUMMY:0" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="fc16-builder">
@@ -65,7 +65,7 @@
     <node_state id="fc16-builder2" uname="fc16-builder2" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member" shutdown="0">
       <transient_attributes id="fc16-builder2">
         <instance_attributes id="status-fc16-builder2">
-          <nvpair id="status-fc16-builder2-master-DUMMY.1" name="master-DUMMY:1" value="5"/>
+          <nvpair id="status-fc16-builder2-promoted-DUMMY.1" name="master-DUMMY:1" value="5"/>
           <nvpair id="status-fc16-builder2-probe_complete" name="probe_complete" value="true"/>
         </instance_attributes>
       </transient_attributes>

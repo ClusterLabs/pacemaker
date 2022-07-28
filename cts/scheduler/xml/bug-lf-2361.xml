@@ -35,7 +35,7 @@
     <constraints>
       <rsc_order first="dummy1" id="o_dummy1_before_dummy2" then="cl_dummy2"/>
       <rsc_order first="ms_stateful" first-action="promote" id="o_stateful_before_dummy1" then="dummy1" then-action="start"/>
-      <rsc_colocation id="c_dummy1_on_master" rsc="dummy1" score="INFINITY" with-rsc="ms_stateful" with-rsc-role="Promoted"/>
+      <rsc_colocation id="c_dummy1_on_promoted" rsc="dummy1" score="INFINITY" with-rsc="ms_stateful" with-rsc-role="Promoted"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

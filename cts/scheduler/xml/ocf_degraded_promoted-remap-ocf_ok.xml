@@ -73,7 +73,7 @@
       </lrm>
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-state" name="master-state" value="10"/>
+          <nvpair id="status-1-promoted-state" name="master-state" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -91,7 +91,7 @@
       </lrm>
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-state" name="master-state" value="5"/>
+          <nvpair id="status-2-promoted-state" name="master-state" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

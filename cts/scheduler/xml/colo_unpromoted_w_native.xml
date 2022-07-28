@@ -46,7 +46,7 @@
       <transient_attributes id="1048225984">
         <instance_attributes id="status-1048225984">
           <nvpair id="status-1048225984-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1048225984-master-MS_RSC_NATIVE.0" name="master-MS_RSC_NATIVE:0" value="10"/>
+          <nvpair id="status-1048225984-promoted-MS_RSC_NATIVE.0" name="master-MS_RSC_NATIVE:0" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1048225984">
@@ -65,7 +65,7 @@
       <transient_attributes id="1031448768">
         <instance_attributes id="status-1031448768">
           <nvpair id="status-1031448768-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1031448768-master-MS_RSC_NATIVE.1" name="master-MS_RSC_NATIVE:1" value="5"/>
+          <nvpair id="status-1031448768-promoted-MS_RSC_NATIVE.1" name="master-MS_RSC_NATIVE:1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1031448768">
