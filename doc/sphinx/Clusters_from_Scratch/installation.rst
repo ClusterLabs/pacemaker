@@ -367,50 +367,58 @@ Create a new key and allow anyone with that key to log in:
 .. index::
     single: SSH; key
 
-.. topic:: Creating and Activating a new SSH Key
+.. topic:: Creating and Activating a New SSH Key
 
    .. code-block:: none
 
-       [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
-       Generating public/private dsa key pair.
-       Created directory '/root/.ssh'.
-       Your identification has been saved in /root/.ssh/id_dsa.
-       Your public key has been saved in /root/.ssh/id_dsa.pub.
-       The key fingerprint is:
-       SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
-       The key's randomart image is:
-       +---[DSA 1024]----+
-       |       . ..+.=+. |
-       |      . +o+ Bo.  |
-       |     . *oo+*+o   |
-       |      = .*E..o   |
-       |       oS..o  .  |
-       |      .o+.       |
-       |      o.*oo      |
-       |     . B.*       |
-       |      ===        |
-       +----[SHA256]-----+
-       [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
+        [root@pcmk-1 ~]# ssh-keygen -f ~/.ssh/id_rsa -N ""
+        Generating public/private rsa key pair.
+        Your identification has been saved in /root/.ssh/id_rsa
+        Your public key has been saved in /root/.ssh/id_rsa.pub
+        The key fingerprint is:
+        SHA256:h5AFPmXsGU4woOxRLYHW9lnU2wIQVOxpSRrsXbo/AX8 root@pcmk-1
+        The key's randomart image is:
+        +---[RSA 3072]----+
+        |   o+*BX*.       |
+        | .oo+.+*O o      |
+        | .+. +=% O o     |
+        | . .  =o%.o .    |
+        |  .    .S+..     |
+        |        ..o E    |
+        |         . o     |
+        |          o      |
+        |           .     |
+        +----[SHA256]-----+
+
+        [root@pcmk-1 ~]# cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
 Install the key on the other node:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
+    [root@pcmk-1 ~]# ssh-copy-id pcmk-2
+    /usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
     The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
-    ECDSA key fingerprint is SHA256:FQ4sVubTiHdQ6IetbN96fixoTVx/LuQUV8qoyiywnfs.
+    ED25519 key fingerprint is SHA256:QkJnJ3fmszY7kAuuZ7wxUC5CC+eQThSCF13XYWnZJPo.
+    This host key is known by the following other names/addresses:
+        ~/.ssh/known_hosts:1: 192.168.122.102
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-    Warning: Permanently added 'pcmk-2,192.168.122.102' (ECDSA) to the list of known hosts.
+    /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+    /usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
     root@pcmk-2's password: 
-    id_dsa                                                                                                         100% 1385     1.6MB/s   00:00    
-    id_dsa.pub                                                                                                     100%  601     1.0MB/s   00:00    
-    authorized_keys                                                                                                100%  601     1.3MB/s   00:00    
-    known_hosts                                                                                                    100%  184   389.2KB/s   00:00    
+    
+    Number of key(s) added: 1
+    
+    Now try logging into the machine, with:   "ssh 'pcmk-2'"
+    and check to make sure that only the key(s) you wanted were added.
 
 Test that you can now run commands remotely, without being prompted:
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
-    root@pcmk-2's password: 
     pcmk-2
+
+Finally, repeat this same process on the other node. For convenience, you can
+also generate an SSH key on your administrative machine and use **ssh-copy-id**
+to copy it to both cluster nodes.
