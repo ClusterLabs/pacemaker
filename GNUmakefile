@@ -166,6 +166,14 @@ coverage: core
 	lcov -a pacemaker_base.info -a pacemaker_test.info -o pacemaker_total.info
 	genhtml pacemaker_total.info -o coverage -s
 
+# This target removes all coverage-related files.  It is only to be run when
+# done with coverage analysis and you are ready to go back to normal development,
+# starting with re-running ./configure.  It is not to be run in between
+# "make coverage" runs.
+#
+# In particular, the *.gcno files are generated when the source is built.
+# Removing those files will break "make coverage" until the whole source tree
+# has been built and the *.gcno files generated again.
 .PHONY: coverage-clean
 coverage-clean:
 	-rm -f pacemaker_*.info
