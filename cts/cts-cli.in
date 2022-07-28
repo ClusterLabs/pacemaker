@@ -631,6 +631,10 @@ function test_tools() {
     cmd="crm_attribute -t nodes -P fail-count -N node1 -D"
     test_assert $CRM_EX_USAGE 0
 
+    desc="crm_attribute given invalid delete usage"
+    cmd="crm_attribute -t nodes -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
+
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
     test_assert $CRM_EX_OK
