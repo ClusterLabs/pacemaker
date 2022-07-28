@@ -1004,7 +1004,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         const char *section = crm_element_value(request, F_CIB_SECTION);
         int log_level = LOG_INFO;
 
-        if (pcmk__str_eq(op, CRM_OP_NOOP, pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
             log_level = LOG_DEBUG;
         }
 

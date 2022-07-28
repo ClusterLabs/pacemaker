@@ -50,7 +50,8 @@ static int
 cib_client_noop(cib_t * cib, int call_options)
 {
     op_common(cib);
-    return cib_internal_op(cib, CRM_OP_NOOP, NULL, NULL, NULL, NULL, call_options, NULL);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_NOOP, NULL, NULL, NULL, NULL,
+                           call_options, NULL);
 }
 
 static int

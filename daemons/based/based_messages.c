@@ -86,10 +86,7 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
         result = -EINVAL;
         crm_err("No operation specified");
 
-    } else if (strcasecmp(CRM_OP_NOOP, op) == 0) {
-        ;
-
-    } else {
+    } else if (strcmp(PCMK__CIB_REQUEST_NOOP, op) != 0) {
         result = -EPROTONOSUPPORT;
         crm_err("Action [%s] is not supported by the CIB manager", op);
     }
