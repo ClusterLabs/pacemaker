@@ -177,6 +177,21 @@ the ``lib/common/tests/strings`` directory.
              pcmk__btoa_test                 \
              pcmk__scan_port_test
 
+* Double check the setting of ``AM_LDFLAGS`` in ``Makefile.am``.  If none of the
+  tests of this source file require using a mocked function, this should be empty,
+  like so:
+
+  .. code-block:: none
+
+     AM_LDFLAGS =
+
+  However, if any test (including your new one) uses a mocked function, it should
+  be set:
+
+  .. code-block:: none
+
+     AM_LDFLAGS = $(LDFLAGS_WRAP)
+
 * Create a new ``pcmk__scan_port_test.c`` file, copying the copyright and include
   boilerplate from another file in the same directory.
 * Continue with the steps in `Writing the test`_.
