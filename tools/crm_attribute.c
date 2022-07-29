@@ -561,8 +561,8 @@ command_query(pcmk__output_t *out, cib_t *cib)
         xmlNode *child = NULL;
         bool did_output = false;
 
-        for (child = pcmk__xml_first_child(result); child != NULL;
-             child = pcmk__xml_next(child)) {
+        for (child = pcmk__xe_first_child(result); child != NULL;
+             child = pcmk__xe_next(child)) {
             if (output_one_attribute(out, child, use_pattern)) {
                 did_output = true;
             }
