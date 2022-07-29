@@ -62,6 +62,7 @@ CRM_EX_INVALID_PARAM=2
 CRM_EX_UNIMPLEMENT_FEATURE=3
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
+CRM_EX_DATAERR=65
 CRM_EX_CONFIG=78
 CRM_EX_OLD=103
 CRM_EX_DIGEST=104
@@ -1786,6 +1787,22 @@ EOF
 
     cibadmin -C -o constraints -x "$TMPXML"
     rm -f "$TMPXML"
+
+    desc="crm_rule given no arguments"
+    cmd="crm_rule"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given no rule to check"
+    cmd="crm_rule -c"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given invalid input XML"
+    cmd="crm_rule -c -r blahblah -X 'invalidxml'"
+    test_assert $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML on stdin"
+    cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X -"
+    test_assert $CRM_EX_DATAERR 0
 
     desc="Try to check a rule that doesn't exist"
     cmd="crm_rule -c -r blahblah"
