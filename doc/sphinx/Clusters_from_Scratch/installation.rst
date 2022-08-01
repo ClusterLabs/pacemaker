@@ -326,28 +326,29 @@ Confirm that you can communicate between the two new nodes:
     rtt min/avg/max/mdev = 0.751/0.923/1.224/0.214 ms
 
 Now we need to make sure we can communicate with the machines by their
-name. If you have a DNS server, add additional entries for the two
-machines. Otherwise, you'll need to add the machines to ``/etc/hosts``
-on both nodes. The entries for your cluster nodes should look something like
-the following:
+name. Add entries for the machines to ``/etc/hosts`` on both nodes. You can
+add entries for the machines to your DNS server if you have one, but this can
+create a single-point-of-failure (SPOF) if the DNS server goes down [#]_. If
+you add entries to ``/etc/hosts``, they should look something like the
+following:
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# grep pcmk /etc/hosts
-    192.168.122.101 pcmk-1.clusterlabs.org pcmk-1
-    192.168.122.102 pcmk-2.clusterlabs.org pcmk-2
+    192.168.122.101 pcmk-1.localdomain  pcmk-1
+    192.168.122.102 pcmk-2.localdomain  pcmk-2
 
 We can now verify the setup by again using ping:
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 3 pcmk-2
-    PING pcmk-2.clusterlabs.org (192.168.122.102) 56(84) bytes of data.
-    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=1 ttl=64 time=0.295 ms
-    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=2 ttl=64 time=0.616 ms
-    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=3 ttl=64 time=0.809 ms
+    PING pcmk-2.localdomain (192.168.122.102) 56(84) bytes of data.
+    64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=1 ttl=64 time=0.295 ms
+    64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=2 ttl=64 time=0.616 ms
+    64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=3 ttl=64 time=0.809 ms
     
-    --- pcmk-2.clusterlabs.org ping statistics ---
+    --- pcmk-2.localdomain ping statistics ---
     3 packets transmitted, 3 received, 0% packet loss, time 2043ms
     rtt min/avg/max/mdev = 0.295/0.573/0.809/0.212 ms
 
@@ -429,3 +430,6 @@ Test that you can now run commands remotely, without being prompted:
 Finally, repeat this same process on the other node. For convenience, you can
 also generate an SSH key on your administrative machine and use **ssh-copy-id**
 to copy it to both cluster nodes.
+
+.. [#] You can also avoid this SPOF by specifying an ``addr`` option for each
+       node when creating the cluster. We will discuss this in a later section.

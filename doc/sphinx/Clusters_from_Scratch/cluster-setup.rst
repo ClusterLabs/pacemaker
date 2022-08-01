@@ -177,6 +177,19 @@ corosync configuration:
     pcmk-2: successful distribution of the file 'corosync.conf'
     Cluster has been successfully set up.
 
+.. NOTE::
+
+    If you'd like, you can specify an **addr** option for each node in the 
+    ``pcs cluster setup`` command. This will create an explicit name-to-address
+    mapping for each node in ``/etc/corosync/corosync.conf``, eliminating the
+    need for hostname resolution via DNS, ``/etc/hosts``, and the like.
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# pcs cluster setup mycluster \
+            pcmk-1 addr=192.168.122.101 pcmk-2 addr=192.168.122.102
+
+
 If you received an authorization error for either of those commands, make
 sure you configured the **hacluster** user account on each node
 with the same password.
