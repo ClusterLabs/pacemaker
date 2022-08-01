@@ -203,11 +203,14 @@ the configuration.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# crm_verify -L -V
-       error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined
-       error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option
-       error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity
-    Errors found during check: config not valid
+    [root@pcmk-1 ~]# pcs cluster verify --full
+    Error: invalid cib:
+    (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
+    (unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
+    (unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+    crm_verify: Errors found during check: config not valid
+
+    Error: Errors have occurred, therefore pcs is unable to continue
 
 As you can see, the tool has found some errors. The cluster will not start any
 resources until we configure STONITH.

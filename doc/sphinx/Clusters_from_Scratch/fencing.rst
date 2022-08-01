@@ -32,7 +32,7 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
     .. code-block:: none
 
         [root@pcmk-1 ~]# pcs property set stonith-enabled=false
-        [root@pcmk-1 ~]# crm_verify -L
+        [root@pcmk-1 ~]# pcs cluster verify --full
 
     However, this is completely inappropriate for a production cluster. It tells
     the cluster to simply pretend that failed nodes are safely powered off. Some
@@ -118,7 +118,7 @@ Configure the Cluster for Fencing
 
 #. Once the fence device resource is running, test it (you might want to stop
    the cluster on that machine first):
-   ``stonith_admin --reboot <NODENAME>``
+   ``pcs stonith fence <NODENAME>``
 
 Example
 #######
@@ -231,7 +231,7 @@ Step 12: Test:
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster stop pcmk-2
-    [root@pcmk-1 ~]# stonith_admin --reboot pcmk-2
+    [root@pcmk-1 ~]# pcs stonith fence pcmk-2
 
 After a successful test, login to any rebooted nodes, and start the cluster
 (with ``pcs cluster start``).
