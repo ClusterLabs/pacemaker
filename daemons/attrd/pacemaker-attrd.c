@@ -259,7 +259,7 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_OK);
     }
 
-    attributes = pcmk__strkey_table(NULL, free_attribute);
+    attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
     /* Connect to the CIB before connecting to the cluster or listening for IPC.
      * This allows us to assume the CIB is connected whenever we process a

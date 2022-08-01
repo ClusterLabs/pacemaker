@@ -241,3 +241,31 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
 
     return (rc == 0)? pcmk_ok : -EINVAL;
 }
+
+void
+attrd_free_attribute_value(gpointer data)
+{
+    attribute_value_t *v = data;
+
+    free(v->nodename);
+    free(v->current);
+    free(v->requested);
+    free(v);
+}
+
+void
+attrd_free_attribute(gpointer data)
+{
+    attribute_t *a = data;
+    if(a) {
+        free(a->id);
+        free(a->set);
+        free(a->uuid);
+        free(a->user);
+
+        mainloop_timer_del(a->timer);
+        g_hash_table_destroy(a->values);
+
+        free(a);
+    }
+}

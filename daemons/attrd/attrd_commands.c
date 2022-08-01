@@ -57,34 +57,6 @@ attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
     return mainloop_timer_add(id, timeout_ms, FALSE, attribute_timer_cb, attr);
 }
 
-static void
-free_attribute_value(gpointer data)
-{
-    attribute_value_t *v = data;
-
-    free(v->nodename);
-    free(v->current);
-    free(v->requested);
-    free(v);
-}
-
-void
-free_attribute(gpointer data)
-{
-    attribute_t *a = data;
-    if(a) {
-        free(a->id);
-        free(a->set);
-        free(a->uuid);
-        free(a->user);
-
-        mainloop_timer_del(a->timer);
-        g_hash_table_destroy(a->values);
-
-        free(a);
-    }
-}
-
 /*!
  * \internal
  * \brief Ensure a Pacemaker Remote node is in the correct peer cache
@@ -171,7 +143,7 @@ create_attribute(xmlNode *xml)
     a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
     a->set     = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
     a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
-    a->values = pcmk__strikey_table(NULL, free_attribute_value);
+    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &a->is_private);
 
@@ -984,7 +956,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     a->force_write = FALSE;
 
     /* Make the table for the attribute trap */
-    alert_attribute_value = pcmk__strikey_table(NULL, free_attribute_value);
+    alert_attribute_value = pcmk__strikey_table(NULL, attrd_free_attribute_value);
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);

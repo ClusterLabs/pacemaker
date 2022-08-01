@@ -159,7 +159,8 @@ void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
                         xmlNode *query);
 gboolean send_attrd_message(crm_node_t * node, xmlNode * data);
 
-void free_attribute(gpointer data);
+void attrd_free_attribute(gpointer data);
+void attrd_free_attribute_value(gpointer data);
 
 gboolean attrd_election_cb(gpointer user_data);
 void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
