@@ -37,7 +37,7 @@ Availability repo.
 
 .. code-block:: none
 
-    # dnf config-manager --set-enabled ha
+    # dnf config-manager --set-enabled highavailability
 
 .. IMPORTANT::
 
@@ -256,24 +256,27 @@ example of all the options available under the status category.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs status help
-    
+
     Usage: pcs status [commands]...
     View current cluster and resource status
     Commands:
         [status] [--full] [--hide-inactive]
             View all information about the cluster and resources (--full provides
             more details, --hide-inactive hides inactive resources).
-    
-        resources [--hide-inactive]
+
+        resources [<resource id | tag id>] [node=<node>] [--hide-inactive]
             Show status of all currently configured resources. If --hide-inactive
-            is specified, only show active resources.
-    
+            is specified, only show active resources.  If a resource or tag id is
+            specified, only show status of the specified resource or resources in
+            the specified tag. If node is specified, only show status of resources
+            configured for the specified node.
+
         cluster
             View current cluster status.
-    
+
         corosync
             View current membership information as seen by corosync.
-    
+
         quorum
             View current quorum status.
 
@@ -281,21 +284,21 @@ example of all the options available under the status category.
             Show runtime status of specified model of quorum device provider.  Using
             --full will give more detailed output.  If <cluster name> is specified,
             only information about the specified cluster will be displayed.
-    
+
         booth
             Print current status of booth on the local node.
-    
+
         nodes [corosync | both | config]
             View current status of nodes from pacemaker. If 'corosync' is
             specified, view current status of nodes from corosync instead. If
             'both' is specified, view current status of nodes from both corosync &
             pacemaker. If 'config' is specified, print nodes from corosync &
             pacemaker configuration.
-    
+
         pcsd [<node>]...
             Show current status of pcsd on nodes specified, or on all nodes
             configured in the local cluster if no nodes are specified.
-    
+
         xml
             View xml version of status (output from crm_mon -r -1 -X).
 
@@ -305,5 +308,5 @@ available with your Pacemaker installation, run:
 .. code-block:: none
 
     [root@pcmk-1 ~]# pacemakerd --features
-    Pacemaker 2.0.5-4.el8 (Build: ba59be7122)
-    Supporting v3.6.1:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls cibsecrets
+     Pacemaker 2.1.2-4.el9 (Build: ada5c3b36e2)
+     Supporting v3.13.0: agent-manpages cibsecrets corosync-ge-2 default-concurrent-fencing default-resource-stickiness default-sbd-sync generated-manpages monotonic nagios ncurses remote systemd

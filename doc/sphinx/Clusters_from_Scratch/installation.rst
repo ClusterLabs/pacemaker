@@ -8,16 +8,16 @@ Boot the Install Image
 ______________________
 
 Download the latest |CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO by navigating to 
-the `CentOS Mirrors List <http://isoredirect.centos.org/centos/8-stream/isos/x86_64/>`_,
-selecting a download mirror which is close to you, and finally selecting the
-.iso file that has "dvd" in its name.
-Use the image to boot a virtual machine, or burn it to a DVD or USB drive and
-boot a physical server from that.
+the |CFS_DISTRO| `mirrors list <https://mirrors.almalinux.org/isos.html>`_,
+selecting the latest 9.x version for your machine's architecture, selecting a
+download mirror that's close to you, and finally selecting the latest .iso file
+that has “dvd” in its name. Use the image to boot a virtual machine, or burn it
+to a DVD or USB drive and boot a physical server from that.
 
 After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
-.. figure:: images/WelcomeToCentos.png
+.. figure:: images/WelcomeToAlmaLinux.png
     :align: center
     :alt: Installation Welcome Screen
 
@@ -59,7 +59,8 @@ In the **NETWORK & HOST NAME** section:
   address, **24** for the netmask, and **192.168.122.1** for the gateway and
   DNS server.
 - Press **Save**.
-- Flip the switch to turn your network device on, and press **Done**.
+- Flip the switch to turn your network device on (if it is not on already), and
+  press **Done**.
 
 .. figure:: images/NetworkAndHostName.png
     :align: center
@@ -88,13 +89,16 @@ Enter the **INSTALLATION DESTINATION** section and select the disk where you
 want to install the OS. Then under **Storage Configuration**, select **Custom**
 and press **Done**.
 
+.. figure:: images/ManualPartitioning.png
+    :align: center
+    :alt: Installation Destination Screen
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Installation Destination Screen
+
 On the **MANUAL PARTITIONING** screen that comes next, click the option to create
 mountpoints automatically. Select the ``/`` mountpoint and reduce the **Desired
 Capacity** down to 4 GiB or so. (The installer will not allow you to proceed if
-the / filesystem is too small to install all required packages.) Then select
-**Modify…** next to the volume group name, and change the **Size policy** to
-**As large as possible**, to make the reclaimed space available inside the LVM
-volume group. We’ll add the additional volume later.
+the / filesystem is too small to install all required packages.)
 
 .. figure:: images/ManualPartitioning.png
     :align: center
@@ -102,7 +106,25 @@ volume group. We’ll add the additional volume later.
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Manual Partitioning Screen
 
-Press **Done**, then **Accept changes**.
+Then select **Modify…** next to the volume group name. In the **CONFIGURE
+VOLUME GROUP** dialog box that appears, change the **Size policy** to **As
+large as possible**, to make the reclaimed space available inside the LVM
+volume group. We’ll add the additional volume later.
+
+.. figure:: images/ConfigureVolumeGroup.png
+    :align: center
+    :alt: Configure Volume Group Dialog
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Configure Volume Group Dialog
+
+Press **Done**. Finally, in the **SUMMARY OF CHANGES** dialog box, press
+**Accept Changes**.
+
+.. figure:: images/SummaryOfChanges.png
+    :align: center
+    :alt: Summary of Changes Dialog
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Summary of Changes Dialog
 
 Configure Time Synchronization
 ______________________________
@@ -113,12 +135,21 @@ significantly easier.
 
 |CFS_DISTRO| will enable NTP automatically. If you want to change any time-related
 settings (such as time zone or NTP server), you can do this in the
-**TIME & DATE** section.
+**TIME & DATE** section. In this example, we configure the time zone as UTC
+(Coordinated Universal Time).
+
+.. figure:: images/TimeAndDate.png
+    :align: center
+    :alt: Time & Date Screen
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Time & Date Screen
+
 
 Root Password
 ______________________________
 
-In order to continue to the next step, a **Root Password** must be set.
+In order to continue to the next step, a **Root Password** must be set. Be sure
+to check the box marked **Allow root SSH login with password**.
 
 .. figure:: images/RootPassword.png
     :align: center
@@ -172,17 +203,16 @@ Ensure that the machine has the static IP address you configured earlier.
 
 .. NOTE::
 
-    If you ever need to change the node's IP address from the command line, follow
-    these instructions, replacing **${device}** with the name of your network device:
+    If you ever need to change the node's IP address from the command line,
+    follow these instructions, replacing **${conn}** with the name of your
+    network connection. You can find the list of all network connection names
+    by running ``nmcli con show``; you can get details for each connection by
+    running ``nmcli con show ${conn}``.
 
     .. code-block:: none
 
-        [root@pcmk-1 ~]# vi /etc/sysconfig/network-scripts/ifcfg-${device} # manually edit as desired
-        [root@pcmk-1 ~]# nmcli dev disconnect ${device}
-        [root@pcmk-1 ~]# nmcli con reload ${device}
-        [root@pcmk-1 ~]# nmcli con up ${device}
-
-    This makes **NetworkManager** aware that a change was made on the config file.
+        [root@pcmk-1 ~]# nmcli con mod ${conn} ipv4.addresses "${new_address}"
+        [root@pcmk-1 ~]# nmcli con up ${conn}
 
 Next, ensure that the routes are as expected:
 
@@ -192,12 +222,13 @@ Next, ensure that the routes are as expected:
     default via 192.168.122.1 dev enp1s0 proto static metric 100 
     192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.101 metric 100
 
-If there is no line beginning with **default via**, then you may need to add a line such as
+If there is no line beginning with **default via**, then use ``nmcli`` to add a
+gateway:
 
-``GATEWAY="192.168.122.1"``
+.. code-block:: none
 
-to the device configuration using the same process as described above for
-changing the IP address.
+    [root@pcmk-1 ~]# nmcli con mod ${conn} ipv4.gateway "${new_gateway_addr}"
+    [root@pcmk-1 ~]# nmcli con up ${conn}
 
 Now, check for connectivity to the outside world. Start small by
 testing whether we can reach the gateway we configured.

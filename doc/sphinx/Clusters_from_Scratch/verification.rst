@@ -50,13 +50,12 @@ First, use ``corosync-cfgtool`` to check whether cluster communication is happy:
 .. code-block:: none
 
     [root@pcmk-1 ~]# corosync-cfgtool -s
-    Printing link status.
-    Local node ID 1
-    LINK ID 0
+    Local node ID 1, transport knet
+    LINK ID 0 udp
 	    addr	= 192.168.122.101
 	    status:
-		    nodeid  1:	localhost
-		    nodeid  2:	connected
+		    nodeid:          1:	localhost
+		    nodeid:          2:	connected
 
 We can see here that everything appears normal with our fixed IP
 address (not a 127.0.0.x loopback address) listed as the **addr**, and **localhost** and **connected** for the statuses of nodeid 1 and nodeid 2, respectively.
@@ -77,6 +76,7 @@ Next, check the membership and quorum APIs:
     runtime.members.2.ip (str) = r(0) ip(192.168.122.102) 
     runtime.members.2.join_count (u32) = 1
     runtime.members.2.status (str) = joined
+
     [root@pcmk-1 ~]# pcs status corosync 
 
     Membership information
@@ -115,21 +115,21 @@ If that looks OK, check the ``pcs status`` output:
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    
+
     WARNINGS:
     No stonith devices and stonith-enabled is not false
-    
+
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Jan 20 07:54:02 2021
-      * Last change:  Wed Jan 20 07:48:25 2021 by hacluster via crmd on pcmk-2
+      * Current DC: pcmk-2 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:09:55 2022
+      * Last change:  Wed Jul 27 00:07:08 2022 by hacluster via crmd on pcmk-2
       * 2 nodes configured
       * 0 resource instances configured
-    
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
       * No resources
 
@@ -167,12 +167,12 @@ configuration and status by using the ``pcs cluster cib`` command.
 
     .. code-block:: xml
 
-        <cib crm_feature_set="3.7.1" validate-with="pacemaker-3.6" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Tue Feb 16 16:20:57 2021" update-origin="pcmk-1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1">
+        <cib crm_feature_set="3.13.0" validate-with="pacemaker-3.8" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Wed Jul 27 00:07:08 2022" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
           <configuration>
             <crm_config>
               <cluster_property_set id="cib-bootstrap-options">
                 <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.5-7.el8-ba59be7122"/>
+                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.2-4.el9-ada5c3b36e2"/>
                 <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
                 <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
               </cluster_property_set>
@@ -183,6 +183,11 @@ configuration and status by using the ``pcs cluster cib`` command.
             </nodes>
             <resources/>
             <constraints/>
+            <rsc_defaults>
+              <meta_attributes id="build-resource-defaults">
+                <nvpair id="build-resource-stickiness" name="resource-stickiness" value="1"/>
+              </meta_attributes>
+            </rsc_defaults>
           </configuration>
           <status>
             <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">

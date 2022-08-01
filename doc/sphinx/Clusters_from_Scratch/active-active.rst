@@ -22,21 +22,13 @@ The only hitch is that we need to use a cluster-aware filesystem. The
 one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
 and GFS2 are supported; here, we will use GFS2.
 
-On both nodes, install the GFS2 command-line utilities required by
-cluster filesystems:
+On both nodes, install Distributed Lock Manager (DLM) and the GFS2 command-
+line utilities required by cluster filesystems:
 
 .. code-block:: none
 
-    # dnf install -y gfs2-utils
-
-Additionally, install Distributed Lock Manager (DLM) on both nodes.
-To do so, download the RPM from the `CentOS composes artifacts tree <https://composes.centos.org/latest-CentOS-Stream-8/compose/ResilientStorage/x86_64/os/Packages/>`_,
-onto your nodes and then run the following
-command:
-
-.. code-block:: none
-
-    # rpm -i dlm-4.1.0-1.el8.x86_64.rpm
+    # dnf config-manager --set-enabled resilientstorage
+    # dnf install -y dlm gfs2-utils
 
 Configure the Cluster for the DLM
 #################################
@@ -52,12 +44,28 @@ it:
         ocf:pacemaker:controld op monitor interval=60s
     [root@pcmk-1 ~]# pcs -f dlm_cfg resource clone dlm clone-max=2 clone-node-max=1
     [root@pcmk-1 ~]# pcs resource status
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-2
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
       * Clone Set: WebData-clone [WebData] (promotable):
-        * Masters: [ pcmk-2 ]
-        * Slaves: [ pcmk-1 ]
-      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-2
+        * Promoted: [ pcmk-1 ]
+        * Unpromoted: [ pcmk-2 ]
+      * WebFS	(ocf:heartbeat:Filesystem):	 Started pcmk-1
+
+Activate our new configuration, and see how the cluster responds:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg --config
+    CIB updated
+    [root@pcmk-1 ~]# pcs resource status
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Promoted: [ pcmk-1 ]
+        * Unpromoted: [ pcmk-2 ]
+      * WebFS	(ocf:heartbeat:Filesystem):	 Started pcmk-1
+      * Clone Set: dlm-clone [dlm]:
+        * Started: [ pcmk-1 pcmk-2 ]
     [root@pcmk-1 ~]# pcs resource config
      Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
       Attributes: cidr_netmask=24 ip=192.168.122.120
@@ -85,40 +93,12 @@ it:
       Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
                   start interval=0s timeout=60s (WebFS-start-interval-0s)
                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
-
-Activate our new configuration, and see how the cluster responds:
-
-.. code-block:: none
-
-    [root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg --config
-    CIB updated
-    [root@pcmk-1 ~]# pcs status
-    Cluster name: mycluster
-    Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-2 (version 2.1.0-3.el8-7c3f660707) - partition with quorum
-      * Last updated: Wed Jul 13 10:57:20 2021
-      * Last change:  Wed Jul 13 10:57:15 2021 by root via cibadmin on pcmk-1
-      * 2 nodes configured
-      * 7 resource instances configured
-
-    Node List:
-      * Online: [ pcmk-1 pcmk-2 ]
-
-    Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
-      * Clone Set: WebData-clone [WebData] (promotable):
-        * Masters: [ pcmk-1 ]
-        * Slaves: [ pcmk-2 ]
-      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-1
-      * Clone Set: dlm-clone [dlm]:
-        * Started: [ pcmk-1 pcmk-2 ]
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
+     Clone: dlm-clone
+      Meta Attrs: interleave=true ordered=true
+      Resource: dlm (class=ocf provider=pacemaker type=controld)
+       Operations: monitor interval=60s (dlm-monitor-interval-60s)
+                   start interval=0s timeout=90s (dlm-start-interval-0s)
+                   stop interval=0s timeout=100s (dlm-stop-interval-0s)
 
 Create and Populate GFS2 Filesystem
 ###################################
@@ -132,12 +112,12 @@ are not only stopped, but stopped in the correct order.
 
     [root@pcmk-1 ~]# pcs resource disable WebFS
     [root@pcmk-1 ~]# pcs resource
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf::heartbeat:apache):	 Stopped
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Stopped
       * Clone Set: WebData-clone [WebData] (promotable):
-        * Masters: [ pcmk-1 ]
-        * Slaves: [ pcmk-2 ]
-      * WebFS	(ocf::heartbeat:Filesystem):	 Stopped (disabled)
+        * Promoted: [ pcmk-1 ]
+        * Unpromoted: [ pcmk-2 ]
+      * WebFS	(ocf:heartbeat:Filesystem):	 Stopped (disabled)
       * Clone Set: dlm-clone [dlm]:
         * Started: [ pcmk-1 pcmk-2 ]
 
@@ -221,11 +201,11 @@ With the WebFS resource stopped, let's update the configuration.
 
     [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-       Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
-       Meta Attrs: target-role=Stopped
-       Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
-                   start interval=0s timeout=60s (WebFS-start-interval-0s)
-                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
+      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+      Meta Attrs: target-role=Stopped
+      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
+                  start interval=0s timeout=60s (WebFS-start-interval-0s)
+                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
 The fstype option needs to be updated to **gfs2** instead of **xfs**.
 
@@ -234,20 +214,36 @@ The fstype option needs to be updated to **gfs2** instead of **xfs**.
     [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
     [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-       Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
-       Meta Attrs: target-role=Stopped
-       Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
-                   start interval=0s timeout=60s (WebFS-start-interval-0s)
-                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
+      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
+      Meta Attrs: target-role=Stopped
+      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
+                  start interval=0s timeout=60s (WebFS-start-interval-0s)
+                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
 GFS2 requires that DLM be running, so we also need to set up new colocation
 and ordering constraints for it:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
+    [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone
     [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
     Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
+    [root@pcmk-1 ~]# pcs constraint
+    Location Constraints:
+      Resource: WebSite
+        Enabled on:
+          Node: pcmk-2 (score:50)
+    Ordering Constraints:
+      start ClusterIP then start WebSite (kind:Mandatory)
+      promote WebData-clone then start WebFS (kind:Mandatory)
+      start WebFS then start WebSite (kind:Mandatory)
+      start dlm-clone then start WebFS (kind:Mandatory)
+    Colocation Constraints:
+      WebSite with ClusterIP (score:INFINITY)
+      WebFS with WebData-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Promoted)
+      WebSite with WebFS (score:INFINITY)
+      WebFS with dlm-clone (score:INFINITY)
+    Ticket Constraints:
 
 We also need to update the **no-quorum-policy** property to **freeze**. By
 default, the value of **no-quorum-policy** is set to **stop**, indicating that
@@ -285,19 +281,20 @@ Notice how pcs automatically updates the relevant constraints again.
     [root@pcmk-1 ~]# pcs cluster cib active_cfg
     [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
     [root@pcmk-1 ~]# pcs -f active_cfg constraint
-    [root@pcmk-1 ~]# pcs -f active_cfg constraint
     Location Constraints:
       Resource: WebSite
         Enabled on:
-          Node: pcmk-1 (score:50)
+          Node: pcmk-2 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
       promote WebData-clone then start WebFS-clone (kind:Mandatory)
       start WebFS-clone then start WebSite (kind:Mandatory)
+      start dlm-clone then start WebFS-clone (kind:Mandatory)
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
-      WebFS-clone with WebData-clone (score:INFINITY) (with-rsc-role:Master)
+      WebFS-clone with WebData-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Promoted)
       WebSite with WebFS-clone (score:INFINITY)
+      WebFS-clone with dlm-clone (score:INFINITY)
     Ticket Constraints:
 
 Tell the cluster that it is now allowed to promote both instances to be DRBD
@@ -321,11 +318,10 @@ After all the processes are started, the status should look similar to this.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
-    [root@pcmk-1 ~]# pcs resource
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
       * Clone Set: WebData-clone [WebData] (promotable):
-        * Masters: [ pcmk-1 pcmk-2 ]
+        * Promoted: [ pcmk-1 pcmk-2 ]
       * Clone Set: dlm-clone [dlm]:
         * Started: [ pcmk-1 pcmk-2 ]
       * Clone Set: WebFS-clone [WebFS]:

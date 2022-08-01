@@ -103,9 +103,12 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 .. code-block:: none
 
+    [root@pcmk-1 ~]# pcs resource op defaults
+    No defaults set
     [root@pcmk-1 ~]# pcs resource op defaults update timeout=240s
     Warning: Defaults do not apply to resources which override them with their own defined values
     [root@pcmk-1 ~]# pcs resource op defaults
+    Meta Attrs: op_defaults-meta_attributes
     timeout: 240s
 
 .. NOTE::
@@ -132,18 +135,19 @@ After a short delay, we should see the cluster start Apache.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:38:22 2021
-      * Last change:  Tue Jan 26 19:38:19 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:47:44 2022
+      * Last change:  Wed Jul 27 00:47:23 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -217,19 +221,19 @@ active anywhere, WebSite will not be permitted to run.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:45:11 2021
-      * Last change:  Tue Jan 26 19:44:30 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:49:33 2022
+      * Last change:  Wed Jul 27 00:49:16 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
 
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
-
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -316,11 +320,12 @@ how strongly we'd like the resource to run at this location.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-1=50
+    [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-2=50
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
       Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
+        Enabled on:
+          Node: pcmk-2 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
     Colocation Constraints:
@@ -330,27 +335,28 @@ how strongly we'd like the resource to run at this location.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:46:52 2021
-      * Last change:  Tue Jan 26 19:46:40 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:51:13 2022
+      * Last change:  Wed Jul 27 00:51:07 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
 
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Wait a minute, the resources are still on pcmk-2!
+Wait a minute, the resources are still on pcmk-1!
 
-Even though WebSite now prefers to run on pcmk-1, that preference is
+Even though WebSite now prefers to run on pcmk-2, that preference is
 (intentionally) less than the resource stickiness (how much we
 preferred not to have unnecessary downtime).
 
@@ -359,21 +365,18 @@ To see the current placement scores, you can use a tool called crm_simulate.
 .. code-block:: none
 
     [root@pcmk-1 ~]# crm_simulate -sL
+    [ pcmk-1 pcmk-2 ]
 
-    Current cluster status:
-    Online: [ pcmk-1 pcmk-2 ]
+    fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+    ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+    WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
-
-    Allocation scores:
-    native_color: ClusterIP allocation score on pcmk-1: 50
-    native_color: ClusterIP allocation score on pcmk-2: 200
-    native_color: WebSite allocation score on pcmk-1: -INFINITY
-    native_color: WebSite allocation score on pcmk-2: 100
-
-    Transition Summary:
-
+    pcmk__native_allocate: fence_dev allocation score on pcmk-1: 100
+    pcmk__native_allocate: fence_dev allocation score on pcmk-2: 0
+    pcmk__native_allocate: ClusterIP allocation score on pcmk-1: 200
+    pcmk__native_allocate: ClusterIP allocation score on pcmk-2: 50
+    pcmk__native_allocate: WebSite allocation score on pcmk-1: 100
+    pcmk__native_allocate: WebSite allocation score on pcmk-2: -INFINITY
 
 .. index::
    single: resource; moving manually
@@ -383,22 +386,27 @@ Move Resources Manually
 
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. In this example,
-we will force the WebSite to move to pcmk-1.
+we will force the WebSite to move to pcmk-2.
 
 We will use the **pcs resource move** command to create a temporary constraint
 with a score of INFINITY. While we could update our existing constraint,
-using **move** allows to easily get rid of the temporary constraint later.
-If desired, we could even give a lifetime for the constraint, so it would
-expire automatically -- but we don't do that in this example.
+using **move** allows pcs to get rid of the temporary constraint automatically
+after the resource has moved to its destination. Note in the below that the
+``pcs constraint`` output after the **move** command is the same as before.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs resource move WebSite pcmk-1
+    [root@pcmk-1 ~]# pcs resource move WebSite pcmk-2
+    Location constraint to move resource 'WebSite' has been created
+    Waiting for the cluster to apply configuration changes...
+    Location constraint created to move resource 'WebSite' has been removed
+    Waiting for the cluster to apply configuration changes...
+    resource 'WebSite' is running on node 'pcmk-2'
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
       Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
-        Enabled on: pcmk-1 (score:INFINITY) (role: Started)
+        Enabled on:
+          Node: pcmk-2 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
     Colocation Constraints:
@@ -408,68 +416,19 @@ expire automatically -- but we don't do that in this example.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:49:27 2021
-      * Last change:  Tue Jan 26 19:49:10 2021 by root via crm_resource on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:54:23 2022
+      * Last change:  Wed Jul 27 00:53:48 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
-
-Once we've finished whatever activity required us to move the
-resources to pcmk-1 (in our case nothing), the new constraint is no longer
-needed, and so we can remove it. Due to our first location constraint and our
-default stickiness, the resources will remain on pcmk-1.
-
-We will use the **pcs resource clear** command, which removes all temporary
-constraints previously created by **pcs resource move** or **pcs resource ban**.
-
-.. code-block:: none
-
-    [root@pcmk-1 ~]# pcs resource clear WebSite
-    Removing constraint: cli-prefer-WebSite
-    [root@pcmk-1 ~]# pcs constraint
-    Location Constraints:
-      Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
-    Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
-
-Note that the INFINITY location constraint is now gone. If we check the cluster
-status, we can also see that (as expected) the resources are still active
-on pcmk-1.
-
-.. code-block:: none
-
-    [root@pcmk-1 ~]# pcs status
-    Cluster name: mycluster
-    Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:50:52 2021
-      * Last change:  Tue Jan 26 19:50:24 2021 by root via crm_resource on pcmk-1
-      * 2 nodes configured
-      * 2 resource instances configured
-    
-    Node List:
-      * Online: [ pcmk-1 pcmk-2 ]
-    
-    Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled

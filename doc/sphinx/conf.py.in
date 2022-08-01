@@ -28,8 +28,8 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 #
 # where occurrences of |<abbr>| in the rST will be substituted with <Full text>
 rst_prolog="""
-.. |CFS_DISTRO| replace:: CentOS Stream
-.. |CFS_DISTRO_VER| replace:: 8
+.. |CFS_DISTRO| replace:: AlmaLinux
+.. |CFS_DISTRO_VER| replace:: 9
 .. |REMOTE_DISTRO| replace:: CentOS Stream
 .. |REMOTE_DISTRO_VER| replace:: 8
 """
