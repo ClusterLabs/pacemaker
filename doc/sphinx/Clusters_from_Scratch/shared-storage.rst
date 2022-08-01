@@ -151,7 +151,8 @@ run this on both nodes to use this sample configuration:
 
     Detailed information on the directives used in this configuration (and
     other alternatives) is available in the
-    `DRBD User's Guide <https://docs.linbit.com/docs/users-guide-8.4/#ch-configure>`_.
+    `DRBD User's Guide
+    <https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/#ch-configure>`_.
     The **allow-two-primaries** option would not normally be used in
     an active/passive cluster. We are adding it here for the convenience
     of changing to an active/active cluster later.
