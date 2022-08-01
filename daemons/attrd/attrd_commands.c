@@ -114,40 +114,6 @@ clear_attribute_value_seen(void)
     }
 }
 
-static attribute_t *
-create_attribute(xmlNode *xml)
-{
-    int dampen = 0;
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
-    attribute_t *a = calloc(1, sizeof(attribute_t));
-
-    a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
-    a->set     = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
-    a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
-    a->values = pcmk__strikey_table(NULL, attrd_free_attribute_value);
-
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &a->is_private);
-
-    a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
-    crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
-
-    if (value != NULL) {
-        dampen = crm_get_msec(value);
-    }
-    crm_trace("Created attribute %s with %s write delay", a->id,
-              (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
-
-    if(dampen > 0) {
-        a->timeout_ms = dampen;
-        a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
-    } else if (dampen < 0) {
-        crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
-    }
-
-    g_hash_table_replace(attributes, a->id, a);
-    return a;
-}
-
 /*!
  * \internal
  * \brief Clear failure-related attributes
@@ -471,46 +437,6 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
     }
 }
 
-static int
-update_attr_dampening(attribute_t *a, xmlNode *xml, const char *attr)
-{
-    const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
-    int dampen = 0;
-
-    if (dvalue == NULL) {
-        crm_warn("Could not update %s: peer did not specify value for delay",
-                 attr);
-        return EINVAL;
-    }
-
-    dampen = crm_get_msec(dvalue);
-    if (dampen < 0) {
-        crm_warn("Could not update %s: invalid delay value %dms (%s)",
-                 attr, dampen, dvalue);
-        return EINVAL;
-    }
-
-    if (a->timeout_ms != dampen) {
-        mainloop_timer_del(a->timer);
-        a->timeout_ms = dampen;
-        if (dampen > 0) {
-            a->timer = attrd_add_timer(attr, a->timeout_ms, a);
-            crm_info("Update attribute %s delay to %dms (%s)",
-                     attr, dampen, dvalue);
-        } else {
-            a->timer = NULL;
-            crm_info("Update attribute %s to remove delay", attr);
-        }
-
-        /* If dampening changed, do an immediate write-out,
-         * otherwise repeated dampening changes would prevent write-outs
-         */
-        attrd_write_or_elect_attribute(a);
-    }
-
-    return pcmk_rc_ok;
-}
-
 static void
 update_minimum_protocol_ver(const char *value)
 {
@@ -523,41 +449,6 @@ update_minimum_protocol_ver(const char *value)
         crm_trace("Set minimum attrd protocol version to %d",
                   minimum_protocol_version);
     }
-}
-
-static attribute_t *
-populate_attribute(xmlNode *xml, const char *attr)
-{
-    attribute_t *a = NULL;
-    bool update_both = false;
-
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
-
-    // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
-    update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                               pcmk__str_null_matches);
-
-    // Look up or create attribute entry
-    a = g_hash_table_lookup(attributes, attr);
-    if (a == NULL) {
-        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_none)) {
-            a = create_attribute(xml);
-        } else {
-            crm_warn("Could not update %s: attribute not found", attr);
-            return NULL;
-        }
-    }
-
-    // Update attribute dampening
-    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
-        int rc = update_attr_dampening(a, xml, attr);
-
-        if (rc != pcmk_rc_ok || !update_both) {
-            return NULL;
-        }
-    }
-
-    return a;
 }
 
 static void
@@ -576,7 +467,7 @@ attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
 
     crm_element_value_int(xml, PCMK__XA_ATTR_FORCE, &is_force_write);
 
-    a = populate_attribute(xml, attr);
+    a = attrd_populate_attribute(xml, attr);
     if (a == NULL) {
         return;
     }

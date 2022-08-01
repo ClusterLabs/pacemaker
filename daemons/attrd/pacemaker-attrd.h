@@ -161,6 +161,7 @@ gboolean send_attrd_message(crm_node_t * node, xmlNode * data);
 
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
+attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 
 void attrd_write_attribute(attribute_t *a, bool ignore_delay);
 void attrd_write_attributes(bool all, bool ignore_delay);
