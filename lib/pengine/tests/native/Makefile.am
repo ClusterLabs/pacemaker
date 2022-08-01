@@ -8,8 +8,8 @@
 #
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include \
 			  -I$(top_builddir) -I$(top_srcdir)
-LDADD = $(top_builddir)/lib/common/libcrmcommon.la \
-		$(top_builddir)/lib/pengine/libpe_status.la \
+LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
+		$(top_builddir)/lib/pengine/libpe_status_test.la \
 		-lcmocka
 
 include $(top_srcdir)/mk/tap.mk

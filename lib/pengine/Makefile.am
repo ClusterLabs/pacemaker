@@ -8,10 +8,15 @@
 #
 include $(top_srcdir)/mk/common.mk
 
-SUBDIRS = tests
+# Without "." here, check-recursive will run through the subdirectories first
+# and then run "make check" here.  This will fail, because there's things in
+# the subdirectories that need check_LTLIBRARIES built first.  Adding "." here
+# changes the order so the subdirectories are processed afterwards.
+SUBDIRS = . tests
 
 ## libraries
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
+check_LTLIBRARIES 	= libpe_rules_test.la libpe_status_test.la
 
 ## SOURCES
 noinst_HEADERS		= variant.h pe_status_private.h
@@ -50,6 +55,16 @@ libpe_status_la_SOURCES	+= status.c
 libpe_status_la_SOURCES	+= tags.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
+
+libpe_rules_test_la_SOURCES = $(libpe_rules_la_SOURCES)
+libpe_rules_test_la_LDFLAGS = $(LDFLAGS_HARDENED_LIB)
+libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS)
+libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
+
+libpe_status_test_la_SOURCES = $(libpe_status_la_SOURCES)
+libpe_status_test_la_LDFLAGS = $(LDFLAGS_HARDENED_LIB)
+libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS)
+libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
 
 clean-generic:
 	rm -f *.log *.debug *~
