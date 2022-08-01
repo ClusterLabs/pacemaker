@@ -58,7 +58,7 @@ the other:
 .. code-block:: none
 
     [root@pcmk-1 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-        source address="192.168.122.102" port port="7789" protocol="tcp" accept'
+    source address="192.168.122.102" port port="7789" protocol="tcp" accept'
     success
     [root@pcmk-1 ~]# firewall-cmd --reload
     success
@@ -66,7 +66,7 @@ the other:
 .. code-block:: none
 
     [root@pcmk-2 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-        source address="192.168.122.101" port port="7789" protocol="tcp" accept'
+    source address="192.168.122.101" port port="7789" protocol="tcp" accept'
     success
     [root@pcmk-2 ~]# firewall-cmd --reload
     success
@@ -77,6 +77,12 @@ the other:
     In production, it is recommended to use a dedicated, isolated network for cluster-related traffic,
     so the firewall configuration would likely be different; one approach would be to
     add the dedicated network interfaces to the trusted zone.
+
+.. NOTE::
+
+    If the ``firewall-cmd --add-rich-rule`` command fails with **Error:
+    INVALID_RULE: unknown element**, ensure that there is no space at the
+    beginning of the second line of the command.
 
 Allocate a Disk Volume for DRBD
 ###############################
