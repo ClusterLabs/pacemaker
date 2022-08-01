@@ -19,6 +19,7 @@ include $(top_srcdir)/mk/tap.mk
 check_PROGRAMS = pe_find_node_any_test \
 				 pe_find_node_id_test \
 				 pe_find_node_test \
-				 pe_new_working_set_test
+				 pe_new_working_set_test \
+				 set_working_set_defaults_test
 
 TESTS = $(check_PROGRAMS)
