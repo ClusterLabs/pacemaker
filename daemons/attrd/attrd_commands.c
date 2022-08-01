@@ -51,6 +51,12 @@ attribute_timer_cb(gpointer data)
     return FALSE;
 }
 
+static mainloop_timer_t *
+attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
+{
+    return mainloop_timer_add(id, timeout_ms, FALSE, attribute_timer_cb, attr);
+}
+
 static void
 free_attribute_value(gpointer data)
 {
@@ -180,7 +186,7 @@ create_attribute(xmlNode *xml)
 
     if(dampen > 0) {
         a->timeout_ms = dampen;
-        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
+        a->timer = attrd_add_timer(a->id, a->timeout_ms, a);
     } else if (dampen < 0) {
         crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
     }
@@ -535,8 +541,7 @@ update_attr_dampening(attribute_t *a, xmlNode *xml, const char *attr)
         mainloop_timer_del(a->timer);
         a->timeout_ms = dampen;
         if (dampen > 0) {
-            a->timer = mainloop_timer_add(attr, a->timeout_ms, FALSE,
-                                          attribute_timer_cb, a);
+            a->timer = attrd_add_timer(attr, a->timeout_ms, a);
             crm_info("Update attribute %s delay to %dms (%s)",
                      attr, dampen, dvalue);
         } else {
@@ -825,8 +830,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
              * to exist until the attribute's dampening gets set or the
              * write succeeds).
              */
-            a->timer = mainloop_timer_add(a->id, 2000, FALSE,
-                                          attribute_timer_cb, a);
+            a->timer = attrd_add_timer(a->id, 2000, a);
             mainloop_timer_start(a->timer);
         }
     }
