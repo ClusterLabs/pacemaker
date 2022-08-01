@@ -7,8 +7,8 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
-LDADD = $(top_builddir)/lib/common/libcrmcommon.la \
-		$(top_builddir)/lib/pengine/libpe_status.la \
+LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
+		$(top_builddir)/lib/pengine/libpe_status_test.la \
 		-lcmocka
 
 include $(top_srcdir)/mk/tap.mk

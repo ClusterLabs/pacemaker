@@ -62,6 +62,7 @@ CRM_EX_INVALID_PARAM=2
 CRM_EX_UNIMPLEMENT_FEATURE=3
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
+CRM_EX_DATAERR=65
 CRM_EX_CONFIG=78
 CRM_EX_OLD=103
 CRM_EX_DIGEST=104
@@ -611,9 +612,29 @@ function test_tools() {
     cmd="crm_simulate --live-check --show-attrs"
     test_assert $CRM_EX_OK 0
 
-    desc="Delete a transient (fail-count) node attribute"
-    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    desc="Set a second transient node attribute"
+    cmd="crm_attribute -n fail-count-bar -v 5 -N node1 -t status"
     test_assert $CRM_EX_OK
+
+    desc="Query node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 --query"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -v 10"
+    test_assert $CRM_EX_OK
+
+    desc="Delete node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -D"
+    test_assert $CRM_EX_OK
+
+    desc="crm_attribute given invalid pattern usage"
+    cmd="crm_attribute -t nodes -P fail-count -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_attribute given invalid delete usage"
+    cmd="crm_attribute -t nodes -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
 
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
@@ -643,6 +664,18 @@ function test_tools() {
     desc="Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_OK
+
+    desc="crm_resource run with extra arguments"
+    cmd="crm_resource foo bar"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_resource given both -r and resource config"
+    cmd="crm_resource -r xyz --class ocf --provider pacemaker --agent Dummy"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_resource given resource config with invalid action"
+    cmd="crm_resource --class ocf --provider pacemaker --agent Dummy -D"
+    test_assert $CRM_EX_USAGE 0
 
     desc="Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p is-managed -v false"
@@ -680,6 +713,10 @@ function test_tools() {
     cmd="crm_resource -L --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
+    desc="Implicitly list the configured resources"
+    cmd="crm_resource"
+    test_assert $CRM_EX_OK 0
+
     desc="List IDs of instantiated resources"
     cmd="crm_resource -l"
     test_assert $CRM_EX_OK 0
@@ -707,6 +744,10 @@ function test_tools() {
     desc="Try to move a resource to its existing location"
     cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_EXISTS
+
+    desc="Try to move a resource that doesn't exist"
+    cmd="crm_resource -r xyz --move --node node1"
+    test_assert $CRM_EX_NOSUCH 0
 
     desc="Move a resource from its existing location"
     cmd="crm_resource -r dummy --move"
@@ -1030,6 +1071,10 @@ function test_tools() {
     desc="List another instance of a promotable clone resource in XML"
     cmd="crm_resource --locate -r promotable-rsc:1 --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
+
+    desc="Try to move an instance of a cloned resource"
+    cmd="crm_resource -r promotable-rsc:0 --move --node node1"
+    test_assert $CRM_EX_INVALID_PARAM 0
 
     unset CIB_file
 
@@ -1742,6 +1787,22 @@ EOF
 
     cibadmin -C -o constraints -x "$TMPXML"
     rm -f "$TMPXML"
+
+    desc="crm_rule given no arguments"
+    cmd="crm_rule"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given no rule to check"
+    cmd="crm_rule -c"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given invalid input XML"
+    cmd="crm_rule -c -r blahblah -X 'invalidxml'"
+    test_assert $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML on stdin"
+    cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X -"
+    test_assert $CRM_EX_DATAERR 0
 
     desc="Try to check a rule that doesn't exist"
     cmd="crm_rule -c -r blahblah"
