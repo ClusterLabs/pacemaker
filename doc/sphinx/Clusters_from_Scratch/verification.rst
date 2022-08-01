@@ -6,10 +6,7 @@ Start the Cluster
 
 Now that corosync is configured, it is time to start the cluster.
 The command below will start corosync and pacemaker on both nodes
-in the cluster.  If you are issuing the start command from a different
-node than the one you ran the ``pcs host auth`` command on earlier, you
-must authenticate on the current node you are logged into before you will
-be allowed to start the cluster.
+in the cluster.
 
 .. code-block:: none
 
