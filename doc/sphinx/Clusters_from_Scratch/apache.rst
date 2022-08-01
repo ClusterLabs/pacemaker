@@ -19,7 +19,7 @@ server. We'll install **httpd** (Apache) and **wget** now.
 
 .. code-block:: none
 
-    # yum install -y httpd wget
+    # dnf install -y httpd wget
     # firewall-cmd --permanent --add-service=http
     # firewall-cmd --reload
 

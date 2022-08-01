@@ -81,7 +81,7 @@ Configure the Cluster for Fencing
 #################################
 
 #. Install the fence agent(s). To see what packages are available, run
-   ``yum search fence-``. Be sure to install the package(s) on all cluster nodes.
+   ``dnf search fence-``. Be sure to install the package(s) on all cluster nodes.
 
 #. Configure the fence device itself to be able to fence your nodes and accept
    fencing requests. This includes any necessary configuration on the device and

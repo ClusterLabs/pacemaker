@@ -49,7 +49,7 @@ make our lives easier:
 
 .. code-block:: none
 
-    # yum install -y pacemaker pcs psmisc policycoreutils-python3
+    # dnf install -y pacemaker pcs psmisc policycoreutils-python3
     
 .. NOTE::
 

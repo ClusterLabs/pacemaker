@@ -27,7 +27,7 @@ cluster filesystems:
 
 .. code-block:: none
 
-    # yum install -y gfs2-utils
+    # dnf install -y gfs2-utils
 
 Additionally, install Distributed Lock Manager (DLM) on both nodes.
 To do so, download the RPM from the `CentOS composes artifacts tree <https://composes.centos.org/latest-CentOS-Stream-8/compose/ResilientStorage/x86_64/os/Packages/>`_,

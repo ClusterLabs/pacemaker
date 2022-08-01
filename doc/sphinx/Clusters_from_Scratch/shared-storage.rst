@@ -40,7 +40,7 @@ Now, we can install the DRBD kernel module and utilities:
 
 .. code-block:: none
 
-    # yum install -y kmod-drbd90 drbd90-utils
+    # dnf install -y kmod-drbd90 drbd90-utils
 
 DRBD will not be able to run under the default SELinux security policies.
 If you are familiar with SELinux, you can modify the policies in a more
@@ -49,7 +49,7 @@ control:
 
 .. code-block:: none
 
-    # yum install -y policycoreutils-python-utils
+    # dnf install -y policycoreutils-python-utils
     # semanage permissive -a drbd_t
 
 We will configure DRBD to use port 7789, so allow that port from each host to

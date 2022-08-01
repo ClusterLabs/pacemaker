@@ -263,7 +263,7 @@ Apply any package updates released since your installation image was created:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# yum update
+    [root@pcmk-1 ~]# dnf update -y
 
 
 .. index::
