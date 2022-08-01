@@ -102,7 +102,8 @@ _________________
 
 Before the cluster can be configured, the pcs daemon must be started and enabled
 to start at boot time on each node. This daemon works with the pcs command-line interface
-to manage synchronizing the corosync configuration across all nodes in the cluster.
+to manage synchronizing the corosync configuration across all nodes in the
+cluster, among other functions.
 
 Start and enable the daemon by issuing the following commands on each node:
 
@@ -112,7 +113,7 @@ Start and enable the daemon by issuing the following commands on each node:
     # systemctl enable pcsd.service
     Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
 
-The installed packages will create a **hacluster** user with a disabled password.
+The installed packages will create an **hacluster** user with a disabled password.
 While this is fine for running ``pcs`` commands locally,
 the account needs a login password in order to perform such tasks as syncing
 the corosync configuration, or starting and stopping the cluster on other nodes.

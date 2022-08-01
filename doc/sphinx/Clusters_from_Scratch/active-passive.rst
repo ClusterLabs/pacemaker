@@ -7,16 +7,18 @@ Create an Active/Passive Cluster
 Add a Resource
 ##############
 
-Our first resource will be a unique IP address that the cluster can bring up on
-either node. Regardless of where any cluster service(s) are running, end
-users need a consistent address to contact them on. Here, I will choose
-192.168.122.120 as the floating address, give it the imaginative name ClusterIP
-and tell the cluster to check whether it is running every 30 seconds.
+Our first resource will be a floating IP address that the cluster can bring up
+on either node. Regardless of where any cluster service(s) are running, end
+users need to be able to communicate with them at a consistent address. Here,
+we will use **192.168.122.120** as the floating IP address, give it the
+imaginative name **ClusterIP**, and tell the cluster to check whether it is
+still running every 30 seconds.
 
 .. WARNING::
 
-    The chosen address must not already be in use on the network.
-    Do not reuse an IP address one of the nodes already has configured.
+    The chosen address must not already be in use on the network, on a cluster
+    node or elsewhere. Do not reuse an IP address one of the nodes already has
+    configured.
 
 .. code-block:: none
 
@@ -27,12 +29,15 @@ Another important piece of information here is **ocf:heartbeat:IPaddr2**.
 This tells Pacemaker three things about the resource you want to add:
 
 * The first field (**ocf** in this case) is the standard to which the resource
-  script conforms and where to find it.
+  agent conforms and where to find it.
 
-* The second field (**heartbeat** in this case) is standard-specific; for OCF
-  resources, it tells the cluster which OCF namespace the resource script is in.
+* The second field (**heartbeat** in this case) is known as the provider.
+  Currently, this field is supported only for OCF resources. It tells Pacemaker
+  which OCF namespace the resource script is in.
 
-* The third field (**IPaddr2** in this case) is the name of the resource script.
+* The third field (**IPaddr2** in this case) is the name of the resource agent,
+  the executable file responsible for starting, stopping, monitoring, and
+  possibly promoting and demoting the resource.
 
 To obtain a list of the available resource standards (the **ocf** part of
 **ocf:heartbeat:IPaddr2**), run:
@@ -140,8 +145,11 @@ Shut down Pacemaker and Corosync on that machine to trigger a failover.
 
 .. NOTE::
 
-    A cluster command such as ``pcs cluster stop <NODENAME>`` can be run from any
-    node in the cluster, not just the affected node.
+    A cluster command such as ``pcs cluster stop <NODENAME>`` can be run from
+    any node in the cluster, not just the node where the cluster services will
+    be stopped. Running ``pcs cluster stop`` without a ``<NODENAME>`` stops the
+    cluster services on the local host. The same is true for ``pcs cluster
+    start`` and many other such commands.
 
 Verify that pacemaker and corosync are no longer running:
 
@@ -156,7 +164,7 @@ Go to the other node, and check the cluster status.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs status
+    [root@pcmk-2 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
@@ -188,13 +196,13 @@ automatically, and no errors are reported.
 .. topic:: Quorum
 
     If a cluster splits into two (or more) groups of nodes that can no longer
-    communicate with each other (aka. *partitions*), *quorum* is used to prevent
-    resources from starting on more nodes than desired, which would risk
-    data corruption.
+    communicate with each other (a.k.a. *partitions*), *quorum* is used to
+    prevent resources from starting on more nodes than desired, which would
+    risk data corruption.
 
     A cluster has quorum when more than half of all known nodes are online in
     the same partition, or for the mathematically inclined, whenever the following
-    equation is true:
+    inequality is true:
 
     .. code-block:: none
 
@@ -208,14 +216,36 @@ automatically, and no errors are reported.
 
     Two-node clusters are a special case. By the above definition,
     a two-node cluster would only have quorum when both nodes are
-    running. This would make the creation of a two-node cluster pointless,
-    but corosync has the ability to treat two-node clusters as if only one node
-    is required for quorum.
+    running. This would make the creation of a two-node cluster pointless.
+    However, corosync has the ability to require only one node for quorum in a
+    two-node cluster.
 
     The ``pcs cluster setup`` command will automatically configure **two_node: 1**
     in ``corosync.conf``, so a two-node cluster will "just work".
 
-    If you are using a different cluster shell, you will have to configure
+    .. NOTE::
+
+        You might wonder, "What if the nodes in a two-node cluster can't
+        communicate with each other? Wouldn't this **two_node: 1** setting
+        create a split-brain scenario, in which each node has quorum separately
+        and they both try to manage the same cluster resources?"
+
+        As long as fencing is configured, there is no danger of this. If the
+        nodes lose contact with each other, each node will try to fence the
+        other node. Resource management is disabled until fencing succeeds;
+        neither node is allowed to start, stop, promote, or demote resources.
+
+        After fencing succeeds, the surviving node can safely recover any
+        resources that were running on the fenced node.
+
+        If the fenced node boots up and rejoins the cluster, it does not have
+        quorum until it can communicate with the surviving node at least once.
+        This prevents "fence loops," in which a node gets fenced, reboots,
+        rejoins the cluster, and fences the other node. This protective
+        behavior is controlled by the **wait_for_all: 1** option, which is
+        enabled automatically when **two_node: 1** is configured.
+
+    If you are using a different cluster shell, you may have to configure
     ``corosync.conf`` appropriately yourself.
 
 Now, simulate node recovery by restarting the cluster stack on **pcmk-1**, and
@@ -279,7 +309,7 @@ often sufficient to change the default.
        automatically added to resource defaults. You can check your
        configuration to see if this is present.
 
-.. [#] Pacemaker's definition of optimal may not always agree with that of a
-       human's. The order in which Pacemaker processes lists of resources and
+.. [#] Pacemaker's default definition of "optimal" may not always agree with
+       yours. The order in which Pacemaker processes lists of resources and
        nodes creates implicit preferences in situations where the administrator
        has not explicitly specified them.

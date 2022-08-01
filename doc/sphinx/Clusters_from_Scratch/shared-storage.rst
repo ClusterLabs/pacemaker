@@ -144,7 +144,7 @@ run this on both nodes to use this sample configuration:
 
 .. IMPORTANT::
 
-    Edit the file to use the hostnames, IP addresses and logical volume paths
+    Edit the file to use the hostnames, IP addresses, and logical volume paths
     of your nodes if they differ from the ones used in this guide.
 
 .. NOTE::
@@ -197,7 +197,7 @@ Run them on one node:
     
     you are the 801th user to install this version
     
-    We can confirm DRBD's status on this node:
+We can confirm DRBD's status on this node:
     
 .. code-block:: none
 
@@ -581,8 +581,8 @@ it can no longer host resources, and eventually all the resources will move.
       pcsd: active/enabled
 
 Once we've done everything we needed to on pcmk-1 (in this case nothing,
-we just wanted to see the resources move), we can allow the node to be a
-full cluster member again.
+we just wanted to see the resources move), we can unstandby the node, making it
+eligible to host resources again.
 
 .. code-block:: none
 

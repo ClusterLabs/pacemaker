@@ -257,7 +257,9 @@ _______________
 This shows cluster option defaults that apply to every resource that does not
 explicitly set the option itself. Above:
 
-* **resource-stickiness** - Specify the aversion to moving healthy resources to other machines
+* **resource-stickiness** - Specify how strongly a resource prefers to remain
+  on its current node. Alternatively, you can view this as the level of
+  aversion to moving healthy resources to other machines.
 
 Fencing
 _______

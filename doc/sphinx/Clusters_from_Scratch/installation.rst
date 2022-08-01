@@ -48,13 +48,16 @@ can see exactly what software is required later, and press **Done**.
 Configure Network
 _________________
 
-In the **NETWORK & HOSTNAME** section:
+In the **NETWORK & HOST NAME** section:
 
 - Edit **Host Name:** as desired. For this example, we will use
   **pcmk-1.localdomain** and then press **Apply**.
-- Select your network device, press **Configure...**, and use the **Manual** method to
-  assign a fixed IP address. For this example, we'll use 192.168.122.101 under
-  **IPv4 Settings** (with an appropriate netmask, gateway and DNS server).
+- Select your network device, press **Configure...**, select the **IPv4
+  Settings** tab, and select **Manual** from the **Method** dropdown menu. Then
+  assign the machine a fixed IP address with an appropriate netmask, gateway,
+  and DNS server. For this example, we'll use **192.168.122.101** for the
+  address, **24** for the netmask, and **192.168.122.1** for the gateway and
+  DNS server.
 - Press **Save**.
 - Flip the switch to turn your network device on, and press **Done**.
 
@@ -75,21 +78,23 @@ ______________
 
 By default, the installer's automatic partitioning will use LVM (which allows
 us to dynamically change the amount of space allocated to a given partition).
-However, it allocates all free space to the ``/`` (aka. **root**) partition, which
-cannot be reduced in size later (dynamic increases are fine).
+However, it allocates all free space to the ``/`` (a.k.a. **root**) partition,
+which cannot be reduced in size later (dynamic increases are fine).
 
 In order to follow the DRBD and GFS2 portions of this guide, we need to reserve
 space on each machine for a replicated volume.
 
-Enter the **INSTALLATION DESTINATION** section, ensure the hard drive you want to
-install to is selected, select **Custom** to be the **Storage Configuration**, and
-press **Done**.
+Enter the **INSTALLATION DESTINATION** section and select the disk where you
+want to install the OS. Then under **Storage Configuration**, select **Custom**
+and press **Done**.
 
-In the **MANUAL PARTITIONING** screen that comes next, click the option to create
-mountpoints automatically. Select the ``/`` mountpoint, and reduce the desired
-capacity by 3GiB or so. Select **Modify...** by the volume group name, and change
-the **Size policy:** to **As large as possible**, to make the reclaimed space
-available inside the LVM volume group. We'll add the additional volume later.
+On the **MANUAL PARTITIONING** screen that comes next, click the option to create
+mountpoints automatically. Select the ``/`` mountpoint and reduce the **Desired
+Capacity** down to 4 GiB or so. (The installer will not allow you to proceed if
+the / filesystem is too small to install all required packages.) Then select
+**Modify…** next to the volume group name, and change the **Size policy** to
+**As large as possible**, to make the reclaimed space available inside the LVM
+volume group. We’ll add the additional volume later.
 
 .. figure:: images/ManualPartitioning.png
     :align: center
@@ -121,7 +126,8 @@ In order to continue to the next step, a **Root Password** must be set.
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Root Password Screen
 
-Press **Done** (depending on the password you chose, you may need to do so twice).
+Press **Done**. (Depending on the password you chose, you may need to do so
+twice.)
 
 Finish Install
 ______________
@@ -293,7 +299,7 @@ You may want to reboot to ensure all updates take effect.
 Repeat for Second Node
 ######################
 
-Repeat the Installation steps so far, so that you have two
+Repeat the installation steps so far, so that you have two
 nodes ready to have the cluster software installed.
 
 For the purposes of this document, the additional node is called
@@ -322,7 +328,8 @@ Confirm that you can communicate between the two new nodes:
 Now we need to make sure we can communicate with the machines by their
 name. If you have a DNS server, add additional entries for the two
 machines. Otherwise, you'll need to add the machines to ``/etc/hosts``
-on both nodes. Below are the entries for my cluster nodes:
+on both nodes. The entries for your cluster nodes should look something like
+the following:
 
 .. code-block:: none
 

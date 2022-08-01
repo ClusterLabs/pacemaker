@@ -27,7 +27,7 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
 .. NOTE::
 
     It is possible to tell the cluster not to use fencing, by setting the
-    **stonith-enabled** cluster option to false:
+    **stonith-enabled** cluster property to false:
 
     .. code-block:: none
 
@@ -74,6 +74,8 @@ and must stop all resources to avoid a possible split-brain situation.
 Likewise, any device that relies on the machine being active (such as
 SSH-based "devices" sometimes used during testing) is inappropriate,
 because fencing will be required when the node is completely unresponsive.
+(Fence agents like ``fence_ilo_ssh``, which connects via SSH to an HP iLO but
+not to the cluster node, are fine.)
 
 Configure the Cluster for Fencing
 #################################
@@ -97,7 +99,8 @@ Configure the Cluster for Fencing
 
    Any flags that do not take arguments, such as ``--ssl``, should be passed as ``ssl=1``.
 
-#. Enable fencing in the cluster: ``pcs -f stonith_cfg property set stonith-enabled=true``
+#. Ensure fencing is enabled in the cluster:
+   ``pcs -f stonith_cfg property set stonith-enabled=true``
 
 #. If the device does not know how to fence nodes based on their cluster node
    name, you may also need to set the special **pcmk_host_map** parameter. See

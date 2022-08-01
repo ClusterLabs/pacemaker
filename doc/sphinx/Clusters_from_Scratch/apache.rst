@@ -6,15 +6,16 @@ Add Apache HTTP Server as a Cluster Service
 
 Now that we have a basic but functional active/passive two-node cluster,
 we're ready to add some real services. We're going to start with
-Apache HTTP Server because it is a feature of many clusters and relatively
+Apache HTTP Server because it is a feature of many clusters and is relatively
 simple to configure.
 
 Install Apache
 ##############
 
 Before continuing, we need to make sure Apache is installed on both
-hosts. We also need the wget tool in order for the cluster to be able to check
-the status of the Apache server.
+hosts. We will also allow the cluster to use the **wget** tool (this is the
+default, but **curl** is also supported) to check the status of the Apache
+server. We'll install **httpd** (Apache) and **wget** now.
 
 .. code-block:: none
 
@@ -35,8 +36,8 @@ Create Website Documents
 ########################
 
 We need to create a page for Apache to serve. On |CFS_DISTRO| |CFS_DISTRO_VER|, the
-default Apache document root is /var/www/html, so we'll create an index file
-there. For the moment, we will simplify things by serving a static site
+default Apache document root is ``/var/www/html``, so we'll create an index
+file there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
 on both nodes:
 
@@ -52,12 +53,12 @@ on both nodes:
 .. index::
     single: Apache HTTP Server; status URL
 
-Enable the Apache status URL
+Enable the Apache Status URL
 ############################
 
-In order to monitor the health of your Apache instance, and recover it if
-it fails, the resource agent used by Pacemaker assumes the server-status
-URL is available. On both nodes, enable the URL with:
+Pacemaker uses the **apache** resource agent to monitor the health of your
+Apache instance via the ``server-status`` URL, and to recover the instance if
+it fails. On both nodes, configure this URL as follows:
 
 .. code-block:: none
 
@@ -83,7 +84,7 @@ Configure the Cluster
 
 At this point, Apache is ready to go, and all that needs to be done is to
 add it to the cluster. Let's call the resource WebSite. We need to use
-an OCF resource script called apache in the heartbeat namespace [#]_.
+an OCF resource agent called apache in the heartbeat namespace [#]_.
 The script's only required parameter is the path to the main Apache
 configuration file, and we'll tell the cluster to check once a
 minute that Apache is still running.
@@ -95,9 +96,9 @@ minute that Apache is still running.
           statusurl="http://localhost/server-status" \
           op monitor interval=1min
 
-By default, the operation timeout for all resources' start, stop, and monitor
-operations is 20 seconds.  In many cases, this timeout period is less than
-a particular resource's advised timeout period.  For the purposes of this
+By default, the operation timeout for all resources' start, stop, monitor, and
+other operations is 20 seconds. In many cases, this timeout period is less than
+a particular resource's advised timeout period. For the purposes of this
 tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 .. code-block:: none
@@ -110,9 +111,18 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 .. NOTE::
 
     In a production cluster, it is usually better to adjust each resource's
-    start, stop, and monitor timeouts to values that are appropriate to
-    the behavior observed in your environment, rather than adjust
+    start, stop, and monitor timeouts to values that are appropriate for
+    the behavior observed in your environment, rather than adjusting
     the global default.
+
+.. NOTE::
+
+    If you use a tool like ``pcs`` to create a resource, its operations may be
+    automatically configured with explicit timeout values that override the
+    Pacemaker built-in default value of 20 seconds. If the resource agent's
+    metadata contains suggested values for the operation timeouts in a
+    particular format, ``pcs`` reads those values and adds them to the
+    configuration at resource creation time.
 
 After a short delay, we should see the cluster start Apache.
 
@@ -166,19 +176,25 @@ Ensure Resources Run on the Same Host
 To reduce the load on any one machine, Pacemaker will generally try to
 spread the configured resources across the cluster nodes. However, we
 can tell the cluster that two resources are related and need to run on
-the same host (or not at all). Here, we instruct the cluster that
-WebSite can only run on the host that ClusterIP is active on.
+the same host (or else one of them should not run at all, if they cannot run on
+the same node). Here, we instruct the cluster that WebSite can only run on the
+host where ClusterIP is active.
 
 To achieve this, we use a *colocation constraint* that indicates it is
-mandatory for WebSite to run on the same node as ClusterIP.  The
+mandatory for WebSite to run on the same node as ClusterIP. The
 "mandatory" part of the colocation constraint is indicated by using a
-score of INFINITY.  The INFINITY score also means that if ClusterIP is not
+score of INFINITY. The INFINITY score also means that if ClusterIP is not
 active anywhere, WebSite will not be permitted to run.
 
 .. NOTE::
 
     If ClusterIP is not active anywhere, WebSite will not be permitted to run
     anywhere.
+
+.. NOTE::
+
+    INFINITY is the default score for a colocation constraint. If you don't
+    specify a score, INFINITY will be used automatically.
 
 .. IMPORTANT::
 
@@ -238,12 +254,16 @@ starts, Apache won't respond on that address.
 
 To be sure our WebSite responds regardless of Apache's address configuration,
 we need to make sure ClusterIP not only runs on the same node,
-but starts before WebSite. A colocation constraint only ensures the
-resources run together, not the order in which they are started and stopped.
+but also starts before WebSite. A colocation constraint ensures only that the
+resources run together; it doesn't affect order in which the resources are
+started or stopped.
 
-We do this by adding an ordering constraint.  By default, all order constraints
-are mandatory, which means that the recovery of ClusterIP will also trigger the
-recovery of WebSite.
+We do this by adding an ordering constraint. By default, all order constraints
+are mandatory. This means, for example, that if ClusterIP needs to stop, then
+WebSite must stop first (or already be stopped); and if WebSite needs to start,
+then ClusterIP must start first (or already be started). This also implies that
+the recovery of ClusterIP will trigger the recovery of WebSite, causing it to
+be restarted.
 
 .. code-block:: none
 
@@ -256,6 +276,12 @@ recovery of WebSite.
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
     Ticket Constraints:
+
+.. NOTE::
+
+    The default action in an order constraint is **start**. If you don't
+    specify an action, as in the example above, **pcs** automatically uses the
+    **start** action.
 
 
 .. index::
@@ -392,10 +418,9 @@ expire automatically -- but we don't do that in this example.
       pcsd: active/enabled
 
 Once we've finished whatever activity required us to move the
-resources to pcmk-1 (in our case nothing), we can then allow the cluster
-to resume normal operation by removing the new constraint. Due to our first
-location constraint and our default stickiness, the resources will remain on
-pcmk-1.
+resources to pcmk-1 (in our case nothing), the new constraint is no longer
+needed, and so we can remove it. Due to our first location constraint and our
+default stickiness, the resources will remain on pcmk-1.
 
 We will use the **pcs resource clear** command, which removes all temporary
 constraints previously created by **pcs resource move** or **pcs resource ban**.
@@ -443,10 +468,10 @@ on pcmk-1.
       pcsd: active/enabled
 
 To remove the constraint with the score of 50, we would first get the
-constraint's ID using **pcs constraint --full**, then remove it with
-**pcs constraint remove** and the ID. We won't show those steps here,
+constraint's ID using ``pcs constraint --full``, then remove it with
+``pcs constraint remove`` and the ID. We won't show those steps here,
 but feel free to try it on your own, with the help of the pcs man page
 if necessary.
 
 .. [#] Compare the key used here, **ocf:heartbeat:apache**, with the one we
-       used earlier for the IP address, **ocf:heartbeat:IPaddr2**
+       used earlier for the IP address, **ocf:heartbeat:IPaddr2**.

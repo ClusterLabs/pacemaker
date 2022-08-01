@@ -18,7 +18,7 @@ Pacemaker's key features include:
   etc.)
 * Automatically replicated configuration that can be updated from any node
 * Ability to specify cluster-wide relationships between services,
-  such as ordering, colocation and anti-colocation
+  such as ordering, colocation, and anti-colocation
 * Support for advanced service types, such as *clones* (services that need to
   be active on multiple nodes), *promotable clones* (clones that can run in
   one of two roles), and containerized services
@@ -160,7 +160,7 @@ _______________________
 
 Pacemaker supports practically any `node redundancy configuration
 <https://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations>`_
-including *Active/Active*, *Active/Passive*, *N+1*, *N+M*, *N-to-1* and
+including *Active/Active*, *Active/Passive*, *N+1*, *N+M*, *N-to-1*, and
 *N-to-N*.
 
 Active/passive clusters with two (or more) nodes using Pacemaker and
@@ -183,7 +183,7 @@ share a common backup node.
 
 When shared storage is available, every node can potentially be used for
 failover. Pacemaker can even run multiple copies of services to spread out the
-workload. This is sometimes called N to N Redundancy.
+workload. This is sometimes called N-to-N redundancy.
 
 .. image:: ../shared/images/pcmk-active-active.png
    :alt: N to N Redundancy

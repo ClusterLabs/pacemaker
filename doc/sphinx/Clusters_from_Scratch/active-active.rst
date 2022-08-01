@@ -184,7 +184,7 @@ Now we can create a new GFS2 filesystem on the DRBD device.
 
 The ``mkfs.gfs2`` command required a number of additional parameters:
 
-* ``-p lock_dlm`` specifies that we want to use the kernel's DLM.
+* ``-p lock_dlm`` specifies that we want to use DLM-based locking.
 
 * ``-j 2`` indicates that the filesystem should reserve enough
   space for two journals (one for each node that will access the filesystem).
@@ -195,7 +195,7 @@ The ``mkfs.gfs2`` command required a number of additional parameters:
   also the value of **cluster_name** in ``/etc/corosync/corosync.conf``). If
   you are unsure what your cluster name is, you can look in
   ``/etc/corosync/corosync.conf`` or execute the command
-  ``pcs cluster corosync pcmk-1 | grep cluster_name``.
+  ``pcs cluster corosync | grep cluster_name``.
 
 Now we can (re-)populate the new filesystem with data
 (web pages). We'll create yet another variation on our home page.
