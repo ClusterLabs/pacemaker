@@ -87,6 +87,7 @@ Final Cluster Configuration
           <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.0-3.el8-7c3f660707"/>
           <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
           <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
+          <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         </cluster_property_set>
       </crm_config>
       <nodes>
@@ -227,6 +228,7 @@ Cluster Options
      cluster-name: mycluster
      dc-version: 2.1.0-3.el8-7c3f660707
      have-watchdog: false
+     no-quorum-policy: freeze
      stonith-enabled: true
 
 The output shows state information automatically obtained about the cluster, including:

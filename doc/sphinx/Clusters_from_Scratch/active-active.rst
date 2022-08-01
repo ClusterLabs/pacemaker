@@ -249,6 +249,24 @@ and ordering constraints for it:
     [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
     Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
 
+We also need to update the **no-quorum-policy** property to **freeze**. By
+default, the value of **no-quorum-policy** is set to **stop**, indicating that
+once quorum is lost, all the resources on the remaining partition will
+immediately be stopped. Typically this default is the safest and most optimal
+option, but unlike most resources, GFS2 requires quorum to function. When
+quorum is lost both the applications using the GFS2 mounts and the GFS2 mount
+itself cannot be correctly stopped. Any attempts to stop these resources
+without quorum will fail, which will ultimately result in the entire cluster
+being fenced every time quorum is lost.
+
+To address this situation, set **no-quorum-policy** to **freeze** when GFS2 is
+in use. This means that when quorum is lost, the remaining partition will do
+nothing until quorum is regained. 
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs property set no-quorum-policy=freeze
+
 
 .. index::
    pair: filesystem; clone
