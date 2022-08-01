@@ -283,6 +283,15 @@ be restarted.
     specify an action, as in the example above, **pcs** automatically uses the
     **start** action.
 
+.. NOTE::
+
+    We could have placed the **ClusterIP** and **WebSite** resources into a
+    **resource group** instead of configuring constraints. A resource group is
+    a compact and intuitive way to organize a set of resources into a chain of
+    colocation and ordering constraints. We will omit that in this guide; see
+    the `Pacemaker Explained <https://www.clusterlabs.org/pacemaker/doc/>`_
+    document for more details.
+
 
 .. index::
     single: constraint; location
