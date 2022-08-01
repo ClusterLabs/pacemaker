@@ -162,6 +162,12 @@ gboolean send_attrd_message(crm_node_t * node, xmlNode * data);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 
+void attrd_write_attribute(attribute_t *a, bool ignore_delay);
+void attrd_write_attributes(bool all, bool ignore_delay);
+void attrd_write_or_elect_attribute(attribute_t *a);
+
+mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
+
 gboolean attrd_election_cb(gpointer user_data);
 void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
 

@@ -268,7 +268,7 @@ void
 attrd_client_refresh(void)
 {
     crm_info("Updating all attributes");
-    write_attributes(true, true);
+    attrd_write_attributes(true, true);
 }
 
 /*!

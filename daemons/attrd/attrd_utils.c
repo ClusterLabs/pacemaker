@@ -146,7 +146,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
     if (attrd_election_won()) {
         if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
             crm_notice("Updating all attributes after %s event", event);
-            write_attributes(true, false);
+            attrd_write_attributes(true, false);
         }
     }
 
