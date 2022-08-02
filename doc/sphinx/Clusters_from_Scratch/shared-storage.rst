@@ -75,8 +75,8 @@ the other:
 
 .. NOTE::
 
-    If the ``firewall-cmd --add-rich-rule`` command fails with **Error:
-    INVALID_RULE: unknown element**, ensure that there is no space at the
+    If the ``firewall-cmd --add-rich-rule`` command fails with ``Error:
+    INVALID_RULE: unknown element`` ensure that there is no space at the
     beginning of the second line of the command.
 
 Allocate a Disk Volume for DRBD
@@ -149,7 +149,7 @@ run this on both nodes to use this sample configuration:
     other alternatives) is available in the
     `DRBD User's Guide
     <https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/#ch-configure>`_.
-    The **allow-two-primaries** option would not normally be used in
+    The ``allow-two-primaries`` option would not normally be used in
     an active/passive cluster. We are adding it here for the convenience
     of changing to an active/active cluster later.
 
@@ -207,12 +207,13 @@ We can confirm DRBD's status on this node:
       pcmk-2 connection:Connecting
 
 Because we have not yet initialized the data, this node's data
-is marked as **Inconsistent**. Because we have not yet initialized
-the second node, the pcmk-2 connection is **Connecting** (waiting for connection).
+is marked as ``Inconsistent`` Because we have not yet initialized
+the second node, the ``pcmk-2`` connection is ``Connecting`` (waiting for
+connection).
 
 Now, repeat the above commands on the second node, starting with creating
-wwwdata.res. After giving it time to connect, when we check the status of the first
-node, it shows:
+``wwwdata.res``. After giving it time to connect, when we check the status of
+the first node, it shows:
 
 .. code-block:: none
 
@@ -222,13 +223,13 @@ node, it shows:
       pcmk-2 role:Secondary
         peer-disk:Inconsistent
 
-You can see that **pcmk-2 connection:Connecting** longer appears in the
+You can see that ``pcmk-2 connection:Connecting`` longer appears in the
 output, meaning the two DRBD nodes are communicating properly, and both
-nodes are in **Secondary** role with **Inconsistent** data.
+nodes are in ``Secondary`` role with ``Inconsistent`` data.
 
 To make the data consistent, we need to tell DRBD which node should be
 considered to have the correct data. In this case, since we are creating
-a new resource, both have garbage, so we'll just pick pcmk-1
+a new resource, both have garbage, so we'll just pick ``pcmk-1``
 and run this command on it:
 
 .. code-block:: none
@@ -259,9 +260,9 @@ It will be quickly followed by this:
       pcmk-2 role:Secondary
         replication:SyncSource peer-disk:Inconsistent
 
-We can see that the first node has the **Primary** role, its partner node has
-the **Secondary** role, the first node's data is now considered **UpToDate**,
-the partner node's data is still **Inconsistent**.
+We can see that the first node has the ``Primary`` role, its partner node has
+the ``Secondary`` role, the first node's data is now considered ``UpToDate``,
+and the partner node's data is still ``Inconsistent``.
 
 After a while, the sync should finish, and you'll see something like:
 
@@ -278,13 +279,13 @@ After a while, the sync should finish, and you'll see something like:
       pcmk-1 role:Primary
         peer-disk:UpToDate
 
-Both sets of data are now **UpToDate**, and we can proceed to creating
-and populating a filesystem for our WebSite resource's documents.
+Both sets of data are now ``UpToDate``, and we can proceed to creating
+and populating a filesystem for our ``WebSite`` resource's documents.
 
 Populate the DRBD Disk
 ######################
 
-On the node with the primary role (pcmk-1 in this example),
+On the node with the primary role (``pcmk-1`` in this example),
 create a filesystem on the DRBD device:
 
 .. code-block:: none
@@ -334,7 +335,7 @@ populating the file with the current raw XML config from the CIB.
 
     [root@pcmk-1 ~]# pcs cluster cib drbd_cfg
 
-Using pcs's ``-f`` option, make changes to the configuration saved
+Using ``pcs``'s ``-f`` option, make changes to the configuration saved
 in the ``drbd_cfg`` file. These changes will not be seen by the cluster until
 the ``drbd_cfg`` file is pushed into the live cluster's CIB later.
 
@@ -364,7 +365,7 @@ resource to allow the resource to run on both nodes at the same time.
                   stop interval=0s timeout=60s (WebSite-stop-interval-0s)
 
 After you are satisfied with all the changes, you can commit
-them all at once by pushing the drbd_cfg file into the live CIB.
+them all at once by pushing the ``drbd_cfg`` file into the live CIB.
 
 .. code-block:: none
 
@@ -415,9 +416,9 @@ Let's see what the cluster did with the new configuration:
                    start interval=0s timeout=240 (WebData-start-interval-0s)
                    stop interval=0s timeout=100 (WebData-stop-interval-0s)
 
-We can see that **WebData-clone** (our DRBD device) is running as promoted
-(DRBD's primary role) on **pcmk-1** and unpromoted (DRBD's secondary role) on
-**pcmk-2**.
+We can see that ``WebData-clone`` (our DRBD device) is running as ``Promoted``
+(DRBD's primary role) on ``pcmk-1`` and ``Unpromoted`` (DRBD's secondary role)
+on ``pcmk-2``.
 
 .. IMPORTANT::
 
@@ -440,12 +441,13 @@ tell the cluster where it can be located (only on the DRBD Primary)
 and when it is allowed to start (after the Primary was promoted).
 
 We are going to take a shortcut when creating the resource this time.
-Instead of explicitly saying we want the **ocf:heartbeat:Filesystem** script, we
-are only going to ask for **Filesystem**. We can do this because we know there is only
-one resource script named **Filesystem** available to pacemaker, and that pcs is smart
-enough to fill in the **ocf:heartbeat:** portion for us correctly in the configuration.
-If there were multiple **Filesystem** scripts from different OCF providers, we would need
-to specify the exact one we wanted.
+Instead of explicitly saying we want the ``ocf:heartbeat:Filesystem`` script,
+we are only going to ask for ``Filesystem``. We can do this because we know
+there is only one resource script named ``Filesystem`` available to
+pacemaker, and that ``pcs`` is smart enough to fill in the
+``ocf:heartbeat:`` portion for us correctly in the configuration. If there were
+multiple ``Filesystem`` scripts from different OCF providers, we would need to
+specify the exact one we wanted.
 
 Once again, we will queue our changes to a file and then push the
 new configuration to the cluster as the final step.
@@ -537,7 +539,7 @@ Test Cluster Failover
 #####################
 
 Previously, we used ``pcs cluster stop pcmk-2`` to stop all cluster
-services on **pcmk-2**, failing over the cluster resources, but there is another
+services on ``pcmk-2``, failing over the cluster resources, but there is another
 way to safely simulate node failure.
 
 We can put the node into *standby mode*. Nodes in this state continue to
@@ -581,7 +583,7 @@ it can no longer host resources, and eventually all the resources will move.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Once we've done everything we needed to on pcmk-2 (in this case nothing,
+Once we've done everything we needed to on ``pcmk-2`` (in this case nothing,
 we just wanted to see the resources move), we can unstandby the node, making it
 eligible to host resources again.
 
@@ -615,8 +617,9 @@ eligible to host resources again.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Notice that **pcmk-2** is back to the **Online** state, and that the cluster resources
-stay where they are due to our resource stickiness settings configured earlier.
+Notice that ``pcmk-2`` is back to the ``Online`` state, and that the cluster
+resources stay where they are due to our resource stickiness settings
+configured earlier.
 
 .. [#] See http://www.drbd.org for details.
 

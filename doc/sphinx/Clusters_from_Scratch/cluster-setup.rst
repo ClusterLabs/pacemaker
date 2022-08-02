@@ -5,7 +5,7 @@ Simplify Administration With a Cluster Shell
 ############################################
 
 In the dark past, configuring Pacemaker required the administrator to
-read and write XML.  In true UNIX style, there were also a number of
+read and write XML. In true UNIX style, there were also a number of
 different commands that specialized in different aspects of querying
 and updating the cluster.
 
@@ -77,9 +77,10 @@ On each node, allow cluster-related services through the local firewall:
 
 .. NOTE ::
 
-    If you are using iptables directly, or some other firewall solution besides
-    firewalld, simply open the following ports, which can be used by various
-    clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405.
+    If you are using ``iptables`` directly, or some other firewall solution
+    besides ``firewalld``, simply open the following ports, which can be used
+    by various clustering components: TCP ports 2224, 3121, and 21064, and UDP
+    port 5405.
 
     If you run into any problems during testing, you might want to disable
     the firewall and SELinux entirely until you have everything working.
@@ -97,13 +98,13 @@ On each node, allow cluster-related services through the local firewall:
         [root@pcmk-1 ~]# systemctl stop firewalld.service
         [root@pcmk-1 ~]# iptables --flush
 
-Enable pcs Daemon
-_________________
+Enable ``pcs`` Daemon
+_____________________
 
-Before the cluster can be configured, the pcs daemon must be started and enabled
-to start at boot time on each node. This daemon works with the pcs command-line interface
-to manage synchronizing the corosync configuration across all nodes in the
-cluster, among other functions.
+Before the cluster can be configured, the ``pcs`` daemon must be started and
+enabled to start at boot time on each node. This daemon works with the ``pcs``
+command-line interface to manage synchronizing the Corosync configuration
+across all nodes in the cluster, among other functions.
 
 Start and enable the daemon by issuing the following commands on each node:
 
@@ -113,13 +114,13 @@ Start and enable the daemon by issuing the following commands on each node:
     # systemctl enable pcsd.service
     Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
 
-The installed packages will create an **hacluster** user with a disabled password.
+The installed packages will create an ``hacluster`` user with a disabled password.
 While this is fine for running ``pcs`` commands locally,
 the account needs a login password in order to perform such tasks as syncing
-the corosync configuration, or starting and stopping the cluster on other nodes.
+the Corosync configuration, or starting and stopping the cluster on other nodes.
 
 This tutorial will make use of such commands,
-so now we will set a password for the **hacluster** user, using the same password
+so now we will set a password for the ``hacluster`` user, using the same password
 on both nodes:
 
 .. code-block:: none
@@ -143,7 +144,7 @@ on both nodes:
 Configure Corosync
 __________________
 
-On either node, use ``pcs host auth`` to authenticate as the **hacluster** user:
+On either node, use ``pcs host auth`` to authenticate as the ``hacluster`` user:
 
 .. code-block:: none
 
@@ -179,7 +180,7 @@ corosync configuration:
 
 .. NOTE::
 
-    If you'd like, you can specify an **addr** option for each node in the 
+    If you'd like, you can specify an ``addr`` option for each node in the 
     ``pcs cluster setup`` command. This will create an explicit name-to-address
     mapping for each node in ``/etc/corosync/corosync.conf``, eliminating the
     need for hostname resolution via DNS, ``/etc/hosts``, and the like.
@@ -191,10 +192,10 @@ corosync configuration:
 
 
 If you received an authorization error for either of those commands, make
-sure you configured the **hacluster** user account on each node
+sure you configured the ``hacluster`` user account on each node
 with the same password.
 
-The final corosync.conf configuration on each node should look
+The final ``corosync.conf`` configuration on each node should look
 something like the sample in :ref:`sample-corosync-configuration`.
 
 Explore pcs
@@ -250,7 +251,7 @@ Start by taking some time to familiarize yourself with what ``pcs`` can do.
 
 As you can see, the different aspects of cluster management are separated
 into categories. To discover the functionality available in each of these
-categories, one can issue the command ``pcs <CATEGORY> help``.  Below is an
+categories, one can issue the command ``pcs <CATEGORY> help``. Below is an
 example of all the options available under the status category.
 
 .. code-block:: none

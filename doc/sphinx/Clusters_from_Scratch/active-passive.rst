@@ -10,8 +10,8 @@ Add a Resource
 Our first resource will be a floating IP address that the cluster can bring up
 on either node. Regardless of where any cluster service(s) are running, end
 users need to be able to communicate with them at a consistent address. Here,
-we will use **192.168.122.120** as the floating IP address, give it the
-imaginative name **ClusterIP**, and tell the cluster to check whether it is
+we will use ``192.168.122.120`` as the floating IP address, give it the
+imaginative name ``ClusterIP``, and tell the cluster to check whether it is
 still running every 30 seconds.
 
 .. WARNING::
@@ -25,22 +25,22 @@ still running every 30 seconds.
     [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
         ip=192.168.122.120 cidr_netmask=24 op monitor interval=30s
 
-Another important piece of information here is **ocf:heartbeat:IPaddr2**.
+Another important piece of information here is ``ocf:heartbeat:IPaddr2``.
 This tells Pacemaker three things about the resource you want to add:
 
-* The first field (**ocf** in this case) is the standard to which the resource
+* The first field (``ocf`` in this case) is the standard to which the resource
   agent conforms and where to find it.
 
-* The second field (**heartbeat** in this case) is known as the provider.
-  Currently, this field is supported only for OCF resources. It tells Pacemaker
-  which OCF namespace the resource script is in.
+* The second field (``heartbeat`` in this case) is known as the provider.
+  Currently, this field is supported only for OCF resources. It tells
+  Pacemaker which OCF namespace the resource script is in.
 
-* The third field (**IPaddr2** in this case) is the name of the resource agent,
+* The third field (``IPaddr2`` in this case) is the name of the resource agent,
   the executable file responsible for starting, stopping, monitoring, and
   possibly promoting and demoting the resource.
 
-To obtain a list of the available resource standards (the **ocf** part of
-**ocf:heartbeat:IPaddr2**), run:
+To obtain a list of the available resource standards (the ``ocf`` part of
+``ocf:heartbeat:IPaddr2``), run:
 
 .. code-block:: none
 
@@ -50,8 +50,8 @@ To obtain a list of the available resource standards (the **ocf** part of
     service
     systemd
 
-To obtain a list of the available OCF resource providers (the **heartbeat**
-part of **ocf:heartbeat:IPaddr2**), run:
+To obtain a list of the available OCF resource providers (the ``heartbeat``
+part of ``ocf:heartbeat:IPaddr2``), run:
 
 .. code-block:: none
 
@@ -61,7 +61,7 @@ part of **ocf:heartbeat:IPaddr2**), run:
     pacemaker
 
 Finally, if you want to see all the resource agents available for
-a specific OCF provider (the **IPaddr2** part of **ocf:heartbeat:IPaddr2**), run:
+a specific OCF provider (the ``IPaddr2`` part of ``ocf:heartbeat:IPaddr2``), run:
 
 .. code-block:: none
 
@@ -75,8 +75,8 @@ a specific OCF provider (the **IPaddr2** part of **ocf:heartbeat:IPaddr2**), run
     VirtualDomain
     Xinetd
 
-If you want to list all resource agents available on the system, run **pcs
-resource list**. We'll skip that here.
+If you want to list all resource agents available on the system, run ``pcs
+resource list``. We'll skip that here.
 
 Now, verify that the IP resource has been added, and display the cluster's
 status to see that it is now active. Note: There should be a stonith device by
@@ -106,7 +106,7 @@ now, but it's okay if it doesn't look like the one below.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-On the node where the **ClusterIP** resource is running, verify that the
+On the node where the ``ClusterIP`` resource is running, verify that the
 address has been added.
 
 .. code-block:: none
@@ -126,8 +126,8 @@ our new resource before moving on.
 
 First, from the ``pcs status`` output in the previous step, find the node on
 which the IP address is running. You can see that the status of the
-**ClusterIP** resource is **Started** on a particular node (in this example,
-**pcmk-2**). Shut down Pacemaker and Corosync on that machine to trigger a
+``ClusterIP`` resource is ``Started`` on a particular node (in this example,
+``pcmk-2``). Shut down Pacemaker and Corosync on that machine to trigger a
 failover.
 
 .. code-block:: none
@@ -180,11 +180,11 @@ Go to the other node, and check the cluster status.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Notice that **pcmk-2** is **OFFLINE** for cluster purposes (its **pcsd** is still
+Notice that ``pcmk-2`` is ``OFFLINE`` for cluster purposes (its ``pcsd`` is still
 active, allowing it to receive ``pcs`` commands, but it is not participating in
 the cluster).
 
-Also notice that **ClusterIP** is now running on **pcmk-1** -- failover happened
+Also notice that ``ClusterIP`` is now running on ``pcmk-1`` -- failover happened
 automatically, and no errors are reported.
 
 .. topic:: Quorum
@@ -214,13 +214,13 @@ automatically, and no errors are reported.
     However, corosync has the ability to require only one node for quorum in a
     two-node cluster.
 
-    The ``pcs cluster setup`` command will automatically configure **two_node: 1**
-    in ``corosync.conf``, so a two-node cluster will "just work".
+    The ``pcs cluster setup`` command will automatically configure
+    ``two_node: 1`` in ``corosync.conf``, so a two-node cluster will "just work".
 
     .. NOTE::
 
         You might wonder, "What if the nodes in a two-node cluster can't
-        communicate with each other? Wouldn't this **two_node: 1** setting
+        communicate with each other? Wouldn't this ``two_node: 1`` setting
         create a split-brain scenario, in which each node has quorum separately
         and they both try to manage the same cluster resources?"
 
@@ -236,13 +236,13 @@ automatically, and no errors are reported.
         quorum until it can communicate with the surviving node at least once.
         This prevents "fence loops," in which a node gets fenced, reboots,
         rejoins the cluster, and fences the other node. This protective
-        behavior is controlled by the **wait_for_all: 1** option, which is
-        enabled automatically when **two_node: 1** is configured.
+        behavior is controlled by the ``wait_for_all: 1`` option, which is
+        enabled automatically when ``two_node: 1`` is configured.
 
     If you are using a different cluster shell, you may have to configure
     ``corosync.conf`` appropriately yourself.
 
-Now, simulate node recovery by restarting the cluster stack on **pcmk-2**, and
+Now, simulate node recovery by restarting the cluster stack on ``pcmk-2``, and
 check the cluster's status. (It may take a little while before the cluster
 gets going on the node, but it eventually will look like the below.)
 

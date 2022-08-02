@@ -50,13 +50,13 @@ _________________
 
 In the **NETWORK & HOST NAME** section:
 
-- Edit **Host Name:** as desired. For this example, we will use
-  **pcmk-1.localdomain** and then press **Apply**.
+- Edit **Host Name:** as desired. For this example, we will enter
+  ``pcmk-1.localdomain`` and then press **Apply**.
 - Select your network device, press **Configure...**, select the **IPv4
   Settings** tab, and select **Manual** from the **Method** dropdown menu. Then
   assign the machine a fixed IP address with an appropriate netmask, gateway,
-  and DNS server. For this example, we'll use **192.168.122.101** for the
-  address, **24** for the netmask, and **192.168.122.1** for the gateway and
+  and DNS server. For this example, we'll use ``192.168.122.101`` for the
+  address, ``24`` for the netmask, and ``192.168.122.1`` for the gateway and
   DNS server.
 - Press **Save**.
 - Flip the switch to turn your network device on (if it is not on already), and
@@ -72,7 +72,7 @@ In the **NETWORK & HOST NAME** section:
 
     Do not accept the default network settings.
     Cluster machines should never obtain an IP address via DHCP, because
-    DHCP's periodic address renewal will interfere with corosync.
+    DHCP's periodic address renewal will interfere with Corosync.
 
 Configure Disk
 ______________
@@ -98,7 +98,7 @@ and press **Done**.
 On the **MANUAL PARTITIONING** screen that comes next, click the option to create
 mountpoints automatically. Select the ``/`` mountpoint and reduce the **Desired
 Capacity** down to 4 GiB or so. (The installer will not allow you to proceed if
-the / filesystem is too small to install all required packages.)
+the ``/`` filesystem is too small to install all required packages.)
 
 .. figure:: images/ManualPartitioning.png
     :align: center
@@ -165,7 +165,7 @@ ______________
 
 Select **Begin Installation**. Once it completes, **Reboot System**
 as instructed.  After the node reboots, you'll see a login prompt on
-the console. Login using **root** and the password you created earlier.
+the console. Login using ``root`` and the password you created earlier.
 
 .. figure:: images/ConsolePrompt.png
     :align: center
@@ -204,7 +204,7 @@ Ensure that the machine has the static IP address you configured earlier.
 .. NOTE::
 
     If you ever need to change the node's IP address from the command line,
-    follow these instructions, replacing **${conn}** with the name of your
+    follow these instructions, replacing ``${conn}`` with the name of your
     network connection. You can find the list of all network connection names
     by running ``nmcli con show``; you can get details for each connection by
     running ``nmcli con show ${conn}``.
@@ -222,7 +222,7 @@ Next, ensure that the routes are as expected:
     default via 192.168.122.1 dev enp1s0 proto static metric 100 
     192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.101 metric 100
 
-If there is no line beginning with **default via**, then use ``nmcli`` to add a
+If there is no line beginning with ``default via``, then use ``nmcli`` to add a
 gateway:
 
 .. code-block:: none
@@ -274,7 +274,7 @@ From another host, check whether we can see the new host at all:
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
     rtt min/avg/max/mdev = 0.344/0.344/0.344/0.000 ms
     
-Next, login as root via SSH.
+Next, login as ``root`` via SSH.
 
 .. code-block:: none
 
@@ -312,7 +312,7 @@ status output. See for yourself how the machine identifies itself:
     [root@pcmk-1 ~]# uname -n
     pcmk-1.localdomain
 
-We can use the `hostnamectl` tool to strip off the domain name:
+We can use the ``hostnamectl`` tool to strip off the domain name:
 
 .. code-block:: none
 
@@ -334,7 +334,7 @@ Repeat the installation steps so far, so that you have two
 nodes ready to have the cluster software installed.
 
 For the purposes of this document, the additional node is called
-pcmk-2 with address 192.168.122.102.
+``pcmk-2`` with address ``192.168.122.102``.
 
 Configure Communication Between Nodes
 #####################################
@@ -369,7 +369,7 @@ following:
     192.168.122.101 pcmk-1.localdomain  pcmk-1
     192.168.122.102 pcmk-2.localdomain  pcmk-2
 
-We can now verify the setup by again using ping:
+We can now verify the setup by again using ``ping``:
 
 .. code-block:: none
 
@@ -390,7 +390,7 @@ _____________
 
 SSH is a convenient and secure way to copy files and perform commands
 remotely. For the purposes of this guide, we will create a key without a
-password (using the -N option) so that we can perform remote actions
+password (using the ``-N`` option) so that we can perform remote actions
 without being prompted.
 
 
@@ -459,7 +459,7 @@ Test that you can now run commands remotely, without being prompted:
     pcmk-2
 
 Finally, repeat this same process on the other node. For convenience, you can
-also generate an SSH key on your administrative machine and use **ssh-copy-id**
+also generate an SSH key on your administrative machine and use ``ssh-copy-id``
 to copy it to both cluster nodes.
 
 .. [#] You can also avoid this SPOF by specifying an ``addr`` option for each

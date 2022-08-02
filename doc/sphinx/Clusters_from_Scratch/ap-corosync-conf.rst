@@ -1,7 +1,7 @@
 .. _sample-corosync-configuration:
 
 Sample Corosync Configuration
------------------------------
+---------------------------------
 
 .. topic:: Sample ``corosync.conf`` for two-node cluster created by ``pcs``.
 

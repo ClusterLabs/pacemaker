@@ -13,9 +13,9 @@ Install Apache
 ##############
 
 Before continuing, we need to make sure Apache is installed on both
-hosts. We will also allow the cluster to use the **wget** tool (this is the
-default, but **curl** is also supported) to check the status of the Apache
-server. We'll install **httpd** (Apache) and **wget** now.
+hosts. We will also allow the cluster to use the ``wget`` tool (this is the
+default, but ``curl`` is also supported) to check the status of the Apache
+server. We'll install ``httpd`` (Apache) and ``wget`` now.
 
 .. code-block:: none
 
@@ -25,7 +25,7 @@ server. We'll install **httpd** (Apache) and **wget** now.
 
 .. IMPORTANT::
 
-    Do **not** enable the httpd service. Services that are intended to
+    Do **not** enable the ``httpd``` service. Services that are intended to
     be managed via the cluster software should never be managed by the OS.
     It is often useful, however, to manually start the service, verify that
     it works, then stop it again, before adding it to the cluster. This
@@ -56,7 +56,7 @@ on both nodes:
 Enable the Apache Status URL
 ############################
 
-Pacemaker uses the **apache** resource agent to monitor the health of your
+Pacemaker uses the ``apache`` resource agent to monitor the health of your
 Apache instance via the ``server-status`` URL, and to recover the instance if
 it fails. On both nodes, configure this URL as follows:
 
@@ -71,9 +71,10 @@ it fails. On both nodes, configure this URL as follows:
 
 .. NOTE::
 
-    If you are using a different operating system, server-status may already be
-    enabled or may be configurable in a different location. If you are using
-    a version of Apache HTTP Server less than 2.4, the syntax will be different.
+    If you are using a different operating system, ``server-status`` may
+    already be enabled or may be configurable in a different location. If you
+    are using a version of Apache HTTP Server less than 2.4, the syntax will be
+    different.
 
 
 .. index::
@@ -83,8 +84,8 @@ Configure the Cluster
 #####################
 
 At this point, Apache is ready to go, and all that needs to be done is to
-add it to the cluster. Let's call the resource WebSite. We need to use
-an OCF resource agent called apache in the heartbeat namespace [#]_.
+add it to the cluster. Let's call the resource ``WebSite``. We need to use
+an OCF resource agent called ``apache`` in the ``heartbeat`` namespace [#]_.
 The script's only required parameter is the path to the main Apache
 configuration file, and we'll tell the cluster to check once a
 minute that Apache is still running.
@@ -154,12 +155,12 @@ After a short delay, we should see the cluster start Apache.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Wait a moment, the WebSite resource isn't running on the same host as our
+Wait a moment, the ``WebSite`` resource isn't running on the same host as our
 IP address!
 
 .. NOTE::
 
-    If, in the ``pcs status`` output, you see the WebSite resource has
+    If, in the ``pcs status`` output, you see the ``WebSite`` resource has
     failed to start, then you've likely not enabled the status URL correctly.
     You can check whether this is the problem by running:
 
@@ -167,8 +168,8 @@ IP address!
 
         wget -O - http://localhost/server-status
 
-    If you see **Not Found** or **Forbidden** in the output, then this is likely the
-    problem.  Ensure that the **<Location /server-status>** block is correct.
+    If you see ``Not Found`` or ``Forbidden`` in the output, then this is likely the
+    problem. Ensure that the ``<Location /server-status>`` block is correct.
 
 .. index::
     single: constraint; colocation
@@ -181,32 +182,32 @@ To reduce the load on any one machine, Pacemaker will generally try to
 spread the configured resources across the cluster nodes. However, we
 can tell the cluster that two resources are related and need to run on
 the same host (or else one of them should not run at all, if they cannot run on
-the same node). Here, we instruct the cluster that WebSite can only run on the
-host where ClusterIP is active.
+the same node). Here, we instruct the cluster that ``WebSite`` can only run on
+the host where ``ClusterIP`` is active.
 
 To achieve this, we use a *colocation constraint* that indicates it is
-mandatory for WebSite to run on the same node as ClusterIP. The
+mandatory for ``WebSite`` to run on the same node as ``ClusterIP``. The
 "mandatory" part of the colocation constraint is indicated by using a
-score of INFINITY. The INFINITY score also means that if ClusterIP is not
-active anywhere, WebSite will not be permitted to run.
+score of ``INFINITY``. The ``INFINITY`` score also means that if ``ClusterIP``
+is not active anywhere, ``WebSite`` will not be permitted to run.
 
 .. NOTE::
 
-    If ClusterIP is not active anywhere, WebSite will not be permitted to run
-    anywhere.
+    If ``ClusterIP`` is not active anywhere, ``WebSite`` will not be permitted
+    to run anywhere.
 
 .. NOTE::
 
-    INFINITY is the default score for a colocation constraint. If you don't
-    specify a score, INFINITY will be used automatically.
+    ``INFINITY`` is the default score for a colocation constraint. If you don't
+    specify a score, ``INFINITY`` will be used automatically.
 
 .. IMPORTANT::
 
     Colocation constraints are "directional", in that they imply certain
     things about the order in which the two resources will have a location
-    chosen. In this case, we're saying that **WebSite** needs to be placed on the
-    same machine as **ClusterIP**, which implies that the cluster must know the
-    location of **ClusterIP** before choosing a location for **WebSite**.
+    chosen. In this case, we're saying that ``WebSite`` needs to be placed on
+    the same machine as ``ClusterIP``, which implies that the cluster must know
+    the location of ``ClusterIP`` before choosing a location for ``WebSite``
 
 .. code-block:: none
 
@@ -256,18 +257,18 @@ that IP just the same. However, if Apache binds only to certain IP
 address(es), the order matters: If the address is added after Apache
 starts, Apache won't respond on that address.
 
-To be sure our WebSite responds regardless of Apache's address configuration,
-we need to make sure ClusterIP not only runs on the same node,
-but also starts before WebSite. A colocation constraint ensures only that the
-resources run together; it doesn't affect order in which the resources are
-started or stopped.
+To be sure our ``WebSite`` responds regardless of Apache's address
+configuration, we need to make sure ``ClusterIP`` not only runs on the same
+node, but also starts before ``WebSite``. A colocation constraint ensures
+only that the resources run together; it doesn't affect order in which the
+resources are started or stopped.
 
 We do this by adding an ordering constraint. By default, all order constraints
-are mandatory. This means, for example, that if ClusterIP needs to stop, then
-WebSite must stop first (or already be stopped); and if WebSite needs to start,
-then ClusterIP must start first (or already be started). This also implies that
-the recovery of ClusterIP will trigger the recovery of WebSite, causing it to
-be restarted.
+are mandatory. This means, for example, that if ``ClusterIP`` needs to stop,
+then ``WebSite`` must stop first (or already be stopped); and if WebSite needs
+to start, then ``ClusterIP`` must start first (or already be started). This
+also implies that the recovery of ``ClusterIP`` will trigger the recovery of
+``WebSite``, causing it to be restarted.
 
 .. code-block:: none
 
@@ -283,13 +284,13 @@ be restarted.
 
 .. NOTE::
 
-    The default action in an order constraint is **start**. If you don't
-    specify an action, as in the example above, **pcs** automatically uses the
-    **start** action.
+    The default action in an order constraint is ``start`` If you don't
+    specify an action, as in the example above, ``pcs`` automatically uses the
+    ``start`` action.
 
 .. NOTE::
 
-    We could have placed the **ClusterIP** and **WebSite** resources into a
+    We could have placed the ``ClusterIP`` and ``WebSite`` resources into a
     **resource group** instead of configuring constraints. A resource group is
     a compact and intuitive way to organize a set of resources into a chain of
     colocation and ordering constraints. We will omit that in this guide; see
@@ -314,8 +315,8 @@ have to worry about whether you can handle the load after a failover.
 
 To do this, we create a location constraint.
 
-In the location constraint below, we are saying the WebSite resource
-prefers the node pcmk-1 with a score of 50.  Here, the score indicates
+In the location constraint below, we are saying the ``WebSite`` resource
+prefers the node ``pcmk-1`` with a score of ``50``.  Here, the score indicates
 how strongly we'd like the resource to run at this location.
 
 .. code-block:: none
@@ -354,13 +355,14 @@ how strongly we'd like the resource to run at this location.
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Wait a minute, the resources are still on pcmk-1!
+Wait a minute, the resources are still on ``pcmk-1``!
 
-Even though WebSite now prefers to run on pcmk-2, that preference is
+Even though ``WebSite`` now prefers to run on ``pcmk-2``, that preference is
 (intentionally) less than the resource stickiness (how much we
 preferred not to have unnecessary downtime).
 
-To see the current placement scores, you can use a tool called crm_simulate.
+To see the current placement scores, you can use a tool called
+``crm_simulate``.
 
 .. code-block:: none
 
@@ -386,13 +388,14 @@ Move Resources Manually
 
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. In this example,
-we will force the WebSite to move to pcmk-2.
+we will force the WebSite to move to ``pcmk-2``.
 
-We will use the **pcs resource move** command to create a temporary constraint
-with a score of INFINITY. While we could update our existing constraint,
-using **move** allows pcs to get rid of the temporary constraint automatically
-after the resource has moved to its destination. Note in the below that the
-``pcs constraint`` output after the **move** command is the same as before.
+We will use the ``pcs resource move`` command to create a temporary constraint
+with a score of ``INFINITY``. While we could update our existing constraint,
+using ``move`` allows ``pcs`` to get rid of the temporary constraint
+automatically after the resource has moved to its destination. Note in the
+below that the ``pcs constraint`` output after the ``move`` command is the same
+as before.
 
 .. code-block:: none
 
@@ -435,11 +438,11 @@ after the resource has moved to its destination. Note in the below that the
       pacemaker: active/disabled
       pcsd: active/enabled
 
-To remove the constraint with the score of 50, we would first get the
+To remove the constraint with the score of ``50``, we would first get the
 constraint's ID using ``pcs constraint --full``, then remove it with
 ``pcs constraint remove`` and the ID. We won't show those steps here,
-but feel free to try it on your own, with the help of the pcs man page
+but feel free to try it on your own, with the help of the ``pcs`` man page
 if necessary.
 
-.. [#] Compare the key used here, **ocf:heartbeat:apache**, with the one we
-       used earlier for the IP address, **ocf:heartbeat:IPaddr2**.
+.. [#] Compare the key used here, ``ocf:heartbeat:apache`` with the one we
+       used earlier for the IP address, ``ocf:heartbeat:IPaddr2``.

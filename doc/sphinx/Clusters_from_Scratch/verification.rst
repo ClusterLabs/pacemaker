@@ -43,7 +43,7 @@ in the cluster.
     investigation of a node failure before returning it to the cluster.
 
 Verify Corosync Installation
-############################
+################################
 
 First, use ``corosync-cfgtool`` to check whether cluster communication is happy:
 
@@ -57,8 +57,9 @@ First, use ``corosync-cfgtool`` to check whether cluster communication is happy:
 		    nodeid:          1:	localhost
 		    nodeid:          2:	connected
 
-We can see here that everything appears normal with our fixed IP
-address (not a 127.0.0.x loopback address) listed as the **addr**, and **localhost** and **connected** for the statuses of nodeid 1 and nodeid 2, respectively.
+We can see here that everything appears normal with our fixed IP address (not a
+``127.0.0.x`` loopback address) listed as the ``addr``, and ``localhost`` and
+``connected`` for the statuses of nodeid 1 and nodeid 2, respectively.
 
 If you see something different, you might want to start by checking
 the node's network, firewall, and SELinux configurations.
@@ -88,7 +89,7 @@ Next, check the membership and quorum APIs:
 You should see both nodes have joined the cluster.
 
 Verify Pacemaker Installation
-#############################
+#################################
 
 Now that we have confirmed that Corosync is functional, we can check
 the rest of the stack. Pacemaker has already been started, so verify

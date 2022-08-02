@@ -4,7 +4,7 @@
 Convert Storage to Active/Active
 --------------------------------
 
-The primary requirement for an Active/Active cluster is that the data
+The primary requirement for an active/active cluster is that the data
 required for your services is available, simultaneously, on both
 machines. Pacemaker makes no requirement on how this is achieved; you
 could use a Storage Area Network (SAN) if you had one available, but
@@ -34,8 +34,8 @@ Configure the Cluster for the DLM
 #################################
 
 The DLM control daemon needs to run on both nodes, so we'll start by creating a
-resource for it (using the **ocf:pacemaker:controld** resource script), and clone
-it:
+resource for it (using the ``ocf:pacemaker:controld`` resource agent), and
+clone it:
 
 .. code-block:: none
 
@@ -104,9 +104,9 @@ Create and Populate GFS2 Filesystem
 ###################################
 
 Before we do anything to the existing partition, we need to make sure it
-is unmounted. We do this by telling the cluster to stop the WebFS resource.
-This will ensure that other resources (in our case, Apache) using WebFS
-are not only stopped, but stopped in the correct order.
+is unmounted. We do this by telling the cluster to stop the ``WebFS`` resource.
+This will ensure that other resources (in our case, ``WebSite``) using
+``WebFS`` are not only stopped, but stopped in the correct order.
 
 .. code-block:: none
 
@@ -121,8 +121,8 @@ are not only stopped, but stopped in the correct order.
       * Clone Set: dlm-clone [dlm]:
         * Started: [ pcmk-1 pcmk-2 ]
 
-You can see that both Apache and WebFS have been stopped, and that **pcmk-1**
-is currently running the promoted instance for the DRBD device.
+You can see that both ``WebSite`` and ``WebFS`` have been stopped, and that
+``pcmk-1`` is currently running the promoted instance for the DRBD device.
 
 Now we can create a new GFS2 filesystem on the DRBD device.
 
@@ -172,7 +172,7 @@ The ``mkfs.gfs2`` command required a number of additional parameters:
 * ``-t mycluster:web`` specifies the lock table name. The format for this
   field is ``<CLUSTERNAME>:<FSNAME>``. For ``CLUSTERNAME``, we need to use the
   same value we specified originally with ``pcs cluster setup --name`` (which is
-  also the value of **cluster_name** in ``/etc/corosync/corosync.conf``). If
+  also the value of ``cluster_name`` in ``/etc/corosync/corosync.conf``). If
   you are unsure what your cluster name is, you can look in
   ``/etc/corosync/corosync.conf`` or execute the command
   ``pcs cluster corosync | grep cluster_name``.
@@ -195,7 +195,7 @@ Now we can (re-)populate the new filesystem with data
 Reconfigure the Cluster for GFS2
 ################################
 
-With the WebFS resource stopped, let's update the configuration.
+With the ``WebFS`` resource stopped, let's update the configuration.
 
 .. code-block:: none
 
@@ -207,7 +207,7 @@ With the WebFS resource stopped, let's update the configuration.
                   start interval=0s timeout=60s (WebFS-start-interval-0s)
                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
-The fstype option needs to be updated to **gfs2** instead of **xfs**.
+The fstype option needs to be updated to ``gfs2`` instead of ``xfs``.
 
 .. code-block:: none
 
@@ -245,8 +245,8 @@ and ordering constraints for it:
       WebFS with dlm-clone (score:INFINITY)
     Ticket Constraints:
 
-We also need to update the **no-quorum-policy** property to **freeze**. By
-default, the value of **no-quorum-policy** is set to **stop**, indicating that
+We also need to update the ``no-quorum-policy`` property to ``freeze``. By
+default, the value of ``no-quorum-policy`` is set to ``stop`` indicating that
 once quorum is lost, all the resources on the remaining partition will
 immediately be stopped. Typically this default is the safest and most optimal
 option, but unlike most resources, GFS2 requires quorum to function. When
@@ -255,7 +255,7 @@ itself cannot be correctly stopped. Any attempts to stop these resources
 without quorum will fail, which will ultimately result in the entire cluster
 being fenced every time quorum is lost.
 
-To address this situation, set **no-quorum-policy** to **freeze** when GFS2 is
+To address this situation, set ``no-quorum-policy`` to ``freeze`` when GFS2 is
 in use. This means that when quorum is lost, the remaining partition will do
 nothing until quorum is regained. 
 
@@ -273,8 +273,8 @@ Clone the Filesystem Resource
 Now that we have a cluster filesystem ready to go, we can configure the cluster
 so both nodes mount the filesystem.
 
-Clone the filesystem resource in a new configuration.
-Notice how pcs automatically updates the relevant constraints again.
+Clone the ``Filesystem`` resource in a new configuration.
+Notice how ``pcs`` automatically updates the relevant constraints again.
 
 .. code-block:: none
 
@@ -304,8 +304,8 @@ Primary.
 
     [root@pcmk-1 ~]# pcs -f active_cfg resource update WebData-clone promoted-max=2
 
-Finally, load our configuration to the cluster, and re-enable the WebFS resource
-(which we disabled earlier).
+Finally, load our configuration to the cluster, and re-enable the ``WebFS``
+resource (which we disabled earlier).
 
 .. code-block:: none
 
@@ -337,6 +337,6 @@ administrator could change HTML files on either node, and the live website will
 show the changes even if it is running on the opposite node.
 
 If the web server is configured to listen on all IP addresses, it is possible
-to remove the constraints between the WebSite and ClusterIP resources, and
-clone the WebSite resource. The web server would always be ready to serve web
-pages, and only the IP address would need to be moved in a failover.
+to remove the constraints between the ``WebSite`` and ``ClusterIP`` resources,
+and clone the ``WebSite`` resource. The web server would always be ready to
+serve web pages, and only the IP address would need to be moved in a failover.

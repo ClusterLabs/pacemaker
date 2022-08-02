@@ -27,7 +27,7 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
 .. NOTE::
 
     It is possible to tell the cluster not to use fencing, by setting the
-    **stonith-enabled** cluster property to false:
+    ``stonith-enabled`` cluster property to false:
 
     .. code-block:: none
 
@@ -103,16 +103,16 @@ Configure the Cluster for Fencing
    ``pcs -f stonith_cfg property set stonith-enabled=true``
 
 #. If the device does not know how to fence nodes based on their cluster node
-   name, you may also need to set the special **pcmk_host_map** parameter. See
+   name, you may also need to set the special ``pcmk_host_map`` parameter. See
    ``man pacemaker-fenced`` for details.
 
-#. If the device does not support the **list** command, you may also need
-   to set the special **pcmk_host_list** and/or **pcmk_host_check**
-   parameters.  See ``man pacemaker-fenced`` for details.
+#. If the device does not support the ``list`` command, you may also need to
+   set the special ``pcmk_host_list`` and/or ``pcmk_host_check`` parameters.
+   See ``man pacemaker-fenced`` for details.
 
-#. If the device does not expect the victim to be specified with the
-   **port** parameter, you may also need to set the special
-   **pcmk_host_argument** parameter. See ``man pacemaker-fenced`` for details.
+#. If the device does not expect the victim to be specified with the ``port``
+   parameter, you may also need to set the special ``pcmk_host_argument``
+   parameter. See ``man pacemaker-fenced`` for details.
 
 #. Commit the new configuration: ``pcs cluster cib-push stonith_cfg``
 
@@ -124,14 +124,14 @@ Example
 #######
 
 For this example, assume we have a chassis containing four nodes
-and a separately powered IPMI device active on 10.0.0.1. Following the steps
+and a separately powered IPMI device active on ``10.0.0.1``. Following the steps
 above would go something like this:
 
-Step 1: Install the **fence-agents-ipmilan** package on both nodes.
+Step 1: Install the ``fence-agents-ipmilan`` package on both nodes.
 
 Step 2: Configure the IP address, authentication credentials, etc. in the IPMI device itself.
 
-Step 3: Choose the **fence_ipmilan** STONITH agent.
+Step 3: Choose the ``fence_ipmilan`` STONITH agent.
 
 Step 4: Obtain the agent's possible parameters:
 

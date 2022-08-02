@@ -204,14 +204,15 @@ Cluster Options
 The output shows cluster-wide configuration options, as well as some baseline-
 level state information. The output includes:
 
-* **cluster-infrastructure** - the cluster communications layer in use
-* **cluster-name** - the cluster name chosen by the administrator when the cluster was created
-* **dc-version** - the version (including upstream source-code hash) of Pacemaker
-  used on the Designated Controller, which is the node elected to determine what
-  actions are needed when events occur
-* **have-watchdog** - whether watchdog integration is enabled; set
+* ``cluster-infrastructure`` - the cluster communications layer in use
+* ``cluster-name`` - the cluster name chosen by the administrator when the
+  cluster was created
+* ``dc-version`` - the version (including upstream source-code hash) of
+  ``pacemaker`` used on the Designated Controller, which is the node elected to
+  determine what actions are needed when events occur
+* ``have-watchdog`` - whether watchdog integration is enabled; set
   automatically when SBD is enabled
-* **stonith-enabled=true** - whether the cluster is allowed to use STONITH resources
+* ``stonith-enabled`` - whether nodes may be fenced as part of recovery
 
 .. NOTE::
 
@@ -232,7 +233,7 @@ _______________
 This shows cluster option defaults that apply to every resource that does not
 explicitly set the option itself. Above:
 
-* **resource-stickiness** - Specify how strongly a resource prefers to remain
+* ``resource-stickiness`` - Specify how strongly a resource prefers to remain
   on its current node. Alternatively, you can view this as the level of
   aversion to moving healthy resources to other machines.
 
@@ -267,10 +268,10 @@ DRBD - Shared Storage
 _____________________
 
 Here, we define the DRBD service and specify which DRBD resource (from
-/etc/drbd.d/\*.res) it should manage. We make it a promotable clone resource
-and, in order to have an active/active setup, allow both instances to be
-promoted at the same time. We also set the notify option so that the cluster
-will tell DRBD agent when its peer changes state.
+``/etc/drbd.d/\*.res``) it should manage. We make it a promotable clone
+resource and, in order to have an active/active setup, allow both instances to
+be promoted at the same time. We also set the notify option so that the cluster
+will tell the ``drbd`` agent when its peer changes state.
 
 .. code-block:: none
 
