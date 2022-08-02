@@ -127,8 +127,8 @@ our new resource before moving on.
 First, from the ``pcs status`` output in the previous step, find the node on
 which the IP address is running. You can see that the status of the
 ``ClusterIP`` resource is ``Started`` on a particular node (in this example,
-``pcmk-2``). Shut down Pacemaker and Corosync on that machine to trigger a
-failover.
+``pcmk-2``). Shut down ``pacemaker`` and ``corosync`` on that machine to
+trigger a failover.
 
 .. code-block:: none
 
@@ -144,7 +144,7 @@ failover.
     cluster services on the local host. The same is true for ``pcs cluster
     start`` and many other such commands.
 
-Verify that pacemaker and corosync are no longer running:
+Verify that ``pacemaker`` and ``corosync`` are no longer running:
 
 .. code-block:: none
 
@@ -205,13 +205,13 @@ automatically, and no errors are reported.
     For example, if a 5-node cluster split into 3- and 2-node paritions,
     the 3-node partition would have quorum and could continue serving resources.
     If a 6-node cluster split into two 3-node partitions, neither partition
-    would have quorum; pacemaker's default behavior in such cases is to
+    would have quorum; Pacemaker's default behavior in such cases is to
     stop all resources, in order to prevent data corruption.
 
     Two-node clusters are a special case. By the above definition,
     a two-node cluster would only have quorum when both nodes are
     running. This would make the creation of a two-node cluster pointless.
-    However, corosync has the ability to require only one node for quorum in a
+    However, Corosync has the ability to require only one node for quorum in a
     two-node cluster.
 
     The ``pcs cluster setup`` command will automatically configure

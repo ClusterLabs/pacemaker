@@ -4,9 +4,9 @@ Start and Verify Cluster
 Start the Cluster
 #################
 
-Now that corosync is configured, it is time to start the cluster.
-The command below will start corosync and pacemaker on both nodes
-in the cluster.
+Now that Corosync is configured, it is time to start the cluster.
+The command below will start the ``corosync`` and ``pacemaker`` services on
+both nodes in the cluster.
 
 .. code-block:: none
 
@@ -34,12 +34,12 @@ in the cluster.
 
 .. IMPORTANT::
 
-    In this example, we are not enabling the corosync and pacemaker services
-    to start at boot. If a cluster node fails or is rebooted, you will need to
-    run ``pcs cluster start [<NODENAME> | --all]`` to start the cluster on it.
-    While you can enable the services to start at boot (for example, using
-    ``pcs cluster enable [<NODENAME> | --all]``), requiring a manual start of
-    cluster services gives you the opportunity to do a post-mortem
+    In this example, we are not enabling the ``corosync`` and ``pacemaker``
+    services to start at boot. If a cluster node fails or is rebooted, you will
+    need to run ``pcs cluster start [<NODENAME> | --all]`` to start the cluster
+    on it. While you can enable the services to start at boot (for example,
+    using ``pcs cluster enable [<NODENAME> | --all]``), requiring a manual
+    start of cluster services gives you the opportunity to do a post-mortem
     investigation of a node failure before returning it to the cluster.
 
 Verify Corosync Installation
@@ -139,9 +139,9 @@ If that looks OK, check the ``pcs status`` output:
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Finally, ensure there are no start-up errors from corosync or pacemaker (aside
-from messages relating to not having STONITH configured, which are OK at this
-point):
+Finally, ensure there are no start-up errors from ``corosync`` or ``pacemaker``
+(aside from messages relating to not having STONITH configured, which are OK at
+this point):
 
 .. code-block:: none
 

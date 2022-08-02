@@ -9,7 +9,7 @@ read and write XML. In true UNIX style, there were also a number of
 different commands that specialized in different aspects of querying
 and updating the cluster.
 
-In addition, the various components of the cluster stack (corosync, pacemaker,
+In addition, the various components of the cluster stack (Corosync, Pacemaker,
 etc.) had to be configured separately, with different configuration tools and
 formats.
 
@@ -44,8 +44,8 @@ Availability repo.
     This document will show commands that need to be executed on both nodes
     with a simple ``#`` prompt. Be sure to run them on each node individually.
 
-Now, we'll install pacemaker, pcs, and some other command-line tools that will
-make our lives easier:
+Now, we'll install ``pacemaker``, ``pcs``, and some other command-line tools
+that will make our lives easier:
 
 .. code-block:: none
 
@@ -155,7 +155,7 @@ On either node, use ``pcs host auth`` to authenticate as the ``hacluster`` user:
     pcmk-1: Authorized
 
 Next, use ``pcs cluster setup`` on the same node to generate and synchronize the
-corosync configuration:
+Corosync configuration:
 
 .. code-block:: none
 

@@ -444,7 +444,7 @@ We are going to take a shortcut when creating the resource this time.
 Instead of explicitly saying we want the ``ocf:heartbeat:Filesystem`` script,
 we are only going to ask for ``Filesystem``. We can do this because we know
 there is only one resource script named ``Filesystem`` available to
-pacemaker, and that ``pcs`` is smart enough to fill in the
+Pacemaker, and that ``pcs`` is smart enough to fill in the
 ``ocf:heartbeat:`` portion for us correctly in the configuration. If there were
 multiple ``Filesystem`` scripts from different OCF providers, we would need to
 specify the exact one we wanted.
@@ -543,10 +543,10 @@ services on ``pcmk-2``, failing over the cluster resources, but there is another
 way to safely simulate node failure.
 
 We can put the node into *standby mode*. Nodes in this state continue to
-run corosync and pacemaker but are not allowed to run resources. Any resources
-found active there will be moved elsewhere. This feature can be particularly
-useful when performing system administration tasks such as updating packages
-used by cluster resources.
+run ``corosync`` and ``pacemaker`` but are not allowed to run resources. Any
+resources found active there will be moved elsewhere. This feature can be
+particularly useful when performing system administration tasks such as
+updating packages used by cluster resources.
 
 Put the active node into standby mode, and observe the cluster move all
 the resources to the other node. The node's status will change to indicate that
