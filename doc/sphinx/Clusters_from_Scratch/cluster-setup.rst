@@ -24,7 +24,7 @@ They even allow you to queue up several changes at once and commit
 them all at once.
 
 Two popular command-line shells are ``pcs`` and ``crmsh``. Clusters from Scratch is
-based on ``pcs`` because it comes with CentOS, but both have similar
+based on ``pcs`` because it comes with |CFS_DISTRO|, but both have similar
 functionality. Choosing a shell or GUI is a matter of personal preference and
 what comes with (and perhaps is supported by) your choice of operating system.
 

@@ -18,7 +18,7 @@ Install the DRBD Packages
 DRBD itself is included in the upstream kernel [#]_, but we do need some
 utilities to use it effectively.
 
-CentOS does not ship these utilities, so we need to enable a third-party
+|CFS_DISTRO| does not ship these utilities, so we need to enable a third-party
 repository to get them. Supported packages for many OSes are available from
 DRBD's maker `LINBIT <http://www.linbit.com/>`_, but here we'll use the free
 `ELRepo <http://elrepo.org/>`_ repository.
