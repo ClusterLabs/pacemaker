@@ -98,7 +98,7 @@ typedef struct lrmd_cmd_s {
 } lrmd_cmd_t;
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
-static gboolean lrmd_rsc_dispatch(gpointer user_data);
+static gboolean execute_resource_action(gpointer user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 
 #ifdef PCMK__TIME_USE_CGT
@@ -284,7 +284,8 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->class = crm_element_value_copy(rsc_xml, F_LRMD_CLASS);
     rsc->provider = crm_element_value_copy(rsc_xml, F_LRMD_PROVIDER);
     rsc->type = crm_element_value_copy(rsc_xml, F_LRMD_TYPE);
-    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_rsc_dispatch, rsc);
+    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
+                                     rsc);
 
     // Initialize fence device probes (to return "not running")
     pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
@@ -1223,7 +1224,7 @@ execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 }
 
 static void
-lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
+execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = 0;
     bool do_monitor = FALSE;
@@ -1278,7 +1279,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 }
 
 static int
-lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
+execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     svc_action_t *action = NULL;
     GHashTable *params_copy = NULL;
@@ -1352,8 +1353,9 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 }
 
 static gboolean
-lrmd_rsc_execute(lrmd_rsc_t * rsc)
+execute_resource_action(gpointer user_data)
 {
+    lrmd_rsc_t *rsc = (lrmd_rsc_t *) user_data;
     lrmd_cmd_t *cmd = NULL;
 
     CRM_CHECK(rsc != NULL, return FALSE);
@@ -1395,18 +1397,12 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
     log_execute(cmd);
 
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        lrmd_rsc_execute_stonith(rsc, cmd);
+        execute_stonith_action(rsc, cmd);
     } else {
-        lrmd_rsc_execute_service_lib(rsc, cmd);
+        execute_nonstonith_action(rsc, cmd);
     }
 
     return TRUE;
-}
-
-static gboolean
-lrmd_rsc_dispatch(gpointer user_data)
-{
-    return lrmd_rsc_execute(user_data);
 }
 
 void
