@@ -1326,19 +1326,28 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     action->cb_data = cmd;
 
     if (services_action_async(action, action_complete)) {
-        /* When services_action_async() returns TRUE, the callback might have
-         * been called -- in this case action_complete(), which might free cmd,
-         * so cmd cannot be used here.
+        /* The services library has taken responsibility for the action. It
+         * could be pending, blocked, or merged into a duplicate recurring
+         * action, in which case the action callback (action_complete())
+         * will be called when the action completes, otherwise the callback has
+         * already been called.
+         *
+         * action_complete() calls cmd_finalize() which can free cmd, so cmd
+         * cannot be used here.
          */
-        return TRUE;
+    } else {
+        /* This is a recurring action that is not being cancelled and could not
+         * be initiated. It has been rescheduled, and the action callback
+         * (action_complete()) has been called, which in this case has already
+         * called cmd_finalize(), which in this case should only reset (not
+         * free) cmd.
+         */
+
+        pcmk__set_result(&(cmd->result), action->rc, action->status,
+                         services__exit_reason(action));
+        services_action_free(action);
     }
 
-    pcmk__set_result(&(cmd->result), action->rc, action->status,
-                     services__exit_reason(action));
-    services_action_free(action);
-    action = NULL;
-
-    cmd_finalize(cmd, rsc);
     return TRUE;
 }
 
