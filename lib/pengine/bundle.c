@@ -73,6 +73,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
                                 data->prefix, replica->offset,
                                 replica->ipaddr);
             }
+            // fall through
         case PE__CONTAINER_AGENT_RKT:
             return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
                             replica->ipaddr, data->prefix, replica->offset);
