@@ -174,6 +174,4 @@ void attrd_update_minimum_protocol_ver(const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
-gboolean attrd_election_cb(gpointer user_data);
-
 #endif /* PACEMAKER_ATTRD__H */

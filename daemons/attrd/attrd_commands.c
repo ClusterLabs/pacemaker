@@ -52,16 +52,3 @@ attrd_broadcast_protocol(void)
     attrd_client_update(attrd_op);
     free_xml(attrd_op);
 }
-
-gboolean
-attrd_election_cb(gpointer user_data)
-{
-    attrd_declare_winner();
-
-    /* Update the peers after an election */
-    attrd_peer_sync(NULL, NULL);
-
-    /* Update the CIB after an election */
-    attrd_write_attributes(true, false);
-    return FALSE;
-}

@@ -17,6 +17,19 @@
 static char *peer_writer = NULL;
 static election_t *writer = NULL;
 
+static gboolean
+attrd_election_cb(gpointer user_data)
+{
+    attrd_declare_winner();
+
+    /* Update the peers after an election */
+    attrd_peer_sync(NULL, NULL);
+
+    /* Update the CIB after an election */
+    attrd_write_attributes(true, false);
+    return FALSE;
+}
+
 void
 attrd_election_init(void)
 {
