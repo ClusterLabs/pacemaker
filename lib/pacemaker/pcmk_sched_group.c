@@ -591,6 +591,12 @@ pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
     pe_resource_t *member = NULL;
     group_variant_data_t *group_data = NULL;
 
+    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+
+    if (log_id == NULL) {
+        log_id = rsc->id;
+    }
+
     get_group_variant_data(group_data, rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {

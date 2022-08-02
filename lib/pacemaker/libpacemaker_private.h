@@ -64,7 +64,7 @@ struct resource_alloc_functions_s {
      * resource's relevant colocations.
      *
      * \param[in,out] rsc      Resource to check colocations for
-     * \param[in]     log_id   Resource ID to use in log messages
+     * \param[in]     log_id   Resource ID to use in logs (if NULL, use rsc ID)
      * \param[in,out] nodes    Nodes to update
      * \param[in]     attr     Colocation attribute (NULL to use default)
      * \param[in]     factor   Incorporate scores multiplied by this factor
