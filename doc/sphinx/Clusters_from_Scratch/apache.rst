@@ -17,7 +17,7 @@ hosts. We will also allow the cluster to use the ``wget`` tool (this is the
 default, but ``curl`` is also supported) to check the status of the Apache
 server. We'll install ``httpd`` (Apache) and ``wget`` now.
 
-.. code-block:: none
+.. code-block:: console
 
     # dnf install -y httpd wget
     # firewall-cmd --permanent --add-service=http
@@ -41,7 +41,7 @@ file there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
 on both nodes:
 
-.. code-block:: none
+.. code-block:: console
 
     # cat <<-END >/var/www/html/index.html
      <html>
@@ -60,7 +60,7 @@ Pacemaker uses the ``apache`` resource agent to monitor the health of your
 Apache instance via the ``server-status`` URL, and to recover the instance if
 it fails. On both nodes, configure this URL as follows:
 
-.. code-block:: none
+.. code-block:: console
 
     # cat <<-END >/etc/httpd/conf.d/status.conf
      <Location /server-status>
@@ -90,7 +90,7 @@ The script's only required parameter is the path to the main Apache
 configuration file, and we'll tell the cluster to check once a
 minute that Apache is still running.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource create WebSite ocf:heartbeat:apache  \
           configfile=/etc/httpd/conf/httpd.conf \
@@ -102,7 +102,7 @@ other operations is 20 seconds. In many cases, this timeout period is less than
 a particular resource's advised timeout period. For the purposes of this
 tutorial, we will adjust the global operation timeout default to 240 seconds.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource op defaults
     No defaults set
@@ -130,7 +130,7 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 After a short delay, we should see the cluster start Apache.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -164,7 +164,7 @@ IP address!
     failed to start, then you've likely not enabled the status URL correctly.
     You can check whether this is the problem by running:
 
-    .. code-block:: none
+    .. code-block:: console
 
         wget -O - http://localhost/server-status
 
@@ -209,7 +209,7 @@ is not active anywhere, ``WebSite`` will not be permitted to run.
     the same machine as ``ClusterIP``, which implies that the cluster must know
     the location of ``ClusterIP`` before choosing a location for ``WebSite``
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP INFINITY
     [root@pcmk-1 ~]# pcs constraint
@@ -270,7 +270,7 @@ to start, then ``ClusterIP`` must start first (or already be started). This
 also implies that the recovery of ``ClusterIP`` will trigger the recovery of
 ``WebSite``, causing it to be restarted.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint order ClusterIP then WebSite
     Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
@@ -319,7 +319,7 @@ In the location constraint below, we are saying the ``WebSite`` resource
 prefers the node ``pcmk-1`` with a score of ``50``.  Here, the score indicates
 how strongly we'd like the resource to run at this location.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-2=50
     [root@pcmk-1 ~]# pcs constraint
@@ -364,7 +364,7 @@ preferred not to have unnecessary downtime).
 To see the current placement scores, you can use a tool called
 ``crm_simulate``.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# crm_simulate -sL
     [ pcmk-1 pcmk-2 ]
@@ -397,7 +397,7 @@ automatically after the resource has moved to its destination. Note in the
 below that the ``pcs constraint`` output after the ``move`` command is the same
 as before.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource move WebSite pcmk-2
     Location constraint to move resource 'WebSite' has been created

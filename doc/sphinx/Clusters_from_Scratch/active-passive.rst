@@ -20,7 +20,7 @@ still running every 30 seconds.
     node or elsewhere. Do not reuse an IP address one of the nodes already has
     configured.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
         ip=192.168.122.120 cidr_netmask=24 op monitor interval=30s
@@ -42,7 +42,7 @@ This tells Pacemaker three things about the resource you want to add:
 To obtain a list of the available resource standards (the ``ocf`` part of
 ``ocf:heartbeat:IPaddr2``), run:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource standards
     lsb
@@ -53,7 +53,7 @@ To obtain a list of the available resource standards (the ``ocf`` part of
 To obtain a list of the available OCF resource providers (the ``heartbeat``
 part of ``ocf:heartbeat:IPaddr2``), run:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource providers
     heartbeat
@@ -63,7 +63,7 @@ part of ``ocf:heartbeat:IPaddr2``), run:
 Finally, if you want to see all the resource agents available for
 a specific OCF provider (the ``IPaddr2`` part of ``ocf:heartbeat:IPaddr2``), run:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource agents ocf:heartbeat
     apache
@@ -82,7 +82,7 @@ Now, verify that the IP resource has been added, and display the cluster's
 status to see that it is now active. Note: There should be a stonith device by
 now, but it's okay if it doesn't look like the one below.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -109,7 +109,7 @@ now, but it's okay if it doesn't look like the one below.
 On the node where the ``ClusterIP`` resource is running, verify that the
 address has been added.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-2 ~]# ip -o addr show
     1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
@@ -130,7 +130,7 @@ which the IP address is running. You can see that the status of the
 ``pcmk-2``). Shut down ``pacemaker`` and ``corosync`` on that machine to
 trigger a failover.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-2 ~]# pcs cluster stop pcmk-2
     pcmk-2: Stopping Cluster (pacemaker)...
@@ -146,7 +146,7 @@ trigger a failover.
 
 Verify that ``pacemaker`` and ``corosync`` are no longer running:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-2 ~]# pcs status
     Error: error running crm_mon, is pacemaker running?
@@ -155,7 +155,7 @@ Verify that ``pacemaker`` and ``corosync`` are no longer running:
 
 Go to the other node, and check the cluster status.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -198,7 +198,7 @@ automatically, and no errors are reported.
     the same partition, or for the mathematically inclined, whenever the following
     inequality is true:
 
-    .. code-block:: none
+    .. code-block:: console
 
         total_nodes < 2 * active_nodes
 
@@ -246,7 +246,7 @@ Now, simulate node recovery by restarting the cluster stack on ``pcmk-2``, and
 check the cluster's status. (It may take a little while before the cluster
 gets going on the node, but it eventually will look like the below.)
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -294,7 +294,7 @@ prevent healthy resources from moving around the cluster when there are no
 user-configured constraints that influence where Pacemaker prefers to run those
 resources.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource defaults
     Meta Attrs: build-resource-defaults
@@ -304,7 +304,7 @@ For this example, we will increase the default resource stickiness to 100.
 Later in this guide, we will configure a location constraint with a score lower
 than the default resource stickiness.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource defaults update resource-stickiness=100
     Warning: Defaults do not apply to resources which override them with their own defined values

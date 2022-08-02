@@ -4,7 +4,7 @@ Configuration Recap
 Final Cluster Configuration
 ###########################
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource
       * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
@@ -16,18 +16,18 @@ Final Cluster Configuration
       * Clone Set: WebFS-clone [WebFS]:
         * Started: [ pcmk-1 pcmk-2 ]
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource op defaults
     Meta Attrs: op_defaults-meta_attributes
       timeout=240s
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs stonith
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
@@ -46,7 +46,7 @@ Final Cluster Configuration
       WebFS-clone with dlm-clone (score:INFINITY)
     Ticket Constraints:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
@@ -77,7 +77,7 @@ Final Cluster Configuration
       pacemaker: active/disabled
       pcsd: active/enabled
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs config
     Cluster Name: mycluster
@@ -171,7 +171,7 @@ Final Cluster Configuration
 Node List
 #########
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status nodes
     Pacemaker Nodes:
@@ -190,7 +190,7 @@ Node List
 Cluster Options
 ###############
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs property
     Cluster Properties:
@@ -224,7 +224,7 @@ Resources
 Default Options
 _______________
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource defaults
     Meta Attrs: build-resource-defaults
@@ -240,7 +240,7 @@ explicitly set the option itself. Above:
 Fencing
 _______
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs stonith status
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
@@ -255,7 +255,7 @@ _______________
 Users of the services provided by the cluster require an unchanging
 address with which to access it.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource config ClusterIP
      Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
@@ -273,7 +273,7 @@ resource and, in order to have an active/active setup, allow both instances to
 be promoted at the same time. We also set the notify option so that the cluster
 will tell the ``drbd`` agent when its peer changes state.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource config WebData-clone
      Clone: WebData-clone
@@ -301,7 +301,7 @@ mounted and that we are using GFS2. Again, it is a clone because it is
 intended to be active on both nodes. The additional constraints ensure
 that it can only be started on nodes with active DLM and DRBD instances.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource config WebFS-clone
      Clone: WebFS-clone
@@ -326,7 +326,7 @@ Lastly, we have the actual service, Apache. We need only tell the cluster
 where to find its main configuration file and restrict it to running on
 a node that has the required filesystem mounted and the IP address active.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource config WebSite
      Resource: WebSite (class=ocf provider=heartbeat type=apache)

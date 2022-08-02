@@ -185,7 +185,7 @@ _________________
 
 Ensure that the machine has the static IP address you configured earlier.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ip addr
     1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -209,14 +209,14 @@ Ensure that the machine has the static IP address you configured earlier.
     by running ``nmcli con show``; you can get details for each connection by
     running ``nmcli con show ${conn}``.
 
-    .. code-block:: none
+    .. code-block:: console
 
         [root@pcmk-1 ~]# nmcli con mod ${conn} ipv4.addresses "${new_address}"
         [root@pcmk-1 ~]# nmcli con up ${conn}
 
 Next, ensure that the routes are as expected:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ip route
     default via 192.168.122.1 dev enp1s0 proto static metric 100 
@@ -225,7 +225,7 @@ Next, ensure that the routes are as expected:
 If there is no line beginning with ``default via``, then use ``nmcli`` to add a
 gateway:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# nmcli con mod ${conn} ipv4.gateway "${new_gateway_addr}"
     [root@pcmk-1 ~]# nmcli con up ${conn}
@@ -233,7 +233,7 @@ gateway:
 Now, check for connectivity to the outside world. Start small by
 testing whether we can reach the gateway we configured.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ping -c 1 192.168.122.1
     PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
@@ -245,7 +245,7 @@ testing whether we can reach the gateway we configured.
 
 Now try something external; choose a location you know should be available.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ping -c 1 www.clusterlabs.org
     PING mx1.clusterlabs.org (95.217.104.78) 56(84) bytes of data.
@@ -264,7 +264,7 @@ use copy and paste, etc.
 
 From another host, check whether we can see the new host at all:
 
-.. code-block:: none
+.. code-block:: console
 
     [gchin@gchin ~]$ ping -c 1 192.168.122.101
     PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
@@ -276,7 +276,7 @@ From another host, check whether we can see the new host at all:
     
 Next, login as ``root`` via SSH.
 
-.. code-block:: none
+.. code-block:: console
 
     [gchin@gchin ~]$ ssh root@192.168.122.101
     The authenticity of host '192.168.122.101 (192.168.122.101)' can't be established.
@@ -292,7 +292,7 @@ _____________
 
 Apply any package updates released since your installation image was created:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# dnf update -y
 
@@ -307,20 +307,20 @@ During installation, we filled in the machine's fully qualified domain
 name (FQDN), which can be rather long when it appears in cluster logs and
 status output. See for yourself how the machine identifies itself:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# uname -n
     pcmk-1.localdomain
 
 We can use the ``hostnamectl`` tool to strip off the domain name:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# hostnamectl set-hostname $(uname -n | sed s/\\..*//)
 
 Now, check that the machine is using the correct name:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# uname -n
     pcmk-1
@@ -344,7 +344,7 @@ ______________________________
 
 Confirm that you can communicate between the two new nodes:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ping -c 3 192.168.122.102
     PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
@@ -363,7 +363,7 @@ create a single-point-of-failure (SPOF) if the DNS server goes down [#]_. If
 you add entries to ``/etc/hosts``, they should look something like the
 following:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# grep pcmk /etc/hosts
     192.168.122.101 pcmk-1.localdomain  pcmk-1
@@ -371,7 +371,7 @@ following:
 
 We can now verify the setup by again using ``ping``:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ping -c 3 pcmk-2
     PING pcmk-2.localdomain (192.168.122.102) 56(84) bytes of data.
@@ -408,7 +408,7 @@ Create a new key and allow anyone with that key to log in:
 
 .. topic:: Creating and Activating a New SSH Key
 
-   .. code-block:: none
+   .. code-block:: console
 
         [root@pcmk-1 ~]# ssh-keygen -f ~/.ssh/id_rsa -N ""
         Generating public/private rsa key pair.
@@ -433,7 +433,7 @@ Create a new key and allow anyone with that key to log in:
 
 Install the key on the other node:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ssh-copy-id pcmk-2
     /usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
@@ -453,7 +453,7 @@ Install the key on the other node:
 
 Test that you can now run commands remotely, without being prompted:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
     pcmk-2

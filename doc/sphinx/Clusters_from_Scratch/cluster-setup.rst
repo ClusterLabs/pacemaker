@@ -35,7 +35,7 @@ Install the Cluster Software
 Fire up a shell on both nodes and run the following to activate the High
 Availability repo.
 
-.. code-block:: none
+.. code-block:: console
 
     # dnf config-manager --set-enabled highavailability
 
@@ -47,7 +47,7 @@ Availability repo.
 Now, we'll install ``pacemaker``, ``pcs``, and some other command-line tools
 that will make our lives easier:
 
-.. code-block:: none
+.. code-block:: console
 
     # dnf install -y pacemaker pcs psmisc policycoreutils-python3
     
@@ -68,7 +68,7 @@ _______________________________________
 
 On each node, allow cluster-related services through the local firewall:
 
-.. code-block:: none
+.. code-block:: console
 
     # firewall-cmd --permanent --add-service=high-availability
     success
@@ -90,7 +90,7 @@ On each node, allow cluster-related services through the local firewall:
 
     To disable security measures:
 
-    .. code-block:: none
+    .. code-block:: console
 
         [root@pcmk-1 ~]# setenforce 0
         [root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
@@ -108,7 +108,7 @@ across all nodes in the cluster, among other functions.
 
 Start and enable the daemon by issuing the following commands on each node:
 
-.. code-block:: none
+.. code-block:: console
 
     # systemctl start pcsd.service
     # systemctl enable pcsd.service
@@ -123,7 +123,7 @@ This tutorial will make use of such commands,
 so now we will set a password for the ``hacluster`` user, using the same password
 on both nodes:
 
-.. code-block:: none
+.. code-block:: console
 
     # passwd hacluster
     Changing password for user hacluster.
@@ -137,7 +137,7 @@ on both nodes:
     different machine from the one you're logged into, you can use
     the ``--stdin`` option for ``passwd``:
 
-    .. code-block:: none
+    .. code-block:: console
 
         [root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'
 
@@ -146,7 +146,7 @@ __________________
 
 On either node, use ``pcs host auth`` to authenticate as the ``hacluster`` user:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
     Username: hacluster
@@ -157,7 +157,7 @@ On either node, use ``pcs host auth`` to authenticate as the ``hacluster`` user:
 Next, use ``pcs cluster setup`` on the same node to generate and synchronize the
 Corosync configuration:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
     No addresses specified for host 'pcmk-1', using 'pcmk-1'
@@ -185,7 +185,7 @@ Corosync configuration:
     mapping for each node in ``/etc/corosync/corosync.conf``, eliminating the
     need for hostname resolution via DNS, ``/etc/hosts``, and the like.
 
-    .. code-block:: none
+    .. code-block:: console
 
         [root@pcmk-1 ~]# pcs cluster setup mycluster \
             pcmk-1 addr=192.168.122.101 pcmk-2 addr=192.168.122.102
@@ -203,7 +203,7 @@ Explore pcs
 
 Start by taking some time to familiarize yourself with what ``pcs`` can do.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs
     
@@ -254,7 +254,7 @@ into categories. To discover the functionality available in each of these
 categories, one can issue the command ``pcs <CATEGORY> help``. Below is an
 example of all the options available under the status category.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status help
 
@@ -306,7 +306,7 @@ example of all the options available under the status category.
 Additionally, if you are interested in the version and supported cluster stack(s)
 available with your Pacemaker installation, run:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pacemakerd --features
      Pacemaker 2.1.2-4.el9 (Build: ada5c3b36e2)

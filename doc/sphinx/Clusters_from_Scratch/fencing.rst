@@ -29,7 +29,7 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
     It is possible to tell the cluster not to use fencing, by setting the
     ``stonith-enabled`` cluster property to false:
 
-    .. code-block:: none
+    .. code-block:: console
 
         [root@pcmk-1 ~]# pcs property set stonith-enabled=false
         [root@pcmk-1 ~]# pcs cluster verify --full
@@ -135,7 +135,7 @@ Step 3: Choose the ``fence_ipmilan`` STONITH agent.
 
 Step 4: Obtain the agent's possible parameters:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs stonith describe fence_ipmilan
     fence_ipmilan - Fence agent for IPMI
@@ -194,7 +194,7 @@ Step 5: ``pcs cluster cib stonith_cfg``
 
 Step 6: Here are example parameters for creating our fence device resource:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \
           pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
@@ -204,7 +204,7 @@ Step 6: Here are example parameters for creating our fence device resource:
 
 Steps 7-10: Enable fencing in the cluster:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs -f stonith_cfg property set stonith-enabled=true
     [root@pcmk-1 ~]# pcs -f stonith_cfg property
@@ -219,7 +219,7 @@ Step 11: ``pcs cluster cib-push stonith_cfg --config``
 
 Step 12: Test:
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs cluster stop pcmk-2
     [root@pcmk-1 ~]# pcs stonith fence pcmk-2
