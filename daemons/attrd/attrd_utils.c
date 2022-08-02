@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/msg_xml.h>
 
 #include "pacemaker-attrd.h"
 
@@ -29,6 +30,25 @@ static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
 int minimum_protocol_version = -1;
+
+/*!
+    \internal
+    \brief Broadcast private attribute for local node with protocol version
+*/
+void
+attrd_broadcast_protocol(void)
+{
+    xmlNode *attrd_op = create_xml_node(NULL, __func__);
+
+    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
+    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
+    crm_xml_add(attrd_op, PCMK__XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
+    crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
+    crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
+    attrd_client_update(attrd_op);
+    free_xml(attrd_op);
+}
 
 /*!
  * \internal
@@ -270,6 +290,15 @@ attrd_free_attribute(gpointer data)
 
         free(a);
     }
+}
+
+gboolean
+attrd_send_message(crm_node_t * node, xmlNode * data)
+{
+    crm_xml_add(data, F_TYPE, T_ATTRD);
+    crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
+    attrd_xml_add_writer(data);
+    return send_cluster_message(node, crm_msg_attrd, data, TRUE);
 }
 
 void

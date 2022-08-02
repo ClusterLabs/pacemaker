@@ -96,6 +96,8 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
     return pcmk_rc_ok;
 }
 
+GHashTable *attributes = NULL;
+
 /*!
  * \internal
  * \brief Create an XML representation of an attribute for use in peer messages
