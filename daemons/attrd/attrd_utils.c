@@ -28,6 +28,8 @@ static bool requesting_shutdown = false;
 static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
+int minimum_protocol_version = -1;
+
 /*!
  * \internal
  * \brief  Set requesting_shutdown state
@@ -267,5 +269,19 @@ attrd_free_attribute(gpointer data)
         g_hash_table_destroy(a->values);
 
         free(a);
+    }
+}
+
+void
+attrd_update_minimum_protocol_ver(const char *value)
+{
+    int ver;
+
+    pcmk__scan_min_int(value, &ver, 0);
+
+    if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
+        minimum_protocol_version = ver;
+        crm_trace("Set minimum attrd protocol version to %d",
+                  minimum_protocol_version);
     }
 }

@@ -23,8 +23,6 @@
 
 #include "pacemaker-attrd.h"
 
-int minimum_protocol_version = -1;
-
 GHashTable *attributes = NULL;
 
 static void broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml);
@@ -384,20 +382,6 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
 }
 
 static void
-update_minimum_protocol_ver(const char *value)
-{
-    int ver;
-
-    pcmk__scan_min_int(value, &ver, 0);
-
-    if (ver > 0 && (minimum_protocol_version == -1 || ver < minimum_protocol_version)) {
-        minimum_protocol_version = ver;
-        crm_trace("Set minimum attrd protocol version to %d",
-                  minimum_protocol_version);
-    }
-}
-
-static void
 attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
 {
     attribute_t *a = NULL;
@@ -439,7 +423,7 @@ attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
      * version, check to see if it's a new minimum version.
      */
     if (pcmk__str_eq(attr, CRM_ATTR_PROTOCOL, pcmk__str_none)) {
-        update_minimum_protocol_ver(value);
+        attrd_update_minimum_protocol_ver(value);
     }
 }
 

@@ -170,6 +170,8 @@ void attrd_write_attribute(attribute_t *a, bool ignore_delay);
 void attrd_write_attributes(bool all, bool ignore_delay);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
+void attrd_update_minimum_protocol_ver(const char *value);
+
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
 gboolean attrd_election_cb(gpointer user_data);
