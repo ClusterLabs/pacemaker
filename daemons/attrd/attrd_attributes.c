@@ -132,6 +132,24 @@ attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
     return xml;
 }
 
+void
+attrd_clear_value_seen(void)
+{
+    GHashTableIter aIter;
+    GHashTableIter vIter;
+    attribute_t *a;
+    attribute_value_t *v = NULL;
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+            v->seen = FALSE;
+            crm_trace("Clear seen flag %s[%s] = %s.", a->id, v->nodename, v->current);
+        }
+    }
+}
+
 attribute_t *
 attrd_populate_attribute(xmlNode *xml, const char *attr)
 {

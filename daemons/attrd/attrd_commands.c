@@ -60,24 +60,6 @@ cache_remote_node(const char *node_name)
     CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
 }
 
-static void
-clear_attribute_value_seen(void)
-{
-    GHashTableIter aIter;
-    GHashTableIter vIter;
-    attribute_t *a;
-    attribute_value_t *v = NULL;
-
-    g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-        g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            v->seen = FALSE;
-            crm_trace("Clear seen flag %s[%s] = %s.", a->id, v->nodename, v->current);
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Clear failure-related attributes
@@ -140,7 +122,7 @@ attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
         /* Initialize the "seen" flag for all attributes to cleared, so we can
          * detect attributes that local node has but the writer doesn't.
          */
-        clear_attribute_value_seen();
+        attrd_clear_value_seen();
     }
 
     // Process each attribute update in the sync response
