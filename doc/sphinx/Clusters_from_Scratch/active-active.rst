@@ -27,7 +27,7 @@ cluster filesystems:
 
 .. code-block:: none
 
-    # yum install -y gfs2-utils
+    # dnf install -y gfs2-utils
 
 Additionally, install Distributed Lock Manager (DLM) on both nodes.
 To do so, download the RPM from the `CentOS composes artifacts tree <https://composes.centos.org/latest-CentOS-Stream-8/compose/ResilientStorage/x86_64/os/Packages/>`_,
@@ -184,7 +184,7 @@ Now we can create a new GFS2 filesystem on the DRBD device.
 
 The ``mkfs.gfs2`` command required a number of additional parameters:
 
-* ``-p lock_dlm`` specifies that we want to use the kernel's DLM.
+* ``-p lock_dlm`` specifies that we want to use DLM-based locking.
 
 * ``-j 2`` indicates that the filesystem should reserve enough
   space for two journals (one for each node that will access the filesystem).
@@ -195,7 +195,7 @@ The ``mkfs.gfs2`` command required a number of additional parameters:
   also the value of **cluster_name** in ``/etc/corosync/corosync.conf``). If
   you are unsure what your cluster name is, you can look in
   ``/etc/corosync/corosync.conf`` or execute the command
-  ``pcs cluster corosync pcmk-1 | grep cluster_name``.
+  ``pcs cluster corosync | grep cluster_name``.
 
 Now we can (re-)populate the new filesystem with data
 (web pages). We'll create yet another variation on our home page.
@@ -248,6 +248,24 @@ and ordering constraints for it:
     [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
     [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
     Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
+
+We also need to update the **no-quorum-policy** property to **freeze**. By
+default, the value of **no-quorum-policy** is set to **stop**, indicating that
+once quorum is lost, all the resources on the remaining partition will
+immediately be stopped. Typically this default is the safest and most optimal
+option, but unlike most resources, GFS2 requires quorum to function. When
+quorum is lost both the applications using the GFS2 mounts and the GFS2 mount
+itself cannot be correctly stopped. Any attempts to stop these resources
+without quorum will fail, which will ultimately result in the entire cluster
+being fenced every time quorum is lost.
+
+To address this situation, set **no-quorum-policy** to **freeze** when GFS2 is
+in use. This means that when quorum is lost, the remaining partition will do
+nothing until quorum is regained. 
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs property set no-quorum-policy=freeze
 
 
 .. index::

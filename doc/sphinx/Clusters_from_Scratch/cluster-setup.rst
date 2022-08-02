@@ -49,7 +49,7 @@ make our lives easier:
 
 .. code-block:: none
 
-    # yum install -y pacemaker pcs psmisc policycoreutils-python3
+    # dnf install -y pacemaker pcs psmisc policycoreutils-python3
     
 .. NOTE::
 
@@ -102,7 +102,8 @@ _________________
 
 Before the cluster can be configured, the pcs daemon must be started and enabled
 to start at boot time on each node. This daemon works with the pcs command-line interface
-to manage synchronizing the corosync configuration across all nodes in the cluster.
+to manage synchronizing the corosync configuration across all nodes in the
+cluster, among other functions.
 
 Start and enable the daemon by issuing the following commands on each node:
 
@@ -112,7 +113,7 @@ Start and enable the daemon by issuing the following commands on each node:
     # systemctl enable pcsd.service
     Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
 
-The installed packages will create a **hacluster** user with a disabled password.
+The installed packages will create an **hacluster** user with a disabled password.
 While this is fine for running ``pcs`` commands locally,
 the account needs a login password in order to perform such tasks as syncing
 the corosync configuration, or starting and stopping the cluster on other nodes.
@@ -175,6 +176,19 @@ corosync configuration:
     pcmk-1: successful distribution of the file 'corosync.conf'
     pcmk-2: successful distribution of the file 'corosync.conf'
     Cluster has been successfully set up.
+
+.. NOTE::
+
+    If you'd like, you can specify an **addr** option for each node in the 
+    ``pcs cluster setup`` command. This will create an explicit name-to-address
+    mapping for each node in ``/etc/corosync/corosync.conf``, eliminating the
+    need for hostname resolution via DNS, ``/etc/hosts``, and the like.
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# pcs cluster setup mycluster \
+            pcmk-1 addr=192.168.122.101 pcmk-2 addr=192.168.122.102
+
 
 If you received an authorization error for either of those commands, make
 sure you configured the **hacluster** user account on each node

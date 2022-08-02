@@ -6,10 +6,7 @@ Start the Cluster
 
 Now that corosync is configured, it is time to start the cluster.
 The command below will start corosync and pacemaker on both nodes
-in the cluster.  If you are issuing the start command from a different
-node than the one you ran the ``pcs host auth`` command on earlier, you
-must authenticate on the current node you are logged into before you will
-be allowed to start the cluster.
+in the cluster.
 
 .. code-block:: none
 
@@ -38,11 +35,12 @@ be allowed to start the cluster.
 .. IMPORTANT::
 
     In this example, we are not enabling the corosync and pacemaker services
-    to start at boot. If a cluster node fails or is rebooted, you will need to run
-    ``pcs cluster start <NODENAME>`` (or ``--all``) to start the cluster on it.
-    While you could enable the services to start at boot, requiring a manual start
-    of cluster services gives you the opportunity to do a post-mortem investigation
-    of a node failure before returning it to the cluster.
+    to start at boot. If a cluster node fails or is rebooted, you will need to
+    run ``pcs cluster start [<NODENAME> | --all]`` to start the cluster on it.
+    While you can enable the services to start at boot (for example, using
+    ``pcs cluster enable [<NODENAME> | --all]``), requiring a manual start of
+    cluster services gives you the opportunity to do a post-mortem
+    investigation of a node failure before returning it to the cluster.
 
 Verify Corosync Installation
 ############################
@@ -64,7 +62,7 @@ We can see here that everything appears normal with our fixed IP
 address (not a 127.0.0.x loopback address) listed as the **addr**, and **localhost** and **connected** for the statuses of nodeid 1 and nodeid 2, respectively.
 
 If you see something different, you might want to start by checking
-the node's network, firewall and SELinux configurations.
+the node's network, firewall, and SELinux configurations.
 
 Next, check the membership and quorum APIs:
 
@@ -150,8 +148,8 @@ point):
 
 .. NOTE::
 
-    Other operating systems may report startup errors in other locations,
-    for example ``/var/log/messages``.
+    Other operating systems may report startup errors in other locations
+    (for example, ``/var/log/messages``).
 
 Repeat these checks on the other node. The results should be the same.
 
@@ -205,11 +203,14 @@ the configuration.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# crm_verify -L -V
-       error: unpack_resources: Resource start-up disabled since no STONITH resources have been defined
-       error: unpack_resources: Either configure some or disable STONITH with the stonith-enabled option
-       error: unpack_resources: NOTE: Clusters with shared data need STONITH to ensure data integrity
-    Errors found during check: config not valid
+    [root@pcmk-1 ~]# pcs cluster verify --full
+    Error: invalid cib:
+    (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
+    (unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
+    (unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+    crm_verify: Errors found during check: config not valid
+
+    Error: Errors have occurred, therefore pcs is unable to continue
 
 As you can see, the tool has found some errors. The cluster will not start any
 resources until we configure STONITH.

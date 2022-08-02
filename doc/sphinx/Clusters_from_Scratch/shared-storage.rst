@@ -40,7 +40,7 @@ Now, we can install the DRBD kernel module and utilities:
 
 .. code-block:: none
 
-    # yum install -y kmod-drbd90 drbd90-utils
+    # dnf install -y kmod-drbd90 drbd90-utils
 
 DRBD will not be able to run under the default SELinux security policies.
 If you are familiar with SELinux, you can modify the policies in a more
@@ -49,7 +49,7 @@ control:
 
 .. code-block:: none
 
-    # yum install -y policycoreutils-python-utils
+    # dnf install -y policycoreutils-python-utils
     # semanage permissive -a drbd_t
 
 We will configure DRBD to use port 7789, so allow that port from each host to
@@ -58,7 +58,7 @@ the other:
 .. code-block:: none
 
     [root@pcmk-1 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-        source address="192.168.122.102" port port="7789" protocol="tcp" accept'
+    source address="192.168.122.102" port port="7789" protocol="tcp" accept'
     success
     [root@pcmk-1 ~]# firewall-cmd --reload
     success
@@ -66,7 +66,7 @@ the other:
 .. code-block:: none
 
     [root@pcmk-2 ~]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-        source address="192.168.122.101" port port="7789" protocol="tcp" accept'
+    source address="192.168.122.101" port port="7789" protocol="tcp" accept'
     success
     [root@pcmk-2 ~]# firewall-cmd --reload
     success
@@ -77,6 +77,12 @@ the other:
     In production, it is recommended to use a dedicated, isolated network for cluster-related traffic,
     so the firewall configuration would likely be different; one approach would be to
     add the dedicated network interfaces to the trusted zone.
+
+.. NOTE::
+
+    If the ``firewall-cmd --add-rich-rule`` command fails with **Error:
+    INVALID_RULE: unknown element**, ensure that there is no space at the
+    beginning of the second line of the command.
 
 Allocate a Disk Volume for DRBD
 ###############################
@@ -138,14 +144,15 @@ run this on both nodes to use this sample configuration:
 
 .. IMPORTANT::
 
-    Edit the file to use the hostnames, IP addresses and logical volume paths
+    Edit the file to use the hostnames, IP addresses, and logical volume paths
     of your nodes if they differ from the ones used in this guide.
 
 .. NOTE::
 
     Detailed information on the directives used in this configuration (and
     other alternatives) is available in the
-    `DRBD User's Guide <https://docs.linbit.com/docs/users-guide-8.4/#ch-configure>`_.
+    `DRBD User's Guide
+    <https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/#ch-configure>`_.
     The **allow-two-primaries** option would not normally be used in
     an active/passive cluster. We are adding it here for the convenience
     of changing to an active/active cluster later.
@@ -190,7 +197,7 @@ Run them on one node:
     
     you are the 801th user to install this version
     
-    We can confirm DRBD's status on this node:
+We can confirm DRBD's status on this node:
     
 .. code-block:: none
 
@@ -574,8 +581,8 @@ it can no longer host resources, and eventually all the resources will move.
       pcsd: active/enabled
 
 Once we've done everything we needed to on pcmk-1 (in this case nothing,
-we just wanted to see the resources move), we can allow the node to be a
-full cluster member again.
+we just wanted to see the resources move), we can unstandby the node, making it
+eligible to host resources again.
 
 .. code-block:: none
 

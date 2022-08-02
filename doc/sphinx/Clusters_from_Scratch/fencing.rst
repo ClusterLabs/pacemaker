@@ -27,12 +27,12 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
 .. NOTE::
 
     It is possible to tell the cluster not to use fencing, by setting the
-    **stonith-enabled** cluster option to false:
+    **stonith-enabled** cluster property to false:
 
     .. code-block:: none
 
         [root@pcmk-1 ~]# pcs property set stonith-enabled=false
-        [root@pcmk-1 ~]# crm_verify -L
+        [root@pcmk-1 ~]# pcs cluster verify --full
 
     However, this is completely inappropriate for a production cluster. It tells
     the cluster to simply pretend that failed nodes are safely powered off. Some
@@ -74,12 +74,14 @@ and must stop all resources to avoid a possible split-brain situation.
 Likewise, any device that relies on the machine being active (such as
 SSH-based "devices" sometimes used during testing) is inappropriate,
 because fencing will be required when the node is completely unresponsive.
+(Fence agents like ``fence_ilo_ssh``, which connects via SSH to an HP iLO but
+not to the cluster node, are fine.)
 
 Configure the Cluster for Fencing
 #################################
 
 #. Install the fence agent(s). To see what packages are available, run
-   ``yum search fence-``. Be sure to install the package(s) on all cluster nodes.
+   ``dnf search fence-``. Be sure to install the package(s) on all cluster nodes.
 
 #. Configure the fence device itself to be able to fence your nodes and accept
    fencing requests. This includes any necessary configuration on the device and
@@ -97,7 +99,8 @@ Configure the Cluster for Fencing
 
    Any flags that do not take arguments, such as ``--ssl``, should be passed as ``ssl=1``.
 
-#. Enable fencing in the cluster: ``pcs -f stonith_cfg property set stonith-enabled=true``
+#. Ensure fencing is enabled in the cluster:
+   ``pcs -f stonith_cfg property set stonith-enabled=true``
 
 #. If the device does not know how to fence nodes based on their cluster node
    name, you may also need to set the special **pcmk_host_map** parameter. See
@@ -115,7 +118,7 @@ Configure the Cluster for Fencing
 
 #. Once the fence device resource is running, test it (you might want to stop
    the cluster on that machine first):
-   ``stonith_admin --reboot <NODENAME>``
+   ``pcs stonith fence <NODENAME>``
 
 Example
 #######
@@ -228,7 +231,7 @@ Step 12: Test:
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster stop pcmk-2
-    [root@pcmk-1 ~]# stonith_admin --reboot pcmk-2
+    [root@pcmk-1 ~]# pcs stonith fence pcmk-2
 
 After a successful test, login to any rebooted nodes, and start the cluster
 (with ``pcs cluster start``).
