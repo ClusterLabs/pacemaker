@@ -336,18 +336,24 @@ apply_coloc_to_dependent(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
-    enum pe_weights flags = 0;
+    pe_resource_t *primary = constraint->primary;
+    uint32_t flags = pcmk__coloc_select_default;
+    float factor = constraint->score / (float) INFINITY;
 
     if (constraint->dependent_role != RSC_ROLE_PROMOTED) {
         return;
     }
     if (constraint->score < INFINITY) {
-        flags = pe_weights_rollback;
+        flags = pcmk__coloc_select_active;
     }
-    pe_rsc_trace(clone, "RHS: %s with %s: %d",
-                 constraint->dependent->id, constraint->primary->id,
-                 constraint->score);
-    pcmk__apply_colocation(constraint, clone, constraint->primary, flags);
+    pe_rsc_trace(clone, "Applying colocation %s (promoted %s with %s) @%s",
+                 constraint->id, constraint->dependent->id,
+                 constraint->primary->id,
+                 pcmk_readable_score(constraint->score));
+    primary->cmds->add_colocated_node_scores(primary, clone->id,
+                                             &clone->allowed_nodes,
+                                             constraint->node_attribute,
+                                             factor, flags);
 }
 
 /*!
@@ -362,17 +368,24 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *constraint = (pcmk__colocation_t *) data;
     pe_resource_t *clone = (pe_resource_t *) user_data;
+    pe_resource_t *dependent = constraint->dependent;
+    const float factor = constraint->score / (float) INFINITY;
+    const uint32_t flags = pcmk__coloc_select_active
+                           |pcmk__coloc_select_nonnegative;
 
     if ((constraint->primary_role != RSC_ROLE_PROMOTED)
          || !pcmk__colocation_has_influence(constraint, NULL)) {
         return;
     }
 
-    pe_rsc_trace(clone, "LHS: %s with %s: %d",
-                 constraint->dependent->id, constraint->primary->id,
-                 constraint->score);
-    pcmk__apply_colocation(constraint, clone, constraint->dependent,
-                           pe_weights_rollback|pe_weights_positive);
+    pe_rsc_trace(clone, "Applying colocation %s (%s with promoted %s) @%s",
+                 constraint->id, constraint->dependent->id,
+                 constraint->primary->id,
+                 pcmk_readable_score(constraint->score));
+    dependent->cmds->add_colocated_node_scores(dependent, clone->id,
+                                               &clone->allowed_nodes,
+                                               constraint->node_attribute,
+                                               factor, flags);
 }
 
 /*!
@@ -934,8 +947,7 @@ set_instance_priority(gpointer data, gpointer user_data)
     for (GList *iter = instance->rsc_cons; iter != NULL; iter = iter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) iter->data;
 
-        instance->cmds->rsc_colocation_lh(instance, cons->primary, cons,
-                                          instance->cluster);
+        instance->cmds->apply_coloc_score(instance, cons->primary, cons, true);
     }
 
     instance->sort_index = instance->priority;

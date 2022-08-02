@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -355,21 +355,32 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
-group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                              pcmk__colocation_t *colocation,
+                              bool for_dependent)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
-    if (dependent == NULL) {
-        pe_err("dependent was NULL for %s", constraint->id);
-        return;
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
 
-    } else if (primary == NULL) {
-        pe_err("primary was NULL for %s", constraint->id);
-        return;
+    if (!for_dependent) {
+        goto for_primary;
     }
 
     gIter = dependent->children;
@@ -378,12 +389,12 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     get_group_variant_data(group_data, dependent);
 
     if (group_data->colocated) {
-        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
-                                                         primary, constraint,
-                                                         data_set);
+        group_data->first_child->cmds->apply_coloc_score(group_data->first_child,
+                                                         primary, colocation,
+                                                         true);
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation "
                          "between non-colocated group and %s",
                          dependent->id, primary->id);
@@ -393,46 +404,39 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint,
-                                           data_set);
+        child_rsc->cmds->apply_coloc_score(child_rsc, primary, colocation,
+                                           true);
     }
-}
+    return;
 
-void
-group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
-{
-    GList *gIter = primary->children;
-    group_variant_data_t *group_data = NULL;
-
+for_primary:
+    gIter = primary->children;
     get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
-    pe_rsc_trace(primary, "Processing RH %s of constraint %s (LH is %s)",
-                 primary->id, constraint->id, dependent->id);
+    pe_rsc_trace(primary,
+                 "Processing colocation %s (%s with group %s) for primary",
+                 colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
-        if (constraint->score >= INFINITY) {
-            /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(dependent,
+        if (colocation->score >= INFINITY) {
+            // Dependent can't start until group is fully up
+            group_data->last_child->cmds->apply_coloc_score(dependent,
                                                             group_data->last_child,
-                                                            constraint,
-                                                            data_set);
+                                                            colocation, false);
         } else {
-            /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(dependent,
+            // Dependent can start as long as group is partially up
+            group_data->first_child->cmds->apply_coloc_score(dependent,
                                                              group_data->first_child,
-                                                             constraint,
-                                                             data_set);
+                                                             colocation, false);
         }
 
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s", dependent->id, primary->id);
         return;
@@ -441,8 +445,8 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
-                                           data_set);
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
+                                           false);
     }
 }
 
@@ -561,39 +565,56 @@ group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-GHashTable *
-pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
-                          GHashTable *nodes, const char *attr, float factor,
-                          uint32_t flags)
+/*!
+ * \internal
+ * \brief Update nodes with scores of colocated resources' nodes
+ *
+ * Given a table of nodes and a resource, update the nodes' scores with the
+ * scores of the best nodes matching the attribute used for each of the
+ * resource's relevant colocations.
+ *
+ * \param[in,out] rsc      Resource to check colocations for
+ * \param[in]     log_id   Resource ID to use in log messages
+ * \param[in,out] nodes    Nodes to update
+ * \param[in]     attr     Colocation attribute (NULL to use default)
+ * \param[in]     factor   Incorporate scores multiplied by this factor
+ * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+ *
+ * \note The caller remains responsible for freeing \p *nodes.
+ */
+void
+pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, uint32_t flags)
 {
     GList *gIter = rsc->rsc_cons_lhs;
+    pe_resource_t *member = NULL;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
-                    rsc->id, primary_id);
-        return nodes;
+                    rsc->id, log_id);
+        return;
     }
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    nodes = group_data->first_child->cmds->merge_weights(group_data->first_child,
-                                                         primary_id, nodes,
-                                                         attr, factor, flags);
+    member = group_data->first_child;
+    member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
+                                            factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        nodes = pcmk__native_merge_weights(constraint->dependent, rsc->id,
-                                           nodes, constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           flags);
+        pcmk__add_colocated_node_scores(constraint->dependent, rsc->id, nodes,
+                                        constraint->node_attribute,
+                                        constraint->score / (float) INFINITY,
+                                        flags);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
-    return nodes;
 }
 
 void

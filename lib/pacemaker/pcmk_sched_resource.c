@@ -19,13 +19,12 @@
 // Resource allocation methods that vary by resource variant
 static resource_alloc_functions_t allocation_methods[] = {
     {
-        pcmk__native_merge_weights,
         pcmk__native_allocate,
         native_create_actions,
         native_create_probe,
         native_internal_constraints,
-        native_rsc_colocation_lh,
-        native_rsc_colocation_rh,
+        pcmk__primitive_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
         native_rsc_location,
         native_action_flags,
@@ -37,13 +36,12 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__primitive_shutdown_lock,
     },
     {
-        pcmk__group_merge_weights,
         pcmk__group_allocate,
         group_create_actions,
         native_create_probe,
         group_internal_constraints,
-        group_rsc_colocation_lh,
-        group_rsc_colocation_rh,
+        pcmk__group_apply_coloc_score,
+        pcmk__group_add_colocated_node_scores,
         pcmk__group_colocated_resources,
         group_rsc_location,
         group_action_flags,
@@ -55,13 +53,12 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_shutdown_lock,
     },
     {
-        pcmk__native_merge_weights,
         pcmk__clone_allocate,
         clone_create_actions,
         clone_create_probe,
         clone_internal_constraints,
-        clone_rsc_colocation_lh,
-        clone_rsc_colocation_rh,
+        pcmk__clone_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
         clone_rsc_location,
         clone_action_flags,
@@ -73,13 +70,12 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__clone_shutdown_lock,
     },
     {
-        pcmk__native_merge_weights,
         pcmk__bundle_allocate,
         pcmk__bundle_create_actions,
         pcmk__bundle_create_probe,
         pcmk__bundle_internal_constraints,
-        pcmk__bundle_rsc_colocation_lh,
-        pcmk__bundle_rsc_colocation_rh,
+        pcmk__bundle_apply_coloc_score,
+        pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
         pcmk__bundle_rsc_location,
         pcmk__bundle_action_flags,
@@ -625,12 +621,12 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
     // Calculate and log node weights
-    r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
-                                          resource1->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
-    r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
-                                          resource2->id, NULL, NULL, 1,
-                                          pe_weights_forward | pe_weights_init);
+    pcmk__add_colocated_node_scores(convert_const_pointer(resource1),
+                                    resource1->id, &r1_nodes, NULL, 1,
+                                    pcmk__coloc_select_this_with);
+    pcmk__add_colocated_node_scores(convert_const_pointer(resource2),
+                                    resource2->id, &r2_nodes, NULL, 1,
+                                    pcmk__coloc_select_this_with);
     pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
                           resource1->cluster);
     pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
@@ -743,20 +739,20 @@ apply_parent_colocations(const pe_resource_t *rsc, GHashTable **nodes)
 
     for (iter = rsc->parent->rsc_cons; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
-        *nodes = pcmk__native_merge_weights(colocation->primary, rsc->id,
-                                            *nodes, colocation->node_attribute,
-                                            colocation->score / (float) INFINITY,
-                                            0);
+        pcmk__add_colocated_node_scores(colocation->primary, rsc->id, nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
+                                        pcmk__coloc_select_default);
     }
     for (iter = rsc->parent->rsc_cons_lhs; iter != NULL; iter = iter->next) {
         colocation = (pcmk__colocation_t *) iter->data;
         if (!pcmk__colocation_has_influence(colocation, rsc)) {
             continue;
         }
-        *nodes = pcmk__native_merge_weights(colocation->dependent, rsc->id,
-                                            *nodes, colocation->node_attribute,
-                                            colocation->score / (float) INFINITY,
-                                            pe_weights_positive);
+        pcmk__add_colocated_node_scores(colocation->dependent, rsc->id, nodes,
+                                        colocation->node_attribute,
+                                        colocation->score / (float) INFINITY,
+                                        pcmk__coloc_select_nonnegative);
     }
 }
 

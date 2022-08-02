@@ -407,18 +407,6 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     return pair;
 }
 
-void
-pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
-{
-    /* -- Never called --
-     *
-     * Instead we add the colocation constraints to the child and call from there
-     */
-    CRM_ASSERT(FALSE);
-}
-
 int copies_per_node(pe_resource_t * rsc) 
 {
     /* Strictly speaking, there should be a 'copies_per_node' addition
@@ -460,37 +448,54 @@ int copies_per_node(pe_resource_t * rsc)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
-pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                               pcmk__colocation_t *colocation,
+                               bool for_dependent)
 {
     GList *allocated_primaries = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(dependent != NULL,
-              pe_err("dependent was NULL for %s", constraint->id); return);
-    CRM_CHECK(primary != NULL,
-              pe_err("primary was NULL for %s", constraint->id); return);
+    /* This should never be called for the bundle itself as a dependent.
+     * Instead, we add its colocation constraints to its replicas and call the
+     * apply_coloc_score() for the replicas as dependents.
+     */
+    CRM_ASSERT(!for_dependent);
+
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
     CRM_ASSERT(dependent->variant == pe_native);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         pe_rsc_trace(primary, "%s is still provisional", primary->id);
         return;
 
-    } else if(constraint->dependent->variant > pe_group) {
+    } else if (colocation->dependent->variant > pe_group) {
         pe_resource_t *primary_replica = compatible_replica(dependent, primary,
                                                             RSC_ROLE_UNKNOWN,
-                                                            FALSE, data_set);
+                                                            FALSE,
+                                                            dependent->cluster);
 
         if (primary_replica) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
-            dependent->cmds->rsc_colocation_lh(dependent, primary_replica,
-                                               constraint, data_set);
+            dependent->cmds->apply_coloc_score(dependent, primary_replica,
+                                               colocation, true);
 
-        } else if (constraint->score >= INFINITY) {
+        } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
@@ -505,16 +510,16 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
     get_bundle_variant_data(bundle_data, primary);
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, dependent->id, primary->id, constraint->score);
+                 colocation->id, dependent->id, primary->id, colocation->score);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (constraint->score < INFINITY) {
-            replica->container->cmds->rsc_colocation_rh(dependent,
+        if (colocation->score < INFINITY) {
+            replica->container->cmds->apply_coloc_score(dependent,
                                                         replica->container,
-                                                        constraint, data_set);
+                                                        colocation, false);
 
         } else {
             pe_node_t *chosen = replica->container->fns->location(replica->container,
@@ -524,23 +529,23 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
             pe_rsc_trace(primary, "Allowing %s: %s %d",
-                         constraint->id, chosen->details->uname,
+                         colocation->id, chosen->details->uname,
                          chosen->weight);
             allocated_primaries = g_list_prepend(allocated_primaries, chosen);
         }
     }
 
-    if (constraint->score >= INFINITY) {
+    if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, allocated_primaries, FALSE);
     }
     g_list_free(allocated_primaries);

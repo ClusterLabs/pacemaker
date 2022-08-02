@@ -16,6 +16,127 @@
 
 #include <crm/pengine/pe_types.h> // pe_action_t, pe_node_t, pe_working_set_t
 
+// Flags to modify the behavior of the add_colocated_node_scores() method
+enum pcmk__coloc_select {
+    // With no other flags, apply all "with this" colocations
+    pcmk__coloc_select_default      = 0,
+
+    // Apply "this with" colocations instead of "with this" colocations
+    pcmk__coloc_select_this_with    = (1 << 0),
+
+    // Apply only colocations with non-negative scores
+    pcmk__coloc_select_nonnegative  = (1 << 1),
+
+    // Apply only colocations with at least one matching node
+    pcmk__coloc_select_active       = (1 << 2),
+};
+
+// Resource allocation methods
+struct resource_alloc_functions_s {
+    pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
+    void (*create_actions) (pe_resource_t *, pe_working_set_t *);
+    gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
+    void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
+
+    /*!
+     * \internal
+     * \brief Apply a colocation's score to node weights or resource priority
+     *
+     * Given a colocation constraint, apply its score to the dependent's
+     * allowed node weights (if we are still placing resources) or priority (if
+     * we are choosing promotable clone instance roles).
+     *
+     * \param[in] dependent      Dependent resource in colocation
+     * \param[in] primary        Primary resource in colocation
+     * \param[in] colocation     Colocation constraint to apply
+     * \param[in] for_dependent  true if called on behalf of dependent
+     */
+    void (*apply_coloc_score) (pe_resource_t *dependent, pe_resource_t *primary,
+                               pcmk__colocation_t *colocation,
+                               bool for_dependent);
+
+    /*!
+     * \internal
+     * \brief Update nodes with scores of colocated resources' nodes
+     *
+     * Given a table of nodes and a resource, update the nodes' scores with the
+     * scores of the best nodes matching the attribute used for each of the
+     * resource's relevant colocations.
+     *
+     * \param[in,out] rsc      Resource to check colocations for
+     * \param[in]     log_id   Resource ID to use in log messages
+     * \param[in,out] nodes    Nodes to update
+     * \param[in]     attr     Colocation attribute (NULL to use default)
+     * \param[in]     factor   Incorporate scores multiplied by this factor
+     * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+     *
+     * \note The caller remains responsible for freeing \p *nodes.
+     */
+    void (*add_colocated_node_scores)(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor,
+                                      enum pcmk__coloc_select flags);
+
+    /*!
+     * \internal
+     * \brief Create list of all resources in colocations with a given resource
+     *
+     * Given a resource, create a list of all resources involved in mandatory
+     * colocations with it, whether directly or indirectly via chained colocations.
+     *
+     * \param[in] rsc             Resource to add to colocated list
+     * \param[in] orig_rsc        Resource originally requested
+     * \param[in] colocated_rscs  Existing list
+     *
+     * \return List of given resource and all resources involved in colocations
+     *
+     * \note This function is recursive; top-level callers should pass NULL as
+     *       \p colocated_rscs and \p orig_rsc, and the desired resource as
+     *       \p rsc. The recursive calls will use other values.
+     */
+    GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                                  GList *colocated_rscs);
+
+    void (*rsc_location) (pe_resource_t *, pe__location_t *);
+
+    enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
+    enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
+                                           pe_node_t *, enum pe_action_flags,
+                                           enum pe_action_flags,
+                                           enum pe_ordering,
+                                           pe_working_set_t *data_set);
+    void (*output_actions)(pe_resource_t *rsc);
+
+    void (*expand) (pe_resource_t *, pe_working_set_t *);
+    void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
+
+    /*!
+     * \internal
+     * \brief Add a resource's utilization to a table of utilization values
+     *
+     * This function is used when summing the utilization of a resource and all
+     * resources colocated with it, to determine whether a node has sufficient
+     * capacity. Given a resource and a table of utilization values, it will add
+     * the resource's utilization to the existing values, if the resource has
+     * not yet been allocated to a node.
+     *
+     * \param[in] rsc          Resource with utilization to add
+     * \param[in] orig_rsc     Resource being allocated (for logging only)
+     * \param[in] all_rscs     List of all resources that will be summed
+     * \param[in] utilization  Table of utilization values to add to
+     */
+    void (*add_utilization)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
+                            GList *all_rscs, GHashTable *utilization);
+
+    /*!
+     * \internal
+     * \brief Apply a shutdown lock for a resource, if appropriate
+     *
+     * \param[in] rsc       Resource to check for shutdown lock
+     */
+    void (*shutdown_lock)(pe_resource_t *rsc);
+};
+
 // Actions (pcmk_sched_actions.c)
 
 G_GNUC_INTERNAL
@@ -148,9 +269,9 @@ void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
                                    pcmk__colocation_t *constraint);
 
 G_GNUC_INTERNAL
-void pcmk__apply_colocation(pcmk__colocation_t *colocation,
-                            pe_resource_t *rsc1, pe_resource_t *rsc2,
-                            uint32_t flags);
+void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
+                                     GHashTable **nodes, const char *attr,
+                                     float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
@@ -167,10 +288,10 @@ void pcmk__block_colocated_starts(pe_action_t *action,
 
 /*!
  * \internal
- * \brief Check whether colocation's left-hand preferences should be considered
+ * \brief Check whether colocation's dependent preferences should be considered
  *
  * \param[in] colocation  Colocation constraint
- * \param[in] rsc         Right-hand instance (normally this will be
+ * \param[in] rsc         Primary instance (normally this will be
  *                        colocation->primary, which NULL will be treated as,
  *                        but for clones or bundles with multiple instances
  *                        this can be a particular instance)
@@ -203,8 +324,8 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
         return false;
     }
 
-    /* The left hand of a colocation influences the right hand's location
-     * if the influence option is true, or the right hand is not yet active.
+    /* The dependent in a colocation influences the primary's location
+     * if the influence option is true or the primary is not yet active.
      */
     return colocation->influence || (rsc->running_on == NULL);
 }
@@ -318,15 +439,48 @@ G_GNUC_INTERNAL
 void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 
 
+// Primitives (pcmk_sched_native.c)
+
+G_GNUC_INTERNAL
+void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
+                                       pe_resource_t *primary,
+                                       pcmk__colocation_t *colocation,
+                                       bool for_dependent);
+
 // Groups (pcmk_sched_group.c)
+
+G_GNUC_INTERNAL
+void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *colocation,
+                                   bool for_dependent);
+
+G_GNUC_INTERNAL
+void pcmk__group_add_colocated_node_scores(pe_resource_t *rsc,
+                                           const char *log_id,
+                                           GHashTable **nodes, const char *attr,
+                                           float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
 GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
                                        pe_resource_t *orig_rsc,
                                        GList *colocated_rscs);
 
+// Clones (pcmk_sched_clone.c)
+
+G_GNUC_INTERNAL
+void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
+                                   pe_resource_t *primary,
+                                   pcmk__colocation_t *colocation,
+                                   bool for_dependent);
 
 // Bundles (pcmk_sched_bundle.c)
+
+G_GNUC_INTERNAL
+void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
+                                    pe_resource_t *primary,
+                                    pcmk__colocation_t *colocation,
+                                    bool for_dependent);
 
 G_GNUC_INTERNAL
 void pcmk__output_bundle_actions(pe_resource_t *rsc);
