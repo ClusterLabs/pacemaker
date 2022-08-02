@@ -96,6 +96,42 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Create an XML representation of an attribute for use in peer messages
+ *
+ * \param[in] parent       Create attribute XML as child element of this element
+ * \param[in] a            Attribute to represent
+ * \param[in] v            Attribute value to represent
+ * \param[in] force_write  If true, value should be written even if unchanged
+ *
+ * \return XML representation of attribute
+ */
+xmlNode *
+attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
+                    bool force_write)
+{
+    xmlNode *xml = create_xml_node(parent, __func__);
+
+    crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
+    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set);
+    crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
+    crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
+    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, v->nodename);
+    if (v->nodeid > 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, v->nodeid);
+    }
+    if (v->is_remote != 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
+    }
+    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, a->is_private);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, force_write);
+
+    return xml;
+}
+
 attribute_t *
 attrd_populate_attribute(xmlNode *xml, const char *attr)
 {

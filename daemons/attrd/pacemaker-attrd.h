@@ -159,6 +159,8 @@ void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
                         xmlNode *query);
 gboolean send_attrd_message(crm_node_t * node, xmlNode * data);
 
+xmlNode *attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
+                             bool force_write);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
