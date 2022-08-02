@@ -1295,7 +1295,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
 
         cmd->result.exit_status = PCMK_OCF_OK;
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return TRUE;
     }
 #endif
 
@@ -1310,14 +1311,16 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (action == NULL) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_ERROR, strerror(ENOMEM));
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return TRUE;
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
         pcmk__set_result(&(cmd->result), action->rc, action->status,
                          services__exit_reason(action));
         services_action_free(action);
-        goto exec_done;
+        cmd_finalize(cmd, rsc);
+        return TRUE;
     }
 
     action->cb_data = cmd;
@@ -1335,7 +1338,6 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     services_action_free(action);
     action = NULL;
 
-  exec_done:
     cmd_finalize(cmd, rsc);
     return TRUE;
 }
