@@ -82,7 +82,8 @@ Activate our new configuration, and see how the cluster responds:
       Resource: WebData (class=ocf provider=linbit type=drbd)
        Attributes: drbd_resource=wwwdata
        Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
-                   monitor interval=60s (WebData-monitor-interval-60s)
+                   monitor interval=29s role=Promoted (WebData-monitor-interval-29s)
+                   monitor interval=31s role=Unpromoted (WebData-monitor-interval-31s)
                    notify interval=0s timeout=90 (WebData-notify-interval-0s)
                    promote interval=0s timeout=90 (WebData-promote-interval-0s)
                    reload interval=0s timeout=30 (WebData-reload-interval-0s)
@@ -142,7 +143,7 @@ Now we can create a new GFS2 filesystem on the DRBD device.
 
 .. code-block:: console
 
-    [root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
+    [root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
     It appears to contain an existing filesystem (xfs)
     This will destroy any data on /dev/drbd1
     Are you sure you want to proceed? [y/n] y

@@ -117,26 +117,35 @@ run this on both nodes to use this sample configuration:
 .. code-block:: console
 
     # cat <<END >/etc/drbd.d/wwwdata.res
-    resource wwwdata {
-     protocol C;
-     meta-disk internal;
-     device /dev/drbd1;
-     syncer {
-      verify-alg sha1;
-     }
-     net {
-      allow-two-primaries;
-     }
-     on pcmk-1 {
-      disk   /dev/almalinux_pcmk-1/drbd-demo;
-      address  192.168.122.101:7789;
-     }
-     on pcmk-2 {
-      disk   /dev/almalinux_pcmk-2/drbd-demo;
-      address  192.168.122.102:7789;
-     }
+    resource "wwwdata" {
+      device minor 1;
+      meta-disk internal;
+
+      net {
+        protocol C;
+        allow-two-primaries yes;
+        fencing resource-and-stonith;
+        verify-alg sha1;
+      }
+      handlers {
+        fence-peer "/usr/lib/drbd/crm-fence-peer.9.sh";
+        unfence-peer "/usr/lib/drbd/crm-unfence-peer.9.sh";
+      }
+      on "pcmk-1" {
+        disk "/dev/almalinux_pcmk-1/drbd-demo";
+        node-id 0;
+      }
+      on "pcmk-2" {
+        disk "/dev/almalinux_pcmk-2/drbd-demo";
+        node-id 1;
+      }
+      connection {
+        host "pcmk-1" address 192.168.122.101:7789;
+        host "pcmk-2" address 192.168.122.102:7789;
+      }
     }
     END
+
 
 .. IMPORTANT::
 
@@ -148,8 +157,13 @@ run this on both nodes to use this sample configuration:
     Detailed information on the directives used in this configuration (and
     other alternatives) is available in the
     `DRBD User's Guide
-    <https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/#ch-configure>`_.
-    The ``allow-two-primaries`` option would not normally be used in
+    <https://linbit.com/drbd-user-guide/drbd-guide-9_0-en/#ch-configure>`_. The
+    guide contains a wealth of information on such topics as core DRBD
+    concepts, replication settings, network connection options, quorum, split-
+    brain handling, administrative tasks, troubleshooting, and responding to
+    disk or node failures, among others.
+
+    The ``allow-two-primaries: yes`` option would not normally be used in
     an active/passive cluster. We are adding it here for the convenience
     of changing to an active/active cluster later.
 
@@ -255,6 +269,7 @@ It will be quickly followed by this:
 
 .. code-block:: console
 
+    [root@pcmk-1 ~]# drbdadm status
     wwwdata role:Primary
       disk:UpToDate
       pcmk-2 role:Secondary
@@ -345,7 +360,8 @@ resource to allow the resource to run on both nodes at the same time.
 .. code-block:: console
 
     [root@pcmk-1 ~]# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \
-         drbd_resource=wwwdata op monitor interval=60s
+         drbd_resource=wwwdata op monitor interval=29s role=Promoted \
+         monitor interval=31s role=Unpromoted
     [root@pcmk-1 ~]# pcs -f drbd_cfg resource promotable WebData \
          promoted-max=1 promoted-node-max=1 clone-max=2 clone-node-max=1 \
          notify=true
@@ -379,7 +395,8 @@ them all at once by pushing the ``drbd_cfg`` file into the live CIB.
     .. code-block:: console
 
         [root@pcmk-1 ~]# pcs resource create WebData ocf:linbit:drbd \
-            drbd_resource=wwwdata op monitor interval=60s \
+            drbd_resource=wwwdata op monitor interval=29s role=Promoted \
+            monitor interval=31s role=Unpromoted \
             promotable promoted-max=1 promoted-node-max=1 clone-max=2  \
             clone-node-max=1 notify=true
 
@@ -409,7 +426,8 @@ Let's see what the cluster did with the new configuration:
       Resource: WebData (class=ocf provider=linbit type=drbd)
        Attributes: drbd_resource=wwwdata
        Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
-                   monitor interval=60s (WebData-monitor-interval-60s)
+                   monitor interval=29s role=Promoted (WebData-monitor-interval-29s)
+                   monitor interval=31s role=Unpromoted (WebData-monitor-interval-31s)
                    notify interval=0s timeout=90 (WebData-notify-interval-0s)
                    promote interval=0s timeout=90 (WebData-promote-interval-0s)
                    reload interval=0s timeout=30 (WebData-reload-interval-0s)
@@ -523,7 +541,8 @@ cluster put it into effect.
       Resource: WebData (class=ocf provider=linbit type=drbd)
        Attributes: drbd_resource=wwwdata
        Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
-                   monitor interval=60s (WebData-monitor-interval-60s)
+                   monitor interval=29s role=Promoted (WebData-monitor-interval-29s)
+                   monitor interval=31s role=Unpromoted (WebData-monitor-interval-31s)
                    notify interval=0s timeout=90 (WebData-notify-interval-0s)
                    promote interval=0s timeout=90 (WebData-promote-interval-0s)
                    reload interval=0s timeout=30 (WebData-reload-interval-0s)
