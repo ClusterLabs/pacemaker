@@ -13,11 +13,11 @@ Install Apache
 ##############
 
 Before continuing, we need to make sure Apache is installed on both
-hosts. We will also allow the cluster to use the **wget** tool (this is the
-default, but **curl** is also supported) to check the status of the Apache
-server. We'll install **httpd** (Apache) and **wget** now.
+hosts. We will also allow the cluster to use the ``wget`` tool (this is the
+default, but ``curl`` is also supported) to check the status of the Apache
+server. We'll install ``httpd`` (Apache) and ``wget`` now.
 
-.. code-block:: none
+.. code-block:: console
 
     # dnf install -y httpd wget
     # firewall-cmd --permanent --add-service=http
@@ -25,7 +25,7 @@ server. We'll install **httpd** (Apache) and **wget** now.
 
 .. IMPORTANT::
 
-    Do **not** enable the httpd service. Services that are intended to
+    Do **not** enable the ``httpd``` service. Services that are intended to
     be managed via the cluster software should never be managed by the OS.
     It is often useful, however, to manually start the service, verify that
     it works, then stop it again, before adding it to the cluster. This
@@ -41,7 +41,7 @@ file there. For the moment, we will simplify things by serving a static site
 and manually synchronizing the data between the two nodes, so run this command
 on both nodes:
 
-.. code-block:: none
+.. code-block:: console
 
     # cat <<-END >/var/www/html/index.html
      <html>
@@ -56,11 +56,11 @@ on both nodes:
 Enable the Apache Status URL
 ############################
 
-Pacemaker uses the **apache** resource agent to monitor the health of your
+Pacemaker uses the ``apache`` resource agent to monitor the health of your
 Apache instance via the ``server-status`` URL, and to recover the instance if
 it fails. On both nodes, configure this URL as follows:
 
-.. code-block:: none
+.. code-block:: console
 
     # cat <<-END >/etc/httpd/conf.d/status.conf
      <Location /server-status>
@@ -71,9 +71,10 @@ it fails. On both nodes, configure this URL as follows:
 
 .. NOTE::
 
-    If you are using a different operating system, server-status may already be
-    enabled or may be configurable in a different location. If you are using
-    a version of Apache HTTP Server less than 2.4, the syntax will be different.
+    If you are using a different operating system, ``server-status`` may
+    already be enabled or may be configurable in a different location. If you
+    are using a version of Apache HTTP Server less than 2.4, the syntax will be
+    different.
 
 
 .. index::
@@ -83,13 +84,13 @@ Configure the Cluster
 #####################
 
 At this point, Apache is ready to go, and all that needs to be done is to
-add it to the cluster. Let's call the resource WebSite. We need to use
-an OCF resource agent called apache in the heartbeat namespace [#]_.
+add it to the cluster. Let's call the resource ``WebSite``. We need to use
+an OCF resource agent called ``apache`` in the ``heartbeat`` namespace [#]_.
 The script's only required parameter is the path to the main Apache
 configuration file, and we'll tell the cluster to check once a
 minute that Apache is still running.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource create WebSite ocf:heartbeat:apache  \
           configfile=/etc/httpd/conf/httpd.conf \
@@ -101,11 +102,14 @@ other operations is 20 seconds. In many cases, this timeout period is less than
 a particular resource's advised timeout period. For the purposes of this
 tutorial, we will adjust the global operation timeout default to 240 seconds.
 
-.. code-block:: none
+.. code-block:: console
 
+    [root@pcmk-1 ~]# pcs resource op defaults
+    No defaults set
     [root@pcmk-1 ~]# pcs resource op defaults update timeout=240s
     Warning: Defaults do not apply to resources which override them with their own defined values
     [root@pcmk-1 ~]# pcs resource op defaults
+    Meta Attrs: op_defaults-meta_attributes
     timeout: 240s
 
 .. NOTE::
@@ -126,45 +130,46 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 After a short delay, we should see the cluster start Apache.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:38:22 2021
-      * Last change:  Tue Jan 26 19:38:19 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:47:44 2022
+      * Last change:  Wed Jul 27 00:47:23 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Wait a moment, the WebSite resource isn't running on the same host as our
+Wait a moment, the ``WebSite`` resource isn't running on the same host as our
 IP address!
 
 .. NOTE::
 
-    If, in the ``pcs status`` output, you see the WebSite resource has
+    If, in the ``pcs status`` output, you see the ``WebSite`` resource has
     failed to start, then you've likely not enabled the status URL correctly.
     You can check whether this is the problem by running:
 
-    .. code-block:: none
+    .. code-block:: console
 
         wget -O - http://localhost/server-status
 
-    If you see **Not Found** or **Forbidden** in the output, then this is likely the
-    problem.  Ensure that the **<Location /server-status>** block is correct.
+    If you see ``Not Found`` or ``Forbidden`` in the output, then this is likely the
+    problem. Ensure that the ``<Location /server-status>`` block is correct.
 
 .. index::
     single: constraint; colocation
@@ -177,34 +182,34 @@ To reduce the load on any one machine, Pacemaker will generally try to
 spread the configured resources across the cluster nodes. However, we
 can tell the cluster that two resources are related and need to run on
 the same host (or else one of them should not run at all, if they cannot run on
-the same node). Here, we instruct the cluster that WebSite can only run on the
-host where ClusterIP is active.
+the same node). Here, we instruct the cluster that ``WebSite`` can only run on
+the host where ``ClusterIP`` is active.
 
 To achieve this, we use a *colocation constraint* that indicates it is
-mandatory for WebSite to run on the same node as ClusterIP. The
+mandatory for ``WebSite`` to run on the same node as ``ClusterIP``. The
 "mandatory" part of the colocation constraint is indicated by using a
-score of INFINITY. The INFINITY score also means that if ClusterIP is not
-active anywhere, WebSite will not be permitted to run.
+score of ``INFINITY``. The ``INFINITY`` score also means that if ``ClusterIP``
+is not active anywhere, ``WebSite`` will not be permitted to run.
 
 .. NOTE::
 
-    If ClusterIP is not active anywhere, WebSite will not be permitted to run
-    anywhere.
+    If ``ClusterIP`` is not active anywhere, ``WebSite`` will not be permitted
+    to run anywhere.
 
 .. NOTE::
 
-    INFINITY is the default score for a colocation constraint. If you don't
-    specify a score, INFINITY will be used automatically.
+    ``INFINITY`` is the default score for a colocation constraint. If you don't
+    specify a score, ``INFINITY`` will be used automatically.
 
 .. IMPORTANT::
 
     Colocation constraints are "directional", in that they imply certain
     things about the order in which the two resources will have a location
-    chosen. In this case, we're saying that **WebSite** needs to be placed on the
-    same machine as **ClusterIP**, which implies that the cluster must know the
-    location of **ClusterIP** before choosing a location for **WebSite**.
+    chosen. In this case, we're saying that ``WebSite`` needs to be placed on
+    the same machine as ``ClusterIP``, which implies that the cluster must know
+    the location of ``ClusterIP`` before choosing a location for ``WebSite``
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP INFINITY
     [root@pcmk-1 ~]# pcs constraint
@@ -217,19 +222,19 @@ active anywhere, WebSite will not be permitted to run.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:45:11 2021
-      * Last change:  Tue Jan 26 19:44:30 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:49:33 2022
+      * Last change:  Wed Jul 27 00:49:16 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
 
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
-
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -252,20 +257,20 @@ that IP just the same. However, if Apache binds only to certain IP
 address(es), the order matters: If the address is added after Apache
 starts, Apache won't respond on that address.
 
-To be sure our WebSite responds regardless of Apache's address configuration,
-we need to make sure ClusterIP not only runs on the same node,
-but also starts before WebSite. A colocation constraint ensures only that the
-resources run together; it doesn't affect order in which the resources are
-started or stopped.
+To be sure our ``WebSite`` responds regardless of Apache's address
+configuration, we need to make sure ``ClusterIP`` not only runs on the same
+node, but also starts before ``WebSite``. A colocation constraint ensures
+only that the resources run together; it doesn't affect order in which the
+resources are started or stopped.
 
 We do this by adding an ordering constraint. By default, all order constraints
-are mandatory. This means, for example, that if ClusterIP needs to stop, then
-WebSite must stop first (or already be stopped); and if WebSite needs to start,
-then ClusterIP must start first (or already be started). This also implies that
-the recovery of ClusterIP will trigger the recovery of WebSite, causing it to
-be restarted.
+are mandatory. This means, for example, that if ``ClusterIP`` needs to stop,
+then ``WebSite`` must stop first (or already be stopped); and if WebSite needs
+to start, then ``ClusterIP`` must start first (or already be started). This
+also implies that the recovery of ``ClusterIP`` will trigger the recovery of
+``WebSite``, causing it to be restarted.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# pcs constraint order ClusterIP then WebSite
     Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
@@ -279,13 +284,13 @@ be restarted.
 
 .. NOTE::
 
-    The default action in an order constraint is **start**. If you don't
-    specify an action, as in the example above, **pcs** automatically uses the
-    **start** action.
+    The default action in an order constraint is ``start`` If you don't
+    specify an action, as in the example above, ``pcs`` automatically uses the
+    ``start`` action.
 
 .. NOTE::
 
-    We could have placed the **ClusterIP** and **WebSite** resources into a
+    We could have placed the ``ClusterIP`` and ``WebSite`` resources into a
     **resource group** instead of configuring constraints. A resource group is
     a compact and intuitive way to organize a set of resources into a chain of
     colocation and ordering constraints. We will omit that in this guide; see
@@ -310,17 +315,18 @@ have to worry about whether you can handle the load after a failover.
 
 To do this, we create a location constraint.
 
-In the location constraint below, we are saying the WebSite resource
-prefers the node pcmk-1 with a score of 50.  Here, the score indicates
+In the location constraint below, we are saying the ``WebSite`` resource
+prefers the node ``pcmk-1`` with a score of ``50``.  Here, the score indicates
 how strongly we'd like the resource to run at this location.
 
-.. code-block:: none
+.. code-block:: console
 
-    [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-1=50
+    [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-2=50
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
       Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
+        Enabled on:
+          Node: pcmk-2 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
     Colocation Constraints:
@@ -330,50 +336,49 @@ how strongly we'd like the resource to run at this location.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:46:52 2021
-      * Last change:  Tue Jan 26 19:46:40 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:51:13 2022
+      * Last change:  Wed Jul 27 00:51:07 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
 
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Wait a minute, the resources are still on pcmk-2!
+Wait a minute, the resources are still on ``pcmk-1``!
 
-Even though WebSite now prefers to run on pcmk-1, that preference is
+Even though ``WebSite`` now prefers to run on ``pcmk-2``, that preference is
 (intentionally) less than the resource stickiness (how much we
 preferred not to have unnecessary downtime).
 
-To see the current placement scores, you can use a tool called crm_simulate.
+To see the current placement scores, you can use a tool called
+``crm_simulate``.
 
-.. code-block:: none
+.. code-block:: console
 
     [root@pcmk-1 ~]# crm_simulate -sL
+    [ pcmk-1 pcmk-2 ]
 
-    Current cluster status:
-    Online: [ pcmk-1 pcmk-2 ]
+    fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+    ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+    WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
-
-    Allocation scores:
-    native_color: ClusterIP allocation score on pcmk-1: 50
-    native_color: ClusterIP allocation score on pcmk-2: 200
-    native_color: WebSite allocation score on pcmk-1: -INFINITY
-    native_color: WebSite allocation score on pcmk-2: 100
-
-    Transition Summary:
-
+    pcmk__native_allocate: fence_dev allocation score on pcmk-1: 100
+    pcmk__native_allocate: fence_dev allocation score on pcmk-2: 0
+    pcmk__native_allocate: ClusterIP allocation score on pcmk-1: 200
+    pcmk__native_allocate: ClusterIP allocation score on pcmk-2: 50
+    pcmk__native_allocate: WebSite allocation score on pcmk-1: 100
+    pcmk__native_allocate: WebSite allocation score on pcmk-2: -INFINITY
 
 .. index::
    single: resource; moving manually
@@ -383,22 +388,28 @@ Move Resources Manually
 
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. In this example,
-we will force the WebSite to move to pcmk-1.
+we will force the WebSite to move to ``pcmk-2``.
 
-We will use the **pcs resource move** command to create a temporary constraint
-with a score of INFINITY. While we could update our existing constraint,
-using **move** allows to easily get rid of the temporary constraint later.
-If desired, we could even give a lifetime for the constraint, so it would
-expire automatically -- but we don't do that in this example.
+We will use the ``pcs resource move`` command to create a temporary constraint
+with a score of ``INFINITY``. While we could update our existing constraint,
+using ``move`` allows ``pcs`` to get rid of the temporary constraint
+automatically after the resource has moved to its destination. Note in the
+below that the ``pcs constraint`` output after the ``move`` command is the same
+as before.
 
-.. code-block:: none
+.. code-block:: console
 
-    [root@pcmk-1 ~]# pcs resource move WebSite pcmk-1
+    [root@pcmk-1 ~]# pcs resource move WebSite pcmk-2
+    Location constraint to move resource 'WebSite' has been created
+    Waiting for the cluster to apply configuration changes...
+    Location constraint created to move resource 'WebSite' has been removed
+    Waiting for the cluster to apply configuration changes...
+    resource 'WebSite' is running on node 'pcmk-2'
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
       Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
-        Enabled on: pcmk-1 (score:INFINITY) (role: Started)
+        Enabled on:
+          Node: pcmk-2 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
     Colocation Constraints:
@@ -408,79 +419,30 @@ expire automatically -- but we don't do that in this example.
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:49:27 2021
-      * Last change:  Tue Jan 26 19:49:10 2021 by root via crm_resource on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Jul 27 00:54:23 2022
+      * Last change:  Wed Jul 27 00:53:48 2022 by root via cibadmin on pcmk-1
       * 2 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
+      * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
-Once we've finished whatever activity required us to move the
-resources to pcmk-1 (in our case nothing), the new constraint is no longer
-needed, and so we can remove it. Due to our first location constraint and our
-default stickiness, the resources will remain on pcmk-1.
-
-We will use the **pcs resource clear** command, which removes all temporary
-constraints previously created by **pcs resource move** or **pcs resource ban**.
-
-.. code-block:: none
-
-    [root@pcmk-1 ~]# pcs resource clear WebSite
-    Removing constraint: cli-prefer-WebSite
-    [root@pcmk-1 ~]# pcs constraint
-    Location Constraints:
-      Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
-    Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
-
-Note that the INFINITY location constraint is now gone. If we check the cluster
-status, we can also see that (as expected) the resources are still active
-on pcmk-1.
-
-.. code-block:: none
-
-    [root@pcmk-1 ~]# pcs status
-    Cluster name: mycluster
-    Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Tue Jan 26 19:50:52 2021
-      * Last change:  Tue Jan 26 19:50:24 2021 by root via crm_resource on pcmk-1
-      * 2 nodes configured
-      * 2 resource instances configured
-    
-    Node List:
-      * Online: [ pcmk-1 pcmk-2 ]
-    
-    Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
-
-To remove the constraint with the score of 50, we would first get the
+To remove the constraint with the score of ``50``, we would first get the
 constraint's ID using ``pcs constraint --full``, then remove it with
 ``pcs constraint remove`` and the ID. We won't show those steps here,
-but feel free to try it on your own, with the help of the pcs man page
+but feel free to try it on your own, with the help of the ``pcs`` man page
 if necessary.
 
-.. [#] Compare the key used here, **ocf:heartbeat:apache**, with the one we
-       used earlier for the IP address, **ocf:heartbeat:IPaddr2**.
+.. [#] Compare the key used here, ``ocf:heartbeat:apache`` with the one we
+       used earlier for the IP address, ``ocf:heartbeat:IPaddr2``.
