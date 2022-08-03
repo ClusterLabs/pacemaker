@@ -571,6 +571,7 @@ pcmk_disconnect_ipc(pcmk_ipc_api_t *api)
                 // This should always be the case already, but to be safe
                 api->free_on_disconnect = false;
 
+                crm_ipc_close(ipc);
                 crm_ipc_destroy(ipc);
                 ipc_post_disconnect(api);
             }
