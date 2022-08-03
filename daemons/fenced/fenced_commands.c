@@ -94,8 +94,8 @@ typedef struct async_command_s {
     char *client_name;
     char *remote_op_id;
 
-    char *victim;
-    uint32_t victim_nodeid;
+    char *target;
+    uint32_t target_nodeid;
     char *action;
     char *device;
 
@@ -144,7 +144,8 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 }
 
 static int
-get_action_delay_base(stonith_device_t *device, const char *action, const char *victim)
+get_action_delay_base(stonith_device_t *device, const char *action,
+                      const char *target)
 {
     char *hash_value = NULL;
     int delay_base = 0;
@@ -161,7 +162,7 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
 
         CRM_ASSERT(value != NULL);
 
-        if (victim) {
+        if (target != NULL) {
             for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
                 char *mapval = strchr(val, ':');
 
@@ -170,9 +171,10 @@ get_action_delay_base(stonith_device_t *device, const char *action, const char *
                     continue;
                 }
 
-                if (mapval != val && strncasecmp(victim, val, (size_t)(mapval - val)) == 0) {
+                if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
                     value = mapval + 1;
-                    crm_debug("pcmk_delay_base mapped to %s for %s", value, victim);
+                    crm_debug("pcmk_delay_base mapped to %s for %s",
+                              value, target);
                     break;
                 }
             }
@@ -251,7 +253,7 @@ free_async_command(async_command_t * cmd)
     g_list_free_full(cmd->device_list, free);
     free(cmd->device);
     free(cmd->action);
-    free(cmd->victim);
+    free(cmd->target);
     free(cmd->remote_op_id);
     free(cmd->client);
     free(cmd->client_name);
@@ -284,7 +286,7 @@ create_async_command(xmlNode * msg)
     cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
     cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = strdup(action);
-    cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
+    cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
@@ -345,9 +347,8 @@ fork_cb(int pid, void *user_data)
     CRM_ASSERT(device);
     crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
               cmd->action, pid,
-              ((cmd->victim == NULL)? "" : " targeting "),
-              ((cmd->victim == NULL)? "" : cmd->victim),
-              device->id, cmd->timeout);
+              ((cmd->target == NULL)? "" : " targeting "),
+              pcmk__s(cmd->target, ""), device->id, cmd->timeout);
     cmd->active_on = device;
     cmd->activating_on = NULL;
 }
@@ -431,8 +432,8 @@ stonith_device_execute(stonith_device_t * device)
             crm_trace("Operation '%s'%s%s using %s was asked to run too early, "
                       "waiting for start delay of %ds",
                       pending_op->action,
-                      ((pending_op->victim == NULL)? "" : " targeting "),
-                      ((pending_op->victim == NULL)? "" : pending_op->victim),
+                      ((pending_op->target == NULL)? "" : " targeting "),
+                      pcmk__s(pending_op->target, ""),
                       device->id, pending_op->start_delay);
             continue;
         }
@@ -487,9 +488,8 @@ stonith_device_execute(stonith_device_t * device)
 
         crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
                    "because agent '%s' does not support reboot",
-                   ((cmd->victim == NULL)? "" : " targeting "),
-                   ((cmd->victim == NULL)? "" : cmd->victim),
-                   device->id, device->agent);
+                   ((cmd->target == NULL)? "" : " targeting "),
+                   pcmk__s(cmd->target, ""), device->id, device->agent);
         action_str = "off";
     }
 
@@ -502,8 +502,8 @@ stonith_device_execute(stonith_device_t * device)
 
     action = stonith_action_create(device->agent,
                                    action_str,
-                                   cmd->victim,
-                                   cmd->victim_nodeid,
+                                   cmd->target,
+                                   cmd->target_nodeid,
                                    cmd->timeout, device->params,
                                    device->aliases, host_arg);
 
@@ -564,10 +564,10 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         free(cmd->device);
     }
 
-    if (device->include_nodeid && cmd->victim) {
-        crm_node_t *node = crm_get_peer(0, cmd->victim);
+    if (device->include_nodeid && (cmd->target != NULL)) {
+        crm_node_t *node = crm_get_peer(0, cmd->target);
 
-        cmd->victim_nodeid = node->id;
+        cmd->target_nodeid = node->id;
     }
 
     cmd->device = strdup(device->id);
@@ -577,12 +577,14 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         crm_debug("Scheduling '%s' action%s%s using %s for remote peer %s "
                   "with op id %.8s and timeout %ds",
                   cmd->action,
-                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  (cmd->target == NULL)? "" : " targeting ",
+                  pcmk__s(cmd->target, ""),
                   device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
         crm_debug("Scheduling '%s' action%s%s using %s for %s with timeout %ds",
                   cmd->action,
-                  cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                  (cmd->target == NULL)? "" : " targeting ",
+                  pcmk__s(cmd->target, ""),
                   device->id, cmd->client, cmd->timeout);
     }
 
@@ -595,7 +597,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     delay_max = get_action_delay_max(device, cmd->action);
-    delay_base = get_action_delay_base(device, cmd->action, cmd->victim);
+    delay_base = get_action_delay_base(device, cmd->action, cmd->target);
     if (delay_max == 0) {
         delay_max = delay_base;
     }
@@ -617,7 +619,8 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         crm_notice("Delaying '%s' action%s%s using %s for %ds " CRM_XS
                    " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
-                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
+                   (cmd->target == NULL)? "" : " targeting ",
+                   pcmk__s(cmd->target, ""),
                    device->id, cmd->start_delay, cmd->timeout,
                    requested_delay, delay_base, delay_max);
         cmd->delay_id =
@@ -1083,7 +1086,7 @@ static void
 schedule_internal_command(const char *origin,
                           stonith_device_t * device,
                           const char *action,
-                          const char *victim,
+                          const char *target,
                           int timeout,
                           void *internal_user_data,
                           void (*done_cb) (int pid,
@@ -1098,7 +1101,7 @@ schedule_internal_command(const char *origin,
     cmd->default_timeout = timeout ? timeout : 60;
     cmd->timeout = cmd->default_timeout;
     cmd->action = strdup(action);
-    pcmk__str_update(&cmd->victim, victim);
+    pcmk__str_update(&cmd->target, target);
     cmd->device = strdup(device->id);
     cmd->origin = strdup(origin);
     cmd->client = strdup(crm_system_name);
@@ -2402,14 +2405,14 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
 
     // Choose log levels appropriately if we have a result
     if (pcmk__result_ok(result)) {
-        log_level = (cmd->victim == NULL)? LOG_DEBUG : LOG_NOTICE;
+        log_level = (cmd->target == NULL)? LOG_DEBUG : LOG_NOTICE;
         if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
             output_log_level = LOG_DEBUG;
         }
         next = NULL;
     } else {
-        log_level = (cmd->victim == NULL)? LOG_NOTICE : LOG_ERR;
+        log_level = (cmd->target == NULL)? LOG_NOTICE : LOG_ERR;
         if ((result->action_stdout != NULL)
             && !pcmk__str_eq(cmd->action, "metadata", pcmk__str_casei)) {
             output_log_level = LOG_WARNING;
@@ -2421,8 +2424,8 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     if (pid != 0) {
         g_string_append_printf(msg, "[%d] ", pid);
     }
-    if (cmd->victim != NULL) {
-        g_string_append_printf(msg, "targeting %s ", cmd->victim);
+    if (cmd->target != NULL) {
+        g_string_append_printf(msg, "targeting %s ", cmd->target);
     }
     if (cmd->device != NULL) {
         g_string_append_printf(msg, "using %s ", cmd->device);
@@ -2499,12 +2502,12 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
     }
 
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
-        && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei)) {
+        && pcmk__str_eq(cmd->origin, cmd->target, pcmk__str_casei)) {
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
-                  cmd->action, cmd->victim);
+                  cmd->action, cmd->target);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
@@ -2521,7 +2524,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
 
         stonith__xe_set_result(notify_data, result);
-        crm_xml_add(notify_data, F_STONITH_TARGET, cmd->victim);
+        crm_xml_add(notify_data, F_STONITH_TARGET, cmd->target);
         crm_xml_add(notify_data, F_STONITH_OPERATION, cmd->op);
         crm_xml_add(notify_data, F_STONITH_DELEGATE, "localhost");
         crm_xml_add(notify_data, F_STONITH_DEVICE, cmd->device);
@@ -2630,12 +2633,12 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
         /* A pending scheduled command matches the command that just finished if.
          * 1. The client connections are different.
-         * 2. The node victim is the same.
+         * 2. The target is the same.
          * 3. The fencing action is the same.
          * 4. The device scheduled to execute the action is the same.
          */
         if (pcmk__str_eq(cmd->client, cmd_other->client, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->victim, cmd_other->victim, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->target, cmd_other->target, pcmk__str_casei) ||
             !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_casei) ||
             !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
 
@@ -2652,7 +2655,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
          */
         crm_notice("Merging fencing action '%s' targeting %s originating from "
                    "client %s with identical fencing request from client %s",
-                   cmd_other->action, cmd_other->victim, cmd_other->client_name,
+                   cmd_other->action, cmd_other->target, cmd_other->client_name,
                    cmd->client_name);
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
@@ -2690,7 +2693,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     guint ndevices = g_list_length(devices);
 
     crm_info("Found %d matching device%s for target '%s'",
-             ndevices, pcmk__plural_s(ndevices), cmd->victim);
+             ndevices, pcmk__plural_s(ndevices), cmd->target);
 
     if (devices != NULL) {
         /* Order based on priority */
@@ -2703,7 +2706,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
         pcmk__format_result(&result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                             "No device configured for target '%s'",
-                            cmd->victim);
+                            cmd->target);
         send_async_reply(cmd, &result, 0, false);
         pcmk__reset_result(&result);
         free_async_command(cmd);
@@ -2853,7 +2856,7 @@ construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
     crm_xml_add(reply, F_STONITH_REMOTE_OP_ID, cmd->remote_op_id);
     crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
     crm_xml_add(reply, F_STONITH_CLIENTNAME, cmd->client_name);
-    crm_xml_add(reply, F_STONITH_TARGET, cmd->victim);
+    crm_xml_add(reply, F_STONITH_TARGET, cmd->target);
     crm_xml_add(reply, F_STONITH_ACTION, cmd->op);
     crm_xml_add(reply, F_STONITH_ORIGIN, cmd->origin);
     crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
