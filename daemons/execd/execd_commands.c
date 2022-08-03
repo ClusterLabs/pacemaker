@@ -1278,7 +1278,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                             ((rc == -pcmk_err_generic)? NULL : pcmk_strerror(rc)));
 }
 
-static int
+static void
 execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     svc_action_t *action = NULL;
@@ -1297,7 +1297,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
         cmd->result.exit_status = PCMK_OCF_OK;
         cmd_finalize(cmd, rsc);
-        return TRUE;
+        return;
     }
 #endif
 
@@ -1313,7 +1313,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_ERROR, strerror(ENOMEM));
         cmd_finalize(cmd, rsc);
-        return TRUE;
+        return;
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
@@ -1321,7 +1321,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                          services__exit_reason(action));
         services_action_free(action);
         cmd_finalize(cmd, rsc);
-        return TRUE;
+        return;
     }
 
     action->cb_data = cmd;
@@ -1348,8 +1348,6 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                          services__exit_reason(action));
         services_action_free(action);
     }
-
-    return TRUE;
 }
 
 static gboolean
