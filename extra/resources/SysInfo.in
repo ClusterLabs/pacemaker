@@ -354,7 +354,13 @@ SysInfo_reload_agent() {
 }
 
 SysInfo_validate() {
-    return $OCF_SUCCESS
+    # If specified, is min_disk_free a non-negative integer followed by a disk unit?
+
+    pat="[1-9][0-9]*[KkBbMmGgTtPp]?"
+    if [[ ! $OCF_RESKEY_min_disk_free =~ $pat ]]; then
+        return $OCF_ERR_CONFIGURED
+    fi
+
 }
 
 if [ $# -ne 1 ]; then
