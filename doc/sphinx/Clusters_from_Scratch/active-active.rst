@@ -82,7 +82,8 @@ Activate our new configuration, and see how the cluster responds:
       Resource: WebData (class=ocf provider=linbit type=drbd)
        Attributes: drbd_resource=wwwdata
        Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
-                   monitor interval=60s (WebData-monitor-interval-60s)
+                   monitor interval=29s role=Promoted (WebData-monitor-interval-29s)
+                   monitor interval=31s role=Unpromoted (WebData-monitor-interval-31s)
                    notify interval=0s timeout=90 (WebData-notify-interval-0s)
                    promote interval=0s timeout=90 (WebData-promote-interval-0s)
                    reload interval=0s timeout=30 (WebData-reload-interval-0s)
