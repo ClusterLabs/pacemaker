@@ -142,7 +142,7 @@ Now we can create a new GFS2 filesystem on the DRBD device.
 
 .. code-block:: console
 
-    [root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
+    [root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
     It appears to contain an existing filesystem (xfs)
     This will destroy any data on /dev/drbd1
     Are you sure you want to proceed? [y/n] y
