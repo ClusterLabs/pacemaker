@@ -575,12 +575,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
                 return FALSE;
             }
 
-/* 		if(data_set->have_quorum == FALSE */
-/* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
-/* 			/\* start shutting resources down *\/ */
-/* 			new_node->weight = -INFINITY; */
-/* 		} */
-
             handle_startup_fencing(data_set, new_node);
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
