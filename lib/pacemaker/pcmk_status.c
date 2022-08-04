@@ -152,6 +152,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
         cib__clean_up_connection(&cib);
+        free_xml(cib_copy);
         rc = pcmk_rc_schema_validation;
         out->err(out, "Upgrade failed: %s", pcmk_rc_str(rc));
         return rc;
