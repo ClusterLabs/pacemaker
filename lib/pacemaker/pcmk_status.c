@@ -287,6 +287,10 @@ done:
         stonith_api_delete(st);
     }
 
+    if (current_cib != NULL) {
+        free_xml(current_cib);
+    }
+
     return rc;
 }
 
