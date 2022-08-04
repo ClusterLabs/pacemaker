@@ -198,7 +198,7 @@ pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_reset_working_set(data_set);
+    pe_free_working_set(data_set);
     return rc;
 }
 
