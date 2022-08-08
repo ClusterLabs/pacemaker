@@ -30,7 +30,7 @@ pcmk__output_free(pcmk__output_t *out) {
 int
 pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filename,
                  char **argv) {
-    pcmk__output_factory_t create = NULL;;
+    pcmk__output_factory_t create = NULL;
 
     if (formatters == NULL) {
         return EINVAL;
