@@ -625,18 +625,20 @@ static pcmk__cluster_option_t controller_options[] = {
         N_("How long before nodes can be assumed to be safely down when "
            "watchdog-based self-fencing via SBD is in use"),
         N_("If this is set to a positive value, lost nodes are assumed to "
-           "self-fence using watchdog-based SBD within this much time, without "
-           "requiring a fencing resource to be explicitly configured. If this "
-           "is set to 0 (the default), the cluster will never assume this. If "
-           "this is set to a negative value, the cluster will use twice the "
-           "local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if "
-           "that is positive, or otherwise treat this as 0. WARNING: When "
-           "used, this timeout must be larger than the value of the "
-           "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes, and "
-           "Pacemaker will refuse to start on any node where this is not true "
-           "for the local value or SBD is not active. When this is set to a "
-           "negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same "
-           "value on all nodes, otherwise data corruption or loss could occur.")
+           "self-fence using watchdog-based SBD within this much time. This "
+           "does not require a fencing resource to be explicitly configured, "
+           "though a fence_watchdog resource can be configured, to limit use "
+           "to specific nodes. If this is set to 0 (the default), the cluster "
+           "will never assume watchdog-based self-fencing. If this is set to a "
+           "negative value, the cluster will use twice the local value of the "
+           "`SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, "
+           "or otherwise treat this as 0. WARNING: When used, this timeout "
+           "must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use "
+           "watchdog-based SBD, and Pacemaker will refuse to start on any of "
+           "those nodes where this is not true for the local value or SBD is "
+           "not active. When this is set to a negative value, "
+           "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
+           "that use SBD, otherwise data corruption or loss could occur.")
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
