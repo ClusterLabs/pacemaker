@@ -144,6 +144,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 void
 pcmk__register_message(pcmk__output_t *out, const char *message_id,
                        pcmk__message_fn_t fn) {
+    CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id) && fn != NULL);
+
     g_hash_table_replace(out->messages, strdup(message_id), fn);
 }
 
