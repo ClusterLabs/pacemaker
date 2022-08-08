@@ -64,6 +64,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     } else {
         (*out)->dest = fopen(filename, "w");
         if ((*out)->dest == NULL) {
+            pcmk__output_free(*out);
+            *out = NULL;
             return errno;
         }
     }
