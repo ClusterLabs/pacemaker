@@ -50,6 +50,7 @@
  *   cases for examples.
  */
 
+// LCOV_EXCL_START
 
 /* calloc()
  *
@@ -280,3 +281,5 @@ __wrap_uname(struct utsname *buf)
         return __real_uname(buf);
     }
 }
+
+// LCOV_EXCL_STOP
