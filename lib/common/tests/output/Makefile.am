@@ -22,6 +22,7 @@ check_PROGRAMS =	pcmk__output_new_test \
 					pcmk__register_format_test \
 					pcmk__register_formats_test \
 					pcmk__register_message_test \
+					pcmk__register_messages_test \
 					pcmk__unregister_formats_test
 
 TESTS = $(check_PROGRAMS)
