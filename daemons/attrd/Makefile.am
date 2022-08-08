@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,8 +25,14 @@ pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
 			  $(CLUSTERLIBS)
 
-pacemaker_attrd_SOURCES	= pacemaker-attrd.c attrd_commands.c 	\
-			  attrd_utils.c attrd_alerts.c attrd_elections.c
+pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
+						  attrd_attributes.c \
+						  attrd_cib.c 		\
+						  attrd_corosync.c 	\
+						  attrd_elections.c \
+						  attrd_ipc.c 		\
+						  attrd_utils.c 	\
+						  pacemaker-attrd.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
