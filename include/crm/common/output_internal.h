@@ -567,7 +567,7 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  * \param[in]     options Format-specific command line options.  These will be
  *                        added to the context.  This argument can also be NULL.
  *
- * \return 0 on success or an error code on error.
+ * \return Standard Pacemaker return code
  */
 int
 pcmk__register_format(GOptionGroup *group, const char *name,

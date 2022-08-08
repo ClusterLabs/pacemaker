@@ -86,9 +86,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create, GOptionEntry *options) {
-    if (create == NULL) {
-        return -EINVAL;
-    }
+    CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
 
     if (formatters == NULL) {
         formatters = pcmk__strkey_table(free, NULL);
