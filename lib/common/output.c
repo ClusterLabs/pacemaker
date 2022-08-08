@@ -92,7 +92,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     g_hash_table_insert(formatters, strdup(name), create);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 void
