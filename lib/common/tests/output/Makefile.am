@@ -18,6 +18,7 @@ AM_LDFLAGS = $(LDFLAGS_WRAP)
 include $(top_srcdir)/mk/tap.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS =	pcmk__register_format_test
+check_PROGRAMS =	pcmk__register_format_test \
+					pcmk__register_formats_test
 
 TESTS = $(check_PROGRAMS)
