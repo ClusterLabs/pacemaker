@@ -614,7 +614,6 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     int lpc = 0;
 
     g_string_append_printf(s, "<?xml version=\"1.0\"?>"
-                              "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
                               "<resource-agent name=\"%s\">\n"
                               "  <version>%s</version>\n",
                               name, PCMK_OCF_VERSION);

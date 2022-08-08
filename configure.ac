@@ -91,9 +91,8 @@ dnl ========================================================================
 dnl A particular compiler can be forced by setting the CC environment variable
 AC_PROG_CC
 
-dnl Use at least C99 if possible. This will generate an "obsolete" warning
-dnl since autoconf 2.70, but is needed for older versions.
-AC_PROG_CC_STDC
+dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
+m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 
 dnl C++ is not needed for build, just maintainer utilities
 AC_PROG_CXX
@@ -833,12 +832,6 @@ dnl ===============================================
 
 PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
 export PATH
-
-dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
-dnl was NOT being expanded all the time thus causing things to fail.
-AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
-AS_IF([test x"${LIBTOOL}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool libtool (or equivalent)])])
 
 dnl Pacemaker's executable python scripts will invoke the python specified by
 dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a

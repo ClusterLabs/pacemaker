@@ -37,6 +37,15 @@ def sig_handler(signum, frame) :
         sys.exit(1)
 
 
+def plural_s(n, uppercase=False):
+    if n == 1:
+        return ""
+    elif uppercase:
+        return "S"
+    else:
+        return "s"
+
+
 if __name__ == '__main__':
 
     Environment = CtsLab(sys.argv[1:])
@@ -110,7 +119,7 @@ if __name__ == '__main__':
         scenario = RandomTests(
             cm, [ BootCluster(Environment), PacketLoss(Environment) ], Audits, Tests)
 
-    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
+    LogFactory().log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TEST" + plural_s(NumIter, True) + " ")
     LogFactory().log("Stack:                  %s (%s)" % (Environment["Stack"], Environment["Name"]))
     LogFactory().log("Schema:                 %s" % Environment["Schema"])
     LogFactory().log("Scenario:               %s" % scenario.__doc__)

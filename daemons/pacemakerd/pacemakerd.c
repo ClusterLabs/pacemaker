@@ -185,27 +185,22 @@ static void
 remove_core_file_limit(void)
 {
     struct rlimit cores;
-    int rc = getrlimit(RLIMIT_CORE, &cores);
 
-    if (rc < 0) {
-        crm_warn("Cannot determine current maximum core file size: %s",
-                 strerror(errno));
-        return;
+    if (getrlimit(RLIMIT_CORE, &cores) == 0) {
+        if ((cores.rlim_max == 0) && (geteuid() == 0)) {
+            cores.rlim_max = RLIM_INFINITY;
+        } else {
+            crm_trace("Maximum core file size is %llu bytes",
+                      (unsigned long long) cores.rlim_max);
+        }
+        cores.rlim_cur = cores.rlim_max;
+        if (setrlimit(RLIMIT_CORE, &cores) == 0) {
+            return;
+        }
     }
-
-    if ((cores.rlim_max == 0) && (geteuid() == 0)) {
-        cores.rlim_max = RLIM_INFINITY;
-    } else {
-        crm_info("Maximum core file size is %llu bytes",
-                 (unsigned long long) cores.rlim_max);
-    }
-    cores.rlim_cur = cores.rlim_max;
-
-    rc = setrlimit(RLIMIT_CORE, &cores);
-    if (rc < 0) {
-        crm_warn("Cannot raise system limit on core file size "
-                 "(consider doing so manually)");
-    }
+    crm_notice("Cannot raise system limit on core file size "
+               "(consider doing so manually): %s",
+               strerror(errno));
 }
 
 static void
