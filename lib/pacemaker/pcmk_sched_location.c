@@ -197,19 +197,19 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 }
 
 static void
-unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
+unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc, const char *role,
                     const char *score, pe_working_set_t *data_set,
                     pe_re_match_data_t *re_match_data)
 {
     pe__location_t *location = NULL;
-    const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    const char *rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
     const char *discovery = crm_element_value(xml_obj, XML_LOCATION_ATTR_DISCOVERY);
 
-    if (rsc_lh == NULL) {
+    if (rsc == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                          "does not exist", id, id_lh);
+                          "does not exist", id, rsc_id);
         return;
     }
 
@@ -224,7 +224,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
         if (!match) {
             return;
         }
-        location = pcmk__new_location(id, rsc_lh, score_i, discovery, match,
+        location = pcmk__new_location(id, rsc, score_i, discovery, match,
                                       data_set);
 
     } else {
@@ -239,7 +239,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
              rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
             empty = false;
             crm_trace("Unpacking %s/%s", id, ID(rule_xml));
-            generate_location_rule(rsc_lh, rule_xml, discovery, next_change,
+            generate_location_rule(rsc, rule_xml, discovery, next_change,
                                    data_set, re_match_data);
         }
 
@@ -293,10 +293,10 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
 
     if (value) {
-        pe_resource_t *rsc_lh;
+        pe_resource_t *rsc;
 
-        rsc_lh = pcmk__find_constraint_resource(data_set->resources, value);
-        unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
+        rsc = pcmk__find_constraint_resource(data_set->resources, value);
+        unpack_rsc_location(xml_obj, rsc, NULL, NULL, data_set, NULL);
     }
 
     value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
@@ -368,11 +368,11 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                      pe_working_set_t *data_set)
 {
     const char *id = NULL;
-    const char *id_lh = NULL;
-    const char *state_lh = NULL;
-    pe_resource_t *rsc_lh = NULL;
-    pe_tag_t *tag_lh = NULL;
-    xmlNode *rsc_set_lh = NULL;
+    const char *rsc_id = NULL;
+    const char *state = NULL;
+    pe_resource_t *rsc = NULL;
+    pe_tag_t *tag = NULL;
+    xmlNode *rsc_set = NULL;
 
     *expanded_xml = NULL;
 
@@ -392,37 +392,37 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
-    if (id_lh == NULL) {
+    rsc_id = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
+    if (rsc_id == NULL) {
         return pcmk_rc_ok;
     }
 
-    if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
+    if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_lh);
+                         "valid resource or tag", id, rsc_id);
         return pcmk_rc_schema_validation;
 
-    } else if (rsc_lh != NULL) {
+    } else if (rsc != NULL) {
         // No template is referenced
         return pcmk_rc_ok;
     }
 
-    state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+    state = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 
     *expanded_xml = copy_xml(xml_obj);
 
     // Convert template/tag reference in "rsc" into resource_set under constraint
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE,
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, XML_LOC_ATTR_SOURCE,
                           false, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
-    if (rsc_set_lh != NULL) {
-        if (state_lh != NULL) {
+    if (rsc_set != NULL) {
+        if (state != NULL) {
             // Move "rsc-role" into converted resource_set as "role" attribute
-            crm_xml_add(rsc_set_lh, "role", state_lh);
+            crm_xml_add(rsc_set, "role", state);
             xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
         }
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");

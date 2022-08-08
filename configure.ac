@@ -1760,6 +1760,7 @@ dnl otherwise none of both
     EXTRA_FLAGS="$EXTRA_FLAGS -Wendif-labels"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wfloat-equal"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wformat-security"
+    EXTRA_FLAGS="$EXTRA_FLAGS -Wimplicit-fallthrough"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wmissing-prototypes"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wmissing-declarations"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wnested-externs"

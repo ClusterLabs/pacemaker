@@ -1446,8 +1446,7 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
         case pcmk__coloc_affects_location:
             pcmk__apply_coloc_to_weights(dependent, primary, colocation);
             break;
-        case pcmk__coloc_affects_nothing:
-        default:
+        default: // pcmk__coloc_affects_nothing
             return;
     }
 }

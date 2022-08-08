@@ -64,7 +64,7 @@ struct resource_alloc_functions_s {
      * resource's relevant colocations.
      *
      * \param[in,out] rsc      Resource to check colocations for
-     * \param[in]     log_id   Resource ID to use in log messages
+     * \param[in]     log_id   Resource ID to use in logs (if NULL, use rsc ID)
      * \param[in,out] nodes    Nodes to update
      * \param[in]     attr     Colocation attribute (NULL to use default)
      * \param[in]     factor   Incorporate scores multiplied by this factor
@@ -334,9 +334,9 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
 // Ordering constraints (pcmk_sched_ordering.c)
 
 G_GNUC_INTERNAL
-void pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_task,
-                        pe_action_t *lh_action, pe_resource_t *rh_rsc,
-                        char *rh_task, pe_action_t *rh_action,
+void pcmk__new_ordering(pe_resource_t *first_rsc, char *first_task,
+                        pe_action_t *first_action, pe_resource_t *then_rsc,
+                        char *then_task, pe_action_t *then_action,
                         enum pe_ordering type, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
@@ -361,18 +361,20 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \internal
  * \brief Create a new ordering between two resource actions
  *
- * \param[in] lh_rsc    Resource for 'first' action
- * \param[in] rh_rsc    Resource for 'then' action
- * \param[in] lh_task   Action key for 'first' action
- * \param[in] rh_task   Action key for 'then' action
- * \param[in] flags     Bitmask of enum pe_ordering flags
- * \param[in] data_set  Cluster working set to add ordering to
+ * \param[in] first_rsc   Resource for 'first' action
+ * \param[in] then_rsc    Resource for 'then' action
+ * \param[in] first_task  Action key for 'first' action
+ * \param[in] then_task   Action key for 'then' action
+ * \param[in] flags       Bitmask of enum pe_ordering flags
+ * \param[in] data_set    Cluster working set to add ordering to
  */
-#define pcmk__order_resource_actions(lh_rsc, lh_task, rh_rsc, rh_task,      \
-                                     flags, data_set)                       \
-    pcmk__new_ordering((lh_rsc), pcmk__op_key((lh_rsc)->id, (lh_task), 0),  \
+#define pcmk__order_resource_actions(first_rsc, first_task, \
+                                     then_rsc, then_task, flags, data_set)  \
+    pcmk__new_ordering((first_rsc),                                         \
+                       pcmk__op_key((first_rsc)->id, (first_task), 0),      \
                        NULL,                                                \
-                       (rh_rsc), pcmk__op_key((rh_rsc)->id, (rh_task), 0),  \
+                       (then_rsc),                                          \
+                       pcmk__op_key((then_rsc)->id, (then_task), 0),        \
                        NULL, (flags), (data_set))
 
 #define pcmk__order_starts(rsc1, rsc2, type, data_set)       \

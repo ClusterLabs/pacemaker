@@ -509,10 +509,10 @@ task_from_action_or_key(pe_action_t *action, const char *key)
 static void
 handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
 {
-    char *lh_task = NULL;
-    char *rh_task = NULL;
-    bool rh_migratable;
-    bool lh_migratable;
+    char *first_task = NULL;
+    char *then_task = NULL;
+    bool then_migratable;
+    bool first_migratable;
 
     // Only orderings between two different resources are relevant
     if ((order->lh_rsc == NULL) || (order->rh_rsc == NULL)
@@ -527,25 +527,27 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
     }
 
     // Only orderings involving at least one migratable resource are relevant
-    lh_migratable = pcmk_is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
-    rh_migratable = pcmk_is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
-    if (!lh_migratable && !rh_migratable) {
+    first_migratable = pcmk_is_set(order->lh_rsc->flags, pe_rsc_allow_migrate);
+    then_migratable = pcmk_is_set(order->rh_rsc->flags, pe_rsc_allow_migrate);
+    if (!first_migratable && !then_migratable) {
         return;
     }
 
     // Check which actions are involved
-    lh_task = task_from_action_or_key(order->lh_action, order->lh_action_task);
-    rh_task = task_from_action_or_key(order->rh_action, order->rh_action_task);
-    if ((lh_task == NULL) || (rh_task == NULL)) {
+    first_task = task_from_action_or_key(order->lh_action,
+                                         order->lh_action_task);
+    then_task = task_from_action_or_key(order->rh_action,
+                                        order->rh_action_task);
+    if ((first_task == NULL) || (then_task == NULL)) {
         goto cleanup_order;
     }
 
-    if (pcmk__str_eq(lh_task, RSC_START, pcmk__str_casei)
-        && pcmk__str_eq(rh_task, RSC_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(first_task, RSC_START, pcmk__str_casei)
+        && pcmk__str_eq(then_task, RSC_START, pcmk__str_casei)) {
 
         int flags = pe_order_optional;
 
-        if (lh_migratable && rh_migratable) {
+        if (first_migratable && then_migratable) {
             /* A start then B start
              * -> A migrate_from then B migrate_to */
             pcmk__new_ordering(order->lh_rsc,
@@ -555,8 +557,8 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                NULL, flags, data_set);
         }
 
-        if (rh_migratable) {
-            if (lh_migratable) {
+        if (then_migratable) {
+            if (first_migratable) {
                 pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
             }
 
@@ -571,12 +573,13 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                NULL, flags, data_set);
         }
 
-    } else if (rh_migratable && pcmk__str_eq(lh_task, RSC_STOP, pcmk__str_casei)
-               && pcmk__str_eq(rh_task, RSC_STOP, pcmk__str_casei)) {
+    } else if (then_migratable
+               && pcmk__str_eq(first_task, RSC_STOP, pcmk__str_casei)
+               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_casei)) {
 
         int flags = pe_order_optional;
 
-        if (lh_migratable) {
+        if (first_migratable) {
             pe__set_order_flags(flags, pe_order_apply_first_non_migratable);
         }
 
@@ -598,12 +601,12 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                NULL, flags, data_set);
         }
 
-    } else if (pcmk__str_eq(lh_task, RSC_PROMOTE, pcmk__str_casei)
-               && pcmk__str_eq(rh_task, RSC_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_casei)
+               && pcmk__str_eq(then_task, RSC_START, pcmk__str_casei)) {
 
         int flags = pe_order_optional;
 
-        if (rh_migratable) {
+        if (then_migratable) {
             /* A promote then B start
              * -> A promote then B migrate_to */
             pcmk__new_ordering(order->lh_rsc,
@@ -613,12 +616,12 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                NULL, flags, data_set);
         }
 
-    } else if (pcmk__str_eq(lh_task, RSC_DEMOTE, pcmk__str_casei)
-               && pcmk__str_eq(rh_task, RSC_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(first_task, RSC_DEMOTE, pcmk__str_casei)
+               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_casei)) {
 
         int flags = pe_order_optional;
 
-        if (rh_migratable) {
+        if (then_migratable) {
             /* A demote then B stop
              * -> A demote then B migrate_to */
             pcmk__new_ordering(order->lh_rsc,
@@ -639,54 +642,56 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
     }
 
 cleanup_order:
-    free(lh_task);
-    free(rh_task);
+    free(first_task);
+    free(then_task);
 }
 
 /*!
  * \internal
  * \brief Create a new ordering between two actions
  *
- * \param[in] lh_rsc           Resource for 'first' action (if NULL and
- *                             \p lh_action is a resource action, that
- *                             resource will be used)
- * \param[in] lh_action_task   Action key for 'first' action (if NULL and
- *                             \p lh_action is not NULL, its UUID will be used)
- * \param[in] lh_action        'first' action (if NULL, \p lh_rsc and
- *                             \p lh_action_task must be set)
+ * \param[in] first_rsc          Resource for 'first' action (if NULL and
+ *                               \p first_action is a resource action, that
+ *                               resource will be used)
+ * \param[in] first_action_task  Action key for 'first' action (if NULL and
+ *                               \p first_action is not NULL, its UUID will be
+ *                               used)
+ * \param[in] first_action       'first' action (if NULL, \p first_rsc and
+ *                               \p first_action_task must be set)
  *
- * \param[in] rh_rsc           Resource for 'then' action (if NULL and
- *                             \p rh_action is a resource action, that
- *                             resource will be used)
- * \param[in] rh_action_task   Action key for 'then' action (if NULL and
- *                             \p rh_action is not NULL, its UUID will be used)
- * \param[in] rh_action        'then' action (if NULL, \p rh_rsc and
- *                             \p rh_action_task must be set)
+ * \param[in] then_rsc           Resource for 'then' action (if NULL and
+ *                               \p then_action is a resource action, that
+ *                               resource will be used)
+ * \param[in] then_action_task   Action key for 'then' action (if NULL and
+ *                               \p then_action is not NULL, its UUID will be
+ *                               used)
+ * \param[in] then_action        'then' action (if NULL, \p then_rsc and
+ *                               \p then_action_task must be set)
  *
- * \param[in] type             Flag set of enum pe_ordering
- * \param[in] data_set         Cluster working set to add ordering to
+ * \param[in] type               Flag set of enum pe_ordering
+ * \param[in] data_set           Cluster working set to add ordering to
  *
- * \note This function takes ownership of lh_action_task and rh_action_task,
- *       which do not need to be freed by the caller.
+ * \note This function takes ownership of first_action_task and
+ *       then_action_task, which do not need to be freed by the caller.
  */
 void
-pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
-                   pe_action_t *lh_action, pe_resource_t *rh_rsc,
-                   char *rh_action_task, pe_action_t *rh_action,
+pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
+                   pe_action_t *first_action, pe_resource_t *then_rsc,
+                   char *then_action_task, pe_action_t *then_action,
                    enum pe_ordering type, pe_working_set_t *data_set)
 {
     pe__ordering_t *order = NULL;
 
     // One of action or resource must be specified for each side
-    CRM_CHECK(((lh_action != NULL) || (lh_rsc != NULL))
-              && ((rh_action != NULL) || (rh_rsc != NULL)),
-              free(lh_action_task); free(rh_action_task); return);
+    CRM_CHECK(((first_action != NULL) || (first_rsc != NULL))
+              && ((then_action != NULL) || (then_rsc != NULL)),
+              free(first_action_task); free(then_action_task); return);
 
-    if ((lh_rsc == NULL) && (lh_action != NULL)) {
-        lh_rsc = lh_action->rsc;
+    if ((first_rsc == NULL) && (first_action != NULL)) {
+        first_rsc = first_action->rsc;
     }
-    if ((rh_rsc == NULL) && (rh_action != NULL)) {
-        rh_rsc = rh_action->rsc;
+    if ((then_rsc == NULL) && (then_action != NULL)) {
+        then_rsc = then_action->rsc;
     }
 
     order = calloc(1, sizeof(pe__ordering_t));
@@ -694,33 +699,33 @@ pcmk__new_ordering(pe_resource_t *lh_rsc, char *lh_action_task,
 
     order->id = data_set->order_id++;
     order->type = type;
-    order->lh_rsc = lh_rsc;
-    order->rh_rsc = rh_rsc;
-    order->lh_action = lh_action;
-    order->rh_action = rh_action;
-    order->lh_action_task = lh_action_task;
-    order->rh_action_task = rh_action_task;
+    order->lh_rsc = first_rsc;
+    order->rh_rsc = then_rsc;
+    order->lh_action = first_action;
+    order->rh_action = then_action;
+    order->lh_action_task = first_action_task;
+    order->rh_action_task = then_action_task;
 
-    if ((order->lh_action_task == NULL) && (lh_action != NULL)) {
-        order->lh_action_task = strdup(lh_action->uuid);
+    if ((order->lh_action_task == NULL) && (first_action != NULL)) {
+        order->lh_action_task = strdup(first_action->uuid);
     }
 
-    if ((order->rh_action_task == NULL) && (rh_action != NULL)) {
-        order->rh_action_task = strdup(rh_action->uuid);
+    if ((order->rh_action_task == NULL) && (then_action != NULL)) {
+        order->rh_action_task = strdup(then_action->uuid);
     }
 
-    if ((order->lh_rsc == NULL) && (lh_action != NULL)) {
-        order->lh_rsc = lh_action->rsc;
+    if ((order->lh_rsc == NULL) && (first_action != NULL)) {
+        order->lh_rsc = first_action->rsc;
     }
 
-    if ((order->rh_rsc == NULL) && (rh_action != NULL)) {
-        order->rh_rsc = rh_action->rsc;
+    if ((order->rh_rsc == NULL) && (then_action != NULL)) {
+        order->rh_rsc = then_action->rsc;
     }
 
-    pe_rsc_trace(lh_rsc, "Created ordering %d for %s then %s",
+    pe_rsc_trace(first_rsc, "Created ordering %d for %s then %s",
                  (data_set->order_id - 1),
-                 ((lh_action_task == NULL)? "?" : lh_action_task),
-                 ((rh_action_task == NULL)? "?" : rh_action_task));
+                 ((first_action_task == NULL)? "?" : first_action_task),
+                 ((then_action_task == NULL)? "?" : then_action_task));
 
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
                                                     order);
@@ -1361,136 +1366,137 @@ find_actions_by_task(pe_resource_t *rsc, const char *original_key)
 }
 
 static void
-rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
+rsc_order_then(pe_action_t *first_action, pe_resource_t *rsc,
                pe__ordering_t *order)
 {
-    GList *rh_actions = NULL;
-    pe_action_t *rh_action = NULL;
+    GList *then_actions = NULL;
+    pe_action_t *then_action = NULL;
     enum pe_ordering type;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(order != NULL, return);
 
     type = order->type;
-    rh_action = order->rh_action;
+    then_action = order->rh_action;
     crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
 
-    if (rh_action != NULL) {
-        rh_actions = g_list_prepend(NULL, rh_action);
+    if (then_action != NULL) {
+        then_actions = g_list_prepend(NULL, then_action);
 
     } else if (rsc != NULL) {
-        rh_actions = find_actions_by_task(rsc, order->rh_action_task);
+        then_actions = find_actions_by_task(rsc, order->rh_action_task);
     }
 
-    if (rh_actions == NULL) {
+    if (then_actions == NULL) {
         pe_rsc_trace(rsc,
                      "Ignoring constraint %d: then (%s for %s) not found",
                      order->id, order->rh_action_task, rsc->id);
         return;
     }
 
-    if ((lh_action != NULL) && (lh_action->rsc == rsc)
-        && pcmk_is_set(lh_action->flags, pe_action_dangle)) {
+    if ((first_action != NULL) && (first_action->rsc == rsc)
+        && pcmk_is_set(first_action->flags, pe_action_dangle)) {
 
         pe_rsc_trace(rsc, "Detected dangling operation %s -> %s",
-                     lh_action->uuid, order->rh_action_task);
+                     first_action->uuid, order->rh_action_task);
         pe__clear_order_flags(type, pe_order_implies_then);
     }
 
-    for (GList *gIter = rh_actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *rh_action_iter = (pe_action_t *) gIter->data;
+    for (GList *gIter = then_actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *then_action_iter = (pe_action_t *) gIter->data;
 
-        if (lh_action) {
-            order_actions(lh_action, rh_action_iter, type);
+        if (first_action != NULL) {
+            order_actions(first_action, then_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            pe__clear_action_flags(rh_action_iter, pe_action_runnable);
-            crm_warn("Unrunnable %s %#.6x", rh_action_iter->uuid, type);
+            pe__clear_action_flags(then_action_iter, pe_action_runnable);
+            crm_warn("Unrunnable %s %#.6x", then_action_iter->uuid, type);
         } else {
-            crm_warn("neither %s %#.6x", rh_action_iter->uuid, type);
+            crm_warn("neither %s %#.6x", then_action_iter->uuid, type);
         }
     }
 
-    g_list_free(rh_actions);
+    g_list_free(then_actions);
 }
 
 static void
-rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
+rsc_order_first(pe_resource_t *first_rsc, pe__ordering_t *order,
                 pe_working_set_t *data_set)
 {
-    GList *lh_actions = NULL;
-    pe_action_t *lh_action = order->lh_action;
-    pe_resource_t *rh_rsc = order->rh_rsc;
+    GList *first_actions = NULL;
+    pe_action_t *first_action = order->lh_action;
+    pe_resource_t *then_rsc = order->rh_rsc;
 
-    CRM_ASSERT(lh_rsc != NULL);
-    pe_rsc_trace(lh_rsc, "Applying ordering constraint %d (first: %s)",
-                 order->id, lh_rsc->id);
+    CRM_ASSERT(first_rsc != NULL);
+    pe_rsc_trace(first_rsc, "Applying ordering constraint %d (first: %s)",
+                 order->id, first_rsc->id);
 
-    if (lh_action != NULL) {
-        lh_actions = g_list_prepend(NULL, lh_action);
+    if (first_action != NULL) {
+        first_actions = g_list_prepend(NULL, first_action);
 
     } else {
-        lh_actions = find_actions_by_task(lh_rsc, order->lh_action_task);
+        first_actions = find_actions_by_task(first_rsc, order->lh_action_task);
     }
 
-    if ((lh_actions == NULL) && (lh_rsc == rh_rsc)) {
-        pe_rsc_trace(lh_rsc,
+    if ((first_actions == NULL) && (first_rsc == then_rsc)) {
+        pe_rsc_trace(first_rsc,
                      "Ignoring constraint %d: first (%s for %s) not found",
-                     order->id, order->lh_action_task, lh_rsc->id);
+                     order->id, order->lh_action_task, first_rsc->id);
 
-    } else if (lh_actions == NULL) {
+    } else if (first_actions == NULL) {
         char *key = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
 
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
-        key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
+        key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED)
+        if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_STOPPED)
             && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
             free(key);
-            pe_rsc_trace(lh_rsc,
+            pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, lh_rsc->id);
+                         order->id, order->lh_action_task, first_rsc->id);
 
-        } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
+        } else if ((first_rsc->fns->state(first_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
                    && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
-            pe_rsc_trace(lh_rsc,
+            pe_rsc_trace(first_rsc,
                          "Ignoring constraint %d: first (%s for %s) not found",
-                         order->id, order->lh_action_task, lh_rsc->id);
+                         order->id, order->lh_action_task, first_rsc->id);
 
         } else {
-            pe_rsc_trace(lh_rsc,
+            pe_rsc_trace(first_rsc,
                          "Creating first (%s for %s) for constraint %d ",
-                         order->lh_action_task, lh_rsc->id, order->id);
-            lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
-            lh_actions = g_list_prepend(NULL, lh_action);
+                         order->lh_action_task, first_rsc->id, order->id);
+            first_action = custom_action(first_rsc, key, op_type, NULL, TRUE,
+                                         TRUE, data_set);
+            first_actions = g_list_prepend(NULL, first_action);
         }
 
         free(op_type);
     }
 
-    if (rh_rsc == NULL) {
+    if (then_rsc == NULL) {
         if (order->rh_action == NULL) {
-            pe_rsc_trace(lh_rsc, "Ignoring constraint %d: then not found",
+            pe_rsc_trace(first_rsc, "Ignoring constraint %d: then not found",
                          order->id);
             return;
         }
-        rh_rsc = order->rh_action->rsc;
+        then_rsc = order->rh_action->rsc;
     }
-    for (GList *gIter = lh_actions; gIter != NULL; gIter = gIter->next) {
-        lh_action = (pe_action_t *) gIter->data;
+    for (GList *gIter = first_actions; gIter != NULL; gIter = gIter->next) {
+        first_action = (pe_action_t *) gIter->data;
 
-        if (rh_rsc == NULL) {
-            order_actions(lh_action, order->rh_action, order->type);
+        if (then_rsc == NULL) {
+            order_actions(first_action, order->rh_action, order->type);
 
         } else {
-            rsc_order_then(lh_action, rh_rsc, order);
+            rsc_order_then(first_action, then_rsc, order);
         }
     }
 
-    g_list_free(lh_actions);
+    g_list_free(first_actions);
 }
 
 void

@@ -3466,8 +3466,8 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                 *status = PCMK_EXEC_NOT_SUPPORTED;
                 break;
             }
-            // fall through
         }
+            // fall through
 
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:

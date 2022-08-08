@@ -1219,7 +1219,7 @@ is_nonempty_group(pe_resource_t *rsc)
  * resource's relevant colocations.
  *
  * \param[in,out] rsc      Resource to check colocations for
- * \param[in]     log_id   Resource ID to use in log messages
+ * \param[in]     log_id   Resource ID to use in logs (if NULL, use \p rsc ID)
  * \param[in,out] nodes    Nodes to update
  * \param[in]     attr     Colocation attribute (NULL to use default)
  * \param[in]     factor   Incorporate scores multiplied by this factor
@@ -1233,6 +1233,12 @@ pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
                                 float factor, uint32_t flags)
 {
     GHashTable *work = NULL;
+
+    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+
+    if (log_id == NULL) {
+        log_id = rsc->id;
+    }
 
     // Avoid infinite recursion
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
