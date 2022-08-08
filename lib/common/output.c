@@ -117,6 +117,7 @@ void
 pcmk__unregister_formats() {
     if (formatters != NULL) {
         g_hash_table_destroy(formatters);
+        formatters = NULL;
     }
 }
 
