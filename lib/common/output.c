@@ -15,6 +15,13 @@
 
 static GHashTable *formatters = NULL;
 
+#if defined(PCMK__UNIT_TESTING)
+GHashTable *
+pcmk__output_formatters(void) {
+    return formatters;
+}
+#endif
+
 void
 pcmk__output_free(pcmk__output_t *out) {
     out->free_priv(out);

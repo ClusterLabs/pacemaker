@@ -862,6 +862,13 @@ int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
 
+#if defined(PCMK__UNIT_TESTING)
+/* If we are building libcrmcommon_test.a, add this accessor function so we can
+ * inspect the internal formatters hash table.
+ */
+GHashTable *pcmk__output_formatters(void);
+#endif
+
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \
         out->spacer(out);                       \
