@@ -2677,9 +2677,11 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
          * cmd->action "off" and once with "on", and they will be merged
          * separately with similar requests.
          */
-        crm_notice("Merging fencing action '%s' targeting %s originating from "
+        crm_notice("Merging fencing action '%s'%s%s originating from "
                    "client %s with identical fencing request from client %s",
-                   cmd_other->action, cmd_other->target, cmd_other->client_name,
+                   cmd_other->action,
+                   (cmd_other->target == NULL)? "" : " targeting ",
+                   pcmk__s(cmd_other->target, ""), cmd_other->client_name,
                    cmd->client_name);
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
@@ -3021,10 +3023,13 @@ remove_relay_op(xmlNode * request)
                     }
                 }
             }
-            crm_debug("Deleting relay op %s ('%s' targeting %s for %s), "
-                      "replaced by op %s ('%s' targeting %s for %s)",
-                      relay_op->id, relay_op->action, relay_op->target,
-                      relay_op->client_name, op_id, relay_op->action, target,
+            crm_debug("Deleting relay op %s ('%s'%s%s for %s), "
+                      "replaced by op %s ('%s'%s%s for %s)",
+                      relay_op->id, relay_op->action,
+                      (relay_op->target == NULL)? "" : " targeting ",
+                      pcmk__s(relay_op->target, ""),
+                      relay_op->client_name, op_id, relay_op->action,
+                      (target == NULL)? "" : " targeting ", pcmk__s(target, ""),
                       client_name);
 
             g_hash_table_remove(stonith_remote_op_list, relay_op_id);
