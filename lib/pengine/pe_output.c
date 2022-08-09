@@ -1878,7 +1878,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
     time_t last_change = 0;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+                       &status, PCMK_EXEC_UNKNOWN);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);
 
@@ -1932,7 +1932,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     xmlNode *node = NULL;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
+                       &status, PCMK_EXEC_UNKNOWN);
     node = pcmk__output_create_xml_node(out, "operation",
                                         "op", op_key ? op_key : ID(xml_op),
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
