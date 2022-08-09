@@ -210,7 +210,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
     key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
     if (!key) {
-        crm_crit("Could not allocate memory for resource metadata");
+        crm_crit("Invalid resource agent standard or type provided");
         goto err;
     }
 
