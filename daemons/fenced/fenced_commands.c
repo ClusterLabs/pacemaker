@@ -237,6 +237,23 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
     return default_timeout;
 }
 
+/*!
+ * \internal
+ * \brief Get the currently executing device for a fencing operation
+ *
+ * \param[in] cmd  Fencing operation to check
+ *
+ * \return Currently executing device for \p cmd if any, otherwise NULL
+ */
+static stonith_device_t *
+cmd_device(const async_command_t *cmd)
+{
+    if ((cmd == NULL) || (cmd->device == NULL) || (device_list == NULL)) {
+        return NULL;
+    }
+    return g_hash_table_lookup(device_list, cmd->device);
+}
+
 static void
 free_async_command(async_command_t * cmd)
 {
@@ -561,11 +578,9 @@ static gboolean
 start_delay_helper(gpointer data)
 {
     async_command_t *cmd = data;
-    stonith_device_t *device = NULL;
+    stonith_device_t *device = cmd_device(cmd);
 
     cmd->delay_id = 0;
-    device = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
-
     if (device) {
         mainloop_set_trigger(device->work);
     }
@@ -1149,7 +1164,7 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
-    stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
+    stonith_device_t *dev = cmd_device(cmd);
     gboolean can = FALSE;
 
     free_async_command(cmd);
@@ -1199,7 +1214,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
 {
     async_command_t *cmd = user_data;
     struct device_search_s *search = cmd->internal_user_data;
-    stonith_device_t *dev = cmd->device ? g_hash_table_lookup(device_list, cmd->device) : NULL;
+    stonith_device_t *dev = cmd_device(cmd);
     gboolean can_fence = FALSE;
 
     free_async_command(cmd);
@@ -2563,15 +2578,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
 static void
 cancel_stonith_command(async_command_t * cmd)
 {
-    stonith_device_t *device;
-
-    CRM_CHECK(cmd != NULL, return);
-
-    if (!cmd->device) {
-        return;
-    }
-
-    device = g_hash_table_lookup(device_list, cmd->device);
+    stonith_device_t *device = cmd_device(cmd);
 
     if (device) {
         crm_trace("Cancel scheduled '%s' action using %s",
@@ -2674,16 +2681,17 @@ next_required_device(async_command_t *cmd)
 static void
 st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 {
+    async_command_t *cmd = user_data;
+
     stonith_device_t *device = NULL;
     stonith_device_t *next_device = NULL;
-    async_command_t *cmd = user_data;
 
     CRM_CHECK(cmd != NULL, return);
 
+    device = cmd_device(cmd);
     cmd->active_on = NULL;
 
     /* The device is ready to do something else now */
-    device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
         if (!device->verified && pcmk__result_ok(result) &&
             (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
