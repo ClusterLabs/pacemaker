@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,19 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
+
+static void
+function_asserts(void **state)
+{
+    pcmk__assert_asserts(pcmk__full_path(NULL, "/dir"));
+    pcmk__assert_asserts(pcmk__full_path("file", NULL));
+
+    pcmk__mock_strdup = true;       // strdup() will return NULL
+    pcmk__assert_asserts(pcmk__full_path("/full/path", "/dir"));
+    pcmk__mock_strdup = false;      // Use real strdup()
+}
 
 static void
 full_path(void **state)
@@ -33,6 +46,7 @@ int
 main(int argc, char **argv)
 {
     const struct CMUnitTest tests[] = {
+        cmocka_unit_test(function_asserts),
         cmocka_unit_test(full_path),
     };
 
