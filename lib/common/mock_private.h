@@ -13,6 +13,7 @@
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <grp.h>
@@ -46,6 +47,10 @@ ssize_t __real_readlink(const char *restrict path, char *restrict buf,
                         size_t bufsize);
 ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
                         size_t bufsize);
+
+extern bool pcmk__mock_strdup;
+char *__real_strdup(const char *s);
+char *__wrap_strdup(const char *s);
 
 extern bool pcmk__mock_uname;
 int __real_uname(struct utsname *buf);
