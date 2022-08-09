@@ -100,7 +100,7 @@ typedef struct async_command_s {
     char *device;
 
     GList *device_list;
-    GList *device_next;
+    GList *device_next; // Iterator for device_list
 
     void *internal_user_data;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
@@ -2645,6 +2645,32 @@ reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return the next required device (if any) for an operation
+ *
+ * \param[in,out] cmd  Fencing operation that just succeeded
+ *
+ * \return Next device required for action if any, otherwise NULL
+ */
+static stonith_device_t *
+next_required_device(async_command_t *cmd)
+{
+    for (GList *iter = cmd->device_next; iter != NULL; iter = iter->next) {
+        stonith_device_t *next_device = g_hash_table_lookup(device_list,
+                                                            iter->data);
+
+        if (is_action_required(cmd->action, next_device)) {
+            /* This is only called for successful actions, so it's OK to skip
+             * non-required devices.
+             */
+            cmd->device_next = iter->next;
+            return next_device;
+        }
+    }
+    return NULL;
+}
+
 static void
 st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 {
@@ -2669,17 +2695,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     }
 
     if (pcmk__result_ok(result)) {
-        GList *iter;
-        /* see if there are any required devices left to execute for this op */
-        for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
-            next_device = g_hash_table_lookup(device_list, iter->data);
-
-            if (next_device != NULL && is_action_required(cmd->action, next_device)) {
-                cmd->device_next = iter->next;
-                break;
-            }
-            next_device = NULL;
-        }
+        next_device = next_required_device(cmd);
 
     } else if ((cmd->device_next != NULL)
                && !is_action_required(cmd->action, device)) {
