@@ -37,7 +37,7 @@
 
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;
-GList *cmd_list = NULL;
+static GList *cmd_list = NULL;
 
 static GHashTable *fenced_handlers = NULL;
 
@@ -85,7 +85,7 @@ typedef struct async_command_s {
     int default_timeout; /* seconds */
     int timeout; /* seconds */
 
-    int start_delay; /* seconds */
+    int start_delay; // seconds (-1 means disable static/random fencing delays)
     int delay_id;
 
     char *op;
@@ -262,38 +262,61 @@ free_async_command(async_command_t * cmd)
     free(cmd);
 }
 
+/*!
+ * \internal
+ * \brief Create a new asynchronous fencing operation from request XML
+ *
+ * \param[in] msg  Fencing request XML (from IPC or CPG)
+ *
+ * \return Newly allocated fencing operation on success, otherwise NULL
+ *
+ * \note This asserts on memory errors, so a NULL return indicates an
+ *       unparseable message.
+ */
 static async_command_t *
-create_async_command(xmlNode * msg)
+create_async_command(xmlNode *msg)
 {
+    xmlNode *op = NULL;
     async_command_t *cmd = NULL;
-    xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
-    const char *action = crm_element_value(op, F_STONITH_ACTION);
 
-    CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
+    if (msg == NULL) {
+        return NULL;
+    }
 
-    crm_log_xml_trace(msg, "Command");
+    op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+    if (op == NULL) {
+        return NULL;
+    }
+
     cmd = calloc(1, sizeof(async_command_t));
+    CRM_ASSERT(cmd != NULL);
+
+    // All messages must include these
+    cmd->action = crm_element_value_copy(op, F_STONITH_ACTION);
+    cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
+    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
+    if ((cmd->action == NULL) || (cmd->op == NULL) || (cmd->client == NULL)) {
+        free_async_command(cmd);
+        return NULL;
+    }
+
     crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
+    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(cmd->default_timeout));
     cmd->timeout = cmd->default_timeout;
-    // Value -1 means disable any static/random fencing delays
-    crm_element_value_int(msg, F_STONITH_DELAY, &(cmd->start_delay));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
-    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
     cmd->client_name = crm_element_value_copy(msg, F_STONITH_CLIENTNAME);
-    cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
-    cmd->action = strdup(action);
     cmd->target = crm_element_value_copy(op, F_STONITH_TARGET);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
-    CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
-    CRM_CHECK(cmd->client != NULL, crm_log_xml_warn(msg, "NoClient"));
-
     cmd->done_cb = st_child_done;
+
+    // Track in global command list
     cmd_list = g_list_append(cmd_list, cmd);
+
     return cmd;
 }
 
@@ -1939,6 +1962,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
+        crm_log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
@@ -2731,12 +2755,16 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 {
     const char *device_id = NULL;
     stonith_device_t *device = NULL;
-    async_command_t *cmd = create_async_command(msg);
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+    async_command_t *cmd = NULL;
+    xmlNode *dev = NULL;
 
-    CRM_CHECK(result != NULL, return);
+    CRM_CHECK((msg != NULL) && (result != NULL), return);
 
+    dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
+
+    cmd = create_async_command(msg);
     if (cmd == NULL) {
+        crm_log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
