@@ -2580,15 +2580,77 @@ cancel_stonith_command(async_command_t * cmd)
     }
 }
 
+/*!
+ * \internal
+ * \brief Cancel and reply to any duplicates of a just-completed operation
+ *
+ * Check whether any fencing operations are scheduled to do the same thing as
+ * one that just succeeded. If so, rather than performing the same operation
+ * twice, return the result of this operation for all matching pending commands.
+ *
+ * \param[in,out] cmd     Fencing operation that just succeeded
+ * \param[in]     result  Result of \p cmd
+ * \param[in]     pid     If nonzero, process ID of agent invocation (for logs)
+ *
+ * \note Duplicate merging will do the right thing for either type of remapped
+ *       reboot. If the executing fencer remapped an unsupported reboot to off,
+ *       then cmd->action will be "reboot" and will be merged with any other
+ *       reboot requests. If the originating fencer remapped a topology reboot
+ *       to off then on, we will get here once with cmd->action "off" and once
+ *       with "on", and they will be merged separately with similar requests.
+ */
+static void
+reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
+                    int pid)
+{
+    GList *next = NULL;
+
+    for (GList *iter = cmd_list; iter != NULL; iter = next) {
+        async_command_t *cmd_other = iter->data;
+
+        next = iter->next; // We might delete this entry, so grab next now
+
+        if (cmd == cmd_other) {
+            continue;
+        }
+
+        /* A pending operation matches if:
+         * 1. The client connections are different.
+         * 2. The target is the same.
+         * 3. The fencing action is the same.
+         * 4. The device scheduled to execute the action is the same.
+         */
+        if (pcmk__str_eq(cmd->client, cmd_other->client, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->target, cmd_other->target, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
+
+            continue;
+        }
+
+        crm_notice("Merging fencing action '%s'%s%s originating from "
+                   "client %s with identical fencing request from client %s",
+                   cmd_other->action,
+                   (cmd_other->target == NULL)? "" : " targeting ",
+                   pcmk__s(cmd_other->target, ""), cmd_other->client_name,
+                   cmd->client_name);
+
+        // Stop tracking the duplicate, send its result, and cancel it
+        cmd_list = g_list_remove_link(cmd_list, iter);
+        send_async_reply(cmd_other, result, pid, true);
+        cancel_stonith_command(cmd_other);
+
+        free_async_command(cmd_other);
+        g_list_free_1(iter);
+    }
+}
+
 static void
 st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 {
     stonith_device_t *device = NULL;
     stonith_device_t *next_device = NULL;
     async_command_t *cmd = user_data;
-
-    GList *gIter = NULL;
-    GList *gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
 
@@ -2627,74 +2689,17 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
         cmd->device_next = cmd->device_next->next;
     }
 
-    /* this operation requires more fencing, hooray! */
-    if (next_device) {
+    if (next_device == NULL) {
+        send_async_reply(cmd, result, pid, false);
+        if (pcmk__result_ok(result)) {
+            reply_to_duplicates(cmd, result, pid);
+        }
+        free_async_command(cmd);
+
+    } else { // This operation requires more fencing
         log_async_result(cmd, result, pid, next_device->id, false);
         schedule_stonith_command(cmd, next_device);
-        /* Prevent cmd from being freed */
-        cmd = NULL;
-        goto done;
     }
-
-    send_async_reply(cmd, result, pid, false);
-
-    if (!pcmk__result_ok(result)) {
-        goto done;
-    }
-
-    /* Check to see if any operations are scheduled to do the exact
-     * same thing that just completed.  If so, rather than
-     * performing the same fencing operation twice, return the result
-     * of this operation for all pending commands it matches. */
-    for (gIter = cmd_list; gIter != NULL; gIter = gIterNext) {
-        async_command_t *cmd_other = gIter->data;
-
-        gIterNext = gIter->next;
-
-        if (cmd == cmd_other) {
-            continue;
-        }
-
-        /* A pending scheduled command matches the command that just finished if.
-         * 1. The client connections are different.
-         * 2. The target is the same.
-         * 3. The fencing action is the same.
-         * 4. The device scheduled to execute the action is the same.
-         */
-        if (pcmk__str_eq(cmd->client, cmd_other->client, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->target, cmd_other->target, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_casei) ||
-            !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
-
-            continue;
-        }
-
-        /* Duplicate merging will do the right thing for either type of remapped
-         * reboot. If the executing fencer remapped an unsupported reboot to
-         * off, then cmd->action will be reboot and will be merged with any
-         * other reboot requests. If the originating fencer remapped a
-         * topology reboot to off then on, we will get here once with
-         * cmd->action "off" and once with "on", and they will be merged
-         * separately with similar requests.
-         */
-        crm_notice("Merging fencing action '%s'%s%s originating from "
-                   "client %s with identical fencing request from client %s",
-                   cmd_other->action,
-                   (cmd_other->target == NULL)? "" : " targeting ",
-                   pcmk__s(cmd_other->target, ""), cmd_other->client_name,
-                   cmd->client_name);
-
-        cmd_list = g_list_remove_link(cmd_list, gIter);
-
-        send_async_reply(cmd_other, result, pid, true);
-        cancel_stonith_command(cmd_other);
-
-        free_async_command(cmd_other);
-        g_list_free_1(gIter);
-    }
-
-  done:
-    free_async_command(cmd);
 }
 
 static gint
