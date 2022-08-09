@@ -8,13 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/agents.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+#include <crm/common/agents.h>
 
 static void
 is_stonith_param(void **state)

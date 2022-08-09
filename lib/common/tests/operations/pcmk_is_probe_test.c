@@ -9,12 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 is_probe_test(void **state)

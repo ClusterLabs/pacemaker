@@ -9,12 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 #include <crm/pengine/status.h>

@@ -9,11 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;

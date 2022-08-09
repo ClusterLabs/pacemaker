@@ -8,10 +8,16 @@
  */
 
 #include <signal.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <cmocka.h>
 
 #ifndef CRM_COMMON_UNITTEST_INTERNAL__H
 #define CRM_COMMON_UNITTEST_INTERNAL__H

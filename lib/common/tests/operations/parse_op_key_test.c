@@ -9,13 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/unittest_internal.h>
+
 #include <glib.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 basic(void **state)
