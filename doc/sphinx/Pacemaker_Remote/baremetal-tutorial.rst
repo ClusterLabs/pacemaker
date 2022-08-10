@@ -178,39 +178,34 @@ created the ocf:pacemaker:remote resource:
 How pcs Configures the Remote
 #############################
 
-To see that it created the key and copied it to all cluster nodes and the
-remote node, run:
+Let's take a closer look at what the ``pcs cluster node add-remote`` command is
+doing. There is no need to run any of the commands in this section.
+
+First, ``pcs`` copies the Pacemaker authkey file to the VM that will become the
+guest. If an authkey is not already present on the cluster nodes, this command
+creates one and distributes it to the existing nodes and to the guest.
+
+If you want to do this manually, you can run a command like the following to
+generate an authkey in ``/etc/pacemaker/authkey``, and then distribute the key
+to the rest of the nodes and to the new guest.
 
 .. code-block:: none
 
-    # ls -l /etc/pacemaker
+    [root@pcmk-1 ~]# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 
-To see that it enables pacemaker_remote, run:
+Then ``pcs`` starts and enables the ``pacemaker_remote`` service on the guest.
+If you want to do this manually, run the following commands.
 
 .. code-block:: none
 
-    # systemctl status pacemaker_remote
-    ● pacemaker_remote.service - Pacemaker Remote executor daemon
-       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
-       Active: active (running) since Tue 2021-03-02 10:42:40 EST; 1min 23s ago
-         Docs: man:pacemaker-remoted
-               https://clusterlabs.org/pacemaker/doc/
-     Main PID: 1139 (pacemaker-remot)
-        Tasks: 1
-       Memory: 5.4M
-       CGroup: /system.slice/pacemaker_remote.service
-               └─1139 /usr/sbin/pacemaker-remoted
-    
-    Mar 02 10:42:40 remote1 systemd[1]: Started Pacemaker Remote executor daemon.
-    Mar 02 10:42:40 remote1 pacemaker-remoted[1139]:  notice: Additional logging available in /var/log/pacemaker/pacemaker.log
-    Mar 02 10:42:40 remote1 pacemaker-remoted[1139]:  notice: Starting Pacemaker remote executor
-    Mar 02 10:42:41 remote1 pacemaker-remoted[1139]:  notice: Pacemaker remote executor successfully started and accepting connections
+    [root@guest1 ~]# systemctl start pacemaker_remote
+    [root@guest1 ~]# systemctl enable pacemaker_remote
 
 Starting Resources on Remote Node
 #################################
 
-Once the remote node is integrated into the cluster, starting resources on a
-remote node is the exact same as on cluster nodes. Refer to the
+Once the remote node is integrated into the cluster, starting and managing
+resources on a remote node is the exact same as on cluster nodes. Refer to the
 `Clusters from Scratch <http://clusterlabs.org/doc/>`_ document for examples of
 resource creation.
 
