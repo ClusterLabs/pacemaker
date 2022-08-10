@@ -552,41 +552,33 @@ on guest nodes, but it is recommended to run them from a cluster node.
 Troubleshooting a Remote Connection
 ###################################
 
-Note: This section should not be done when the guest is connected to the cluster.
+If connectivity issues occur, it's worth verifying that the cluster nodes can
+communicate with the guest node on TCP port 3121. We can use the ``nc`` command
+to test the connection.
 
-Should connectivity issues occur, it can be worth verifying that the cluster nodes
-can contact the remote node on port 3121. Here's a trick you can use.
-Connect using ssh from each of the cluster nodes. The connection will get
-destroyed, but how it is destroyed tells you whether it worked or not.
+On the cluster nodes, install the package that provides the ``nc`` command. The
+package name may vary by distribution; on |REMOTE_DISTRO| |REMOTE_DISTRO_VER|
+it's ``nmap-ncat``.
 
-If running the ssh command on one of the cluster nodes results in this
-output before disconnecting, the connection works:
+Now connect using ``nc`` from each of the cluster nodes to the guest and run a
+``/bin/true`` command that does nothing except return success. No output
+indicates that the cluster node is able to communicate with the guest on TCP
+port 3121. An error indicates that the connection failed. This could be due to
+a network issue or because ``pacemaker-remoted`` is not currently running on
+the guest node.
 
-.. code-block:: none
-
-    # ssh -p 3121 guest1
-    ssh_exchange_identification: read: Connection reset by peer
-
-If you see one of these, the connection is not working:
-
-.. code-block:: none
-
-    # ssh -p 3121 guest1
-    ssh: connect to host guest1 port 3121: No route to host
+Example of success:
 
 .. code-block:: none
 
-    # ssh -p 3121 guest1
-    ssh: connect to host guest1 port 3121: Connection refused
+    [root@pcmk-1 ~]# nc guest1 3121 --sh-exec /bin/true
+    [root@pcmk-1 ~]#
 
-If you see this, then the connection is working, but port 3121 is attached
-to SSH, which it should not be.
+Examples of failure:
 
 .. code-block:: none
 
-    # ssh -p 3121 guest1
-    kex_exchange_identification: banner line contains invalid characters
-
-Once you can successfully connect to the guest from the host, you may
-shutdown the guest. Pacemaker will be managing the virtual machine from
-this point forward.
+    [root@pcmk-1 ~]# nc guest1 3121 --sh-exec /bin/true
+    Ncat: Connection refused.
+    [root@pcmk-1 ~]# nc guest1 3121 --sh-exec /bin/true
+    Ncat: No route to host.
