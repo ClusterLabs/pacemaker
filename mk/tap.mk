@@ -18,6 +18,7 @@ CLEANFILES = *.log *.trs
 WRAPPED = calloc		\
 	  endgrent		\
 	  getenv		\
+	  getpid		\
 	  getgrent		\
 	  getpwnam_r		\
 	  readlink		\

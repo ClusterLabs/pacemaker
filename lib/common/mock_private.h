@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 #include <grp.h>
 
 /* This header is for the sole use of libcrmcommon_test and unit tests */
@@ -27,6 +28,10 @@ void *__wrap_calloc(size_t nmemb, size_t size);
 extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);
 char *__wrap_getenv(const char *name);
+
+extern bool pcmk__mock_getpid;
+pid_t __real_getpid(void);
+pid_t __wrap_getpid(void);
 
 extern bool pcmk__mock_grent;
 void __real_setgrent(void);
