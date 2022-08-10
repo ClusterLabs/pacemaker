@@ -177,21 +177,6 @@ the ``lib/common/tests/strings`` directory.
              pcmk__btoa_test                 \
              pcmk__scan_port_test
 
-* Double check the setting of ``AM_LDFLAGS`` in ``Makefile.am``.  If none of the
-  tests of this source file require using a mocked function, this should be empty,
-  like so:
-
-  .. code-block:: none
-
-     AM_LDFLAGS =
-
-  However, if any test (including your new one) uses a mocked function, it should
-  be set:
-
-  .. code-block:: none
-
-     AM_LDFLAGS = $(LDFLAGS_WRAP)
-
 * Create a new ``pcmk__scan_port_test.c`` file, copying the copyright and include
   boilerplate from another file in the same directory.
 * Continue with the steps in `Writing the test`_.
@@ -229,7 +214,8 @@ is no ``lib/common/tests/acls`` directory.
      SUBDIRS = agents acls cmdline flags operations strings utils xpath results
 
 * Create a new ``acls`` directory, copying the ``Makefile.am`` from some other
-  directory.
+  directory.  At this time, each ``Makefile.am`` is largely boilerplate with
+  very little that needs to change from directory to directory.
 * cd into ``acls``
 * Get rid of any existing values for ``check_PROGRAMS`` and set it to
   ``pcmk_acl_required_test`` like so:
@@ -237,6 +223,17 @@ is no ``lib/common/tests/acls`` directory.
   .. code-block:: none
 
      check_PROGRAMS = pcmk_acl_required_test
+
+* Double check that ``-I$(top_srcdir)/lib/common`` is present in ``AM_CPPFLAGS``.
+
+* Double check the settings of variables at the top of ``Makefile.am``.  The
+  following block should be present:
+
+  .. code-block:: none
+
+     LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+     AM_CFLAGS = -DPCMK__UNIT_TESTING
+     AM_LDFLAGS = $(LDFLAGS_WRAP)
 
 * Follow the steps in `Testing a new function in an already testable source file`_
   to create the new ``pcmk_acl_required_test.c`` file.
@@ -317,11 +314,7 @@ here's the basic structure:
 
    #include <crm_internal.h>
 
-   #include <stdarg.h>
-   #include <stddef.h>
-   #include <stdint.h>
-   #include <setjmp.h>
-   #include <cmocka.h>
+   #include <crm/common/unittest_internal.h>
 
    /* Put your test-specific includes here */
 
@@ -361,6 +354,31 @@ This is done with ``cmocka_unit_test()`` in the ``main`` function:
    const struct CMUnitTest tests[] = {
        cmocka_unit_test(regex),
    };
+
+Assertions
+__________
+
+In addition to the `assertions provided by <https://api.cmocka.org/group__cmocka__asserts.html>`_,
+``unittest_internal.h`` also provides ``pcmk__assert_asserts``.  This macro takes an
+expression and verifies that the expression aborts due to a failed call to
+``CRM_ASSERT`` or some other similar function.  It can be used like so:
+
+.. code-block:: c
+
+   static void
+   null_input_variables(void **state)
+   {
+       long long start, end;
+
+       pcmk__assert_asserts(pcmk__parse_ll_range("1234", NULL, &end));
+       pcmk__assert_asserts(pcmk__parse_ll_range("1234", &start, NULL));
+   }
+
+Here, ``pcmk__parse_ll_range`` expects non-NULL for its second and third
+arguments.  If one of those arguments is NULL, ``CRM_ASSERT`` will fail and
+the program will abort.  ``pcmk__assert_asserts`` checks that the code would
+abort and the test passes.  If the code does not abort, the test fails.
+
 
 Running
 _______
