@@ -534,65 +534,6 @@ like ``crm_attribute``) work seamlessly on the guest nodes.
 Higher-level command shells such as ``pcs`` may have partial support
 on guest nodes, but it is recommended to run them from a cluster node.
 
-Guest nodes will show up in ``crm_mon`` output as normal.  For example, this is the
-``crm_mon`` output after **guest1** is integrated into the cluster:
-
-.. code-block:: none
-
-    Cluster name: mycluster
-    
-    Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar 17 08:37:37 2021
-      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
-      * 2 nodes configured
-      * 2 resource instances configured
-    
-    Node List:
-      * Online: [ pcmk-1 ]
-      * GuestOnline: [ guest1@pcmk-1 ]
-
-    Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
-
-Now, you could place a resource, such as a webserver, on **guest1**:
-
-.. code-block:: none
-
-    # pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
-    # pcs constraint location webserver prefers guest1
-
-Now, the crm_mon output would show:
-
-.. code-block:: none
-
-    Cluster name: mycluster
-    
-    Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar 17 08:38:37 2021
-      * Last change:  Wed Mar 17 08:35:01 2021 by root via cibadmin on pcmk-1
-      * 2 nodes configured
-      * 3 resource instances configured
-    
-    Node List:
-      * Online: [ pcmk-1 ]
-      * GuestOnline: [ guest1@pcmk-1 ]
-
-    Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain): Started pcmk-1
-      * webserver	(ocf::heartbeat::apache):       Started guest1
-
-It is worth noting that after **guest1** is integrated into the cluster, nearly all the
-Pacemaker command-line tools immediately become available to the guest node.
-This means things like ``crm_mon``, ``crm_resource``, and ``crm_attribute`` will work
-natively on the guest node, as long as the connection between the guest node
-and a cluster node exists. This is particularly important for any promotable
-clone resources executing on the guest node that need access to
-``crm_attribute`` to set promotion scores.
-
 Troubleshooting a Remote Connection
 ###################################
 
