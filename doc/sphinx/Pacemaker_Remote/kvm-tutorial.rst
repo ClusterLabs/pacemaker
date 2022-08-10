@@ -98,10 +98,9 @@ vice versa.
 Configure pacemaker_remote on Guest Node
 ________________________________________
 
-Install the pacemaker_remote daemon on the guest node. Here,
-we also install the ``pacemaker`` package; it is not required, but
-it contains the dummy resource agent that we will use later
-for testing.
+Install the pacemaker_remote daemon on the guest node. We'll also install the
+``pacemaker`` package. It isn't required for a guest node to run, but it
+provides the ``crm_attribute`` tool, which many resource agents use.
 
 .. code-block:: none
 
@@ -214,11 +213,7 @@ created is removed.
 
 .. code-block:: none
 
-    # pcs resource create FAKE1 ocf:pacemaker:Dummy
-    # pcs resource create FAKE2 ocf:pacemaker:Dummy
-    # pcs resource create FAKE3 ocf:pacemaker:Dummy
-    # pcs resource create FAKE4 ocf:pacemaker:Dummy
-    # pcs resource create FAKE5 ocf:pacemaker:Dummy
+    # for i in {1..5}; do pcs resource create FAKE${i} ocf:heartbeat:Dummy; done
 
 Now check your ``pcs status`` output. In the resource section, you should see
 something like the following, where some of the resources started on the
@@ -228,11 +223,11 @@ cluster node, and some started on the guest node.
 
     Full List of Resources:
       * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
-      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE3	(ocf::pacemaker:Dummy):	 Started pcmk-1
-      * FAKE4	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE1	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE2	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE3	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * FAKE4	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
 The guest node, **guest1**, reacts just like any other node in the cluster. For
 example, pick out a resource that is running on your cluster node. For my
@@ -250,11 +245,11 @@ Now, looking at the bottom of the `pcs status` output you'll see FAKE3 is on
 
     Full List of Resources:
       * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
-      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE3	(ocf::pacemaker:Dummy):	 Started guest1
-      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE1	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE2	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE3	(ocf::heartbeat:Dummy):	 Started guest1
+      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
 Testing Recovery and Fencing
 ############################
@@ -294,11 +289,11 @@ and the **guest1** node will not be shown while it is being recovered.
 
     Full List of Resources:
       * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
-      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE1	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE2	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE3	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
     Failed Actions:
     * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
@@ -341,11 +336,11 @@ something like this.
 
     Full List of Resources:
       * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
-      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
-      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE1	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE2	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE3	(ocf::heartbeat:Dummy):	 Stopped
+      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
     Failed Actions:
     * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
