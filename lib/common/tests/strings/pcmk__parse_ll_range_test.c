@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,15 @@ empty_input_string(void **state)
 
     assert_int_equal(pcmk__parse_ll_range(NULL, &start, &end), pcmk_rc_unknown_format);
     assert_int_equal(pcmk__parse_ll_range("", &start, &end), pcmk_rc_unknown_format);
+}
+
+static void
+null_input_variables(void **state)
+{
+    long long start, end;
+
+    pcmk__assert_asserts(pcmk__parse_ll_range("1234", NULL, &end));
+    pcmk__assert_asserts(pcmk__parse_ll_range("1234", &start, NULL));
 }
 
 static void
@@ -99,6 +108,7 @@ int main(int argc, char **argv)
 {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(empty_input_string),
+        cmocka_unit_test(null_input_variables),
         cmocka_unit_test(missing_separator),
         cmocka_unit_test(only_separator),
         cmocka_unit_test(no_range_end),
