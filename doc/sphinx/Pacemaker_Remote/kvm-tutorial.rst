@@ -438,13 +438,12 @@ and the **guest1** node will not be shown while it is being recovered.
     
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-      * GuestOnline: [ guest1@pcmk-1 ]
 
     Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
-      * FAKE1	(ocf::heartbeat:Dummy):	 Stopped
-      * FAKE2	(ocf::heartbeat:Dummy):	 Stopped
-      * FAKE3	(ocf::heartbeat:Dummy):	 Stopped
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 FAILED pcmk-1
+      * FAKE1	(ocf::heartbeat:Dummy):	 FAILED guest1
+      * FAKE2	(ocf::heartbeat:Dummy):	 FAILED guest1
+      * FAKE3	(ocf::heartbeat:Dummy):	 FAILED guest1
       * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
       * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
@@ -460,11 +459,14 @@ and the **guest1** node will not be shown while it is being recovered.
 
 .. NOTE::
 
-    A guest node involves two resources: the one you explicitly configured creates the guest,
-    and Pacemaker creates an implicit resource for the pacemaker_remote connection, which
-    will be named the same as the value of the **remote-node** attribute of the explicit resource.
-    When we killed pacemaker_remote, it is the implicit resource that failed, which is why
-    the failed action starts with **guest1** and not **vm-guest1**.
+    A guest node involves two resources: an explicitly configured resource that
+    you create, which manages the virtual machine (the ``VirtualDomain``
+    resource in our example); and an implicit resource that Pacemaker creates,
+    which manages the ``pacemaker-remoted`` connection to the guest. The
+    implicit resource's name is the value of the explicit resource's
+    ``remote-node`` meta attribute. When we killed ``pacemaker-remoted``, the
+    **implicit** resource is what failed. That's why the failed action starts
+    with ``guest1`` and not ``vm-guest1``.
 
 Once recovery of the guest is complete, you'll see it automatically get
 re-integrated into the cluster.  The final ``pcs status`` output should look
