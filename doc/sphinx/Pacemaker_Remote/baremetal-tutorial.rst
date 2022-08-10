@@ -39,7 +39,7 @@ Allow cluster-related services through the local firewall:
 
     If you are using some other firewall solution besides firewalld,
     simply open the following ports, which can be used by various
-    clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405.
+    clustering components: TCP ports 2224, 3121, and 21064.
 
     If you run into any problems during testing, you might want to disable
     the firewall and SELinux entirely until you have everything working.
@@ -52,7 +52,8 @@ Allow cluster-related services through the local firewall:
     .. code-block:: none
 
         # setenforce 0
-        # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+        # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" \
+            /etc/selinux/config
         # systemctl mask firewalld.service
         # systemctl stop firewalld.service
 

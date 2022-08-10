@@ -73,7 +73,37 @@ Here's an example way to create a guest:
 Configure Firewall on Guest
 ___________________________
 
-On each guest, allow cluster-related services through the local firewall.
+On each guest, allow cluster-related services through the local firewall. If
+you're using ``firewalld``, run the following commands.
+
+.. code-block:: none
+
+    [root@guest1 ~]# firewall-cmd --permanent --add-service=high-availability
+    success
+    [root@guest1 ~]# firewall-cmd --reload
+    success
+
+.. NOTE::
+
+    If you are using some other firewall solution besides firewalld,
+    simply open the following ports, which can be used by various
+    clustering components: TCP ports 2224, 3121, and 21064.
+
+    If you run into any problems during testing, you might want to disable
+    the firewall and SELinux entirely until you have everything working.
+    This may create significant security issues and should not be performed on
+    machines that will be exposed to the outside world, but may be appropriate
+    during development and testing on a protected host.
+
+    To disable security measures:
+
+    .. code-block:: none
+
+        [root@guest1 ~]# setenforce 0
+        [root@guest1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" \
+            /etc/selinux/config
+        [root@guest1 ~]# systemctl mask firewalld.service
+        [root@guest1 ~]# systemctl stop firewalld.service
 
 Configure ``/etc/hosts``
 ________________________
