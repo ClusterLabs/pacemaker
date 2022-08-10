@@ -92,7 +92,8 @@ Install the pacemaker_remote daemon on the remote node.
 
 .. code-block:: none
 
-    # yum install -y pacemaker-remote resource-agents pcs
+    [root@remote1 ~]# dnf config-manager --set-enabled highavailability
+    [root@remote1 ~]# dnf install -y pacemaker-remote resource-agents pcs
 
 Prepare ``pcsd``
 ________________
@@ -158,22 +159,28 @@ created the ocf:pacemaker:remote resource:
 
 .. code-block:: none
 
-    # pcs status
+    [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar  3 11:02:03 2021
-      * Last change:  Wed Mar  3 11:01:57 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Aug 10 05:17:28 2022
+      * Last change:  Wed Aug 10 05:17:26 2022 by root via cibadmin on pcmk-1
       * 3 nodes configured
-      * 1 resource instance configured
-    
+      * 2 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
       * RemoteOnline: [ remote1 ]
-    
+
     Full List of Resources:
-      * remote1	(ocf::pacemaker:remote):	 Started pcmk-1
+      * xvm	(stonith:fence_xvm):	 Started pcmk-1
+      * remote1	(ocf:pacemaker:remote):	 Started pcmk-1
+
+    Daemon Status:
+      corosync: active/disabled
+      pacemaker: active/disabled
+      pcsd: active/enabled
 
 How pcs Configures the Remote
 #############################

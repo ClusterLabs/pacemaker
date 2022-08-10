@@ -21,13 +21,13 @@ Install Virtualization Software
 _______________________________
 
 On each node within your cluster, install virt-install, libvirt, and qemu-kvm.
-Start and enable libvirtd.
+Start and enable ``virtnetworkd``.
 
   .. code-block:: none
 
-    # yum install -y virt-install libvirt qemu-kvm
-    # systemctl start libvirtd
-    # systemctl enable libvirtd
+    # dnf install -y virt-install libvirt qemu-kvm
+    # systemctl start virtnetworkd
+    # systemctl enable virtnetworkd
 
 Reboot the host.
 
@@ -48,24 +48,32 @@ Create a KVM guest to use as a guest node. Be sure to configure the guest with a
 hostname and a static IP address (as an example here, we will use guest1 and 192.168.122.10).
 Here's an example way to create a guest:
 
-* Download an .iso file from the `CentOS Mirrors List <http://isoredirect.centos.org/centos/8-stream/isos/x86_64/>`_ into a directory on your cluster node.
+* Download an .iso file from the |REMOTE_DISTRO| |REMOTE_DISTRO_VER| `mirrors
+  list <https://mirrors.almalinux.org/isos.html>`_ into a directory on your
+  cluster node.
 
 * Run the following command, using your own path for the **location** flag:
 
   .. code-block:: none
 
-    # virt-install \
-      --name vm-guest1 \
-      --ram 1024 \
-      --disk path=./vm-guest1.qcow2,size=1 \
-      --vcpus 2 \
-      --os-type linux \
-      --os-variant centos-stream8\
-      --network bridge=virbr0 \
-      --graphics none \
-      --console pty,target_type=serial \
-      --location <path to your .iso file> \
-      --extra-args 'console=ttyS0,115200n8 serial'
+      [root@pcmk-1 ~]# virt-install \
+        --name vm-guest1 \
+        --memory 1536 \
+        --disk path=/var/lib/libvirt/images/vm-guest1.qcow2,size=4 \
+        --vcpus 2 \
+        --os-variant almalinux9 \
+        --network bridge=virbr0 \
+        --graphics none \
+        --console pty,target_type=serial \
+        --location /tmp/AlmaLinux-9-latest-x86_64-dvd.iso \
+        --extra-args 'console=ttyS0,115200n8'
+
+  .. NOTE::
+
+      See the Clusters from Scratch document for more details about installing
+      |REMOTE_DISTRO| |REMOTE_DISTRO_VER|. The above command will perform a
+      text-based installation by default, but feel free to do a graphical
+      installation, which exposes more options.
 
 .. index::
    single: guest node; firewall
@@ -138,6 +146,15 @@ ___________________
 At this point, you should be able to ping and ssh into guests from hosts, and
 vice versa.
 
+Depending on your installation method, you may have to perform an additional
+step to make SSH work. The simplest approach is to open the
+``/etc/ssh/sshd_config`` file and set ``PermitRootLogin yes``. Then to make the
+change take effect, run the following command.
+
+.. code-block:: none
+
+    [root@guest1 ~]# systemctl restart sshd
+
 Configure pacemaker_remote on Guest Node
 ________________________________________
 
@@ -147,7 +164,9 @@ provides the ``crm_attribute`` tool, which many resource agents use.
 
 .. code-block:: none
 
-    # yum install -y pacemaker-remote resource-agents pcs pacemaker
+    [root@guest1 ~]# dnf config-manager --set-enabled highavailability
+    [root@guest1 ~]# dnf install -y pacemaker-remote resource-agents pcs \
+        pacemaker
 
 Integrate Guest into Cluster
 ############################
@@ -275,23 +294,23 @@ The output should look something like this:
 
 .. code-block:: none
 
-    # pcs status
+    [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar 17 08:37:37 2021
-      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Aug 10 00:08:58 2022
+      * Last change:  Wed Aug 10 00:02:37 2022 by root via cibadmin on pcmk-1
       * 3 nodes configured
-      * 2 resource instances configured
-    
+      * 3 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
       * GuestOnline: [ guest1@pcmk-1 ]
 
     Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
+      * xvm	(stonith:fence_xvm):	 Started pcmk-1
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -366,43 +385,42 @@ agent.
 
     # for i in {1..5}; do pcs resource create FAKE${i} ocf:heartbeat:Dummy; done
 
-Now check your ``pcs status`` output. In the resource section, you should see
-something like the following, where some of the resources started on the
-cluster nodes, and some started on the guest node.
+Now run ``pcs resource status``. You should see something like the following,
+where some of the resources are started on the cluster nodes, and some are
+started on the guest node.
 
 .. code-block:: none
 
-    Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
-      * FAKE1	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE2	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE3	(ocf::heartbeat:Dummy):	 Started pcmk-1
-      * FAKE4	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
+    [root@pcmk-1 ~]# pcs resource status
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
+      * FAKE1	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE2	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE3	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE4	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE5	(ocf:heartbeat:Dummy):	 Started guest1
 
-The guest node, **guest1**, behaves just like any other node in the cluster with
+The guest node, ``guest1``, behaves just like any other node in the cluster with
 respect to resources. For example, choose a resource that is running on one of
-your cluster nodes. We'll choose ``FAKE3`` from the output above. It's currently
-running on ``pcmk-1``. We can force ``FAKE3`` to run on ``guest1`` in the exact
+your cluster nodes. We'll choose ``FAKE2`` from the output above. It's currently
+running on ``pcmk-2``. We can force ``FAKE2`` to run on ``guest1`` in the exact
 same way as we could force it to run on any particular cluster node. We do this
 by creating a location constraint:
 
 .. code-block:: none
 
-    # pcs constraint location FAKE3 prefers guest1
+    # pcs constraint location FAKE2 prefers guest1
 
-Now, looking at the bottom of the `pcs status` output you'll see FAKE3 is on
-**guest1**.
+Now the ``pcs resource status`` output shows that ``FAKE2`` is on ``guest1``.
 
 .. code-block:: none
 
-    Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
-      * FAKE1	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE2	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE3	(ocf::heartbeat:Dummy):	 Started guest1
-      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
+    [root@pcmk-1 ~]# pcs resource status
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
+      * FAKE1	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE2	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE3	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE4	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE5	(ocf:heartbeat:Dummy):	 Started guest1
 
 Testing Recovery and Fencing
 ############################
@@ -418,44 +436,42 @@ ssh into the guest and run this command.
 
 .. code-block:: none
 
-    # kill -9 $(pidof pacemaker-remoted)
+    [root@guest1 ~]# kill -9 $(pidof pacemaker-remoted)
 
 Within a few seconds, your ``pcs status`` output will show a monitor failure,
 and the **guest1** node will not be shown while it is being recovered.
 
 .. code-block:: none
 
-    # pcs status
+    [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar 17 08:37:37 2021
-      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Aug 10 01:39:40 2022
+      * Last change:  Wed Aug 10 01:34:55 2022 by root via cibadmin on pcmk-1
       * 3 nodes configured
-      * 7 resource instances configured
-    
+      * 8 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
 
     Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 FAILED pcmk-1
-      * FAKE1	(ocf::heartbeat:Dummy):	 FAILED guest1
-      * FAKE2	(ocf::heartbeat:Dummy):	 FAILED guest1
-      * FAKE3	(ocf::heartbeat:Dummy):	 FAILED guest1
-      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * xvm	(stonith:fence_xvm):	 Started pcmk-1
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 FAILED pcmk-1
+      * FAKE1	(ocf:heartbeat:Dummy):	 FAILED guest1
+      * FAKE2	(ocf:heartbeat:Dummy):	 FAILED guest1
+      * FAKE3	(ocf:heartbeat:Dummy):	 FAILED guest1
+      * FAKE4	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE5	(ocf:heartbeat:Dummy):	 FAILED guest1
 
-    Failed Actions:
-    * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
-        last-rc-change='Wed Mar 17 08:32:01 2021', queued=0ms, exec=0ms
+    Failed Resource Actions:
+      * guest1 30s-interval monitor on pcmk-1 could not be executed (Error) because 'Lost connection to remote executor' at Wed Aug 10 01:39:38 2022
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
-
 
 .. NOTE::
 
@@ -474,32 +490,31 @@ something like this.
 
 .. code-block:: none
 
-    # pcs status
+    [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Mar 17 08:37:37 2021
-      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
+      * Last updated: Wed Aug 10 01:40:05 2022
+      * Last change:  Wed Aug 10 01:34:55 2022 by root via cibadmin on pcmk-1
       * 3 nodes configured
-      * 7 resource instances configured
-    
+      * 8 resource instances configured
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
       * GuestOnline: [ guest1@pcmk-1 ]
 
     Full List of Resources:
-      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
-      * FAKE1	(ocf::heartbeat:Dummy):	 Stopped
-      * FAKE2	(ocf::heartbeat:Dummy):	 Stopped
-      * FAKE3	(ocf::heartbeat:Dummy):	 Stopped
-      * FAKE4	(ocf::heartbeat:Dummy):	 Started pcmk-1
-      * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
+      * xvm	(stonith:fence_xvm):	 Started pcmk-1
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
+      * FAKE1	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE2	(ocf:heartbeat:Dummy):	 Started guest1
+      * FAKE3	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE4	(ocf:heartbeat:Dummy):	 Started pcmk-2
+      * FAKE5	(ocf:heartbeat:Dummy):	 Started guest1
 
-    Failed Actions:
-    * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
-        last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
+    Failed Resource Actions:
+      * guest1 30s-interval monitor on pcmk-1 could not be executed (Error) because 'Lost connection to remote executor' at Wed Aug 10 01:39:38 2022
 
     Daemon Status:
       corosync: active/disabled
