@@ -352,14 +352,15 @@ cluster shell, or edit the CIB manually.
 Starting Resources on KVM Guest
 ###############################
 
-The commands below demonstrate how resources can be executed on both the
-guest node and the cluster node.
+The following example demonstrates that resources can be run on the guest node
+in the exact same way as on the cluster nodes.
 
-Create a few Dummy resources.  Dummy resources are real resource agents used
-just for testing purposes.  They actually execute on the host they are assigned
-to just like an apache server or database would, except their execution just
-means a file was created.  When the resource is stopped, that the file it
-created is removed.
+Create a few ``Dummy`` resources. A ``Dummy`` resource is a real resource that
+actually executes operations on its assigned node. However, these operations are
+trivial (creating, deleting, or checking the existence of an empty or small
+file), so ``Dummy`` resources are ideal for testing purposes. ``Dummy``
+resources use the ``ocf:heartbeat:Dummy`` or ``ocf:pacemaker:Dummy`` resource
+agent.
 
 .. code-block:: none
 
@@ -367,7 +368,7 @@ created is removed.
 
 Now check your ``pcs status`` output. In the resource section, you should see
 something like the following, where some of the resources started on the
-cluster node, and some started on the guest node.
+cluster nodes, and some started on the guest node.
 
 .. code-block:: none
 
@@ -379,10 +380,12 @@ cluster node, and some started on the guest node.
       * FAKE4	(ocf::heartbeat:Dummy):	 Started guest1
       * FAKE5	(ocf::heartbeat:Dummy):	 Started pcmk-1
 
-The guest node, **guest1**, reacts just like any other node in the cluster. For
-example, pick out a resource that is running on your cluster node. For my
-purposes, I am picking FAKE3 from the output above. We can force FAKE3 to run
-on **guest1** in the exact same way we would any other node.
+The guest node, **guest1**, behaves just like any other node in the cluster with
+respect to resources. For example, choose a resource that is running on one of
+your cluster nodes. We'll choose ``FAKE3`` from the output above. It's currently
+running on ``pcmk-1``. We can force ``FAKE3`` to run on ``guest1`` in the exact
+same way as we could force it to run on any particular cluster node. We do this
+by creating a location constraint:
 
 .. code-block:: none
 
