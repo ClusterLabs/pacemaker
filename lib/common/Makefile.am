@@ -103,8 +103,15 @@ libcrmcommon_la_SOURCES	+= xpath.c
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
 libcrmcommon_test_la_LDFLAGS	= $(LDFLAGS_HARDENED_LIB)
-libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS)
-libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka
+# If GCC emits a builtin function in place of something we've mocked up, that will
+# get used instead of the mocked version which leads to unexpected test results.  So
+# disable all builtins.  Older versions of GCC (at least, on RHEL7) will still emit
+# replacement code for strdup (and possibly other functions) unless -fno-inline is
+# also added.
+libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) -fno-builtin -fno-inline
+# If -fno-builtin is used, -lm also needs to be added.  See the comment at
+# BUILD_PROFILING above.
+libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
 
