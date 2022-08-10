@@ -77,6 +77,12 @@ trailing_chars(void **state)
 }
 
 static void
+no_result_variable(void **state)
+{
+    pcmk__assert_asserts(pcmk__scan_double("asdf", NULL, NULL, NULL));
+}
+
+static void
 typical_case(void **state)
 {
     char str[LOCAL_BUF_SIZE];
@@ -149,6 +155,7 @@ int main(int argc, char **argv)
         cmocka_unit_test(empty_input_string),
         cmocka_unit_test(bad_input_string),
         cmocka_unit_test(trailing_chars),
+        cmocka_unit_test(no_result_variable),
 
         // Test for numeric issues
         cmocka_unit_test(typical_case),
