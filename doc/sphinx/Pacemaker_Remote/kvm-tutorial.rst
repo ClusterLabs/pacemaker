@@ -69,9 +69,9 @@ Here's an example way to create a guest:
   .. code-block:: none
 
     # virt-install \
-      --name guest-vm \
+      --name vm-guest1 \
       --ram 1024 \
-      --disk path=./guest-vm.qcow2,size=1 \
+      --disk path=./vm-guest1.qcow2,size=1 \
       --vcpus 2 \
       --os-type linux \
       --os-variant centos-stream8\
