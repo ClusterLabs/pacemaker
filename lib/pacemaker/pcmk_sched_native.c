@@ -98,7 +98,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     }
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = pcmk__sort_nodes(nodes, pe__current_node(rsc), data_set);
+        nodes = pcmk__sort_nodes(nodes, pe__current_node(rsc));
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -193,8 +193,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
 }
 
 pe_node_t *
-pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                      pe_working_set_t *data_set)
+pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *gIter = NULL;
 
@@ -202,7 +201,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         /* never allocate children on their own */
         pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
                      rsc->parent->id);
-        rsc->parent->cmds->allocate(rsc->parent, prefer, data_set);
+        rsc->parent->cmds->allocate(rsc->parent, prefer);
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
@@ -215,7 +214,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes,
+                          rsc->cluster);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -232,7 +232,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      "%s: Allocating %s first (constraint=%s score=%d role=%s)",
                      rsc->id, primary->id, constraint->id,
                      constraint->score, role2text(constraint->dependent_role));
-        primary->cmds->allocate(primary, NULL, data_set);
+        primary->cmds->allocate(primary, NULL);
         rsc->cmds->apply_coloc_score(rsc, primary, constraint, true);
         if (archive && !pcmk__any_node_available(rsc->allowed_nodes)) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s",
@@ -246,7 +246,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes, data_set);
+    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes,
+                          rsc->cluster);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -269,20 +270,21 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesn't come up again */
-        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
+        resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE,
+                          rsc->cluster);
 
     } else if(rsc->next_role > rsc->role
-              && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-              && data_set->no_quorum_policy == no_quorum_freeze) {
+              && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_quorum)
+              && rsc->cluster->no_quorum_policy == no_quorum_freeze) {
         crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
-    if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
-        && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
+    if (pcmk_is_set(rsc->cluster->flags, pe_flag_stonith_enabled)
+        && !pcmk_is_set(rsc->cluster->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
@@ -305,12 +307,12 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                     (assign_to? assign_to->details->uname : "no node"), reason);
         pcmk__assign_primitive(rsc, assign_to, true);
 
-    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
         pcmk__assign_primitive(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
-               && native_choose_node(rsc, prefer, data_set)) {
+               && native_choose_node(rsc, prefer, rsc->cluster)) {
         pe_rsc_trace(rsc, "Allocated resource %s to %s", rsc->id,
                      rsc->allocated_to->details->uname);
 
@@ -329,7 +331,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__clear_resource_flags(rsc, pe_rsc_allocating);
 
     if (rsc->is_remote_node) {
-        pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
+        pe_node_t *remote_node = pe_find_node(rsc->cluster->nodes, rsc->id);
 
         CRM_ASSERT(remote_node != NULL);
         if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
@@ -954,7 +956,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
 }
 
 void
-native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *start = NULL;
     pe_node_t *chosen = NULL;
@@ -994,12 +996,12 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_action_t *stop = NULL;
 
         pe_rsc_trace(rsc, "Creating stop action %sfor %s on %s due to dangling migration",
-                     pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
+                     pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
                      rsc->id, dangling_source->details->uname);
         stop = stop_action(rsc, dangling_source, FALSE);
         pe__set_action_flags(stop, pe_action_dangle);
-        if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, dangling_source, FALSE, data_set);
+        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
+            DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
         }
     }
 
@@ -1124,7 +1126,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
                      rsc->id, role2text(role), role2text(next_role),
                      role2text(rsc->next_role));
-        if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
+        if (!rsc_action_matrix[role][next_role](rsc, chosen, FALSE,
+                                                rsc->cluster)) {
             break;
         }
         role = next_role;
@@ -1140,13 +1143,13 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                      ((rsc->next_role == RSC_ROLE_STOPPED)? "unmanaged" : "active"),
                      rsc->id);
         start = start_action(rsc, chosen, TRUE);
-        Recurring(rsc, start, chosen, data_set);
-        Recurring_Stopped(rsc, start, chosen, data_set);
+        Recurring(rsc, start, chosen, rsc->cluster);
+        Recurring_Stopped(rsc, start, chosen, rsc->cluster);
 
     } else {
         pe_rsc_trace(rsc, "Creating recurring monitors for inactive resource %s",
                      rsc->id);
-        Recurring_Stopped(rsc, NULL, NULL, data_set);
+        Recurring_Stopped(rsc, NULL, NULL, rsc->cluster);
     }
 
     /* if we are stuck in a partial migration, where the target
@@ -1167,7 +1170,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (allow_migrate) {
-        handle_migration_actions(rsc, current, chosen, data_set);
+        handle_migration_actions(rsc, current, chosen, rsc->cluster);
     }
 }
 
@@ -1215,7 +1218,7 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_internal_constraints(pe_resource_t *rsc)
 {
     /* This function is on the critical path and worth optimizing as much as possible */
 
@@ -1235,19 +1238,19 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether resource requires unfencing
     check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-                      && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)
+                      && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing)
                       && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                         && !pcmk__str_eq(data_set->placement_strategy,
+                         && !pcmk__str_eq(rsc->cluster->placement_strategy,
                                           "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                        rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                        pe_order_optional|pe_order_implies_then|pe_order_restart,
-                       data_set);
+                       rsc->cluster);
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
@@ -1255,22 +1258,22 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                           pe_order_promoted_implies_first, data_set);
+                           pe_order_promoted_implies_first, rsc->cluster);
 
         pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                            rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
-                           pe_order_runnable_left, data_set);
+                           pe_order_runnable_left, rsc->cluster);
     }
 
     // Don't clear resource history if probing on same node
     pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, CRM_OP_LRM_DELETE, 0),
                        NULL, rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0),
                        NULL, pe_order_same_node|pe_order_then_cancels_first,
-                       data_set);
+                       rsc->cluster);
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || rsc->container) {
-        allowed_nodes = allowed_nodes_as_list(rsc, data_set);
+        allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
     }
 
     if (check_unfencing) {
@@ -1278,7 +1281,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *node = item->data;
-            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
+            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
+                                               rsc->cluster);
 
             crm_debug("Ordering any stops of %s before %s, and any starts after",
                       rsc->id, unfence->uuid);
@@ -1300,12 +1304,13 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              */
             pcmk__new_ordering(rsc, stop_key(rsc), NULL,
                                NULL, strdup(unfence->uuid), unfence,
-                               pe_order_optional|pe_order_same_node, data_set);
+                               pe_order_optional|pe_order_same_node,
+                               rsc->cluster);
 
             pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
                                rsc, start_key(rsc), NULL,
                                pe_order_implies_then_on_node|pe_order_same_node,
-                               data_set);
+                               rsc->cluster);
         }
     }
 
@@ -1334,7 +1339,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * transition and avoid the unnecessary recovery.
              */
             pcmk__order_resource_actions(rsc->container, RSC_STATUS, rsc,
-                                         RSC_STOP, pe_order_optional, data_set);
+                                         RSC_STOP, pe_order_optional);
 
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
@@ -1346,7 +1351,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
         } else  {
-            remote_rsc = pe__resource_contains_guest_node(data_set,
+            remote_rsc = pe__resource_contains_guest_node(rsc->cluster,
                                                           rsc->container);
         }
 
@@ -1377,12 +1382,12 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                NULL, rsc, pcmk__op_key(rsc->id, RSC_START, 0),
                                NULL,
                                pe_order_implies_then|pe_order_runnable_left,
-                               data_set);
+                               rsc->cluster);
 
             pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                                rsc->container,
                                pcmk__op_key(rsc->container->id, RSC_STOP, 0),
-                               NULL, pe_order_implies_first, data_set);
+                               NULL, pe_order_implies_first, rsc->cluster);
 
             if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
@@ -1390,7 +1395,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, true, data_set);
+                                 rsc->container, NULL, NULL, true, rsc->cluster);
         }
     }
 
@@ -1701,7 +1706,7 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
+native_expand(pe_resource_t *rsc)
 {
     GList *gIter = NULL;
 
@@ -1712,13 +1717,13 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         crm_trace("processing action %d for rsc=%s", action->id, rsc->id);
-        pcmk__add_action_to_graph(action, data_set);
+        pcmk__add_action_to_graph(action, rsc->cluster);
     }
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->expand(child_rsc, data_set);
+        child_rsc->cmds->expand(child_rsc);
     }
 }
 
@@ -1837,7 +1842,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
                  ((next == NULL)? 0 : next->weight));
     start = start_action(rsc, next, TRUE);
 
-    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then, data_set);
+    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
@@ -1977,19 +1982,17 @@ DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_s
     delete_action(rsc, node, optional);
 
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
-                                 optional? pe_order_implies_then : pe_order_optional,
-                                 data_set);
+                                 optional? pe_order_implies_then : pe_order_optional);
 
     pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
-                                 optional? pe_order_implies_then : pe_order_optional,
-                                 data_set);
+                                 optional? pe_order_implies_then : pe_order_optional);
 
     return TRUE;
 }
 
 gboolean
 native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complete,
-                    gboolean force, pe_working_set_t * data_set)
+                    gboolean force)
 {
     enum pe_ordering flags = pe_order_optional;
     char *key = NULL;
@@ -2007,7 +2010,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     CRM_CHECK(node != NULL, return FALSE);
-    if (!force && !pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (!force && !pcmk_is_set(rsc->cluster->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
     }
@@ -2021,7 +2024,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                          rsc->id, node->details->id);
             return FALSE;
         } else if (pe__is_guest_node(node)
-                   && pe__resource_contains_guest_node(data_set, rsc)) {
+                   && pe__resource_contains_guest_node(rsc->cluster, rsc)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
                          rsc->id, node->details->id);
@@ -2041,7 +2044,8 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            any_created = child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set)
+            any_created = child_rsc->cmds->create_probe(child_rsc, node,
+                                                        complete, force)
                 || any_created;
         }
 
@@ -2125,7 +2129,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                                    pcmk__op_key(remote->id, RSC_STATUS, 0),
                                    NULL, top,
                                    pcmk__op_key(top->id, RSC_START, 0), NULL,
-                                   pe_order_optional, data_set);
+                                   pe_order_optional, rsc->cluster);
             }
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
                          rsc->id, node->details->id, remote->id);
@@ -2147,7 +2151,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
              */
             pcmk__new_ordering(remote, pcmk__op_key(remote->id, RSC_STOP, 0),
                                NULL, top, pcmk__op_key(top->id, RSC_START, 0),
-                               NULL, pe_order_optional, data_set);
+                               NULL, pe_order_optional, rsc->cluster);
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
                      rsc->id, node->details->id, remote->id);
             return FALSE;
@@ -2158,10 +2162,10 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
-    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
+    probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, rsc->cluster);
     pe__clear_action_flags(probe, pe_action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional, data_set);
+    pcmk__order_vs_unfence(rsc, node, probe, pe_order_optional);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -2179,7 +2183,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
               pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
         || !pe_rsc_is_clone(top)) {
         top = rsc;
     } else {
@@ -2196,11 +2200,11 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
     pcmk__new_ordering(rsc, NULL, probe, top,
                        pcmk__op_key(top->id, RSC_START, 0), NULL, flags,
-                       data_set);
+                       rsc->cluster);
 
     // Order the probe before any agent reload
     pcmk__new_ordering(rsc, NULL, probe, top, reload_key(rsc), NULL,
-                       pe_order_optional, data_set);
+                       pe_order_optional, rsc->cluster);
 
     return TRUE;
 }

@@ -33,10 +33,11 @@ enum pcmk__coloc_select {
 
 // Resource allocation methods
 struct resource_alloc_functions_s {
-    pe_node_t *(*allocate) (pe_resource_t *, pe_node_t *, pe_working_set_t *);
-    void (*create_actions) (pe_resource_t *, pe_working_set_t *);
-    gboolean(*create_probe) (pe_resource_t *, pe_node_t *, pe_action_t *, gboolean, pe_working_set_t *);
-    void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
+    pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
+    void (*create_actions)(pe_resource_t *rsc);
+    gboolean (*create_probe)(pe_resource_t *rsc, pe_node_t *node,
+                             pe_action_t *complete, gboolean force);
+    void (*internal_constraints)(pe_resource_t *rsc);
 
     /*!
      * \internal
@@ -107,7 +108,7 @@ struct resource_alloc_functions_s {
                                            pe_working_set_t *data_set);
     void (*output_actions)(pe_resource_t *rsc);
 
-    void (*expand) (pe_resource_t *, pe_working_set_t *);
+    void (*expand)(pe_resource_t *rsc);
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
 
     /*!
@@ -189,8 +190,7 @@ void pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node,
-                            pe_action_t *action, enum pe_ordering order,
-                            pe_working_set_t *data_set);
+                            pe_action_t *action, enum pe_ordering order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pe_node_t *node);
@@ -347,8 +347,7 @@ void pcmk__disable_invalid_orderings(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__order_stops_before_shutdown(pe_node_t *node,
-                                       pe_action_t *shutdown_op,
-                                       pe_working_set_t *data_set);
+                                       pe_action_t *shutdown_op);
 
 G_GNUC_INTERNAL
 void pcmk__apply_orderings(pe_working_set_t *data_set);
@@ -368,22 +367,22 @@ void pcmk__order_after_each(pe_action_t *after, GList *list);
  * \param[in] flags       Bitmask of enum pe_ordering flags
  * \param[in] data_set    Cluster working set to add ordering to
  */
-#define pcmk__order_resource_actions(first_rsc, first_task, \
-                                     then_rsc, then_task, flags, data_set)  \
+#define pcmk__order_resource_actions(first_rsc, first_task,                 \
+                                     then_rsc, then_task, flags)            \
     pcmk__new_ordering((first_rsc),                                         \
                        pcmk__op_key((first_rsc)->id, (first_task), 0),      \
                        NULL,                                                \
                        (then_rsc),                                          \
                        pcmk__op_key((then_rsc)->id, (then_task), 0),        \
-                       NULL, (flags), (data_set))
+                       NULL, (flags), (first_rsc)->cluster)
 
-#define pcmk__order_starts(rsc1, rsc2, type, data_set)       \
+#define pcmk__order_starts(rsc1, rsc2, type)                 \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_START,  \
-                                 (rsc2), CRMD_ACTION_START, (type), (data_set))
+                                 (rsc2), CRMD_ACTION_START, (type))
 
-#define pcmk__order_stops(rsc1, rsc2, type, data_set)        \
+#define pcmk__order_stops(rsc1, rsc2, type)                  \
     pcmk__order_resource_actions((rsc1), CRMD_ACTION_STOP,   \
-                                 (rsc2), CRMD_ACTION_STOP, (type), (data_set))
+                                 (rsc2), CRMD_ACTION_STOP, (type))
 
 
 // Ticket constraints (pcmk_sched_tickets.c)
@@ -528,8 +527,7 @@ G_GNUC_INTERNAL
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 
 G_GNUC_INTERNAL
-GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
-                        pe_working_set_t *data_set);
+GList *pcmk__sort_nodes(GList *nodes, pe_node_t *active_node);
 
 G_GNUC_INTERNAL
 void pcmk__apply_node_health(pe_working_set_t *data_set);

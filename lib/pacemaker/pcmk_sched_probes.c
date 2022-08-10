@@ -259,7 +259,7 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
             compatible_rsc = find_compatible_child(probe->rsc,
                                                    after->rsc,
                                                    RSC_ROLE_UNKNOWN,
-                                                   FALSE, data_set);
+                                                   FALSE);
         }
     }
 
@@ -557,7 +557,7 @@ pcmk__schedule_probes(pe_working_set_t *data_set)
              rsc_iter = rsc_iter->next) {
             pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
 
-            rsc->cmds->create_probe(rsc, node, NULL, FALSE, data_set);
+            rsc->cmds->create_probe(rsc, node, NULL, FALSE);
         }
     }
 }

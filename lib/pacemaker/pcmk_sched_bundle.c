@@ -62,8 +62,7 @@ get_containers_or_children(pe_resource_t *rsc)
 }
 
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                      pe_working_set_t *data_set)
+pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *containers = NULL;
     GList *nodes = NULL;
@@ -76,14 +75,14 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     containers = g_list_sort(containers, pcmk__cmp_instance);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
-                        bundle_data->nreplicas_per_host, data_set);
+                        bundle_data->nreplicas_per_host, rsc->cluster);
     g_list_free(nodes);
     g_list_free(containers);
 
@@ -96,7 +95,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         if (replica->ip) {
             pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
                          rsc->id, replica->ip->id);
-            replica->ip->cmds->allocate(replica->ip, prefer, data_set);
+            replica->ip->cmds->allocate(replica->ip, prefer);
         }
 
         container_host = replica->container->allocated_to;
@@ -108,14 +107,13 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pcmk__new_colocation("child-remote-with-docker-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
-                                 NULL, true, data_set);
+                                 NULL, true, rsc->cluster);
         }
 
         if (replica->remote) {
             pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
                          rsc->id, replica->remote->id);
-            replica->remote->cmds->allocate(replica->remote, prefer,
-                                            data_set);
+            replica->remote->cmds->allocate(replica->remote, prefer);
         }
 
         // Explicitly allocate replicas' children before bundle child
@@ -136,8 +134,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
-            replica->child->cmds->allocate(replica->child, replica->node,
-                                           data_set);
+            replica->child->cmds->allocate(replica->child, replica->node);
             pe__clear_resource_flags(replica->child->parent,
                                        pe_rsc_allocating);
         }
@@ -156,7 +153,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
                      rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
+        bundle_data->child->cmds->allocate(bundle_data->child, prefer);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
@@ -165,7 +162,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
 
 void
-pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *action = NULL;
     GList *containers = NULL;
@@ -181,21 +178,20 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         CRM_ASSERT(replica);
         if (replica->ip) {
-            replica->ip->cmds->create_actions(replica->ip, data_set);
+            replica->ip->cmds->create_actions(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->create_actions(replica->container,
-                                                     data_set);
+            replica->container->cmds->create_actions(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->create_actions(replica->remote, data_set);
+            replica->remote->cmds->create_actions(replica->remote);
         }
     }
 
-    clone_create_pseudo_actions(rsc, containers, NULL, NULL,  data_set);
+    clone_create_pseudo_actions(rsc, containers, NULL, NULL);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
+        bundle_data->child->cmds->create_actions(bundle_data->child);
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
@@ -214,8 +210,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-pcmk__bundle_internal_constraints(pe_resource_t *rsc,
-                                  pe_working_set_t *data_set)
+pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -225,30 +220,24 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
 
     if (bundle_data->child) {
         pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
-                                     RSC_START, pe_order_implies_first_printed,
-                                     data_set);
+                                     RSC_START, pe_order_implies_first_printed);
         pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
-                                     RSC_STOP, pe_order_implies_first_printed,
-                                     data_set);
+                                     RSC_STOP, pe_order_implies_first_printed);
 
         if (bundle_data->child->children) {
             pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
         } else {
             pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
         }
     }
 
@@ -259,40 +248,36 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         CRM_ASSERT(replica);
         CRM_ASSERT(replica->container);
 
-        replica->container->cmds->internal_constraints(replica->container,
-                                                       data_set);
+        replica->container->cmds->internal_constraints(replica->container);
 
         pcmk__order_starts(rsc, replica->container,
-                           pe_order_runnable_left|pe_order_implies_first_printed,
-                           data_set);
+                           pe_order_runnable_left|pe_order_implies_first_printed);
 
         if (replica->child) {
             pcmk__order_stops(rsc, replica->child,
-                              pe_order_implies_first_printed, data_set);
+                              pe_order_implies_first_printed);
         }
         pcmk__order_stops(rsc, replica->container,
-                          pe_order_implies_first_printed, data_set);
+                          pe_order_implies_first_printed);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
-                                     RSC_STARTED, pe_order_implies_then_printed,
-                                     data_set);
+                                     RSC_STARTED,
+                                     pe_order_implies_then_printed);
         pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
-                                     RSC_STOPPED, pe_order_implies_then_printed,
-                                     data_set);
+                                     RSC_STOPPED,
+                                     pe_order_implies_then_printed);
 
         if (replica->ip) {
-            replica->ip->cmds->internal_constraints(replica->ip, data_set);
+            replica->ip->cmds->internal_constraints(replica->ip);
 
             // Start IP then container
             pcmk__order_starts(replica->ip, replica->container,
-                               pe_order_runnable_left|pe_order_preserve,
-                               data_set);
+                               pe_order_runnable_left|pe_order_preserve);
             pcmk__order_stops(replica->container, replica->ip,
-                              pe_order_implies_first|pe_order_preserve,
-                              data_set);
+                              pe_order_implies_first|pe_order_preserve);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,
-                                 data_set);
+                                 rsc->cluster);
         }
 
         if (replica->remote) {
@@ -301,8 +286,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
              * colocated relative to the container, we don't need to do anything
              * explicit here with IP.
              */
-            replica->remote->cmds->internal_constraints(replica->remote,
-                                                        data_set);
+            replica->remote->cmds->internal_constraints(replica->remote);
         }
 
         if (replica->child) {
@@ -314,33 +298,29 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     }
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
+        bundle_data->child->cmds->internal_constraints(bundle_data->child);
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             pcmk__promotable_restart_ordering(rsc);
 
             /* child demoted before global demoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
                                          RSC_DEMOTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
 
             /* global demote before child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
                                          RSC_DEMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
 
             /* child promoted before global promoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
                                          RSC_PROMOTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
 
             /* global promote before child promote */
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
                                          RSC_PROMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
         }
     }
 }
@@ -390,7 +370,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL);
 
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -660,7 +640,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
         pe_resource_t *first_child = find_compatible_child(then_child,
                                                            first->rsc,
                                                            RSC_ROLE_UNKNOWN,
-                                                           current, data_set);
+                                                           current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
@@ -897,7 +877,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
+pcmk__bundle_expand(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -906,7 +886,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->expand(bundle_data->child, data_set);
+        bundle_data->child->cmds->expand(bundle_data->child);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -915,7 +895,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote, data_set)) {
+            && pe__bundle_needs_remote_name(replica->remote, rsc->cluster)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -929,7 +909,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
             // Replace the value in replica->remote->xml (if appropriate)
             calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                         data_set,
+                                                         rsc->cluster,
                                                          nvpair, "value");
             if (calculated_addr) {
                 /* Since this is for the bundle as a resource, and not any
@@ -939,7 +919,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                  * parameters.
                  */
                 GHashTable *params = pe_rsc_params(replica->remote,
-                                                   NULL, data_set);
+                                                   NULL, rsc->cluster);
 
                 g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
@@ -957,21 +937,20 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
             }
         }
         if (replica->ip) {
-            replica->ip->cmds->expand(replica->ip, data_set);
+            replica->ip->cmds->expand(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->expand(replica->container, data_set);
+            replica->container->cmds->expand(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->expand(replica->remote, data_set);
+            replica->remote->cmds->expand(replica->remote);
         }
     }
 }
 
 gboolean
 pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, gboolean force,
-                          pe_working_set_t * data_set)
+                          pe_action_t *complete, gboolean force)
 {
     bool any_created = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -986,18 +965,17 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
         CRM_ASSERT(replica);
         if (replica->ip) {
             any_created |= replica->ip->cmds->create_probe(replica->ip, node,
-                                                           complete, force,
-                                                           data_set);
+                                                           complete, force);
         }
         if (replica->child && (node->details == replica->node->details)) {
             any_created |= replica->child->cmds->create_probe(replica->child,
                                                               node, complete,
-                                                              force, data_set);
+                                                              force);
         }
         if (replica->container) {
             bool created = replica->container->cmds->create_probe(replica->container,
                                                                   node, complete,
-                                                                  force, data_set);
+                                                                  force);
 
             if(created) {
                 any_created = TRUE;
@@ -1028,15 +1006,14 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                            pcmk__op_key(other->container->id, RSC_START, 0),
                                            NULL,
                                            pe_order_optional|pe_order_same_node,
-                                           data_set);
+                                           rsc->cluster);
                     }
                 }
             }
         }
         if (replica->container && replica->remote
             && replica->remote->cmds->create_probe(replica->remote, node,
-                                                   complete, force,
-                                                   data_set)) {
+                                                   complete, force)) {
 
             /* Do not probe the remote resource until we know where the
              * container is running. This is required for REMOTE_CONTAINER_HACK
@@ -1055,7 +1032,7 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                 pcmk__new_ordering(replica->container,
                                    pcmk__op_key(replica->container->id, RSC_START, 0),
                                    NULL, replica->remote, NULL, probe,
-                                   pe_order_probe, data_set);
+                                   pe_order_probe, rsc->cluster);
             }
         }
     }

@@ -304,11 +304,10 @@ pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
  * \param[in] node      Node that action is on
  * \param[in] action    Action to be ordered after unfencing
  * \param[in] order     Ordering flags
- * \param[in] data_set  Cluster working set
  */
 void
 pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
-                       enum pe_ordering order, pe_working_set_t *data_set)
+                       enum pe_ordering order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
      * start of resources that require unfencing, and also of fence devices.
@@ -318,14 +317,15 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * information to even probe or start unless the node is first unfenced.
      */
     if ((pcmk_is_set(rsc->flags, pe_rsc_fence_device)
-         && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing))
+         && pcmk_is_set(rsc->cluster->flags, pe_flag_enable_unfencing))
         || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
          * the node being unfenced, and all its resources being stopped,
          * whenever a new resource is added -- which would be highly suboptimal.
          */
-        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE, data_set);
+        pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
+                                           rsc->cluster);
 
         order_actions(unfence, action, order);
 
@@ -334,7 +334,7 @@ pcmk__order_vs_unfence(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
             char *reason = crm_strdup_printf("required by %s %s",
                                              rsc->id, action->task);
 
-            trigger_unfencing(NULL, node, reason, NULL, data_set);
+            trigger_unfencing(NULL, node, reason, NULL, rsc->cluster);
             free(reason);
         }
     }

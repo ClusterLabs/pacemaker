@@ -82,8 +82,7 @@ expand_group_colocations(pe_resource_t *rsc)
 }
 
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                     pe_working_set_t *data_set)
+pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
@@ -111,8 +110,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     expand_group_colocations(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -120,7 +119,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         pe_rsc_trace(rsc, "Allocating group %s member %s",
                      rsc->id, child_rsc->id);
-        node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
+        node = child_rsc->cmds->allocate(child_rsc, prefer);
         if (group_node == NULL) {
             group_node = node;
         }
@@ -139,7 +138,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
 
 void
-group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *op = NULL;
     const char *value = NULL;
@@ -150,7 +149,7 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->create_actions(child_rsc, data_set);
+        child_rsc->cmds->create_actions(child_rsc);
         group_update_pseudo_status(rsc, child_rsc);
     }
 
@@ -158,28 +157,36 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
-                       RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
+                       RSC_STARTED, NULL,
+                       TRUE /* !group_data->child_starting */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
-                       RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
+                       RSC_STOPPED, NULL,
+                       TRUE /* !group_data->child_stopping */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
-        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
+                           TRUE, rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 }
@@ -222,7 +229,7 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
 }
 
 void
-group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_internal_constraints(pe_resource_t *rsc)
 {
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
@@ -233,11 +240,11 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     get_group_variant_data(group_data, rsc);
 
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -247,7 +254,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         int started =
             pe_order_runnable_left | pe_order_implies_then | pe_order_implies_then_printed;
 
-        child_rsc->cmds->internal_constraints(child_rsc, data_set);
+        child_rsc->cmds->internal_constraints(child_rsc);
 
         if (last_rsc == NULL) {
             if (group_data->ordered) {
@@ -259,66 +266,60 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
                                  child_rsc, last_rsc, NULL, NULL,
                                  pcmk_is_set(child_rsc->flags, pe_rsc_critical),
-                                 data_set);
+                                 rsc->cluster);
         }
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
-                                         stop|pe_order_implies_first_printed,
-                                         data_set);
+                                         stop|pe_order_implies_first_printed);
 
             pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, rsc,
-                                         RSC_DEMOTED, stopped, data_set);
+                                         RSC_DEMOTED, stopped);
 
             pcmk__order_resource_actions(child_rsc, RSC_PROMOTE, rsc,
-                                         RSC_PROMOTED, started, data_set);
+                                         RSC_PROMOTED, started);
 
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                          RSC_PROMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
 
         }
 
-        pcmk__order_starts(rsc, child_rsc, pe_order_implies_first_printed,
-                           data_set);
+        pcmk__order_starts(rsc, child_rsc, pe_order_implies_first_printed);
         pcmk__order_stops(rsc, child_rsc,
-                          stop|pe_order_implies_first_printed, data_set);
+                          stop|pe_order_implies_first_printed);
 
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stopped, data_set);
+                                     stopped);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     started, data_set);
+                                     started);
 
         if (group_data->ordered == FALSE) {
             pcmk__order_starts(rsc, child_rsc,
-                               start|pe_order_implies_first_printed, data_set);
+                               start|pe_order_implies_first_printed);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE,
-                                             start|pe_order_implies_first_printed,
-                                             data_set);
+                                             start|pe_order_implies_first_printed);
             }
 
         } else if (last_rsc != NULL) {
-            pcmk__order_starts(last_rsc, child_rsc, start, data_set);
+            pcmk__order_starts(last_rsc, child_rsc, start);
             pcmk__order_stops(child_rsc, last_rsc,
-                              pe_order_optional|pe_order_restart, data_set);
+                              pe_order_optional|pe_order_restart);
 
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(last_rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, start, data_set);
+                                             RSC_PROMOTE, start);
                 pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, last_rsc,
-                                             RSC_DEMOTE, pe_order_optional,
-                                             data_set);
+                                             RSC_DEMOTE, pe_order_optional);
             }
 
         } else {
-            pcmk__order_starts(rsc, child_rsc, pe_order_none, data_set);
+            pcmk__order_starts(rsc, child_rsc, pe_order_none);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, pe_order_none,
-                                             data_set);
+                                             RSC_PROMOTE, pe_order_none);
             }
         }
 
@@ -329,8 +330,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             if (group_data->ordered
                 && last_rsc
                 && last_rsc->running_on == NULL && last_active && last_active->running_on) {
-                pcmk__order_stops(child_rsc, last_active, pe_order_optional,
-                                  data_set);
+                pcmk__order_stops(child_rsc, last_active, pe_order_optional);
             }
             last_active = child_rsc;
         }
@@ -342,15 +342,15 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         int stop_stop_flags = pe_order_implies_then;
         int stop_stopped_flags = pe_order_optional;
 
-        pcmk__order_stops(rsc, last_rsc, stop_stop_flags, data_set);
+        pcmk__order_stops(rsc, last_rsc, stop_stop_flags);
         pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stop_stopped_flags, data_set);
+                                     stop_stopped_flags);
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE,
-                                         stop_stop_flags, data_set);
+                                         stop_stop_flags);
             pcmk__order_resource_actions(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                         stop_stopped_flags, data_set);
+                                         stop_stopped_flags);
         }
     }
 }
@@ -551,17 +551,17 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 }
 
 void
-group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_expand(pe_resource_t *rsc)
 {
     CRM_CHECK(rsc != NULL, return);
 
     pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
-    native_expand(rsc, data_set);
+    native_expand(rsc);
 
     for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->expand(child_rsc, data_set);
+        child_rsc->cmds->expand(child_rsc);
     }
 }
 
