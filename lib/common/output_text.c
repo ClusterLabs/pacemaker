@@ -37,11 +37,13 @@ typedef struct private_data_s {
 
 static void
 text_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     g_queue_free(priv->parent_q);
     free(priv);
@@ -51,6 +53,8 @@ text_free_priv(pcmk__output_t *out) {
 static bool
 text_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If text_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -70,6 +74,7 @@ text_init(pcmk__output_t *out) {
 
 static void
 text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    CRM_ASSERT(out != NULL && out->dest != NULL);
     fflush(out->dest);
 }
 
@@ -103,7 +108,7 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 text_version(pcmk__output_t *out, bool extended) {
-    CRM_ASSERT(out != NULL);
+    CRM_ASSERT(out != NULL && out->dest != NULL);
 
     if (extended) {
         fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
