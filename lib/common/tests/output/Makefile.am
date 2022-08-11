@@ -19,6 +19,7 @@ include $(top_srcdir)/mk/tap.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS =	pcmk__call_message_test \
+					pcmk__output_free_test \
 					pcmk__output_new_test \
 					pcmk__register_format_test \
 					pcmk__register_formats_test \
