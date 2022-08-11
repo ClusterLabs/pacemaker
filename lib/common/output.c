@@ -24,6 +24,10 @@ pcmk__output_formatters(void) {
 
 void
 pcmk__output_free(pcmk__output_t *out) {
+    if (out == NULL) {
+        return;
+    }
+
     out->free_priv(out);
 
     if (out->messages != NULL) {
