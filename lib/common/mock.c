@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -175,6 +176,34 @@ void
 __wrap_endgrent(void) {
     if (!pcmk__mock_grent) {
         __real_endgrent();
+    }
+}
+
+
+/* fopen()
+ *
+ * If pcmk__mock_fopen is set to true, later calls to fopen() must be
+ * preceded by:
+ *
+ *     will_return(__wrap_fopen, errno_to_set);
+ */
+
+bool pcmk__mock_fopen = false;
+
+FILE *
+__wrap_fopen(const char *pathname, const char *mode)
+{
+    if (pcmk__mock_fopen) {
+        errno = mock_type(int);
+
+        if (errno != 0) {
+            return NULL;
+        } else {
+            return __real_fopen(pathname, mode);
+        }
+
+    } else {
+        return __real_fopen(pathname, mode);
     }
 }
 

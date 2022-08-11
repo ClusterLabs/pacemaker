@@ -12,6 +12,7 @@
 
 #include <pwd.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -24,6 +25,10 @@
 extern bool pcmk__mock_calloc;
 void *__real_calloc(size_t nmemb, size_t size);
 void *__wrap_calloc(size_t nmemb, size_t size);
+
+extern bool pcmk__mock_fopen;
+FILE *__real_fopen(const char *pathname, const char *mode);
+FILE *__wrap_fopen(const char *pathname, const char *mode);
 
 extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);
