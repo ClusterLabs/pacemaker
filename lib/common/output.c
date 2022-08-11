@@ -39,9 +39,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
                  char **argv) {
     pcmk__output_factory_t create = NULL;
 
-    if (formatters == NULL) {
-        return EINVAL;
-    }
+    CRM_ASSERT(formatters != NULL && out != NULL);
 
     /* If no name was given, just try "text".  It's up to each tool to register
      * what it supports so this also may not be valid.
