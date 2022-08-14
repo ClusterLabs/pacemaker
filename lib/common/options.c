@@ -285,21 +285,17 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
 const char *
 pcmk__env_option(const char *option)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
     const char *value = NULL;
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
-    }
-
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        value = getenv(env_name);
+        if (value != NULL) {
+            crm_trace("Found %s = %s", env_name, value);
+            return value;
+        }
     }
 
     crm_trace("Nothing found for %s", option);
@@ -318,24 +314,18 @@ pcmk__env_option(const char *option)
 void
 pcmk__set_env_option(const char *option, const char *value)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
-    }
-
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        if (value) {
+            crm_trace("Setting %s to %s", env_name, value);
+            setenv(env_name, value, 1);
+        } else {
+            crm_trace("Unsetting %s", env_name);
+            unsetenv(env_name);
+        }
     }
 }
 
