@@ -236,17 +236,16 @@ attrd_client_query(pcmk__request_t *request)
     return reply;
 }
 
-/*!
- * \internal
- * \brief Respond to a client refresh request (i.e. write out all attributes)
- *
- * \return void
- */
-void
-attrd_client_refresh(void)
+xmlNode *
+attrd_client_refresh(pcmk__request_t *request)
 {
     crm_info("Updating all attributes");
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
     attrd_write_attributes(true, true);
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 /*!
@@ -473,10 +472,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_refresh();
 
     } else {
         pcmk__request_t request = {

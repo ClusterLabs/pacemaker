@@ -154,7 +154,7 @@ void attrd_broadcast_protocol(void);
 xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
-void attrd_client_refresh(void);
+xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
 gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
 

@@ -65,6 +65,16 @@ handle_remove_request(pcmk__request_t *request)
     }
 }
 
+static xmlNode *
+handle_refresh_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        return handle_unknown_request(request);
+    } else {
+        return attrd_client_refresh(request);
+    }
+}
+
 static void
 attrd_register_handlers(void)
 {
@@ -72,6 +82,7 @@ attrd_register_handlers(void)
         { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
+        { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
         { NULL, handle_unknown_request },
     };
 
