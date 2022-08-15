@@ -204,57 +204,38 @@ attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
     }
 }
 
-/*!
- * \internal
- * \brief Respond to a client query
- *
- * \param[in] client Who queried us
- * \param[in] query  Root of query XML
- *
- * \return void
- */
-void
-attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                   xmlNode *query)
+xmlNode *
+attrd_client_query(pcmk__request_t *request)
 {
-    const char *attr;
-    const char *origin = crm_element_value(query, F_ORIG);
-    xmlNode *reply;
+    xmlNode *query = request->xml;
+    xmlNode *reply = NULL;
+    const char *attr = NULL;
 
-    if (origin == NULL) {
-        origin = "unknown client";
-    }
-    crm_debug("Query arrived from %s", origin);
+    crm_debug("Query arrived from %s", pcmk__client_name(request->ipc_client));
 
     /* Request must specify attribute name to query */
     attr = crm_element_value(query, PCMK__XA_ATTR_NAME);
     if (attr == NULL) {
-        crm_warn("Ignoring malformed query from %s (no attribute name given)",
-                 origin);
-        return;
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Ignoring malformed query from %s (no attribute name given)",
+                            pcmk__client_name(request->ipc_client));
+        return NULL;
     }
 
     /* Build the XML reply */
     reply = build_query_reply(attr, crm_element_value(query,
                                                       PCMK__XA_ATTR_NODE_NAME));
     if (reply == NULL) {
-        crm_err("Could not respond to query from %s: could not create XML reply",
-                 origin);
-        return;
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Could not respond to query from %s: could not create XML reply",
+                            pcmk__client_name(request->ipc_client));
+        return NULL;
+    } else {
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
-    crm_log_xml_trace(reply, "Reply");
 
-    /* Send the reply to the client */
-    client->request_id = 0;
-    {
-        int rc = pcmk__ipc_send_xml(client, id, reply, flags);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Could not respond to query from %s: %s " CRM_XS " rc=%d",
-                    origin, pcmk_rc_str(rc), rc);
-        }
-    }
-    free_xml(reply);
+    request->ipc_client->request_id = 0;
+    return reply;
 }
 
 /*!
@@ -502,10 +483,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
-        /* queries will get reply, so no ack is necessary */
-        attrd_client_query(client, id, flags, xml);
 
     } else {
         pcmk__request_t request = {
