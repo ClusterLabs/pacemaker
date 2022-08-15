@@ -8,15 +8,10 @@
  */
 
 #include <crm_internal.h>
-#include "mock_private.h"
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
 
 #include <sys/utsname.h>
 

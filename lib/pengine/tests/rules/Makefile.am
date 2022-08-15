@@ -10,6 +10,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
 		$(top_builddir)/lib/pengine/libpe_rules_test.la \
 		-lcmocka
+AM_LDFLAGS = $(LDFLAGS_WRAP)
 
 include $(top_srcdir)/mk/tap.mk
 

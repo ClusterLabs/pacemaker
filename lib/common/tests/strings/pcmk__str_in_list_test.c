@@ -9,13 +9,9 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
+#include <crm/common/unittest_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <glib.h>
 
 static void
 empty_input_list(void **state) {

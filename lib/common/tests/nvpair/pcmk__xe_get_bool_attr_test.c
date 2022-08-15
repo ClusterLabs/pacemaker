@@ -7,17 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include "crm/common/results.h"
 #include <crm_internal.h>
-#include <crm/common/xml_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+#include <crm/common/xml_internal.h>
 
 static void
 empty_input(void **state)

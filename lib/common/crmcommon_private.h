@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the Pacemaker project contributors
+ * Copyright 2018-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,11 @@
 
 // Decent chunk size for processing large amounts of data
 #define PCMK__BUFFER_SIZE 4096
+
+#if defined(PCMK__UNIT_TESTING)
+#undef G_GNUC_INTERNAL
+#define G_GNUC_INTERNAL
+#endif
 
 /* When deleting portions of an XML tree, we keep a record so we can know later
  * (e.g. when checking differences) that something was deleted.

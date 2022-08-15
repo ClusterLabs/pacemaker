@@ -220,6 +220,21 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
 }
 
 
+/* strdup()
+ *
+ * If pcmk__mock_strdup is set to true, later calls to strdup() will return
+ * NULL.
+ */
+
+bool pcmk__mock_strdup = false;
+
+char *
+__wrap_strdup(const char *s)
+{
+    return pcmk__mock_strdup? NULL : __real_strdup(s);
+}
+
+
 /* uname()
  *
  * If pcmk__mock_uname is set to true, later calls to uname() must be preceded

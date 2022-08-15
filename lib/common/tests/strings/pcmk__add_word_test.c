@@ -9,13 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 add_words(void **state)

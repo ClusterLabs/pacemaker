@@ -10,7 +10,9 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include		\
 	      -I$(top_builddir)/include		\
 	      -I$(top_srcdir)/lib/common
-LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
+	-lcmocka
+AM_CFLAGS = -DPCMK__UNIT_TESTING
 AM_LDFLAGS = $(LDFLAGS_WRAP)
 
 include $(top_srcdir)/mk/tap.mk
@@ -21,4 +23,3 @@ check_PROGRAMS = \
 	pcmk__get_tmpdir_test
 
 TESTS = $(check_PROGRAMS)
-

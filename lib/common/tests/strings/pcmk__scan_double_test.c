@@ -9,11 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 #include <float.h>  // DBL_MAX, etc.
 #include <math.h>   // fabs()
@@ -78,6 +74,12 @@ trailing_chars(void **state)
     assert_int_equal(pcmk__scan_double("2.0asdf", &result, NULL, &end_text), pcmk_rc_ok);
     assert_float_equal(result, 2.0, DBL_EPSILON);
     assert_string_equal(end_text, "asdf");
+}
+
+static void
+no_result_variable(void **state)
+{
+    pcmk__assert_asserts(pcmk__scan_double("asdf", NULL, NULL, NULL));
 }
 
 static void
@@ -153,6 +155,7 @@ int main(int argc, char **argv)
         cmocka_unit_test(empty_input_string),
         cmocka_unit_test(bad_input_string),
         cmocka_unit_test(trailing_chars),
+        cmocka_unit_test(no_result_variable),
 
         // Test for numeric issues
         cmocka_unit_test(typical_case),

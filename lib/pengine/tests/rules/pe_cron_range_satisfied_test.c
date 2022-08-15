@@ -7,16 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <glib.h>
 
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules_internal.h>
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 run_one_test(const char *t, const char *x, int expected) {

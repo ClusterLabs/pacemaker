@@ -8,13 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/msg_xml.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+#include <crm/msg_xml.h>
 
 #include <glib.h>
 

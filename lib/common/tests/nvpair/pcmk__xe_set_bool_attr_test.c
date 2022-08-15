@@ -8,16 +8,10 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 set_attr(void **state)
