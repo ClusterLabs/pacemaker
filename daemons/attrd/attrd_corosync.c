@@ -64,14 +64,36 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
          */
         attrd_peer_clear_failure(peer, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)
-               && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-        attrd_peer_sync_response(peer, peer_won, xml);
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {
+        /* This is a separate test to prevent falling into the unknown message
+         * handler below.  Sometimes, we get PCMK__ATTRD_CMD_SYNC_RESPONSE without
+         * the unames being equal, and in that case we just want to do nothing.
+         */
+        if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
+            attrd_peer_sync_response(peer, peer_won, xml);
+        }
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_none)) {
         /* Ignore. The flush command was removed in 2.0.0 but may be
          * received from peers running older versions.
          */
+
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = NULL,
+            .ipc_id         = 0,
+            .ipc_flags      = 0,
+            .peer           = crm_element_value(xml, F_ORIG),
+            .xml            = xml,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        CRM_CHECK(request.op != NULL, return);
+
+        attrd_handle_request(&request);
+        pcmk__reset_request(&request);
     }
 }
 

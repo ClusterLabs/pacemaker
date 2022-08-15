@@ -465,6 +465,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     xml = pcmk__client_data2xml(client, data, &id, &flags);
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
@@ -507,8 +508,21 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         attrd_client_query(client, id, flags, xml);
 
     } else {
-        crm_info("Ignoring request from client %s with unknown operation %s",
-                 pcmk__client_name(client), op);
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = xml,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        attrd_handle_request(&request);
+        pcmk__reset_request(&request);
     }
 
     free_xml(xml);

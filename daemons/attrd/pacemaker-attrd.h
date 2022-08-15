@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/messages_internal.h>
 #include <crm/cib/internal.h>
 
 /*
@@ -173,5 +174,8 @@ extern int minimum_protocol_version;
 void attrd_update_minimum_protocol_ver(const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
+
+void attrd_unregister_handlers(void);
+void attrd_handle_request(pcmk__request_t *request);
 
 #endif /* PACEMAKER_ATTRD__H */
