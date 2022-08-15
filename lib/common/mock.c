@@ -73,7 +73,10 @@ __wrap_calloc(size_t nmemb, size_t size)
  * If pcmk__mock_getenv is set to true, later calls to getenv() must be preceded
  * by:
  *
+ *     expect_*(__wrap_getenv, name[, ...]);
  *     will_return(__wrap_getenv, return_value);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_getenv = false;
@@ -81,7 +84,11 @@ bool pcmk__mock_getenv = false;
 char *
 __wrap_getenv(const char *name)
 {
-    return pcmk__mock_getenv? mock_ptr_type(char *) : __real_getenv(name);
+    if (!pcmk__mock_getenv) {
+        return __real_getenv(name);
+    }
+    check_expected_ptr(name);
+    return mock_ptr_type(char *);
 }
 
 
