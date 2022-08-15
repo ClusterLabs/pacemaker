@@ -20,6 +20,7 @@ include $(top_srcdir)/mk/tap.mk
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = \
 		pcmk__env_option_test \
-		pcmk__set_env_option_test
+		pcmk__set_env_option_test \
+		pcmk__env_option_enabled_test
 
 TESTS = $(check_PROGRAMS)
