@@ -52,11 +52,25 @@ handle_query_request(pcmk__request_t *request)
     }
 }
 
+static xmlNode *
+handle_remove_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
+        attrd_peer_remove(host, true, request->peer);
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        return attrd_client_peer_remove(request);
+    }
+}
+
 static void
 attrd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
+        { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { NULL, handle_unknown_request },
     };

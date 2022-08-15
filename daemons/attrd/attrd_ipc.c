@@ -157,21 +157,16 @@ attrd_client_clear_failure(xmlNode *xml)
     attrd_client_update(xml);
 }
 
-/*!
- * \internal
- * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
- *
- * \param[in] client_name Name of client that made request (for log messages)
- * \param[in] xml         Root of request XML
- *
- * \return void
- */
-void
-attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
+xmlNode *
+attrd_client_peer_remove(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
+
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     char *host_alloc = NULL;
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
 
     if (host == NULL) {
         int nodeid = 0;
@@ -195,13 +190,16 @@ attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
 
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
-                 pcmk__client_name(client), host);
+                 pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 pcmk__client_name(client));
+                 pcmk__client_name(request->ipc_client));
     }
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 xmlNode *
@@ -460,11 +458,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_clear_failure(xml);
 

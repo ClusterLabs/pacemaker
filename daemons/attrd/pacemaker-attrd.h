@@ -151,7 +151,7 @@ void attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
 
 void attrd_broadcast_protocol(void);
-void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
+xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);

@@ -55,9 +55,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
         attrd_peer_sync(peer, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_none)) {
-        attrd_peer_remove(host, true, peer->uname);
-
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
