@@ -100,7 +100,7 @@ typedef struct async_command_s {
     char *device;
 
     GList *device_list;
-    GList *device_next; // Iterator for device_list
+    GList *next_device_iter; // device_list entry for next device to execute
 
     void *internal_user_data;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
@@ -2438,7 +2438,7 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
 {
     int log_level = LOG_ERR;
     int output_log_level = LOG_NEVER;
-    guint devices_remaining = g_list_length(cmd->device_next);
+    guint devices_remaining = g_list_length(cmd->next_device_iter);
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
@@ -2663,7 +2663,7 @@ reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
 static stonith_device_t *
 next_required_device(async_command_t *cmd)
 {
-    for (GList *iter = cmd->device_next; iter != NULL; iter = iter->next) {
+    for (GList *iter = cmd->next_device_iter; iter != NULL; iter = iter->next) {
         stonith_device_t *next_device = g_hash_table_lookup(device_list,
                                                             iter->data);
 
@@ -2671,7 +2671,7 @@ next_required_device(async_command_t *cmd)
             /* This is only called for successful actions, so it's OK to skip
              * non-required devices.
              */
-            cmd->device_next = iter->next;
+            cmd->next_device_iter = iter->next;
             return next_device;
         }
     }
@@ -2705,12 +2705,13 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     if (pcmk__result_ok(result)) {
         next_device = next_required_device(cmd);
 
-    } else if ((cmd->device_next != NULL)
+    } else if ((cmd->next_device_iter != NULL)
                && !is_action_required(cmd->action, device)) {
         /* if this device didn't work out, see if there are any others we can try.
          * if the failed device was 'required', we can't pick another device. */
-        next_device = g_hash_table_lookup(device_list, cmd->device_next->data);
-        cmd->device_next = cmd->device_next->next;
+        next_device = g_hash_table_lookup(device_list,
+                                          cmd->next_device_iter->data);
+        cmd->next_device_iter = cmd->next_device_iter->next;
     }
 
     if (next_device == NULL) {
@@ -2769,7 +2770,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 
     } else { // Device found, schedule it for fencing
         cmd->device_list = devices;
-        cmd->device_next = devices->next;
+        cmd->next_device_iter = devices->next;
         schedule_stonith_command(cmd, device);
     }
 }
