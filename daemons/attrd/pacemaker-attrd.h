@@ -149,7 +149,6 @@ void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
 
-void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);
 void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);
