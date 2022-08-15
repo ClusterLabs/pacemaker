@@ -34,6 +34,14 @@ extern bool pcmk__mock_getenv;
 char *__real_getenv(const char *name);
 char *__wrap_getenv(const char *name);
 
+extern bool pcmk__mock_setenv;
+int __real_setenv(const char *name, const char *value, int overwrite);
+int __wrap_setenv(const char *name, const char *value, int overwrite);
+
+extern bool pcmk__mock_unsetenv;
+int __real_unsetenv(const char *name);
+int __wrap_unsetenv(const char *name);
+
 extern bool pcmk__mock_getpid;
 pid_t __real_getpid(void);
 pid_t __wrap_getpid(void);

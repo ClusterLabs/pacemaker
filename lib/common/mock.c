@@ -114,6 +114,62 @@ __wrap_getenv(const char *name)
 }
 
 
+/* setenv()
+ *
+ * If pcmk__mock_setenv is set to true, later calls to setenv() must be preceded
+ * by:
+ *
+ *     expect_*(__wrap_setenv, name[, ...]);
+ *     expect_*(__wrap_setenv, value[, ...]);
+ *     expect_*(__wrap_setenv, overwrite[, ...]);
+ *     will_return(__wrap_setenv, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ *
+ * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
+ */
+bool pcmk__mock_setenv = false;
+
+int
+__wrap_setenv(const char *name, const char *value, int overwrite)
+{
+    if (!pcmk__mock_setenv) {
+        return __real_setenv(name, value, overwrite);
+    }
+    check_expected_ptr(name);
+    check_expected_ptr(value);
+    check_expected(overwrite);
+    errno = mock_type(int);
+    return (errno == 0)? 0 : -1;
+}
+
+
+/* unsetenv()
+ *
+ * If pcmk__mock_unsetenv is set to true, later calls to unsetenv() must be
+ * preceded by:
+ *
+ *     expect_*(__wrap_unsetenv, name[, ...]);
+ *     will_return(__wrap_setenv, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ *
+ * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
+ */
+bool pcmk__mock_unsetenv = false;
+
+int
+__wrap_unsetenv(const char *name)
+{
+    if (!pcmk__mock_unsetenv) {
+        return __real_unsetenv(name);
+    }
+    check_expected_ptr(name);
+    errno = mock_type(int);
+    return (errno == 0)? 0 : -1;
+}
+
+
 /* getpid()
  *
  * If pcmk__mock_getpid is set to true, later calls to getpid() must be preceded
