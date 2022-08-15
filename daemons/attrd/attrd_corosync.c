@@ -73,11 +73,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             attrd_peer_sync_response(peer, peer_won, xml);
         }
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_none)) {
-        /* Ignore. The flush command was removed in 2.0.0 but may be
-         * received from peers running older versions.
-         */
-
     } else {
         pcmk__request_t request = {
             .ipc_client     = NULL,

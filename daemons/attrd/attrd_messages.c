@@ -28,10 +28,25 @@ handle_unknown_request(pcmk__request_t *request)
     return NULL;
 }
 
+static xmlNode *
+handle_flush_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        /* Ignore. The flush command was removed in 2.0.0 but may be
+         * received from peers running older versions.
+         */
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        return handle_unknown_request(request);
+    }
+}
+
 static void
 attrd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { NULL, handle_unknown_request },
     };
 
