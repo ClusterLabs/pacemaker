@@ -288,7 +288,7 @@ resources and will do so to achieve "optimal" [#]_ resource placement.
 We can specify a different stickiness for every resource, but it is
 often sufficient to change the default.
 
-In |CFS_DISTRO| |CFS_VERSION|, the cluster setup process automatically
+In |CFS_DISTRO| |CFS_DISTRO_VER|, the cluster setup process automatically
 configures a default resource stickiness score of 1. This is sufficient to
 prevent healthy resources from moving around the cluster when there are no
 user-configured constraints that influence where Pacemaker prefers to run those
