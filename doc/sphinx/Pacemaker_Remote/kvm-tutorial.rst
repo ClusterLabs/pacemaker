@@ -128,11 +128,68 @@ cluster. It is incredibly simple.
 Start the Cluster
 _________________
 
-On the host, start Pacemaker.
+On the host, start Pacemaker if it's not already running.
 
 .. code-block:: none
 
     # pcs cluster start
+
+Create a ``VirtualDomain`` Resource for the Guest VM
+____________________________________________________
+
+For this simple walk-through, we have created the VM and made its disk
+available only on node ``pcmk-1``, so that's the only node where the VM is
+capable of running. In a more realistic scenario, you'll probably want to have
+multiple nodes that are capable of running the VM.
+
+Next we'll assign an attribute to node 1 that denotes its eligibility to host
+``vm-guest1``. If other nodes are capable of hosting your guest VM, then add the
+attribute to each of those nodes as well.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs node attribute pcmk-1 can-host-vm-guest1=1
+
+Then we'll create a ``VirtualDomain`` resource so that Pacemaker can manage
+``vm-guest1``. Be sure to replace the XML file path below with your own if it
+differs. We'll also create a rule to prevent Pacemaker from trying to start the
+resource or probe its status on any node that isn't capable of running the VM.
+We'll save the CIB to a file, make both of these edits, and push them
+simultaneously.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib vm_cfg
+    [root@pcmk-1 ~]# pcs -f vm_cfg resource create vm-guest1 VirtualDomain \
+        hypervisor="qemu:///system" config="/etc/libvirt/qemu/vm-guest1.xml"
+    Assumed agent name 'ocf:heartbeat:VirtualDomain' (deduced from 'VirtualDomain')
+    [root@pcmk-1 ~]# pcs -f vm_cfg constraint location vm-guest1 rule \
+        resource-discovery=never score=-INFINITY can-host-vm-guest1 ne 1
+    [root@pcmk-1 ~]# pcs cluster cib-push --config vm_cfg --wait
+
+.. NOTE::
+
+    If all nodes in your cluster are capable of hosting the VM that you've
+    created, then you can skip the ``pcs node attribute`` and ``pcs constraint
+    location`` commands.
+
+.. NOTE::
+
+    The ID of the resource managing the virtual machine (``vm-guest1`` in the
+    above example) **must** be different from the virtual machine's node name
+    (``guest1`` in the above example). Pacemaker will create an implicit
+    internal resource for the Pacemaker Remote connection to the guest. This
+    implicit resource will be named with the value of the ``VirtualDomain``
+    resource's ``remote-node`` meta attribute, which will be set by ``pcs`` to
+    the guest node's node name. Therefore, that value cannot be used as the name
+    of any other resource.
+
+Now we can confirm that the ``VirtualDomain`` resource is running on ``pcmk-1``.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource status
+      * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
 
 Integrate Guest Node into Cluster
 _________________________________
