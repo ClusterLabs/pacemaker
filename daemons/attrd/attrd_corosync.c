@@ -28,9 +28,7 @@ extern crm_exit_t attrd_exit_status;
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
-    bool peer_won = false;
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -43,18 +41,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
          * needed). Ignore all other messages.
          */
         return;
-    }
-
-    peer_won = attrd_check_for_new_writer(peer, xml);
-
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {
-        /* This is a separate test to prevent falling into the unknown message
-         * handler below.  Sometimes, we get PCMK__ATTRD_CMD_SYNC_RESPONSE without
-         * the unames being equal, and in that case we just want to do nothing.
-         */
-        if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-            attrd_peer_sync_response(peer, peer_won, xml);
-        }
 
     } else {
         pcmk__request_t request = {

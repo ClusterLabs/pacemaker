@@ -105,6 +105,26 @@ handle_sync_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_sync_response_request(pcmk__request_t *request)
+{
+    if (request->ipc_client != NULL) {
+        return handle_unknown_request(request);
+    } else {
+        if (request->peer != NULL) {
+            crm_node_t *peer = crm_get_peer(0, request->peer);
+            bool peer_won = attrd_check_for_new_writer(peer, request->xml);
+
+            if (!pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
+                attrd_peer_sync_response(peer, peer_won, request->xml);
+            }
+        }
+
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    }
+}
+
+static xmlNode *
 handle_update_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
@@ -134,6 +154,7 @@ attrd_register_handlers(void)
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
         { PCMK__ATTRD_CMD_SYNC, handle_sync_request },
+        { PCMK__ATTRD_CMD_SYNC_RESPONSE, handle_sync_response_request },
         { PCMK__ATTRD_CMD_UPDATE, handle_update_request },
         { PCMK__ATTRD_CMD_UPDATE_DELAY, handle_update_request },
         { PCMK__ATTRD_CMD_UPDATE_BOTH, handle_update_request },
