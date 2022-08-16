@@ -110,7 +110,7 @@ Configure the Cluster for Fencing
    set the special ``pcmk_host_list`` and/or ``pcmk_host_check`` parameters.
    See ``man pacemaker-fenced`` for details.
 
-#. If the device does not expect the victim to be specified with the ``port``
+#. If the device does not expect the target to be specified with the ``port``
    parameter, you may also need to set the special ``pcmk_host_argument``
    parameter. See ``man pacemaker-fenced`` for details.
 

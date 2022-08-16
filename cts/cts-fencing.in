@@ -1370,7 +1370,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
         test.add_stonith_log_pattern("(on) to be executed on target")
 
-        ### verify unfencing using on_target device with topology fails when victim node doesn't exist
+        ### verify unfencing using on_target device with topology fails when target node doesn't exist
         test = self.new_test("cpg_unfence_on_target_4",
                              "Verify unfencing failure with on_target = true using topology",
                              1)
