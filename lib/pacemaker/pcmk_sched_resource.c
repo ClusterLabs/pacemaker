@@ -28,7 +28,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__colocated_resources,
         native_rsc_location,
         native_action_flags,
-        native_update_actions,
+        pcmk__update_ordered_actions,
         pcmk__output_resource_actions,
         native_expand,
         native_append_meta,

@@ -31,6 +31,27 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_active       = (1 << 2),
 };
 
+// Flags the update_ordered_actions() method can return
+enum pcmk__updated {
+    pcmk__updated_none      = 0,        // Nothing changed
+    pcmk__updated_first     = (1 << 0), // First action was updated
+    pcmk__updated_then      = (1 << 1), // Then action was updated
+};
+
+#define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \
+        au_flags = pcmk__set_flags_as(__func__, __LINE__,                   \
+                                      LOG_TRACE, "Action update",           \
+                                      (action)->uuid, au_flags,             \
+                                      (flags_to_set), #flags_to_set);       \
+    } while (0)
+
+#define pcmk__clear_updated_flags(au_flags, action, flags_to_clear) do {    \
+        au_flags = pcmk__clear_flags_as(__func__, __LINE__,                 \
+                                        LOG_TRACE, "Action update",         \
+                                        (action)->uuid, au_flags,           \
+                                        (flags_to_clear), #flags_to_clear); \
+    } while (0)
+
 // Resource allocation methods
 struct resource_alloc_functions_s {
     pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
@@ -101,11 +122,34 @@ struct resource_alloc_functions_s {
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
     enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
-    enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
-                                           pe_node_t *, enum pe_action_flags,
-                                           enum pe_action_flags,
-                                           enum pe_ordering,
-                                           pe_working_set_t *data_set);
+
+    /*!
+     * \internal
+     * \brief Update two actions according to an ordering between them
+     *
+     * Given information about an ordering of two actions, update the actions'
+     * flags (and runnable_before members if appropriate) as appropriate for the
+     * ordering. In some cases, the ordering could be disabled as well.
+     *
+     * \param[in] first     'First' action in an ordering
+     * \param[in] then      'Then' action in an ordering
+     * \param[in] node      If not NULL, limit scope of ordering to this node
+     *                      (only used when interleaving instances)
+     * \param[in] flags     Action flags for \p first for ordering purposes
+     * \param[in] filter    Action flags to limit scope of certain updates (may
+     *                      include pe_action_optional to affect only mandatory
+     *                      actions, and pe_action_runnable to affect only
+     *                      runnable actions)
+     * \param[in] type      Group of enum pe_ordering flags to apply
+     * \param[in] data_set  Cluster working set
+     *
+     * \return Group of enum pcmk__updated flags indicating what was updated
+     */
+    uint32_t (*update_ordered_actions)(pe_action_t *first, pe_action_t *then,
+                                       pe_node_t *node, uint32_t flags,
+                                       uint32_t filter, uint32_t type,
+                                       pe_working_set_t *data_set);
+
     void (*output_actions)(pe_resource_t *rsc);
 
     void (*expand)(pe_resource_t *rsc);
@@ -143,6 +187,12 @@ struct resource_alloc_functions_s {
 G_GNUC_INTERNAL
 void pcmk__update_action_for_orderings(pe_action_t *action,
                                        pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+uint32_t pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
+                                      pe_node_t *node, uint32_t flags,
+                                      uint32_t filter, uint32_t type,
+                                      pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
 void pcmk__log_action(const char *pre_text, pe_action_t *action, bool details);

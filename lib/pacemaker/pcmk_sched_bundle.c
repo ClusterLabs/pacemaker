@@ -616,17 +616,15 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
     return NULL;
 }
 
-static enum pe_graph_flags
+static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, enum pe_action_flags flags,
-                                enum pe_action_flags filter,
-                                enum pe_ordering type,
+                                pe_node_t *node, uint32_t filter, uint32_t type,
                                 pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     GList *children = NULL;
     gboolean current = FALSE;
-    enum pe_graph_flags changed = pe_graph_none;
+    uint32_t changed = pcmk__updated_none;
 
     /* Fix this - lazy */
     if (pcmk__ends_with(first->uuid, "_stopped_0")
@@ -653,10 +651,10 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
              *   on the same node as then_child, then they must
              *   not be allowed to start
              */
-            if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
+            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
+                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
                 }
             }
 
@@ -736,14 +734,17 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                           then_action->uuid,
                           pcmk_is_set(then_action->flags, pe_action_optional),
                           type);
-                pe__set_graph_flags(changed, first,
-                                    pe_graph_updated_first|pe_graph_updated_then);
+                pcmk__set_updated_flags(changed, first,
+                                        pcmk__updated_first|pcmk__updated_then);
             }
             if(first_action && then_action) {
-                changed |= then_child->cmds->update_actions(first_action,
-                    then_action, node,
-                    first_child->cmds->action_flags(first_action, node),
-                    filter, type, data_set);
+                changed |= then_child->cmds->update_ordered_actions(first_action,
+                                                                    then_action,
+                                                                    node,
+                                                                    first_child->cmds->action_flags(first_action, node),
+                                                                    filter,
+                                                                    type,
+                                                                    data_set);
             } else {
                 crm_err("Nothing found either for %s (%p) or %s (%p) %s",
                         first_child->id, first_action,
@@ -791,44 +792,71 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
     return interleave;
 }
 
-enum pe_graph_flags
+/*!
+ * \internal
+ * \brief Update two actions according to an ordering between them
+ *
+ * Given information about an ordering of two actions, update the actions'
+ * flags (and runnable_before members if appropriate) as appropriate for the
+ * ordering. In some cases, the ordering could be disabled as well.
+ *
+ * \param[in] first     'First' action in an ordering
+ * \param[in] then      'Then' action in an ordering
+ * \param[in] node      If not NULL, limit scope of ordering to this node
+ *                      (only used when interleaving instances)
+ * \param[in] flags     Action flags for \p first for ordering purposes
+ * \param[in] filter    Action flags to limit scope of certain updates (may
+ *                      include pe_action_optional to affect only mandatory
+ *                      actions, and pe_action_runnable to affect only
+ *                      runnable actions)
+ * \param[in] type      Group of enum pe_ordering flags to apply
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, enum pe_action_flags flags,
-                           enum pe_action_flags filter, enum pe_ordering type,
-                           pe_working_set_t *data_set)
+                           pe_node_t *node, uint32_t flags, uint32_t filter,
+                           uint32_t type, pe_working_set_t *data_set)
 {
-    enum pe_graph_flags changed = pe_graph_none;
+    uint32_t changed = pcmk__updated_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, flags,
-                                                  filter, type, data_set);
+        changed = multi_update_interleave_actions(first, then, node, filter,
+                                                  type, data_set);
 
     } else if(then->rsc) {
         GList *gIter = NULL;
         GList *children = NULL;
 
         // Handle the 'primitive' ordering case
-        changed |= native_update_actions(first, then, node, flags, filter,
-                                         type, data_set);
+        changed |= pcmk__update_ordered_actions(first, then, node, flags,
+                                                filter, type, data_set);
 
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            enum pe_graph_flags then_child_changed = pe_graph_none;
+            uint32_t then_child_changed = pcmk__updated_none;
             pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
-                enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
+                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
+                                                                           node);
 
                 if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |= then_child->cmds->update_actions(first,
-                        then_child_action, node, flags, filter, type, data_set);
+                    then_child_changed |= then_child->cmds->update_ordered_actions(first,
+                                                                                   then_child_action,
+                                                                                   node,
+                                                                                   flags,
+                                                                                   filter,
+                                                                                   type,
+                                                                                   data_set);
                 }
                 changed |= then_child_changed;
-                if (then_child_changed & pe_graph_updated_then) {
+                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
 
