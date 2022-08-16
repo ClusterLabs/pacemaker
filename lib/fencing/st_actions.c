@@ -29,7 +29,6 @@ struct stonith_action_s {
     /*! user defined data */
     char *agent;
     char *action;
-    char *victim;
     GHashTable *args;
     int timeout;
     int async;
@@ -208,7 +207,6 @@ stonith__destroy_action(stonith_action_t *action)
             g_hash_table_destroy(action->args);
         }
         free(action->action);
-        free(action->victim);
         if (action->svc_action) {
             services_action_free(action->svc_action);
         }
@@ -249,7 +247,6 @@ stonith__action_create(const char *agent, const char *_action,
               _action, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
     action->action = strdup(_action);
-    pcmk__str_update(&action->victim, target);
     action->timeout = action->remaining_timeout = timeout;
     action->max_retries = FAILURE_MAX_RETRIES;
 
