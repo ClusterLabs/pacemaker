@@ -285,39 +285,39 @@ The resulting configuration should look something like the following:
 How pcs Configures the Guest
 ____________________________
 
-To see that it created the key and copied it to all cluster nodes and the
-guest, run:
+Let's take a closer look at what the ``pcs cluster node add-guest`` command is
+doing. There is no need to run any of the commands in this section.
+
+First, ``pcs`` copies the Pacemaker authkey file to the VM that will become the
+guest. If an authkey is not already present on the cluster nodes, this command
+creates one and distributes it to the existing nodes and to the guest.
+
+If you want to do this manually, you can run a command like the following to
+generate an authkey in ``/etc/pacemaker/authkey``, and then distribute the key
+to the rest of the nodes and to the new guest.
 
 .. code-block:: none
 
-    # ls -l /etc/pacemaker
+    [root@pcmk-1 ~]# dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 
-To see that it enables pacemaker_remote, run:
+Then ``pcs`` starts and enables the ``pacemaker_remote`` service on the guest.
+If you want to do this manually, run the following commands.
 
 .. code-block:: none
 
-    # systemctl status pacemaker_remote
-    
-    ● pacemaker_remote.service - Pacemaker Remote executor daemon
-       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
-       Active: active (running) since Wed 2021-03-17 08:31:01 EDT; 1min 5s ago
-         Docs: man:pacemaker-remoted
-               https://clusterlabs.org/pacemaker/doc/
-     Main PID: 90160 (pacemaker-remot)
-        Tasks: 1
-       Memory: 1.4M
-       CGroup: /system.slice/pacemaker_remote.service
-               └─90160 /usr/sbin/pacemaker-remoted
-    
-    Mar 17 08:31:01 guest1 systemd[1]: Started Pacemaker Remote executor daemon.
-    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Additional logging available in /var/log/pacemaker/pacemaker.log
-    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Starting Pacemaker remote executor
-    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Pacemaker remote executor successfully started and accepting connections
-.. NOTE::
+    [root@guest1 ~]# systemctl start pacemaker_remote
+    [root@guest1 ~]# systemctl enable pacemaker_remote
 
-    Pacemaker will automatically monitor pacemaker_remote connections for failure,
-    so it is not necessary to create a recurring monitor on the **VirtualDomain**
-    resource.
+Finally, ``pcs`` creates a guest node from the ``VirtualDomain`` resource by
+adding ``remote-addr`` and ``remote-node`` meta attributes to the resource. If
+you want to do this manually, you can run the following command if you're using
+``pcs``. Alternativately, run an equivalent command if you're using another
+cluster shell, or edit the CIB manually.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource update vm-guest1 meta remote-addr='guest1' \
+        remote-node='guest1' --force
 
 Starting Resources on KVM Guest
 ###############################
@@ -557,118 +557,6 @@ natively on the guest node, as long as the connection between the guest node
 and a cluster node exists. This is particularly important for any promotable
 clone resources executing on the guest node that need access to
 ``crm_attribute`` to set promotion scores.
-
-Mile-High View of Configuration Steps
-#####################################
-
-The command used in `Integrate Guest Node into Cluster`_ does multiple things.
-If you'd like to each part manually, you can do so as follows. You'll see that the
-end result is the same:
-
-* Later, we are going to put the same authentication key with the path
-  ``/etc/pacemaker/authkey`` on every cluster node and on every virtual machine.
-  This secures remote communication.
-
-  Run this command on your cluster node if you want to make a somewhat random key:
-
-  .. code-block:: none
-
-     # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
-
-
-* To create the VirtualDomain resource agent for the management of the virtual
-  machine, Pacemaker requires the virtual machine's xml config file to be dumped
-  to a file -- which we can name as we'd like -- on disk. We named our virtual
-  machine guest1; for this example, we'll dump to the file /etc/pacemaker/guest1.xml
-
-  .. code-block:: none
-
-    # virsh dumpxml guest1 > /etc/pacemaker/guest1.xml
-
-* Install pacemaker_remote on the virtual machine, and if a local firewall is used,
-  allow the node to accept connections on TCP port 3121.
-
-  .. code-block:: none
-
-    # yum install pacemaker-remote resource-agents
-    # firewall-cmd --add-port 3121/tcp --permanent
-
-  .. NOTE::
-
-      If you just want to see this work, you may want to simply disable the local
-      firewall and put SELinux in permissive mode while testing. This creates
-      security risks and should not be done on a production machine exposed to the
-      Internet, but can be appropriate for a protected test machine.
-
-* On a cluster node, create a Pacemaker VirtualDomain resource to launch the virtual machine.
-
-  .. code-block:: none
-
-    [root@pcmk-1 ~]# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta
-    Assumed agent name 'ocf:heartbeat:VirtualDomain' (deduced from 'VirtualDomain')
-
-* Now use the following command to convert the VirtualDomain resource into a guest node
-  which we'll name guest1. By doing so, the /etc/pacemaker/authkey will get copied to
-  the guest node and the pacemaker_remote daemon will get started and enabled on the
-  guest node as well.
-
-  .. code-block:: none
-
-    [root@pcmk-1 ~]# pcs cluster node add-guest guest1 vm-guest1
-    No addresses specified for host 'guest1', using 'guest1'
-    Sending 'pacemaker authkey' to 'guest1'
-    guest1: successful distribution of the file 'pacemaker authkey'
-    Requesting 'pacemaker_remote enable', 'pacemaker_remote start' on 'guest1'
-    guest1: successful run of 'pacemaker_remote enable'
-    guest1: successful run of 'pacemaker_remote start'
-
-*  This will create CIB XML similar to the following:
-
-  .. code-block:: xml
-
-     <primitive class="ocf" id="vm-guest1" provider="heartbeat" type="VirtualDomain">
-       <meta_attributes id="vm-guest1-meta_attributes">
-         <nvpair id="vm-guest1-meta_attributes-remote-addr" name="remote-addr" value="guest1"/>
-         <nvpair id="vm-guest1-meta_attributes-remote-node" name="remote-node" value="guest1"/>
-       </meta_attributes>
-       <instance_attributes id="vm-guest1-instance_attributes">
-         <nvpair id="vm-guest1-instance_attributes-config" name="config" value="vm-guest1.xml"/>
-         <nvpair id="vm-guest1-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
-       </instance_attributes>
-       <operations>
-         <op id="vm-guest1-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="60s"/>
-         <op id="vm-guest1-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="120s"/>
-         <op id="vm-guest1-monitor-interval-10s" interval="10s" name="monitor" timeout="30s"/>
-         <op id="vm-guest1-start-interval-0s" interval="0s" name="start" timeout="90s"/>
-         <op id="vm-guest1-stop-interval-0s" interval="0s" name="stop" timeout="90s"/>
-       </operations>
-     </primitive>
-
-  .. code-block:: xml
-
-    [root@pcmk-1 ~]# pcs resource status
-      * vm-guest1 (ocf::heartbeat:VirtualDomain): Stopped
-
-    [root@pcmk-1 ~]# pcs resource config
-     Resource: vm-guest1 (class=ocf provider=heartbeat type=VirtualDomain)
-      Attributes: config=vm-guest1.xml hypervisor=qemu:///system
-      Meta Attrs: remote-addr=guest1 remote-node=guest1
-      Operations: migrate_from interval=0s timeout=60s (vm-guest1-migrate_from-interval-0s)
-                  migrate_to interval=0s timeout=120s (vm-guest1-migrate_to-interval-0s)
-                  monitor interval=10s timeout=30s (vm-guest1-monitor-interval-10s)
-                  start interval=0s timeout=90s (vm-guest1-start-interval-0s)
-                  stop interval=0s timeout=90s (vm-guest1-stop-interval-0s)
-
-The cluster will attempt to contact the virtual machine's pacemaker_remote service at the
-hostname **guest1** after it launches.
-
-.. NOTE::
-
-    The ID of the resource creating the virtual machine (**vm-guest1** in the above
-    example) 'must' be different from the virtual machine's uname (**guest1** in the
-    above example). Pacemaker will create an implicit internal resource for the
-    pacemaker_remote connection to the guest, named with the value of **remote-node**,
-    so that value cannot be used as the name of any other resource.
 
 Troubleshooting a Remote Connection
 ###################################
