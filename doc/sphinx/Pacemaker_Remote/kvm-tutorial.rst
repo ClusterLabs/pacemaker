@@ -191,6 +191,37 @@ Now we can confirm that the ``VirtualDomain`` resource is running on ``pcmk-1``.
     [root@pcmk-1 ~]# pcs resource status
       * vm-guest1	(ocf:heartbeat:VirtualDomain):	 Started pcmk-1
 
+Prepare ``pcsd``
+________________
+
+Now we need to prepare ``pcsd`` on the guest so that we can use ``pcs`` commands
+to communicate with it.
+
+Start and enable the ``pcsd`` daemon on the guest.
+
+.. code-block:: none
+
+    [root@guest1 ~]# systemctl start pcsd
+    [root@guest1 ~]# systemctl enable pcsd
+    Created symlink /etc/systemd/system/multi-user.target.wants/pcsd.service → /usr/lib/systemd/system/pcsd.service.
+
+Next, set a password for the ``hacluster`` user on the guest.
+
+.. code-block:: none
+
+    [root@guest1 ~]# echo MyPassword | passwd --stdin hacluster
+    Changing password for user hacluster.
+    passwd: all authentication tokens updated successfully.
+
+Now authenticate the existing cluster nodes to ``pcsd`` on the guest. The below
+command only needs to be run from one cluster node.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs host auth guest1 -u hacluster
+    Password: 
+    guest1: Authorized
+
 Integrate Guest Node into Cluster
 _________________________________
 
