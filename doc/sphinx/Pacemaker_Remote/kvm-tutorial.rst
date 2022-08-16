@@ -225,16 +225,23 @@ command only needs to be run from one cluster node.
 Integrate Guest Node into Cluster
 _________________________________
 
-We will use the following command, which creates the VirtualDomain resource,
-creates and copies the key, and enables pacemaker_remote:
+We're finally ready to integrate the VM into the cluster as a guest node. Run
+the following command, which will create a guest node from the ``VirtualDomain``
+resource and take care of all the remaining steps. Note that the format is ``pcs
+cluster node add-guest <guest_name> <vm_resource_name>``.
 
 .. code-block:: none
 
-    # pcs cluster node add-guest guest1
+    [root@pcmk-1 ~]# pcs cluster node add-guest guest1 vm-guest1
+    No addresses specified for host 'guest1', using 'guest1'
+    Sending 'pacemaker authkey' to 'guest1'
+    guest1: successful distribution of the file 'pacemaker authkey'
+    Requesting 'pacemaker_remote enable', 'pacemaker_remote start' on 'guest1'
+    guest1: successful run of 'pacemaker_remote enable'
+    guest1: successful run of 'pacemaker_remote start'
 
-Once the **vm-guest1** resource is started you will see **guest1** appear in the
-``pcs status`` output as a node.  The final ``pcs status`` output should look
-something like this, and you can see that it created the VirtualDomain resource:
+You should soon see ``guest1`` appear in the ``pcs status`` output as a node.
+The output should look something like this:
 
 .. code-block:: none
 
@@ -260,6 +267,20 @@ something like this, and you can see that it created the VirtualDomain resource:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
+
+The resulting configuration should look something like the following:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource config
+     Resource: vm-guest1 (class=ocf provider=heartbeat type=VirtualDomain)
+      Attributes: config=/etc/libvirt/qemu/vm-guest1.xml hypervisor=qemu:///system
+      Meta Attrs: remote-addr=guest1 remote-node=guest1
+      Operations: migrate_from interval=0s timeout=60s (vm-guest1-migrate_from-interval-0s)
+                  migrate_to interval=0s timeout=120s (vm-guest1-migrate_to-interval-0s)
+                  monitor interval=10s timeout=30s (vm-guest1-monitor-interval-10s)
+                  start interval=0s timeout=90s (vm-guest1-start-interval-0s)
+                  stop interval=0s timeout=90s (vm-guest1-stop-interval-0s)
 
 How pcs Configures the Guest
 ____________________________
