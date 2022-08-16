@@ -1526,6 +1526,7 @@ class CtsScheduler(object):
             did_fail = True
 
         remove_files([ output_filename,
+                       dot_output_filename,
                        score_output_filename,
                        summary_output_filename])
 
