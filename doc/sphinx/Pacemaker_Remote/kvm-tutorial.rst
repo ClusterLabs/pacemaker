@@ -134,8 +134,6 @@ On the host, start Pacemaker.
 
     # pcs cluster start
 
-Wait for the host to become the DC.
-
 Integrate Guest Node into Cluster
 _________________________________
 
