@@ -18,6 +18,7 @@
 #include <setjmp.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 #include <grp.h>
 
 #include <cmocka.h>
@@ -49,6 +50,7 @@
  *   cases for examples.
  */
 
+// LCOV_EXCL_START
 
 /* calloc()
  *
@@ -79,6 +81,23 @@ char *
 __wrap_getenv(const char *name)
 {
     return pcmk__mock_getenv? mock_ptr_type(char *) : __real_getenv(name);
+}
+
+
+/* getpid()
+ *
+ * If pcmk__mock_getpid is set to true, later calls to getpid() must be preceded
+ * by:
+ *
+ *     will_return(__wrap_getpid, return_value);
+ */
+
+bool pcmk__mock_getpid = false;
+
+pid_t
+__wrap_getpid(void)
+{
+    return pcmk__mock_getpid? mock_type(pid_t) : __real_getpid();
 }
 
 
@@ -262,3 +281,5 @@ __wrap_uname(struct utsname *buf)
         return __real_uname(buf);
     }
 }
+
+// LCOV_EXCL_STOP

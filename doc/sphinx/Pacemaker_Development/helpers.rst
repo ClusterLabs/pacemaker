@@ -231,7 +231,8 @@ is no ``lib/common/tests/acls`` directory.
 
   .. code-block:: none
 
-     LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+     LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
+             -lcmocka
      AM_CFLAGS = -DPCMK__UNIT_TESTING
      AM_LDFLAGS = $(LDFLAGS_WRAP)
 

@@ -25,7 +25,8 @@ check_PROGRAMS =				\
 	crm_user_lookup_test			\
 	pcmk_daemon_user_test			\
 	pcmk_str_is_infinity_test		\
-	pcmk_str_is_minus_infinity_test
+	pcmk_str_is_minus_infinity_test \
+	pcmk__getpid_s_test
 
 if WRAPPABLE_UNAME
 check_PROGRAMS += pcmk_hostname_test

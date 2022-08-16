@@ -30,6 +30,7 @@ check_PROGRAMS = \
 		pcmk__guint_from_hash_test	\
 		pcmk__numeric_strcasecmp_test \
 		pcmk__parse_ll_range_test	\
+		pcmk__s_test				\
 		pcmk__scan_double_test		\
 		pcmk__scan_min_int_test		\
 		pcmk__scan_port_test		\
