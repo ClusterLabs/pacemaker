@@ -104,7 +104,8 @@ handle_update_request(pcmk__request_t *request)
         /* Because attrd_client_update can be called recursively, we send the ACK
          * here to ensure that the client only ever receives one.
          */
-        attrd_send_ack(request->ipc_client, request->ipc_id, request->flags);
+        attrd_send_ack(request->ipc_client, request->ipc_id,
+                       request->flags|crm_ipc_client_response);
         return attrd_client_update(request);
     }
 }
