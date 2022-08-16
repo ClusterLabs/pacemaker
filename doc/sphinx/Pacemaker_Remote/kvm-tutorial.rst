@@ -17,20 +17,6 @@ Configure Cluster Nodes
 
 This walk-through assumes you already have a Pacemaker cluster configured. For examples, we will use a cluster with two cluster nodes named pcmk-1 and pcmk-2. You can substitute whatever your node names are, for however many nodes you have. If you are not familiar with setting up basic Pacemaker clusters, follow the walk-through in the Clusters From Scratch document before attempting this one.
 
-You will need to add the remote node's hostname (we're using **guest1** in
-this tutorial) to the cluster nodes' ``/etc/hosts`` files if you haven't already.
-This is required unless you have DNS set up in a way where guest1's address can be
-discovered.
-
-Execute the following on each cluster node, replacing the IP address with the
-actual IP address of the remote node.
-
-.. code-block:: none
-
-    # cat << END >> /etc/hosts
-    192.168.122.10    guest1
-    END
-
 Install Virtualization Software
 _______________________________
 
@@ -88,6 +74,33 @@ Configure Firewall on Guest
 ___________________________
 
 On each guest, allow cluster-related services through the local firewall.
+
+Configure ``/etc/hosts``
+________________________
+
+You will need to add the remote node's hostname (we're using **guest1** in
+this tutorial) to the cluster nodes' ``/etc/hosts`` files if you haven't already.
+This is required unless you have DNS set up in a way where guest1's address can be
+discovered.
+
+For each guest, execute the following on each cluster node and on the guests,
+replacing the IP address with the actual IP address of the guest node.
+
+.. code-block:: none
+
+    # cat << END >> /etc/hosts
+    192.168.122.10  guest1
+    END
+
+Also add entries for each cluster node to the ``/etc/hosts`` file on each guest.
+For example:
+
+.. code-block:: none
+
+   # cat << END >> /etc/hosts
+   192.168.122.101  pcmk-1
+   192.168.122.102  pcmk-2
+   END
 
 Verify Connectivity
 ___________________
