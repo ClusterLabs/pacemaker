@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import psutil
 import re
 import sys
 import subprocess
@@ -166,6 +167,15 @@ def killall(process):
     cmd = shlex.split("killall -9 -q %s" % process)
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     test.wait()
+
+
+def is_proc_running(process_name):
+    """ Check whether a process with a given name is running """
+
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] == process_name:
+            return True
+    return False
 
 
 class TestError(Exception):
@@ -1571,6 +1581,11 @@ class TestOptions(object):
 def main(argv):
     """ Run fencing regression tests as specified by arguments """
 
+    if is_proc_running("pacemaker-fenced"):
+        print("Error: pacemaker-fenced is already running!")
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
+        
     update_path()
 
     # Ensure all command output is in portable locale for comparison
