@@ -47,10 +47,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     peer_won = attrd_check_for_new_writer(peer, xml);
 
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
-        attrd_peer_sync(peer, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {
         /* This is a separate test to prevent falling into the unknown message
          * handler below.  Sometimes, we get PCMK__ATTRD_CMD_SYNC_RESPONSE without
          * the unames being equal, and in that case we just want to do nothing.
