@@ -49,14 +49,14 @@ enum st_device_flags
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
-stonith_action_t *stonith_action_create(const char *agent,
-                                        const char *_action,
-                                        const char *victim,
-                                        uint32_t victim_nodeid,
-                                        int timeout,
-                                        GHashTable * device_args,
-                                        GHashTable * port_map,
-                                        const char * host_arg);
+stonith_action_t *stonith__action_create(const char *agent,
+                                         const char *_action,
+                                         const char *target,
+                                         uint32_t target_nodeid,
+                                         int timeout,
+                                         GHashTable *device_args,
+                                         GHashTable *port_map,
+                                         const char *host_arg);
 void stonith__destroy_action(stonith_action_t *action);
 pcmk__action_result_t *stonith__action_result(stonith_action_t *action);
 int stonith__result2rc(const pcmk__action_result_t *result);

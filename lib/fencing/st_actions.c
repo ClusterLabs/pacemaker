@@ -233,25 +233,23 @@ stonith__action_result(stonith_action_t *action)
 
 #define FAILURE_MAX_RETRIES 2
 stonith_action_t *
-stonith_action_create(const char *agent,
-                      const char *_action,
-                      const char *victim,
-                      uint32_t victim_nodeid,
-                      int timeout, GHashTable * device_args,
-                      GHashTable * port_map, const char *host_arg)
+stonith__action_create(const char *agent, const char *_action,
+                       const char *target, uint32_t target_nodeid,
+                       int timeout, GHashTable *device_args,
+                       GHashTable *port_map, const char *host_arg)
 {
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
     CRM_ASSERT(action != NULL);
 
-    action->args = make_args(agent, _action, victim, victim_nodeid,
+    action->args = make_args(agent, _action, target, target_nodeid,
                              device_args, port_map, host_arg);
-    crm_debug("Preparing '%s' action for %s using agent %s",
-              _action, (victim? victim : "no target"), agent);
+    crm_debug("Preparing '%s' action targeting %s using agent %s",
+              _action, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
     action->action = strdup(_action);
-    pcmk__str_update(&action->victim, victim);
+    pcmk__str_update(&action->victim, target);
     action->timeout = action->remaining_timeout = timeout;
     action->max_retries = FAILURE_MAX_RETRIES;
 

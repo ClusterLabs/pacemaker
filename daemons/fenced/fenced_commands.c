@@ -540,12 +540,9 @@ stonith_device_execute(stonith_device_t * device)
         host_arg = "plug";
     }
 
-    action = stonith_action_create(device->agent,
-                                   action_str,
-                                   cmd->target,
-                                   cmd->target_nodeid,
-                                   cmd->timeout, device->params,
-                                   device->aliases, host_arg);
+    action = stonith__action_create(device->agent, action_str, cmd->target,
+                                    cmd->target_nodeid, cmd->timeout,
+                                    device->params, device->aliases, host_arg);
 
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
