@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import psutil
 import re
 import sys
 import subprocess
@@ -160,12 +161,43 @@ def localname():
     return our_uname
 
 
-def killall(process):
-    """ Kill all instances of a process """
+def killall(process_names=[], terminate=False):
+    """ Kill all instances of every process in a list """
 
-    cmd = shlex.split("killall -9 -q %s" % process)
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    test.wait()
+    if not process_names:
+        return
+
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] in process_names:
+            procs.append(proc)
+
+    if terminate:
+        for proc in procs:
+            proc.terminate()
+        gone, alive = psutil.wait_procs(procs, timeout=3)
+        procs = alive
+
+    for proc in procs:
+        proc.kill()
+
+
+def is_proc_running(process_name):
+    """ Check whether a process with a given name is running """
+
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] == process_name:
+            return True
+    return False
+
+
+def exit_if_proc_running(process_name):
+    """ Exit with error if a given process is running """
+
+    if is_proc_running(process_name):
+        print("Error: %s is already running!" % process_name)
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
 
 
 class TestError(Exception):
@@ -266,8 +298,7 @@ class Test(object):
         """ Prepare the host for executing a test """
 
         # Make sure we are in full control
-        killall("pacemakerd")
-        killall("pacemaker-fenced")
+        killall(["pacemakerd", "pacemaker-fenced"])
 
         if self.verbose:
             self.stonith_options = self.stonith_options + " -V"
@@ -1475,7 +1506,7 @@ class Tests(object):
                 corosync_cfg.close()
 
             ### make sure we are in control ###
-            killall("corosync")
+            killall(["corosync"])
             self.start_corosync()
 
         subprocess.call(["cts-support", "install"])
@@ -1484,7 +1515,7 @@ class Tests(object):
         """ Clean up the host after executing desired tests """
 
         if use_corosync:
-            killall("corosync")
+            killall(["corosync"])
 
             if self.autogen_corosync_cfg:
                 if self.verbose:
@@ -1579,7 +1610,11 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    use_corosync = 1
+    exit_if_proc_running("pacemaker-fenced")
+
+    use_corosync = not opts.options['no-cpg']
+    if use_corosync:
+        exit_if_proc_running("corosync")
 
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
@@ -1607,9 +1642,6 @@ def main(argv):
             sys.exit(CrmExit.OK)
 
         print("Starting ...")
-
-        if opts.options['no-cpg']:
-            use_corosync = 0
 
         tests.setup_environment(use_corosync)
 
