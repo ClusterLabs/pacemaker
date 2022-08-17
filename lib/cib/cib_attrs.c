@@ -144,8 +144,9 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
     CRM_LOG_ASSERT(offset > 0);
 
-    rc = cib_internal_op(cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
-                         cib_sync_call | cib_scope_local | cib_xpath, user_name);
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, xpath_string, NULL,
+                         &xml_search, cib_sync_call|cib_scope_local| cib_xpath,
+                         user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
@@ -336,8 +337,8 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     }
 
     crm_log_xml_trace(xml_top, "update_attr");
-    rc = cib_internal_op(cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
-                         call_options | cib_quorum_override, user_name);
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
+                         NULL, call_options|cib_quorum_override, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
 
@@ -412,8 +413,8 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
 
     xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
 
-    rc = cib_internal_op(cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
-                         options | cib_quorum_override, user_name);
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
+                         NULL, options|cib_quorum_override, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
     } else {
@@ -653,8 +654,9 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
 
     xpath_string = crm_strdup_printf(XPATH_NODE, host_lowercase, host_lowercase, host_lowercase, host_lowercase);
-    if (cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL,
-                        &xml_search, cib_sync_call|cib_scope_local|cib_xpath,
+    if (cib_internal_op(the_cib, PCMK__CIB_REQUEST_QUERY, NULL, xpath_string,
+                        NULL, &xml_search,
+                        cib_sync_call|cib_scope_local|cib_xpath,
                         NULL) == pcmk_ok) {
         rc = get_uuid_from_result(xml_search, uuid, is_remote_node);
     } else {

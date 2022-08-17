@@ -315,8 +315,9 @@ attrd_write_attribute(attribute_t *a, bool ignore_delay)
     if (cib_updates) {
         crm_log_xml_trace(xml_top, __func__);
 
-        a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
-                                    flags, a->user);
+        a->update = cib_internal_op(the_cib, PCMK__CIB_REQUEST_MODIFY, NULL,
+                                    XML_CIB_TAG_STATUS, xml_top, NULL, flags,
+                                    a->user);
 
         crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
                  a->update, cib_updates, pcmk__plural_s(cib_updates),

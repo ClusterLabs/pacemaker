@@ -472,11 +472,11 @@ main(int argc, char **argv)
                                       cib_xpath_address);
                 break;
             case 'u':
-                cib_action = CIB_OP_UPGRADE;
+                cib_action = PCMK__CIB_REQUEST_UPGRADE;
                 dangerous_cmd = TRUE;
                 break;
             case 'E':
-                cib_action = CIB_OP_ERASE;
+                cib_action = PCMK__CIB_REQUEST_ERASE;
                 dangerous_cmd = TRUE;
                 break;
             case 'S':
@@ -504,25 +504,25 @@ main(int argc, char **argv)
                 command_options |= cib_sync_call;
                 break;
             case 'Q':
-                cib_action = CIB_OP_QUERY;
+                cib_action = PCMK__CIB_REQUEST_QUERY;
                 break;
             case 'P':
-                cib_action = CIB_OP_APPLY_DIFF;
+                cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
                 break;
             case 'U':
                 cib_user = optarg;
                 break;
             case 'M':
-                cib_action = CIB_OP_MODIFY;
+                cib_action = PCMK__CIB_REQUEST_MODIFY;
                 break;
             case 'R':
-                cib_action = CIB_OP_REPLACE;
+                cib_action = PCMK__CIB_REQUEST_REPLACE;
                 break;
             case 'C':
-                cib_action = CIB_OP_CREATE;
+                cib_action = PCMK__CIB_REQUEST_CREATE;
                 break;
             case 'D':
-                cib_action = CIB_OP_DELETE;
+                cib_action = PCMK__CIB_REQUEST_DELETE;
                 break;
             case '5':
                 cib_action = "md5-sum";
@@ -539,7 +539,7 @@ main(int argc, char **argv)
                                       cib_no_children);
                 break;
             case 'B':
-                cib_action = CIB_OP_BUMP;
+                cib_action = PCMK__CIB_REQUEST_BUMP;
                 crm_log_args(argc, argv);
                 break;
             case 'V':
@@ -579,7 +579,7 @@ main(int argc, char **argv)
                                       cib_scope_local);
                 break;
             case 'd':
-                cib_action = CIB_OP_DELETE;
+                cib_action = PCMK__CIB_REQUEST_DELETE;
                 cib__set_call_options(command_options, crm_system_name,
                                       cib_multiple);
                 dangerous_cmd = TRUE;
@@ -757,7 +757,8 @@ main(int argc, char **argv)
         g_main_loop_run(mainloop);
 
     } else if ((rc == -pcmk_err_schema_unchanged)
-               && pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
+               && pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
+                               pcmk__str_none)) {
         report_schema_unchanged();
 
     } else if (rc < 0) {
@@ -766,7 +767,8 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
 
         if (rc == pcmk_rc_schema_validation) {
-            if (pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
+            if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_UPGRADE,
+                             pcmk__str_none)) {
                 xmlNode *obj = NULL;
                 int version = 0;
 
@@ -845,7 +847,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
 {
     /* construct the request */
     the_cib->call_timeout = message_timeout_ms;
-    if (strcasecmp(CIB_OP_REPLACE, cib_action) == 0
+    if ((strcmp(cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = pcmk_find_cib_element(input, XML_CIB_TAG_STATUS);
 
@@ -895,7 +897,8 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         fprintf(stderr, "Call %s failed: %s\n", cib_action, pcmk_rc_str(rc));
         print_xml_output(output);
 
-    } else if (pcmk__str_eq(cib_action, CIB_OP_QUERY, pcmk__str_casei) && output == NULL) {
+    } else if (pcmk__str_eq(cib_action, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)
+               && (output == NULL)) {
         crm_err("Query returned no output");
         crm_log_xml_err(msg, "no output");
 

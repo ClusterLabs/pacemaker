@@ -86,10 +86,7 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
         result = -EINVAL;
         crm_err("No operation specified");
 
-    } else if (strcasecmp(CRM_OP_NOOP, op) == 0) {
-        ;
-
-    } else {
+    } else if (strcmp(PCMK__CIB_REQUEST_NOOP, op) != 0) {
         result = -EPROTONOSUPPORT;
         crm_err("Action [%s] is not supported by the CIB manager", op);
     }
@@ -105,7 +102,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
-    if (pcmk__str_eq(op, CIB_OP_ISMASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
         if (cib_is_master == TRUE) {
             result = pcmk_ok;
         } else {
@@ -114,7 +111,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
         return result;
     }
 
-    if (pcmk__str_eq(op, CIB_OP_MASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
         if (cib_is_master == FALSE) {
             crm_info("We are now in R/W mode");
             cib_is_master = TRUE;
@@ -144,7 +141,7 @@ send_sync_request(const char *host)
     sync_in_progress = 1;
 
     crm_xml_add(sync_me, F_TYPE, "cib");
-    crm_xml_add(sync_me, F_CIB_OPERATION, CIB_OP_SYNC_ONE);
+    crm_xml_add(sync_me, F_CIB_OPERATION, PCMK__CIB_REQUEST_SYNC_TO_ONE);
     crm_xml_add(sync_me, F_CIB_DELEGATED, cib_our_uname);
 
     send_cluster_message(host ? crm_get_peer(0, host) : NULL, crm_msg_cib, sync_me, FALSE);
@@ -246,7 +243,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_notice("Upgrade request from %s verified", host);
 
             crm_xml_add(up, F_TYPE, "cib");
-            crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+            crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
             crm_xml_add(up, F_CIB_DELEGATED, host);
             crm_xml_add(up, F_CIB_CLIENTID, client_id);
@@ -279,7 +276,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 xmlNode *up = create_xml_node(NULL, __func__);
 
                 crm_xml_add(up, F_TYPE, "cib");
-                crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+                crm_xml_add(up, F_CIB_OPERATION, PCMK__CIB_REQUEST_UPGRADE);
                 crm_xml_add(up, F_CIB_DELEGATED, host);
                 crm_xml_add(up, F_CIB_ISREPLY, host);
                 crm_xml_add(up, F_CIB_CLIENTID, client_id);
@@ -423,7 +420,7 @@ sync_our_cib(xmlNode * request, gboolean all)
         xml_remove_prop(replace_request, F_CIB_HOST);
     }
 
-    crm_xml_add(replace_request, F_CIB_OPERATION, CIB_OP_REPLACE);
+    crm_xml_add(replace_request, F_CIB_OPERATION, PCMK__CIB_REQUEST_REPLACE);
     crm_xml_add(replace_request, "original_" F_CIB_OPERATION, op);
     pcmk__xe_set_bool_attr(replace_request, F_CIB_GLOBAL_UPDATE, true);
 

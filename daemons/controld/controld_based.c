@@ -319,8 +319,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     // Ask CIB to delete the entry
     xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
-    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, xpath, NULL,
-                         NULL, call_options|cib_xpath, user_name);
+    rc = cib_internal_op(fsa_cib_conn, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
+                         NULL, NULL, call_options|cib_xpath, user_name);
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);

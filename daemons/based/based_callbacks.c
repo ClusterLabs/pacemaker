@@ -532,7 +532,8 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
                        gboolean *process, gboolean *needs_forward)
 {
     if (cib_op_modifies(call_type)) {
-        if (pcmk__strcase_any_of(op, CIB_OP_MASTER, CIB_OP_SLAVE, NULL)) {
+        if (pcmk__str_any_of(op, PCMK__CIB_REQUEST_PRIMARY,
+                             PCMK__CIB_REQUEST_SECONDARY, NULL)) {
             /* Always handle these locally */
             *process = TRUE;
             *needs_reply = FALSE;
@@ -620,7 +621,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
 
     op = crm_element_value(request, F_CIB_OPERATION);
     crm_trace("Processing %s request sent by %s", op, originator);
-    if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Always process these */
         *local_notify = FALSE;
         if (reply_to == NULL || is_reply) {
@@ -672,7 +673,7 @@ parse_peer_options_v1(int call_type, xmlNode * request,
         /* this is for the master instance and we're not it */
         crm_trace("Ignoring reply for primary instance");
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         if (reply_to != NULL) {
             crm_debug("Processing %s from %s", op, originator);
             *needs_reply = FALSE;
@@ -703,25 +704,27 @@ parse_peer_options_v2(int call_type, xmlNode * request,
 
     gboolean is_reply = pcmk__str_eq(reply_to, cib_our_uname, pcmk__str_casei);
 
-    if(pcmk__str_eq(op, CIB_OP_REPLACE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         /* sync_our_cib() sets F_CIB_ISREPLY */
         if (reply_to) {
             delegated = reply_to;
         }
         goto skip_is_reply;
 
-    } else if(pcmk__str_eq(op, CIB_OP_SYNC, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
+                            pcmk__str_none)) {
+        // Nothing to do
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         process_ping_reply(request);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, CIB_OP_UPGRADE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if F_CIB_SCHEMA_MAX is unset
          *
          * If the DC is happy it will then send out another
-         * CIB_OP_UPGRADE which will tell all nodes to do the actual
+         * PCMK__CIB_REQUEST_UPGRADE which will tell all nodes to do the actual
          * upgrade.
          *
          * Except this time F_CIB_SCHEMA_MAX will be set which puts a
@@ -762,7 +765,7 @@ parse_peer_options_v2(int call_type, xmlNode * request,
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
         return FALSE;
 
-    } else if (pcmk__str_eq(op, "cib_shutdown_req", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* Legacy handling */
         crm_debug("Legacy handling of %s message from %s", op, originator);
         *local_notify = FALSE;
@@ -890,7 +893,7 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
 
         crm_xml_add(msg, F_CIB_ISREPLY, originator);
         pcmk__xe_set_bool_attr(msg, F_CIB_GLOBAL_UPDATE, true);
-        crm_xml_add(msg, F_CIB_OPERATION, CIB_OP_APPLY_DIFF);
+        crm_xml_add(msg, F_CIB_OPERATION, PCMK__CIB_REQUEST_APPLY_PATCH);
         crm_xml_add(msg, F_CIB_USER, CRM_DAEMON_USER);
 
         if (format == 1) {
@@ -1001,7 +1004,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         const char *section = crm_element_value(request, F_CIB_SECTION);
         int log_level = LOG_INFO;
 
-        if (pcmk__str_eq(op, CRM_OP_NOOP, pcmk__str_casei)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
             log_level = LOG_DEBUG;
         }
 
@@ -1273,7 +1276,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
 
         /* Calculate the hash value of the section before the change. */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             current_nodes_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES, current_cib);
             current_alerts_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_ALERTS, current_cib);
             current_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, current_cib);
@@ -1302,7 +1305,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         /* Always write to disk for replace ops,
          * this also negates the need to detect ordering changes
          */
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             config_changed = TRUE;
         }
     }
@@ -1323,7 +1326,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
+        if (pcmk__str_eq(PCMK__CIB_REQUEST_REPLACE, op, pcmk__str_none)) {
             char *result_nodes_digest = NULL;
             char *result_alerts_digest = NULL;
             char *result_status_digest = NULL;
@@ -1352,7 +1355,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             free(result_alerts_digest);
             free(result_status_digest);
 
-        } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
+        } else if (pcmk__str_eq(PCMK__CIB_REQUEST_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
         }
 
@@ -1568,7 +1571,7 @@ initiate_exit(void)
 
     leaving = create_xml_node(NULL, "exit-notification");
     crm_xml_add(leaving, F_TYPE, "cib");
-    crm_xml_add(leaving, F_CIB_OPERATION, "cib_shutdown_req");
+    crm_xml_add(leaving, F_CIB_OPERATION, PCMK__CIB_REQUEST_SHUTDOWN);
 
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
     free_xml(leaving);
