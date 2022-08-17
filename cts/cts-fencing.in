@@ -178,6 +178,15 @@ def is_proc_running(process_name):
     return False
 
 
+def exit_if_proc_running(process_name):
+    """ Exit with error if a given process is running """
+
+    if is_proc_running(process_name):
+        print("Error: %s is already running!" % process_name)
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
+
+
 class TestError(Exception):
     """ Base class for exceptions in this module """
     pass
@@ -1581,11 +1590,6 @@ class TestOptions(object):
 def main(argv):
     """ Run fencing regression tests as specified by arguments """
 
-    if is_proc_running("pacemaker-fenced"):
-        print("Error: pacemaker-fenced is already running!")
-        print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(CrmExit.ERROR)
-        
     update_path()
 
     # Ensure all command output is in portable locale for comparison
@@ -1594,7 +1598,11 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    use_corosync = 1
+    exit_if_proc_running("pacemaker-fenced")
+
+    use_corosync = not opts.options['no-cpg']
+    if use_corosync:
+        exit_if_proc_running("corosync")
 
     # Create a temporary directory for log files (the directory and its
     # contents will automatically be erased when done)
@@ -1622,9 +1630,6 @@ def main(argv):
             sys.exit(CrmExit.OK)
 
         print("Starting ...")
-
-        if opts.options['no-cpg']:
-            use_corosync = 0
 
         tests.setup_environment(use_corosync)
 

@@ -111,6 +111,16 @@ def is_proc_running(process_name):
     return False
 
 
+def exit_if_proc_running(process_name):
+    """ Exit with error if a given process is running """
+
+    if is_proc_running(process_name):
+        print("Error: %s is already running!" % process_name)
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
+
+
+def main(argv):
 class TestError(Exception):
     """ Base class for exceptions in this module """
     pass
@@ -1253,10 +1263,7 @@ def main(argv):
     else:
         daemon_name = "pacemaker-execd"
 
-    if is_proc_running(daemon_name):
-        print("Error: %s is already running!" % daemon_name)
-        print("Run %s only when the cluster is stopped." % sys.argv[0])
-        sys.exit(CrmExit.ERROR)
+    exit_if_proc_running(daemon_name)
 
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)
