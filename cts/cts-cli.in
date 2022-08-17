@@ -1076,6 +1076,78 @@ function test_tools() {
     cmd="crm_resource -r promotable-rsc:0 --move --node node1"
     test_assert $CRM_EX_INVALID_PARAM 0
 
+    desc="Query a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Delete a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D"
+    test_assert $CRM_EX_OK 0
+
+    desc="Delete a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after deleting a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after deleting a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Update a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after updating a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query after updating a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Update an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 5"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 5 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after updating an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query after updating an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D"
+    test_assert $CRM_EX_OK 0
+
+    desc="Delete an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after deleting an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after deleting an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     unset CIB_file
 
     export CIB_file="-"
