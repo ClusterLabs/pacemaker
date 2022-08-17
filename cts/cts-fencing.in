@@ -161,12 +161,25 @@ def localname():
     return our_uname
 
 
-def killall(process):
-    """ Kill all instances of a process """
+def killall(process_names=[], terminate=False):
+    """ Kill all instances of every process in a list """
 
-    cmd = shlex.split("killall -9 -q %s" % process)
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    test.wait()
+    if not process_names:
+        return
+
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] in process_names:
+            procs.append(proc)
+
+    if terminate:
+        for proc in procs:
+            proc.terminate()
+        gone, alive = psutil.wait_procs(procs, timeout=3)
+        procs = alive
+
+    for proc in procs:
+        proc.kill()
 
 
 def is_proc_running(process_name):
@@ -285,8 +298,7 @@ class Test(object):
         """ Prepare the host for executing a test """
 
         # Make sure we are in full control
-        killall("pacemakerd")
-        killall("pacemaker-fenced")
+        killall(["pacemakerd", "pacemaker-fenced"])
 
         if self.verbose:
             self.stonith_options = self.stonith_options + " -V"
@@ -1494,7 +1506,7 @@ class Tests(object):
                 corosync_cfg.close()
 
             ### make sure we are in control ###
-            killall("corosync")
+            killall(["corosync"])
             self.start_corosync()
 
         subprocess.call(["cts-support", "install"])
@@ -1503,7 +1515,7 @@ class Tests(object):
         """ Clean up the host after executing desired tests """
 
         if use_corosync:
-            killall("corosync")
+            killall(["corosync"])
 
             if self.autogen_corosync_cfg:
                 if self.verbose:

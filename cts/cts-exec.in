@@ -102,6 +102,27 @@ def output_from_command(command):
     return output.split("\n")
 
 
+def killall(process_names=[], terminate=False):
+    """ Kill all instances of every process in a list """
+
+    if not process_names:
+        return
+
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] in process_names:
+            procs.append(proc)
+
+    if terminate:
+        for proc in procs:
+            proc.terminate()
+        gone, alive = psutil.wait_procs(procs, timeout=3)
+        procs = alive
+
+    for proc in procs:
+        proc.kill()
+
+
 def is_proc_running(process_name):
     """ Check whether a process with a given name is running """
 
@@ -120,7 +141,6 @@ def exit_if_proc_running(process_name):
         sys.exit(CrmExit.ERROR)
 
 
-def main(argv):
 class TestError(Exception):
     """ Base class for exceptions in this module """
     pass
@@ -213,9 +233,15 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 pacemaker-fenced lt-pacemaker-fenced pacemaker-execd lt-pacemaker-execd cts-exec-helper lt-cts-exec-helper pacemaker-remoted")
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        test.wait()
+        killall([
+            "pacemaker-fenced",
+            "lt-pacemaker-fenced",
+            "pacemaker-execd",
+            "lt-pacemaker-execd",
+            "cts-exec-helper",
+            "lt-cts-exec-helper",
+            "pacemaker-remoted",
+        ])
 
         additional_args = ""
 
