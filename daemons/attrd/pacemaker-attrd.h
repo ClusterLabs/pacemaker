@@ -147,12 +147,12 @@ int attrd_cluster_connect(void);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
-void attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_clear_failure(pcmk__request_t *request);
 void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
 
 void attrd_broadcast_protocol(void);
 xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
-void attrd_client_clear_failure(xmlNode *xml);
+xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 void attrd_client_update(xmlNode *xml);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);

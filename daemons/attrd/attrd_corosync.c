@@ -55,12 +55,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
         attrd_peer_sync(peer, xml);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
-        /* It is not currently possible to receive this as a peer command,
-         * but will be, if we one day enable propagating this operation.
-         */
-        attrd_peer_clear_failure(peer, xml);
-
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {
         /* This is a separate test to prevent falling into the unknown message
          * handler below.  Sometimes, we get PCMK__ATTRD_CMD_SYNC_RESPONSE without
@@ -438,16 +432,10 @@ attrd_cluster_connect(void)
     return pcmk_ok;
 }
 
-/*!
- * \internal
- * \brief Clear failure-related attributes
- *
- * \param[in] peer  Peer that sent clear request
- * \param[in] xml   Request XML
- */
 void
-attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
+attrd_peer_clear_failure(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
@@ -456,6 +444,8 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
+
+    crm_node_t *peer = crm_get_peer(0, request->peer);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",

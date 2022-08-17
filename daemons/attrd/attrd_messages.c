@@ -29,6 +29,21 @@ handle_unknown_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_clear_failure_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        /* It is not currently possible to receive this as a peer command,
+         * but will be, if we one day enable propagating this operation.
+         */
+        attrd_peer_clear_failure(request);
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        return attrd_client_clear_failure(request);
+    }
+}
+
+static xmlNode *
 handle_flush_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
@@ -79,6 +94,7 @@ static void
 attrd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
         { PCMK__ATTRD_CMD_FLUSH, handle_flush_request },
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },

@@ -98,23 +98,21 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     return reply;
 }
 
-/*!
- * \internal
- * \brief Respond to client clear-failure request
- *
- * \param[in] xml         Request XML
- */
-void
-attrd_client_clear_failure(xmlNode *xml)
+xmlNode *
+attrd_client_clear_failure(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     const char *rsc, *op, *interval_spec;
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
 
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
         attrd_send_message(NULL, xml);
-        return;
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
     }
 
     rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
@@ -155,6 +153,8 @@ attrd_client_clear_failure(xmlNode *xml)
     }
 
     attrd_client_update(xml);
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 xmlNode *
@@ -457,11 +457,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_clear_failure(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
