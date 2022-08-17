@@ -90,6 +90,25 @@ handle_refresh_request(pcmk__request_t *request)
     }
 }
 
+static xmlNode *
+handle_update_request(pcmk__request_t *request)
+{
+    if (request->peer != NULL) {
+        const char *host = crm_element_value(request->xml, PCMK__XA_ATTR_NODE_NAME);
+        crm_node_t *peer = crm_get_peer(0, request->peer);
+
+        attrd_peer_update(peer, request->xml, host, false);
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
+    } else {
+        /* Because attrd_client_update can be called recursively, we send the ACK
+         * here to ensure that the client only ever receives one.
+         */
+        attrd_send_ack(request->ipc_client, request->ipc_id, request->flags);
+        return attrd_client_update(request);
+    }
+}
+
 static void
 attrd_register_handlers(void)
 {
@@ -99,6 +118,9 @@ attrd_register_handlers(void)
         { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
         { PCMK__ATTRD_CMD_QUERY, handle_query_request },
         { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
+        { PCMK__ATTRD_CMD_UPDATE, handle_update_request },
+        { PCMK__ATTRD_CMD_UPDATE_DELAY, handle_update_request },
+        { PCMK__ATTRD_CMD_UPDATE_BOTH, handle_update_request },
         { NULL, handle_unknown_request },
     };
 

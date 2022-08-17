@@ -44,6 +44,9 @@
  */
 #define ATTRD_PROTOCOL_VERSION "4"
 
+#define attrd_send_ack(client, id, flags) \
+    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
+
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
@@ -153,7 +156,7 @@ void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
 void attrd_broadcast_protocol(void);
 xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
 xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
-void attrd_client_update(xmlNode *xml);
+xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
 gboolean attrd_send_message(crm_node_t * node, xmlNode * data);

@@ -30,7 +30,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
     const char *op = crm_element_value(xml, PCMK__XA_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     bool peer_won = false;
 
     if (election_op) {
@@ -48,11 +47,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     peer_won = attrd_check_for_new_writer(peer, xml);
 
-    if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                         PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-        attrd_peer_update(peer, xml, host, false);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
         attrd_peer_sync(peer, xml);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)) {

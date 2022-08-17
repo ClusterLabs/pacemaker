@@ -26,9 +26,6 @@
 
 #include "pacemaker-attrd.h"
 
-#define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
-
 static qb_ipcs_service_t *ipcs = NULL;
 
 /*!
@@ -152,9 +149,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
         crm_xml_replace(xml, PCMK__XA_ATTR_VALUE, NULL);
     }
 
-    attrd_client_update(xml);
-    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    return NULL;
+    return attrd_client_update(request);
 }
 
 xmlNode *
@@ -248,17 +243,10 @@ attrd_client_refresh(pcmk__request_t *request)
     return NULL;
 }
 
-/*!
- * \internal
- * \brief Respond to a client update request
- *
- * \param[in] xml         Root of request XML
- *
- * \return void
- */
-void
-attrd_client_update(xmlNode *xml)
+xmlNode *
+attrd_client_update(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     attribute_t *a = NULL;
     char *host;
     const char *attr, *value, *regex;
@@ -273,6 +261,7 @@ attrd_client_update(xmlNode *xml)
              * just broadcast the big message and they'll handle it.
              */
             attrd_send_message(NULL, xml);
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
@@ -280,11 +269,15 @@ attrd_client_update(xmlNode *xml)
              */
             for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
                  child = crm_next_same_xml(child)) {
-                attrd_client_update(child);
+                request->xml = child;
+                /* Calling pcmk__set_result is handled by one of these calls to
+                 * attrd_client_update, so no need to do it again here.
+                 */
+                attrd_client_update(request);
             }
         }
 
-        return;
+        return NULL;
     }
 
     host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
@@ -299,7 +292,9 @@ attrd_client_update(xmlNode *xml)
 
         crm_debug("Setting %s to %s", regex, value);
         if (regcomp(r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            crm_err("Bad regex '%s' for update", regex);
+            pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                                "Bad regex '%s' for update from client %s", regex,
+                                pcmk__client_name(request->ipc_client));
 
         } else {
             g_hash_table_iter_init(&aIter, attributes);
@@ -312,17 +307,22 @@ attrd_client_update(xmlNode *xml)
                     attrd_send_message(NULL, xml);
                 }
             }
+
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
         free(host);
         regfree(r_patt);
         free(r_patt);
-        return;
+        return NULL;
 
     } else if (attr == NULL) {
         crm_err("Update request did not specify attribute or regular expression");
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Client %s update request did not specify attribute or regular expression",
+                            pcmk__client_name(request->ipc_client));
         free(host);
-        return;
+        return NULL;
     }
 
     if (host == NULL) {
@@ -359,6 +359,8 @@ attrd_client_update(xmlNode *xml)
     free(host);
 
     attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 /*!
@@ -432,7 +434,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
     xmlNode *xml = NULL;
-    const char *op;
 
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK((c != NULL) && (client != NULL), return 0);
@@ -440,34 +441,13 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
+
     xml = pcmk__client_data2xml(client, data, &id, &flags);
+
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
-    }
-
-    CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-
-    op = crm_element_value(xml, PCMK__XA_TASK);
-
-    if (client->name == NULL) {
-        const char *value = crm_element_value(xml, F_ORIG);
-        client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
-    }
-
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
 
     } else {
         pcmk__request_t request = {
@@ -479,6 +459,14 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
             .call_options   = 0,
             .result         = PCMK__UNKNOWN_RESULT,
         };
+
+        CRM_ASSERT(client->user != NULL);
+        pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
+
+        if (client->name == NULL) {
+            const char *value = crm_element_value(xml, F_ORIG);
+            client->name = crm_strdup_printf("%s.%d", pcmk__s(value, "unknown"), client->pid);
+        }
 
         request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
