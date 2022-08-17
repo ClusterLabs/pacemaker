@@ -592,8 +592,9 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     svc_action->timeout = 1000 * action->remaining_timeout;
     svc_action->standard = strdup(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%d", basename(action->agent),
-                                       action->action, action->tries);
+    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", basename(action->agent),
+                                       action->action, action->tries,
+                                       action->max_retries);
     svc_action->agent = strdup(action->agent);
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
