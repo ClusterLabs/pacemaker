@@ -61,6 +61,8 @@ typedef struct device_properties_s {
     int delay_max[st_phase_max];
     /* Action-specific base delay for each phase */
     int delay_base[st_phase_max];
+    /* Group of enum st_device_flags */
+    uint32_t flags;
 } device_properties_t;
 
 typedef struct {
@@ -1348,7 +1350,6 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
         if ((options & FIND_PEER_TARGET_ONLY) && !pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
             continue;
         }
-
         if (pcmk_is_set(op->call_options, st_opt_topology)) {
 
             if (grab_peer_device(op, peer, device, verified_devices_only)) {
@@ -1365,6 +1366,22 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     }
 
     return NULL;
+}
+
+static gboolean
+is_device_support_on_action(const remote_fencing_op_t * op, const peer_device_info_t *peer, const char *device)
+{
+    if (peer != NULL && pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
+        device_properties_t *props = g_hash_table_lookup(peer->devices, device);
+
+        if (props) {
+            if (!pcmk_is_set(props->flags, st_device_supports_on)) {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
 }
 
 static peer_device_info_t *
@@ -1386,7 +1403,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
         /* Best choice is a peer other than the target with verified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET|FIND_PEER_VERIFIED_ONLY);
-        if (peer) {
+        if (peer && is_device_support_on_action(op, peer, device)) {
             crm_trace("Found verified peer %s for %s", peer->host, device?device:"<any>");
             return peer;
         }
@@ -1398,7 +1415,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
         /* If no other peer has verified access, next best is unverified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET);
-        if (peer) {
+        if (peer && is_device_support_on_action(op, peer, device)) {
             crm_trace("Found best unverified peer %s", peer->host);
             return peer;
         }
@@ -1408,7 +1425,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
          */
         if (op->phase != st_phase_on) {
             peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY);
-            if (peer) {
+            if (peer && is_device_support_on_action(op, peer, device)) {
                 crm_trace("%s will fence itself", peer->host);
                 return peer;
             }
@@ -1515,7 +1532,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
 
-                    if (find_peer_device(op, peer, device_list->data)) {
+                    if (find_peer_device(op, peer, device_list->data) && is_device_support_on_action(op, peer, device_list->data)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data);
                         break;
@@ -1708,6 +1725,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * @TODO Basing the total timeout on the caller's preferred peer (above)
          *       is less than ideal.
          */
+
         peer = stonith_choose_peer(op);
 
         device = op->devices->data;
@@ -1995,6 +2013,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     xmlNode *child;
     int verified = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
+    int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
     CRM_ASSERT(props != NULL);
@@ -2007,6 +2026,9 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                   peer->host, device);
         props->verified = TRUE;
     }
+
+    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+    props->flags = flags;
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
