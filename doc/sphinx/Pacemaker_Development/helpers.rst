@@ -224,17 +224,14 @@ is no ``lib/common/tests/acls`` directory.
 
      check_PROGRAMS = pcmk_acl_required_test
 
-* Double check that ``-I$(top_srcdir)/lib/common`` is present in ``AM_CPPFLAGS``.
-
-* Double check the settings of variables at the top of ``Makefile.am``.  The
-  following block should be present:
+* Double check that ``$(top_srcdir)/mk/tap.mk`` and ``$(top_srcdir)/mk/unittest.mk``
+  are included in the ``Makefile.am``.  These files contain all the flags necessary
+  for most unit tests.  If necessary, individual settings can be overridden like so:
 
   .. code-block:: none
 
-     LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
-             -lcmocka
-     AM_CFLAGS = -DPCMK__UNIT_TESTING
-     AM_LDFLAGS = $(LDFLAGS_WRAP)
+     AM_CPPFLAGS += -I$(top_srcdir)
+     LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
 * Follow the steps in `Testing a new function in an already testable source file`_
   to create the new ``pcmk_acl_required_test.c`` file.
@@ -321,14 +318,8 @@ here's the basic structure:
 
    /* Put your test functions here */
 
-   int
-   main(int argc, char **argv)
-   {
-       /* Register your test functions here */
-
-       cmocka_set_message_output(CM_OUTPUT_TAP);
-       return cmocka_run_group_tests(tests, NULL, NULL);
-   }
+   PCMK__UNIT_TEST(NULL, NULL,
+                   /* Register your test functions here */)
 
 Each test-specific function should test one aspect of the library function,
 though it can include many assertions if there are many ways of testing that
@@ -348,13 +339,17 @@ expression matching:
    }
 
 Each test-specific function must also be registered or it will not be called.
-This is done with ``cmocka_unit_test()`` in the ``main`` function:
+This is done with ``cmocka_unit_test()`` in the ``PCMK__UNIT_TEST`` macro:
 
 .. code-block:: c
 
-   const struct CMUnitTest tests[] = {
-       cmocka_unit_test(regex),
-   };
+   PCMK__UNIT_TEST(NULL, NULL,
+                   cmocka_unit_test(regex))
+
+Most unit tests do not require a setup and teardown function to be executed
+around the entire group of tests.  On occassion, this may be necessary.  Simply
+pass those functions in as the first two parameters to ``PCMK__UNIT_TEST``
+instead of using NULL.
 
 Assertions
 __________
