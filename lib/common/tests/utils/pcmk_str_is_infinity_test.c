@@ -49,16 +49,9 @@ minus_infinity_fails(void **state)
     assert_false(pcmk_str_is_infinity("-INFINITY"));
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(uppercase_str_passes),
-        cmocka_unit_test(mixed_case_str_fails),
-        cmocka_unit_test(added_whitespace_fails),
-        cmocka_unit_test(empty_str_fails),
-        cmocka_unit_test(minus_infinity_fails),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(uppercase_str_passes),
+                cmocka_unit_test(mixed_case_str_fails),
+                cmocka_unit_test(added_whitespace_fails),
+                cmocka_unit_test(empty_str_fails),
+                cmocka_unit_test(minus_infinity_fails))

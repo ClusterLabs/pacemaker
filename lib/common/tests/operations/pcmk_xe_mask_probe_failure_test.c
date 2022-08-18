@@ -144,14 +144,7 @@ check_values_test(void **state) {
     free_xml(node);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(op_is_not_probe_test),
-        cmocka_unit_test(op_does_not_have_right_values_test),
-        cmocka_unit_test(check_values_test),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(op_is_not_probe_test),
+                cmocka_unit_test(op_does_not_have_right_values_test),
+                cmocka_unit_test(check_values_test))

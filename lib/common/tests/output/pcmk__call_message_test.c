@@ -149,16 +149,8 @@ default_called(void **state) {
     pcmk__output_free(out);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test_setup_teardown(no_such_message, setup, teardown),
-        cmocka_unit_test_setup_teardown(message_return_value, setup, teardown),
-        cmocka_unit_test_setup_teardown(wrong_format, setup, teardown),
-        cmocka_unit_test_setup_teardown(default_called, setup, teardown),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test_setup_teardown(no_such_message, setup, teardown),
+                cmocka_unit_test_setup_teardown(message_return_value, setup, teardown),
+                cmocka_unit_test_setup_teardown(wrong_format, setup, teardown),
+                cmocka_unit_test_setup_teardown(default_called, setup, teardown))

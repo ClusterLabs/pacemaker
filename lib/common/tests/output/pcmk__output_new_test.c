@@ -137,20 +137,12 @@ no_fmt_name_given(void **state) {
     pcmk__output_free(out);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_formatters),
-        cmocka_unit_test_setup_teardown(invalid_params, setup, teardown),
-        cmocka_unit_test_setup_teardown(no_such_format, setup, teardown),
-        cmocka_unit_test_setup_teardown(create_fails, setup, teardown),
-        cmocka_unit_test_setup_teardown(init_fails, setup, teardown),
-        cmocka_unit_test_setup_teardown(fopen_fails, setup, teardown),
-        cmocka_unit_test_setup_teardown(everything_succeeds, setup, teardown),
-        cmocka_unit_test_setup_teardown(no_fmt_name_given, setup, teardown),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_formatters),
+                cmocka_unit_test_setup_teardown(invalid_params, setup, teardown),
+                cmocka_unit_test_setup_teardown(no_such_format, setup, teardown),
+                cmocka_unit_test_setup_teardown(create_fails, setup, teardown),
+                cmocka_unit_test_setup_teardown(init_fails, setup, teardown),
+                cmocka_unit_test_setup_teardown(fopen_fails, setup, teardown),
+                cmocka_unit_test_setup_teardown(everything_succeeds, setup, teardown),
+                cmocka_unit_test_setup_teardown(no_fmt_name_given, setup, teardown))

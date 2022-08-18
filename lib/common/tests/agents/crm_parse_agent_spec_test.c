@@ -78,18 +78,10 @@ get_systemd_values(void **state) {
     free(ty);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(all_params_null),
-        cmocka_unit_test(no_prov_or_type),
-        cmocka_unit_test(no_type),
-        cmocka_unit_test(get_std_and_ty),
-        cmocka_unit_test(get_all_values),
-        cmocka_unit_test(get_systemd_values),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(all_params_null),
+                cmocka_unit_test(no_prov_or_type),
+                cmocka_unit_test(no_type),
+                cmocka_unit_test(get_std_and_ty),
+                cmocka_unit_test(get_all_values),
+                cmocka_unit_test(get_systemd_values))

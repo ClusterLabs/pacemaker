@@ -45,14 +45,6 @@ is_stonith_action_param(void **state)
     assert_true(pcmk_stonith_param("pcmk_on_retries"));
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(is_stonith_param),
-        cmocka_unit_test(is_stonith_action_param),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(is_stonith_param),
+                cmocka_unit_test(is_stonith_action_param))

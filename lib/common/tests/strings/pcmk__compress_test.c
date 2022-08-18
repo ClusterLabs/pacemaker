@@ -52,15 +52,7 @@ calloc_fails(void **state) {
     );
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(simple_compress),
-        cmocka_unit_test(max_too_small),
-        cmocka_unit_test(calloc_fails),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(simple_compress),
+                cmocka_unit_test(max_too_small),
+                cmocka_unit_test(calloc_fails))

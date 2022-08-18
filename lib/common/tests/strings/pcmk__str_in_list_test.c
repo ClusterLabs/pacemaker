@@ -98,17 +98,10 @@ not_in_list(void **state) {
     g_list_free(list);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input_list),
-        cmocka_unit_test(empty_string),
-        cmocka_unit_test(star_matches),
-        cmocka_unit_test(star_doesnt_match),
-        cmocka_unit_test(in_list),
-        cmocka_unit_test(not_in_list),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_list),
+                cmocka_unit_test(empty_string),
+                cmocka_unit_test(star_matches),
+                cmocka_unit_test(star_doesnt_match),
+                cmocka_unit_test(in_list),
+                cmocka_unit_test(not_in_list))

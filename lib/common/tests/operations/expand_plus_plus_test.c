@@ -234,30 +234,23 @@ assignment_result_is_too_large(void **state)
     assert_string_equal(new_value, "1000000");
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(value_is_name_plus_plus),
-        cmocka_unit_test(value_is_name_plus_equals_integer),
-        cmocka_unit_test(target_is_NULL),
-        cmocka_unit_test(name_is_NULL),
-        cmocka_unit_test(value_is_NULL),
-        cmocka_unit_test(value_is_wrong_name),
-        cmocka_unit_test(value_is_only_an_integer),
-        cmocka_unit_test(variable_is_initialized_to_be_NULL),
-        cmocka_unit_test(variable_is_initialized_to_be_non_numeric),
-        cmocka_unit_test(variable_is_initialized_to_be_non_numeric_2),
-        cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing),
-        cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_2),
-        cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_3),
-        cmocka_unit_test(value_is_non_numeric),
-        cmocka_unit_test(value_is_numeric_and_decimal_point_containing),
-        cmocka_unit_test(value_is_numeric_and_decimal_point_containing_2),
-        cmocka_unit_test(value_is_numeric_and_decimal_point_containing_3),
-        cmocka_unit_test(name_is_undefined),
-        cmocka_unit_test(assignment_result_is_too_large),        
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(value_is_name_plus_plus),
+                cmocka_unit_test(value_is_name_plus_equals_integer),
+                cmocka_unit_test(target_is_NULL),
+                cmocka_unit_test(name_is_NULL),
+                cmocka_unit_test(value_is_NULL),
+                cmocka_unit_test(value_is_wrong_name),
+                cmocka_unit_test(value_is_only_an_integer),
+                cmocka_unit_test(variable_is_initialized_to_be_NULL),
+                cmocka_unit_test(variable_is_initialized_to_be_non_numeric),
+                cmocka_unit_test(variable_is_initialized_to_be_non_numeric_2),
+                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing),
+                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_2),
+                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_3),
+                cmocka_unit_test(value_is_non_numeric),
+                cmocka_unit_test(value_is_numeric_and_decimal_point_containing),
+                cmocka_unit_test(value_is_numeric_and_decimal_point_containing_2),
+                cmocka_unit_test(value_is_numeric_and_decimal_point_containing_3),
+                cmocka_unit_test(name_is_undefined),
+                cmocka_unit_test(assignment_result_is_too_large))

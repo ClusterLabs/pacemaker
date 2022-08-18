@@ -65,4 +65,20 @@
         } \
     } while (0);
 
+/* Generate the main function of most unit test files.  Typically, group_setup
+ * and group_teardown will be NULL.  The rest of the arguments are a list of
+ * calls to cmocka_unit_test or cmocka_unit_test_setup_teardown to run the
+ * individual unit tests.
+ */
+#define PCMK__UNIT_TEST(group_setup, group_teardown, ...) \
+int \
+main(int argc, char **argv) \
+{ \
+    const struct CMUnitTest t[] = { \
+        __VA_ARGS__ \
+    }; \
+    cmocka_set_message_output(CM_OUTPUT_TAP); \
+    return cmocka_run_group_tests(t, group_setup, group_teardown); \
+}
+
 #endif /* CRM_COMMON_UNITTEST_INTERNAL__H */

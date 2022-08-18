@@ -63,16 +63,8 @@ unequal_lengths(void **state)
     assert_int_equal(pcmk__numeric_strcasecmp("node1abc", "node1ab"), 1);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(no_numbers),
-        cmocka_unit_test(trailing_numbers),
-        cmocka_unit_test(middle_numbers),
-        cmocka_unit_test(unequal_lengths),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(no_numbers),
+                cmocka_unit_test(trailing_numbers),
+                cmocka_unit_test(middle_numbers),
+                cmocka_unit_test(unequal_lengths))

@@ -146,17 +146,9 @@ valid_inputs_unset(void **state)
     pcmk__mock_unsetenv = false;
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_input_string),
-        cmocka_unit_test(input_too_long_for_both),
-        cmocka_unit_test(input_too_long_for_pcmk),
-        cmocka_unit_test(valid_inputs_set),
-        cmocka_unit_test(valid_inputs_unset),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(bad_input_string),
+                cmocka_unit_test(input_too_long_for_both),
+                cmocka_unit_test(input_too_long_for_pcmk),
+                cmocka_unit_test(valid_inputs_set),
+                cmocka_unit_test(valid_inputs_unset))

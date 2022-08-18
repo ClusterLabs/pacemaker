@@ -63,14 +63,6 @@ getenv_returns_valid(void **state)
     pcmk__mock_getenv = false;
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(getenv_returns_invalid),
-        cmocka_unit_test(getenv_returns_valid),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(getenv_returns_invalid),
+                cmocka_unit_test(getenv_returns_valid))

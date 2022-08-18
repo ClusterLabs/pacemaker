@@ -52,16 +52,10 @@ test_for_bz2_strerror(void **state) {
     assert_string_equal(bz2_strerror(BZ_STREAM_END), "Ok");
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(test_for_pcmk_rc_name),
-        cmocka_unit_test(test_for_pcmk_rc_str),
-        cmocka_unit_test(test_for_crm_exit_name),
-        cmocka_unit_test(test_for_crm_exit_str),
-        cmocka_unit_test(test_for_pcmk_rc2exitc),
-        cmocka_unit_test(test_for_bz2_strerror),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(test_for_pcmk_rc_name),
+                cmocka_unit_test(test_for_pcmk_rc_str),
+                cmocka_unit_test(test_for_crm_exit_name),
+                cmocka_unit_test(test_for_crm_exit_str),
+                cmocka_unit_test(test_for_pcmk_rc2exitc),
+                cmocka_unit_test(test_for_bz2_strerror))

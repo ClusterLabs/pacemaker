@@ -125,18 +125,10 @@ value_found_ha(void **state)
     pcmk__mock_getenv = false;
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input_string),
-        cmocka_unit_test(input_too_long_for_both),
-        cmocka_unit_test(input_too_long_for_pcmk),
-        cmocka_unit_test(value_not_found),
-        cmocka_unit_test(value_found_pcmk),
-        cmocka_unit_test(value_found_ha),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_string),
+                cmocka_unit_test(input_too_long_for_both),
+                cmocka_unit_test(input_too_long_for_pcmk),
+                cmocka_unit_test(value_not_found),
+                cmocka_unit_test(value_found_pcmk),
+                cmocka_unit_test(value_found_ha))

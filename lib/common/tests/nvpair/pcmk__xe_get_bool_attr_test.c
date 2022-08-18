@@ -53,15 +53,7 @@ attr_present(void **state)
     free_xml(node);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input),
-        cmocka_unit_test(attr_missing),
-        cmocka_unit_test(attr_present),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input),
+                cmocka_unit_test(attr_missing),
+                cmocka_unit_test(attr_present))

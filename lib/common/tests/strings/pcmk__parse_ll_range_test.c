@@ -104,21 +104,13 @@ strtoll_errors(void **state)
     assert_int_equal(pcmk__parse_ll_range("100-20000000000000000000", &start, &end), pcmk_rc_unknown_format);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input_string),
-        cmocka_unit_test(null_input_variables),
-        cmocka_unit_test(missing_separator),
-        cmocka_unit_test(only_separator),
-        cmocka_unit_test(no_range_end),
-        cmocka_unit_test(no_range_start),
-        cmocka_unit_test(range_start_and_end),
-        cmocka_unit_test(strtoll_errors),
-
-        cmocka_unit_test(garbage),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_string),
+                cmocka_unit_test(null_input_variables),
+                cmocka_unit_test(missing_separator),
+                cmocka_unit_test(only_separator),
+                cmocka_unit_test(no_range_end),
+                cmocka_unit_test(no_range_start),
+                cmocka_unit_test(range_start_and_end),
+                cmocka_unit_test(strtoll_errors),
+                cmocka_unit_test(garbage))
