@@ -73,11 +73,13 @@ typedef struct private_data_s {
 
 static void
 html_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     xmlFreeNode(priv->root);
     g_queue_free(priv->parent_q);
@@ -89,6 +91,8 @@ html_free_priv(pcmk__output_t *out) {
 static bool
 html_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If html_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -125,9 +129,13 @@ add_error_node(gpointer data, gpointer user_data) {
 
 static void
 html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    priv = out->priv;
 
     /* If root is NULL, html_init failed and we are being called from pcmk__output_free
      * in the pcmk__output_new path.
@@ -208,7 +216,7 @@ html_reset(pcmk__output_t *out) {
 
 static void
 html_subprocess_output(pcmk__output_t *out, int exit_status,
-                      const char *proc_stdout, const char *proc_stderr) {
+                       const char *proc_stdout, const char *proc_stderr) {
     char *rc_buf = NULL;
 
     CRM_ASSERT(out != NULL);
@@ -423,7 +431,7 @@ pcmk__mk_html_output(char **argv) {
 
 xmlNodePtr
 pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
-                       const char *class_name, const char *text) {
+                              const char *class_name, const char *text) {
     htmlNodePtr node = NULL;
 
     CRM_ASSERT(out != NULL);

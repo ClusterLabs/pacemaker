@@ -15,8 +15,19 @@
 
 static GHashTable *formatters = NULL;
 
+#if defined(PCMK__UNIT_TESTING)
+GHashTable *
+pcmk__output_formatters(void) {
+    return formatters;
+}
+#endif
+
 void
 pcmk__output_free(pcmk__output_t *out) {
+    if (out == NULL) {
+        return;
+    }
+
     out->free_priv(out);
 
     if (out->messages != NULL) {
@@ -30,11 +41,9 @@ pcmk__output_free(pcmk__output_t *out) {
 int
 pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filename,
                  char **argv) {
-    pcmk__output_factory_t create = NULL;;
+    pcmk__output_factory_t create = NULL;
 
-    if (formatters == NULL) {
-        return EINVAL;
-    }
+    CRM_ASSERT(formatters != NULL && out != NULL);
 
     /* If no name was given, just try "text".  It's up to each tool to register
      * what it supports so this also may not be valid.
@@ -59,6 +68,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     } else {
         (*out)->dest = fopen(filename, "w");
         if ((*out)->dest == NULL) {
+            pcmk__output_free(*out);
+            *out = NULL;
             return errno;
         }
     }
@@ -79,9 +90,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
                       pcmk__output_factory_t create, GOptionEntry *options) {
-    if (create == NULL) {
-        return -EINVAL;
-    }
+    CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
 
     if (formatters == NULL) {
         formatters = pcmk__strkey_table(free, NULL);
@@ -92,7 +101,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     g_hash_table_insert(formatters, strdup(name), create);
-    return 0;
+    return pcmk_rc_ok;
 }
 
 void
@@ -112,6 +121,7 @@ void
 pcmk__unregister_formats() {
     if (formatters != NULL) {
         g_hash_table_destroy(formatters);
+        formatters = NULL;
     }
 }
 
@@ -120,6 +130,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
     va_list args;
     int rc = pcmk_rc_ok;
     pcmk__message_fn_t fn;
+
+    CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id));
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
@@ -138,6 +150,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 void
 pcmk__register_message(pcmk__output_t *out, const char *message_id,
                        pcmk__message_fn_t fn) {
+    CRM_ASSERT(out != NULL && !pcmk__str_empty(message_id) && fn != NULL);
+
     g_hash_table_replace(out->messages, strdup(message_id), fn);
 }
 

@@ -17,6 +17,7 @@ CLEANFILES = *.log *.trs
 
 WRAPPED = calloc		\
 	  endgrent		\
+	  fopen 		\
 	  getenv		\
 	  getpid		\
 	  getgrent		\
