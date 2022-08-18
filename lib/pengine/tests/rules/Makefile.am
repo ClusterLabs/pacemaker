@@ -6,13 +6,11 @@
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
-LDADD = $(top_builddir)/lib/common/libcrmcommon_test.la \
-		$(top_builddir)/lib/pengine/libpe_rules_test.la \
-		-lcmocka
-AM_LDFLAGS = $(LDFLAGS_WRAP)
 
 include $(top_srcdir)/mk/tap.mk
+include $(top_srcdir)/mk/unittest.mk
+
+LDADD += $(top_builddir)/lib/pengine/libpe_rules_test.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pe_cron_range_satisfied_test
