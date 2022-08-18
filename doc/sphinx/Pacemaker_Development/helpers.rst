@@ -468,6 +468,46 @@ At this point, you need to determine whether your test case is incorrect or
 whether the code being tested is incorrect.  Fix whichever is wrong and continue.
 
 
+Code Coverage
+#############
+
+Figuring out what needs unit tests written is the purpose of a code coverage tool.
+The Pacemaker build process uses ``lcov`` and special make targets to generate
+an HTML coverage report that can be inspected with any web browser.
+
+To start, you'll need to install the ``lcov`` package which is included in most
+distributions.  Next, reconfigure and rebuild the source tree:
+
+.. code-block:: none
+
+   $ ./configure --with-coverage
+   $ make
+
+Then simply run ``make coverage``.  This will do the same thing as ``make check``,
+but will generate a bunch of intermediate files as part of the compiler's output.
+Essentially, the coverage tools run all the unit tests and make a note if a given
+line if code is executed as a part of some test program.  This will include not
+just things run as part of the tests but anything in the setup and teardown
+functions as well.
+
+Afterwards, the HTML report will be in ``coverage/index.html``.  You can drill down
+into individual source files to see exactly which lines are covered and which are
+not, which makes it easy to target new unit tests.  Note that sometimes, it is
+impossible to achieve 100% coverage for a source file.  For instance, how do you
+test a function with a return type of void that simply returns on some condition?
+
+Note that Pacemaker's overall code coverage numbers are very low at the moment.
+One reason for this is the large amount of code in the ``daemons`` directory that
+will be very difficult to write unit tests for.  For now, it is best to focus
+efforts on increasing the coverage on individual libraries.
+
+Additionally, there is a ``coverage-cts`` target that does the same thing but
+instead of testing ``make check``, it tests ``cts/cts-cli``.  The idea behind this
+target is to see what parts of our command line tools are covered by our regression
+tests.  It is probably best to clean and rebuild the source tree when switching
+between these various targets.
+
+
 Debugging
 #########
 
