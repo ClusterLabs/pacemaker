@@ -56,15 +56,22 @@ libpe_status_la_SOURCES	+= tags.c
 libpe_status_la_SOURCES	+= unpack.c
 libpe_status_la_SOURCES	+= utils.c
 
+#
+# libpe_rules_test and libpe_status_test are only used with unit tests, so we can
+# mock system calls.  See lib/common/mock.c for details.
+#
+
 libpe_rules_test_la_SOURCES = $(libpe_rules_la_SOURCES)
 libpe_rules_test_la_LDFLAGS = $(LDFLAGS_HARDENED_LIB)
-libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS)
-libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
+# See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
+libpe_rules_test_la_CFLAGS = $(libpe_rules_la_CFLAGS) -fno-builtin -fno-inline
+libpe_rules_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka -lm
 
 libpe_status_test_la_SOURCES = $(libpe_status_la_SOURCES)
 libpe_status_test_la_LDFLAGS = $(LDFLAGS_HARDENED_LIB)
-libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS)
-libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka
+# See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
+libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS) -fno-builtin -fno-inline
+libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la -lcmocka -lm
 
 clean-generic:
 	rm -f *.log *.debug *~
