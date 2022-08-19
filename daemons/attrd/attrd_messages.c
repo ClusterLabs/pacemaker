@@ -228,11 +228,7 @@ attrd_handle_request(pcmk__request_t *request)
 void
 attrd_broadcast_protocol(void)
 {
-    char *host = strdup(attrd_cluster->uname);
-
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
-
-    CRM_ASSERT(host != NULL);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, crm_system_name);
@@ -240,15 +236,13 @@ attrd_broadcast_protocol(void)
     crm_xml_add(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     crm_xml_add(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
-    crm_xml_add(attrd_op, PCMK__XA_ATTR_NODE_NAME, host);
-    crm_xml_add_int(attrd_op, PCMK__XA_ATTR_NODE_ID, attrd_cluster->nodeid);
+    pcmk__xe_add_node(attrd_op, attrd_cluster->uname, attrd_cluster->nodeid);
 
     crm_debug("Broadcasting attrd protocol version %s for node %s",
-              ATTRD_PROTOCOL_VERSION, host);
+              ATTRD_PROTOCOL_VERSION, attrd_cluster->uname);
 
     attrd_send_message(NULL, attrd_op); /* ends up at attrd_peer_message() */
 
-    free(host);
     free_xml(attrd_op);
 }
 

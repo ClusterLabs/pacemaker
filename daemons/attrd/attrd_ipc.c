@@ -72,7 +72,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
                 free_xml(reply);
                 return NULL;
             }
-            crm_xml_add(host_value, PCMK__XA_ATTR_NODE_NAME, host);
+            pcmk__xe_add_node(host_value, host, 0);
             crm_xml_add(host_value, PCMK__XA_ATTR_VALUE,
                         (v? v->current : NULL));
 
@@ -87,7 +87,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
                     free_xml(reply);
                     return NULL;
                 }
-                crm_xml_add(host_value, PCMK__XA_ATTR_NODE_NAME, v->nodename);
+                pcmk__xe_add_node(host_value, v->nodename, 0);
                 crm_xml_add(host_value, PCMK__XA_ATTR_VALUE, v->current);
             }
         }
@@ -179,7 +179,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = get_node_name(nodeid);
                 host = host_alloc;
             }
-            crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, host);
+            pcmk__xe_add_node(xml, host, 0);
         }
     }
 
@@ -328,8 +328,7 @@ attrd_client_update(pcmk__request_t *request)
     if (host == NULL) {
         crm_trace("Inferring host");
         host = strdup(attrd_cluster->uname);
-        crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, host);
-        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, attrd_cluster->nodeid);
+        pcmk__xe_add_node(xml, host, attrd_cluster->nodeid);
     }
 
     a = g_hash_table_lookup(attributes, attr);

@@ -215,7 +215,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
     }
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_OPERATION, operation);
     crm_xml_add(request, PCMK__XA_ATTR_INTERVAL, interval_spec);
@@ -293,7 +293,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     if (api == NULL) {
         rc = create_api(&api);
@@ -341,7 +341,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     rc = send_attrd_request(api, request);
     free_xml(request);
@@ -372,7 +372,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_REFRESH);
-    crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(request, node, 0);
 
     if (api == NULL) {
         rc = create_api(&api);
@@ -424,7 +424,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
 
     crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
     crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
-    crm_xml_add(op, PCMK__XA_ATTR_NODE_NAME, node);
+    pcmk__xe_add_node(op, node, 0);
     crm_xml_add(op, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));

@@ -119,10 +119,7 @@ attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
     crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set);
     crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
-    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, v->nodename);
-    if (v->nodeid > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, v->nodeid);
-    }
+    pcmk__xe_add_node(xml, v->nodename, v->nodeid);
     if (v->is_remote != 0) {
         crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
     }

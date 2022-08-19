@@ -60,6 +60,19 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
 guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
 
 
+/* internal node-related XML utilities (from nodes.c) */
+
+/*!
+ * \internal
+ * \brief Add local node name and ID to an XML node
+ *
+ * \param[in,out] request  XML node to modify
+ * \param[in]     node     The local node's name
+ * \param[in]     nodeid   The local node's ID (can be 0)
+ */
+void pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid);
+
+
 /* internal name/value utilities (from nvpair.c) */
 
 int pcmk__scan_nvpair(const char *input, char **name, char **value);
