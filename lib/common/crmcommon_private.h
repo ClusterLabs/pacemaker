@@ -291,4 +291,10 @@ int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, u
                                        pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
 
+/*
+ * Utils
+ */
+#define PCMK__PW_BUFFER_LEN 500
+
+
 #endif  // CRMCOMMON_PRIVATE__H

@@ -44,10 +44,6 @@
 
 #include "crmcommon_private.h"
 
-#ifndef PW_BUFFER_LEN
-#  define PW_BUFFER_LEN		500
-#endif
-
 CRM_TRACE_INIT_DATA(common);
 
 gboolean crm_config_error = FALSE;
@@ -94,12 +90,12 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
     struct passwd pwd;
     struct passwd *pwentry = NULL;
 
-    buffer = calloc(1, PW_BUFFER_LEN);
+    buffer = calloc(1, PCMK__PW_BUFFER_LEN);
     if (buffer == NULL) {
         return -ENOMEM;
     }
 
-    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    rc = getpwnam_r(name, &pwd, buffer, PCMK__PW_BUFFER_LEN, &pwentry);
     if (pwentry) {
         if (uid) {
             *uid = pwentry->pw_uid;
