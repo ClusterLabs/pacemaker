@@ -19,9 +19,14 @@ function_asserts(void **state)
     pcmk__assert_asserts(pcmk__full_path(NULL, "/dir"));
     pcmk__assert_asserts(pcmk__full_path("file", NULL));
 
-    pcmk__mock_strdup = true;       // strdup() will return NULL
-    pcmk__assert_asserts(pcmk__full_path("/full/path", "/dir"));
-    pcmk__mock_strdup = false;      // Use real strdup()
+    pcmk__assert_asserts(
+        {
+            pcmk__mock_strdup = true;   // strdup() will return NULL
+            expect_string(__wrap_strdup, s, "/full/path");
+            pcmk__full_path("/full/path", "/dir");
+            pcmk__mock_strdup = false;  // Use real strdup()
+        }
+    );
 }
 
 static void

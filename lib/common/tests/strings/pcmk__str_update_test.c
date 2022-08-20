@@ -59,9 +59,14 @@ strdup_fails(void **state) {
 
     str = strdup("hello");
 
-    pcmk__mock_strdup = true;       // strdup() will return NULL
-    pcmk__assert_asserts(pcmk__str_update(&str, "world"));
-    pcmk__mock_strdup = false;      // Use the real strdup()
+    pcmk__assert_asserts(
+        {
+            pcmk__mock_strdup = true;   // strdup() will return NULL
+            expect_string(__wrap_strdup, s, "world");
+            pcmk__str_update(&str, "world");
+            pcmk__mock_strdup = false;  // Use the real strdup()
+        }
+    );
 
     free(str);
 }

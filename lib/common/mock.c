@@ -313,7 +313,11 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
 /* strdup()
  *
  * If pcmk__mock_strdup is set to true, later calls to strdup() will return
- * NULL.
+ * NULL and must be preceded by:
+ *
+ *     expect_*(__wrap_strdup, s[, ...]);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_strdup = false;
@@ -321,7 +325,11 @@ bool pcmk__mock_strdup = false;
 char *
 __wrap_strdup(const char *s)
 {
-    return pcmk__mock_strdup? NULL : __real_strdup(s);
+    if (!pcmk__mock_strdup) {
+        return __real_strdup(s);
+    }
+    check_expected_ptr(s);
+    return NULL;
 }
 
 
