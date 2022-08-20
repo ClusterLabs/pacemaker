@@ -83,6 +83,8 @@ create_fails(void **state) {
 
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
+    expect_value(__wrap_calloc, nmemb, 1);
+    expect_value(__wrap_calloc, size, sizeof(pcmk__output_t));
     assert_int_equal(pcmk__output_new(&out, "text", NULL, NULL), ENOMEM);
 
     pcmk__mock_calloc = false;  // Use real calloc()

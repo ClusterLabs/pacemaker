@@ -24,6 +24,8 @@ calloc_fails(void **state)
 
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
+    expect_value(__wrap_calloc, nmemb, 1);
+    expect_value(__wrap_calloc, size, PCMK__PW_BUFFER_LEN);
     assert_int_equal(crm_user_lookup("hauser", &uid, &gid), -ENOMEM);
 
     pcmk__mock_calloc = false;  // Use real calloc()

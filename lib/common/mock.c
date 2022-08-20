@@ -52,11 +52,15 @@
  */
 
 // LCOV_EXCL_START
-
 /* calloc()
  *
- * If pcmk__mock_calloc is set to true, later calls to malloc() will return
- * NULL.
+ * If pcmk__mock_calloc is set to true, later calls to calloc() will return
+ * NULL and must be preceded by:
+ *
+ *     expect_*(__wrap_calloc, nmemb[, ...]);
+ *     expect_*(__wrap_calloc, size[, ...]);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_calloc = false;
@@ -64,7 +68,12 @@ bool pcmk__mock_calloc = false;
 void *
 __wrap_calloc(size_t nmemb, size_t size)
 {
-    return pcmk__mock_calloc? NULL : __real_calloc(nmemb, size);
+    if (!pcmk__mock_calloc) {
+        return __real_calloc(nmemb, size);
+    }
+    check_expected(nmemb);
+    check_expected(size);
+    return NULL;
 }
 
 
