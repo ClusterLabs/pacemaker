@@ -272,8 +272,13 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
  * If pcmk__mock_readlink is set to true, later calls to readlink() must be
  * preceded by:
  *
+ *     expect_*(__wrap_readlink, path[, ...]);
+ *     expect_*(__wrap_readlink, buf[, ...]);
+ *     expect_*(__wrap_readlink, bufsize[, ...]);
  *     will_return(__wrap_readlink, errno_to_set);
  *     will_return(__wrap_readlink, link_contents);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  *
  * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
  */
@@ -287,6 +292,9 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
     if (pcmk__mock_readlink) {
         const char *contents = NULL;
 
+        check_expected_ptr(path);
+        check_expected_ptr(buf);
+        check_expected(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);
 
