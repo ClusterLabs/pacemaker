@@ -338,8 +338,11 @@ __wrap_strdup(const char *s)
  * If pcmk__mock_uname is set to true, later calls to uname() must be preceded
  * by:
  *
+ *     expect_*(__wrap_uname, buf[, ...]);
  *     will_return(__wrap_uname, return_value);
  *     will_return(__wrap_uname, node_name_for_buf_parameter_to_uname);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_uname = false;
@@ -348,8 +351,12 @@ int
 __wrap_uname(struct utsname *buf)
 {
     if (pcmk__mock_uname) {
-        int retval = mock_type(int);
-        char *result = mock_ptr_type(char *);
+        int retval = 0;
+        char *result = NULL;
+
+        check_expected_ptr(buf);
+        retval = mock_type(int);
+        result = mock_ptr_type(char *);
 
         if (result != NULL) {
             strcpy(buf->nodename, result);
