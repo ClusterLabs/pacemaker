@@ -201,7 +201,11 @@ __wrap_endgrent(void) {
  * If pcmk__mock_fopen is set to true, later calls to fopen() must be
  * preceded by:
  *
+ *     expect_*(__wrap_fopen, pathname[, ...]);
+ *     expect_*(__wrap_fopen, mode[, ...]);
  *     will_return(__wrap_fopen, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_fopen = false;
@@ -210,6 +214,8 @@ FILE *
 __wrap_fopen(const char *pathname, const char *mode)
 {
     if (pcmk__mock_fopen) {
+        check_expected_ptr(pathname);
+        check_expected_ptr(mode);
         errno = mock_type(int);
 
         if (errno != 0) {

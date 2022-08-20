@@ -95,6 +95,8 @@ fopen_fails(void **state) {
     pcmk__output_t *out = NULL;
 
     pcmk__mock_fopen = true;
+    expect_string(__wrap_fopen, pathname, "destfile");
+    expect_string(__wrap_fopen, mode, "w");
     will_return(__wrap_fopen, EPERM);
 
     assert_int_equal(pcmk__output_new(&out, "text", "destfile", NULL), EPERM);
