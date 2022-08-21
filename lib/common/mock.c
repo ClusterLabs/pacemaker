@@ -42,6 +42,19 @@
  *
  * - In mk/tap.mk, add the function name to the WRAPPED variable.
  *
+ * - If the mocked function doesn't require access to the real function:
+ *   - DON'T define a __wrap_X function.
+ *   - DON'T add __real_X and __wrap_X function prototypes to mock_private.h.
+ *   - DON'T add the function name to the WRAPPED variable in mk/tap.mk.
+ *   - DO define a pcmk__test_X function, with the same prototype as the actual
+ *     function, that performs the desired behavior if pcmk__mock_X is true and
+ *     does something else otherwise. For example, pcmk__test_snprintf() never
+ *     calls the real snprintf(). Instead it passes the va_list to vsnprintf()
+ *     if pcmk__mock_snprintf is false.
+ *   - DO add declarations for extern bool pcmk__mock_X and the pcmk__test_X
+ *     function prototype to mock_private.h.
+ *   - DO add the function name to the MOCKED variable in mk/tap.mk.
+ *
  * HOW TO USE A MOCKED FUNCTION:
  *
  * - #include "mock_private.h" in your test file.
@@ -307,6 +320,51 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
     } else {
         return __real_readlink(path, buf, bufsize);
     }
+}
+
+
+/* snprintf()
+ *
+ * If pcmk__mock_snprintf is set to true, later calls to snprintf() must be
+ * preceded by:
+ * 
+ *     expect_*(pcmk__test_snprintf, str[, ...]);
+ *     expect_*(pcmk__test_snprintf, size[, ...]);
+ *     expect_*(pcmk__test_snprintf, format[, ...]);
+ *     will_return(pcmk__test_snprintf, errno_to_set);
+ *
+ * The mocked function will return -1 if errno_to_set is not 0. Otherwise, it
+ * will call vsnprintf() with the passed-in argument list and return its return
+ * value.
+ *
+ * Ideally we would check whether the variable arguments after the format string
+ * match our expectations, but this does not appear to be feasible.
+ */
+
+bool pcmk__mock_snprintf = false;
+
+int
+pcmk__test_snprintf(char *restrict str, size_t size,
+                    const char *restrict format, ...)
+{
+    int rc;
+    va_list ap;
+
+    va_start(ap, format);
+
+    if (pcmk__mock_snprintf) {
+        check_expected_ptr(str);
+        check_expected(size);
+        check_expected_ptr(format);
+        errno = mock_type(int);
+
+        rc = (errno == 0)? vsnprintf(str, size, format, ap) : -1;
+    } else {
+        rc = vsnprintf(str, size, format, ap);
+    }
+
+    va_end(ap);
+    return rc;
 }
 
 

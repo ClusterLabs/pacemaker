@@ -58,6 +58,10 @@ ssize_t __real_readlink(const char *restrict path, char *restrict buf,
 ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
                         size_t bufsize);
 
+extern bool pcmk__mock_snprintf;
+int pcmk__test_snprintf(char *restrict str, size_t size,
+                        const char *restrict format, ...);
+
 extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);

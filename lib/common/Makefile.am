@@ -110,7 +110,8 @@ libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) -rpath $(libdir) $(LDF
 # disable all builtins.  Older versions of GCC (at least, on RHEL7) will still emit
 # replacement code for strdup (and possibly other functions) unless -fno-inline is
 # also added.
-libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) -DPCMK__UNIT_TESTING -fno-builtin -fno-inline
+libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) -DPCMK__UNIT_TESTING
+libcrmcommon_test_la_CFLAGS	+= $(CFLAGS_MOCK) -fno-builtin -fno-inline
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
 libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD) -lcmocka -lm
