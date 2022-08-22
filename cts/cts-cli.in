@@ -946,7 +946,6 @@ function test_tools() {
 
     unset CIB_shadow
     unset CIB_shadow_dir
-    rm -f "$TMPXML" "$TMPORIG"
 
     desc="Create an XML patchset"
     cmd="crm_diff -o $test_home/cli/crm_diff_old.xml -n $test_home/cli/crm_diff_new.xml"
@@ -1076,6 +1075,10 @@ function test_tools() {
     cmd="crm_resource -r promotable-rsc:0 --move --node node1"
     test_assert $CRM_EX_INVALID_PARAM 0
 
+    # Create a sandbox copy of crm_mon.xml
+    cibadmin -Q > "$TMPXML"
+    export CIB_file="$TMPXML"
+
     desc="Query a nonexistent promotable score attribute"
     cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
     test_assert $CRM_EX_NOSUCH 0
@@ -1165,6 +1168,7 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+    rm -f "$TMPXML" "$TMPORIG"
 }
 
 INVALID_PERIODS=(
