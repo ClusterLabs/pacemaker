@@ -244,9 +244,6 @@ bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
-void pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set);
-
-G_GNUC_INTERNAL
 void pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
