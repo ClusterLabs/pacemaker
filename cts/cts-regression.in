@@ -1,230 +1,345 @@
-#!@BASH_PATH@
-#
-# cts-regression
-#
-# Convenience wrapper for running any of the Pacemaker regression tests
-#
-# Copyright 2012-2021 the Pacemaker project contributors
-#
-# The version control history for this file may have further details.
-#
-# This source code is licensed under the GNU General Public License version 2
-# or later (GPLv2+) WITHOUT ANY WARRANTY.
-#
+#!@PYTHON@
+"""Convenience wrapper for running Pacemaker regression tests.
 
-# Check whether Pacemaker Remote support was built
-[ -z "@PC_NAME_GNUTLS@" ]
-REMOTE_ENABLED=$?
+Usage: cts-regression [-h] [-V] [-v] [COMPONENT ...]
+"""
 
-USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]
-Options:
- --help          Display this text, then exit
- -V, --verbose   Increase test verbosity
- -v, --valgrind  Run test commands under valgrind
+__copyright__ = 'Copyright 2012-2022 the Pacemaker project contributors'
+__license__ = 'GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY'
 
-Tests (default tests are 'scheduler cli'):
- scheduler         Action scheduler
- cli               Command-line tools
- exec              Local resource agent executor"
+import argparse
+from enum import IntEnum, unique
+import os
+import subprocess
+import sys
+import textwrap
 
-if [ $REMOTE_ENABLED -eq 1 ]; then
-    USAGE_TEXT="$USAGE_TEXT
- pacemaker_remote  Resource agent executor in remote mode"
-fi
 
-USAGE_TEXT="$USAGE_TEXT
- fencing           Fencer
- all               Synonym for 'scheduler cli exec fencing'"
+REMOTE_ENABLED = bool('@PC_NAME_GNUTLS@')
 
-# If readlink supports -e (i.e. GNU), use it
-readlink -e / >/dev/null 2>/dev/null
-if [ $? -eq 0 ]; then
-    test_home="$(dirname "$(readlink -e "$0")")"
-else
-    test_home="$(dirname "$0")"
-fi
 
-valgrind=""
-verbose=""
-tests=""
+@unique
+class CrmExit(IntEnum):
+    """Pacemaker exit codes.
 
-# These constants must track crm_exit_t values
-CRM_EX_OK=0
-CRM_EX_ERROR=1
-CRM_EX_NOT_INSTALLED=5
-CRM_EX_USAGE=64
+    These values must be kept in sync with include/crm/common/results.h.
+    """
 
-function info() {
-    printf "$*\n"
-}
+    # Common convention
+    OK = 0
+    ERROR = 1
 
-function error() {
-    printf "      * ERROR:   $*\n"
-}
+    # LSB + OCF
+    INVALID_PARAM = 2
+    UNIMPLEMENT_FEATURE = 3
+    INSUFFICIENT_PRIV = 4
+    NOT_INSTALLED = 5
+    NOT_CONFIGURED = 6
+    NOT_RUNNING = 7
+    PROMOTED = 8
+    FAILED_PROMOTED = 9
 
-function run_as_root() {
-    CMD="$1"
-    shift
-    ARGS="$*" # assumes arguments don't need quoting
+    # sysexits.h
+    USAGE = 64
+    DATAERR = 65
+    NOINPUT = 66
+    NOUSER = 67
+    NOHOST = 68
+    UNAVAILABLE = 69
+    SOFTWARE = 70
+    OSERR = 71
+    OSFILE = 72
+    CANTCREAT = 73
+    IOERR = 74
+    TEMPFAIL = 75
+    PROTOCOL = 76
+    NOPERM = 77
+    CONFIG = 78
 
-    # Test might not be executable if run from source directory
-    chmod a+x $CMD
+    # Custom
+    FATAL = 100
+    PANIC = 101
+    DISCONNECT = 102
+    OLD = 103
+    DIGEST = 104
+    NOSUCH = 105
+    QUORUM = 106
+    UNSAFE = 107
+    EXISTS = 108
+    MULTIPLE = 109
+    EXPIRED = 110
+    NOT_YET_IN_EFFECT = 111
+    INDETERMINATE = 112
+    UNSATISFIED = 113
 
-    CMD="$CMD $ARGS $verbose"
+    # Other
+    TIMEOUT = 124
 
-    if [ $EUID -eq 0 ]; then
-        $CMD
+    # OCF Resource Agent API 1.1
+    DEGRADED = 190
+    DEGRADED_PROMOTED = 191
 
-    else
-        echo "Enter the root password if prompted..."
-        sudo -- $CMD
-    fi
-}
+    # Custom
+    NONE = 193
 
-add_test() {
-    local TEST="$1"
+    MAX = 255
 
-    case "$TEST" in
-        scheduler|exec|pacemaker_remote|fencing|cli)
-            if [[ ! $tests =~ $TEST ]]; then
-                tests="$tests $TEST"
-            fi
-            ;;
-        *)
-            error "unknown test: $TEST"
-            echo
-            echo "$USAGE_TEXT"
-            exit $CRM_EX_USAGE
-            ;;
-    esac
-}
 
-run_test() {
-    local t="$1"
+class Component():
+    """A class for running regression tests on a component.
 
-    info "Executing the $t regression tests"
-    info "============================================================"
-    case $t in
-        scheduler)
-            if [ -x $test_home/cts-scheduler ]; then
-                $test_home/cts-scheduler $verbose $valgrind
-                rc=$?
-            else
-                error "scheduler regression test not found"
-                rc=$CRM_EX_NOT_INSTALLED
-            fi
-            ;;
-        exec)
-            if [ -x $test_home/cts-exec ]; then
-                run_as_root $test_home/cts-exec
-                rc=$?
-            else
-                error "executor regression test not found"
-                rc=$CRM_EX_NOT_INSTALLED
-            fi
-            ;;
-        pacemaker_remote)
-            if [ -x $test_home/cts-exec ]; then
-                run_as_root $test_home/cts-exec -R
-                rc=$?
-            else
-                error "pacemaker_remote regression test not found"
-                rc=$CRM_EX_NOT_INSTALLED
-            fi
-            ;;
-        fencing)
-            if [ -x $test_home/cts-fencing ]; then
-                run_as_root $test_home/cts-fencing
-                rc=$?
-            else
-                error "fencing regression test not found"
-                rc=$CRM_EX_NOT_INSTALLED
-            fi
-            ;;
-        cli)
-            if [ -x $test_home/cts-cli ]; then
-                $test_home/cts-cli $verbose $valgrind
-                rc=$?
-            else
-                error "cli regression test not found"
-                rc=$CRM_EX_NOT_INSTALLED
-            fi
-            ;;
-    esac
+    "Component" refers to a Pacemaker component, such as the scheduler.
 
-    info "============================================================"
-    info ""
-    info ""
-    return $rc
-}
+    :attribute name: The name of the component.
+    :type name: str
+    :attribute description: The description of the component.
+    :type description: str
+    :attribute requires_root: Whether the component's tests must be run
+        as root.
+    :type requires_root: bool
+    :attribute supports_valgrind: Whether the component's tests support
+        running under valgrind.
+    :type supports_valgrind: bool
+    :attribute cmd: The command to run the component's tests, along with
+        any required options.
+    :type cmd: list[str]
 
-run_tests() {
-    local TEST
-    local TEST_RC
-    local FAILED
+    :method run([verbose=False], [valgrind=False]): Run the component's
+        regression tests and return the result.
+    """
 
-    FAILED=""
-    for TEST in "$@"; do
-        run_test $TEST
-	TEST_RC=$?
-        if [ $TEST_RC -ne 0 ]; then
-            info "$TEST regression tests failed ($TEST_RC)"
-            FAILED="$FAILED $TEST"
-        fi
-    done
-    if [ -n "$FAILED" ]; then
-        error "failed regression tests: $FAILED"
-        return $CRM_EX_ERROR
-    fi
-    return $CRM_EX_OK
-}
+    def __init__(self, name, description, test_home, requires_root=False,
+                 supports_valgrind=False):
+        """Constructor for the :class:`Component` class.
 
-while [ $# -gt 0 ] ; do
-    case "$1" in
-        --help)
-            echo "$USAGE_TEXT"
-            exit $CRM_EX_OK
-            ;;
-        -V|--verbose)
-            verbose="-V"
-            shift
-            ;;
-        -v|--valgrind)
-            valgrind="-v"
-            shift
-            ;;
-        scheduler|exec|fencing|cli)
-            add_test $1
-            shift
-            ;;
-        pacemaker_remote)
-            if [ $REMOTE_ENABLED -eq 0 ]; then
-                error "Pacemaker Remote not supported by this build"
-                exit $CRM_EX_USAGE
-            else
-                add_test $1
-                shift
-            fi
-            ;;
-        all)
-            add_test scheduler
-            add_test cli
-            add_test exec
-            add_test fencing
-            shift
-            ;;
-        *)
-            error "unknown option: $1"
-            echo
-            echo "$USAGE_TEXT"
-            exit $CRM_EX_USAGE
-            ;;
-    esac
-done
+        :param name: The name of the component.
+        :type name: str
+        :param description: The description of the component.
+        :type description: str
+        :param test_home: The directory where the component's tests
+            reside.
+        :type test_home: str
+        :param requires_root: Whether the component's tests must be run
+            as root.
+        :type requires_root: bool
+        :param supports_valgrind: Whether the component's tests support
+            running under valgrind.
+        :type supports_valgrind: bool
+        """
+        self.name = name
+        self.description = description
+        self.requires_root = requires_root
+        self.supports_valgrind = supports_valgrind
 
-if [ -z "$tests" ]; then
-    add_test scheduler
-    add_test cli
-fi
+        if self.name == 'pacemaker_remote':
+            self.cmd = [os.path.join(test_home, 'cts-exec'), '-R']
+        else:
+            self.cmd = [os.path.join(test_home, 'cts-%s' % self.name)]
 
-run_tests $tests
+    def run(self, verbose=False, valgrind=False):
+        """Run the component's regression tests and return the result.
+
+        :param verbose: Whether to increase test output verbosity.
+        :type verbose: bool
+        :param valgrind: Whether to run the test under valgrind.
+        :type valgrind: bool
+        :return: The exit code from the component's test suite.
+        :rtype: :class:`CrmExit`
+        """
+        print('Executing the %s regression tests' % self.name)
+        print('=' * 60)
+
+        cmd = self.cmd
+        if self.requires_root and os.geteuid() != 0:
+            print('Enter the sudo password if prompted')
+            cmd = ['sudo'] + self.cmd
+
+        if verbose:
+            cmd.append('--verbose')
+
+        if self.supports_valgrind and valgrind:
+            cmd.append('--valgrind')
+
+        try:
+            rc = CrmExit(subprocess.call(cmd))
+        except OSError as err:
+            error_print('Failed to execute %s tests: %s' % (self.name, err))
+            rc = CrmExit.NOT_INSTALLED
+
+        print('=' * 60 + '\n\n')
+        return rc
+
+
+class ComponentsArgAction(argparse.Action):
+    """A class to handle `components` arguments.
+
+    This class handles special cases and cleans up the `components`
+    list. Specifically, it does the following:
+      * Enforce a default value of ['cli', 'scheduler'].
+      * Replace the 'all' alias with the components that it represents.
+      * Get rid of duplicates.
+
+    The main motivation is that when the `choices` argument of
+    :meth:`parser.add_argument()` is specified, the `default` argument
+    must contain exactly one value (not `None` and not a list). We want
+    our default to be a list of components, namely `cli` and
+    `scheduler`.
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        all_components = ['cli', 'exec', 'fencing', 'scheduler']
+        default_components = ['cli', 'scheduler']
+
+        if not values:
+            setattr(namespace, self.dest, default_components)
+            return
+
+        # If no argument is specified, the default gets passed as a
+        # string 'default' instead of as a list ['default']. Probably
+        # a bug in argparse. The below gives us a list.
+        if not isinstance(values, list):
+            values = [values]
+
+        components = set(values)
+
+        # If 'all', is found, replace it with the components it represents.
+        try:
+            components.remove('all')
+            components.update(set(all_components))
+        except KeyError:
+            pass
+
+        # Same for 'default'
+        try:
+            components.remove('default')
+            components.update(set(default_components))
+        except KeyError:
+            pass
+
+        setattr(namespace, self.dest, sorted(list(components)))
+
+
+def error_print(msg):
+    """Print an error message.
+
+    :param msg: Message to print.
+    :type msg: str
+    """
+    print('      * ERROR:   %s' % msg)
+
+
+def run_components(components, verbose=False, valgrind=False):
+    """Run components' regression tests and report results for each.
+
+    :param components: A list of names of components for which to run
+        tests.
+    :type components: list[:class:`Component`]
+    :return: :attr:`CrmExit.OK` if all tests were successful,
+        :attr:`CrmExit.ERROR` otherwise.
+    :rtype: :class:`CrmExit`
+    """
+    failed = []
+
+    for comp in components:
+        rc = comp.run(verbose, valgrind)
+        if rc != CrmExit.OK:
+            error_print('%s regression tests failed (%s)' % (comp.name, rc))
+            failed.append(comp.name)
+
+    if failed:
+        print('Failed regression tests:', end='')
+        for comp in failed:
+            print(' %s' % comp, end='')
+        print()
+        return CrmExit.ERROR
+
+    return CrmExit.OK
+
+
+def main():
+    """Run Pacemaker regression tests as specified by arguments."""
+    try:
+        test_home = os.path.dirname(os.readlink(sys.argv[0]))
+    except OSError:
+        test_home = os.path.dirname(sys.argv[0])
+
+    # Available components
+    components = {
+        'cli': Component(
+            'cli',
+            'Command-line tools',
+            test_home,
+            requires_root=False,
+            supports_valgrind=True,
+        ),
+        'exec': Component(
+            'exec',
+            'Local resource agent executor',
+            test_home,
+            requires_root=True,
+            supports_valgrind=False,
+        ),
+        'fencing': Component(
+            'fencing',
+            'Fencer',
+            test_home,
+            requires_root=True,
+            supports_valgrind=False,
+        ),
+        'scheduler': Component(
+            'scheduler',
+            'Action scheduler',
+            test_home,
+            requires_root=False,
+            supports_valgrind=True,
+        ),
+    }
+
+    if REMOTE_ENABLED:
+        components['pacemaker_remote'] = Component(
+            'pacemaker_remote',
+            'Resource agent executor in remote mode',
+            test_home,
+            requires_root=True,
+            supports_valgrind=False,
+        )
+
+    # Build up program description
+    description = textwrap.dedent('''\
+        Run Pacemaker regression tests.
+
+        Available components (default components are 'cli scheduler'):
+    ''')
+
+    for name, comp in sorted(components.items()):
+        description += '\n {:<20} {}'.format(name, comp.description)
+
+    description += (
+        '\n {:<20} Synonym for "cli exec fencing scheduler"'.format('all')
+    )
+
+    # Parse the arguments
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    choices = sorted(components.keys()) + ['all', 'default']
+
+    parser.add_argument('-V', '--verbose', action='store_true',
+                        help='Increase test verbosity')
+    parser.add_argument('-v', '--valgrind', action='store_true',
+                        help='Run test commands under valgrind')
+    parser.add_argument('components', nargs='*', choices=choices,
+                        default='default',
+                        action=ComponentsArgAction, metavar='COMPONENT',
+                        help="One of the components to test, or 'all'")
+    args = parser.parse_args()
+
+    # Run the tests
+    selected = [components[x] for x in args.components]
+    run_components(selected, args.verbose, args.valgrind)
+
+
+if __name__ == '__main__':
+    main()
