@@ -2963,7 +2963,7 @@ check_alternate_host(const char *target)
     const char *alternate_host = NULL;
 
     crm_trace("Checking if we (%s) can fence %s", stonith_our_uname, target);
-    if (find_topology_for_host(target) && pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
+    if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;
 
