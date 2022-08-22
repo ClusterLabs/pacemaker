@@ -18,6 +18,7 @@ SUBDIRS = \
 	lists		\
 	nvpair 		\
 	operations	\
+	options		\
 	output 		\
 	procfs		\
 	results		\
