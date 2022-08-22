@@ -104,10 +104,24 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Create a table of arguments for a fencing action
+ *
+ * \param[in] agent          Fencing agent name
+ * \param[in] action         Name of fencing action
+ * \param[in] target         Name of target node for fencing action
+ * \param[in] target_nodeid  Node ID of target node for fencing action
+ * \param[in] device_args    Fence device parameters
+ * \param[in] port_map       Target node-to-port mapping for fence device
+ * \param[in] host_arg       Argument name for passing target
+ *
+ * \return Newly created hash table of arguments for fencing action
+ */
 static GHashTable *
-make_args(const char *agent, const char *action, const char *victim,
-          uint32_t victim_nodeid, GHashTable * device_args,
-          GHashTable * port_map, const char *host_arg)
+make_args(const char *agent, const char *action, const char *target,
+          uint32_t target_nodeid, GHashTable *device_args,
+          GHashTable *port_map, const char *host_arg)
 {
     GHashTable *arg_list = NULL;
     const char *value = NULL;
@@ -124,7 +138,7 @@ make_args(const char *agent, const char *action, const char *victim,
         value = g_hash_table_lookup(device_args, buffer);
         if (value) {
             crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, victim);
+                      value, action, pcmk__s(target, "no node"));
             action = value;
         }
     }
@@ -134,21 +148,21 @@ make_args(const char *agent, const char *action, const char *victim,
     /* If this is a fencing operation against another node, add more standard
      * arguments.
      */
-    if (victim && device_args) {
+    if ((target != NULL) && (device_args != NULL)) {
         const char *param = NULL;
 
         /* Always pass the target's name, per
          * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
          */
-        g_hash_table_insert(arg_list, strdup("nodename"), strdup(victim));
+        g_hash_table_insert(arg_list, strdup("nodename"), strdup(target));
 
         // If the target's node ID was specified, pass it, too
-        if (victim_nodeid) {
-            char *nodeid = crm_strdup_printf("%" PRIu32, victim_nodeid);
+        if (target_nodeid != 0) {
+            char *nodeid = crm_strdup_printf("%" PRIu32, target_nodeid);
 
             // cts-fencing looks for this log message
             crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, victim);
+                     nodeid, action, pcmk__s(target, "no node"));
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
@@ -173,13 +187,13 @@ make_args(const char *agent, const char *action, const char *victim,
                 const char *alias = NULL;
 
                 if (port_map) {
-                    alias = g_hash_table_lookup(port_map, victim);
+                    alias = g_hash_table_lookup(port_map, target);
                 }
                 if (alias == NULL) {
-                    alias = victim;
+                    alias = target;
                 }
                 crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, victim);
+                          param, alias, action, pcmk__s(target, "no node"));
                 g_hash_table_insert(arg_list, strdup(param), strdup(alias));
             }
         }
