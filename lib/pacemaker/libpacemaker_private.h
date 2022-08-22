@@ -56,8 +56,18 @@ enum pcmk__updated {
 struct resource_alloc_functions_s {
     pe_node_t *(*allocate)(pe_resource_t *rsc, pe_node_t *prefer);
     void (*create_actions)(pe_resource_t *rsc);
-    gboolean (*create_probe)(pe_resource_t *rsc, pe_node_t *node,
-                             pe_action_t *complete, gboolean force);
+
+    /*!
+     * \internal
+     * \brief Schedule any probes needed for a resource on a node
+     *
+     * \param[in] rsc   Resource to create probe for
+     * \param[in] node  Node to create probe on
+     *
+     * \return true if any probe was created, otherwise false
+     */
+    bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node);
+
     void (*internal_constraints)(pe_resource_t *rsc);
 
     /*!
@@ -152,7 +162,14 @@ struct resource_alloc_functions_s {
 
     void (*output_actions)(pe_resource_t *rsc);
 
-    void (*expand)(pe_resource_t *rsc);
+    /*!
+     * \internal
+     * \brief Add a resource's actions to the transition graph
+     *
+     * \param[in] rsc  Resource whose actions should be added
+     */
+    void (*add_actions_to_graph)(pe_resource_t *rsc);
+
     void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
 
     /*!
@@ -227,7 +244,7 @@ bool pcmk__graph_has_loop(pe_action_t *init_action, pe_action_t *action,
                           pe_action_wrapper_t *input);
 
 G_GNUC_INTERNAL
-void pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set);
+void pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_graph(pe_working_set_t *data_set);
@@ -632,7 +649,13 @@ gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
 // Functions related to probes (pcmk_sched_probes.c)
 
 G_GNUC_INTERNAL
+bool pcmk__probe_rsc_on_node(pe_resource_t *rsc, pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__order_probes(pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
+bool pcmk__probe_resource_list(GList *rscs, pe_node_t *node);
 
 G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);

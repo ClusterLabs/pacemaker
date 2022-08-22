@@ -572,21 +572,6 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     g_list_free_full(zero, free);
 }
 
-void
-group_expand(pe_resource_t *rsc)
-{
-    CRM_CHECK(rsc != NULL, return);
-
-    pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
-    native_expand(rsc);
-
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->cmds->expand(child_rsc);
-    }
-}
-
 /*!
  * \internal
  * \brief Update nodes with scores of colocated resources' nodes

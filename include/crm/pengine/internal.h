@@ -524,6 +524,7 @@ void trigger_unfencing(
 
 char *pe__action2reason(pe_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
+void pe__add_action_expected_result(pe_action_t *action, int expected_result);
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);

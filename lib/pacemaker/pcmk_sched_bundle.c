@@ -904,6 +904,12 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
 void
 pcmk__bundle_expand(pe_resource_t *rsc)
 {
@@ -914,7 +920,7 @@ pcmk__bundle_expand(pe_resource_t *rsc)
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->expand(bundle_data->child);
+        bundle_data->child->cmds->add_actions_to_graph(bundle_data->child);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -965,25 +971,34 @@ pcmk__bundle_expand(pe_resource_t *rsc)
             }
         }
         if (replica->ip) {
-            replica->ip->cmds->expand(replica->ip);
+            replica->ip->cmds->add_actions_to_graph(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->expand(replica->container);
+            replica->container->cmds->add_actions_to_graph(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->expand(replica->remote);
+            replica->remote->cmds->add_actions_to_graph(replica->remote);
         }
     }
 }
 
-gboolean
-pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, gboolean force)
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
+bool
+pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    bool any_created = FALSE;
+    bool any_created = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(rsc != NULL, return FALSE);
+    CRM_CHECK(rsc != NULL, return false);
 
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -991,57 +1006,52 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->ip) {
-            any_created |= replica->ip->cmds->create_probe(replica->ip, node,
-                                                           complete, force);
+        if ((replica->ip != NULL)
+            && replica->ip->cmds->create_probe(replica->ip, node)) {
+            any_created = true;
         }
-        if (replica->child && (node->details == replica->node->details)) {
-            any_created |= replica->child->cmds->create_probe(replica->child,
-                                                              node, complete,
-                                                              force);
+        if ((replica->child != NULL) && (node->details == replica->node->details)
+            && replica->child->cmds->create_probe(replica->child, node)) {
+            any_created = true;
         }
-        if (replica->container) {
-            bool created = replica->container->cmds->create_probe(replica->container,
-                                                                  node, complete,
-                                                                  force);
+        if ((replica->container != NULL)
+            && replica->container->cmds->create_probe(replica->container,
+                                                      node)) {
+            any_created = true;
 
-            if(created) {
-                any_created = TRUE;
-                /* If we're limited to one replica per host (due to
-                 * the lack of an IP range probably), then we don't
-                 * want any of our peer containers starting until
-                 * we've established that no other copies are already
-                 * running.
-                 *
-                 * Partly this is to ensure that nreplicas_per_host is
-                 * observed, but also to ensure that the containers
-                 * don't fail to start because the necessary port
-                 * mappings (which won't include an IP for uniqueness)
-                 * are already taken
-                 */
+            /* If we're limited to one replica per host (due to
+             * the lack of an IP range probably), then we don't
+             * want any of our peer containers starting until
+             * we've established that no other copies are already
+             * running.
+             *
+             * Partly this is to ensure that nreplicas_per_host is
+             * observed, but also to ensure that the containers
+             * don't fail to start because the necessary port
+             * mappings (which won't include an IP for uniqueness)
+             * are already taken
+             */
 
-                for (GList *tIter = bundle_data->replicas;
-                     tIter && (bundle_data->nreplicas_per_host == 1);
-                     tIter = tIter->next) {
-                    pe__bundle_replica_t *other = tIter->data;
+            for (GList *tIter = bundle_data->replicas;
+                 tIter && (bundle_data->nreplicas_per_host == 1);
+                 tIter = tIter->next) {
+                pe__bundle_replica_t *other = tIter->data;
 
-                    if ((other != replica) && (other != NULL)
-                        && (other->container != NULL)) {
+                if ((other != replica) && (other != NULL)
+                    && (other->container != NULL)) {
 
-                        pcmk__new_ordering(replica->container,
-                                           pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                           NULL, other->container,
-                                           pcmk__op_key(other->container->id, RSC_START, 0),
-                                           NULL,
-                                           pe_order_optional|pe_order_same_node,
-                                           rsc->cluster);
-                    }
+                    pcmk__new_ordering(replica->container,
+                                       pcmk__op_key(replica->container->id, RSC_STATUS, 0),
+                                       NULL, other->container,
+                                       pcmk__op_key(other->container->id, RSC_START, 0),
+                                       NULL,
+                                       pe_order_optional|pe_order_same_node,
+                                       rsc->cluster);
                 }
             }
         }
-        if (replica->container && replica->remote
-            && replica->remote->cmds->create_probe(replica->remote, node,
-                                                   complete, force)) {
+        if ((replica->container != NULL) && (replica->remote != NULL)
+            && replica->remote->cmds->create_probe(replica->remote, node)) {
 
             /* Do not probe the remote resource until we know where the
              * container is running. This is required for REMOTE_CONTAINER_HACK
@@ -1053,8 +1063,8 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                                    probe_uuid, NULL, node);
 
             free(probe_uuid);
-            if (probe) {
-                any_created = TRUE;
+            if (probe != NULL) {
+                any_created = true;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
                 pcmk__new_ordering(replica->container,
