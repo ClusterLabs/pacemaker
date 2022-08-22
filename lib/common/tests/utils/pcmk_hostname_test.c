@@ -22,6 +22,8 @@ uname_succeeded_test(void **state)
 
     // Set uname() return value and buf parameter node name
     pcmk__mock_uname = true;
+
+    expect_any(__wrap_uname, buf);
     will_return(__wrap_uname, 0);
     will_return(__wrap_uname, "somename");
 
@@ -39,6 +41,8 @@ uname_failed_test(void **state)
 {
     // Set uname() return value and buf parameter node name
     pcmk__mock_uname = true;
+
+    expect_any(__wrap_uname, buf);
     will_return(__wrap_uname, -1);
     will_return(__wrap_uname, NULL);
 

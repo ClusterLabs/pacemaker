@@ -24,21 +24,33 @@
 
 /* internal unit testing related utilities */
 
-/* A cmocka-like assert macro for use in unit testing.  This one verifies that
- * an expression aborts through CRM_ASSERT, erroring out if that is not the case.
+/*!
+ * \internal
+ * \brief Assert that a statement aborts through CRM_ASSERT().
  *
- * This macro works by running the expression in a forked child process with core
- * dumps disabled (CRM_ASSERT calls abort(), which will write out a core dump).
- * The parent waits for the child to exit and checks why.  If the child received
- * a SIGABRT, the test passes.  For all other cases, the test fails.
+ * \param[in] stmt  Statement to execute; can be an expression.
+ *
+ * A cmocka-like assert macro for use in unit testing. This one verifies that a
+ * statement aborts through CRM_ASSERT(), erroring out if that is not the case.
+ *
+ * This macro works by running the statement in a forked child process with core
+ * dumps disabled (CRM_ASSERT() calls \c abort(), which will write out a core
+ * dump). The parent waits for the child to exit and checks why. If the child
+ * received a \c SIGABRT, the test passes. For all other cases, the test fails.
+ *
+ * \note If cmocka's expect_*() or will_return() macros are called along with
+ *       pcmk__assert_asserts(), they must be called within a block that is
+ *       passed as the \c stmt argument. That way, the values are added only to
+ *       the child's queue. Otherwise, values added to the parent's queue will
+ *       never be popped, and the test will fail.
  */
-#define pcmk__assert_asserts(expr) \
+#define pcmk__assert_asserts(stmt) \
     do { \
         pid_t p = fork(); \
         if (p == 0) { \
             struct rlimit cores = { 0, 0 }; \
             setrlimit(RLIMIT_CORE, &cores); \
-            expr; \
+            stmt; \
             _exit(0); \
         } else if (p > 0) { \
             int wstatus = 0; \
@@ -46,7 +58,7 @@
                 fail_msg("waitpid failed"); \
             } \
             if (!(WIFSIGNALED(wstatus) && WTERMSIG(wstatus) == SIGABRT)) { \
-                fail_msg("expr terminated without asserting"); \
+                fail_msg("statement terminated in child without asserting"); \
             } \
         } else { \
             fail_msg("unable to fork for assert test"); \

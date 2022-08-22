@@ -18,6 +18,8 @@ static void
 calloc_fails(void **state) {
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
+    expect_value(__wrap_calloc, nmemb, 1);
+    expect_value(__wrap_calloc, size, sizeof(pe_working_set_t));
     assert_null(pe_new_working_set());
 
     pcmk__mock_calloc = false;  // Use real calloc()

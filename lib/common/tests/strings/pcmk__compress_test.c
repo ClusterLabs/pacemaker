@@ -41,9 +41,15 @@ calloc_fails(void **state) {
     char *result = calloc(1024, sizeof(char));
     unsigned int len;
 
-    pcmk__mock_calloc = true;   // calloc() will return NULL
-    pcmk__assert_asserts(pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len));
-    pcmk__mock_calloc = false;  // Use the real calloc()
+    pcmk__assert_asserts(
+        {
+            pcmk__mock_calloc = true;   // calloc() will return NULL
+            expect_value(__wrap_calloc, nmemb, (size_t) ((40 * 1.01) + 601));
+            expect_value(__wrap_calloc, size, sizeof(char));
+            pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len);
+            pcmk__mock_calloc = false;  // Use the real calloc()
+        }
+    );
 }
 
 int
