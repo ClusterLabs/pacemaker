@@ -42,11 +42,5 @@ check_defaults(void **state) {
     free(data_set);
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(check_defaults),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(check_defaults))

@@ -33,13 +33,6 @@ invalid_strategy(void **state) {
     assert_false(pcmk__validate_health_strategy("customized"));
 }
 
-int
-main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(valid_strategy),
-        cmocka_unit_test(invalid_strategy),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(valid_strategy),
+                cmocka_unit_test(invalid_strategy))

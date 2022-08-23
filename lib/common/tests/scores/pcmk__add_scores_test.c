@@ -65,17 +65,10 @@ result_finite(void **state)
     assert_int_equal(pcmk__add_scores(200, -50), 150);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(score1_minus_inf),
-        cmocka_unit_test(score2_minus_inf),
-        cmocka_unit_test(score1_pos_inf),
-        cmocka_unit_test(score2_pos_inf),
-        cmocka_unit_test(result_infinite),
-        cmocka_unit_test(result_finite),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(score1_minus_inf),
+                cmocka_unit_test(score2_minus_inf),
+                cmocka_unit_test(score1_pos_inf),
+                cmocka_unit_test(score2_pos_inf),
+                cmocka_unit_test(result_infinite),
+                cmocka_unit_test(result_finite))

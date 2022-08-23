@@ -69,14 +69,8 @@ conversion_errors(void **state)
     g_hash_table_destroy(tbl);
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(null_args),
-        cmocka_unit_test(missing_key),
-        cmocka_unit_test(standard_usage),
-        cmocka_unit_test(conversion_errors),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(null_args),
+                cmocka_unit_test(missing_key),
+                cmocka_unit_test(standard_usage),
+                cmocka_unit_test(conversion_errors))

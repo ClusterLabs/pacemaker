@@ -42,15 +42,7 @@ no_params_null(void **state) {
     free(retval);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(all_params_null),
-        cmocka_unit_test(some_params_null),
-        cmocka_unit_test(no_params_null),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(all_params_null),
+                cmocka_unit_test(some_params_null),
+                cmocka_unit_test(no_params_null))

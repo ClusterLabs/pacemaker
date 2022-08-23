@@ -44,15 +44,7 @@ overflow(void **state) {
     assert_int_equal(crm_get_msec("9223372036854775807s"), LLONG_MAX);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_input),
-        cmocka_unit_test(good_input),
-        cmocka_unit_test(overflow),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(bad_input),
+                cmocka_unit_test(good_input),
+                cmocka_unit_test(overflow))

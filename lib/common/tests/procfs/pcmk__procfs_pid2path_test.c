@@ -81,16 +81,10 @@ contents_ok(void **state)
 
 #endif // SUPPORT_PROCFS
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
+PCMK__UNIT_TEST(NULL, NULL,
 #if SUPPORT_PROCFS
-        cmocka_unit_test(no_exe_file),
-        cmocka_unit_test(contents_too_long),
-        cmocka_unit_test(contents_ok),
+                cmocka_unit_test(no_exe_file),
+                cmocka_unit_test(contents_too_long),
+                cmocka_unit_test(contents_ok)
 #endif
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+               )

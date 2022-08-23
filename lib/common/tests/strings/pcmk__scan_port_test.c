@@ -52,16 +52,8 @@ typical_case(void **state)
     assert_int_equal(result, 80);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input_string),
-        cmocka_unit_test(bad_input_string),
-        cmocka_unit_test(out_of_range),
-        cmocka_unit_test(typical_case),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
-
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_string),
+                cmocka_unit_test(bad_input_string),
+                cmocka_unit_test(out_of_range),
+                cmocka_unit_test(typical_case))

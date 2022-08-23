@@ -51,15 +51,7 @@ ends_with_ext(void **state) {
     assert_false(pcmk__ends_with_ext("ab.c", ".C"));
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_input),
-        cmocka_unit_test(ends_with),
-        cmocka_unit_test(ends_with_ext),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(bad_input),
+                cmocka_unit_test(ends_with),
+                cmocka_unit_test(ends_with_ext))

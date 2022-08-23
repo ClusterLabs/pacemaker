@@ -72,15 +72,9 @@ regex(void **state) {
     assert_true(pcmk__strcmp(s2, "*ab", pcmk__str_regex) > 0);
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(same_pointer),
-        cmocka_unit_test(one_is_null),
-        cmocka_unit_test(case_matters),
-        cmocka_unit_test(case_insensitive),
-        cmocka_unit_test(regex),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(same_pointer),
+                cmocka_unit_test(one_is_null),
+                cmocka_unit_test(case_matters),
+                cmocka_unit_test(case_insensitive),
+                cmocka_unit_test(regex))

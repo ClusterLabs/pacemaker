@@ -148,22 +148,11 @@ double_underflow(void **state)
     assert_true(result >= -DBL_MIN);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        // Test for input string issues
-        cmocka_unit_test(empty_input_string),
-        cmocka_unit_test(bad_input_string),
-        cmocka_unit_test(trailing_chars),
-        cmocka_unit_test(no_result_variable),
-
-        // Test for numeric issues
-        cmocka_unit_test(typical_case),
-        cmocka_unit_test(double_overflow),
-        cmocka_unit_test(double_underflow),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
-
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_string),
+                cmocka_unit_test(bad_input_string),
+                cmocka_unit_test(trailing_chars),
+                cmocka_unit_test(no_result_variable),
+                cmocka_unit_test(typical_case),
+                cmocka_unit_test(double_overflow),
+                cmocka_unit_test(double_underflow))

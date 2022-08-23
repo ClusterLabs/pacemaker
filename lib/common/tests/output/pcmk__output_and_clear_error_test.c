@@ -78,13 +78,5 @@ standard_usage(void **state) {
     assert_null(error->message);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test_setup_teardown(standard_usage, setup, teardown),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test_setup_teardown(standard_usage, setup, teardown))

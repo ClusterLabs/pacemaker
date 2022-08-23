@@ -56,14 +56,6 @@ is_xml_acl_enabled_with_node(void **state)
     assert_true(xml_acl_enabled(test_xml));
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(is_xml_acl_enabled_without_node),
-        cmocka_unit_test(is_xml_acl_enabled_with_node),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(is_xml_acl_enabled_without_node),
+                cmocka_unit_test(is_xml_acl_enabled_with_node))

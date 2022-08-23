@@ -30,13 +30,7 @@ has_suffix(void **state) {
     assert_string_equal(pe_base_name_end("rsc:100"), "c:100");
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_args),
-        cmocka_unit_test(no_suffix),
-        cmocka_unit_test(has_suffix),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(bad_args),
+                cmocka_unit_test(no_suffix),
+                cmocka_unit_test(has_suffix))

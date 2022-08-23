@@ -141,15 +141,9 @@ bundle_rsc(void **state) {
     assert_false(pe_base_name_eq(httpd_bundle, "httpd-docker-0"));
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_args),
-        cmocka_unit_test(primitive_rsc),
-        cmocka_unit_test(group_rsc),
-        cmocka_unit_test(clone_rsc),
-        cmocka_unit_test(bundle_rsc),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, setup, teardown);
-}
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(bad_args),
+                cmocka_unit_test(primitive_rsc),
+                cmocka_unit_test(group_rsc),
+                cmocka_unit_test(clone_rsc),
+                cmocka_unit_test(bundle_rsc))

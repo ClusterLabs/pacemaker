@@ -42,14 +42,8 @@ no_pids(void **state)
 
 #endif // SUPPORT_PROCFS
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
+PCMK__UNIT_TEST(NULL, NULL,
 #if SUPPORT_PROCFS
-        cmocka_unit_test(no_pids),
+                cmocka_unit_test(no_pids)
 #endif
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+               )

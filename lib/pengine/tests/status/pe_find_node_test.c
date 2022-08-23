@@ -46,12 +46,6 @@ non_null_list(void **state) {
     g_list_free(nodes);
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_list),
-        cmocka_unit_test(non_null_list),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_list),
+                cmocka_unit_test(non_null_list))

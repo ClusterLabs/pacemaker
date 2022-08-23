@@ -55,17 +55,9 @@ unknown_standard(void **state) {
     assert_int_equal(pcmk_get_ra_caps(NULL), pcmk_ra_cap_none);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(ocf_standard),
-        cmocka_unit_test(stonith_standard),
-        cmocka_unit_test(service_standard),
-        cmocka_unit_test(nagios_standard),
-        cmocka_unit_test(unknown_standard),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(ocf_standard),
+                cmocka_unit_test(stonith_standard),
+                cmocka_unit_test(service_standard),
+                cmocka_unit_test(nagios_standard),
+                cmocka_unit_test(unknown_standard))
