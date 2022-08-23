@@ -270,7 +270,7 @@ controld_validate() {
             ;;
     esac
 
-    [ -d /var/run/cluster ] || mkdir /var/run/cluster
+    [ -d "@runstatedir@/cluster" ] || mkdir "@runstatedir@/cluster"
 
     return $OCF_SUCCESS
 }

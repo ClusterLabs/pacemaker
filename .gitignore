@@ -121,6 +121,7 @@ configure
 /extra/resources/ClusterMon
 /extra/resources/HealthSMART
 /extra/resources/SysInfo
+/extra/resources/controld
 /extra/resources/ifspeed
 /extra/resources/o2cb
 /include/config.h
