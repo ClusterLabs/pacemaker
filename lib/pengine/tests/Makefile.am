@@ -1,1 +1,1 @@
-SUBDIRS = rules native status unpack
+SUBDIRS = rules native status unpack utils
