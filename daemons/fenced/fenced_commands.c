@@ -2957,33 +2957,22 @@ set_fencing_completed(remote_fencing_op_t *op)
 static const char *
 check_alternate_host(const char *target)
 {
-    const char *alternate_host = NULL;
-
-    crm_trace("Checking if we (%s) can fence %s", stonith_our_uname, target);
     if (pcmk__str_eq(target, stonith_our_uname, pcmk__str_casei)) {
         GHashTableIter gIter;
         crm_node_t *entry = NULL;
 
         g_hash_table_iter_init(&gIter, crm_peer_cache);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-            crm_trace("Checking for %s.%d != %s", entry->uname, entry->id, target);
             if (fencing_peer_active(entry)
                 && !pcmk__str_eq(entry->uname, target, pcmk__str_casei)) {
-                alternate_host = entry->uname;
-                break;
+                crm_notice("Forwarding self-fencing request to %s",
+                           entry->uname);
+                return entry->uname;
             }
         }
-        if (alternate_host == NULL) {
-            crm_err("No alternate host available to handle request "
-                    "for self-fencing with topology");
-            g_hash_table_iter_init(&gIter, crm_peer_cache);
-            while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-                crm_notice("Peer[%d] %s", entry->id, entry->uname);
-            }
-        }
+        crm_warn("Will handle own fencing because no peer can");
     }
-
-    return alternate_host;
+    return NULL;
 }
 
 /*!
@@ -3275,6 +3264,7 @@ handle_fence_request(pcmk__request_t *request)
                 return fenced_construct_reply(request->xml, NULL,
                                               &request->result);
             }
+            alternate_host = check_alternate_host(target);
 
         } else {
             crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
@@ -3282,14 +3272,9 @@ handle_fence_request(pcmk__request_t *request)
                        (device == NULL)? "(any)" : device);
         }
 
-        alternate_host = check_alternate_host(target);
-
-        if ((alternate_host != NULL) && (request->ipc_client != NULL)) {
+        if (alternate_host != NULL) {
             const char *client_id = NULL;
             remote_fencing_op_t *op = NULL;
-
-            crm_notice("Forwarding self-fencing request to peer %s "
-                       "due to topology", alternate_host);
 
             if (request->ipc_client->id == 0) {
                 client_id = crm_element_value(request->xml, F_STONITH_CLIENTID);
