@@ -169,18 +169,33 @@ pe__node_list2table(GList *list)
  * numeric portions of the name sorted numerically. For example, "node10" will
  * sort higher than "node9" but lower than "remotenode9".
  *
- * \param[in] a  First node to compare (must not be \c NULL)
- * \param[in] b  Second node to compare (must not be \c NULL)
+ * \param[in] a  First node to compare (can be \c NULL)
+ * \param[in] b  Second node to compare (can be \c NULL)
  *
- * \retval -1 \c a comes before \c b
- * \retval  0 \c a and \c b are equal
- * \retval  1 \c a comes after \c b
+ * \retval -1 \c a comes before \c b (or \c a is \c NULL and \c b is not)
+ * \retval  0 \c a and \c b are equal (or both are \c NULL)
+ * \retval  1 \c a comes after \c b (or \c b is \c NULL and \c a is not)
  */
 gint
 pe__cmp_node_name(gconstpointer a, gconstpointer b)
 {
-    return pcmk__numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
-                                    ((const pe_node_t *) b)->details->uname);
+    const pe_node_t *node1 = (const pe_node_t *) a;
+    const pe_node_t *node2 = (const pe_node_t *) b;
+
+    if ((node1 == NULL) && (node2 == NULL)) {
+        return 0;
+    }
+
+    if (node1 == NULL) {
+        return -1;
+    }
+
+    if (node2 == NULL) {
+        return 1;
+    }
+
+    return pcmk__numeric_strcasecmp(node1->details->uname,
+                                    node2->details->uname);
 }
 
 /*!
