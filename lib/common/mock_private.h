@@ -66,6 +66,18 @@ ssize_t __real_readlink(const char *restrict path, char *restrict buf,
 ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
                         size_t bufsize);
 
+extern bool pcmk__mock_snprintf;
+int pcmk__wrap_vsnprintf_helper(char *restrict str, size_t size,
+                                const char *restrict format, va_list ap);
+int __real_snprintf(char *restrict str, size_t size,
+                    const char *restrict format, ...);
+int __wrap_snprintf(char *restrict str, size_t size,
+                    const char *restrict format, ...);
+int __real___snprintfieee128(char *restrict str, size_t size,
+                               const char *restrict format, ...);
+int __wrap___snprintfieee128(char *restrict str, size_t size,
+                               const char *restrict format, ...);
+
 extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);

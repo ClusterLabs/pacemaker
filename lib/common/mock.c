@@ -366,6 +366,78 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
 }
 
 
+/* snprintf()
+ *
+ * If pcmk__mock_snprintf is set to true, later calls to snprintf() must be
+ * preceded by:
+ * 
+ *     expect_*(pcmk__wrap_vsnprintf_helper, str[, ...]);
+ *     expect_*(pcmk__wrap_vsnprintf_helper, size[, ...]);
+ *     expect_*(pcmk__wrap_vsnprintf_helper, format[, ...]);
+ *     will_return(pcmk__wrap_vsnprintf_helper, errno_to_set);
+ *
+ * The mocked function will return -1 if errno_to_set is not 0. Otherwise, it
+ * will call vsnprintf() with the passed-in argument list and return its return
+ * value.
+ *
+ * Ideally we would check whether the variable arguments after the format string
+ * match our expectations, but this is not straightforward.
+ *
+ * __wrap_snprintf() and __wrap___snprintfieee128() should behave exactly the
+ * same. They have to be defined separately since wrapping is done at link time.
+ * By then, snprintf() calls have already been converted to __snprintfieee128()
+ * throughout the Pacemaker code on systems that support it. For example:
+ *   - https://fedoraproject.org/wiki/Changes/PPC64LE_Float128_Transition
+ *
+ * To ensure a stable interface, unit testing macros like expect_*() and
+ * will_return() need to refer directly to pcmk__wrap_vsnprintf_helper().
+ *
+ * If vsnprintf() is mocked in the future, it should use the same scheme with
+ * pcmk__wrap_vsnprintf_helper().
+ */
+
+bool pcmk__mock_snprintf = false;
+
+// Caller must free ap
+int
+pcmk__wrap_vsnprintf_helper(char *restrict str, size_t size,
+                            const char *restrict format, va_list ap)
+{
+    if (!pcmk__mock_snprintf) {
+        return vsnprintf(str, size, format, ap);
+    }
+    check_expected_ptr(str);
+    check_expected(size);
+    check_expected_ptr(format);
+    errno = mock_type(int);
+    return (errno == 0)? vsnprintf(str, size, format, ap) : -1;
+}
+
+#define DO_WRAP_SNPRINTF() \
+    do { \
+        int rc; \
+        va_list ap; \
+        va_start(ap, format); \
+        rc = pcmk__wrap_vsnprintf_helper(str, size, format, ap); \
+        va_end(ap); \
+        return rc; \
+    } while (0);
+
+int
+__wrap_snprintf(char *restrict str, size_t size, const char *restrict format,
+                ...)
+{
+    DO_WRAP_SNPRINTF();
+}
+
+int
+__wrap___snprintfieee128(char *restrict str, size_t size,
+                         const char *restrict format, ...)
+{
+    DO_WRAP_SNPRINTF();
+}
+
+
 /* strdup()
  *
  * If pcmk__mock_strdup is set to true, later calls to strdup() will return

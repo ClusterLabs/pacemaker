@@ -25,6 +25,8 @@ WRAPPED = calloc		\
 	  readlink		\
 	  setenv		\
 	  setgrent		\
+	  snprintf		\
+	  __snprintfieee128		\
 	  strdup 		\
 	  uname			\
 	  unsetenv
