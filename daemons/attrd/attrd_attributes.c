@@ -102,16 +102,16 @@ GHashTable *attributes = NULL;
  * \internal
  * \brief Create an XML representation of an attribute for use in peer messages
  *
- * \param[in] parent       Create attribute XML as child element of this element
- * \param[in] a            Attribute to represent
- * \param[in] v            Attribute value to represent
- * \param[in] force_write  If true, value should be written even if unchanged
+ * \param[in,out] parent      Create attribute XML as child element of this
+ * \param[in]     a           Attribute to represent
+ * \param[in]     v           Attribute value to represent
+ * \param[in]     force_write If true, value should be written even if unchanged
  *
  * \return XML representation of attribute
  */
 xmlNode *
-attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
-                    bool force_write)
+attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
+                    const attribute_value_t *v, bool force_write)
 {
     xmlNode *xml = create_xml_node(parent, __func__);
 
