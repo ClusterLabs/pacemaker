@@ -37,7 +37,7 @@ extern "C" {
 #define create_reply(request, xml_response_data)    \
     create_reply_adv(request, xml_response_data, __func__)
 
-xmlNode *create_reply_adv(xmlNode *request, xmlNode *xml_response_data,
+xmlNode *create_reply_adv(const xmlNode *request, xmlNode *xml_response_data,
                           const char *origin);
 
 #define create_request(task, xml_data, host_to, sys_to, sys_from, uuid_from) \
