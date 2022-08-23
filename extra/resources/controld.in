@@ -264,8 +264,10 @@ controld_monitor() {
 
 controld_validate() {
     case "${OCF_RESKEY_CRM_meta_globally_unique}" in
-        yes|Yes|true|True|1)
-            ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
+        [Tt][Rr][Uu][Ee] | [Oo][Nn] | [Yy][Ee][Ss] | [Yy] | 1)
+            msg="The globally-unique meta attribute must not be enabled for"
+            msg="$msg $OCF_RESOURCE_INSTANCE"
+            ocf_log err "$msg"
             exit $OCF_ERR_CONFIGURED
             ;;
     esac
