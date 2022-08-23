@@ -50,7 +50,7 @@ extern "C" {
 typedef const xmlChar *pcmkXmlStr;
 
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(xmlNode * msg, const char *field);
+xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
 xmlDoc *getDocPtr(xmlNode * node);
 
