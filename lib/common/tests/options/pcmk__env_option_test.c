@@ -25,6 +25,23 @@ empty_input_string(void **state)
 }
 
 static void
+snprintf_error(void **state)
+{
+    pcmk__mock_getenv = true;
+    pcmk__mock_snprintf = true;
+
+    // getenv() not called
+    expect_any(pcmk__wrap_vsnprintf_helper, str);
+    expect_value(pcmk__wrap_vsnprintf_helper, size, NAME_MAX);
+    expect_string(pcmk__wrap_vsnprintf_helper, format, "%s%s");
+    will_return(pcmk__wrap_vsnprintf_helper, EOVERFLOW);
+    assert_null(pcmk__env_option("env_var"));
+
+    pcmk__mock_getenv = false;
+    pcmk__mock_snprintf = false;
+}
+
+static void
 input_too_long_for_both(void **state)
 {
     /* pcmk__env_option() prepends "PCMK_" before lookup. If the option name is
@@ -130,6 +147,7 @@ main(int argc, char **argv)
 {
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(empty_input_string),
+        cmocka_unit_test(snprintf_error),
         cmocka_unit_test(input_too_long_for_both),
         cmocka_unit_test(input_too_long_for_pcmk),
         cmocka_unit_test(value_not_found),
