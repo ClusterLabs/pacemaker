@@ -810,7 +810,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         link_rsc2remotenode(data_set, rsc);
     }
 
-    data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
+    data_set->resources = g_list_sort(data_set->resources,
+                                      pe__cmp_rsc_priority);
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* Ignore */
 

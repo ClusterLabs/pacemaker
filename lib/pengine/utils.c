@@ -17,6 +17,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include "pe_status_private.h"
+
 extern bool pcmk__is_daemon;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -290,8 +292,22 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
     }
 }
 
+/*!
+ * \internal
+ * \brief Compare two resources by priority
+ *
+ * \param[in] a  First resource to compare (can be \c NULL)
+ * \param[in] b  Second resource to compare (can be \c NULL)
+ *
+ * \retval -1 \c a->priority > \c b->priority (or \c b is \c NULL and \c a is
+ *            not)
+ * \retval  0 \c a->priority == \c b->priority (or both \c a and \c b are
+ *            \c NULL)
+ * \retval  1 \c a->priority < \c b->priority (or \c a is \c NULL and \c b is
+ *            not)
+ */
 gint
-sort_rsc_priority(gconstpointer a, gconstpointer b)
+pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 {
     const pe_resource_t *resource1 = (const pe_resource_t *)a;
     const pe_resource_t *resource2 = (const pe_resource_t *)b;

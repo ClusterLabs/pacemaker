@@ -38,6 +38,9 @@ void pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                     pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
+gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
+
+G_GNUC_INTERNAL
 gboolean unpack_remote_nodes(xmlNode *xml_resources, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
