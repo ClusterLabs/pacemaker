@@ -893,7 +893,7 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
  *       \c g_hash_table_destroy().
  */
 GHashTable *
-xml2list(xmlNode *parent)
+xml2list(const xmlNode *parent)
 {
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
