@@ -1470,7 +1470,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 // Log an XML element (and any children) in a formatted way
 void
 pcmk__xe_log(int log_level, const char *file, const char *function, int line,
-             const char *prefix, xmlNode *data, int depth, int options)
+             const char *prefix, const xmlNode *data, int depth, int options)
 {
     int max = 0;
     int offset = 0;

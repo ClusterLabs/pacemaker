@@ -945,7 +945,8 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 }
 
 int
-pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value) {
+pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
+{
     const char *xml_value = NULL;
     int ret, rc;
 
@@ -971,7 +972,7 @@ pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value) {
 }
 
 bool
-pcmk__xe_attr_is_true(xmlNodePtr node, const char *name)
+pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 {
     bool value = false;
     int rc;

@@ -56,7 +56,7 @@ pcmk__foreach_ipc_client(GHFunc func, gpointer user_data)
 }
 
 pcmk__client_t *
-pcmk__find_client(qb_ipcs_connection_t *c)
+pcmk__find_client(const qb_ipcs_connection_t *c)
 {
     if (client_connections) {
         return g_hash_table_lookup(client_connections, c);
@@ -95,7 +95,7 @@ pcmk__find_client_by_id(const char *id)
  * \note This is intended to be used in format strings like "client %s".
  */
 const char *
-pcmk__client_name(pcmk__client_t *c)
+pcmk__client_name(const pcmk__client_t *c)
 {
     if (c == NULL) {
         return "(unspecified)";
