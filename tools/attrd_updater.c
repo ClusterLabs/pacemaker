@@ -118,15 +118,16 @@ static GOptionEntry command_entries[] = {
       INDENT "pacemaker-attrd. If this causes the value or dampening to change,\n"
       INDENT "the attribute will also be written to the cluster configuration,\n"
       INDENT "so be aware that repeatedly changing the dampening reduces its\n"
-      INDENT "effectiveness.",
+      INDENT "effectiveness.\n"
+      INDENT "Requires -d/--delay",
       "VALUE" },
 
     { "update-delay", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's dampening in pacemaker-attrd (requires\n"
-      INDENT "-d/--delay). If this causes the dampening to change, the\n"
-      INDENT "attribute will also be written to the cluster configuration, so\n"
-      INDENT "be aware that repeatedly changing the dampening reduces its\n"
-      INDENT "effectiveness.",
+      "Update attribute's dampening in pacemaker-attrd. If this causes\n"
+      INDENT "the dampening to change, the attribute will also be written\n"
+      INDENT "to the cluster configuration, so be aware that repeatedly\n"
+      INDENT "changing the dampening reduces its effectiveness.\n"
+      INDENT "Requires -d/--delay",
       NULL },
 
     { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
@@ -255,6 +256,8 @@ main(int argc, char **argv)
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Command requires --name argument");
         goto done;
+    } else if ((options.command == 'B'|| options.command == 'Y') && options.attr_dampen == NULL) {
+        out->info(out, "Warning: '%c' command given without required --delay", options.command);
     }
 
     pcmk__register_lib_messages(out);
