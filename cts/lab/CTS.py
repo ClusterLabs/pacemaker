@@ -108,9 +108,6 @@ class NodeStatus(object):
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        if self.Env["docker"]:
-            return RemoteFactory().getInstance()("localhost", "docker inspect --format {{.State.Running}} %s | grep -q true" % node, silent=True) == 0
-
         return RemoteFactory().getInstance()("localhost", "ping -nq -c1 -w1 %s" % node, silent=True) == 0
 
     def IsSshdUp(self, node):
