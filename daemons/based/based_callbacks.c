@@ -51,7 +51,7 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 
 void send_cib_replace(const xmlNode * sync_request, const char *host);
 static void cib_process_request(xmlNode *request, gboolean privileged,
-                                pcmk__client_t *cib_client);
+                                const pcmk__client_t *cib_client);
 
 
 static int cib_process_command(xmlNode *request, xmlNode **reply,
@@ -483,7 +483,7 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
 }
 
 static void
-parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
+parse_local_options_v1(const pcmk__client_t *cib_client, int call_type,
                        int call_options, const char *host, const char *op,
                        gboolean *local_notify, gboolean *needs_reply,
                        gboolean *process, gboolean *needs_forward)
@@ -526,7 +526,7 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
 }
 
 static void
-parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
+parse_local_options_v2(const pcmk__client_t *cib_client, int call_type,
                        int call_options, const char *host, const char *op,
                        gboolean *local_notify, gboolean *needs_reply,
                        gboolean *process, gboolean *needs_forward)
@@ -580,7 +580,7 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
 }
 
 static void
-parse_local_options(pcmk__client_t *cib_client, int call_type,
+parse_local_options(const pcmk__client_t *cib_client, int call_type,
                     int call_options, const char *host, const char *op,
                     gboolean *local_notify, gboolean *needs_reply,
                     gboolean *process, gboolean *needs_forward)
@@ -835,7 +835,7 @@ parse_peer_options(int call_type, xmlNode * request,
 }
 
 static void
-forward_request(xmlNode * request, pcmk__client_t *cib_client, int call_options)
+forward_request(xmlNode *request, int call_options)
 {
     const char *op = crm_element_value(request, F_CIB_OPERATION);
     const char *host = crm_element_value(request, F_CIB_HOST);
@@ -919,14 +919,14 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in] request            Request XML
+ * \param[in,out] request        Request XML
  * \param[in] privileged         Whether privileged commands may be run
  *                               (see cib_server_ops[] definition)
  * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
  */
 static void
 cib_process_request(xmlNode *request, gboolean privileged,
-                    pcmk__client_t *cib_client)
+                    const pcmk__client_t *cib_client)
 {
     int call_type = 0;
     int call_options = 0;
@@ -1017,7 +1017,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                    originator ? originator : "local",
                    client_name, call_id);
 
-        forward_request(request, cib_client, call_options);
+        forward_request(request, call_options);
         return;
     }
 
