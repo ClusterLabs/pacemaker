@@ -267,7 +267,7 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 }
 
 int
-pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
+pcmk__element_xpath(const char *prefix, const xmlNode *xml, char *buffer,
                     int offset, size_t buffer_size)
 {
     const char *id = ID(xml);
@@ -289,7 +289,7 @@ pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
 }
 
 char *
-xml_get_path(xmlNode *xml)
+xml_get_path(const xmlNode *xml)
 {
     int offset = 0;
     char buffer[PCMK__BUFFER_SIZE];
