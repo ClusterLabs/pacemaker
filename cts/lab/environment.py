@@ -50,7 +50,6 @@ class Environment(object):
         self["loop-tests"] = 1
         self["scenario"] = "random"
         self["stats"] = 0
-        self["docker"] = 0
         self["continue"] = 0
 
         self.RandomGen = random.Random()
@@ -123,9 +122,7 @@ class Environment(object):
                 # GoodThing(tm).
                 try:
                     n = node.strip()
-                    if self.data["docker"] == 0:
-                        socket.gethostbyname_ex(n)
-
+                    socket.gethostbyname_ex(n)
                     self.Nodes.append(n) 
                 except:
                     self.logger.log(node+" not found in DNS... aborting")
@@ -154,10 +151,7 @@ class Environment(object):
             return "unknown"
 
         elif self.data["Stack"] == "corosync 2+":
-            if self["docker"]:
-                return "crm-corosync-docker"
-            else:
-                return "crm-corosync"
+            return "crm-corosync"
 
         else:
             LogFactory().log("Unknown stack: "+self["stack"])
@@ -320,9 +314,6 @@ class Environment(object):
             elif args[i] == "--qarsh":
                 RemoteFactory().enable_qarsh()
 
-            elif args[i] == "--docker":
-                self["docker"] = 1
-                RemoteFactory().enable_docker()
             elif args[i] == "--yes" or args[i] == "-y":
                 self["continue"] = 1
             elif args[i] == "--stonith" or args[i] == "--fencing":
@@ -331,15 +322,9 @@ class Environment(object):
                     self["DoFencing"]=1
                 elif args[i+1] == "0" or args[i+1] == "no":
                     self["DoFencing"]=0
-                elif args[i+1] == "phd":
-                    self["DoStonith"]=1
-                    self["stonith-type"] = "fence_phd_kvm"
                 elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"
-                elif args[i+1] == "docker":
-                    self["DoStonith"]=1
-                    self["stonith-type"] = "fence_docker_cts"
                 elif args[i+1] == "scsi":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_scsi"
@@ -630,7 +615,6 @@ class Environment(object):
         print("\t [--container-tests]          include pacemaker_remote tests that run in lxc container resources")
         print("\t [--oprofile 'node list']     list of cluster nodes to run oprofile on]")
         print("\t [--qarsh]                    use the QARSH backdoor to access nodes instead of SSH")
-        print("\t [--docker]                   Indicates nodes are docker nodes.")
         print("\t [--seed random_seed]")
         print("\t [--set option=value]")
         print("\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts")
