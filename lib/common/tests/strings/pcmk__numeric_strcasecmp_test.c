@@ -12,6 +12,14 @@
 #include <crm/common/unittest_internal.h>
 
 static void
+null_ptr(void **state)
+{
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp(NULL, NULL));
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp("a", NULL));
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp(NULL, "a"));
+}
+
+static void
 no_numbers(void **state)
 {
     /* All comparisons are done case-insensitively. */
@@ -64,6 +72,7 @@ unequal_lengths(void **state)
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(null_ptr),
                 cmocka_unit_test(no_numbers),
                 cmocka_unit_test(trailing_numbers),
                 cmocka_unit_test(middle_numbers),
