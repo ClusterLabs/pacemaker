@@ -287,7 +287,7 @@ void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
-bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);

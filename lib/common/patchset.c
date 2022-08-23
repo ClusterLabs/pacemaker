@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -768,7 +768,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
  * \return TRUE if format is valid, FALSE if invalid
  */
 static bool
-find_patch_xml_node(xmlNode *patchset, int format, bool added,
+find_patch_xml_node(const xmlNode *patchset, int format, bool added,
                     xmlNode **patch_node)
 {
     xmlNode *cib_node;
@@ -798,7 +798,7 @@ find_patch_xml_node(xmlNode *patchset, int format, bool added,
 
 // Get CIB versions used for additions and deletions in a patchset
 bool
-xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 {
     int lpc = 0;
     int format = 1;
