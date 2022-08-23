@@ -729,7 +729,7 @@ add_notif_keys(pe_resource_t *rsc, notify_data_t *n_data)
          * regression test output (while avoiding the performance hit
          * for the live cluster).
          */
-        nodes = g_list_sort(nodes, sort_node_uname);
+        nodes = g_list_sort(nodes, pe__cmp_node_name);
     }
     get_node_names(nodes, &node_list, NULL);
     add_notify_env_free(n_data, "notify_available_uname", node_list);

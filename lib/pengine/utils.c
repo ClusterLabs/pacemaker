@@ -159,8 +159,23 @@ pe__node_list2table(GList *list)
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Compare two nodes by name, with numeric portions sorted numerically
+ *
+ * Sort two node names case-insensitively like strcasecmp(), but with any
+ * numeric portions of the name sorted numerically. For example, "node10" will
+ * sort higher than "node9" but lower than "remotenode9".
+ *
+ * \param[in] a  First node to compare (must not be \c NULL)
+ * \param[in] b  Second node to compare (must not be \c NULL)
+ *
+ * \retval -1 \c a comes before \c b
+ * \retval  0 \c a and \c b are equal
+ * \retval  1 \c a comes after \c b
+ */
 gint
-sort_node_uname(gconstpointer a, gconstpointer b)
+pe__cmp_node_name(gconstpointer a, gconstpointer b)
 {
     return pcmk__numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
                                     ((const pe_node_t *) b)->details->uname);
@@ -181,7 +196,8 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
     pcmk__output_t *out = data_set->priv;
 
     // Sort the nodes so the output is consistent for regression tests
-    GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
+    GList *list = g_list_sort(g_hash_table_get_values(nodes),
+                              pe__cmp_node_name);
 
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
