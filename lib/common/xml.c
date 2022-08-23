@@ -442,7 +442,7 @@ xml_accept_changes(xmlNode * xml)
 }
 
 xmlNode *
-find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
+find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
 {
     xmlNode *a_child = NULL;
     const char *name = "NULL";

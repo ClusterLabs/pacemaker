@@ -156,7 +156,8 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 /*
  * Searching & Modifying
  */
-xmlNode *find_xml_node(xmlNode * cib, const char *node_path, gboolean must_find);
+xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
+                       gboolean must_find);
 
 void xml_remove_prop(xmlNode * obj, const char *name);
 
