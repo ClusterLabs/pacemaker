@@ -16,7 +16,7 @@
 #    endif
 #  endif
 #  include <sys/socket.h>
-#elif defined(US_AUTH_GETPEERUCRED)
+#elif defined(HAVE_GETPEERUCRED)
 #  include <ucred.h>
 #endif
 
@@ -1399,7 +1399,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
     if (!getpeereid(sock, &found_uid, &found_gid)) {
         found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
 
-#elif defined(US_AUTH_GETPEERUCRED)
+#elif defined(HAVE_GETPEERUCRED)
     ucred_t *ucred;
     if (!getpeerucred(sock, &ucred)) {
         errno = 0;

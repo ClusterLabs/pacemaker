@@ -756,7 +756,7 @@ AS_IF([test -z "${us_auth}"], [
         # Solaris/OpenIndiana
         AC_CHECK_DECL([getpeerucred], [
             us_auth=getpeerucred;
-            AC_DEFINE([US_AUTH_GETPEERUCRED], [1],
+            AC_DEFINE([HAVE_GETPEERUCRED], [1],
                       [Define if Unix socket auth method is
                        getpeercred(s, &ucred)])
         ], [
