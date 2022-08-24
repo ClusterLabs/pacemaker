@@ -1057,7 +1057,7 @@ pcmk__log_action(const char *pre_text, pe_action_t *action, bool details)
  */
 pe_action_t *
 pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
-                        pe_node_t *node)
+                        const pe_node_t *node)
 {
     pe_action_t *cancel_op = NULL;
     char *key = NULL;
