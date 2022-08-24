@@ -14,6 +14,11 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
+#if defined(PCMK__UNIT_TESTING)
+#undef G_GNUC_INTERNAL
+#define G_GNUC_INTERNAL
+#endif
+
 #  define status_print(fmt, args...)           \
    if(options & pe_print_html) {           \
        FILE *stream = print_data;      \
