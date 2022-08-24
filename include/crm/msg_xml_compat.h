@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_MSG_XML_COMPAT__H
 #  define PCMK__CRM_MSG_XML_COMPAT__H
+
+#include <crm/common/agents.h>      // PCMK_STONITH_PROVIDES
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +26,7 @@ extern "C" {
  */
 
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
-#define XML_RSC_ATTR_PROVIDES       "provides"
+#define XML_RSC_ATTR_PROVIDES PCMK_STONITH_PROVIDES
 
 //! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
 #define XML_CIB_TAG_MASTER PCMK_XE_PROMOTED_LEGACY
