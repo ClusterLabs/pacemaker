@@ -134,7 +134,7 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
             crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);
             if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
-                                    data_set) == FALSE) {
+                                    data_set) != pcmk_rc_ok) {
                 pe_err("Failed unpacking resource %s", crm_element_value(xml_obj, XML_ATTR_ID));
                 if (new_rsc != NULL && new_rsc->fns != NULL) {
                     new_rsc->fns->free(new_rsc);

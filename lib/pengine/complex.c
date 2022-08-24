@@ -570,7 +570,7 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
                  (is_default? " (default)" : ""));
 }
 
-gboolean
+int
 pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
                     pe_resource_t *parent, pe_working_set_t *data_set)
 {
@@ -594,18 +594,15 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
+    CRM_CHECK(rsc != NULL, return EINVAL);
+
     if (id == NULL) {
         pe_err("Must specify id tag in <resource>");
-        return FALSE;
-
-    } else if (rsc == NULL) {
-        pe_err("Nowhere to unpack resource into");
-        return FALSE;
-
+        return pcmk_rc_unpack_error;
     }
 
     if (unpack_template(xml_obj, &expanded_xml, data_set) == FALSE) {
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     *rsc = calloc(1, sizeof(pe_resource_t));
@@ -632,7 +629,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     if ((*rsc)->variant == pe_unknown) {
         pe_err("Unknown resource type: %s", crm_element_name((*rsc)->xml));
         free(*rsc);
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -848,7 +845,7 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
                  (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
@@ -873,10 +870,10 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, data_set) == FALSE) {
-            return FALSE;
+            return pcmk_rc_unpack_error;
         }
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 void
