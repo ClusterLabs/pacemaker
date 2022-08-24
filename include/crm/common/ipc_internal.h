@@ -116,7 +116,6 @@ struct pcmk__remote_s {
     /* TLS only */
 #  ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
-    bool tls_handshake_complete;
 #  endif
 };
 
