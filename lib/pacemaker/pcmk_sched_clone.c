@@ -1120,7 +1120,7 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
-        name = crm_meta_name(PCMK_XE_PROMOTED_MAX_LEGACY);
+        name = crm_meta_name(PCMK_XA_PROMOTED_MAX_LEGACY);
         crm_xml_add_int(xml, name, promoted_max);
         free(name);
 
