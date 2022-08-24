@@ -570,6 +570,20 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
                  (is_default? " (default)" : ""));
 }
 
+/*!
+ * \internal
+ * \brief Unpack configuration XML for a given resource
+ *
+ * Unpack the XML object containing a resource's configuration into a new
+ * \c pe_resource_t object.
+ *
+ * \param[in]     xml_obj   XML node containing the resource's configuration
+ * \param[out]    rsc       Where to store the unpacked resource information
+ * \param[in]     parent    Resource's parent, if any
+ * \param[in,out] data_set  Cluster working set
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
                     pe_resource_t *parent, pe_working_set_t *data_set)
