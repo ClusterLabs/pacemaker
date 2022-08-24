@@ -13,7 +13,6 @@
 #include <unistd.h>             // pid_t, getpid()
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
-#include <string.h>             // strcmp()
 
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
