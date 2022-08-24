@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#if defined(US_AUTH_PEERCRED_UCRED) || defined(US_AUTH_PEERCRED_SOCKPEERCRED)
+#if defined(US_AUTH_PEERCRED_UCRED) || defined(HAVE_SOCKPEERCRED)
 #  ifdef US_AUTH_PEERCRED_UCRED
 #    ifndef _GNU_SOURCE
 #      define _GNU_SOURCE
@@ -1385,7 +1385,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
                 && ucred_len == sizeof(ucred)) {
         found_pid = ucred.pid; found_uid = ucred.uid; found_gid = ucred.gid;
 
-#elif defined(US_AUTH_PEERCRED_SOCKPEERCRED)
+#elif defined(HAVE_SOCKPEERCRED)
     struct sockpeercred sockpeercred;
     socklen_t sockpeercred_len = sizeof(sockpeercred);
 

@@ -736,7 +736,7 @@ AC_CHECK_HEADER([sys/socket.h], [
             # OpenBSD
             AC_CHECK_TYPE([struct sockpeercred], [
                 us_auth=localpeercred_sockepeercred;
-                AC_DEFINE([US_AUTH_PEERCRED_SOCKPEERCRED], [1],
+                AC_DEFINE([HAVE_SOCKPEERCRED], [1],
                           [Define if Unix socket auth method is
                            getsockopt(s, SO_PEERCRED, &sockpeercred, ...)])
             ], [], [[#include <sys/socket.h>]])
