@@ -1682,24 +1682,24 @@ pcmk__time_format_hr(const char *format, pcmk__time_hr_t * hr_dt)
             fmt_pos = scanned_pos; /* print till end */
         }
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
-#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
         date_len += strftime(&date_s[date_len], max-date_len, tmp_fmt_s, &tm);
-#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
         printed_pos = scanned_pos;
         free(tmp_fmt_s);
         if (nano_digits) {
-#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
             date_len += snprintf(&date_s[date_len], max-date_len,
                                  nanofmt_s, nano_s);
-#ifdef GCC_FORMAT_NONLITERAL_CHECKING_ENABLED
+#ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
             nano_digits = 0;

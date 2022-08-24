@@ -1774,7 +1774,7 @@ dnl otherwise none of both
 
     AS_IF([test x"$gcc_diagnostic_push_pull" = x"yes"],
           [
-              AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+              AC_DEFINE([HAVE_FORMAT_NONLITERAL], [],
                         [gcc can complain about nonliterals in format])
               EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2 -Wformat-nonliteral"
           ],
