@@ -51,7 +51,7 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  * \return Existing action that matches arguments (or NULL if none)
  */
 static pe_action_t *
-find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
+find_existing_action(const char *key, pe_resource_t *rsc, const pe_node_t *node,
                      pe_working_set_t *data_set)
 {
     GList *matches = NULL;
@@ -164,8 +164,9 @@ find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
  *       responsibility to free the return value with pe_free_action().
  */
 static pe_action_t *
-new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
-           bool optional, bool for_graph, pe_working_set_t *data_set)
+new_action(char *key, const char *task, pe_resource_t *rsc,
+           const pe_node_t *node, bool optional, bool for_graph,
+           pe_working_set_t *data_set)
 {
     pe_action_t *action = calloc(1, sizeof(pe_action_t));
 
@@ -1042,7 +1043,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
  */
 pe_action_t *
 custom_action(pe_resource_t *rsc, char *key, const char *task,
-              pe_node_t *on_node, gboolean optional, gboolean save_action,
+              const pe_node_t *on_node, gboolean optional, gboolean save_action,
               pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
