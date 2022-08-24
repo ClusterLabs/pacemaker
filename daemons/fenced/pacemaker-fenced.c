@@ -592,7 +592,7 @@ fencing_topology_init(void)
  * \return Pointer to node object if found, NULL otherwise
  */
 static pe_node_t *
-our_node_allowed_for(pe_resource_t *rsc)
+our_node_allowed_for(const pe_resource_t *rsc)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -674,10 +674,11 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
  * \brief If a resource or any of its children are STONITH devices, update their
  *        definitions given a cluster working set.
  *
- * \param[in] rsc       Resource to check
- * \param[in] data_set  Cluster working set with device information
+ * \param[in,out] rsc       Resource to check
+ * \param[in,out] data_set  Cluster working set with device information
  */
-static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
+static void
+cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_node_t *node = NULL;
     const char *value = NULL;
