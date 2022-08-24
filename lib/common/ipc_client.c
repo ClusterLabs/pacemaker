@@ -9,8 +9,8 @@
 
 #include <crm_internal.h>
 
-#if defined(US_AUTH_PEERCRED_UCRED) || defined(HAVE_SOCKPEERCRED)
-#  ifdef US_AUTH_PEERCRED_UCRED
+#if defined(HAVE_UCRED) || defined(HAVE_SOCKPEERCRED)
+#  ifdef HAVE_UCRED
 #    ifndef _GNU_SOURCE
 #      define _GNU_SOURCE
 #    endif
@@ -1368,7 +1368,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
 {
     int ret = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-#if defined(US_AUTH_PEERCRED_UCRED)
+#if defined(HAVE_UCRED)
     struct ucred ucred;
     socklen_t ucred_len = sizeof(ucred);
 #endif
@@ -1379,7 +1379,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
     }
 #endif
 
-#if defined(US_AUTH_PEERCRED_UCRED)
+#if defined(HAVE_UCRED)
     if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
                     &ucred, &ucred_len)
                 && ucred_len == sizeof(ucred)) {

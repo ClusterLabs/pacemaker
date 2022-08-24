@@ -729,7 +729,7 @@ AC_CHECK_HEADER([sys/socket.h], [
         # Linux
         AC_CHECK_TYPE([struct ucred], [
             us_auth=peercred_ucred;
-            AC_DEFINE([US_AUTH_PEERCRED_UCRED], [1],
+            AC_DEFINE([HAVE_UCRED], [1],
                       [Define if Unix socket auth method is
                        getsockopt(s, SO_PEERCRED, &ucred, ...)])
         ], [
