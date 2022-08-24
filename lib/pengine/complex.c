@@ -579,9 +579,9 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     const char *value = NULL;
     const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    bool guest_node = FALSE;
-    bool remote_node = FALSE;
-    bool has_versioned_params = FALSE;
+    bool guest_node = false;
+    bool remote_node = false;
+    bool has_versioned_params = false;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -695,9 +695,9 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
         if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
-            guest_node = TRUE;
+            guest_node = true;
         } else {
-            remote_node = TRUE;
+            remote_node = true;
         }
     }
 
