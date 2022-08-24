@@ -419,7 +419,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
             *dest = NULL;
         }
 
-#if SSCANF_HAS_M
+#if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
 #else
         *dest = calloc(1, 1024);

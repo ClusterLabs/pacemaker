@@ -1133,7 +1133,9 @@ return n == 1 ? 0 : 1;
 ]])],
                                  pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
 
-AS_IF([test x"$pf_cv_var_sscanf" = x"yes"], [AC_DEFINE(SSCANF_HAS_M, 1, [ ])])
+AS_IF([test x"$pf_cv_var_sscanf" = x"yes"],
+      [AC_DEFINE([HAVE_SSCANF_M], [1],
+                 [Define to 1 if sscanf %m modifier is available])])
 
 dnl ========================================================================
 dnl   bzip2
