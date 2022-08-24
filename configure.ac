@@ -1405,7 +1405,7 @@ HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
                   [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
                   [HAVE_dbus=0])
-AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
+AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
