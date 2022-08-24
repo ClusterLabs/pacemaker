@@ -333,6 +333,13 @@ attrd_client_update(pcmk__request_t *request)
 
     a = g_hash_table_lookup(attributes, attr);
 
+    if (a == NULL && pcmk__str_eq(request->op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+        pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
+                            "Attribute %s does not exist", attr);
+        free(host);
+        return NULL;
+    }
+
     /* If value was specified using ++ or += notation, expand to real value */
     if (value) {
         if (attrd_value_needs_expansion(value)) {
