@@ -73,7 +73,8 @@ find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_disabled)
+find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
+                         gboolean include_disabled)
 {
     guint interval_ms = 0;
     gboolean do_retry = TRUE;
@@ -141,7 +142,7 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
 }
 
 xmlNode *
-find_rsc_op_entry(pe_resource_t * rsc, const char *key)
+find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
