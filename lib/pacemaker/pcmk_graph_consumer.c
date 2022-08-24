@@ -815,7 +815,8 @@ pcmk__free_graph(pcmk__graph_t *graph)
  * \return Newly allocated executor event on success, or NULL otherwise
  */
 lrmd_event_data_t *
-pcmk__event_from_graph_action(xmlNode *resource, pcmk__graph_action_t *action,
+pcmk__event_from_graph_action(const xmlNode *resource,
+                              const pcmk__graph_action_t *action,
                               int status, int rc, const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
