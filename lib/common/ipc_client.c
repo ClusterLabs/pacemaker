@@ -1395,7 +1395,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
         found_pid = sockpeercred.pid;
         found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
 
-#elif defined(US_AUTH_GETPEEREID)
+#elif defined(HAVE_GETPEEREID)
     if (!getpeereid(sock, &found_uid, &found_gid)) {
         found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
 

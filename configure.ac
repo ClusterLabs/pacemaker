@@ -749,7 +749,7 @@ AS_IF([test -z "${us_auth}"], [
     # FreeBSD
     AC_CHECK_DECL([getpeereid], [
         us_auth=getpeereid;
-        AC_DEFINE([US_AUTH_GETPEEREID], [1],
+        AC_DEFINE([HAVE_GETPEEREID], [1],
                   [Define if Unix socket auth method is
                    getpeereid(s, &uid, &gid)])
     ], [
