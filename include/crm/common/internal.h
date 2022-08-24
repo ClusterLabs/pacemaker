@@ -10,12 +10,10 @@
 #ifndef CRM_COMMON_INTERNAL__H
 #define CRM_COMMON_INTERNAL__H
 
-#include <unistd.h>             // getpid()
+#include <unistd.h>             // pid_t, getpid()
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
 #include <string.h>             // strcmp()
-#include <fcntl.h>              // open()
-#include <sys/types.h>          // uid_t, gid_t, pid_t
 
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
@@ -24,6 +22,7 @@
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/health_internal.h>
+#include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/messages_internal.h>
@@ -52,49 +51,6 @@ int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 /* internal digest-related utilities (from digest.c) */
 
 bool pcmk__verify_digest(xmlNode *input, const char *expected);
-
-
-/* internal I/O utilities (from io.c) */
-
-int pcmk__real_path(const char *path, char **resolved_path);
-
-char *pcmk__series_filename(const char *directory, const char *series,
-                            int sequence, bool bzip);
-int pcmk__read_series_sequence(const char *directory, const char *series,
-                               unsigned int *seq);
-void pcmk__write_series_sequence(const char *directory, const char *series,
-                                 unsigned int sequence, int max);
-int pcmk__chown_series_sequence(const char *directory, const char *series,
-                                uid_t uid, gid_t gid);
-
-int pcmk__build_path(const char *path_c, mode_t mode);
-char *pcmk__full_path(const char *filename, const char *dirname);
-bool pcmk__daemon_can_write(const char *dir, const char *file);
-void pcmk__sync_directory(const char *name);
-
-int pcmk__file_contents(const char *filename, char **contents);
-int pcmk__write_sync(int fd, const char *contents);
-int pcmk__set_nonblocking(int fd);
-const char *pcmk__get_tmpdir(void);
-
-void pcmk__close_fds_in_child(bool);
-
-/*!
- * \internal
- * \brief Open /dev/null to consume next available file descriptor
- *
- * Open /dev/null, disregarding the result. This is intended when daemonizing to
- * be able to null stdin, stdout, and stderr.
- *
- * \param[in] flags  O_RDONLY (stdin) or O_WRONLY (stdout and stderr)
- */
-static inline void
-pcmk__open_devnull(int flags)
-{
-    // Static analysis clutter
-    // cppcheck-suppress leakReturnValNotUsed
-    (void) open("/dev/null", flags);
-}
 
 
 /* internal main loop utilities (from mainloop.c) */
