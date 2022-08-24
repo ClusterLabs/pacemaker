@@ -111,7 +111,6 @@ struct pcmk__remote_s {
     mainloop_io_t *source;
 
     /* CIB-only */
-    bool authenticated;
     char *token;
 
     /* TLS only */
