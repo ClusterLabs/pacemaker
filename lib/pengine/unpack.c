@@ -756,7 +756,7 @@ destroy_tag(gpointer data)
  * \return TRUE
  *
  * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
- *       be used when common_unpack() calls resource_location()
+ *       be used when pe__unpack_resource() calls resource_location()
  */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
@@ -789,7 +789,9 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Unpacking <%s id='%s'>", crm_element_name(xml_obj), id);
-        if (common_unpack(xml_obj, &new_rsc, NULL, data_set) && (new_rsc != NULL)) {
+        if (pe__unpack_resource(xml_obj, &new_rsc, NULL, data_set)
+            && (new_rsc != NULL)) {
+
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
@@ -1688,7 +1690,7 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
-    if (!common_unpack(xml_rsc, &rsc, NULL, data_set)) {
+    if (!pe__unpack_resource(xml_rsc, &rsc, NULL, data_set)) {
         return NULL;
     }
 

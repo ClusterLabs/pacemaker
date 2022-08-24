@@ -14,6 +14,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
 
+#include "pe_status_private.h"
+
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -569,8 +571,8 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
 }
 
 gboolean
-common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
-              pe_resource_t * parent, pe_working_set_t * data_set)
+pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
+                    pe_resource_t *parent, pe_working_set_t *data_set)
 {
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;

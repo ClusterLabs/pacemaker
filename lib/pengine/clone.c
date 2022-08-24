@@ -210,7 +210,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
 
-    if (common_unpack(child_copy, &child_rsc, rsc, data_set) == FALSE) {
+    if (pe__unpack_resource(child_copy, &child_rsc, rsc, data_set) == FALSE) {
         pe_err("Failed unpacking resource %s", crm_element_value(child_copy, XML_ATTR_ID));
         child_rsc = NULL;
         goto bail;
