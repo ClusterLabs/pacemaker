@@ -29,7 +29,6 @@
 #define attrd_send_ack(client, id, flags) \
     pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 
-extern int minimum_protocol_version;
 static qb_ipcs_service_t *ipcs = NULL;
 
 /*!
