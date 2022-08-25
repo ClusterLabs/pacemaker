@@ -376,13 +376,13 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return pcmk_rc_schema_validation);
+    CRM_CHECK(xml_obj != NULL, return EINVAL);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     // Check whether there are any resource sets with template or tag references
@@ -400,7 +400,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
 
     } else if (rsc != NULL) {
         // No template is referenced
@@ -416,7 +416,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           false, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (rsc_set != NULL) {
@@ -446,14 +446,14 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
     const char *role;
     const char *local_score;
 
-    CRM_CHECK(set != NULL, return pcmk_rc_schema_validation);
+    CRM_CHECK(set != NULL, return EINVAL);
 
     set_id = ID(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
                          XML_ATTR_ID " in constraint '%s'",
                          pcmk__s(ID(location), "(missing ID)"));
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     role = crm_element_value(set, "role");
@@ -467,7 +467,7 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
                              set_id, ID(xml_rsc));
-            return pcmk_rc_schema_validation;
+            return pcmk_rc_unpack_error;
         }
 
         unpack_rsc_location(location, resource, role, local_score, data_set,

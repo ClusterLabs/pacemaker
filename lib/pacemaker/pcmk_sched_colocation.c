@@ -588,13 +588,13 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return pcmk_rc_schema_validation);
+    CRM_CHECK(xml_obj != NULL, return EINVAL);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     // Check whether there are any resource sets with template or tag references
@@ -614,14 +614,14 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                                      &dependent_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, dependent_id);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, primary_id, &primary,
                                      &primary_tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, primary_id);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if ((dependent != NULL) && (primary != NULL)) {
@@ -633,7 +633,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         // A colocation constraint between two templates/tags makes no sense
         pcmk__config_err("Ignoring constraint '%s' because two templates or "
                          "tags cannot be colocated", id);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     dependent_role = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -646,7 +646,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (dependent_set != NULL) {
@@ -663,7 +663,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (primary_set != NULL) {
