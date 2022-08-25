@@ -2126,6 +2126,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pengine/tests/rules/Makefile                    \
                 lib/pengine/tests/status/Makefile                   \
                 lib/pengine/tests/unpack/Makefile                   \
+                lib/pengine/tests/utils/Makefile                    \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
                 po/Makefile.in                                      \

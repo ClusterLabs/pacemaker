@@ -1205,7 +1205,7 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     if (!pcmk__is_daemon) {
-        allowed_nodes = g_list_sort(allowed_nodes, sort_node_uname);
+        allowed_nodes = g_list_sort(allowed_nodes, pe__cmp_node_name);
     }
 
     return allowed_nodes;

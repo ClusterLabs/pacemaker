@@ -447,7 +447,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->digest_cache = pcmk__strkey_table(free,
                                                           pe__free_digests);
 
-    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
+    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node,
+                                           pe__cmp_node_name);
     return new_node;
 }
 
@@ -809,7 +810,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         link_rsc2remotenode(data_set, rsc);
     }
 
-    data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
+    data_set->resources = g_list_sort(data_set->resources,
+                                      pe__cmp_rsc_priority);
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* Ignore */
 

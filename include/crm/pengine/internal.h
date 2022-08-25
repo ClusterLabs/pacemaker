@@ -378,8 +378,6 @@ void pe__show_node_weights_as(const char *file, const char *function,
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes), (data_set))
 
-extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
-
 extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
 
 extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *task, pe_node_t * on_node,
@@ -482,7 +480,7 @@ pe_base_name_eq(pe_resource_t *rsc, const char *id)
 
 int pe__target_rc_from_xml(xmlNode *xml_op);
 
-gint sort_node_uname(gconstpointer a, gconstpointer b);
+gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
