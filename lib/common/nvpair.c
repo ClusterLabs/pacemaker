@@ -220,7 +220,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 int
 pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
-#ifdef SSCANF_HAS_M
+#ifdef HAVE_SSCANF_M
     *name = NULL;
     *value = NULL;
     if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {

@@ -62,7 +62,7 @@ load2str(enum throttle_state_e mode)
     }
 }
 
-#if SUPPORT_PROCFS
+#if HAVE_PROCFS
 /*!
  * \internal
  * \brief Return name of /proc file containing the CIB daemon's load statistics
@@ -301,7 +301,7 @@ throttle_mode(void)
 {
     enum throttle_state_e mode = throttle_none;
 
-#if SUPPORT_PROCFS
+#if HAVE_PROCFS
     unsigned int cores;
     float load;
     float thresholds[4];
@@ -351,7 +351,7 @@ throttle_mode(void)
         }
         crm_debug("Current load is %f across %u core(s)", load, cores);
     }
-#endif // SUPPORT_PROCFS
+#endif // HAVE_PROCFS
     return mode;
 }
 

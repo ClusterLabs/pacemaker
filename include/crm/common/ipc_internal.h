@@ -27,7 +27,7 @@ extern "C" {
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
 
-#include <crm_config.h>             // US_AUTH_GETPEEREID
+#include <crm_config.h>             // HAVE_GETPEEREID
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>    // mainloop_io_t
 
@@ -49,7 +49,7 @@ extern "C" {
 // Timeout (in seconds) to use for IPC client sends, reply waits, etc.
 #define PCMK__IPC_TIMEOUT 120
 
-#if defined(US_AUTH_GETPEEREID)
+#if defined(HAVE_GETPEEREID)
 /* on FreeBSD, we don't want to expose "non-yieldable PID" (leading to
    "IPC liveness check only") as its nominal representation, which could
    cause confusion -- this is unambiguous as long as there's no

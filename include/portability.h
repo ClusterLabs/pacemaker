@@ -66,7 +66,7 @@ char *strndup(const char *str, size_t len);
 #    define USE_GNU
 #  endif
 
-#  if SUPPORT_DBUS
+#  if HAVE_DBUS
 #    ifndef HAVE_DBUSBASICVALUE
 #      include <stdint.h>
 #      include <dbus/dbus.h>
@@ -109,7 +109,7 @@ typedef union
   int fd;              /**< as Unix file descriptor */
 } DBusBasicValue;
 #    endif  // !defined(HAVE_DBUSBASICVALUE)
-#  endif    // !defined(SUPPORT_DBUS)
+#  endif    // !defined(HAVE_DBUS)
 
 // Replacement constants for Linux-specific errno values
 

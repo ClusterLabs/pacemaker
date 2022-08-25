@@ -178,7 +178,7 @@ pcmk__procfs_num_cores(void)
 int
 pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
 {
-#if SUPPORT_PROCFS
+#if HAVE_PROCFS
     char procfs_exe_path[PATH_MAX];
     ssize_t link_rc;
 
@@ -210,7 +210,7 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
 bool
 pcmk__procfs_has_pids(void)
 {
-#if SUPPORT_PROCFS
+#if HAVE_PROCFS
     static bool have_pids = false;
     static bool checked = false;
 

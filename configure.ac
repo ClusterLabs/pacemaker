@@ -729,14 +729,14 @@ AC_CHECK_HEADER([sys/socket.h], [
         # Linux
         AC_CHECK_TYPE([struct ucred], [
             us_auth=peercred_ucred;
-            AC_DEFINE([US_AUTH_PEERCRED_UCRED], [1],
+            AC_DEFINE([HAVE_UCRED], [1],
                       [Define if Unix socket auth method is
                        getsockopt(s, SO_PEERCRED, &ucred, ...)])
         ], [
             # OpenBSD
             AC_CHECK_TYPE([struct sockpeercred], [
                 us_auth=localpeercred_sockepeercred;
-                AC_DEFINE([US_AUTH_PEERCRED_SOCKPEERCRED], [1],
+                AC_DEFINE([HAVE_SOCKPEERCRED], [1],
                           [Define if Unix socket auth method is
                            getsockopt(s, SO_PEERCRED, &sockpeercred, ...)])
             ], [], [[#include <sys/socket.h>]])
@@ -749,14 +749,14 @@ AS_IF([test -z "${us_auth}"], [
     # FreeBSD
     AC_CHECK_DECL([getpeereid], [
         us_auth=getpeereid;
-        AC_DEFINE([US_AUTH_GETPEEREID], [1],
+        AC_DEFINE([HAVE_GETPEEREID], [1],
                   [Define if Unix socket auth method is
                    getpeereid(s, &uid, &gid)])
     ], [
         # Solaris/OpenIndiana
         AC_CHECK_DECL([getpeerucred], [
             us_auth=getpeerucred;
-            AC_DEFINE([US_AUTH_GETPEERUCRED], [1],
+            AC_DEFINE([HAVE_GETPEERUCRED], [1],
                       [Define if Unix socket auth method is
                        getpeercred(s, &ucred)])
         ], [
@@ -780,7 +780,7 @@ AS_CASE(["$host_os"],
         ])
 
 AC_SUBST(INIT_EXT)
-AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
+AC_DEFINE_UNQUOTED([HAVE_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 
 AS_CASE(["$host_cpu"],
@@ -1133,7 +1133,9 @@ return n == 1 ? 0 : 1;
 ]])],
                                  pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
 
-AS_IF([test x"$pf_cv_var_sscanf" = x"yes"], [AC_DEFINE(SSCANF_HAS_M, 1, [ ])])
+AS_IF([test x"$pf_cv_var_sscanf" = x"yes"],
+      [AC_DEFINE([HAVE_SSCANF_M], [1],
+                 [Define to 1 if sscanf %m modifier is available])])
 
 dnl ========================================================================
 dnl   bzip2
@@ -1403,7 +1405,7 @@ HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
                   [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
                   [HAVE_dbus=0])
-AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
+AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
@@ -1774,7 +1776,7 @@ dnl otherwise none of both
 
     AS_IF([test x"$gcc_diagnostic_push_pull" = x"yes"],
           [
-              AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+              AC_DEFINE([HAVE_FORMAT_NONLITERAL], [],
                         [gcc can complain about nonliterals in format])
               EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2 -Wformat-nonliteral"
           ],
