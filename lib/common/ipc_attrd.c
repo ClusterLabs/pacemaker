@@ -48,9 +48,13 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
 {
     const char *command = crm_element_value(request, PCMK__XA_TASK);
 
-    return pcmk__str_any_of(command, PCMK__ATTRD_CMD_UPDATE,
-                            PCMK__ATTRD_CMD_UPDATE_BOTH, PCMK__ATTRD_CMD_UPDATE_DELAY,
-                            PCMK__ATTRD_CMD_QUERY, NULL);
+    return pcmk__str_any_of(command,
+                            PCMK__ATTRD_CMD_QUERY,
+                            PCMK__ATTRD_CMD_REFRESH,
+                            PCMK__ATTRD_CMD_UPDATE,
+                            PCMK__ATTRD_CMD_UPDATE_BOTH,
+                            PCMK__ATTRD_CMD_UPDATE_DELAY,
+                            NULL);
 }
 
 static bool
