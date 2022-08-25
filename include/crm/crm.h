@@ -100,8 +100,7 @@ extern char *crm_system_name;
 
 /* Sub-systems */
 #  define CRM_SYSTEM_DC		"dc"
-#  define CRM_SYSTEM_DCIB		"dcib"
-                                        /*  The master CIB */
+#define CRM_SYSTEM_DCIB         "dcib" // Primary instance of CIB manager
 #  define CRM_SYSTEM_CIB		"cib"
 #  define CRM_SYSTEM_CRMD		"crmd"
 #  define CRM_SYSTEM_LRMD		"lrmd"

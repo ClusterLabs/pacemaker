@@ -54,7 +54,7 @@ typedef struct cib_operation_s {
                xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 } cib_operation_t;
 
-extern gboolean cib_is_master;
+extern bool based_is_primary;
 extern GHashTable *peer_hash;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;

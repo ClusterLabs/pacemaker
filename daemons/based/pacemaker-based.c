@@ -341,7 +341,7 @@ cib_init(void)
                           &ipc_rw_callbacks);
 
     if (stand_alone) {
-        cib_is_master = TRUE;
+        based_is_primary = true;
     }
 }
 

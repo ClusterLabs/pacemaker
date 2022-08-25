@@ -77,7 +77,7 @@ cib_client_query_from(cib_t * cib, const char *host, const char *section,
 }
 
 static int
-cib_client_is_master(cib_t * cib)
+is_primary(cib_t *cib)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_IS_PRIMARY, NULL, NULL, NULL,
@@ -85,7 +85,7 @@ cib_client_is_master(cib_t * cib)
 }
 
 static int
-cib_client_set_slave(cib_t * cib, int call_options)
+set_secondary(cib_t *cib, int call_options)
 {
     op_common(cib);
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SECONDARY, NULL, NULL, NULL,
@@ -93,13 +93,13 @@ cib_client_set_slave(cib_t * cib, int call_options)
 }
 
 static int
-cib_client_set_slave_all(cib_t * cib, int call_options)
+set_all_secondary(cib_t * cib, int call_options)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_client_set_master(cib_t * cib, int call_options)
+set_primary(cib_t *cib, int call_options)
 {
     op_common(cib);
     crm_trace("Adding cib_scope_local to options");
@@ -406,10 +406,15 @@ cib_new_variant(void)
     new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
-    new_cib->cmds->is_master = cib_client_is_master;
-    new_cib->cmds->set_master = cib_client_set_master;
-    new_cib->cmds->set_slave = cib_client_set_slave;
-    new_cib->cmds->set_slave_all = cib_client_set_slave_all;
+    new_cib->cmds->is_master = is_primary; // Deprecated method
+
+    new_cib->cmds->set_primary = set_primary;
+    new_cib->cmds->set_master = set_primary; // Deprecated method
+
+    new_cib->cmds->set_secondary = set_secondary;
+    new_cib->cmds->set_slave = set_secondary; // Deprecated method
+
+    new_cib->cmds->set_slave_all = set_all_secondary; // Deprecated method
 
     new_cib->cmds->upgrade = cib_client_upgrade;
     new_cib->cmds->bump_epoch = cib_client_bump_epoch;
