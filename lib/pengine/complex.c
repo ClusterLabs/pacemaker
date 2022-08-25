@@ -189,8 +189,8 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
 }
 
 void
-get_rsc_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
-                   pe_node_t * node, pe_working_set_t * data_set)
+get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
+                   const pe_node_t *node, pe_working_set_t *data_set)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
