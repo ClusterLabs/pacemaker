@@ -578,14 +578,14 @@ pcmk__close_fds_in_child(bool all)
      * Use this if available, because it's more efficient than a shotgun
      * approach to closing descriptors.
      */
-#if HAVE_PROCFS
+#if HAVE_LINUX_PROCFS
     dir = opendir("/proc/self/fd");
     if (dir == NULL) {
         dir = opendir("/dev/fd");
     }
 #else
     dir = opendir("/dev/fd");
-#endif
+#endif // HAVE_LINUX_PROCFS
     if (dir != NULL) {
         struct dirent *entry;
         int dir_fd = dirfd(dir);
