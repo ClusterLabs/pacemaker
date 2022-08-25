@@ -195,6 +195,10 @@ static struct pcmk__rc_info {
       "Cluster simulation produced invalid transition",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_unpack_error",
+      "Unable to parse CIB XML",
+      -pcmk_err_generic,
+    },
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
@@ -582,6 +586,7 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_schema_validation:
         case pcmk_rc_transform_failed:
+        case pcmk_rc_unpack_error:
             return CRM_EX_CONFIG;
 
         case pcmk_rc_bad_nvpair:
