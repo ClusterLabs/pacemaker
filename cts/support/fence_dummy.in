@@ -71,9 +71,9 @@ ALL_OPT = {
     "nodename" : {
         "getopt" : "N:",
         "longopt" : "nodename",
-        "help" : "-N, --nodename                 Node name of fence victim (ignored)",
+        "help" : "-N, --nodename                 Node name of fence target (ignored)",
         "required" : "0",
-        "shortdesc" : "The node name of fence victim (ignored)",
+        "shortdesc" : "The node name of fence target (ignored)",
         "order" : 2
         },
     "mode": {
@@ -153,7 +153,7 @@ ALL_OPT = {
     "nodeid" : {
         "getopt" : "i:",
         "longopt" : "nodeid",
-        "help" : "-i, --nodeid                   Corosync id of fence victim (ignored)",
+        "help" : "-i, --nodeid                   Corosync id of fence target (ignored)",
         "required" : "0",
         "shortdesc" : "Ignored",
         "order" : 4

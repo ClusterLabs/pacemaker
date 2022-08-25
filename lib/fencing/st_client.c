@@ -579,11 +579,22 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     return max;
 }
 
+/*!
+ * \internal
+ * \brief Make a STONITH_OP_EXEC request
+ *
+ * \param[in]  stonith       Fencer connection
+ * \param[in]  call_options  Bitmask of \c stonith_call_options
+ * \param[in]  id            Fence device ID that request is for
+ * \param[in]  action        Agent action to request (list, status, or monitor)
+ * \param[in]  target        Name of target node for requested action
+ * \param[in]  timeout_sec   Error if not completed within this many seconds
+ * \param[out] output        Where to set agent output
+ */
 static int
-stonith_api_call(stonith_t * stonith,
-                 int call_options,
-                 const char *id,
-                 const char *action, const char *victim, int timeout, xmlNode ** output)
+stonith_api_call(stonith_t *stonith, int call_options, const char *id,
+                 const char *action, const char *target, int timeout_sec,
+                 xmlNode **output)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -592,9 +603,10 @@ stonith_api_call(stonith_t * stonith,
     crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add(data, F_STONITH_TARGET, victim);
+    crm_xml_add(data, F_STONITH_TARGET, target);
 
-    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output, call_options, timeout);
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, output,
+                              call_options, timeout_sec);
     free_xml(data);
 
     return rc;
