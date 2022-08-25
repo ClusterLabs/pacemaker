@@ -288,7 +288,7 @@ crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 }
 
 int
-crm_time_get_timeofday(crm_time_t *dt, uint32_t *h, uint32_t *m,
+crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
     crm_time_get_sec(dt->seconds, h, m, s);
