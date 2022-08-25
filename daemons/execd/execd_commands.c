@@ -1478,7 +1478,10 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     if (pcmk__xe_attr_is_true(request, F_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
-        if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
+        if ((client->remote != NULL)
+            && pcmk_is_set(client->flags,
+                           pcmk__client_tls_handshake_complete)) {
+
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
         } else {

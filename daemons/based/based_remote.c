@@ -264,7 +264,7 @@ remote_auth_timeout_cb(gpointer data)
 
     client->remote->auth_timeout = 0;
 
-    if (client->remote->authenticated == TRUE) {
+    if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
         return FALSE;
     }
 
@@ -376,7 +376,8 @@ cib_remote_connection_destroy(gpointer user_data)
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
 
                 csock = GPOINTER_TO_INT(sock_ptr);
-                if (client->remote->tls_handshake_complete) {
+                if (pcmk_is_set(client->flags,
+                                pcmk__client_tls_handshake_complete)) {
                     gnutls_bye(*client->remote->tls_session, GNUTLS_SHUT_WR);
                 }
                 gnutls_deinit(*client->remote->tls_session);
@@ -468,7 +469,11 @@ cib_remote_msg(gpointer data)
     xmlNode *command = NULL;
     pcmk__client_t *client = data;
     int rc;
-    int timeout = client->remote->authenticated ? -1 : 1000;
+    int timeout = 1000;
+
+    if (pcmk_is_set(client->flags, pcmk__client_authenticated)) {
+        timeout = -1;
+    }
 
     crm_trace("Remote %s message received for client %s",
               pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
@@ -476,7 +481,7 @@ cib_remote_msg(gpointer data)
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
-        && !(client->remote->tls_handshake_complete)) {
+        && !pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
 
         int rc = pcmk__read_handshake_data(client);
 
@@ -490,7 +495,7 @@ cib_remote_msg(gpointer data)
         }
 
         crm_debug("TLS handshake with remote CIB client completed");
-        client->remote->tls_handshake_complete = TRUE;
+        pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
         if (client->remote->auth_timeout) {
             g_source_remove(client->remote->auth_timeout);
         }
@@ -506,7 +511,7 @@ cib_remote_msg(gpointer data)
     rc = pcmk__read_remote_message(client->remote, timeout);
 
     /* must pass auth before we will process anything else */
-    if (client->remote->authenticated == FALSE) {
+    if (!pcmk_is_set(client->flags, pcmk__client_authenticated)) {
         xmlNode *reg;
         const char *user = NULL;
 
@@ -517,7 +522,7 @@ cib_remote_msg(gpointer data)
         }
 
         crm_notice("Remote CIB client connection accepted");
-        client->remote->authenticated = TRUE;
+        pcmk__set_client_flags(client, pcmk__client_authenticated);
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
         client->name = crm_element_value_copy(command, "name");
