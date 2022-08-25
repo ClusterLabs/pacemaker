@@ -446,9 +446,9 @@ free_params_table(gpointer data)
 /*!
  * \brief Get a table of resource parameters
  *
- * \param[in] rsc       Resource to query
- * \param[in] node      Node for evaluating rules (NULL for defaults)
- * \param[in] data_set  Cluster working set
+ * \param[in,out] rsc       Resource to query
+ * \param[in]     node      Node for evaluating rules (NULL for defaults)
+ * \param[in]     data_set  Cluster working set
  *
  * \return Hash table containing resource parameter names and values
  *         (or NULL if \p rsc or \p data_set is NULL)
@@ -456,7 +456,8 @@ free_params_table(gpointer data)
  *       callers should not destroy it.
  */
 GHashTable *
-pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
+pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
+              pe_working_set_t *data_set)
 {
     GHashTable *params_on_node = NULL;
 

@@ -20,7 +20,7 @@ extern "C" {
 
 extern resource_object_functions_t resource_class_functions[];
 
-GHashTable *pe_rsc_params(pe_resource_t *rsc, pe_node_t *node,
+GHashTable *pe_rsc_params(pe_resource_t *rsc, const pe_node_t *node,
                           pe_working_set_t *data_set);
 void get_meta_attributes(GHashTable * meta_hash, pe_resource_t *rsc,
                          pe_node_t *node, pe_working_set_t *data_set);
