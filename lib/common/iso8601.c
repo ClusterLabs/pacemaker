@@ -296,7 +296,7 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
 }
 
 int
-crm_time_get_timezone(crm_time_t *dt, uint32_t *h, uint32_t *m)
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 {
     uint32_t s;
 
