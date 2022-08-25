@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ gboolean pe_test_expression(xmlNode *expr, GHashTable *node_hash,
                             crm_time_t *next_change,
                             pe_match_data_t *match_data);
 
-void pe_eval_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                      pe_rule_eval_data_t *rule_data, GHashTable *hash,
                      const char *always_first, gboolean overwrite,
                      crm_time_t *next_change);
