@@ -264,9 +264,9 @@ crm_time_log_alias(int log_level, const char *file, const char *function, int li
 }
 
 static void
-crm_time_get_sec(int sec, uint * h, uint * m, uint * s)
+crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
-    uint hours, minutes, seconds;
+    uint32_t hours, minutes, seconds;
 
     if (sec < 0) {
         seconds = 0 - sec;
@@ -288,16 +288,17 @@ crm_time_get_sec(int sec, uint * h, uint * m, uint * s)
 }
 
 int
-crm_time_get_timeofday(crm_time_t * dt, uint * h, uint * m, uint * s)
+crm_time_get_timeofday(crm_time_t *dt, uint32_t *h, uint32_t *m,
+                       uint32_t *s)
 {
     crm_time_get_sec(dt->seconds, h, m, s);
     return TRUE;
 }
 
 int
-crm_time_get_timezone(crm_time_t * dt, uint * h, uint * m)
+crm_time_get_timezone(crm_time_t *dt, uint32_t *h, uint32_t *m)
 {
-    uint s;
+    uint32_t s;
 
     crm_time_get_sec(dt->seconds, h, m, &s);
     return TRUE;
@@ -353,7 +354,7 @@ crm_time_get_seconds_since_epoch(crm_time_t * dt)
 }
 
 int
-crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
+crm_time_get_gregorian(crm_time_t *dt, uint32_t *y, uint32_t *m, uint32_t *d)
 {
     int months = 0;
     int days = dt->days;
@@ -385,7 +386,7 @@ crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
 }
 
 int
-crm_time_get_ordinal(crm_time_t * dt, uint * y, uint * d)
+crm_time_get_ordinal(crm_time_t *dt, uint32_t *y, uint32_t *d)
 {
     *y = dt->years;
     *d = dt->days;
@@ -393,7 +394,7 @@ crm_time_get_ordinal(crm_time_t * dt, uint * y, uint * d)
 }
 
 int
-crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
+crm_time_get_isoweek(crm_time_t * dt, uint32_t *y, uint32_t *w, uint32_t *d)
 {
     /*
      * Monday 29 December 2008 is written "2009-W01-1"
@@ -471,7 +472,7 @@ crm_duration_as_string(crm_time_t *dt, char *result)
         offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
                            dt->seconds, pcmk__plural_s(dt->seconds));
     } else if (dt->seconds) {
-        uint h = 0, m = 0, s = 0;
+        uint32_t h = 0, m = 0, s = 0;
 
         offset += snprintf(result + offset, DATE_MAX - offset, "%d seconds (",
                            dt->seconds);
@@ -538,7 +539,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
 
     if (flags & crm_time_log_date) {
         if (flags & crm_time_weeks) { // YYYY-WW-D
-            uint y, w, d;
+            uint32_t y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -546,7 +547,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             }
 
         } else if (flags & crm_time_ordinal) { // YYYY-DDD
-            uint y, d;
+            uint32_t y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -554,7 +555,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             }
 
         } else { // YYYY-MM-DD
-            uint y, m, d;
+            uint32_t y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -564,7 +565,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     }
 
     if (flags & crm_time_log_timeofday) {
-        uint h = 0, m = 0, s = 0;
+        uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
             offset += snprintf(result + offset, DATE_MAX - offset, " ");
@@ -608,9 +609,9 @@ static bool
 crm_time_parse_sec(const char *time_str, int *result)
 {
     int rc;
-    uint hour = 0;
-    uint minute = 0;
-    uint second = 0;
+    uint32_t hour = 0;
+    uint32_t minute = 0;
+    uint32_t second = 0;
 
     *result = 0;
 
@@ -713,7 +714,7 @@ crm_time_parse_offset(const char *offset_str, int *offset)
 static bool
 crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
-    uint h, m, s;
+    uint32_t h, m, s;
     char *offset_s = NULL;
 
     tzset();
