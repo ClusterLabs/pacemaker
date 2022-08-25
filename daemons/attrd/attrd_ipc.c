@@ -469,11 +469,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         CRM_ASSERT(client->user != NULL);
         pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 
-        if (client->name == NULL) {
-            const char *value = crm_element_value(xml, F_ORIG);
-            client->name = crm_strdup_printf("%s.%d", pcmk__s(value, "unknown"), client->pid);
-        }
-
         request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
