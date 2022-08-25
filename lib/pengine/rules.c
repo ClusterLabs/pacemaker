@@ -645,7 +645,8 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 
 #if ENABLE_VERSIONED_ATTRS
 void
-pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+pe_eval_versioned_attributes(xmlNode *top, const xmlNode *xml_obj,
+                             const char *set_name,
                              pe_rule_eval_data_t *rule_data, xmlNode *hash,
                              crm_time_t *next_change)
 {
