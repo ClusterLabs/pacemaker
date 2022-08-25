@@ -251,7 +251,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
     if (set_id == NULL) {
         pcmk__config_err("Ignoring <" XML_CONS_TAG_RSC_SET "> without "
                          XML_ATTR_ID);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     role = crm_element_value(set, "role");
@@ -266,7 +266,7 @@ unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
         if (resource == NULL) {
             pcmk__config_err("%s: No resource found for %s",
                              set_id, ID(xml_rsc));
-            return pcmk_rc_schema_validation;
+            return pcmk_rc_unpack_error;
         }
         pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
                      resource->id, ticket->id);
@@ -373,7 +373,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     // Check whether there are any resource sets with template or tag references
@@ -391,7 +391,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (!pcmk__valid_resource_or_tag(data_set, rsc_id, &rsc, &tag)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
 
     } else if (rsc != NULL) {
         // No template or tag is referenced
@@ -407,7 +407,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           false, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (rsc_set != NULL) {

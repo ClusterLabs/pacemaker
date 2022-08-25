@@ -161,7 +161,8 @@ create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (!common_unpack(xml_ip, &replica->ip, parent, data_set)) {
+        if (pe__unpack_resource(xml_ip, &replica->ip, parent,
+                                data_set) != pcmk_rc_ok) {
             return FALSE;
         }
 
@@ -327,7 +328,8 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (!common_unpack(xml_container, &replica->container, parent, data_set)) {
+        if (pe__unpack_resource(xml_container, &replica->container, parent,
+                                data_set) != pcmk_rc_ok) {
             return FALSE;
         }
         parent->children = g_list_append(parent->children, replica->container);
@@ -493,8 +495,8 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (!common_unpack(xml_container, &replica->container, parent,
-                           data_set)) {
+        if (pe__unpack_resource(xml_container, &replica->container, parent,
+                                data_set) != pcmk_rc_ok) {
             return FALSE;
         }
         parent->children = g_list_append(parent->children, replica->container);
@@ -663,7 +665,8 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
-        if (!common_unpack(xml_container, &replica->container, parent, data_set)) {
+        if (pe__unpack_resource(xml_container, &replica->container, parent,
+                                data_set) != pcmk_rc_ok) {
             return FALSE;
         }
         parent->children = g_list_append(parent->children, replica->container);
@@ -762,7 +765,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          *
          * Worse, that means that the node may have been utilized while
          * unpacking other resources, without our weight correction. The most
-         * likely place for this to happen is when common_unpack() calls
+         * likely place for this to happen is when pe__unpack_resource() calls
          * resource_location() to set a default score in symmetric clusters.
          * This adds a node *copy* to each resource's allowed nodes, and these
          * copies will have the wrong weight.
@@ -793,7 +796,8 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             g_hash_table_insert(replica->child->parent->allowed_nodes,
                                 (gpointer) replica->node->details->id, copy);
         }
-        if (!common_unpack(xml_remote, &replica->remote, parent, data_set)) {
+        if (pe__unpack_resource(xml_remote, &replica->remote, parent,
+                                data_set) != pcmk_rc_ok) {
             return FALSE;
         }
 
@@ -1193,7 +1197,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         int offset = 0, max = 1024;
         char *buffer = NULL;
 
-        if (common_unpack(xml_resource, &new_rsc, rsc, data_set) == FALSE) {
+        if (pe__unpack_resource(xml_resource, &new_rsc, rsc,
+                                data_set) != pcmk_rc_ok) {
             pe_err("Failed unpacking resource %s", ID(rsc->xml));
             if (new_rsc != NULL && new_rsc->fns != NULL) {
                 new_rsc->fns->free(new_rsc);

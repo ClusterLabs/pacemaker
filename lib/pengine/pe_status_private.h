@@ -46,6 +46,10 @@ G_GNUC_INTERNAL
 gint pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
 
 G_GNUC_INTERNAL
+gboolean pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
+                             pe_resource_t *parent, pe_working_set_t *data_set);
+
+G_GNUC_INTERNAL
 gboolean unpack_remote_nodes(xmlNode *xml_resources, pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL

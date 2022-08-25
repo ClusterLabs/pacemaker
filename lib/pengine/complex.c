@@ -14,6 +14,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
 
+#include "pe_status_private.h"
+
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -568,18 +570,32 @@ unpack_requires(pe_resource_t *rsc, const char *value, bool is_default)
                  (is_default? " (default)" : ""));
 }
 
-gboolean
-common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
-              pe_resource_t * parent, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Unpack configuration XML for a given resource
+ *
+ * Unpack the XML object containing a resource's configuration into a new
+ * \c pe_resource_t object.
+ *
+ * \param[in]     xml_obj   XML node containing the resource's configuration
+ * \param[out]    rsc       Where to store the unpacked resource information
+ * \param[in]     parent    Resource's parent, if any
+ * \param[in,out] data_set  Cluster working set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
+                    pe_resource_t *parent, pe_working_set_t *data_set)
 {
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
     const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    bool guest_node = FALSE;
-    bool remote_node = FALSE;
-    bool has_versioned_params = FALSE;
+    bool guest_node = false;
+    bool remote_node = false;
+    bool has_versioned_params = false;
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -592,18 +608,15 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     crm_log_xml_trace(xml_obj, "Processing resource input...");
 
+    CRM_CHECK(rsc != NULL, return EINVAL);
+
     if (id == NULL) {
         pe_err("Must specify id tag in <resource>");
-        return FALSE;
-
-    } else if (rsc == NULL) {
-        pe_err("Nowhere to unpack resource into");
-        return FALSE;
-
+        return pcmk_rc_unpack_error;
     }
 
     if (unpack_template(xml_obj, &expanded_xml, data_set) == FALSE) {
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     *rsc = calloc(1, sizeof(pe_resource_t));
@@ -630,7 +643,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     if ((*rsc)->variant == pe_unknown) {
         pe_err("Unknown resource type: %s", crm_element_name((*rsc)->xml));
         free(*rsc);
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -693,9 +706,9 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     if (xml_contains_remote_node((*rsc)->xml)) {
         (*rsc)->is_remote_node = TRUE;
         if (g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CONTAINER)) {
-            guest_node = TRUE;
+            guest_node = true;
         } else {
-            remote_node = TRUE;
+            remote_node = true;
         }
     }
 
@@ -846,7 +859,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
                  (*rsc)->next_role != RSC_ROLE_UNKNOWN ? role2text((*rsc)->next_role) : "default");
 
     if ((*rsc)->fns->unpack(*rsc, data_set) == FALSE) {
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
@@ -871,10 +884,10 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     if (expanded_xml) {
         if (add_template_rsc(xml_obj, data_set) == FALSE) {
-            return FALSE;
+            return pcmk_rc_unpack_error;
         }
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 void

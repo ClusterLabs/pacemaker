@@ -32,7 +32,7 @@ enum ordering_symmetry {
         __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
         if (__rsc == NULL) {                                                    \
             pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return pcmk_rc_schema_validation;                                   \
+            return pcmk_rc_unpack_error;                                        \
         }                                                                       \
     } while (0)
 
@@ -1040,7 +1040,7 @@ order_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2,
  * \param[in]  data_set      Cluster working set
  *
  * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
- *         and pcmk_rc_schema_validation on invalid configuration)
+ *         and pcmk_rc_unpack_error on invalid configuration)
  */
 static int
 unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
@@ -1077,13 +1077,13 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                                      &tag_first)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", ID(xml_obj), id_first);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id_then, &rsc_then, &tag_then)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", ID(xml_obj), id_then);
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if ((rsc_first != NULL) && (rsc_then != NULL)) {
@@ -1101,7 +1101,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (rsc_set_first != NULL) {
@@ -1118,7 +1118,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           true, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return pcmk_rc_schema_validation;
+        return pcmk_rc_unpack_error;
     }
 
     if (rsc_set_then != NULL) {

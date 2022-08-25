@@ -309,8 +309,6 @@ enum rsc_role_e pe__bundle_resource_state(const pe_resource_t *rsc,
 void pe__count_common(pe_resource_t *rsc);
 void pe__count_bundle(pe_resource_t *rsc);
 
-gboolean common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc, pe_resource_t * parent,
-                       pe_working_set_t * data_set);
 void common_free(pe_resource_t * rsc);
 
 pe_node_t *pe__copy_node(const pe_node_t *this_node);
