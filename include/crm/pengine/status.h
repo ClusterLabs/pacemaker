@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,7 +55,7 @@ pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
  * \return TRUE if resource is clone, FALSE otherwise
  */
 static inline bool
-pe_rsc_is_clone(pe_resource_t *rsc)
+pe_rsc_is_clone(const pe_resource_t *rsc)
 {
     return rsc && (rsc->variant == pe_clone);
 }
