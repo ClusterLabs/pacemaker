@@ -4,7 +4,7 @@ pcmk__clone_allocate: MASTER_RSC_A allocation score on fc16-builder2: 0
 pcmk__clone_allocate: MASTER_RSC_A allocation score on fc16-builder: 0
 pcmk__clone_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder2: 0
 pcmk__clone_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder: 6
-pcmk__native_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
-pcmk__native_allocate: NATIVE_RSC_A:0 allocation score on fc16-builder: 6
-pcmk__native_allocate: NATIVE_RSC_B allocation score on fc16-builder2: -INFINITY
-pcmk__native_allocate: NATIVE_RSC_B allocation score on fc16-builder: -INFINITY
+pcmk__primitive_assign: NATIVE_RSC_A:0 allocation score on fc16-builder2: -INFINITY
+pcmk__primitive_assign: NATIVE_RSC_A:0 allocation score on fc16-builder: 6
+pcmk__primitive_assign: NATIVE_RSC_B allocation score on fc16-builder2: -INFINITY
+pcmk__primitive_assign: NATIVE_RSC_B allocation score on fc16-builder: -INFINITY

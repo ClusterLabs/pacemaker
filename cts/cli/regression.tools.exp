@@ -4453,46 +4453,46 @@ Resources colocated with clone:
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="1" id="ping:0"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="1" id="ping:1"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="ping:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="ping:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="ping:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="ping:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="ping:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="Fencing"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Fencing"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="dummy"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="dummy"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="ping:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="ping:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="ping:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="ping:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Fencing"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Fencing"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="dummy"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="dummy"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-clone"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-clone"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-dhcpd:0"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-dhcpd:0"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="inactive-dhcpd:1"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-group"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-group"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-1"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-1"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-2"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dummy-2"/>
     <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle"/>
     <node_weight function="pcmk__bundle_allocate" node="cluster02" score="0" id="httpd-bundle"/>
     <node_weight function="pcmk__bundle_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
@@ -4521,27 +4521,27 @@ Resources colocated with clone:
     <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-0" score="501" id="httpd:0"/>
     <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-1" score="501" id="httpd:1"/>
     <node_weight function="pcmk__bundle_allocate" node="httpd-bundle-2" score="500" id="httpd:2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="10000" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-0"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="10000" id="httpd-bundle-1"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="httpd-bundle-2"/>
-    <node_weight function="pcmk__native_allocate" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-docker-1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-docker-2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.131"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="10000" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-0"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-ip-192.168.122.132"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="10000" id="httpd-bundle-1"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="httpd-bundle-ip-192.168.122.133"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="httpd-bundle-2"/>
+    <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="-INFINITY" id="httpd-bundle-clone"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="-INFINITY" id="httpd-bundle-clone"/>
     <node_weight function="pcmk__clone_allocate" node="httpd-bundle-0" score="0" id="httpd-bundle-clone"/>
@@ -4556,10 +4556,10 @@ Resources colocated with clone:
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Public-IP"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="Email"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Email"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="Email"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="0" id="Email"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="Email"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Email"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-clone-group"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-clone-group"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-group:0"/>
@@ -4586,32 +4586,32 @@ Resources colocated with clone:
     <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="mysql-group:0"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-group:1"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
     <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
     <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-clone"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-clone"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:0"/>
@@ -4624,16 +4624,16 @@ Resources colocated with clone:
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:3"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-rsc:4"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="promotable-rsc:4"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="0" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="1" id="promotable-rsc:0"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="1" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:1"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:2"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:3"/>
-    <node_weight function="pcmk__native_allocate" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
-    <node_weight function="pcmk__native_allocate" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="promotable-rsc:0"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:1"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:2"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:3"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="promotable-rsc:4"/>
+    <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="promotable-rsc:4"/>
     <promotion_score id="promotable-rsc:0" score="9" node="cluster02"/>
     <promotion_score id="promotable-rsc:2" score="0"/>
     <promotion_score id="promotable-rsc:3" score="0"/>

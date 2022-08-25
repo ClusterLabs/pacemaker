@@ -7,9 +7,9 @@ pcmk__clone_allocate: child_rsc1:1 allocation score on node1: 100
 pcmk__clone_allocate: child_rsc1:1 allocation score on node2: 300
 pcmk__clone_allocate: rsc1 allocation score on node1: 0
 pcmk__clone_allocate: rsc1 allocation score on node2: 0
-pcmk__native_allocate: child_rsc1:0 allocation score on node1: 10
-pcmk__native_allocate: child_rsc1:0 allocation score on node2: -INFINITY
-pcmk__native_allocate: child_rsc1:1 allocation score on node1: 100
-pcmk__native_allocate: child_rsc1:1 allocation score on node2: 300
-pcmk__native_allocate: simple-rsc allocation score on node1: -INFINITY
-pcmk__native_allocate: simple-rsc allocation score on node2: 300
+pcmk__primitive_assign: child_rsc1:0 allocation score on node1: 10
+pcmk__primitive_assign: child_rsc1:0 allocation score on node2: -INFINITY
+pcmk__primitive_assign: child_rsc1:1 allocation score on node1: 100
+pcmk__primitive_assign: child_rsc1:1 allocation score on node2: 300
+pcmk__primitive_assign: simple-rsc allocation score on node1: -INFINITY
+pcmk__primitive_assign: simple-rsc allocation score on node2: 300

@@ -61,6 +61,15 @@ get_containers_or_children(pe_resource_t *rsc)
            get_container_list(rsc) : rsc->children;
 }
 
+/*!
+ * \internal
+ * \brief Assign a bundle resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
 pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
@@ -95,7 +104,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         if (replica->ip) {
             pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
                          rsc->id, replica->ip->id);
-            replica->ip->cmds->allocate(replica->ip, prefer);
+            replica->ip->cmds->assign(replica->ip, prefer);
         }
 
         container_host = replica->container->allocated_to;
@@ -113,7 +122,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         if (replica->remote) {
             pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
                          rsc->id, replica->remote->id);
-            replica->remote->cmds->allocate(replica->remote, prefer);
+            replica->remote->cmds->assign(replica->remote, prefer);
         }
 
         // Explicitly allocate replicas' children before bundle child
@@ -134,7 +143,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
             pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
-            replica->child->cmds->allocate(replica->child, replica->node);
+            replica->child->cmds->assign(replica->child, replica->node);
             pe__clear_resource_flags(replica->child->parent,
                                        pe_rsc_allocating);
         }
@@ -153,7 +162,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
                      rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->allocate(bundle_data->child, prefer);
+        bundle_data->child->cmds->assign(bundle_data->child, prefer);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);

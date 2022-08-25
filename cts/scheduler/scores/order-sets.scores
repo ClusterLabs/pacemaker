@@ -1,9 +1,9 @@
 
-pcmk__native_allocate: world1 allocation score on ubuntu_1: 2000
-pcmk__native_allocate: world1 allocation score on ubuntu_2: -INFINITY
-pcmk__native_allocate: world2 allocation score on ubuntu_1: 1500
-pcmk__native_allocate: world2 allocation score on ubuntu_2: -INFINITY
-pcmk__native_allocate: world3 allocation score on ubuntu_1: 1000
-pcmk__native_allocate: world3 allocation score on ubuntu_2: -INFINITY
-pcmk__native_allocate: world4 allocation score on ubuntu_1: 500
-pcmk__native_allocate: world4 allocation score on ubuntu_2: -INFINITY
+pcmk__primitive_assign: world1 allocation score on ubuntu_1: 2000
+pcmk__primitive_assign: world1 allocation score on ubuntu_2: -INFINITY
+pcmk__primitive_assign: world2 allocation score on ubuntu_1: 1500
+pcmk__primitive_assign: world2 allocation score on ubuntu_2: -INFINITY
+pcmk__primitive_assign: world3 allocation score on ubuntu_1: 1000
+pcmk__primitive_assign: world3 allocation score on ubuntu_2: -INFINITY
+pcmk__primitive_assign: world4 allocation score on ubuntu_1: 500
+pcmk__primitive_assign: world4 allocation score on ubuntu_2: -INFINITY

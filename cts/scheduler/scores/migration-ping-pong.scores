@@ -1,9 +1,9 @@
 
-pcmk__native_allocate: fence_ilo_ha-idg-1 allocation score on ha-idg-1: -INFINITY
-pcmk__native_allocate: fence_ilo_ha-idg-1 allocation score on ha-idg-2: 0
-pcmk__native_allocate: fence_ilo_ha-idg-2 allocation score on ha-idg-1: 200
-pcmk__native_allocate: fence_ilo_ha-idg-2 allocation score on ha-idg-2: -INFINITY
-pcmk__native_allocate: vm_idcc_devel allocation score on ha-idg-1: 200
-pcmk__native_allocate: vm_idcc_devel allocation score on ha-idg-2: 0
-pcmk__native_allocate: vm_severin allocation score on ha-idg-1: 200
-pcmk__native_allocate: vm_severin allocation score on ha-idg-2: 0
+pcmk__primitive_assign: fence_ilo_ha-idg-1 allocation score on ha-idg-1: -INFINITY
+pcmk__primitive_assign: fence_ilo_ha-idg-1 allocation score on ha-idg-2: 0
+pcmk__primitive_assign: fence_ilo_ha-idg-2 allocation score on ha-idg-1: 200
+pcmk__primitive_assign: fence_ilo_ha-idg-2 allocation score on ha-idg-2: -INFINITY
+pcmk__primitive_assign: vm_idcc_devel allocation score on ha-idg-1: 200
+pcmk__primitive_assign: vm_idcc_devel allocation score on ha-idg-2: 0
+pcmk__primitive_assign: vm_severin allocation score on ha-idg-1: 200
+pcmk__primitive_assign: vm_severin allocation score on ha-idg-2: 0

@@ -111,7 +111,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
-    chosen = rsc->cmds->allocate(rsc, prefer);
+    chosen = rsc->cmds->assign(rsc, prefer);
     if (chosen && prefer && (chosen->details != prefer->details)) {
         crm_info("Not pre-allocating %s to %s because %s is better",
                  rsc->id, prefer->details->uname, chosen->details->uname);
@@ -278,7 +278,15 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                  allocated, rsc->id, max);
 }
 
-
+/*!
+ * \internal
+ * \brief Assign a clone resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
 pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
@@ -309,7 +317,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 
         pe_rsc_trace(rsc, "%s: Allocating %s first",
                      rsc->id, constraint->primary->id);
-        constraint->primary->cmds->allocate(constraint->primary, prefer);
+        constraint->primary->cmds->assign(constraint->primary, prefer);
     }
 
     for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {

@@ -5,9 +5,9 @@ pcmk__clone_allocate: res_Stateful_1:0 allocation score on sles11-a: 0
 pcmk__clone_allocate: res_Stateful_1:0 allocation score on sles11-b: 11
 pcmk__clone_allocate: res_Stateful_1:1 allocation score on sles11-a: 11
 pcmk__clone_allocate: res_Stateful_1:1 allocation score on sles11-b: 0
-pcmk__native_allocate: res_Stateful_1:0 allocation score on sles11-a: 0
-pcmk__native_allocate: res_Stateful_1:0 allocation score on sles11-b: 11
-pcmk__native_allocate: res_Stateful_1:1 allocation score on sles11-a: 11
-pcmk__native_allocate: res_Stateful_1:1 allocation score on sles11-b: -INFINITY
+pcmk__primitive_assign: res_Stateful_1:0 allocation score on sles11-a: 0
+pcmk__primitive_assign: res_Stateful_1:0 allocation score on sles11-b: 11
+pcmk__primitive_assign: res_Stateful_1:1 allocation score on sles11-a: 11
+pcmk__primitive_assign: res_Stateful_1:1 allocation score on sles11-b: -INFINITY
 res_Stateful_1:0 promotion score on sles11-b: 10
 res_Stateful_1:1 promotion score on sles11-a: 10

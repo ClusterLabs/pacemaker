@@ -17,9 +17,9 @@ pcmk__group_allocate: prmStonith:0 allocation score on rh5node1: -INFINITY
 pcmk__group_allocate: prmStonith:0 allocation score on rh5node2: 0
 pcmk__group_allocate: prmStonith:1 allocation score on rh5node1: -INFINITY
 pcmk__group_allocate: prmStonith:1 allocation score on rh5node2: -INFINITY
-pcmk__native_allocate: prmIpPostgreSQLDB allocation score on rh5node1: 200
-pcmk__native_allocate: prmIpPostgreSQLDB allocation score on rh5node2: 100
-pcmk__native_allocate: prmStonith:0 allocation score on rh5node1: -INFINITY
-pcmk__native_allocate: prmStonith:0 allocation score on rh5node2: 0
-pcmk__native_allocate: prmStonith:1 allocation score on rh5node1: -INFINITY
-pcmk__native_allocate: prmStonith:1 allocation score on rh5node2: -INFINITY
+pcmk__primitive_assign: prmIpPostgreSQLDB allocation score on rh5node1: 200
+pcmk__primitive_assign: prmIpPostgreSQLDB allocation score on rh5node2: 100
+pcmk__primitive_assign: prmStonith:0 allocation score on rh5node1: -INFINITY
+pcmk__primitive_assign: prmStonith:0 allocation score on rh5node2: 0
+pcmk__primitive_assign: prmStonith:1 allocation score on rh5node1: -INFINITY
+pcmk__primitive_assign: prmStonith:1 allocation score on rh5node2: -INFINITY

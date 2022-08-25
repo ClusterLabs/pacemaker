@@ -1,5 +1,5 @@
 
-pcmk__native_allocate: Dummy allocation score on puma1: 110
-pcmk__native_allocate: Dummy allocation score on puma2: 0
-pcmk__native_allocate: Dummy allocation score on puma3: -2000
-pcmk__native_allocate: Dummy allocation score on puma4: 0
+pcmk__primitive_assign: Dummy allocation score on puma1: 110
+pcmk__primitive_assign: Dummy allocation score on puma2: 0
+pcmk__primitive_assign: Dummy allocation score on puma3: -2000
+pcmk__primitive_assign: Dummy allocation score on puma4: 0

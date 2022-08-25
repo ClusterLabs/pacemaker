@@ -1,5 +1,5 @@
 
-pcmk__native_allocate: remote-node allocation score on 18builder: 0
-pcmk__native_allocate: remote-node allocation score on 18node1: 0
-pcmk__native_allocate: remote-node allocation score on 18node2: 0
-pcmk__native_allocate: remote-node allocation score on 18node3: 0
+pcmk__primitive_assign: remote-node allocation score on 18builder: 0
+pcmk__primitive_assign: remote-node allocation score on 18node1: 0
+pcmk__primitive_assign: remote-node allocation score on 18node2: 0
+pcmk__primitive_assign: remote-node allocation score on 18node3: 0

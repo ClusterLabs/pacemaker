@@ -3,5 +3,5 @@ pcmk__clone_allocate: ClusterIP2:0 allocation score on fc16-builder: 0
 pcmk__clone_allocate: ClusterIP:0 allocation score on fc16-builder: 0
 pcmk__clone_allocate: clone1 allocation score on fc16-builder: 0
 pcmk__clone_allocate: clone2 allocation score on fc16-builder: 0
-pcmk__native_allocate: ClusterIP2:0 allocation score on fc16-builder: 0
-pcmk__native_allocate: ClusterIP:0 allocation score on fc16-builder: 0
+pcmk__primitive_assign: ClusterIP2:0 allocation score on fc16-builder: 0
+pcmk__primitive_assign: ClusterIP:0 allocation score on fc16-builder: 0

@@ -19,7 +19,8 @@
 #  include <sys/types.h>
 
 #  include <crm_config.h>       // OCF_ROOT_DIR
-#  include "common/results.h"
+#  include <crm/common/agents.h>
+#  include <crm/common/results.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,16 +35,6 @@ extern "C" {
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
 #  endif
-
-/* Known resource classes */
-#define PCMK_RESOURCE_CLASS_OCF     "ocf"
-#define PCMK_RESOURCE_CLASS_SERVICE "service"
-#define PCMK_RESOURCE_CLASS_LSB     "lsb"
-#define PCMK_RESOURCE_CLASS_SYSTEMD "systemd"
-#define PCMK_RESOURCE_CLASS_UPSTART "upstart"
-#define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
-#define PCMK_RESOURCE_CLASS_STONITH "stonith"
-#define PCMK_RESOURCE_CLASS_ALERT   "alert"
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX environment variable.
  * The stderr output that occurs after this prefix is encountered is considered

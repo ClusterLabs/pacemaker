@@ -1,4 +1,4 @@
 
-pcmk__native_allocate: ClusterIP allocation score on fc16-builder: 0
-pcmk__native_allocate: ClusterIP2 allocation score on fc16-builder: 0
-pcmk__native_allocate: ClusterIP3 allocation score on fc16-builder: -INFINITY
+pcmk__primitive_assign: ClusterIP allocation score on fc16-builder: 0
+pcmk__primitive_assign: ClusterIP2 allocation score on fc16-builder: 0
+pcmk__primitive_assign: ClusterIP3 allocation score on fc16-builder: -INFINITY

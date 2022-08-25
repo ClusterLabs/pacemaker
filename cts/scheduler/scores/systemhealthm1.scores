@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: apache_1 allocation score on hs21c: 100
-pcmk__native_allocate: apache_1 allocation score on hs21d: 0
-pcmk__native_allocate: nfs_1 allocation score on hs21c: 100
-pcmk__native_allocate: nfs_1 allocation score on hs21d: 0
-pcmk__native_allocate: stonith-1 allocation score on hs21c: 0
-pcmk__native_allocate: stonith-1 allocation score on hs21d: 0
+pcmk__primitive_assign: apache_1 allocation score on hs21c: 100
+pcmk__primitive_assign: apache_1 allocation score on hs21d: 0
+pcmk__primitive_assign: nfs_1 allocation score on hs21c: 100
+pcmk__primitive_assign: nfs_1 allocation score on hs21d: 0
+pcmk__primitive_assign: stonith-1 allocation score on hs21c: 0
+pcmk__primitive_assign: stonith-1 allocation score on hs21d: 0

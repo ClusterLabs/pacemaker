@@ -1,13 +1,13 @@
 
-pcmk__native_allocate: fake allocation score on 18builder: 0
-pcmk__native_allocate: fake allocation score on 18node1: 0
-pcmk__native_allocate: fake allocation score on 18node2: 0
-pcmk__native_allocate: fake allocation score on remote1: 0
-pcmk__native_allocate: remote1 allocation score on 18builder: 0
-pcmk__native_allocate: remote1 allocation score on 18node1: 0
-pcmk__native_allocate: remote1 allocation score on 18node2: 0
-pcmk__native_allocate: remote1 allocation score on remote1: -INFINITY
-pcmk__native_allocate: shooter allocation score on 18builder: 0
-pcmk__native_allocate: shooter allocation score on 18node1: 0
-pcmk__native_allocate: shooter allocation score on 18node2: 0
-pcmk__native_allocate: shooter allocation score on remote1: -INFINITY
+pcmk__primitive_assign: fake allocation score on 18builder: 0
+pcmk__primitive_assign: fake allocation score on 18node1: 0
+pcmk__primitive_assign: fake allocation score on 18node2: 0
+pcmk__primitive_assign: fake allocation score on remote1: 0
+pcmk__primitive_assign: remote1 allocation score on 18builder: 0
+pcmk__primitive_assign: remote1 allocation score on 18node1: 0
+pcmk__primitive_assign: remote1 allocation score on 18node2: 0
+pcmk__primitive_assign: remote1 allocation score on remote1: -INFINITY
+pcmk__primitive_assign: shooter allocation score on 18builder: 0
+pcmk__primitive_assign: shooter allocation score on 18node1: 0
+pcmk__primitive_assign: shooter allocation score on 18node2: 0
+pcmk__primitive_assign: shooter allocation score on remote1: -INFINITY

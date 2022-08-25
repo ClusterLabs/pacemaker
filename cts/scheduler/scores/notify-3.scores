@@ -2,5 +2,5 @@
 pcmk__clone_allocate: child_rsc1:0 allocation score on node1: 11
 pcmk__clone_allocate: child_rsc1:1 allocation score on node1: 10
 pcmk__clone_allocate: rsc1 allocation score on node1: 10
-pcmk__native_allocate: child_rsc1:0 allocation score on node1: 11
-pcmk__native_allocate: child_rsc1:1 allocation score on node1: 10
+pcmk__primitive_assign: child_rsc1:0 allocation score on node1: 11
+pcmk__primitive_assign: child_rsc1:1 allocation score on node1: 10
