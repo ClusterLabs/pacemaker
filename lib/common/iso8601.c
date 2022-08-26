@@ -354,7 +354,8 @@ crm_time_get_seconds_since_epoch(crm_time_t * dt)
 }
 
 int
-crm_time_get_gregorian(crm_time_t *dt, uint32_t *y, uint32_t *m, uint32_t *d)
+crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                       uint32_t *d)
 {
     int months = 0;
     int days = dt->days;
