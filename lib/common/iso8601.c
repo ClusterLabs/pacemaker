@@ -1193,7 +1193,7 @@ crm_time_free_period(crm_time_period_t *period)
 }
 
 void
-crm_time_set(crm_time_t * target, crm_time_t * source)
+crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
     crm_trace("target=%p, source=%p", target, source);
 
