@@ -387,7 +387,7 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
 }
 
 int
-crm_time_get_ordinal(crm_time_t *dt, uint32_t *y, uint32_t *d)
+crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
 {
     *y = dt->years;
     *d = dt->days;
