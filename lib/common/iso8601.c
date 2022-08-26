@@ -1271,7 +1271,7 @@ pcmk_copy_time(const crm_time_t *source)
 }
 
 crm_time_t *
-crm_time_add(crm_time_t * dt, crm_time_t * value)
+crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
