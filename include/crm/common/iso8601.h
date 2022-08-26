@@ -100,7 +100,7 @@ void crm_time_set(crm_time_t *target, const crm_time_t *source);
 void crm_time_set_timet(crm_time_t *target, const time_t *source);
 
 /* Returns a new time object */
-crm_time_t *pcmk_copy_time(crm_time_t *source);
+crm_time_t *pcmk_copy_time(const crm_time_t *source);
 crm_time_t *crm_time_add(crm_time_t * dt, crm_time_t * value);
 crm_time_t *crm_time_subtract(crm_time_t * dt, crm_time_t * value);
 

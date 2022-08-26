@@ -1262,7 +1262,7 @@ crm_time_set_timet(crm_time_t *target, const time_t *source)
 }
 
 crm_time_t *
-pcmk_copy_time(crm_time_t *source)
+pcmk_copy_time(const crm_time_t *source)
 {
     crm_time_t *target = crm_time_new_undefined();
 
