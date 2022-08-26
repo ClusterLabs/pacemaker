@@ -75,7 +75,8 @@ void crm_time_log_alias(int log_level, const char *file, const char *function,
 #  define crm_time_epoch             0x200
 
 crm_time_t *crm_time_parse_duration(const char *duration_str);
-crm_time_t *crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value);
+crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,
+                                        const crm_time_t *value);
 crm_time_period_t *crm_time_parse_period(const char *period_str);
 void crm_time_free_period(crm_time_period_t *period);
 
