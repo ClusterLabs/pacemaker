@@ -395,7 +395,8 @@ crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
 }
 
 int
-crm_time_get_isoweek(crm_time_t * dt, uint32_t *y, uint32_t *w, uint32_t *d)
+crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                     uint32_t *d)
 {
     /*
      * Monday 29 December 2008 is written "2009-W01-1"
