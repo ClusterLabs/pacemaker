@@ -80,7 +80,7 @@ crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,
 crm_time_period_t *crm_time_parse_period(const char *period_str);
 void crm_time_free_period(crm_time_period_t *period);
 
-int crm_time_compare(crm_time_t * dt, crm_time_t * rhs);
+int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                            uint32_t *s);

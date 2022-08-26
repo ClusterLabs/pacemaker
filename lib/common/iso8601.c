@@ -1388,7 +1388,7 @@ crm_time_check(const crm_time_t *dt)
     }
 
 int
-crm_time_compare(crm_time_t *a, crm_time_t *b)
+crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
     crm_time_t *t1 = crm_get_utc_time(a);
