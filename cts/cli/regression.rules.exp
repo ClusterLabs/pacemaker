@@ -27,7 +27,7 @@ crm_rule: Couldn't parse input from STDIN
 =#=#=#= End test: crm_rule given invalid input XML on stdin - Invalid data given (65) =#=#=#=
 * Passed: echo           - crm_rule given invalid input XML on stdin
 =#=#=#= Begin test: Try to check a rule that doesn't exist =#=#=#=
-crm_rule: No rule found with ID=blahblah
+No rule found with ID=blahblah
 =#=#=#= Current cib after: Try to check a rule that doesn't exist =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
@@ -93,14 +93,14 @@ crm_rule: No rule found with ID=blahblah
 <pacemaker-result api-version="X" request="crm_rule -c -r blahblah --output-as=xml">
   <status code="105" message="No such object">
     <errors>
-      <error>crm_rule: No rule found with ID=blahblah</error>
+      <error>No rule found with ID=blahblah</error>
     </errors>
   </status>
 </pacemaker-result>
 =#=#=#= End test: Try to check a rule that doesn't exist, with XML output - No such object (105) =#=#=#=
 * Passed: crm_rule       - Try to check a rule that doesn't exist, with XML output
 =#=#=#= Begin test: Try to check a rule that has too many date_expressions =#=#=#=
-crm_rule: Can't check rule cli-rule-too-many-date-expressions because it does not have exactly one date_expression
+Can't check rule cli-rule-too-many-date-expressions because it does not have exactly one date_expression
 =#=#=#= End test: Try to check a rule that has too many date_expressions - Unimplemented (3) =#=#=#=
 * Passed: crm_rule       - Try to check a rule that has too many date_expressions
 =#=#=#= Begin test: Verify basic rule is expired =#=#=#=
@@ -144,14 +144,14 @@ Rule cli-prefer-rule-dummy-date_spec-only-years satisfies conditions
 =#=#=#= End test: Verify date_spec rule with years is in effect - OK (0) =#=#=#=
 * Passed: crm_rule       - Verify date_spec rule with years is in effect
 =#=#=#= Begin test: Try to check a rule whose date_spec does not contain years= =#=#=#=
-crm_rule: Rule either must not use date_spec, or use date_spec with years= but not moon=
+Rule either must not use date_spec, or use date_spec with years= but not moon=
 =#=#=#= End test: Try to check a rule whose date_spec does not contain years= - No such object (105) =#=#=#=
 * Passed: crm_rule       - Try to check a rule whose date_spec does not contain years=
 =#=#=#= Begin test: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
-crm_rule: Rule either must not use date_spec, or use date_spec with years= but not moon=
+Rule either must not use date_spec, or use date_spec with years= but not moon=
 =#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - No such object (105) =#=#=#=
 * Passed: crm_rule       - Try to check a rule whose date_spec contains years= and moon=
 =#=#=#= Begin test: Try to check a rule with no date_expression =#=#=#=
-crm_rule: Can't check rule cli-no-date_expression-rule because it does not have exactly one date_expression
+Can't check rule cli-no-date_expression-rule because it does not have exactly one date_expression
 =#=#=#= End test: Try to check a rule with no date_expression - Unimplemented (3) =#=#=#=
 * Passed: crm_rule       - Try to check a rule with no date_expression

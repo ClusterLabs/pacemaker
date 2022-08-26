@@ -14,6 +14,7 @@ noinst_HEADERS		= pcmki_acl.h \
 			  pcmki_fence.h \
 			  pcmki_output.h \
 			  pcmki_resource.h \
+			  pcmki_rule.h \
 			  pcmki_sched_allocate.h \
 			  pcmki_sched_utils.h \
 			  pcmki_scheduler.h \

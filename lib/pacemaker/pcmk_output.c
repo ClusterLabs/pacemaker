@@ -1864,6 +1864,50 @@ attribute_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
+static int
+rule_check_default(pcmk__output_t *out, va_list args)
+{
+    const char *rule_id = va_arg(args, const char *);
+    int result = va_arg(args, int);
+
+    if (result == pcmk_rc_within_range) {
+        out->info(out, "Rule %s is still in effect", rule_id);
+    } else if (result == pcmk_rc_ok) {
+        out->info(out, "Rule %s satisfies conditions", rule_id);
+    } else if (result == pcmk_rc_after_range) {
+        out->info(out, "Rule %s is expired", rule_id);
+    } else if (result == pcmk_rc_before_range) {
+        out->info(out, "Rule %s has not yet taken effect", rule_id);
+    } else if (result == pcmk_rc_op_unsatisfied) {
+        out->info(out, "Rule %s does not satisfy conditions", rule_id);
+    } else {
+        out->info(out, "Could not determine whether rule %s is expired",
+                  rule_id);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
+static int
+rule_check_xml(pcmk__output_t *out, va_list args)
+{
+    const char *rule_id = va_arg(args, const char *);
+    int result = va_arg(args, int);
+
+    char *rc_str = pcmk__itoa(pcmk_rc2exitc(result));
+
+    pcmk__output_create_xml_node(out, "rule-check",
+                                 "rule-id", rule_id,
+                                 "rc", rc_str,
+                                 NULL);
+
+    free(rc_str);
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "default", attribute_default },
     { "attribute", "xml", attribute_xml },
@@ -1911,6 +1955,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "rsc-is-colocated-with-list", "xml", rsc_is_colocated_with_list_xml },
     { "rscs-colocated-with-list", "default", rscs_colocated_with_list },
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
+    { "rule-check", "default", rule_check_default },
+    { "rule-check", "xml", rule_check_xml },
     { "stacks-constraints", "default", stacks_and_constraints },
     { "stacks-constraints", "xml", stacks_and_constraints_xml },
 
