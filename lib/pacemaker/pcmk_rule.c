@@ -124,15 +124,15 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
  * \return Standard Pacemaker return code
  */
 static int
-crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set,
-               const char *rule_id, crm_time_t *date)
+eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
+          crm_time_t *date)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
     xmlXPathObjectPtr xpath_obj = NULL;
     char *xpath = NULL;
     int rc = pcmk_rc_ok;
-    int max = 0;
+    int num_results = 0;
 
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = pcmk_find_cib_element(data_set->input,
@@ -150,44 +150,43 @@ crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set,
      */
     xpath = crm_strdup_printf("//rule[@id='%s']", rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
-    max = numXpathResults(xpath_obj);
-
-    if (max == 0) {
-        rc = ENXIO;
-        out->err(out, "No rule found with ID=%s", rule_id);
-        goto done;
-    } else if (max > 1) {
-        rc = ENXIO;
-        out->err(out, "More than one rule with ID=%s found", rule_id);
-        goto done;
-    }
+    num_results = numXpathResults(xpath_obj);
 
     free(xpath);
     freeXpathObject(xpath_obj);
+
+    if (num_results == 0) {
+        out->err(out, "No rule found with ID=%s", rule_id);
+        return ENXIO;
+    } else if (num_results > 1) {
+        // Should not be possible; schema prevents this
+        out->err(out, "More than one rule with ID=%s found", rule_id);
+        return ENXIO;
+    }
 
     /* Next, make sure it has exactly one date_expression. */
     xpath = crm_strdup_printf("//rule[@id='%s']//date_expression", rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
-    max = numXpathResults(xpath_obj);
-
-    if (max != 1) {
-        rc = EOPNOTSUPP;
-        out->err(out, "Can't check rule %s because it does not have exactly "
-                 "one date_expression", rule_id);
-        goto done;
-    }
+    num_results = numXpathResults(xpath_obj);
 
     free(xpath);
     freeXpathObject(xpath_obj);
+
+    if (num_results != 1) {
+        out->err(out, "Can't check rule %s because it does not have exactly "
+                 "one date_expression", rule_id);
+        return EOPNOTSUPP;
+    }
 
     /* Then, check that it's something we actually support. */
     xpath = crm_strdup_printf("//rule[@id='%s']//date_expression["
                               "@operation!='date_spec']", rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
-    max = numXpathResults(xpath_obj);
+    num_results = numXpathResults(xpath_obj);
 
-    if (max == 0) {
-        free(xpath);
+    free(xpath);
+
+    if (num_results == 0) {
         freeXpathObject(xpath_obj);
 
         xpath = crm_strdup_printf("//rule[@id='%s']//date_expression["
@@ -195,13 +194,15 @@ crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set,
                                   "and date_spec/@years "
                                   "and not(date_spec/@moon)]", rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);
-        max = numXpathResults(xpath_obj);
+        num_results = numXpathResults(xpath_obj);
 
-        if (max == 0) {
-            rc = ENXIO;
-            out->err(out, "Rule either must not use date_spec, or use "
-                     "date_spec with years= but not moon=");
-            goto done;
+        free(xpath);
+
+        if (num_results == 0) {
+            freeXpathObject(xpath_obj);
+            out->err(out, "Rule %s must either not use date_spec, or use "
+                     "date_spec with years= but not moon=", rule_id);
+            return ENXIO;
         }
     }
 
@@ -215,9 +216,6 @@ crm_rule_check(pcmk__output_t *out, pe_working_set_t *data_set,
 
     rc = eval_date_expression(match, date, NULL);
     out->message(out, "rule-check", rule_id, rc);
-
-done:
-    free(xpath);
     freeXpathObject(xpath_obj);
     return rc;
 }
@@ -255,7 +253,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
     }
 
     for (const char **rule_id = rule_ids; *rule_id != NULL; rule_id++) {
-        int last_rc = crm_rule_check(out, data_set, *rule_id, date);
+        int last_rc = eval_rule(out, data_set, *rule_id, date);
 
         if (last_rc != pcmk_rc_ok) {
             rc = last_rc;
