@@ -1212,7 +1212,7 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
 }
 
 static void
-ha_set_tm_time(crm_time_t * target, struct tm *source)
+ha_set_tm_time(crm_time_t *target, const struct tm *source)
 {
     int h_offset = 0;
     int m_offset = 0;
@@ -1256,7 +1256,7 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
 }
 
 void
-crm_time_set_timet(crm_time_t * target, time_t * source)
+crm_time_set_timet(crm_time_t *target, const time_t *source)
 {
     ha_set_tm_time(target, localtime(source));
 }

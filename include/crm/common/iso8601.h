@@ -97,7 +97,7 @@ long long crm_time_get_seconds(const crm_time_t *dt);
 long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 
 void crm_time_set(crm_time_t *target, const crm_time_t *source);
-void crm_time_set_timet(crm_time_t * target, time_t * source);
+void crm_time_set_timet(crm_time_t *target, const time_t *source);
 
 /* Returns a new time object */
 crm_time_t *pcmk_copy_time(crm_time_t *source);
