@@ -1807,11 +1807,9 @@ mon_trigger_refresh(gpointer user_data)
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
-    xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    for (change = pcmk__xml_first_child(diff); change != NULL;
-         change = pcmk__xml_next(change)) {
+    pcmk__xml_foreach(change, diff) {
         const char *name = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
@@ -1850,12 +1848,9 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
 
         } else if(strcmp(name, XML_TAG_CIB) == 0) {
-            xmlNode *state = NULL;
             xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
 
-            for (state = pcmk__xe_first_child(status); state != NULL;
-                 state = pcmk__xe_next(state)) {
-
+            pcmk__xe_foreach(state, status) {
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
                     node = ID(state);
@@ -1864,11 +1859,7 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             }
 
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
-            xmlNode *state = NULL;
-
-            for (state = pcmk__xe_first_child(match); state != NULL;
-                 state = pcmk__xe_next(state)) {
-
+            pcmk__xe_foreach(state, match) {
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
                     node = ID(state);

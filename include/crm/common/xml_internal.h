@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -335,5 +335,31 @@ enum xml_private_flags {
 };
 
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
+
+/*!
+ * \internal
+ * \brief A macro around the typical pcmk__xml_first_child/pcmk__xml_next
+ *        for loop.
+ *
+ * \param[in] var    Name of the variable to xmlNode * variable to create.
+ *                   This will exist for the lifetime of the block.
+ * \param[in] first  The xmlNode to start from.
+ */
+#define pcmk__xml_foreach(var, first) \
+    for (xmlNode *var = pcmk__xml_first_child(first); var != NULL; \
+         var = pcmk__xml_next(var))
+
+/*!
+ * \internal
+ * \brief A macro around the typical pcmk__xe_first_child/pcmk__xe_next
+ *        for loop.
+ *
+ * \param[in] var    Name of the variable to xmlNode * variable to create.
+ *                   This will exist for the lifetime of the block.
+ * \param[in] first  The xmlNode to start from.
+ */
+#define pcmk__xe_foreach(var, first) \
+    for (xmlNode *var = pcmk__xe_first_child(first); var != NULL; \
+         var = pcmk__xe_next(var))
 
 #endif // PCMK__XML_INTERNAL__H
