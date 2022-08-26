@@ -1364,10 +1364,10 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
  *
  * \param[in] dt  Date/time object to check
  *
- * \return TRUE if years, days, and seconds are sensible, FALSE otherwise
+ * \return \c true if years, days, and seconds are sensible, \c false otherwise
  */
 bool
-crm_time_check(crm_time_t * dt)
+crm_time_check(const crm_time_t *dt)
 {
     return (dt != NULL)
            && (dt->days > 0) && (dt->days <= year_days(dt->years))

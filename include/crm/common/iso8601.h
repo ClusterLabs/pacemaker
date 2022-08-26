@@ -120,7 +120,7 @@ int crm_time_weeks_in_year(int year);
 int crm_time_days_in_month(int month, int year);
 
 bool crm_time_leapyear(int year);
-bool crm_time_check(crm_time_t * dt);
+bool crm_time_check(const crm_time_t *dt);
 
 #ifdef __cplusplus
 }
