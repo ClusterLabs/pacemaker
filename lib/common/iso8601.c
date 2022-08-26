@@ -59,7 +59,7 @@ struct crm_time_s {
 static crm_time_t *parse_date(const char *date_str);
 
 static crm_time_t *
-crm_get_utc_time(crm_time_t *dt)
+crm_get_utc_time(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
 
@@ -248,8 +248,9 @@ get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 }
 
 void
-crm_time_log_alias(int log_level, const char *file, const char *function, int line,
-                   const char *prefix, crm_time_t * date_time, int flags)
+crm_time_log_alias(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const crm_time_t *date_time,
+                   int flags)
 {
     char *date_s = crm_time_as_string(date_time, flags);
 
@@ -305,7 +306,7 @@ crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 }
 
 long long
-crm_time_get_seconds(crm_time_t * dt)
+crm_time_get_seconds(const crm_time_t *dt)
 {
     int lpc;
     crm_time_t *utc = NULL;
@@ -348,7 +349,7 @@ crm_time_get_seconds(crm_time_t * dt)
 
 #define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
 long long
-crm_time_get_seconds_since_epoch(crm_time_t * dt)
+crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
     return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
 }
@@ -452,7 +453,7 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 #define DATE_MAX 128
 
 static void
-crm_duration_as_string(crm_time_t *dt, char *result)
+crm_duration_as_string(const crm_time_t *dt, char *result)
 {
     size_t offset = 0;
 
@@ -496,9 +497,9 @@ crm_duration_as_string(crm_time_t *dt, char *result)
 }
 
 char *
-crm_time_as_string(crm_time_t * date_time, int flags)
+crm_time_as_string(const crm_time_t *date_time, int flags)
 {
-    crm_time_t *dt = NULL;
+    const crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
     char result[DATE_MAX] = { '\0', };
     char *result_copy = NULL;

@@ -55,13 +55,14 @@ crm_time_t *crm_time_new_undefined(void);
 void crm_time_free(crm_time_t * dt);
 
 bool crm_time_is_defined(const crm_time_t *t);
-char *crm_time_as_string(crm_time_t * dt, int flags);
+char *crm_time_as_string(const crm_time_t *dt, int flags);
 
 #define crm_time_log(level, prefix, dt, flags)  \
     crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
 
-void crm_time_log_alias(int log_level, const char *file, const char *function, int line,
-                        const char *prefix, crm_time_t * date_time, int flags);
+void crm_time_log_alias(int log_level, const char *file, const char *function,
+                        int line, const char *prefix,
+                        const crm_time_t *date_time, int flags);
 
 #  define crm_time_log_date          0x001
 #  define crm_time_log_timeofday     0x002
@@ -90,10 +91,10 @@ int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                          uint32_t * d);
 
 /* Time in seconds since 0000-01-01 00:00:00Z */
-long long int crm_time_get_seconds(crm_time_t * dt);
+long long crm_time_get_seconds(const crm_time_t *dt);
 
 /* Time in seconds since 1970-01-01 00:00:00Z */
-long long int crm_time_get_seconds_since_epoch(crm_time_t * dt);
+long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 
 void crm_time_set(crm_time_t * target, crm_time_t * source);
 void crm_time_set_timet(crm_time_t * target, time_t * source);
