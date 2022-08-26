@@ -1333,7 +1333,7 @@ crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 }
 
 crm_time_t *
-crm_time_subtract(crm_time_t * dt, crm_time_t * value)
+crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
