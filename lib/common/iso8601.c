@@ -1529,7 +1529,7 @@ crm_time_add_years(crm_time_t * a_time, int extra)
 }
 
 static void
-ha_get_tm_time( struct tm *target, crm_time_t *source)
+ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
@@ -1557,7 +1557,7 @@ ha_get_tm_time( struct tm *target, crm_time_t *source)
  */
 
 pcmk__time_hr_t *
-pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt)
+pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
 {
     pcmk__time_hr_t *hr_dt = NULL;
 
@@ -1578,7 +1578,7 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt)
 }
 
 void
-pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt)
+pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt)
 {
     CRM_ASSERT((hr_dt) && (target));
     *target = (crm_time_t) {
@@ -1642,7 +1642,7 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 }
 
 char *
-pcmk__time_format_hr(const char *format, pcmk__time_hr_t * hr_dt)
+pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
     const char *mark_s;
     int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
@@ -1726,7 +1726,7 @@ pcmk__time_format_hr(const char *format, pcmk__time_hr_t * hr_dt)
  *       functions.
  */
 const char *
-pcmk__epoch2str(time_t *when)
+pcmk__epoch2str(const time_t *when)
 {
     char *since_epoch = NULL;
 
