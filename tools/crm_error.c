@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
@@ -15,8 +16,6 @@
 #include <crm/crm.h>
 
 #define SUMMARY "crm_error - display name or description of a Pacemaker error code"
-
-GError *error = NULL;
 
 struct {
     gboolean with_name;
@@ -57,11 +56,107 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_none(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_text(pcmk__output_t *out, va_list args)
+{
+    int code = va_arg(args, int);
+    char *name = va_arg(args, char *);
+    char *desc = va_arg(args, char *);
+
+    static int code_width = 0;
+
+    if (out->is_quiet(out)) {
+        /* If out->is_quiet(), don't print the code. Print name and/or desc in a
+         * compact format for text output, or print nothing at all for none-type
+         * output.
+         */
+        if ((name != NULL) && (desc != NULL)) {
+            pcmk__formatted_printf(out, "%s - %s\n", name, desc);
+
+        } else if ((name != NULL) || (desc != NULL)) {
+            pcmk__formatted_printf(out, "%s\n", ((name != NULL)? name : desc));
+        }
+        return pcmk_rc_ok;
+    }
+
+    /* Get length of longest (most negative) standard Pacemaker return code
+     * This should be longer than all the values of any other type of return
+     * code.
+     */
+    if (code_width == 0) {
+        long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
+        code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
+    }
+
+    if ((name != NULL) && (desc != NULL)) {
+        static int name_width = 0;
+
+        if (name_width == 0) {
+            // Get length of longest standard Pacemaker return code name
+            for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
+                int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
+                name_width = QB_MAX(name_width, len);
+            }
+        }
+        return out->info(out, "% *d: %-*s  %s", code_width, code, name_width,
+                         name, desc);
+    }
+
+    if ((name != NULL) || (desc != NULL)) {
+        return out->info(out, "% *d: %s", code_width, code,
+                         ((name != NULL)? name : desc));
+    }
+
+    return out->info(out, "% *d", code_width, code);
+}
+
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_xml(pcmk__output_t *out, va_list args)
+{
+    int code = va_arg(args, int);
+    char *name = va_arg(args, char *);
+    char *desc = va_arg(args, char *);
+
+    char *code_str = pcmk__itoa(code);
+    pcmk__output_create_xml_node(out, "result-code",
+                                 "code", code_str,
+                                 XML_ATTR_NAME, name,
+                                 XML_ATTR_DESC, desc,
+                                 NULL);
+    free(code_str);
+    return pcmk_rc_ok;
+}
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "result-code", "none", result_code_none },
+    { "result-code", "text", result_code_text },
+    { "result-code", "xml", result_code_xml },
+
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, group, "[-- <rc> [<rc>...]]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[-- <rc> [<rc>...]]");
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -70,14 +165,20 @@ int
 main(int argc, char **argv)
 {
     crm_exit_t exit_code = CRM_EX_OK;
+    int rc = pcmk_rc_ok;
     const char *name = NULL;
     const char *desc = NULL;
+
+    pcmk__output_t *out = NULL;
+
+    GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -85,11 +186,13 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_error", args->verbosity);
 
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_error is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
     }
 
     if (g_strv_length(processed_args) < 2) {
@@ -97,26 +200,17 @@ main(int argc, char **argv)
         options.do_list = TRUE;
     }
 
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
+
+    pcmk__register_messages(out, fmt_functions);
+
     if (options.do_list) {
         int start = 0;
         int end = 0;
         int code = 0;
-
-        /* Get length of longest (most negative) standard Pacemaker return code
-         * This should be longer than all the values of any other type of return
-         * code.
-         */
-        long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
-        int code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
-        int name_width = 0;
-
-        if (options.with_name) {
-            // Get length of longest standard Pacemaker return code name
-            for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
-                int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
-                name_width = QB_MAX(name_width, len);
-            }
-        }
 
         pcmk__result_bounds(options.result_type, &start, &end);
 
@@ -137,32 +231,28 @@ main(int argc, char **argv)
                 code++;
                 continue;
             }
-
-            if (options.with_name) {
-                printf("% *d: %-*s  %s\n", code_width, code, name_width, name,
-                       desc);
-            } else {
-                printf("% *d: %s\n", code_width, code, desc);
-            }
+            out->message(out, "result-code", code,
+                         (options.with_name? name : NULL), desc);
             code++;
         }
 
     } else {
-        int code = 0;
+        // For text output, print only "[name -] description" by default
+        if (args->verbosity == 0) {
+            out->quiet = true;
+        }
 
         /* Skip #1 because that's the program name. */
         for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            int code = 0;
+
             if (pcmk__str_eq(processed_args[lpc], "--", pcmk__str_none)) {
                 continue;
             }
-
             pcmk__scan_min_int(processed_args[lpc], &code, INT_MIN);
             pcmk_result_get_strings(code, options.result_type, &name, &desc);
-            if (options.with_name) {
-                printf("%s - %s\n", name, desc);
-            } else {
-                printf("%s\n", desc);
-            }
+            out->message(out, "result-code", code,
+                         (options.with_name? name : NULL), desc);
         }
     }
 
@@ -170,6 +260,11 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
-    return exit_code;
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    crm_exit(exit_code);
 }
