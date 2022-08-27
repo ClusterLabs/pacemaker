@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,6 +136,10 @@ main(int argc, char **argv)
 
         /* Skip #1 because that's the program name. */
         for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            if (pcmk__str_eq(processed_args[lpc], "--", pcmk__str_none)) {
+                continue;
+            }
+
             pcmk__scan_min_int(processed_args[lpc], &rc, INT_MIN);
             get_strings(rc, &name, &desc);
             if (options.with_name) {
