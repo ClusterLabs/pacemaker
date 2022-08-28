@@ -29,7 +29,7 @@ static GOptionEntry entries[] = {
       "of the error in source code)",
        NULL },
     { "list", 'l', 0, G_OPTION_ARG_NONE, &options.do_list,
-      "Show all known errors",
+      "Show all known errors (enabled by default if no rc is specified)",
       NULL },
     { "exit", 'X', 0, G_OPTION_ARG_NONE, &options.as_exit_code,
       "Interpret as exit code rather than legacy function return value",
@@ -61,7 +61,7 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, group, "-- <rc> [...]");
+    context = pcmk__build_arg_context(args, NULL, group, "[-- <rc> [<rc>...]]");
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -92,6 +92,11 @@ main(int argc, char **argv)
         pcmk__free_arg_context(context);
         /* FIXME:  When crm_error is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_OK);
+    }
+
+    if (g_strv_length(processed_args) < 2) {
+        // If no result codes were specified, list them all
+        options.do_list = TRUE;
     }
 
     if (options.do_list) {
@@ -125,14 +130,6 @@ main(int argc, char **argv)
 
     } else {
         int code = 0;
-
-        if (g_strv_length(processed_args) < 2) {
-            char *help = g_option_context_get_help(context, TRUE, NULL);
-            fprintf(stderr, "%s", help);
-            g_free(help);
-            exit_code = CRM_EX_USAGE;
-            goto done;
-        }
 
         /* Skip #1 because that's the program name. */
         for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
