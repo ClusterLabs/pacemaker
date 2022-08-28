@@ -1068,36 +1068,39 @@ pcmk__numeric_strcasecmp(const char *s1, const char *s2)
     return 0;
 }
 
-/*
+/*!
+ * \internal
  * \brief Sort strings.
  *
- * This is your one-stop function for string comparison.  By default, this
- * function works like g_strcmp0.  That is, like strcmp but a NULL string
- * sorts before a non-NULL string.
+ * This is your one-stop function for string comparison. By default, this
+ * function works like \p g_strcmp0. That is, like \p strcmp but a \p NULL
+ * string sorts before a non-<tt>NULL</tt> string.
  *
- * Behavior can be changed with various flags:
+ * The \p pcmk__str_none flag produces the default behavior. Behavior can be
+ * changed with various flags:
  *
- * - pcmk__str_regex - The second string is a regular expression that the
- *                     first string will be matched against.
- * - pcmk__str_casei - By default, comparisons are done taking case into
- *                     account.  This flag makes comparisons case-insensitive.
- *                     This can be combined with pcmk__str_regex.
- * - pcmk__str_null_matches - If one string is NULL and the other is not,
- *                            still return 0.
- * - pcmk__str_star_matches - If one string is "*" and the other is not, still
- *                            return 0.
+ * - \p pcmk__str_regex - The second string is a regular expression that the
+ *                        first string will be matched against.
+ * - \p pcmk__str_casei - By default, comparisons are done taking case into
+ *                        account. This flag makes comparisons case-
+ *                        insensitive. This can be combined with
+ *                        \p pcmk__str_regex.
+ * - \p pcmk__str_null_matches - If one string is \p NULL and the other is not,
+ *                               still return \p 0.
+ * - \p pcmk__str_star_matches - If one string is \p "*" and the other is not,
+ *                               still return \p 0.
  *
- * \param[in] s1    First string to compare
- * \param[in] s2    Second string to compare, or a regular expression to
- *                  match if pcmk__str_regex is set
- * \param[in] flags A bitfield of pcmk__str_flags to modify operation
+ * \param[in] s1     First string to compare
+ * \param[in] s2     Second string to compare, or a regular expression to
+ *                   match if \p pcmk__str_regex is set
+ * \param[in] flags  A bitfield of \p pcmk__str_flags to modify operation
  *
- * \retval  negative \p s1 is NULL or comes before \p s2
- * \retval  0 \p s1 and \p s2 are equal, or \p s1 is found in \p s2 if
- *            pcmk__str_regex is set
- * \retval  positive \p s2 is NULL or \p s1 comes after \p s2, or \p s2
- *            is an invalid regular expression, or \p s1 was not found
- *            in \p s2 if pcmk__str_regex is set.
+ * \retval  negative \p s1 is \p NULL or comes before \p s2
+ * \retval  0        \p s1 and \p s2 are equal, or \p s1 is found in \p s2 if
+ *                   \c pcmk__str_regex is set
+ * \retval  positive \p s2 is \p NULL or \p s1 comes after \p s2, or \p s2
+ *                   is an invalid regular expression, or \p s1 was not found
+ *                   in \p s2 if \p pcmk__str_regex is set.
  */
 int
 pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
