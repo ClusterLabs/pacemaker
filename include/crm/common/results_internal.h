@@ -12,6 +12,10 @@
 
 #include <glib.h>               // GQuark
 
+// Standard Pacemaker API return codes
+
+extern const size_t pcmk__n_rc;
+
 /* Error domains for use with g_set_error */
 
 GQuark pcmk__rc_error_quark(void);

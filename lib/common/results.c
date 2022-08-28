@@ -114,7 +114,7 @@ pcmk_strerror(int rc)
  * kept in the exact reverse order of the enum value numbering (i.e. add new
  * values to the end of the array).
  */
-static struct pcmk__rc_info {
+static const struct pcmk__rc_info {
     const char *name;
     const char *desc;
     int legacy_rc;
@@ -253,7 +253,15 @@ static struct pcmk__rc_info {
     },
 };
 
-#define PCMK__N_RC PCMK__NELEM(pcmk__rcs)
+/*!
+ * \internal
+ * \brief The number of <tt>enum pcmk_rc_e</tt> values, excluding \c pcmk_rc_ok
+ *
+ * This constant stores the number of negative standard Pacemaker return codes.
+ * These represent Pacemaker-custom error codes. The count does not include
+ * positive system error numbers, nor does it include \c pcmk_rc_ok (success).
+ */
+const size_t pcmk__n_rc = PCMK__NELEM(pcmk__rcs);
 
 /*!
  * \brief Get a return code constant name as a string
@@ -265,7 +273,7 @@ static struct pcmk__rc_info {
 const char *
 pcmk_rc_name(int rc)
 {
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].name;
     }
     switch (rc) {
@@ -428,7 +436,7 @@ pcmk_rc_str(int rc)
     if (rc == pcmk_rc_ok) {
         return "OK";
     }
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].desc;
     }
     if (rc < 0) {
@@ -473,7 +481,7 @@ pcmk_rc2legacy(int rc)
     if (rc >= 0) {
         return -rc; // OK or system errno
     }
-    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < PCMK__N_RC)) {
+    if ((rc <= pcmk_rc_error) && ((pcmk_rc_error - rc) < pcmk__n_rc)) {
         return pcmk__rcs[pcmk_rc_error - rc].legacy_rc;
     }
     return -pcmk_err_generic;
