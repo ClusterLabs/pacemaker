@@ -100,6 +100,7 @@ main(int argc, char **argv)
     if (options.do_list) {
         int start = 0;
         int end = 0;
+        int code = 0;
 
         /* Get length of longest (most negative) standard Pacemaker return code
          * This should be longer than all the values of any other type of return
@@ -119,16 +120,21 @@ main(int argc, char **argv)
 
         pcmk__result_bounds(options.result_type, &start, &end);
 
-        for (int code = start; code <= end; code++) {
+        code = start;
+        while (code <= end) {
             if (code == (pcmk_rc_error + 1)) {
-                // Values in between are reserved for callers, no use iterating
+                /* Values between here and pcmk_rc_ok are reserved for callers,
+                 * so skip them
+                 */
                 code = pcmk_rc_ok;
+                continue;
             }
-
             pcmk_result_get_strings(code, options.result_type, &name, &desc);
+
             if ((name == NULL)
                 || pcmk__str_any_of(name, "Unknown", "CRM_EX_UNKNOWN", NULL)) {
 
+                code++;
                 continue;
             }
 
@@ -138,6 +144,7 @@ main(int argc, char **argv)
             } else {
                 printf("% *d: %s\n", code_width, code, desc);
             }
+            code++;
         }
 
     } else {
