@@ -326,6 +326,27 @@ enum pcmk_exec_status {
     PCMK_EXEC_MAX = PCMK_EXEC_NO_SECRETS, //!< Maximum value for this enum
 };
 
+/*!
+ * \enum pcmk_result_type
+ * \brief Types of Pacemaker result codes
+ *
+ * A particular integer can have different meanings within different Pacemaker
+ * result code families. It may be interpretable within zero, one, or multiple
+ * families.
+ *
+ * These values are useful for specifying how an integer result code should be
+ * interpreted in situations involving a generic integer value. For example, a
+ * function that can process multiple types of result codes might accept an
+ * arbitrary integer argument along with a \p pcmk_result_type argument that
+ * specifies how to interpret the integer.
+ */
+enum pcmk_result_type {
+    pcmk_result_legacy      = 0,  //!< Legacy API function return code
+    pcmk_result_rc          = 1,  //!< Standard Pacemaker return code
+    pcmk_result_exitcode    = 2,  //!< Exit status code
+    pcmk_result_exec_status = 3,  //!< Execution status
+};
+
 const char *pcmk_rc_name(int rc);
 const char *pcmk_rc_str(int rc);
 crm_exit_t pcmk_rc2exitc(int rc);
