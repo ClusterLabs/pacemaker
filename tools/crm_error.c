@@ -71,7 +71,6 @@ main(int argc, char **argv)
 {
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
-    int lpc;
     const char *name = NULL;
     const char *desc = NULL;
 
@@ -135,7 +134,7 @@ main(int argc, char **argv)
         }
 
         /* Skip #1 because that's the program name. */
-        for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
+        for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
             if (pcmk__str_eq(processed_args[lpc], "--", pcmk__str_none)) {
                 continue;
             }
