@@ -126,9 +126,13 @@ main(int argc, char **argv)
             }
 
             pcmk_result_get_strings(code, options.result_type, &name, &desc);
-            if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
-                // Undefined
-            } else if(options.with_name) {
+            if ((name == NULL)
+                || pcmk__str_any_of(name, "Unknown", "CRM_EX_UNKNOWN", NULL)) {
+
+                continue;
+            }
+
+            if (options.with_name) {
                 printf("% *d: %-*s  %s\n", code_width, code, name_width, name,
                        desc);
             } else {
