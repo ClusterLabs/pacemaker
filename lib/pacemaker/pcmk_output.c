@@ -1993,6 +1993,87 @@ rule_check_xml(pcmk__output_t *out, va_list args)
     }
 }
 
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_none(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_text(pcmk__output_t *out, va_list args)
+{
+    int code = va_arg(args, int);
+    char *name = va_arg(args, char *);
+    char *desc = va_arg(args, char *);
+
+    static int code_width = 0;
+
+    if (out->is_quiet(out)) {
+        /* If out->is_quiet(), don't print the code. Print name and/or desc in a
+         * compact format for text output, or print nothing at all for none-type
+         * output.
+         */
+        if ((name != NULL) && (desc != NULL)) {
+            pcmk__formatted_printf(out, "%s - %s\n", name, desc);
+
+        } else if ((name != NULL) || (desc != NULL)) {
+            pcmk__formatted_printf(out, "%s\n", ((name != NULL)? name : desc));
+        }
+        return pcmk_rc_ok;
+    }
+
+    /* Get length of longest (most negative) standard Pacemaker return code
+     * This should be longer than all the values of any other type of return
+     * code.
+     */
+    if (code_width == 0) {
+        long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
+        code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
+    }
+
+    if ((name != NULL) && (desc != NULL)) {
+        static int name_width = 0;
+
+        if (name_width == 0) {
+            // Get length of longest standard Pacemaker return code name
+            for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
+                int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
+                name_width = QB_MAX(name_width, len);
+            }
+        }
+        return out->info(out, "% *d: %-*s  %s", code_width, code, name_width,
+                         name, desc);
+    }
+
+    if ((name != NULL) || (desc != NULL)) {
+        return out->info(out, "% *d: %s", code_width, code,
+                         ((name != NULL)? name : desc));
+    }
+
+    return out->info(out, "% *d", code_width, code);
+}
+
+PCMK__OUTPUT_ARGS("result-code", "int", "char *", "char *");
+static int
+result_code_xml(pcmk__output_t *out, va_list args)
+{
+    int code = va_arg(args, int);
+    char *name = va_arg(args, char *);
+    char *desc = va_arg(args, char *);
+
+    char *code_str = pcmk__itoa(code);
+
+    pcmk__output_create_xml_node(out, "result-code",
+                                 "code", code_str,
+                                 XML_ATTR_NAME, name,
+                                 XML_ATTR_DESC, desc,
+                                 NULL);
+    free(code_str);
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "default", attribute_default },
     { "attribute", "xml", attribute_xml },
@@ -2037,6 +2118,9 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "profile", "default", profile_default, },
     { "profile", "xml", profile_xml },
+    { "result-code", "none", result_code_none },
+    { "result-code", "text", result_code_text },
+    { "result-code", "xml", result_code_xml },
     { "rsc-action", "default", rsc_action_default },
     { "rsc-action-item", "default", rsc_action_item },
     { "rsc-action-item", "xml", rsc_action_item_xml },

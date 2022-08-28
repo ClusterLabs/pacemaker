@@ -71,7 +71,8 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la
 
 crm_error_SOURCES	= crm_error.c
-crm_error_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
+crm_error_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(top_builddir)/lib/pacemaker/libpacemaker.la		\
