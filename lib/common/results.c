@@ -253,7 +253,7 @@ static struct pcmk__rc_info {
     },
 };
 
-#define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
+#define PCMK__N_RC PCMK__NELEM(pcmk__rcs)
 
 /*!
  * \brief Get a return code constant name as a string
