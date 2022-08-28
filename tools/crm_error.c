@@ -98,17 +98,31 @@ main(int argc, char **argv)
     }
 
     if (options.do_list) {
-        int start, end, width;
+        int start, end;
+
+        /* Get length of longest (most negative) standard Pacemaker return code
+         * This should be longer than all the values of any other type of return
+         * code.
+         */
+        long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
+        int code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
+        int name_width = 0;
 
         // 256 is a hacky magic number that "should" be enough
         if (options.result_type == pcmk_result_rc) {
             start = pcmk_rc_error - 256;
             end = PCMK_CUSTOM_OFFSET;
-            width = 4;
         } else {
             start = 0;
             end = 256;
-            width = 3;
+        }
+
+        if (options.with_name) {
+            // Get length of longest standard Pacemaker return code name
+            for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
+                int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
+                name_width = QB_MAX(name_width, len);
+            }
         }
 
         for (int code = start; code < end; code++) {
@@ -121,9 +135,10 @@ main(int argc, char **argv)
             if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 // Undefined
             } else if(options.with_name) {
-                printf("% .*d: %-26s  %s\n", width, code, name, desc);
+                printf("% *d: %-*s  %s\n", code_width, code, name_width, name,
+                       desc);
             } else {
-                printf("% .*d: %s\n", width, code, desc);
+                printf("% *d: %s\n", code_width, code, desc);
             }
         }
 
