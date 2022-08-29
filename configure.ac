@@ -780,7 +780,7 @@ AS_CASE(["$host_os"],
         ])
 
 AC_SUBST(INIT_EXT)
-AC_DEFINE_UNQUOTED([HAVE_PROCFS], [$PROCFS],
+AC_DEFINE_UNQUOTED([HAVE_LINUX_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 
 AS_CASE(["$host_cpu"],

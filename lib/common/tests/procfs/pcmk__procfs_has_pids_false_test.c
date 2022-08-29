@@ -17,7 +17,7 @@
 #include <string.h>
 #include <errno.h>
 
-#if HAVE_PROCFS
+#if HAVE_LINUX_PROCFS
 
 static void
 no_pids(void **state)
@@ -40,10 +40,10 @@ no_pids(void **state)
     pcmk__mock_readlink = false;
 }
 
-#endif // HAVE_PROCFS
+#endif // HAVE_LINUX_PROCFS
 
 PCMK__UNIT_TEST(NULL, NULL,
-#if HAVE_PROCFS
+#if HAVE_LINUX_PROCFS
                 cmocka_unit_test(no_pids)
-#endif
+#endif // HAVE_LINUX_PROCFS
                )
