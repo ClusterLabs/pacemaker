@@ -2108,6 +2108,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
+                lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
                 lib/gnu/Makefile                                    \
