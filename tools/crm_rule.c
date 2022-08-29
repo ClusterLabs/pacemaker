@@ -21,8 +21,6 @@
 
 #define SUMMARY "evaluate rules from the Pacemaker configuration"
 
-GError *error = NULL;
-
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -105,6 +103,8 @@ main(int argc, char **argv)
 
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
+
+    GError *error = NULL;
 
     pcmk__output_t *out = NULL;
 
