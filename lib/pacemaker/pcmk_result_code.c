@@ -145,3 +145,23 @@ pcmk__list_result_codes(pcmk__output_t *out, enum pcmk_result_type type,
 
     return rc;
 }
+
+// Documented in header
+int
+pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
+                       uint32_t flags)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_result_codes(out, type, flags);
+    pcmk__xml_output_finish(out, xml);
+    return rc;
+}

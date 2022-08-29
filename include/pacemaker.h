@@ -246,6 +246,20 @@ enum pcmk_rc_disp_flags {
 int pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
                           uint32_t flags);
 
+/*!
+ * \brief List all valid result codes in a particular family
+ *
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     type   The family of result codes to list. Supported
+ *                       values: \c pcmk_result_legacy, \c pcmk_result_rc,
+ *                       \c pcmk_result_exitcode.
+ * \param[in]     flags  Group of \c pcmk_rc_disp_flags
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
+                           uint32_t flags);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
