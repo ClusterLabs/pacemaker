@@ -197,7 +197,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
             freeXpathObject(xpath_obj);
             out->err(out, "Rule %s must either not use date_spec, or use "
                      "date_spec with years= but not moon=", rule_id);
-            return ENXIO;
+            return EOPNOTSUPP;
         }
     }
 

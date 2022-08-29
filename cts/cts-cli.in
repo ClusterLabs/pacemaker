@@ -1926,11 +1926,11 @@ EOF
 
     desc="Try to check a rule whose date_spec does not contain years="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule whose date_spec contains years= and moon="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule with no date_expression"
     cmd="crm_rule -c -r cli-no-date_expression-rule"

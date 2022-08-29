@@ -145,11 +145,11 @@ Rule cli-prefer-rule-dummy-date_spec-only-years satisfies conditions
 * Passed: crm_rule       - Verify date_spec rule with years is in effect
 =#=#=#= Begin test: Try to check a rule whose date_spec does not contain years= =#=#=#=
 Rule cli-prefer-rule-dummy-date_spec-without-years must either not use date_spec, or use date_spec with years= but not moon=
-=#=#=#= End test: Try to check a rule whose date_spec does not contain years= - No such object (105) =#=#=#=
+=#=#=#= End test: Try to check a rule whose date_spec does not contain years= - Unimplemented (3) =#=#=#=
 * Passed: crm_rule       - Try to check a rule whose date_spec does not contain years=
 =#=#=#= Begin test: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
 Rule cli-prefer-rule-dummy-date_spec-years-moon must either not use date_spec, or use date_spec with years= but not moon=
-=#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - No such object (105) =#=#=#=
+=#=#=#= End test: Try to check a rule whose date_spec contains years= and moon= - Unimplemented (3) =#=#=#=
 * Passed: crm_rule       - Try to check a rule whose date_spec contains years= and moon=
 =#=#=#= Begin test: Try to check a rule with no date_expression =#=#=#=
 Can't check rule cli-no-date_expression-rule because it does not have exactly one date_expression
