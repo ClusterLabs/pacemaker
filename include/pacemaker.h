@@ -198,7 +198,7 @@ int pcmk_status(xmlNodePtr *xml);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
                      const char **rule_ids);
 
 /*!
@@ -213,7 +213,7 @@ int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
  * \return Standard Pacemaker return code
  */
 static inline int
-pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
                 const char *rule_id)
 {
     const char *rule_ids[] = {rule_id, NULL};

@@ -22,12 +22,11 @@
  *
  * \param[in]  expr         date_expression XML
  * \param[in]  now          Time for which to evaluate expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
  *
  * \return Standard Pacemaker return code
  */
 static int
-eval_date_expression(xmlNodePtr expr, crm_time_t *now, crm_time_t *next_change)
+eval_date_expression(xmlNodePtr expr, crm_time_t *now)
 {
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -38,7 +37,7 @@ eval_date_expression(xmlNodePtr expr, crm_time_t *now, crm_time_t *next_change)
         .op_data = NULL
     };
 
-    return pe__eval_date_expr(expr, &rule_data, next_change);
+    return pe__eval_date_expr(expr, &rule_data, NULL);
 }
 
 /*!
@@ -58,7 +57,7 @@ eval_date_expression(xmlNodePtr expr, crm_time_t *now, crm_time_t *next_change)
  * \return Standard Pacemaker return code
  */
 static int
-init_rule_check(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
+init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                 pe_working_set_t **data_set)
 {
     // Allows for cleaner syntax than dereferencing the data_set argument
@@ -93,19 +92,15 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
         }
     }
 
-    // Make our own copy of the given crm_time_t object or use the current time
+    // Make our own copy of the given crm_time_t object; otherwise
+    // cluster_status() populates with the current time
     if (date != NULL) {
         // pcmk_copy_time() guarantees non-NULL
         new_data_set->now = pcmk_copy_time(date);
-
-    } else {
-        // So does crm_time_new()
-        new_data_set->now = crm_time_new(NULL);
     }
 
     // Unpack everything
     cluster_status(new_data_set);
-
     *data_set = new_data_set;
 
     return pcmk_rc_ok;
@@ -120,14 +115,11 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
  * \param[in,out] out       Output object
  * \param[in]     data_set  Cluster working set
  * \param[in]     rule_id   The ID of the rule to check
- * \param[in]     date      Check whether the rule is in effect at this date and
- *                          time
  *
  * \return Standard Pacemaker return code
  */
 static int
-eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
-          crm_time_t *date)
+eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
@@ -217,7 +209,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    rc = eval_date_expression(match, date, NULL);
+    rc = eval_date_expression(match, data_set->now);
     out->message(out, "rule-check", rule_id, rc);
     freeXpathObject(xpath_obj);
     return rc;
@@ -237,7 +229,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
+pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                   const char **rule_ids)
 {
     pe_working_set_t *data_set = NULL;
@@ -256,7 +248,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
     }
 
     for (const char **rule_id = rule_ids; *rule_id != NULL; rule_id++) {
-        int last_rc = eval_rule(out, data_set, *rule_id, date);
+        int last_rc = eval_rule(out, data_set, *rule_id);
 
         if (last_rc != pcmk_rc_ok) {
             rc = last_rc;
@@ -269,7 +261,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
 
 // Documented in pacemaker.h
 int
-pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
                  const char **rule_ids)
 {
     pcmk__output_t *out = NULL;

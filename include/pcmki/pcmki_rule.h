@@ -15,7 +15,7 @@
 #include <crm/common/output_internal.h>
 
 int pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input,
-                      crm_time_t *date_time, const char **rule_ids);
+                      const crm_time_t *date_time, const char **rule_ids);
 
 /*!
  * \internal
@@ -30,7 +30,7 @@ int pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input,
  * \return Standard Pacemaker return code
  */
 static inline int
-pcmk__check_rule(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
+pcmk__check_rule(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
                  const char *rule_id)
 {
     const char *rule_ids[] = {rule_id, NULL};
