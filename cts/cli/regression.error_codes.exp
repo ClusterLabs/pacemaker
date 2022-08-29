@@ -1,0 +1,532 @@
+=#=#=#= Begin test: Get legacy return code =#=#=#=
+Error
+=#=#=#= End test: Get legacy return code - OK (0) =#=#=#=
+* Passed: crm_error      - Get legacy return code
+=#=#=#= Begin test: Get legacy return code (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -- 201">
+  <result-code code="201" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get legacy return code (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get legacy return code (XML)
+=#=#=#= Begin test: Get legacy return code (with name) =#=#=#=
+pcmk_err_generic - Error
+=#=#=#= End test: Get legacy return code (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get legacy return code (with name)
+=#=#=#= Begin test: Get legacy return code (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n --output-as=xml -- 201">
+  <result-code code="201" name="pcmk_err_generic" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get legacy return code (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get legacy return code (with name) (XML)
+=#=#=#= Begin test: Get multiple legacy return codes =#=#=#=
+Error
+Operation requires quorum
+=#=#=#= End test: Get multiple legacy return codes - OK (0) =#=#=#=
+* Passed: crm_error      - Get multiple legacy return codes
+=#=#=#= Begin test: Get multiple legacy return codes (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -- 201 202">
+  <result-code code="201" description="Error"/>
+  <result-code code="202" description="Operation requires quorum"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get multiple legacy return codes (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get multiple legacy return codes (XML)
+=#=#=#= Begin test: Get multiple legacy return codes (with names) =#=#=#=
+pcmk_err_generic - Error
+pcmk_err_no_quorum - Operation requires quorum
+=#=#=#= End test: Get multiple legacy return codes (with names) - OK (0) =#=#=#=
+* Passed: crm_error      - Get multiple legacy return codes (with names)
+=#=#=#= Begin test: Get multiple legacy return codes (with names) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n --output-as=xml -- 201 202">
+  <result-code code="201" name="pcmk_err_generic" description="Error"/>
+  <result-code code="202" name="pcmk_err_no_quorum" description="Operation requires quorum"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get multiple legacy return codes (with names) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get multiple legacy return codes (with names) (XML)
+=#=#=#= Begin test: List legacy return codes (spot check) =#=#=#=
+  201: Error
+  202: Operation requires quorum
+  203: Update does not conform to the configured schema
+  204: Schema transform failed
+  205: Update was older than existing configuration
+  206: Application of update diff failed
+  207: Application of update diff failed, requesting full refresh
+  208: On-disk configuration was manually modified
+  209: Could not archive previous configuration
+=#=#=#= End test: List legacy return codes (spot check) - OK (0) =#=#=#=
+* Passed: crm_error      - List legacy return codes (spot check)
+=#=#=#= Begin test: List legacy return codes (spot check) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -l --output-as=xml">
+  <result-code code="201" description="Error"/>
+  <result-code code="202" description="Operation requires quorum"/>
+  <result-code code="203" description="Update does not conform to the configured schema"/>
+  <result-code code="204" description="Schema transform failed"/>
+  <result-code code="205" description="Update was older than existing configuration"/>
+  <result-code code="206" description="Application of update diff failed"/>
+  <result-code code="207" description="Application of update diff failed, requesting full refresh"/>
+  <result-code code="208" description="On-disk configuration was manually modified"/>
+  <result-code code="209" description="Could not archive previous configuration"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List legacy return codes (spot check) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - List legacy return codes (spot check) (XML)
+=#=#=#= Begin test: List legacy return codes (spot check) (with names) =#=#=#=
+  201: pcmk_err_generic            Error
+  202: pcmk_err_no_quorum          Operation requires quorum
+  203: pcmk_err_schema_validation  Update does not conform to the configured schema
+  204: pcmk_err_transform_failed   Schema transform failed
+  205: pcmk_err_old_data           Update was older than existing configuration
+  206: pcmk_err_diff_failed        Application of update diff failed
+  207: pcmk_err_diff_resync        Application of update diff failed, requesting full refresh
+  208: pcmk_err_cib_modified       On-disk configuration was manually modified
+  209: pcmk_err_cib_backup         Could not archive previous configuration
+=#=#=#= End test: List legacy return codes (spot check) (with names) - OK (0) =#=#=#=
+* Passed: crm_error      - List legacy return codes (spot check) (with names)
+=#=#=#= Begin test: List legacy return codes (spot check) (with names) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -l --output-as=xml">
+  <result-code code="201" name="pcmk_err_generic" description="Error"/>
+  <result-code code="202" name="pcmk_err_no_quorum" description="Operation requires quorum"/>
+  <result-code code="203" name="pcmk_err_schema_validation" description="Update does not conform to the configured schema"/>
+  <result-code code="204" name="pcmk_err_transform_failed" description="Schema transform failed"/>
+  <result-code code="205" name="pcmk_err_old_data" description="Update was older than existing configuration"/>
+  <result-code code="206" name="pcmk_err_diff_failed" description="Application of update diff failed"/>
+  <result-code code="207" name="pcmk_err_diff_resync" description="Application of update diff failed, requesting full refresh"/>
+  <result-code code="208" name="pcmk_err_cib_modified" description="On-disk configuration was manually modified"/>
+  <result-code code="209" name="pcmk_err_cib_backup" description="Could not archive previous configuration"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List legacy return codes (spot check) (with names) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - List legacy return codes (spot check) (with names) (XML)
+=#=#=#= Begin test: Get unknown Pacemaker return code =#=#=#=
+Error
+=#=#=#= End test: Get unknown Pacemaker return code - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown Pacemaker return code
+=#=#=#= Begin test: Get unknown Pacemaker return code (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -r --output-as=xml -- -10000">
+  <result-code code="-10000" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get unknown Pacemaker return code (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown Pacemaker return code (XML)
+=#=#=#= Begin test: Get unknown Pacemaker return code (with name) =#=#=#=
+Unknown - Error
+=#=#=#= End test: Get unknown Pacemaker return code (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown Pacemaker return code (with name)
+=#=#=#= Begin test: Get unknown Pacemaker return code (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -r --output-as=xml -- -10000">
+  <result-code code="-10000" name="Unknown" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get unknown Pacemaker return code (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown Pacemaker return code (with name) (XML)
+=#=#=#= Begin test: Get negative Pacemaker return code =#=#=#=
+Node not found
+=#=#=#= End test: Get negative Pacemaker return code - OK (0) =#=#=#=
+* Passed: crm_error      - Get negative Pacemaker return code
+=#=#=#= Begin test: Get negative Pacemaker return code (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -r --output-as=xml -- -1005">
+  <result-code code="-1005" description="Node not found"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get negative Pacemaker return code (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get negative Pacemaker return code (XML)
+=#=#=#= Begin test: Get negative Pacemaker return code (with name) =#=#=#=
+pcmk_rc_node_unknown - Node not found
+=#=#=#= End test: Get negative Pacemaker return code (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get negative Pacemaker return code (with name)
+=#=#=#= Begin test: Get negative Pacemaker return code (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -r --output-as=xml -- -1005">
+  <result-code code="-1005" name="pcmk_rc_node_unknown" description="Node not found"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get negative Pacemaker return code (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get negative Pacemaker return code (with name) (XML)
+=#=#=#= Begin test: List Pacemaker return codes (non-positive) =#=#=#=
+-1033: Two or more XML elements have the same ID
+-1032: Unable to parse CIB XML
+-1031: Cluster simulation produced invalid transition
+-1030: Error writing graph file
+-1029: Error writing dot(1) file
+-1028: Value too small to be stored in data type
+-1027: Input file not available
+-1026: Output message produced no output
+-1025: Result occurs after given range
+-1024: Result occurs within given range
+-1023: Result occurs before given range
+-1022: Result undetermined
+-1021: Not applicable under current conditions
+-1020: IPC server process is active but not accepting connections
+-1019: IPC server is unresponsive
+-1018: IPC server is blocked by unauthorized process
+-1017: Operation requires quorum
+-1016: Update does not conform to the configured schema
+-1015: Schema is already the latest available
+-1014: Schema transform failed
+-1013: Update was older than existing configuration
+-1012: Application of update diff failed
+-1011: Application of update diff failed, requesting full refresh
+-1010: On-disk configuration was manually modified
+-1009: Could not archive previous configuration
+-1008: Could not save new configuration to disk
+-1007: Could not parse on-disk configuration
+-1006: Resource active on multiple nodes
+-1005: Node not found
+-1004: Already in requested state
+-1003: Bad name/value pair given
+-1002: Unknown output format
+-1001: Error
+    0: OK
+=#=#=#= End test: List Pacemaker return codes (non-positive) - OK (0) =#=#=#=
+* Passed: crm_error      - List Pacemaker return codes (non-positive)
+=#=#=#= Begin test: List Pacemaker return codes (non-positive) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -l -r --output-as=xml">
+  <result-code code="-1033" description="Two or more XML elements have the same ID"/>
+  <result-code code="-1032" description="Unable to parse CIB XML"/>
+  <result-code code="-1031" description="Cluster simulation produced invalid transition"/>
+  <result-code code="-1030" description="Error writing graph file"/>
+  <result-code code="-1029" description="Error writing dot(1) file"/>
+  <result-code code="-1028" description="Value too small to be stored in data type"/>
+  <result-code code="-1027" description="Input file not available"/>
+  <result-code code="-1026" description="Output message produced no output"/>
+  <result-code code="-1025" description="Result occurs after given range"/>
+  <result-code code="-1024" description="Result occurs within given range"/>
+  <result-code code="-1023" description="Result occurs before given range"/>
+  <result-code code="-1022" description="Result undetermined"/>
+  <result-code code="-1021" description="Not applicable under current conditions"/>
+  <result-code code="-1020" description="IPC server process is active but not accepting connections"/>
+  <result-code code="-1019" description="IPC server is unresponsive"/>
+  <result-code code="-1018" description="IPC server is blocked by unauthorized process"/>
+  <result-code code="-1017" description="Operation requires quorum"/>
+  <result-code code="-1016" description="Update does not conform to the configured schema"/>
+  <result-code code="-1015" description="Schema is already the latest available"/>
+  <result-code code="-1014" description="Schema transform failed"/>
+  <result-code code="-1013" description="Update was older than existing configuration"/>
+  <result-code code="-1012" description="Application of update diff failed"/>
+  <result-code code="-1011" description="Application of update diff failed, requesting full refresh"/>
+  <result-code code="-1010" description="On-disk configuration was manually modified"/>
+  <result-code code="-1009" description="Could not archive previous configuration"/>
+  <result-code code="-1008" description="Could not save new configuration to disk"/>
+  <result-code code="-1007" description="Could not parse on-disk configuration"/>
+  <result-code code="-1006" description="Resource active on multiple nodes"/>
+  <result-code code="-1005" description="Node not found"/>
+  <result-code code="-1004" description="Already in requested state"/>
+  <result-code code="-1003" description="Bad name/value pair given"/>
+  <result-code code="-1002" description="Unknown output format"/>
+  <result-code code="-1001" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List Pacemaker return codes (non-positive) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - List Pacemaker return codes (non-positive) (XML)
+=#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) =#=#=#=
+-1033: pcmk_rc_duplicate_id        Two or more XML elements have the same ID
+-1032: pcmk_rc_unpack_error        Unable to parse CIB XML
+-1031: pcmk_rc_invalid_transition  Cluster simulation produced invalid transition
+-1030: pcmk_rc_graph_error         Error writing graph file
+-1029: pcmk_rc_dot_error           Error writing dot(1) file
+-1028: pcmk_rc_underflow           Value too small to be stored in data type
+-1027: pcmk_rc_no_input            Input file not available
+-1026: pcmk_rc_no_output           Output message produced no output
+-1025: pcmk_rc_after_range         Result occurs after given range
+-1024: pcmk_rc_within_range        Result occurs within given range
+-1023: pcmk_rc_before_range        Result occurs before given range
+-1022: pcmk_rc_undetermined        Result undetermined
+-1021: pcmk_rc_op_unsatisfied      Not applicable under current conditions
+-1020: pcmk_rc_ipc_pid_only        IPC server process is active but not accepting connections
+-1019: pcmk_rc_ipc_unresponsive    IPC server is unresponsive
+-1018: pcmk_rc_ipc_unauthorized    IPC server is blocked by unauthorized process
+-1017: pcmk_rc_no_quorum           Operation requires quorum
+-1016: pcmk_rc_schema_validation   Update does not conform to the configured schema
+-1015: pcmk_rc_schema_unchanged    Schema is already the latest available
+-1014: pcmk_rc_transform_failed    Schema transform failed
+-1013: pcmk_rc_old_data            Update was older than existing configuration
+-1012: pcmk_rc_diff_failed         Application of update diff failed
+-1011: pcmk_rc_diff_resync         Application of update diff failed, requesting full refresh
+-1010: pcmk_rc_cib_modified        On-disk configuration was manually modified
+-1009: pcmk_rc_cib_backup          Could not archive previous configuration
+-1008: pcmk_rc_cib_save            Could not save new configuration to disk
+-1007: pcmk_rc_cib_corrupt         Could not parse on-disk configuration
+-1006: pcmk_rc_multiple            Resource active on multiple nodes
+-1005: pcmk_rc_node_unknown        Node not found
+-1004: pcmk_rc_already             Already in requested state
+-1003: pcmk_rc_bad_nvpair          Bad name/value pair given
+-1002: pcmk_rc_unknown_format      Unknown output format
+-1001: pcmk_rc_error               Error
+    0: pcmk_rc_ok                  OK
+=#=#=#= End test: List Pacemaker return codes (non-positive) (with names) - OK (0) =#=#=#=
+* Passed: crm_error      - List Pacemaker return codes (non-positive) (with names)
+=#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -l -r --output-as=xml">
+  <result-code code="-1033" name="pcmk_rc_duplicate_id" description="Two or more XML elements have the same ID"/>
+  <result-code code="-1032" name="pcmk_rc_unpack_error" description="Unable to parse CIB XML"/>
+  <result-code code="-1031" name="pcmk_rc_invalid_transition" description="Cluster simulation produced invalid transition"/>
+  <result-code code="-1030" name="pcmk_rc_graph_error" description="Error writing graph file"/>
+  <result-code code="-1029" name="pcmk_rc_dot_error" description="Error writing dot(1) file"/>
+  <result-code code="-1028" name="pcmk_rc_underflow" description="Value too small to be stored in data type"/>
+  <result-code code="-1027" name="pcmk_rc_no_input" description="Input file not available"/>
+  <result-code code="-1026" name="pcmk_rc_no_output" description="Output message produced no output"/>
+  <result-code code="-1025" name="pcmk_rc_after_range" description="Result occurs after given range"/>
+  <result-code code="-1024" name="pcmk_rc_within_range" description="Result occurs within given range"/>
+  <result-code code="-1023" name="pcmk_rc_before_range" description="Result occurs before given range"/>
+  <result-code code="-1022" name="pcmk_rc_undetermined" description="Result undetermined"/>
+  <result-code code="-1021" name="pcmk_rc_op_unsatisfied" description="Not applicable under current conditions"/>
+  <result-code code="-1020" name="pcmk_rc_ipc_pid_only" description="IPC server process is active but not accepting connections"/>
+  <result-code code="-1019" name="pcmk_rc_ipc_unresponsive" description="IPC server is unresponsive"/>
+  <result-code code="-1018" name="pcmk_rc_ipc_unauthorized" description="IPC server is blocked by unauthorized process"/>
+  <result-code code="-1017" name="pcmk_rc_no_quorum" description="Operation requires quorum"/>
+  <result-code code="-1016" name="pcmk_rc_schema_validation" description="Update does not conform to the configured schema"/>
+  <result-code code="-1015" name="pcmk_rc_schema_unchanged" description="Schema is already the latest available"/>
+  <result-code code="-1014" name="pcmk_rc_transform_failed" description="Schema transform failed"/>
+  <result-code code="-1013" name="pcmk_rc_old_data" description="Update was older than existing configuration"/>
+  <result-code code="-1012" name="pcmk_rc_diff_failed" description="Application of update diff failed"/>
+  <result-code code="-1011" name="pcmk_rc_diff_resync" description="Application of update diff failed, requesting full refresh"/>
+  <result-code code="-1010" name="pcmk_rc_cib_modified" description="On-disk configuration was manually modified"/>
+  <result-code code="-1009" name="pcmk_rc_cib_backup" description="Could not archive previous configuration"/>
+  <result-code code="-1008" name="pcmk_rc_cib_save" description="Could not save new configuration to disk"/>
+  <result-code code="-1007" name="pcmk_rc_cib_corrupt" description="Could not parse on-disk configuration"/>
+  <result-code code="-1006" name="pcmk_rc_multiple" description="Resource active on multiple nodes"/>
+  <result-code code="-1005" name="pcmk_rc_node_unknown" description="Node not found"/>
+  <result-code code="-1004" name="pcmk_rc_already" description="Already in requested state"/>
+  <result-code code="-1003" name="pcmk_rc_bad_nvpair" description="Bad name/value pair given"/>
+  <result-code code="-1002" name="pcmk_rc_unknown_format" description="Unknown output format"/>
+  <result-code code="-1001" name="pcmk_rc_error" description="Error"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List Pacemaker return codes (non-positive) (with names) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - List Pacemaker return codes (non-positive) (with names) (XML)
+=#=#=#= Begin test: Get unknown crm_exit_t exit code =#=#=#=
+Unknown exit status
+=#=#=#= End test: Get unknown crm_exit_t exit code - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown crm_exit_t exit code
+=#=#=#= Begin test: Get unknown crm_exit_t exit code (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -X --output-as=xml -- -10000">
+  <result-code code="-10000" description="Unknown exit status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get unknown crm_exit_t exit code (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown crm_exit_t exit code (XML)
+=#=#=#= Begin test: Get unknown crm_exit_t exit code (with name) =#=#=#=
+CRM_EX_UNKNOWN - Unknown exit status
+=#=#=#= End test: Get unknown crm_exit_t exit code (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown crm_exit_t exit code (with name)
+=#=#=#= Begin test: Get unknown crm_exit_t exit code (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -X --output-as=xml -- -10000">
+  <result-code code="-10000" name="CRM_EX_UNKNOWN" description="Unknown exit status"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get unknown crm_exit_t exit code (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get unknown crm_exit_t exit code (with name) (XML)
+=#=#=#= Begin test: Get crm_exit_t exit code =#=#=#=
+Error occurred
+=#=#=#= End test: Get crm_exit_t exit code - OK (0) =#=#=#=
+* Passed: crm_error      - Get crm_exit_t exit code
+=#=#=#= Begin test: Get crm_exit_t exit code (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -X --output-as=xml -- 1">
+  <result-code code="1" description="Error occurred"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get crm_exit_t exit code (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get crm_exit_t exit code (XML)
+=#=#=#= Begin test: Get crm_exit_t exit code (with name) =#=#=#=
+CRM_EX_ERROR - Error occurred
+=#=#=#= End test: Get crm_exit_t exit code (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get crm_exit_t exit code (with name)
+=#=#=#= Begin test: Get crm_exit_t exit code (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -n -X --output-as=xml -- 1">
+  <result-code code="1" name="CRM_EX_ERROR" description="Error occurred"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get crm_exit_t exit code (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get crm_exit_t exit code (with name) (XML)
+=#=#=#= Begin test: Get all crm_exit_t exit codes =#=#=#=
+    0: OK
+    1: Error occurred
+    2: Invalid parameter
+    3: Unimplemented
+    4: Insufficient privileges
+    5: Not installed
+    6: Not configured
+    7: Not running
+    8: Promoted
+    9: Failed in promoted role
+   64: Incorrect usage
+   65: Invalid data given
+   66: Input file not available
+   67: User does not exist
+   68: Host does not exist
+   69: Necessary service unavailable
+   70: Internal software bug
+   71: Operating system error occurred
+   72: System file not available
+   73: Cannot create output file
+   74: I/O error occurred
+   75: Temporary failure, try again
+   76: Protocol violated
+   77: Insufficient privileges
+   78: Invalid configuration
+  100: Fatal error occurred, will not respawn
+  101: System panic required
+  102: Not connected
+  103: Update was older than existing configuration
+  104: Digest mismatch
+  105: No such object
+  106: Quorum required
+  107: Operation not safe
+  108: Requested item already exists
+  109: Multiple items match request
+  110: Requested item has expired
+  111: Requested item is not yet in effect
+  112: Could not determine status
+  113: Not applicable under current conditions
+  124: Timeout occurred
+  190: Service is active but might fail soon
+  191: Service is promoted but might fail soon
+  193: No exit status available
+=#=#=#= End test: Get all crm_exit_t exit codes - OK (0) =#=#=#=
+* Passed: crm_error      - Get all crm_exit_t exit codes
+=#=#=#= Begin test: Get all crm_exit_t exit codes (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -l -X --output-as=xml">
+  <result-code code="0" description="OK"/>
+  <result-code code="1" description="Error occurred"/>
+  <result-code code="2" description="Invalid parameter"/>
+  <result-code code="3" description="Unimplemented"/>
+  <result-code code="4" description="Insufficient privileges"/>
+  <result-code code="5" description="Not installed"/>
+  <result-code code="6" description="Not configured"/>
+  <result-code code="7" description="Not running"/>
+  <result-code code="8" description="Promoted"/>
+  <result-code code="9" description="Failed in promoted role"/>
+  <result-code code="64" description="Incorrect usage"/>
+  <result-code code="65" description="Invalid data given"/>
+  <result-code code="66" description="Input file not available"/>
+  <result-code code="67" description="User does not exist"/>
+  <result-code code="68" description="Host does not exist"/>
+  <result-code code="69" description="Necessary service unavailable"/>
+  <result-code code="70" description="Internal software bug"/>
+  <result-code code="71" description="Operating system error occurred"/>
+  <result-code code="72" description="System file not available"/>
+  <result-code code="73" description="Cannot create output file"/>
+  <result-code code="74" description="I/O error occurred"/>
+  <result-code code="75" description="Temporary failure, try again"/>
+  <result-code code="76" description="Protocol violated"/>
+  <result-code code="77" description="Insufficient privileges"/>
+  <result-code code="78" description="Invalid configuration"/>
+  <result-code code="100" description="Fatal error occurred, will not respawn"/>
+  <result-code code="101" description="System panic required"/>
+  <result-code code="102" description="Not connected"/>
+  <result-code code="103" description="Update was older than existing configuration"/>
+  <result-code code="104" description="Digest mismatch"/>
+  <result-code code="105" description="No such object"/>
+  <result-code code="106" description="Quorum required"/>
+  <result-code code="107" description="Operation not safe"/>
+  <result-code code="108" description="Requested item already exists"/>
+  <result-code code="109" description="Multiple items match request"/>
+  <result-code code="110" description="Requested item has expired"/>
+  <result-code code="111" description="Requested item is not yet in effect"/>
+  <result-code code="112" description="Could not determine status"/>
+  <result-code code="113" description="Not applicable under current conditions"/>
+  <result-code code="124" description="Timeout occurred"/>
+  <result-code code="190" description="Service is active but might fail soon"/>
+  <result-code code="191" description="Service is promoted but might fail soon"/>
+  <result-code code="193" description="No exit status available"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get all crm_exit_t exit codes (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get all crm_exit_t exit codes (XML)
+=#=#=#= Begin test: Get all crm_exit_t exit codes (with name) =#=#=#=
+    0: CRM_EX_OK                   OK
+    1: CRM_EX_ERROR                Error occurred
+    2: CRM_EX_INVALID_PARAM        Invalid parameter
+    3: CRM_EX_UNIMPLEMENT_FEATURE  Unimplemented
+    4: CRM_EX_INSUFFICIENT_PRIV    Insufficient privileges
+    5: CRM_EX_NOT_INSTALLED        Not installed
+    6: CRM_EX_NOT_CONFIGURED       Not configured
+    7: CRM_EX_NOT_RUNNING          Not running
+    8: CRM_EX_PROMOTED             Promoted
+    9: CRM_EX_FAILED_PROMOTED      Failed in promoted role
+   64: CRM_EX_USAGE                Incorrect usage
+   65: CRM_EX_DATAERR              Invalid data given
+   66: CRM_EX_NOINPUT              Input file not available
+   67: CRM_EX_NOUSER               User does not exist
+   68: CRM_EX_NOHOST               Host does not exist
+   69: CRM_EX_UNAVAILABLE          Necessary service unavailable
+   70: CRM_EX_SOFTWARE             Internal software bug
+   71: CRM_EX_OSERR                Operating system error occurred
+   72: CRM_EX_OSFILE               System file not available
+   73: CRM_EX_CANTCREAT            Cannot create output file
+   74: CRM_EX_IOERR                I/O error occurred
+   75: CRM_EX_TEMPFAIL             Temporary failure, try again
+   76: CRM_EX_PROTOCOL             Protocol violated
+   77: CRM_EX_NOPERM               Insufficient privileges
+   78: CRM_EX_CONFIG               Invalid configuration
+  100: CRM_EX_FATAL                Fatal error occurred, will not respawn
+  101: CRM_EX_PANIC                System panic required
+  102: CRM_EX_DISCONNECT           Not connected
+  103: CRM_EX_OLD                  Update was older than existing configuration
+  104: CRM_EX_DIGEST               Digest mismatch
+  105: CRM_EX_NOSUCH               No such object
+  106: CRM_EX_QUORUM               Quorum required
+  107: CRM_EX_UNSAFE               Operation not safe
+  108: CRM_EX_EXISTS               Requested item already exists
+  109: CRM_EX_MULTIPLE             Multiple items match request
+  110: CRM_EX_EXPIRED              Requested item has expired
+  111: CRM_EX_NOT_YET_IN_EFFECT    Requested item is not yet in effect
+  112: CRM_EX_INDETERMINATE        Could not determine status
+  113: CRM_EX_UNSATISFIED          Not applicable under current conditions
+  124: CRM_EX_TIMEOUT              Timeout occurred
+  190: CRM_EX_DEGRADED             Service is active but might fail soon
+  191: CRM_EX_DEGRADED_PROMOTED    Service is promoted but might fail soon
+  193: CRM_EX_NONE                 No exit status available
+=#=#=#= End test: Get all crm_exit_t exit codes (with name) - OK (0) =#=#=#=
+* Passed: crm_error      - Get all crm_exit_t exit codes (with name)
+=#=#=#= Begin test: Get all crm_exit_t exit codes (with name) (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_error -l -n -X --output-as=xml">
+  <result-code code="0" name="CRM_EX_OK" description="OK"/>
+  <result-code code="1" name="CRM_EX_ERROR" description="Error occurred"/>
+  <result-code code="2" name="CRM_EX_INVALID_PARAM" description="Invalid parameter"/>
+  <result-code code="3" name="CRM_EX_UNIMPLEMENT_FEATURE" description="Unimplemented"/>
+  <result-code code="4" name="CRM_EX_INSUFFICIENT_PRIV" description="Insufficient privileges"/>
+  <result-code code="5" name="CRM_EX_NOT_INSTALLED" description="Not installed"/>
+  <result-code code="6" name="CRM_EX_NOT_CONFIGURED" description="Not configured"/>
+  <result-code code="7" name="CRM_EX_NOT_RUNNING" description="Not running"/>
+  <result-code code="8" name="CRM_EX_PROMOTED" description="Promoted"/>
+  <result-code code="9" name="CRM_EX_FAILED_PROMOTED" description="Failed in promoted role"/>
+  <result-code code="64" name="CRM_EX_USAGE" description="Incorrect usage"/>
+  <result-code code="65" name="CRM_EX_DATAERR" description="Invalid data given"/>
+  <result-code code="66" name="CRM_EX_NOINPUT" description="Input file not available"/>
+  <result-code code="67" name="CRM_EX_NOUSER" description="User does not exist"/>
+  <result-code code="68" name="CRM_EX_NOHOST" description="Host does not exist"/>
+  <result-code code="69" name="CRM_EX_UNAVAILABLE" description="Necessary service unavailable"/>
+  <result-code code="70" name="CRM_EX_SOFTWARE" description="Internal software bug"/>
+  <result-code code="71" name="CRM_EX_OSERR" description="Operating system error occurred"/>
+  <result-code code="72" name="CRM_EX_OSFILE" description="System file not available"/>
+  <result-code code="73" name="CRM_EX_CANTCREAT" description="Cannot create output file"/>
+  <result-code code="74" name="CRM_EX_IOERR" description="I/O error occurred"/>
+  <result-code code="75" name="CRM_EX_TEMPFAIL" description="Temporary failure, try again"/>
+  <result-code code="76" name="CRM_EX_PROTOCOL" description="Protocol violated"/>
+  <result-code code="77" name="CRM_EX_NOPERM" description="Insufficient privileges"/>
+  <result-code code="78" name="CRM_EX_CONFIG" description="Invalid configuration"/>
+  <result-code code="100" name="CRM_EX_FATAL" description="Fatal error occurred, will not respawn"/>
+  <result-code code="101" name="CRM_EX_PANIC" description="System panic required"/>
+  <result-code code="102" name="CRM_EX_DISCONNECT" description="Not connected"/>
+  <result-code code="103" name="CRM_EX_OLD" description="Update was older than existing configuration"/>
+  <result-code code="104" name="CRM_EX_DIGEST" description="Digest mismatch"/>
+  <result-code code="105" name="CRM_EX_NOSUCH" description="No such object"/>
+  <result-code code="106" name="CRM_EX_QUORUM" description="Quorum required"/>
+  <result-code code="107" name="CRM_EX_UNSAFE" description="Operation not safe"/>
+  <result-code code="108" name="CRM_EX_EXISTS" description="Requested item already exists"/>
+  <result-code code="109" name="CRM_EX_MULTIPLE" description="Multiple items match request"/>
+  <result-code code="110" name="CRM_EX_EXPIRED" description="Requested item has expired"/>
+  <result-code code="111" name="CRM_EX_NOT_YET_IN_EFFECT" description="Requested item is not yet in effect"/>
+  <result-code code="112" name="CRM_EX_INDETERMINATE" description="Could not determine status"/>
+  <result-code code="113" name="CRM_EX_UNSATISFIED" description="Not applicable under current conditions"/>
+  <result-code code="124" name="CRM_EX_TIMEOUT" description="Timeout occurred"/>
+  <result-code code="190" name="CRM_EX_DEGRADED" description="Service is active but might fail soon"/>
+  <result-code code="191" name="CRM_EX_DEGRADED_PROMOTED" description="Service is promoted but might fail soon"/>
+  <result-code code="193" name="CRM_EX_NONE" description="No exit status available"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Get all crm_exit_t exit codes (with name) (XML) - OK (0) =#=#=#=
+* Passed: crm_error      - Get all crm_exit_t exit codes (with name) (XML)
