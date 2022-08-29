@@ -112,14 +112,14 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
  * \internal
  * \brief Check whether a given rule is in effect
  *
- * \param[in,out] out       Output object
  * \param[in]     data_set  Cluster working set
  * \param[in]     rule_id   The ID of the rule to check
+ * \param[out]    error     Where to store a rule evaluation error message
  *
  * \return Standard Pacemaker return code
  */
 static int
-eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
+eval_rule(pe_working_set_t *data_set, const char *rule_id, const char **error)
 {
     xmlNodePtr cib_constraints = NULL;
     xmlNodePtr match = NULL;
@@ -127,6 +127,8 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
     char *xpath = NULL;
     int rc = pcmk_rc_ok;
     int num_results = 0;
+
+    *error = NULL;
 
     /* Rules are under the constraints node in the XML, so first find that. */
     cib_constraints = pcmk_find_cib_element(data_set->input,
@@ -150,11 +152,13 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
     freeXpathObject(xpath_obj);
 
     if (num_results == 0) {
-        out->err(out, "No rule found with ID=%s", rule_id);
+        *error = "Rule not found";
         return ENXIO;
-    } else if (num_results > 1) {
+    }
+
+    if (num_results > 1) {
         // Should not be possible; schema prevents this
-        out->err(out, "More than one rule with ID=%s found", rule_id);
+        *error = "Found more than one rule with matching ID";
         return pcmk_rc_duplicate_id;
     }
 
@@ -167,8 +171,11 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
     freeXpathObject(xpath_obj);
 
     if (num_results != 1) {
-        out->err(out, "Can't check rule %s because it does not have exactly "
-                 "one date_expression", rule_id);
+        if (num_results == 0) {
+            *error = "Rule does not have a date expression";
+        } else {
+            *error = "Rule has more than one date expression";
+        }
         return EOPNOTSUPP;
     }
 
@@ -195,8 +202,8 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
 
         if (num_results == 0) {
             freeXpathObject(xpath_obj);
-            out->err(out, "Rule %s must either not use date_spec, or use "
-                     "date_spec with years= but not moon=", rule_id);
+            *error = "Rule must either not use date_spec, or use date_spec "
+                     "with years= but not moon=";
             return EOPNOTSUPP;
         }
     }
@@ -210,7 +217,13 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
     rc = eval_date_expression(match, data_set->now);
-    out->message(out, "rule-check", rule_id, rc);
+    if (rc == pcmk_rc_undetermined) {
+        /* pe__eval_date_expr() should return this only if something is
+         * malformed or missing
+         */
+        *error = "Error parsing rule";
+    }
+
     freeXpathObject(xpath_obj);
     return rc;
 }
@@ -248,7 +261,10 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
     }
 
     for (const char **rule_id = rule_ids; *rule_id != NULL; rule_id++) {
-        int last_rc = eval_rule(out, data_set, *rule_id);
+        const char *error = NULL;
+        int last_rc = eval_rule(data_set, *rule_id, &error);
+
+        out->message(out, "rule-check", *rule_id, last_rc, error);
 
         if (last_rc != pcmk_rc_ok) {
             rc = last_rc;

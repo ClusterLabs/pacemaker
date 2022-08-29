@@ -1864,12 +1864,13 @@ attribute_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int", "const char *")
 static int
 rule_check_default(pcmk__output_t *out, va_list args)
 {
     const char *rule_id = va_arg(args, const char *);
     int result = va_arg(args, int);
+    const char *error = va_arg(args, const char *);
 
     switch (result) {
         case pcmk_rc_within_range:
@@ -1884,18 +1885,20 @@ rule_check_default(pcmk__output_t *out, va_list args)
             return out->info(out, "Rule %s does not satisfy conditions",
                              rule_id);
         default:
-            return out->info(out,
-                             "Could not determine whether rule %s is expired",
-                             rule_id);
+            out->err(out,
+                     "Could not determine whether rule %s is in effect: %s",
+                     rule_id, ((error != NULL)? error : "unexpected error"));
+            return pcmk_rc_ok;
     }
 }
 
-PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
+PCMK__OUTPUT_ARGS("rule-check", "const char *", "int", "const char *")
 static int
 rule_check_xml(pcmk__output_t *out, va_list args)
 {
     const char *rule_id = va_arg(args, const char *);
     int result = va_arg(args, int);
+    const char *error = va_arg(args, const char *);
 
     char *rc_str = pcmk__itoa(pcmk_rc2exitc(result));
 
@@ -1903,10 +1906,21 @@ rule_check_xml(pcmk__output_t *out, va_list args)
                                  "rule-id", rule_id,
                                  "rc", rc_str,
                                  NULL);
-
     free(rc_str);
 
-    return pcmk_rc_ok;
+    switch (result) {
+        case pcmk_rc_within_range:
+        case pcmk_rc_ok:
+        case pcmk_rc_after_range:
+        case pcmk_rc_before_range:
+        case pcmk_rc_op_unsatisfied:
+            return pcmk_rc_ok;
+        default:
+            out->err(out,
+                    "Could not determine whether rule %s is in effect: %s",
+                    rule_id, ((error != NULL)? error : "unexpected error"));
+            return pcmk_rc_ok;
+    }
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
