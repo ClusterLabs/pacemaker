@@ -204,8 +204,8 @@
       <transient_attributes id="9a4cafd3-fcfc-4de9-9440-10bc8822d9af">
         <instance_attributes id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af">
           <nvpair id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-master-res_drbd_iscsivg01:0" name="master-res_drbd_iscsivg01:0" value="100"/>
-          <nvpair id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-master-res_drbd_iscsivg02:0" name="master-res_drbd_iscsivg02:0" value="100"/>
+          <nvpair id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-promoted-res_drbd_iscsivg01:0" name="master-res_drbd_iscsivg01:0" value="100"/>
+          <nvpair id="status-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-promoted-res_drbd_iscsivg02:0" name="master-res_drbd_iscsivg02:0" value="100"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -213,8 +213,8 @@
       <transient_attributes id="3074cde6-2e91-4259-9868-7ac94007087e">
         <instance_attributes id="status-3074cde6-2e91-4259-9868-7ac94007087e">
           <nvpair id="status-3074cde6-2e91-4259-9868-7ac94007087e-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3074cde6-2e91-4259-9868-7ac94007087e-master-res_drbd_iscsivg01:1" name="master-res_drbd_iscsivg01:1" value="100"/>
-          <nvpair id="status-3074cde6-2e91-4259-9868-7ac94007087e-master-res_drbd_iscsivg02:1" name="master-res_drbd_iscsivg02:1" value="100"/>
+          <nvpair id="status-3074cde6-2e91-4259-9868-7ac94007087e-promoted-res_drbd_iscsivg01:1" name="master-res_drbd_iscsivg01:1" value="100"/>
+          <nvpair id="status-3074cde6-2e91-4259-9868-7ac94007087e-promoted-res_drbd_iscsivg02:1" name="master-res_drbd_iscsivg02:1" value="100"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3074cde6-2e91-4259-9868-7ac94007087e">

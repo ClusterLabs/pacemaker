@@ -34,8 +34,8 @@
         </meta_attributes>
         <primitive class="ocf" id="rsc3" provider="pacemaker" type="Stateful">
           <operations id="rsc3-operations">
-            <op id="rsc3-monitor-master-5" interval="5" name="monitor" role="Promoted"/>
-            <op id="rsc3-monitor-slave-5" interval="5" name="monitor" role="Unpromoted"/>
+            <op id="rsc3-monitor-promoted-5" interval="5" name="monitor" role="Promoted"/>
+            <op id="rsc3-monitor-unpromoted-5" interval="5" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>

@@ -152,7 +152,7 @@ make_args(const char *agent, const char *action, const char *target,
         const char *param = NULL;
 
         /* Always pass the target's name, per
-         * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
+         * https://github.com/ClusterLabs/fence-agents/blob/main/doc/FenceAgentAPI.md
          */
         g_hash_table_insert(arg_list, strdup("nodename"), strdup(target));
 

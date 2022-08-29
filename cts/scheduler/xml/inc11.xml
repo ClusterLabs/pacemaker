@@ -39,8 +39,8 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="simple-with-master" rsc="simple-rsc" with-rsc="rsc1" with-rsc-role="Promoted" score="INFINITY"/>
-      <rsc_location id="master-cons" rsc="rsc1">
+      <rsc_colocation id="simple-with-promoted" rsc="simple-rsc" with-rsc="rsc1" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_location id="promoted-cons" rsc="rsc1">
         <rule id="master-rule" score="100" role="Promoted">
           <expression id="expression.id22031" attribute="#uname" operation="eq" value="node2"/>
         </rule>

@@ -50,8 +50,8 @@
         </meta_attributes>
         <primitive class="ocf" id="rsc5" provider="pacemaker" type="Stateful">
           <operations id="rsc5-operations">
-            <op id="rsc5-monitor-master-5" interval="5" name="monitor" role="Promoted"/>
-            <op id="rsc5-monitor-slave-5" interval="5" name="monitor" role="Unpromoted"/>
+            <op id="rsc5-monitor-promoted-5" interval="5" name="monitor" role="Promoted"/>
+            <op id="rsc5-monitor-unpromoted-5" interval="5" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>

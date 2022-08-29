@@ -20,8 +20,8 @@
         </meta_attributes>
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="rsc1-operations">
-            <op id="rsc1-monitor-master-5" name="monitor" interval="5" role="Promoted"/>
-            <op id="rsc1-monitor-slave-10" name="monitor" interval="10" role="Unpromoted"/>
+            <op id="rsc1-monitor-promoted-5" name="monitor" interval="5" role="Promoted"/>
+            <op id="rsc1-monitor-unpromoted-10" name="monitor" interval="10" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>
@@ -36,7 +36,7 @@
     </resources>
     <constraints>
       <rsc_order id="rsc2-then-ms1-promote" first="rsc2" first-action="start" then="ms1" then-action="promote" kind="Mandatory"/>
-      <rsc_colocation id="ms1-master-with-rsc2" rsc="ms1" rsc-role="Promoted" with-rsc="rsc2" score="INFINITY"/>
+      <rsc_colocation id="ms1-promoted-with-rsc2" rsc="ms1" rsc-role="Promoted" with-rsc="rsc2" score="INFINITY"/>
       <rsc_location id="loc-ms1-node1" rsc="ms1" role="Promoted" node="node1" score="100"/>
       <rsc_location id="loc-ms1-node2" rsc="ms1" role="Promoted" node="node2" score="100"/>
       <rsc_location id="loc-rsc2" rsc="rsc2" node="node1" score="-INFINITY"/>

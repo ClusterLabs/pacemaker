@@ -76,7 +76,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Promoted" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_colocation id="drbd0_drbd1_promoted" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Promoted" with-rsc-role="Promoted" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

@@ -113,8 +113,8 @@
         </primitive>
       </clone>
       <clone id="vtest7-master">
-        <meta_attributes id="vtest7-master-meta">
-          <nvpair id="vtest7-master-promotable" name="promotable" value="true"/>
+        <meta_attributes id="vtest7-promoted-meta">
+          <nvpair id="vtest7-promoted-promotable" name="promotable" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="vtest7" provider="kgaillot" type="vstateful">
           <instance_attributes id="vtest7-instance_attributes-gt-eq" score="3">
@@ -210,7 +210,7 @@
       <transient_attributes id="5">
         <instance_attributes id="status-5">
           <nvpair id="status-5-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-5-master-vtest7" name="master-vtest7" value="10"/>
+          <nvpair id="status-5-promoted-vtest7" name="master-vtest7" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -225,7 +225,7 @@
       <transient_attributes id="2">
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-master-vtest7" name="master-vtest7" value="5"/>
+          <nvpair id="status-2-promoted-vtest7" name="master-vtest7" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -241,7 +241,7 @@
       <transient_attributes id="1">
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1-master-vtest7" name="master-vtest7" value="5"/>
+          <nvpair id="status-1-promoted-vtest7" name="master-vtest7" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -256,7 +256,7 @@
       <transient_attributes id="3">
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-3-master-vtest7" name="master-vtest7" value="5"/>
+          <nvpair id="status-3-promoted-vtest7" name="master-vtest7" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -270,7 +270,7 @@
       </lrm>
       <transient_attributes id="4">
         <instance_attributes id="status-4">
-          <nvpair id="status-4-master-vtest7" name="master-vtest7" value="5"/>
+          <nvpair id="status-4-promoted-vtest7" name="master-vtest7" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

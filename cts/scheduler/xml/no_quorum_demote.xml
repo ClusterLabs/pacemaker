@@ -93,7 +93,7 @@
     <node_state id="1" uname="rhel7-1" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-rsc1" name="master-rsc1" value="10"/>
+          <nvpair id="status-1-promoted-rsc1" name="master-rsc1" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">
@@ -170,7 +170,7 @@
     <node_state id="2" uname="rhel7-2" crmd="online" crm-debug-origin="post_cache_update" in_ccm="true" join="member" expected="member">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-rsc1" name="master-rsc1" value="5"/>
+          <nvpair id="status-2-promoted-rsc1" name="master-rsc1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">

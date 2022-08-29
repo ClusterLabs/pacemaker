@@ -52,7 +52,7 @@
         </rule>
       </rsc_location>
       <rsc_order first="g0" id="promote-after-g0" then="ms0" then-action="promote"/>
-      <rsc_colocation id="master-with-g0" rsc="ms0" rsc-role="Promoted" score="INFINITY" with-rsc="g0"/>
+      <rsc_colocation id="promoted-with-g0" rsc="ms0" rsc-role="Promoted" score="INFINITY" with-rsc="g0"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

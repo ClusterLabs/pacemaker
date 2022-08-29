@@ -19,9 +19,6 @@
           <nvpair id="nvpair.id21943" name="standby" value="off"/>
           <nvpair id="nvpair.id21952" name="inhibit_group0" value="1"/>
         </instance_attributes>
-        <instance_attributes id="instance_attributes.id21964">
-          <nvpair id="nvpair.id21970" name="master-resource_masterslave:0" value="1"/>
-        </instance_attributes>
       </node>
       <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="member">
         <instance_attributes id="instance_attributes.id21992">

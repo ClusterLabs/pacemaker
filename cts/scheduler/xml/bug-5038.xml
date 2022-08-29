@@ -33,7 +33,7 @@
         </primitive>
         <primitive class="lsb" id="master-app-rsc" type="cluster-master">
           <operations>
-            <op id="master-app-rsc-monitor-10s" interval="10s" name="monitor"/>
+            <op id="promoted-app-rsc-monitor-10s" interval="10s" name="monitor"/>
           </operations>
         </primitive>
       </group>

@@ -71,7 +71,7 @@
           <nvpair id="nvpair.id22228" name="nic" value="eth1"/>
           <nvpair id="nvpair.id22236" name="target_role" value="started"/>
         </instance_attributes>
-        <meta_attributes id="primitive-intip_1_master.meta">
+        <meta_attributes id="primitive-intip_1_promoted.meta">
           <nvpair id="nvpair.meta.auto-131" name="target-role" value="started"/>
         </meta_attributes>
       </primitive>
@@ -85,7 +85,7 @@
           <nvpair id="nvpair.id22294" name="nic" value="eth1"/>
           <nvpair id="nvpair.id22303" name="target_role" value="started"/>
         </instance_attributes>
-        <meta_attributes id="primitive-intip_2_slave.meta">
+        <meta_attributes id="primitive-intip_2_unpromoted.meta">
           <nvpair id="nvpair.meta.auto-153" name="target-role" value="started"/>
         </meta_attributes>
       </primitive>
@@ -242,12 +242,12 @@
           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23076"/>
         </rule>
       </rsc_location>
-      <rsc_location id="run_intip_1_master" rsc="intip_1_master">
+      <rsc_location id="run_intip_1_promoted" rsc="intip_1_master">
         <rule id="pref_run_intip_1" score="200">
           <expression attribute="#uname" operation="eq" value="webcluster01" id="expression.id23101"/>
         </rule>
       </rsc_location>
-      <rsc_location id="run_intip_2_slave" rsc="intip_2_slave">
+      <rsc_location id="run_intip_2_unpromoted" rsc="intip_2_slave">
         <rule id="pref_run_intip_2_wc2" score="100">
           <expression attribute="#uname" operation="eq" value="webcluster02" id="expression.id23125"/>
         </rule>

@@ -48,7 +48,6 @@
         </operations>
         <instance_attributes id="instance_attributes.id22051">
           <nvpair id="nvpair.id22057" name="ip" value="127.0.0.12"/>
-          <nvpair id="nvpair.id22066" name="target_role" value="Slave"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc_c001n02.meta">
           <nvpair id="is_managed.meta.auto-67" name="is-managed" value="1"/>
@@ -61,7 +60,6 @@
         </operations>
         <instance_attributes id="instance_attributes.id22103">
           <nvpair id="nvpair.id22109" name="ip" value="127.0.0.13"/>
-          <nvpair id="nvpair.id22117" name="target_role" value="Master"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc_c001n03.meta">
           <nvpair id="is_managed.meta.auto-85" name="is-managed" value="1"/>
@@ -132,8 +130,8 @@
             <lrm_rsc_op id="DcIPaddr_monitor_5000" operation="monitor" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="5" rc-code="0" crm_feature_set="2.0" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="9537312373b6b9c44e592a2019af9078" interval="5000"/>
           </lrm_resource>
           <lrm_resource id="rsc_c001n02" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" interval="0" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="5" rc-code="0" crm_feature_set="1.0.5" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="4d1896e6bbd5b9ae4b8ba68d7886f72f"/>
-            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="6" rc-code="0" crm_feature_set="2.0" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="2b8a5baaa2c5af19bfc548131a589c25" interval="5000"/>
+            <lrm_rsc_op id="rsc_c001n02_start_0" operation="start" interval="0" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="5" rc-code="0" crm_feature_set="1.0.5" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="d8eeae5f6724dfcab8f57ef54367eb0a"/>
+            <lrm_rsc_op id="rsc_c001n02_monitor_5000" operation="monitor" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="6" rc-code="0" crm_feature_set="2.0" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="7515405113757a8bc37db755be497fca" interval="5000"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -147,8 +145,8 @@
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22637">
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" interval="0" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="3" rc-code="0" crm_feature_set="1.0.5" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="8ae701f1361c5d5acd7a6cddd2f8eca0"/>
-            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="4" rc-code="0" crm_feature_set="2.0" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="1b9dcfc7892e83a84242bc9eed4c7c08" interval="5000"/>
+            <lrm_rsc_op id="rsc_c001n03_start_0" operation="start" interval="0" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="3" rc-code="0" crm_feature_set="1.0.5" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="6e0f48b04277dfed400d2ffce5b5ae51"/>
+            <lrm_rsc_op id="rsc_c001n03_monitor_5000" operation="monitor" transition-key="0:0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-status="0" call-id="4" rc-code="0" crm_feature_set="2.0" transition-magic="0:0:0fbef83f-5f7a-4928-b803-3cdca478e889" op-digest="3b337ce52a3a88fb0a61ff74c5e42f0b" interval="5000"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

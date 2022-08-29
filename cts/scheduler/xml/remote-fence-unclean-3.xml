@@ -174,7 +174,7 @@
         </storage>
         <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
           <instance_attributes id="redis-instance_attributes">
-            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+            <nvpair id="redis-instance_attributes-wait_last_known_promoted" name="wait_last_known_master" value="true"/>
           </instance_attributes>
           <meta_attributes id="redis-meta_attributes">
             <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
@@ -719,7 +719,7 @@
     <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="galera-bundle-0">
         <instance_attributes id="status-galera-bundle-0">
-          <nvpair id="status-galera-bundle-0-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-galera-bundle-0-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="galera-bundle-0">
@@ -734,7 +734,7 @@
     <node_state remote_node="true" id="galera-bundle-2" uname="galera-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="galera-bundle-2">
         <instance_attributes id="status-galera-bundle-2">
-          <nvpair id="status-galera-bundle-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-galera-bundle-2-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="galera-bundle-2">
@@ -749,7 +749,7 @@
     <node_state remote_node="true" id="galera-bundle-1" uname="galera-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="galera-bundle-1">
         <instance_attributes id="status-galera-bundle-1">
-          <nvpair id="status-galera-bundle-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-galera-bundle-1-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="galera-bundle-1">
@@ -764,7 +764,7 @@
     <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="redis-bundle-1">
         <instance_attributes id="status-redis-bundle-1">
-          <nvpair id="status-redis-bundle-1-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-1-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="redis-bundle-1">
@@ -780,7 +780,7 @@
     <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="redis-bundle-0">
         <instance_attributes id="status-redis-bundle-0">
-          <nvpair id="status-redis-bundle-0-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-0-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="redis-bundle-0">
@@ -795,7 +795,7 @@
     <node_state remote_node="true" id="redis-bundle-2" uname="redis-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="redis-bundle-2">
         <instance_attributes id="status-redis-bundle-2">
-          <nvpair id="status-redis-bundle-2-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-redis-bundle-2-promoted-redis" name="master-redis" value="1"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="redis-bundle-2">

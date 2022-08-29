@@ -22,7 +22,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="ms0-master-node-1" rsc="ms0">
+      <rsc_location id="ms0-promoted-node-1" rsc="ms0">
         <rule id="ms0-master-node-1-rule" role="Promoted" score="INFINITY">
           <expression attribute="#uname" id="ms0-master-node-1-expression" operation="eq" value="node-1"/>
         </rule>
@@ -37,7 +37,7 @@
       <transient_attributes id="node-0">
         <instance_attributes id="status-node-0">
           <nvpair id="status-node-0-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-node-0-master-s0:0" name="master-s0:0" value="5"/>
+          <nvpair id="status-node-0-promoted-s0:0" name="master-s0:0" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="node-0">
@@ -60,7 +60,7 @@
       <transient_attributes id="node-1">
         <instance_attributes id="status-node-1">
           <nvpair id="status-node-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-node-1-master-s0:1" name="master-s0:1" value="5"/>
+          <nvpair id="status-node-1-promoted-s0:1" name="master-s0:1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="node-1">

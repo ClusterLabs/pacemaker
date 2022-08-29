@@ -59,7 +59,7 @@
       <transient_attributes id="fc16-builder">
         <instance_attributes id="status-fc16-builder">
           <nvpair id="status-fc16-builder-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-fc16-builder-master-NATIVE_RSC_A.0" name="master-NATIVE_RSC_A:0" value="5"/>
+          <nvpair id="status-fc16-builder-promoted-NATIVE_RSC_A.0" name="master-NATIVE_RSC_A:0" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="fc16-builder">
