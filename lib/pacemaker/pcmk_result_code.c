@@ -57,6 +57,26 @@ pcmk__show_result_code(pcmk__output_t *out, int code,
     return rc;
 }
 
+// Documented in header
+int
+pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
+                      uint32_t flags)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__show_result_code(out, code, type, flags);
+    pcmk__xml_output_finish(out, xml);
+    return rc;
+}
+
 /*!
  * \internal
  * \brief List all valid result codes in a particular family
