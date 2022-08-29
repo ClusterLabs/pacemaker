@@ -186,6 +186,40 @@ int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
  */
 int pcmk_status(xmlNodePtr *xml);
 
+/*!
+ * \brief Check whether each rule in a list is in effect
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     input     The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date      Check whether the rule is in effect at this date and
+ *                          time (if \c NULL, use current date and time)
+ * \param[in]     rule_ids  The IDs of the rules to check, as a <tt>NULL</tt>-
+ *                          terminated list.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+                     const char **rule_ids);
+
+/*!
+ * \brief Check whether a given rule is in effect
+ *
+ * \param[in,out] xml       The destination for the result, as an XML tree
+ * \param[in]     input     The CIB XML to check (if \c NULL, use current CIB)
+ * \param[in]     date      Check whether the rule is in effect at this date and
+ *                          time (if \c NULL, use current date and time)
+ * \param[in]     rule_ids  The ID of the rule to check
+ *
+ * \return Standard Pacemaker return code
+ */
+static inline int
+pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+                const char *rule_id)
+{
+    const char *rule_ids[] = {rule_id, NULL};
+    return pcmk_check_rules(xml, input, date, rule_ids);
+}
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

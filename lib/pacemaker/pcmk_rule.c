@@ -265,3 +265,23 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
     pe_free_working_set(data_set);
     return rc;
 }
+
+// Documented in pacemaker.h
+int
+pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, crm_time_t *date,
+                 const char **rule_ids)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__xml_output_new(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__check_rules(out, input, date, rule_ids);
+    pcmk__xml_output_finish(out, xml);
+    return rc;
+}
