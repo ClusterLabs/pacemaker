@@ -59,7 +59,7 @@ struct crm_time_s {
 static crm_time_t *parse_date(const char *date_str);
 
 static crm_time_t *
-crm_get_utc_time(crm_time_t *dt)
+crm_get_utc_time(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
 
@@ -248,8 +248,9 @@ get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 }
 
 void
-crm_time_log_alias(int log_level, const char *file, const char *function, int line,
-                   const char *prefix, crm_time_t * date_time, int flags)
+crm_time_log_alias(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const crm_time_t *date_time,
+                   int flags)
 {
     char *date_s = crm_time_as_string(date_time, flags);
 
@@ -264,9 +265,9 @@ crm_time_log_alias(int log_level, const char *file, const char *function, int li
 }
 
 static void
-crm_time_get_sec(int sec, uint * h, uint * m, uint * s)
+crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
-    uint hours, minutes, seconds;
+    uint32_t hours, minutes, seconds;
 
     if (sec < 0) {
         seconds = 0 - sec;
@@ -288,23 +289,24 @@ crm_time_get_sec(int sec, uint * h, uint * m, uint * s)
 }
 
 int
-crm_time_get_timeofday(crm_time_t * dt, uint * h, uint * m, uint * s)
+crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
+                       uint32_t *s)
 {
     crm_time_get_sec(dt->seconds, h, m, s);
     return TRUE;
 }
 
 int
-crm_time_get_timezone(crm_time_t * dt, uint * h, uint * m)
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 {
-    uint s;
+    uint32_t s;
 
     crm_time_get_sec(dt->seconds, h, m, &s);
     return TRUE;
 }
 
 long long
-crm_time_get_seconds(crm_time_t * dt)
+crm_time_get_seconds(const crm_time_t *dt)
 {
     int lpc;
     crm_time_t *utc = NULL;
@@ -347,13 +349,14 @@ crm_time_get_seconds(crm_time_t * dt)
 
 #define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
 long long
-crm_time_get_seconds_since_epoch(crm_time_t * dt)
+crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
     return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
 int
-crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
+crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                       uint32_t *d)
 {
     int months = 0;
     int days = dt->days;
@@ -385,7 +388,7 @@ crm_time_get_gregorian(crm_time_t * dt, uint * y, uint * m, uint * d)
 }
 
 int
-crm_time_get_ordinal(crm_time_t * dt, uint * y, uint * d)
+crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
 {
     *y = dt->years;
     *d = dt->days;
@@ -393,7 +396,8 @@ crm_time_get_ordinal(crm_time_t * dt, uint * y, uint * d)
 }
 
 int
-crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
+crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                     uint32_t *d)
 {
     /*
      * Monday 29 December 2008 is written "2009-W01-1"
@@ -449,7 +453,7 @@ crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
 #define DATE_MAX 128
 
 static void
-crm_duration_as_string(crm_time_t *dt, char *result)
+crm_duration_as_string(const crm_time_t *dt, char *result)
 {
     size_t offset = 0;
 
@@ -471,7 +475,7 @@ crm_duration_as_string(crm_time_t *dt, char *result)
         offset += snprintf(result + offset, DATE_MAX - offset, "%d second%s",
                            dt->seconds, pcmk__plural_s(dt->seconds));
     } else if (dt->seconds) {
-        uint h = 0, m = 0, s = 0;
+        uint32_t h = 0, m = 0, s = 0;
 
         offset += snprintf(result + offset, DATE_MAX - offset, "%d seconds (",
                            dt->seconds);
@@ -493,9 +497,9 @@ crm_duration_as_string(crm_time_t *dt, char *result)
 }
 
 char *
-crm_time_as_string(crm_time_t * date_time, int flags)
+crm_time_as_string(const crm_time_t *date_time, int flags)
 {
-    crm_time_t *dt = NULL;
+    const crm_time_t *dt = NULL;
     crm_time_t *utc = NULL;
     char result[DATE_MAX] = { '\0', };
     char *result_copy = NULL;
@@ -538,7 +542,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
 
     if (flags & crm_time_log_date) {
         if (flags & crm_time_weeks) { // YYYY-WW-D
-            uint y, w, d;
+            uint32_t y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -546,7 +550,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             }
 
         } else if (flags & crm_time_ordinal) { // YYYY-DDD
-            uint y, d;
+            uint32_t y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -554,7 +558,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             }
 
         } else { // YYYY-MM-DD
-            uint y, m, d;
+            uint32_t y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
                 offset += snprintf(result + offset, DATE_MAX - offset,
@@ -564,7 +568,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     }
 
     if (flags & crm_time_log_timeofday) {
-        uint h = 0, m = 0, s = 0;
+        uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
             offset += snprintf(result + offset, DATE_MAX - offset, " ");
@@ -608,9 +612,9 @@ static bool
 crm_time_parse_sec(const char *time_str, int *result)
 {
     int rc;
-    uint hour = 0;
-    uint minute = 0;
-    uint second = 0;
+    uint32_t hour = 0;
+    uint32_t minute = 0;
+    uint32_t second = 0;
 
     *result = 0;
 
@@ -713,7 +717,7 @@ crm_time_parse_offset(const char *offset_str, int *offset)
 static bool
 crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
-    uint h, m, s;
+    uint32_t h, m, s;
     char *offset_s = NULL;
 
     tzset();
@@ -1189,7 +1193,7 @@ crm_time_free_period(crm_time_period_t *period)
 }
 
 void
-crm_time_set(crm_time_t * target, crm_time_t * source)
+crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
     crm_trace("target=%p, source=%p", target, source);
 
@@ -1208,7 +1212,7 @@ crm_time_set(crm_time_t * target, crm_time_t * source)
 }
 
 static void
-ha_set_tm_time(crm_time_t * target, struct tm *source)
+ha_set_tm_time(crm_time_t *target, const struct tm *source)
 {
     int h_offset = 0;
     int m_offset = 0;
@@ -1252,13 +1256,13 @@ ha_set_tm_time(crm_time_t * target, struct tm *source)
 }
 
 void
-crm_time_set_timet(crm_time_t * target, time_t * source)
+crm_time_set_timet(crm_time_t *target, const time_t *source)
 {
     ha_set_tm_time(target, localtime(source));
 }
 
 crm_time_t *
-pcmk_copy_time(crm_time_t *source)
+pcmk_copy_time(const crm_time_t *source)
 {
     crm_time_t *target = crm_time_new_undefined();
 
@@ -1267,7 +1271,7 @@ pcmk_copy_time(crm_time_t *source)
 }
 
 crm_time_t *
-crm_time_add(crm_time_t * dt, crm_time_t * value)
+crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
@@ -1295,7 +1299,7 @@ crm_time_add(crm_time_t * dt, crm_time_t * value)
 }
 
 crm_time_t *
-crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value)
+crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
@@ -1329,7 +1333,7 @@ crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value)
 }
 
 crm_time_t *
-crm_time_subtract(crm_time_t * dt, crm_time_t * value)
+crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
@@ -1360,10 +1364,10 @@ crm_time_subtract(crm_time_t * dt, crm_time_t * value)
  *
  * \param[in] dt  Date/time object to check
  *
- * \return TRUE if years, days, and seconds are sensible, FALSE otherwise
+ * \return \c true if years, days, and seconds are sensible, \c false otherwise
  */
 bool
-crm_time_check(crm_time_t * dt)
+crm_time_check(const crm_time_t *dt)
 {
     return (dt != NULL)
            && (dt->days > 0) && (dt->days <= year_days(dt->years))
@@ -1384,7 +1388,7 @@ crm_time_check(crm_time_t * dt)
     }
 
 int
-crm_time_compare(crm_time_t *a, crm_time_t *b)
+crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
     crm_time_t *t1 = crm_get_utc_time(a);
@@ -1525,7 +1529,7 @@ crm_time_add_years(crm_time_t * a_time, int extra)
 }
 
 static void
-ha_get_tm_time( struct tm *target, crm_time_t *source)
+ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
@@ -1553,7 +1557,7 @@ ha_get_tm_time( struct tm *target, crm_time_t *source)
  */
 
 pcmk__time_hr_t *
-pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt)
+pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
 {
     pcmk__time_hr_t *hr_dt = NULL;
 
@@ -1574,7 +1578,7 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt)
 }
 
 void
-pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt)
+pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt)
 {
     CRM_ASSERT((hr_dt) && (target));
     *target = (crm_time_t) {
@@ -1638,7 +1642,7 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 }
 
 char *
-pcmk__time_format_hr(const char *format, pcmk__time_hr_t * hr_dt)
+pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
     const char *mark_s;
     int max = 128, scanned_pos = 0, printed_pos = 0, fmt_pos = 0,
@@ -1722,7 +1726,7 @@ pcmk__time_format_hr(const char *format, pcmk__time_hr_t * hr_dt)
  *       functions.
  */
 const char *
-pcmk__epoch2str(time_t *when)
+pcmk__epoch2str(const time_t *when)
 {
     char *since_epoch = NULL;
 

@@ -55,13 +55,14 @@ crm_time_t *crm_time_new_undefined(void);
 void crm_time_free(crm_time_t * dt);
 
 bool crm_time_is_defined(const crm_time_t *t);
-char *crm_time_as_string(crm_time_t * dt, int flags);
+char *crm_time_as_string(const crm_time_t *dt, int flags);
 
 #define crm_time_log(level, prefix, dt, flags)  \
     crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
 
-void crm_time_log_alias(int log_level, const char *file, const char *function, int line,
-                        const char *prefix, crm_time_t * date_time, int flags);
+void crm_time_log_alias(int log_level, const char *file, const char *function,
+                        int line, const char *prefix,
+                        const crm_time_t *date_time, int flags);
 
 #  define crm_time_log_date          0x001
 #  define crm_time_log_timeofday     0x002
@@ -74,31 +75,35 @@ void crm_time_log_alias(int log_level, const char *file, const char *function, i
 #  define crm_time_epoch             0x200
 
 crm_time_t *crm_time_parse_duration(const char *duration_str);
-crm_time_t *crm_time_calculate_duration(crm_time_t * dt, crm_time_t * value);
+crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,
+                                        const crm_time_t *value);
 crm_time_period_t *crm_time_parse_period(const char *period_str);
 void crm_time_free_period(crm_time_period_t *period);
 
-int crm_time_compare(crm_time_t * dt, crm_time_t * rhs);
+int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
-int crm_time_get_timeofday(crm_time_t * dt, uint32_t * h, uint32_t * m, uint32_t * s);
-int crm_time_get_timezone(crm_time_t * dt, uint32_t * h, uint32_t * m);
-int crm_time_get_gregorian(crm_time_t * dt, uint32_t * y, uint32_t * m, uint32_t * d);
-int crm_time_get_ordinal(crm_time_t * dt, uint32_t * y, uint32_t * d);
-int crm_time_get_isoweek(crm_time_t * dt, uint32_t * y, uint32_t * w, uint32_t * d);
+int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
+                           uint32_t *s);
+int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
+int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                           uint32_t *d);
+int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
+int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                         uint32_t * d);
 
 /* Time in seconds since 0000-01-01 00:00:00Z */
-long long int crm_time_get_seconds(crm_time_t * dt);
+long long crm_time_get_seconds(const crm_time_t *dt);
 
 /* Time in seconds since 1970-01-01 00:00:00Z */
-long long int crm_time_get_seconds_since_epoch(crm_time_t * dt);
+long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 
-void crm_time_set(crm_time_t * target, crm_time_t * source);
-void crm_time_set_timet(crm_time_t * target, time_t * source);
+void crm_time_set(crm_time_t *target, const crm_time_t *source);
+void crm_time_set_timet(crm_time_t *target, const time_t *source);
 
 /* Returns a new time object */
-crm_time_t *pcmk_copy_time(crm_time_t *source);
-crm_time_t *crm_time_add(crm_time_t * dt, crm_time_t * value);
-crm_time_t *crm_time_subtract(crm_time_t * dt, crm_time_t * value);
+crm_time_t *pcmk_copy_time(const crm_time_t *source);
+crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
+crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
 
 /* All crm_time_add_... functions support negative values */
 void crm_time_add_seconds(crm_time_t * dt, int value);
@@ -115,7 +120,7 @@ int crm_time_weeks_in_year(int year);
 int crm_time_days_in_month(int month, int year);
 
 bool crm_time_leapyear(int year);
-bool crm_time_check(crm_time_t * dt);
+bool crm_time_check(const crm_time_t *dt);
 
 #ifdef __cplusplus
 }
