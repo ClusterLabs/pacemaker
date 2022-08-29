@@ -220,9 +220,9 @@ void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
 
 void pcmk__client_cleanup(void);
 
-pcmk__client_t *pcmk__find_client(qb_ipcs_connection_t *c);
+pcmk__client_t *pcmk__find_client(const qb_ipcs_connection_t *c);
 pcmk__client_t *pcmk__find_client_by_id(const char *id);
-const char *pcmk__client_name(pcmk__client_t *c);
+const char *pcmk__client_name(const pcmk__client_t *c);
 const char *pcmk__client_type_str(uint64_t client_type);
 
 pcmk__client_t *pcmk__new_unauth_client(void *key);

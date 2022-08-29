@@ -89,7 +89,7 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
  *         the value "true", False in all other cases
  */
 bool
-pcmk__xe_attr_is_true(xmlNodePtr node, const char *name);
+pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
 
 /*!
  * \internal
@@ -107,7 +107,7 @@ pcmk__xe_attr_is_true(xmlNodePtr node, const char *name);
  * \note \p value only has any meaning if the return value is pcmk_rc_ok.
  */
 int
-pcmk__xe_get_bool_attr(xmlNodePtr node, const char *name, bool *value);
+pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value);
 
 
 /* internal procfs utilities (from procfs.c) */

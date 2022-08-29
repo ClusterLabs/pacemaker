@@ -442,7 +442,7 @@ xml_accept_changes(xmlNode * xml)
 }
 
 xmlNode *
-find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
+find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
 {
     xmlNode *a_child = NULL;
     const char *name = "NULL";
@@ -1470,7 +1470,7 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 // Log an XML element (and any children) in a formatted way
 void
 pcmk__xe_log(int log_level, const char *file, const char *function, int line,
-             const char *prefix, xmlNode *data, int depth, int options)
+             const char *prefix, const xmlNode *data, int depth, int options)
 {
     int max = 0;
     int offset = 0;
@@ -1572,7 +1572,7 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
 // Log XML portions that have been marked as changed
 static void
 log_xml_changes(int log_level, const char *file, const char *function, int line,
-                const char *prefix, xmlNode *data, int depth, int options)
+                const char *prefix, const xmlNode *data, int depth, int options)
 {
     xml_private_t *p;
     char *prefix_m = NULL;
@@ -1671,8 +1671,9 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
 }
 
 void
-log_data_element(int log_level, const char *file, const char *function, int line,
-                 const char *prefix, xmlNode * data, int depth, int options)
+log_data_element(int log_level, const char *file, const char *function,
+                 int line, const char *prefix, const xmlNode *data, int depth,
+                 int options)
 {
     xmlNode *a_child = NULL;
 

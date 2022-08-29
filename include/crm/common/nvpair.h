@@ -43,7 +43,7 @@ void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
 void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
-GHashTable *xml2list(xmlNode *parent);
+GHashTable *xml2list(const xmlNode *parent);
 
 const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
 const char *crm_xml_replace(xmlNode *node, const char *name, const char *value);

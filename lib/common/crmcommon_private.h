@@ -68,7 +68,7 @@ G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-int pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
+int pcmk__element_xpath(const char *prefix, const xmlNode *xml, char *buffer,
                         int offset, size_t buffer_size);
 
 G_GNUC_INTERNAL
@@ -82,7 +82,7 @@ xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
 
 G_GNUC_INTERNAL
 void pcmk__xe_log(int log_level, const char *file, const char *function,
-                  int line, const char *prefix, xmlNode *data, int depth,
+                  int line, const char *prefix, const xmlNode *data, int depth,
                   int options);
 
 G_GNUC_INTERNAL
