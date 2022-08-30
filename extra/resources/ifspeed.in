@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ifspeed resource agent
 #
-# Copyright 2011-2021 the Pacemaker project contributors
+# Copyright 2011-2022 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -64,7 +64,7 @@ OCF_RESKEY_dampen_default=5
 meta_data() {
         cat <<END
 <?xml version="1.0"?>
-<resource-agent name="ifspeed" version="1.0">
+<resource-agent name="ifspeed" version="1.1">
 <version>1.0</version>
 
 <longdesc lang="en">
@@ -85,11 +85,11 @@ default looks only on ports which are connected to upstream switch. This can be
 overridden by 'bridge_ports' parameter. Active interfaces in this case are those
 in "forwarding" state.
 
-For balancing bonds this RA summs speeds of underlying "up" slave interfaces
-(and applies coefficient 0.8 to result).
+For balancing bonds, this agent sums speeds of underlying "up" ports (and
+applies coefficient 0.8 to result).
 
 For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
-speed of the currently active slave is used.
+speed of the currently active port is used.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
@@ -410,14 +410,14 @@ hfi1_get_speed() {
     echo $(( hfi1_speed * 1000 ))
 }
 
-bond_get_slaves() {
+bond_get_ports() {
     local iface="$1"
-    local slaves
-    read slaves < "/sys/class/net/${iface}/bonding/slaves"
+    local ports
+    read ports < "/sys/class/net/${iface}/bonding/slaves"
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
-        eval "$2=\${slaves}"
+        eval "$2=\${ports}"
     else # Expect sub-shell
-        echo ${slaves}
+        echo ${ports}
     fi
 }
 
@@ -450,18 +450,18 @@ bond_get_speed() {
     local iface="$1"
     local aggregate_speed=0
     local active_iface
-    local bond_slaves
+    local bond_ports
 
     if ! iface_is_bond "${iface}" ; then
         echo 0
         return
     fi
 
-    bond_get_slaves "${iface}" bond_slaves
+    bond_get_ports "${iface}" bond_ports
 
     if bond_is_balancing "${iface}" ; then
-        for slave in ${bond_slaves} ; do
-            : $(( aggregate_speed += $( iface_get_speed "${slave}" ) ))
+        for port in ${bond_ports} ; do
+            : $(( aggregate_speed += $( iface_get_speed "${port}" ) ))
         done
         # Bonding is unable to get speed*n
         : $(( aggregate_speed = aggregate_speed * 8 / 10 ))
