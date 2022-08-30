@@ -17,42 +17,45 @@
 #include <crm/common/results.h>
 
 #define cons_string(x) x?x:"NA"
+static int
+print_constraint(xmlNode *xml_obj, void *userdata)
+{
+    pe_working_set_t *data_set = (pe_working_set_t *) userdata;
+    pcmk__output_t *out = data_set->priv;
+    xmlNode *lifetime = NULL;
+    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+
+    if (id == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    // @COMPAT lifetime is deprecated
+    lifetime = first_named_child(xml_obj, "lifetime");
+    if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
+        return pcmk_rc_ok;
+    }
+
+    if (!pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
+        return pcmk_rc_ok;
+    }
+
+    out->info(out, "Constraint %s %s %s %s %s %s %s",
+              crm_element_name(xml_obj),
+              cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
+              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
+              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
+              cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
+              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
+              cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
+
+    return pcmk_rc_ok;
+}
+
 void
 cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 {
-    pcmk__output_t *out = data_set->priv;
-    xmlNode *xml_obj = NULL;
-    xmlNode *lifetime = NULL;
-    xmlNode *cib_constraints = pcmk_find_cib_element(data_set->input,
-                                                     XML_CIB_TAG_CONSTRAINTS);
-
-    for (xml_obj = pcmk__xe_first_child(cib_constraints); xml_obj != NULL;
-         xml_obj = pcmk__xe_next(xml_obj)) {
-        const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-
-        if (id == NULL) {
-            continue;
-        }
-
-        // @COMPAT lifetime is deprecated
-        lifetime = first_named_child(xml_obj, "lifetime");
-        if (pe_evaluate_rules(lifetime, NULL, data_set->now, NULL) == FALSE) {
-            continue;
-        }
-
-        if (!pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
-            continue;
-        }
-
-        out->info(out, "Constraint %s %s %s %s %s %s %s",
-                  crm_element_name(xml_obj),
-                  cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
-                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
-                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
-                  cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
-                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
-                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
-    }
+    pcmk__xe_foreach_child(pcmk_find_cib_element(data_set->input, XML_CIB_TAG_CONSTRAINTS),
+                           NULL, print_constraint, data_set);
 }
 
 void

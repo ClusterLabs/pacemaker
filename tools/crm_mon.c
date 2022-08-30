@@ -1694,9 +1694,10 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     return 0;
 }
 
-static void
-handle_rsc_op(xmlNode * xml, const char *node_id)
+static int
+handle_rsc_op(xmlNode *xml, void *userdata)
 {
+    const char *node_id = (const char *) userdata;
     int rc = -1;
     int status = -1;
     int target_rc = -1;
@@ -1713,13 +1714,8 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     xmlNode * rsc_op = xml;
 
     if(strcmp((const char*)xml->name, XML_LRM_TAG_RSC_OP) != 0) {
-        xmlNode *cIter;
-
-        for(cIter = xml->children; cIter; cIter = cIter->next) {
-            handle_rsc_op(cIter, node_id);
-        }
-
-        return;
+        pcmk__xe_foreach_child(xml, NULL, handle_rsc_op, (void *) node_id);
+        return pcmk_rc_ok;
     }
 
     id = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
@@ -1731,13 +1727,13 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
-        return;
+        return pcmk_rc_ok;
     }
 
     if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
                                  &target_rc)) {
         crm_err("Invalid event %s detected for %s", magic, id);
-        return;
+        return pcmk_rc_ok;
     }
 
     if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
@@ -1788,9 +1784,11 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     if (notify && options.external_agent) {
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
+
   bail:
     free(rsc);
     free(task);
+    return pcmk_rc_ok;
 }
 
 /* This function is just a wrapper around mainloop_set_trigger so that it can be
@@ -1802,6 +1800,19 @@ mon_trigger_refresh(gpointer user_data)
 {
     mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     return FALSE;
+}
+
+static int
+handle_op_for_node(xmlNode *xml, void *userdata)
+{
+    const char *node = crm_element_value(xml, XML_ATTR_UNAME);
+
+    if (node == NULL) {
+        node = ID(xml);
+    }
+
+    handle_rsc_op(xml, (void *) node);
+    return pcmk_rc_ok;
 }
 
 static void
@@ -1850,42 +1861,22 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
 
         } else if(strcmp(name, XML_TAG_CIB) == 0) {
-            xmlNode *state = NULL;
-            xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
-
-            for (state = pcmk__xe_first_child(status); state != NULL;
-                 state = pcmk__xe_next(state)) {
-
-                node = crm_element_value(state, XML_ATTR_UNAME);
-                if (node == NULL) {
-                    node = ID(state);
-                }
-                handle_rsc_op(state, node);
-            }
+            pcmk__xe_foreach_child(first_named_child(match, XML_CIB_TAG_STATUS),
+                                   NULL, handle_op_for_node, NULL);
 
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
-            xmlNode *state = NULL;
-
-            for (state = pcmk__xe_first_child(match); state != NULL;
-                 state = pcmk__xe_next(state)) {
-
-                node = crm_element_value(state, XML_ATTR_UNAME);
-                if (node == NULL) {
-                    node = ID(state);
-                }
-                handle_rsc_op(state, node);
-            }
+            pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
         } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
             node = crm_element_value(match, XML_ATTR_UNAME);
             if (node == NULL) {
                 node = ID(match);
             }
-            handle_rsc_op(match, node);
+            handle_rsc_op(match, (void *) node);
 
         } else if(strcmp(name, XML_CIB_TAG_LRM) == 0) {
             node = ID(match);
-            handle_rsc_op(match, node);
+            handle_rsc_op(match, (void *) node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
             char *local_node = pcmk__xpath_node_id(xpath, "lrm");
