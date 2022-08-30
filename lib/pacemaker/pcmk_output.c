@@ -1871,22 +1871,23 @@ rule_check_default(pcmk__output_t *out, va_list args)
     const char *rule_id = va_arg(args, const char *);
     int result = va_arg(args, int);
 
-    if (result == pcmk_rc_within_range) {
-        out->info(out, "Rule %s is still in effect", rule_id);
-    } else if (result == pcmk_rc_ok) {
-        out->info(out, "Rule %s satisfies conditions", rule_id);
-    } else if (result == pcmk_rc_after_range) {
-        out->info(out, "Rule %s is expired", rule_id);
-    } else if (result == pcmk_rc_before_range) {
-        out->info(out, "Rule %s has not yet taken effect", rule_id);
-    } else if (result == pcmk_rc_op_unsatisfied) {
-        out->info(out, "Rule %s does not satisfy conditions", rule_id);
-    } else {
-        out->info(out, "Could not determine whether rule %s is expired",
-                  rule_id);
+    switch (result) {
+        case pcmk_rc_within_range:
+            return out->info(out, "Rule %s is still in effect", rule_id);
+        case pcmk_rc_ok:
+            return out->info(out, "Rule %s satisfies conditions", rule_id);
+        case pcmk_rc_after_range:
+            return out->info(out, "Rule %s is expired", rule_id);
+        case pcmk_rc_before_range:
+            return out->info(out, "Rule %s has not yet taken effect", rule_id);
+        case pcmk_rc_op_unsatisfied:
+            return out->info(out, "Rule %s does not satisfy conditions",
+                             rule_id);
+        default:
+            return out->info(out,
+                             "Could not determine whether rule %s is expired",
+                             rule_id);
     }
-
-    return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("rule-check", "const char *", "int")
