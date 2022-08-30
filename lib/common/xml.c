@@ -3009,6 +3009,29 @@ pcmk__xe_set_props(xmlNodePtr node, ...)
     va_end(pairs);
 }
 
+int
+pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
+                       int (*handler)(xmlNode *xml, void *userdata),
+                       void *userdata)
+{
+    xmlNode *children = (xml? xml->children : NULL);
+
+    CRM_ASSERT(handler != NULL);
+
+    for (xmlNode *node = children; node != NULL; node = node->next) {
+        if (node->type == XML_ELEMENT_NODE &&
+            pcmk__str_eq(child_element_name, (const char *) node->name, pcmk__str_null_matches)) {
+            int rc = handler(node, userdata);
+
+            if (rc != pcmk_rc_ok) {
+                return rc;
+            }
+        }
+    }
+
+    return pcmk_rc_ok;
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 

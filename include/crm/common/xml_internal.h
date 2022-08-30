@@ -336,4 +336,29 @@ enum xml_private_flags {
 
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
+/*!
+ * \internal
+ * \brief Iterate over child elements of \p xml
+ *
+ * This function iterates over the children of \p xml, performing the
+ * callback function \p handler on each node.  If the callback returns
+ * a value other than pcmk_rc_ok, the iteration stops and the value is
+ * returned.  It is therefore possible that not all children will be
+ * visited.
+ *
+ * \param[in,out] xml                 The starting XML node.  Can be NULL.
+ * \param[in]     child_element_name  The name that the node must match in order
+ *                                    for \p handler to be run.  If NULL, all
+ *                                    child elements will match.
+ * \param[in]     handler             The callback function.
+ * \param[in,out] userdata            User data to pass to the callback function.
+ *                                    Can be NULL.
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
+                       int (*handler)(xmlNode *xml, void *userdata),
+                       void *userdata);
+
 #endif // PCMK__XML_INTERNAL__H
