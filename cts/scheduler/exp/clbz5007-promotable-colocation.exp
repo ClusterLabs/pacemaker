@@ -1,21 +1,21 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="34" operation="start" operation_key="SLAVE_IP_start_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
-        <primitive id="SLAVE_IP" class="ocf" provider="pacemaker" type="Dummy"/>
+      <rsc_op id="34" operation="start" operation_key="UNPROMOTED_IP_start_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
+        <primitive id="UNPROMOTED_IP" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_on_node="fc16-builder2" CRM_meta_on_node_uuid="fc16-builder2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="33" operation="stop" operation_key="SLAVE_IP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
+        <rsc_op id="33" operation="stop" operation_key="UNPROMOTED_IP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="33" operation="stop" operation_key="SLAVE_IP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="SLAVE_IP" class="ocf" provider="pacemaker" type="Dummy"/>
+      <rsc_op id="33" operation="stop" operation_key="UNPROMOTED_IP_stop_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
+        <primitive id="UNPROMOTED_IP" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
@@ -23,21 +23,21 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="36" operation="start" operation_key="MASTER_IP_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
-        <primitive id="MASTER_IP" class="ocf" provider="pacemaker" type="Dummy"/>
+      <rsc_op id="36" operation="start" operation_key="PROMOTED_IP_start_0" on_node="fc16-builder" on_node_uuid="fc16-builder">
+        <primitive id="PROMOTED_IP" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_on_node="fc16-builder" CRM_meta_on_node_uuid="fc16-builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="35" operation="stop" operation_key="MASTER_IP_stop_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2"/>
+        <rsc_op id="35" operation="stop" operation_key="PROMOTED_IP_stop_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="35" operation="stop" operation_key="MASTER_IP_stop_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
-        <primitive id="MASTER_IP" class="ocf" provider="pacemaker" type="Dummy"/>
+      <rsc_op id="35" operation="stop" operation_key="PROMOTED_IP_stop_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
+        <primitive id="PROMOTED_IP" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_on_node="fc16-builder2" CRM_meta_on_node_uuid="fc16-builder2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>

@@ -61,7 +61,7 @@
           <nvpair id="nvpair.id22243" name="promoted-node-max" value="1"/>
         </meta_attributes>
         <group id="grp_ms_sf">
-          <primitive id="master_slave_Stateful" class="ocf" type="Stateful" provider="heartbeat">
+          <primitive id="promotable_Stateful" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
               <op name="monitor" interval="6s" id="ms-sf_monitor_promoted" timeout="30s" role="Promoted"/>
@@ -100,13 +100,13 @@
     <node_state id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" crmd="online" shutdown="0" in_ccm="true" ha="active" join="member" expected="member">
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22436">
-          <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="5:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;5:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="master_slave_Stateful-1_start_0" operation="start" transition-key="17:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;17:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="master_slave_Stateful-1_monitor_5000" operation="monitor" transition-key="18:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;18:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          <lrm_resource id="promotable_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="promotable_Stateful-1_monitor_0" operation="monitor" transition-key="5:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;5:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="promotable_Stateful-1_start_0" operation="start" transition-key="17:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;17:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="promotable_Stateful-1_monitor_5000" operation="monitor" transition-key="18:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;18:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="7" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
           </lrm_resource>
-          <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="4:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;4:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          <lrm_resource id="promotable_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="promotable_Stateful-0_monitor_0" operation="monitor" transition-key="4:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;4:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
           <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="3:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;3:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
@@ -124,13 +124,13 @@
     <node_state id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member">
       <lrm id="lrm.auto-2">
         <lrm_resources id="lrm_resources.id22709">
-          <lrm_resource id="master_slave_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="master_slave_Stateful-0_monitor_0" operation="monitor" transition-key="8:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;8:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="master_slave_Stateful-0_start_0" operation="start" transition-key="11:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;11:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="master_slave_Stateful-0_monitor_5000" operation="monitor" transition-key="15:2:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;15:2:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          <lrm_resource id="promotable_Stateful:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="promotable_Stateful-0_monitor_0" operation="monitor" transition-key="8:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;8:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="promotable_Stateful-0_start_0" operation="start" transition-key="11:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;11:1:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="5" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="promotable_Stateful-0_monitor_5000" operation="monitor" transition-key="15:2:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:0;15:2:0:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="6" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
           </lrm_resource>
-          <lrm_resource id="master_slave_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="master_slave_Stateful-1_monitor_0" operation="monitor" transition-key="9:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;9:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          <lrm_resource id="promotable_Stateful:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="promotable_Stateful-1_monitor_0" operation="monitor" transition-key="9:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;9:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
           <lrm_resource id="resource_1" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="resource_1_monitor_0" operation="monitor" transition-key="7:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" transition-magic="0:7;7:0:7:f8daff63-8d0f-4e18-a9b3-6ccd910175bd" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="cf453c0695bcf0a97aa217bbc913b737"/>
