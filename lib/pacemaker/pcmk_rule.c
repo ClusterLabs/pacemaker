@@ -155,7 +155,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id)
     } else if (num_results > 1) {
         // Should not be possible; schema prevents this
         out->err(out, "More than one rule with ID=%s found", rule_id);
-        return ENXIO;
+        return pcmk_rc_duplicate_id;
     }
 
     /* Next, make sure it has exactly one date_expression. */
