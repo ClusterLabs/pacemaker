@@ -111,6 +111,8 @@ init_rule_check(pcmk__output_t *out, xmlNodePtr input, crm_time_t *date,
     return pcmk_rc_ok;
 }
 
+#define XPATH_NODE_RULE "//" XML_TAG_RULE "[@" XML_ATTR_ID "='%s']"
+
 /*!
  * \internal
  * \brief Check whether a given rule is in effect
@@ -148,7 +150,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
      * We do this in steps to provide better error messages. First, check that
      * there's any rule with the given ID.
      */
-    xpath = crm_strdup_printf("//rule[@id='%s']", rule_id);
+    xpath = crm_strdup_printf(XPATH_NODE_RULE, rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
 
@@ -165,7 +167,7 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
     }
 
     /* Next, make sure it has exactly one date_expression. */
-    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression", rule_id);
+    xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression", rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
 
@@ -179,8 +181,9 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
     }
 
     /* Then, check that it's something we actually support. */
-    xpath = crm_strdup_printf("//rule[@id='%s']//date_expression["
-                              "@operation!='date_spec']", rule_id);
+    xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
+                              "@" XML_EXPR_ATTR_OPERATION "!='date_spec']",
+                              rule_id);
     xpath_obj = xpath_search(cib_constraints, xpath);
     num_results = numXpathResults(xpath_obj);
 
@@ -189,8 +192,8 @@ eval_rule(pcmk__output_t *out, pe_working_set_t *data_set, const char *rule_id,
     if (num_results == 0) {
         freeXpathObject(xpath_obj);
 
-        xpath = crm_strdup_printf("//rule[@id='%s']//date_expression["
-                                  "@operation='date_spec' "
+        xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression["
+                                  "@" XML_EXPR_ATTR_OPERATION "='date_spec' "
                                   "and date_spec/@years "
                                   "and not(date_spec/@moon)]", rule_id);
         xpath_obj = xpath_search(cib_constraints, xpath);
