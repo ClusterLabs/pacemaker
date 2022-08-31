@@ -70,24 +70,6 @@ event2status(struct sl_event * event)
     return status;
 }
 
-static int
-send_attrd_update(const char *attr_node, const char *attr_name,
-                  const char *attr_value, const char *attr_set,
-                  const char *attr_dampen, uint32_t attr_options)
-{
-    int rc = pcmk_rc_ok;
-
-    rc = pcmk__attrd_api_update(NULL, attr_node, attr_name, attr_value, NULL,
-                                NULL, NULL, attr_options | pcmk__node_attr_pattern);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not update %s=%s: %s (%d)",
-                attr_name, attr_value, pcmk_rc_str(rc), rc);
-    }
-
-    return rc;
-}
-
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
     {
@@ -199,10 +181,18 @@ main(int argc, char *argv[])
             int attrd_rc;
 
             // @TODO pass pcmk__node_attr_remote when appropriate
-            attrd_rc = send_attrd_update(NULL, health_component, health_status,
-                                         NULL, NULL, pcmk__node_attr_none);
-            crm_debug("Updating attribute ('%s', '%s') = %d",
-                      health_component, health_status, attrd_rc);
+            attrd_rc = pcmk__attrd_api_update(NULL, NULL, health_component,
+                                              health_status, NULL, NULL, NULL,
+                                              pcmk__node_attr_pattern);
+            if (attrd_rc == pcmk_rc_ok) {
+                crm_debug("Updating attribute %s=%s: %d",
+                          health_component, health_status, attrd_rc);
+            } else {
+                crm_err("Could not update %s=%s: %s (%d)",
+                        health_component, health_status, pcmk_rc_str(attrd_rc),
+                        attrd_rc);
+            }
+
         } else {
             crm_err("Error: status2char failed, status = %d", status);
             rc = 1;
