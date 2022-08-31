@@ -117,11 +117,12 @@ pcmk__client_cleanup(void)
     if (client_connections != NULL) {
         int active = g_hash_table_size(client_connections);
 
-        if (active) {
-            crm_err("Exiting with %d active IPC client%s",
-                    active, pcmk__plural_s(active));
+        if (active > 0) {
+            crm_warn("Exiting with %d active IPC client%s",
+                     active, pcmk__plural_s(active));
         }
-        g_hash_table_destroy(client_connections); client_connections = NULL;
+        g_hash_table_destroy(client_connections);
+        client_connections = NULL;
     }
 }
 
