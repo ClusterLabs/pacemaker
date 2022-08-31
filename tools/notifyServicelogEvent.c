@@ -104,6 +104,9 @@ main(int argc, char *argv[])
     struct sl_event *event = NULL;
     uint64_t event_id = 0;
 
+    const char *health_component = "#health-ipmi";
+    const char *health_status = NULL;
+
     pcmk__cli_init_logging("notifyServicelogEvent", 0);
     pcmk__set_cli_options(NULL, "<event_id>", long_options,
                           "handle events written to servicelog database");
@@ -140,77 +143,57 @@ main(int argc, char *argv[])
 
     if (sscanf(argv[optind], "%" U64TS, &event_id) != 1) {
         crm_err("Error: could not read event_id from args!");
-
         rc = 1;
         goto done;
     }
 
     if (event_id == 0) {
         crm_err("Error: event_id is 0!");
-
         rc = 1;
         goto done;
     }
 
     rc = servicelog_open(&slog, 0);     /* flags is one of SL_FLAG_xxx */
-
-    if (!slog) {
-        crm_err("Error: servicelog_open failed, rc = %d", rc);
-
+    if (rc != 0) {
+        crm_err("Error: Failed to open the servicelog, rc = %d", rc);
         rc = 1;
         goto done;
     }
 
-    if (slog) {
-        rc = servicelog_event_get(slog, event_id, &event);
+    rc = servicelog_event_get(slog, event_id, &event);
+    if (rc != 0) {
+        crm_err("Error: Failed to get event from the servicelog, rc = %d", rc);
+        rc = 1;
+        goto done;
     }
 
-    if (rc == 0) {
-        STATUS status = STATUS_GREEN;
-        const char *health_component = "#health-ipmi";
-        const char *health_status = NULL;
+    crm_debug("Event id = %" U64T ", Log timestamp = %s, Event timestamp = %s",
+              event_id, ctime(&(event->time_logged)),
+              ctime(&(event->time_event)));
 
-        crm_debug("Event id = %" U64T ", Log timestamp = %s, Event timestamp = %s",
-                  event_id, ctime(&(event->time_logged)), ctime(&(event->time_event)));
+    health_status = status2char(event2status(event));
 
-        status = event2status(event);
-
-        health_status = status2char(status);
-
-        if (health_status) {
-            int attrd_rc;
-
-            // @TODO pass pcmk__node_attr_remote when appropriate
-            attrd_rc = pcmk__attrd_api_update(NULL, NULL, health_component,
-                                              health_status, NULL, NULL, NULL,
-                                              pcmk__node_attr_pattern);
-            if (attrd_rc == pcmk_rc_ok) {
-                crm_debug("Updating attribute %s=%s: %d",
-                          health_component, health_status, attrd_rc);
-            } else {
-                crm_err("Could not update %s=%s: %s (%d)",
-                        health_component, health_status, pcmk_rc_str(attrd_rc),
-                        attrd_rc);
-            }
-
-        } else {
-            crm_err("Error: status2char failed, status = %d", status);
-            rc = 1;
-        }
+    // @TODO pass pcmk__node_attr_remote when appropriate
+    rc = pcmk__attrd_api_update(NULL, NULL, health_component, health_status,
+                                NULL, NULL, NULL, pcmk__node_attr_pattern);
+    if (rc == pcmk_rc_ok) {
+        crm_debug("Updating attribute %s=%s: %d",
+                  health_component, health_status, rc);
     } else {
-        crm_err("Error: servicelog_event_get failed, rc = %d", rc);
+        crm_err("Could not update %s=%s: %s (%d)",
+                health_component, health_status, pcmk_rc_str(rc), rc);
+        rc = 1;
     }
 
   done:
-    if (event) {
+    if (event != NULL) {
         servicelog_event_free(event);
     }
 
-    if (slog) {
+    if (slog != NULL) {
         servicelog_close(slog);
     }
 
     closelog();
-
     return rc;
 }
