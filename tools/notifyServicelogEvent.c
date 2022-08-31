@@ -174,7 +174,7 @@ main(int argc, char *argv[])
 
     // @TODO pass pcmk__node_attr_remote when appropriate
     rc = pcmk__attrd_api_update(NULL, NULL, health_component, health_status,
-                                NULL, NULL, NULL, pcmk__node_attr_pattern);
+                                NULL, NULL, NULL, pcmk__node_attr_value);
     if (rc == pcmk_rc_ok) {
         crm_debug("Updating attribute %s=%s: %d",
                   health_component, health_status, rc);
