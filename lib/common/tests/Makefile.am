@@ -25,4 +25,5 @@ SUBDIRS = \
 	scores		\
 	strings		\
 	utils		\
+	xml 		\
 	xpath

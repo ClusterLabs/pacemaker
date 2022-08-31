@@ -405,6 +405,35 @@ send_attrd_update(char command, const char *attr_node, const char *attr_name,
     return rc;
 }
 
+struct delete_data_s {
+    pcmk__output_t *out;
+    cib_t *cib;
+};
+
+static int
+delete_attr_on_node(xmlNode *child, void *userdata)
+{
+    struct delete_data_s *dd = (struct delete_data_s *) userdata;
+
+    const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+    int rc = pcmk_rc_ok;
+
+    if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
+        return pcmk_rc_ok;
+    }
+
+    rc = cib__delete_node_attr(dd->out, dd->cib, cib_opts, options.type,
+                               options.dest_node, options.set_type,
+                               options.set_name, options.attr_id,
+                               attr_name, options.attr_value, NULL);
+
+    if (rc == ENXIO) {
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
 static int
 command_delete(pcmk__output_t *out, cib_t *cib)
 {
@@ -415,27 +444,20 @@ command_delete(pcmk__output_t *out, cib_t *cib)
 
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
+        struct delete_data_s dd = { out, cib };
+
         rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
                                  options.set_type, options.set_name, NULL, NULL,
                                  NULL, &result);
 
-        for (xmlNode *child = pcmk__xe_first_child(result); child != NULL;
-             child = pcmk__xe_next(child)) {
-            const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+        if (rc != pcmk_rc_ok) {
+            goto done_deleting;
+        }
 
-            if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
-                continue;
-            }
+        rc = pcmk__xe_foreach_child(result, NULL, delete_attr_on_node, &dd);
 
-            rc = cib__delete_node_attr(out, cib, cib_opts, options.type,
-                                       options.dest_node, options.set_type,
-                                       options.set_name, options.attr_id,
-                                       attr_name, options.attr_value,
-                                       NULL);
-
-            if (rc != ENXIO && rc != pcmk_rc_ok) {
-                goto done_deleting;
-            }
+        if (rc != pcmk_rc_ok) {
+            goto done_deleting;
         }
 
     } else {
@@ -458,6 +480,30 @@ done_deleting:
     return rc;
 }
 
+struct update_data_s {
+    pcmk__output_t *out;
+    cib_t *cib;
+    int is_remote_node;
+};
+
+static int
+update_attr_on_node(xmlNode *child, void *userdata)
+{
+    struct update_data_s *ud = (struct update_data_s *) userdata;
+
+    const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+
+    if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
+        return pcmk_rc_ok;
+    }
+
+    return cib__update_node_attr(ud->out, ud->cib, cib_opts, options.type,
+                                 options.dest_node, options.set_type,
+                                 options.set_name, options.attr_id,
+                                 attr_name, options.attr_value, NULL,
+                                 ud->is_remote_node ? "remote" : NULL);
+}
+
 static int
 command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
 {
@@ -472,27 +518,20 @@ command_update(pcmk__output_t *out, cib_t *cib, int is_remote_node)
 
     /* See the comment in command_query regarding xpath and regular expressions. */
     if (use_pattern) {
+        struct update_data_s ud = { out, cib, is_remote_node };
+
         rc = cib__get_node_attrs(out, cib, options.type, options.dest_node,
                                  options.set_type, options.set_name, NULL, NULL,
                                  NULL, &result);
 
-        for (xmlNode *child = pcmk__xe_first_child(result); child != NULL;
-             child = pcmk__xe_next(child)) {
-            const char *attr_name = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
+        if (rc != pcmk_rc_ok) {
+            goto done_updating;
+        }
 
-            if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
-                continue;
-            }
+        rc = pcmk__xe_foreach_child(result, NULL, update_attr_on_node, &ud);
 
-            rc = cib__update_node_attr(out, cib, cib_opts, options.type,
-                                       options.dest_node, options.set_type,
-                                       options.set_name, options.attr_id,
-                                       attr_name, options.attr_value,
-                                       NULL, is_remote_node ? "remote" : NULL);
-
-            if (rc != pcmk_rc_ok) {
-                goto done_updating;
-            }
+        if (rc != pcmk_rc_ok) {
+            goto done_updating;
         }
 
     } else {
@@ -508,22 +547,32 @@ done_updating:
     return rc;
 }
 
-static bool
-output_one_attribute(pcmk__output_t *out, xmlNode *node, bool use_pattern)
+struct output_data_s {
+    pcmk__output_t *out;
+    bool use_pattern;
+    bool did_output;
+};
+
+static int
+output_one_attribute(xmlNode *node, void *userdata)
 {
+    struct output_data_s *od = (struct output_data_s *) userdata;
+
     const char *name = crm_element_value(node, XML_NVPAIR_ATTR_NAME);
     const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
     const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
 
-    if (use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
-        return false;
+    if (od->use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
+        return pcmk_rc_ok;
     }
 
-    out->message(out, "attribute", options.type, options.attr_id, name, value, host);
+    od->out->message(od->out, "attribute", options.type, options.attr_id, name, value, host);
+    od->did_output = true;
     crm_info("Read %s='%s' %s%s",
              pcmk__s(name, "<null>"), pcmk__s(value, ""),
              options.set_name ? "in " : "", options.set_name ? options.set_name : "");
-    return true;
+
+    return pcmk_rc_ok;
 }
 
 static int
@@ -558,22 +607,17 @@ command_query(pcmk__output_t *out, cib_t *cib)
         // Don't do anything.
 
     } else if (xml_has_children(result)) {
-        xmlNode *child = NULL;
-        bool did_output = false;
+        struct output_data_s od = { out, use_pattern, false };
 
-        for (child = pcmk__xe_first_child(result); child != NULL;
-             child = pcmk__xe_next(child)) {
-            if (output_one_attribute(out, child, use_pattern)) {
-                did_output = true;
-            }
-        }
+        pcmk__xe_foreach_child(result, NULL, output_one_attribute, &od);
 
-        if (!did_output) {
+        if (!od.did_output) {
             rc = ENXIO;
         }
 
     } else {
-        output_one_attribute(out, result, use_pattern);
+        struct output_data_s od = { out, use_pattern, false };
+        output_one_attribute(result, &od);
     }
 
     free_xml(result);
