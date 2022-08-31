@@ -589,10 +589,10 @@ pcmk__create_recurring_actions(pe_resource_t *rsc)
  * \internal
  * \brief Create an executor cancel action
  *
- * \param[in] rsc          Resource of action to cancel
- * \param[in] task         Name of action to cancel
- * \param[in] interval_ms  Interval of action to cancel
- * \param[in] node         Node of action to cancel
+ * \param[in,out] rsc          Resource of action to cancel
+ * \param[in]     task         Name of action to cancel
+ * \param[in]     interval_ms  Interval of action to cancel
+ * \param[in]     node         Node of action to cancel
  *
  * \return Created op
  */
@@ -627,16 +627,17 @@ pcmk__new_cancel_action(pe_resource_t *rsc, const char *task, guint interval_ms,
  * \internal
  * \brief Schedule cancellation of a recurring action
  *
- * \param[in] rsc          Resource that action is for
- * \param[in] call_id      Action's call ID from history
- * \param[in] task         Action name
- * \param[in] interval_ms  Action interval
- * \param[in] node         Node that history entry is for
- * \param[in] reason       Short description of why action is being cancelled
+ * \param[in,out] rsc          Resource that action is for
+ * \param[in]     call_id      Action's call ID from history
+ * \param[in]     task         Action name
+ * \param[in]     interval_ms  Action interval
+ * \param[in]     node         Node that history entry is for
+ * \param[in]     reason       Short description of why action is being cancelled
  */
 void
 pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
-                      guint interval_ms, pe_node_t *node, const char *reason)
+                      guint interval_ms, const pe_node_t *node,
+                      const char *reason)
 {
     pe_action_t *cancel = NULL;
 
@@ -659,10 +660,10 @@ pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
  * \internal
  * \brief Reschedule a recurring action
  *
- * \param[in] rsc          Resource that action is for
- * \param[in] task         Name of action being rescheduled
- * \param[in] interval_ms  Action interval (in milliseconds)
- * \param[in] node         Node where action should be rescheduled
+ * \param[in,out] rsc          Resource that action is for
+ * \param[in]     task         Name of action being rescheduled
+ * \param[in]     interval_ms  Action interval (in milliseconds)
+ * \param[in]     node         Node where action should be rescheduled
  */
 void
 pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
