@@ -34,10 +34,7 @@
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
-const char *status2char(STATUS status);
-STATUS event2status(struct sl_event *event);
-
-const char *
+static const char *
 status2char(STATUS status)
 {
     switch (status) {
@@ -51,7 +48,7 @@ status2char(STATUS status)
     }
 }
 
-STATUS
+static STATUS
 event2status(struct sl_event * event)
 {
     crm_debug("Severity = %d, Disposition = %d", event->severity, event->disposition);
