@@ -37,13 +37,18 @@ typedef struct pcmk__deleted_xml_s {
         int position;
 } pcmk__deleted_xml_t;
 
-typedef struct xml_private_s {
+typedef struct xml_node_private_s {
+        long check;
+        uint32_t flags;
+} xml_node_private_t;
+
+typedef struct xml_doc_private_s {
         long check;
         uint32_t flags;
         char *user;
         GList *acls;
         GList *deleted_objs; // List of pcmk__deleted_xml_t
-} xml_private_t;
+} xml_doc_private_t;
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \

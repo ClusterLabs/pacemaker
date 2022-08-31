@@ -33,25 +33,25 @@ is_xml_acl_enabled_without_node(void **state)
 static void
 is_xml_acl_enabled_with_node(void **state)
 {
-    xml_private_t *p;
+    xml_doc_private_t *docpriv;
     
     xmlNode *test_xml = create_xml_node(NULL, "test_xml");
 
     // allocate memory for _private, which is NULL by default
-    test_xml->doc->_private = calloc(1, sizeof(xml_private_t));
+    test_xml->doc->_private = calloc(1, sizeof(xml_doc_private_t));
 
     assert_false(xml_acl_enabled(test_xml));
 
-    // cast _private from void* to xml_private_t*
-    p = test_xml->doc->_private;
+    // cast _private from void* to xml_doc_private_t*
+    docpriv = test_xml->doc->_private;
 
     // enable an irrelevant flag
-    p->flags |= pcmk__xf_acl_denied;
+    docpriv->flags |= pcmk__xf_acl_denied;
 
     assert_false(xml_acl_enabled(test_xml));
 
     // enable pcmk__xf_acl_enabled
-    p->flags |= pcmk__xf_acl_enabled;
+    docpriv->flags |= pcmk__xf_acl_enabled;
 
     assert_true(xml_acl_enabled(test_xml));
 }

@@ -224,16 +224,17 @@ void
 pcmk__apply_acl(xmlNode *xml)
 {
     GList *aIter = NULL;
-    xml_private_t *p = xml->doc->_private;
+    xml_doc_private_t *docpriv = xml->doc->_private;
+    xml_node_private_t *nodepriv;
     xmlXPathObjectPtr xpathObj = NULL;
 
     if (!xml_acl_enabled(xml)) {
         crm_trace("Skipping ACLs for user '%s' because not enabled for this XML",
-                  p->user);
+                  docpriv->user);
         return;
     }
 
-    for (aIter = p->acls; aIter != NULL; aIter = aIter->next) {
+    for (aIter = docpriv->acls; aIter != NULL; aIter = aIter->next) {
         int max = 0, lpc = 0;
         xml_acl_t *acl = aIter->data;
 
@@ -244,8 +245,8 @@ pcmk__apply_acl(xmlNode *xml)
             static struct qb_log_callsite *trace_cs = NULL;
             xmlNode *match = getXpathResult(xpathObj, lpc);
 
-            p = match->_private;
-            pcmk__set_xml_flags(p, acl->mode);
+            nodepriv = match->_private;
+            pcmk__set_xml_flags(nodepriv, acl->mode);
 
             /* Build a GString only if tracing is enabled.
              * Can't use pcmk__log_else() because the else_action would be
@@ -286,23 +287,23 @@ pcmk__apply_acl(xmlNode *xml)
 void
 pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 {
-    xml_private_t *p = NULL;
+    xml_doc_private_t *docpriv = NULL;
 
     if ((target == NULL) || (target->doc == NULL)
         || (target->doc->_private == NULL)) {
         return;
     }
 
-    p = target->doc->_private;
+    docpriv = target->doc->_private;
     if (!pcmk_acl_required(user)) {
         crm_trace("Not unpacking ACLs because not required for user '%s'",
                   user);
 
-    } else if (p->acls == NULL) {
+    } else if (docpriv->acls == NULL) {
         xmlNode *acls = get_xpath_object("//" XML_CIB_TAG_ACLS,
                                          source, LOG_NEVER);
 
-        pcmk__str_update(&p->user, user);
+        pcmk__str_update(&docpriv->user, user);
 
         if (acls) {
             xmlNode *child = NULL;
@@ -321,7 +322,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
                     if (id && strcmp(id, user) == 0) {
                         crm_debug("Unpacking ACLs for user '%s'", id);
-                        p->acls = parse_acl_entry(acls, child, p->acls);
+                        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
                 } else if (!strcmp(tag, XML_ACL_TAG_GROUP)) {
                     const char *id = crm_element_value(child, XML_ATTR_NAME);
@@ -332,7 +333,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
                     if (id && pcmk__is_user_in_group(user,id)) {
                         crm_debug("Unpacking ACLs for group '%s'", id);
-                        p->acls = parse_acl_entry(acls, child, p->acls);
+                        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
                 }
             }
@@ -393,9 +394,9 @@ purge_xml_attributes(xmlNode *xml)
     xmlNode *child = NULL;
     xmlAttr *xIter = NULL;
     bool readable_children = false;
-    xml_private_t *p = xml->_private;
+    xml_node_private_t *nodepriv = xml->_private;
 
-    if (test_acl_mode(p->flags, pcmk__xf_acl_read)) {
+    if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
         crm_trace("%s[@id=%s] is readable", crm_element_name(xml), ID(xml));
         return true;
     }
@@ -444,7 +445,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 {
     GList *aIter = NULL;
     xmlNode *target = NULL;
-    xml_private_t *doc = NULL;
+    xml_doc_private_t *docpriv = NULL;
 
     *result = NULL;
     if ((xml == NULL) || !pcmk_acl_required(user)) {
@@ -461,8 +462,8 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     pcmk__enable_acl(acl_source, target, user);
 
-    doc = target->doc->_private;
-    for(aIter = doc->acls; aIter != NULL && target; aIter = aIter->next) {
+    docpriv = target->doc->_private;
+    for(aIter = docpriv->acls; aIter != NULL && target; aIter = aIter->next) {
         int max = 0;
         xml_acl_t *acl = aIter->data;
 
@@ -496,9 +497,9 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    if (doc->acls) {
-        g_list_free_full(doc->acls, free_acl);
-        doc->acls = NULL;
+    if (docpriv->acls) {
+        g_list_free_full(docpriv->acls, free_acl);
+        docpriv->acls = NULL;
 
     } else {
         crm_trace("User '%s' without ACLs denied access to entire XML document",
@@ -569,9 +570,9 @@ implicitly_allowed(xmlNode *xml)
 void
 pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
-    xml_private_t *p = xml->_private;
+    xml_node_private_t *nodepriv = xml->_private;
 
-    if (pcmk_is_set(p->flags, pcmk__xf_created)) {
+    if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
         if (implicitly_allowed(xml)) {
             crm_trace("Creation of <%s> scaffolding with id=\"%s\""
                       " is implicitly allowed",
@@ -612,9 +613,9 @@ bool
 xml_acl_denied(xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
-        xml_private_t *p = xml->doc->_private;
+        xml_doc_private_t *docpriv = xml->doc->_private;
 
-        return pcmk_is_set(p->flags, pcmk__xf_acl_denied);
+        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_denied);
     }
     return false;
 }
@@ -623,12 +624,12 @@ void
 xml_acl_disable(xmlNode *xml)
 {
     if (xml_acl_enabled(xml)) {
-        xml_private_t *p = xml->doc->_private;
+        xml_doc_private_t *docpriv = xml->doc->_private;
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acl(xml);
         pcmk__apply_creation_acl(xml, false);
-        pcmk__clear_xml_flags(p, pcmk__xf_acl_enabled);
+        pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
 }
 
@@ -643,9 +644,9 @@ bool
 xml_acl_enabled(xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
-        xml_private_t *p = xml->doc->_private;
+        xml_doc_private_t *docpriv = xml->doc->_private;
 
-        return pcmk_is_set(p->flags, pcmk__xf_acl_enabled);
+        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_enabled);
     }
     return false;
 }
@@ -659,10 +660,10 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 
     if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
         xmlNode *parent = xml;
-        xml_private_t *docp = xml->doc->_private;
+        xml_doc_private_t *docpriv = xml->doc->_private;
         GString *xpath = NULL;
 
-        if (docp->acls == NULL) {
+        if (docpriv->acls == NULL) {
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
             pcmk__log_else(LOG_TRACE, return false);
@@ -674,7 +675,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             qb_log_from_external_source(__func__, __FILE__,
                                         "User '%s' without ACLs denied %s "
                                         "access to %s", LOG_TRACE, __LINE__, 0,
-                                        docp->user, acl_to_text(mode),
+                                        docpriv->user, acl_to_text(mode),
                                         (const char *) xpath->str);
             g_string_free(xpath, TRUE);
             return false;
@@ -694,11 +695,11 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         }
 
         while (parent && parent->_private) {
-            xml_private_t *p = parent->_private;
-            if (test_acl_mode(p->flags, mode)) {
+            xml_node_private_t *nodepriv = parent->_private;
+            if (test_acl_mode(nodepriv->flags, mode)) {
                 return true;
 
-            } else if (pcmk_is_set(p->flags, pcmk__xf_acl_deny)) {
+            } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
                 pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
 
                 pcmk__log_else(LOG_TRACE, return false);
@@ -711,7 +712,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                                             "%sACL denies user '%s' %s access "
                                             "to %s", LOG_TRACE, __LINE__, 0,
                                             (parent != xml)? "Parent ": "",
-                                            docp->user, acl_to_text(mode),
+                                            docpriv->user, acl_to_text(mode),
                                             (const char *) xpath->str);
                 g_string_free(xpath, TRUE);
                 return false;
@@ -730,7 +731,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         qb_log_from_external_source(__func__, __FILE__,
                                     "Default ACL denies user '%s' %s access to "
                                     "%s", LOG_TRACE, __LINE__, 0,
-                                    docp->user, acl_to_text(mode),
+                                    docpriv->user, acl_to_text(mode),
                                     (const char *) xpath->str);
         g_string_free(xpath, TRUE);
         return false;

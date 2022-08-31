@@ -87,11 +87,11 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
     xmlNode *change = NULL;
-    xml_private_t *p = xml->_private;
+    xml_node_private_t *nodepriv = xml->_private;
     const char *value = NULL;
 
     // If this XML node is new, just report that
-    if (patchset && pcmk_is_set(p->flags, pcmk__xf_created)) {
+    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
 
         if (xpath != NULL) {
@@ -114,8 +114,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
          pIter = pIter->next) {
         xmlNode *attr = NULL;
 
-        p = pIter->_private;
-        if (!pcmk_any_flags_set(p->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        nodepriv = pIter->_private;
+        if (!pcmk_any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
             continue;
         }
 
@@ -136,7 +136,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         attr = create_xml_node(change, XML_DIFF_ATTR);
 
         crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, (const char *)pIter->name);
-        if (p->flags & pcmk__xf_deleted) {
+        if (nodepriv->flags & pcmk__xf_deleted) {
             crm_xml_add(attr, XML_DIFF_OP, "unset");
 
         } else {
@@ -155,8 +155,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
-            p = pIter->_private;
-            if (!pcmk_is_set(p->flags, pcmk__xf_deleted)) {
+            nodepriv = pIter->_private;
+            if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 value = crm_element_value(xml, (const char *) pIter->name);
                 crm_xml_add(result, (const char *)pIter->name, value);
             }
@@ -169,8 +169,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         add_xml_changes_to_patchset(cIter, patchset);
     }
 
-    p = xml->_private;
-    if (patchset && pcmk_is_set(p->flags, pcmk__xf_moved)) {
+    nodepriv = xml->_private;
+    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
         GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
@@ -192,19 +192,20 @@ static bool
 is_config_change(xmlNode *xml)
 {
     GList *gIter = NULL;
-    xml_private_t *p = NULL;
+    xml_node_private_t *nodepriv = NULL;
+    xml_doc_private_t *docpriv;
     xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
 
     if (config) {
-        p = config->_private;
+        nodepriv = config->_private;
     }
-    if ((p != NULL) && pcmk_is_set(p->flags, pcmk__xf_dirty)) {
+    if ((nodepriv != NULL) && pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
         return TRUE;
     }
 
     if ((xml->doc != NULL) && (xml->doc->_private != NULL)) {
-        p = xml->doc->_private;
-        for (gIter = p->deleted_objs; gIter; gIter = gIter->next) {
+        docpriv = xml->doc->_private;
+        for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
             pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
             if (strstr(deleted_obj->path,
@@ -304,7 +305,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     GList *gIter = NULL;
-    xml_private_t *doc = NULL;
+    xml_doc_private_t *docpriv;
 
     xmlNode *v = NULL;
     xmlNode *version = NULL;
@@ -321,7 +322,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     }
 
     CRM_ASSERT(target->doc);
-    doc = target->doc->_private;
+    docpriv = target->doc->_private;
 
     patchset = create_xml_node(NULL, XML_TAG_DIFF);
     crm_xml_add_int(patchset, "format", 2);
@@ -348,7 +349,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         crm_xml_add(v, vfields[lpc], value);
     }
 
-    for (gIter = doc->deleted_objs; gIter; gIter = gIter->next) {
+    for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
         xmlNode *change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
@@ -1548,7 +1549,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
          xIter = xIter->next) {
         const char *prop_name = (const char *) xIter->name;
         xmlAttrPtr right_attr = NULL;
-        xml_private_t *p = NULL;
+        xml_node_private_t *nodepriv = NULL;
 
         if (strcmp(prop_name, XML_ATTR_ID) == 0) {
             // id already obtained when present ~ this case, so just reuse
@@ -1562,11 +1563,11 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
         right_attr = xmlHasProp(right, (pcmkXmlStr) prop_name);
         if (right_attr) {
-            p = right_attr->_private;
+            nodepriv = right_attr->_private;
         }
 
         right_val = crm_element_value(right, prop_name);
-        if ((right_val == NULL) || (p && pcmk_is_set(p->flags, pcmk__xf_deleted))) {
+        if ((right_val == NULL) || (nodepriv && pcmk_is_set(nodepriv->flags, pcmk__xf_deleted))) {
             /* new */
             *changed = TRUE;
             if (full) {
