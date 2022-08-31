@@ -32,19 +32,20 @@
 #include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
-typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
+typedef enum { STATUS_GREEN, STATUS_YELLOW, STATUS_RED } STATUS;
 
 static const char *
 status2char(STATUS status)
 {
     switch (status) {
-        default:
         case STATUS_GREEN:
             return "green";
         case STATUS_YELLOW:
             return "yellow";
         case STATUS_RED:
             return "red";
+        default:
+            return NULL;
     }
 }
 
