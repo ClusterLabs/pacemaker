@@ -54,20 +54,18 @@ status2char(STATUS status)
 STATUS
 event2status(struct sl_event * event)
 {
-    STATUS status = STATUS_GREEN;
-
     crm_debug("Severity = %d, Disposition = %d", event->severity, event->disposition);
 
     /* @TBD */
-    if (event->severity == SL_SEV_WARNING) {
-        status = STATUS_YELLOW;
-    }
-
     if (event->disposition == SL_DISP_UNRECOVERABLE) {
-        status = STATUS_RED;
+        return STATUS_RED;
     }
 
-    return status;
+    if (event->severity == SL_SEV_WARNING) {
+        return STATUS_YELLOW;
+    }
+
+    return STATUS_GREEN;
 }
 
 static pcmk__cli_option_t long_options[] = {
