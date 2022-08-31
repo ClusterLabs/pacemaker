@@ -20,7 +20,7 @@
 #include <servicelog.h>
 #include <syslog.h>
 #include <unistd.h>
-#include <inttypes.h>  /* U64T ~ PRIu64, U64TS ~ SCNu64 */
+#include <inttypes.h>  // PRIu64, SCNu64
 
 #ifndef PCMK__CONFIG_H
 #  define PCMK__CONFIG_H
@@ -144,7 +144,7 @@ main(int argc, char *argv[])
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);
 
-    if (sscanf(argv[optind], "%" U64TS, &event_id) != 1) {
+    if (sscanf(argv[optind], "%" SCNu64, &event_id) != 1) {
         crm_err("Error: could not read event_id from args!");
         exit_code = CRM_EX_DATAERR;
         goto done;
@@ -170,8 +170,8 @@ main(int argc, char *argv[])
         goto done;
     }
 
-    crm_debug("Event id = %" U64T ", Log timestamp = %s, Event timestamp = %s",
-              event_id, ctime(&(event->time_logged)),
+    crm_debug("Event id = %" PRIu64 ", Log timestamp = %s, "
+              "Event timestamp = %s", event_id, ctime(&(event->time_logged)),
               ctime(&(event->time_event)));
 
     health_status = status2char(event2status(event));
