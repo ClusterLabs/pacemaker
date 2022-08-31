@@ -282,6 +282,8 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
  * \internal
  * \brief Notify a proxy provider that we wish to shut down
  *
+ * \param[in,out] ipc_proxy  IPC client connection to proxy provider
+ *
  * \return 0 on success, -1 on error
  */
 int

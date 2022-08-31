@@ -149,7 +149,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
  * \internal
  * \brief Free a client connection, and exit if appropriate
  *
- * \param[in] client  Client connection to free
+ * \param[in,out] client  Client connection to free
  */
 void
 lrmd_client_destroy(pcmk__client_t *client)
