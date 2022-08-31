@@ -529,7 +529,7 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
  * \return List of sorted_set_t entries for nvpair blocks
  */
 static GList *
-make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+make_pairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
            const char *always_first)
 {
     GList *unsorted = NULL;
@@ -580,7 +580,7 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
  * \param[in]  unpack_func   Function to call to unpack each block
  */
 static void
-unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+unpack_nvpair_blocks(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                      void *hash, const char *always_first, gboolean overwrite,
                      pe_rule_eval_data_t *rule_data, crm_time_t *next_change,
                      GFunc unpack_func)
@@ -602,7 +602,7 @@ unpack_nvpair_blocks(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 }
 
 void
-pe_eval_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 pe_rule_eval_data_t *rule_data, GHashTable *hash,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
@@ -645,7 +645,8 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
 
 #if ENABLE_VERSIONED_ATTRS
 void
-pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
+pe_eval_versioned_attributes(xmlNode *top, const xmlNode *xml_obj,
+                             const char *set_name,
                              pe_rule_eval_data_t *rule_data, xmlNode *hash,
                              crm_time_t *next_change)
 {

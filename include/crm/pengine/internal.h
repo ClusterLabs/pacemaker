@@ -569,7 +569,7 @@ void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
  */
 void pe__register_messages(pcmk__output_t *out);
 
-void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 pe_rule_eval_data_t *rule_data, GHashTable *hash,
                                 const char *always_first, gboolean overwrite,
                                 pe_working_set_t *data_set);
