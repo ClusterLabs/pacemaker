@@ -376,10 +376,11 @@ void pe__show_node_weights_as(const char *file, const char *function,
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes), (data_set))
 
-extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
+xmlNode *find_rsc_op_entry(const pe_resource_t *rsc, const char *key);
 
-extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *task, pe_node_t * on_node,
-                                  gboolean optional, gboolean foo, pe_working_set_t * data_set);
+pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
+                           const pe_node_t *on_node, gboolean optional,
+                           gboolean foo, pe_working_set_t *data_set);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\

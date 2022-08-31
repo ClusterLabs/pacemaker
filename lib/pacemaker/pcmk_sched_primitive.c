@@ -19,8 +19,6 @@
 
 static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                       pe_working_set_t *data_set);
-static void RecurringOp(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
-                        xmlNode *operation, pe_working_set_t *data_set);
 static void Recurring_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                               pe_working_set_t *data_set);
 static void RecurringOp_Stopped(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
@@ -435,148 +433,232 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
     return rsc->allocated_to;
 }
 
-static gboolean
-is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
+/*!
+ * \internal
+ * \brief Parse an interval from XML
+ *
+ * \param[in] xml  XML containing an interval attribute
+ *
+ * \return Interval parsed from XML (or 0 as default)
+ */
+static guint
+xe_interval(const xmlNode *xml)
 {
-    gboolean dup = FALSE;
-    const char *id = NULL;
-    const char *value = NULL;
-    xmlNode *operation = NULL;
-    guint interval2_ms = 0;
-
-    CRM_ASSERT(rsc);
-    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
-         operation = pcmk__xe_next(operation)) {
-
-        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-            value = crm_element_value(operation, "name");
-            if (!pcmk__str_eq(value, name, pcmk__str_casei)) {
-                continue;
-            }
-
-            value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            interval2_ms = crm_parse_interval_spec(value);
-            if (interval_ms != interval2_ms) {
-                continue;
-            }
-
-            if (id == NULL) {
-                id = ID(operation);
-
-            } else {
-                pcmk__config_err("Operation %s is duplicate of %s (do not use "
-                                 "same name and interval combination more "
-                                 "than once per resource)", ID(operation), id);
-                dup = TRUE;
-            }
-        }
-    }
-
-    return dup;
+    return crm_parse_interval_spec(crm_element_value(xml,
+                                                     XML_LRM_ATTR_INTERVAL));
 }
 
+/*!
+ * \internal
+ * \brief Check whether an operation exists multiple times in resource history
+ *
+ * \param[in] rsc          Resource with history to search
+ * \param[in] name         Name of action to search for
+ * \param[in] interval_ms  Interval (in milliseconds) of action to search for
+ *
+ * \return true if an operation with \p name and \p interval_ms exists more than
+ *         once in the operation history of \p rsc, otherwise false
+ */
+static bool
+is_op_dup(const pe_resource_t *rsc, const char *name, guint interval_ms)
+{
+    const char *id = NULL;
+
+    for (xmlNode *op = first_named_child(rsc->ops_xml, "op");
+         op != NULL; op = crm_next_same_xml(op)) {
+
+        // Check whether action name and interval match
+        if (!pcmk__str_eq(crm_element_value(op, "name"),
+                          name, pcmk__str_none)
+            || (xe_interval(op) != interval_ms)) {
+            continue;
+        }
+
+        if (ID(op) == NULL) {
+            continue; // Shouldn't be possible
+        }
+
+        if (id == NULL) {
+            id = ID(op); // First matching op
+        } else {
+            pcmk__config_err("Operation %s is duplicate of %s (do not use "
+                             "same name and interval combination more "
+                             "than once per resource)", ID(op), id);
+            return true;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an action name is one that can be recurring
+ *
+ * \param[in] name  Action name to check
+ *
+ * \return true if \p name is an action known to be unsuitable as a recurring
+ *         operation, otherwise false
+ *
+ * \note Pacemaker's current philosophy is to allow users to configure recurring
+ *       operations except for a short list of actions known not to be suitable
+ *       for that (as opposed to allowing only actions known to be suitable,
+ *       which includes only monitor). Among other things, this approach allows
+ *       users to define their own custom operations and make them recurring,
+ *       though that use case is not well tested.
+ */
 static bool
 op_cannot_recur(const char *name)
 {
-    return pcmk__strcase_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE, NULL);
+    return pcmk__str_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE,
+                            CRMD_ACTION_RELOAD_AGENT, CRMD_ACTION_MIGRATE,
+                            CRMD_ACTION_MIGRATED, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource history entry is for a recurring action
+ *
+ * \param[in]  rsc          Resource that history entry is for
+ * \param[in]  op           Resource history entry to check
+ * \param[out] key          Will be set to operation key if recurring
+ * \param[out] interval_ms  Will be set to interval from history entry
+ */
+static bool
+is_recurring_history(const pe_resource_t *rsc, const xmlNode *op, char **key,
+                     guint *interval_ms)
+{
+    const char *name = NULL;
+
+    *interval_ms = xe_interval(op);
+    if (*interval_ms == 0) {
+        return false; // Not recurring
+    }
+
+    if (pcmk__str_empty(ID(op))) {
+        pcmk__config_err("Ignoring resource history entry without ID");
+        return false; // Shouldn't be possible (unless CIB was manually edited)
+    }
+
+    name = crm_element_value(op, "name");
+    if (op_cannot_recur(name)) {
+        pcmk__config_err("Ignoring %s because action '%s' cannot be recurring",
+                         ID(op), name);
+        return false;
+    }
+
+    // There should only be one recurring operation per action/interval
+    if (is_op_dup(rsc, name, *interval_ms)) {
+        return false;
+    }
+
+    // Disabled resources don't get monitored
+    *key = pcmk__op_key(rsc->id, name, *interval_ms);
+    if (find_rsc_op_entry(rsc, *key) == NULL) {
+        crm_trace("Not creating recurring action %s for disabled resource %s",
+                  ID(op), rsc->id);
+        free(*key);
+        return false;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a recurring action for an active role should be optional
+ *
+ * \param[in] rsc    Resource that recurring action is for
+ * \param[in] node   Node that \p rsc will be active on (if any)
+ * \param[in] key    Operation key for recurring action to check
+ * \param[in] start  Start action for \p rsc
+ *
+ * \return true if recurring action should be optional, otherwise false
+ */
+static bool
+active_recurring_should_be_optional(const pe_resource_t *rsc,
+                                    const pe_node_t *node, const char *key,
+                                    pe_action_t *start)
+{
+    GList *possible_matches = NULL;
+
+    if (node == NULL) { // Should only be possible if unmanaged and stopped
+        pe_rsc_trace(rsc, "%s will be mandatory because resource is unmanaged",
+                     key);
+        return false;
+    }
+
+    if (!pcmk_is_set(rsc->cmds->action_flags(start, NULL),
+                     pe_action_optional)) {
+        pe_rsc_trace(rsc, "%s will be mandatory because %s is",
+                     key, start->uuid);
+        return false;
+    }
+
+    possible_matches = find_actions_exact(rsc->actions, key, node);
+    if (possible_matches == NULL) {
+        pe_rsc_trace(rsc, "%s will be mandatory because it is not active on %s",
+                     key, node->details->uname);
+        return false;
+    }
+
+    for (GList *iter = possible_matches; iter != NULL; iter = iter->next) {
+        pe_action_t *op = (pe_action_t *) iter->data;
+
+        if (pcmk_is_set(op->flags, pe_action_reschedule)) {
+            pe_rsc_trace(rsc,
+                         "%s will be mandatory because "
+                         "it needs to be rescheduled", key);
+            g_list_free(possible_matches);
+            return false;
+        }
+    }
+
+    g_list_free(possible_matches);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Create recurring action from resource history entry for an active role
+ *
+ * \param[in,out] rsc    Resource that resource history is for
+ * \param[in]     start  Start action for \p rsc on \p node
+ * \param[in]     node   Node that resource will be active on (if any)
+ * \param[in]     op     Resource history entry
+ */
 static void
-RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
-            xmlNode * operation, pe_working_set_t * data_set)
+recurring_op_for_active(pe_resource_t *rsc, pe_action_t *start,
+                        const pe_node_t *node, const xmlNode *op)
 {
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *interval_spec = NULL;
-    const char *node_uname = node? node->details->uname : "n/a";
 
     guint interval_ms = 0;
     pe_action_t *mon = NULL;
-    gboolean is_optional = TRUE;
-    GList *possible_matches = NULL;
+    bool is_optional = true;
 
-    CRM_ASSERT(rsc);
-
-    /* Only process for the operations without role="Stopped" */
-    role = crm_element_value(operation, "role");
-    if (role && text2role(role) == RSC_ROLE_STOPPED) {
+    // We're only interested in recurring actions for active roles
+    role = crm_element_value(op, "role");
+    if ((role != NULL) && (text2role(role) == RSC_ROLE_STOPPED)) {
         return;
     }
 
-    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_parse_interval_spec(interval_spec);
-    if (interval_ms == 0) {
+    if (!is_recurring_history(rsc, op, &key, &interval_ms)) {
         return;
     }
 
-    name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval_ms)) {
-        crm_trace("Not creating duplicate recurring action %s for %dms %s",
-                  ID(operation), interval_ms, name);
-        return;
-    }
+    name = crm_element_value(op, "name");
+    is_optional = active_recurring_should_be_optional(rsc, node, key, start);
 
-    if (op_cannot_recur(name)) {
-        pcmk__config_err("Ignoring %s because action '%s' cannot be recurring",
-                         ID(operation), name);
-        return;
-    }
+    if (((role != NULL) && (rsc->next_role != text2role(role)))
+        || ((role == NULL) && (rsc->next_role == RSC_ROLE_PROMOTED))) {
+        // Configured monitor role doesn't match role resource will have
 
-    key = pcmk__op_key(rsc->id, name, interval_ms);
-    if (find_rsc_op_entry(rsc, key) == NULL) {
-        crm_trace("Not creating recurring action %s for disabled resource %s",
-                  ID(operation), rsc->id);
-        free(key);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Creating recurring action %s for %s in role %s on %s",
-                 ID(operation), rsc->id, role2text(rsc->next_role), node_uname);
-
-    if (start != NULL) {
-        pe_rsc_trace(rsc, "Marking %s %s due to %s", key,
-                     pcmk_is_set(start->flags, pe_action_optional)? "optional" : "mandatory",
-                     start->uuid);
-        is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
-    } else {
-        pe_rsc_trace(rsc, "Marking %s optional", key);
-        is_optional = TRUE;
-    }
-
-    /* start a monitor for an already active resource */
-    possible_matches = find_actions_exact(rsc->actions, key, node);
-    if (possible_matches == NULL) {
-        is_optional = FALSE;
-        pe_rsc_trace(rsc, "Marking %s mandatory: not active", key);
-
-    } else {
-        GList *gIter = NULL;
-
-        for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *op = (pe_action_t *) gIter->data;
-
-            if (pcmk_is_set(op->flags, pe_action_reschedule)) {
-                is_optional = FALSE;
-                break;
-            }
-        }
-        g_list_free(possible_matches);
-    }
-
-    if (((rsc->next_role == RSC_ROLE_PROMOTED) && (role == NULL))
-        || (role != NULL && text2role(role) != rsc->next_role)) {
-        int log_level = LOG_TRACE;
-        const char *result = "Ignoring";
-
-        if (is_optional) {
+        if (is_optional) { // It's running, so cancel it
             char *after_key = NULL;
-            pe_action_t *cancel_op = NULL;
-
-            // It's running, so cancel it
-            log_level = LOG_INFO;
-            result = "Cancelling";
-            cancel_op = pcmk__new_cancel_action(rsc, name, interval_ms, node);
+            pe_action_t *cancel_op = pcmk__new_cancel_action(rsc, name,
+                                                             interval_ms, node);
 
             switch (rsc->role) {
                 case RSC_ROLE_UNPROMOTED:
@@ -598,61 +680,71 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             if (after_key) {
                 pcmk__new_ordering(rsc, NULL, cancel_op, rsc, after_key, NULL,
-                                   pe_order_runnable_left, data_set);
+                                   pe_order_runnable_left, rsc->cluster);
             }
         }
 
-        do_crm_log(log_level, "%s action %s (%s vs. %s)",
-                   result, key, role ? role : role2text(RSC_ROLE_UNPROMOTED),
+        do_crm_log((is_optional? LOG_INFO : LOG_TRACE),
+                   "%s recurring action %s because %s configured for %s role "
+                   "(not %s)",
+                   (is_optional? "Cancelling" : "Ignoring"), key, ID(op),
+                   ((role == NULL)? role2text(RSC_ROLE_UNPROMOTED) : role),
                    role2text(rsc->next_role));
-
         free(key);
         return;
     }
 
-    mon = custom_action(rsc, key, name, node, is_optional, TRUE, data_set);
-    key = mon->uuid;
-    if (is_optional) {
-        pe_rsc_trace(rsc, "%s\t   %s (optional)", node_uname, mon->uuid);
-    }
+    pe_rsc_trace(rsc,
+                 "Creating %s recurring action %s for %s (%s %s on %s)",
+                 (is_optional? "optional" : "mandatory"), key,
+                 ID(op), rsc->id, role2text(rsc->next_role),
+                 ((node == NULL)? "any node" : node->details->uname));
 
-    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
-        pe_rsc_debug(rsc, "%s\t   %s (cancelled : start un-runnable)",
-                     node_uname, mon->uuid);
+    mon = custom_action(rsc, key, name, node, is_optional, TRUE, rsc->cluster);
+
+    if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+        pe_rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
         pe__clear_action_flags(mon, pe_action_runnable);
 
-    } else if (node == NULL || node->details->online == FALSE || node->details->unclean) {
-        pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
-                     node_uname, mon->uuid);
+    } else if ((node == NULL) || !node->details->online
+               || node->details->unclean) {
+        pe_rsc_trace(rsc, "%s is unrunnable because no node is available",
+                     mon->uuid);
         pe__clear_action_flags(mon, pe_action_runnable);
 
     } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
-        pe_rsc_info(rsc, " Start recurring %s (%us) for %s on %s",
-                    mon->task, interval_ms / 1000, rsc->id, node_uname);
+        pe_rsc_info(rsc, "Start %s-interval %s for %s on %s",
+                    pcmk__readable_interval(interval_ms), mon->task, rsc->id,
+                    node->details->uname);
     }
 
     if (rsc->next_role == RSC_ROLE_PROMOTED) {
         pe__add_action_expected_result(mon, CRM_EX_PROMOTED);
     }
 
+    // Order monitor relative to other actions
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__new_ordering(rsc, start_key(rsc), NULL, NULL, strdup(key), mon,
+        pcmk__new_ordering(rsc, start_key(rsc), NULL,
+                           NULL, strdup(mon->uuid), mon,
                            pe_order_implies_then|pe_order_runnable_left,
-                           data_set);
+                           rsc->cluster);
 
-        pcmk__new_ordering(rsc, reload_key(rsc), NULL, NULL, strdup(key), mon,
+        pcmk__new_ordering(rsc, reload_key(rsc), NULL,
+                           NULL, strdup(mon->uuid), mon,
                            pe_order_implies_then|pe_order_runnable_left,
-                           data_set);
+                           rsc->cluster);
 
         if (rsc->next_role == RSC_ROLE_PROMOTED) {
-            pcmk__new_ordering(rsc, promote_key(rsc), NULL, rsc, NULL, mon,
+            pcmk__new_ordering(rsc, promote_key(rsc), NULL,
+                               rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,
-                               data_set);
+                               rsc->cluster);
 
         } else if (rsc->role == RSC_ROLE_PROMOTED) {
-            pcmk__new_ordering(rsc, demote_key(rsc), NULL, rsc, NULL, mon,
+            pcmk__new_ordering(rsc, demote_key(rsc), NULL,
+                               rsc, NULL, mon,
                                pe_order_optional|pe_order_runnable_left,
-                               data_set);
+                               rsc->cluster);
         }
     }
 }
@@ -669,7 +761,7 @@ Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working
              operation = pcmk__xe_next(operation)) {
 
             if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
-                RecurringOp(rsc, start, node, operation, data_set);
+                recurring_op_for_active(rsc, start, node, operation);
             }
         }
     }
@@ -682,7 +774,6 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *interval_spec = NULL;
     const char *node_uname = node? node->details->uname : "n/a";
 
     guint interval_ms = 0;
@@ -695,32 +786,11 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         return;
     }
 
-    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_parse_interval_spec(interval_spec);
-    if (interval_ms == 0) {
+    if (!is_recurring_history(rsc, operation, &key, &interval_ms)) {
         return;
     }
 
     name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval_ms)) {
-        crm_trace("Not creating duplicate recurring action %s for %dms %s",
-                  ID(operation), interval_ms, name);
-        return;
-    }
-
-    if (op_cannot_recur(name)) {
-        pcmk__config_err("Ignoring %s because action '%s' cannot be recurring",
-                         ID(operation), name);
-        return;
-    }
-
-    key = pcmk__op_key(rsc->id, name, interval_ms);
-    if (find_rsc_op_entry(rsc, key) == NULL) {
-        crm_trace("Not creating recurring action %s for disabled resource %s",
-                  ID(operation), rsc->id);
-        free(key);
-        return;
-    }
 
     // @TODO add support
     if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
