@@ -30,8 +30,8 @@ OCF_RESKEY_program_default="/usr/sbin/notifyServicelogEvent"
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<resource-agent name="SystemHealth" version="1.0">
-<version>1.0</version>
+<resource-agent name="SystemHealth" version="1.1">
+<version>1.1</version>
 
 <longdesc lang="en">
 This is a SystemHealth Resource Agent.  It is used to monitor
@@ -177,9 +177,12 @@ SystemHealth_monitor() {
 }
 
 SystemHealth_validate() {
-    check_binary servicelog_notify
-    check_binary "$daemon_name"
-    check_binary "$OCF_RESKEY_program"
+    if [ $__OCF_ACTION = "start" ] || [ "$OCF_CHECK_LEVEL" -eq 10 ]; then
+        check_binary servicelog_notify
+        check_binary "$daemon_name"
+        check_binary "$OCF_RESKEY_program"
+    fi
+    return $OCF_SUCCESS
 }
 
 case "$__OCF_ACTION" in
