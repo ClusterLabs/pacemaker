@@ -175,11 +175,11 @@ SystemHealth_monitor() {
 
     pid=$(cat $pidfile)
 
-    ps -p "$pid" >/dev/null 2>&1
+    comm=$(ps -p "$pid" -o comm= 2>/dev/null)
     RC=$?
 
-    if [ $RC -ne 0 ]; then
-        ocf_log debug "${daemon_name}'s pid $pid is not running!"
+    if [ $RC -ne 0 ] || [ "$comm" != "$daemon_name" ]; then
+        ocf_log debug "${daemon_name} is not running as pid $pid!"
         rm "$pidfile"
         return $OCF_ERR_GENERIC
     fi
