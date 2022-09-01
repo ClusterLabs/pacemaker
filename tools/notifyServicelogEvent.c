@@ -23,7 +23,11 @@
 #include <inttypes.h>  // PRIu64, SCNu64
 
 #include <crm/common/attrd_internal.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
+
+const char *summary = "notifyServicelogEvent - handle events written to "
+                      "servicelog database";
 
 typedef enum { STATUS_GREEN, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -59,36 +63,22 @@ event2status(struct sl_event * event)
     return STATUS_GREEN;
 }
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nUsage: notifyServicelogEvent event_id", pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Where event_id is a unique unsigned event identifier which is "
-            "then passed into servicelog",
-        pcmk__option_paragraph
-    },
-    { 0, 0, 0, 0 }
-};
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
+    GOptionContext *context = NULL;
+    const char *description = "event_id is a unique unsigned event identifier "
+                              "that is passed into servicelog.\n";
+
+    context = pcmk__build_arg_context(args, NULL, NULL, "event_id");
+    g_option_context_set_description(context, description);
+
+    return context;
+}
 
 int
 main(int argc, char *argv[])
 {
-    int argerr = 0;
-    int flag;
-    int index = 0;
-
     crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
 
@@ -99,62 +89,64 @@ main(int argc, char *argv[])
     const char *health_component = "#health-ipmi";
     const char *health_status = NULL;
 
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(summary);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
+    GOptionContext *context = build_arg_context(args, &output_group);
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
     pcmk__cli_init_logging("notifyServicelogEvent", 0);
-    pcmk__set_cli_options(NULL, "<event_id>", long_options,
-                          "handle events written to servicelog database");
 
-    if (argc < 2) {
-        argerr++;
+    if (args->version) {
+        printf("Pacemaker %s\n", PACEMAKER_VERSION);
+        printf("Written by Andrew Beekhof and the Pacemaker project "
+               "contributors\n");
+        goto done;
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &index, NULL);
-        if (flag == -1)
-            break;
+    if (g_strv_length(processed_args) != 2) {
+        char *help = g_option_context_get_help(context, TRUE, NULL);
 
-        switch (flag) {
-            case '?':
-            case '$':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            default:
-                ++argerr;
-                break;
-        }
-    }
-
-    if (argc - optind != 1) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+        fprintf(stderr, "%s", help);
+        g_free(help);
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);
 
     if (sscanf(argv[optind], "%" SCNu64, &event_id) != 1) {
-        crm_err("Error: could not read event_id from args!");
+        g_set_error(&error, PCMK__RC_ERROR, EINVAL,
+                    "Error: could not read event_id from args!");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     if (event_id == 0) {
-        crm_err("Error: event_id is 0!");
+        g_set_error(&error, PCMK__RC_ERROR, EINVAL, "Error: event_id is 0!");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     rc = servicelog_open(&slog, 0);     /* flags is one of SL_FLAG_xxx */
     if (rc != 0) {
-        crm_err("Error: Failed to open the servicelog, rc = %d", rc);
+        g_set_error(&error, PCMK__RC_ERROR, EIO,
+                    "Error: Failed to open the servicelog, rc = %d", rc);
         exit_code = CRM_EX_OSERR;
         goto done;
     }
 
     rc = servicelog_event_get(slog, event_id, &event);
     if (rc != 0) {
-        crm_err("Error: Failed to get event from the servicelog, rc = %d", rc);
+        g_set_error(&error, PCMK__RC_ERROR, EIO,
+                    "Error: Failed to get event from the servicelog, rc = %d",
+                    rc);
         exit_code = CRM_EX_OSERR;
         goto done;
     }
@@ -177,6 +169,9 @@ main(int argc, char *argv[])
     }
 
   done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
     if (event != NULL) {
         servicelog_event_free(event);
     }
@@ -184,11 +179,11 @@ main(int argc, char *argv[])
     if (slog != NULL) {
         servicelog_close(slog);
     }
-
     closelog();
 
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);
     }
+    pcmk__output_and_clear_error(error, NULL);
     crm_exit(exit_code);
 }
