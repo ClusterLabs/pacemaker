@@ -22,8 +22,22 @@ pidfile="@runstatedir@/ipmiservicelogd.pid0"
 
 # Defaults
 OCF_RESKEY_program_default="/usr/sbin/notifyServicelogEvent"
+OCF_RESKEY_conn_type_default="smi"
+OCF_RESKEY_smi_num_default="0"
+OCF_RESKEY_host_default=""
+OCF_RESKEY_username_default=""
+OCF_RESKEY_password_default=""
+OCF_RESKEY_port_default=""
+OCF_RESKEY_extra_conn_parms_default=""
 
 : ${OCF_RESKEY_program=${OCF_RESKEY_program_default}}
+: ${OCF_RESKEY_conn_type=${OCF_RESKEY_conn_type_default}}
+: ${OCF_RESKEY_smi_num=${OCF_RESKEY_smi_num_default}}
+: ${OCF_RESKEY_host=${OCF_RESKEY_host_default}}
+: ${OCF_RESKEY_username=${OCF_RESKEY_username_default}}
+: ${OCF_RESKEY_password=${OCF_RESKEY_password_default}}
+: ${OCF_RESKEY_port=${OCF_RESKEY_port_default}}
+: ${OCF_RESKEY_extra_conn_parms=${OCF_RESKEY_extra_conn_parms_default}}
 
 #######################################################################
 
@@ -40,11 +54,83 @@ the health of a system via IPMI.
 <shortdesc lang="en">SystemHealth resource agent</shortdesc>
 
 <parameters>
-  <parameter name="program">
-    <longdesc lang="en">Path to notifyServicelogEvent command</longdesc>
-    <shortdesc lang="en">Path to notify command</shortdesc>
-    <content type="string" default="/usr/sbin/notifyServicelogEvent"/>
-  </parameter>
+<parameter name="program">
+<longdesc lang="en">Path to notifyServicelogEvent command</longdesc>
+<shortdesc lang="en">Path to notify command</shortdesc>
+<content type="string" default="/usr/sbin/notifyServicelogEvent"/>
+</parameter>
+
+<parameter name="conn_type">
+<longdesc lang="en">
+Type of OpenIPMI connection to use, from openipmi_conparms
+</longdesc>
+<shortdesc lang="en">Type of IPMI connection to use</shortdesc>
+<content type="string" default="smi"/>
+</parameter>
+
+<parameter name="smi_num">
+<longdesc lang="en">
+The SMI interface for the local connection. There may be more than one BMC
+connection on a system and they are generally numbered, like /dev/ipmi0,
+/dev/ipmi1, etc.
+
+Used with conn_type="smi".
+</longdesc>
+<shortdesc lang="en">The SMI interface for the local connection</shortdesc>
+<content type="integer" default="0"/>
+</parameter>
+
+<parameter name="host">
+<longdesc lang="en">
+The IP address (either by name lookup or specified directly) to connect to.
+
+Used with conn_type="lan".
+</longdesc>
+<shortdesc lang="en">The address for the LAN connection</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="username">
+<longdesc lang="en">
+Use the given username for the LAN connection. If none is given, then no
+username is used.
+
+Used with conn_type="lan".
+</longdesc>
+<shortdesc lang="en">The username for the LAN connection</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="password">
+<longdesc lang="en">
+The password to use for the connection. If none is given, the user is assumed to
+have an empty password.
+
+Used with conn_type="lan".
+</longdesc>
+<shortdesc lang="en">The password for the LAN connection</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="port">
+<longdesc lang="en">
+The UDP port to connect to. This defaults to the standard 623 port, so it is not
+necessary unless a special port is required.
+
+Used with conn_type="lan".
+</longdesc>
+<shortdesc lang="en">The UDP port for the LAN connection</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="extra_conn_parms">
+<longdesc lang="en">
+Extra connection parameters to pass to the ipmiservicelogd daemon. See the
+openipmi_conparms(7) man page for available options.
+</longdesc>
+<shortdesc lang="en">Extra connection parameters</shortdesc>
+<content type="string" default=""/>
+</parameter>
 </parameters>
 
 <actions>
@@ -87,7 +173,29 @@ SystemHealth_start() {
         return $OCF_ERR_GENERIC
     fi
 
-    "$daemon_name" smi 0 > /dev/null 2>&1 &
+    options=""
+    case "$OCF_RESKEY_conn_type" in
+        smi)
+            options="$smi_num"
+            ;;
+        lan)
+            if [ -n "$OCF_RESKEY_username" ]; then
+                options="$options -U $OCF_RESKEY_username"
+            fi
+            if [ -n "$OCF_RESKEY_password" ]; then
+                options="$options -P $OCF_RESKEY_password"
+            fi
+            if [ -n "$OCF_RESKEY_port" ]; then
+                options="$options -p $OCF_RESKEY_port"
+            fi
+            options="$options $OCF_RESKEY_host"
+            ;;
+        *)
+            ;;
+    esac
+    options="$options $OCF_RESKEY_extra_conn_parms"
+
+    "$daemon_name" "$OCF_RESKEY_conn_type" $options >/dev/null 2>&1 &
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -177,6 +285,24 @@ SystemHealth_monitor() {
 }
 
 SystemHealth_validate() {
+    case "$OCF_RESKEY_conn_type" in
+        smi)
+            num="$OCF_RESKEY_smi_num"
+            if ! [ "$num" -eq "$num" ] 2>/dev/null; then
+                ocf_exit_reason "smi_num must be an integer"
+                return $OCF_ERR_CONFIGURED
+            fi
+            ;;
+        lan)
+            if [ -z "$OCF_RESKEY_host" ]; then
+                ocf_exit_reason "host parameter must be specified"
+                return $OCF_ERR_CONFIGURED
+            fi
+            ;;
+        *)
+            ;;
+    esac
+
     if [ $__OCF_ACTION = "start" ] || [ "$OCF_CHECK_LEVEL" -eq 10 ]; then
         check_binary servicelog_notify
         check_binary "$daemon_name"
