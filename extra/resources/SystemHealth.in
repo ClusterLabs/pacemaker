@@ -18,7 +18,7 @@
 : ${__OCF_ACTION:="$1"}
 
 daemon_name="ipmiservicelogd"
-pidfile="/var/run/ipmiservicelogd.pid0"
+pidfile="@runstatedir@/ipmiservicelogd.pid0"
 
 # Defaults
 OCF_RESKEY_program_default="/usr/sbin/notifyServicelogEvent"
