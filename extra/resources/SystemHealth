@@ -181,7 +181,11 @@ SystemHealth_monitor() {
     if [ $RC -ne 0 ] || [ "$comm" != "$daemon_name" ]; then
         ocf_log debug "${daemon_name} is not running as pid $pid!"
         rm "$pidfile"
-        return $OCF_ERR_GENERIC
+
+        if [ "$__OCF_ACTION" = "monitor" ] && ! ocf_is_probe; then
+            return $OCF_ERR_GENERIC
+        fi
+        return $OCF_NOT_RUNNING
     fi
 
     servicelog_notify --list --command="$OCF_RESKEY_program" > /dev/null 2>&1
