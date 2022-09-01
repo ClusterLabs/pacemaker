@@ -173,7 +173,7 @@ SystemHealth_monitor() {
         return $OCF_NOT_RUNNING
     fi
 
-    pid=$(cat $pidfile)
+    pid=$(cat $pidfile | tr -d '[:space:]')
 
     comm=$(ps -p "$pid" -o comm= 2>/dev/null)
     RC=$?
