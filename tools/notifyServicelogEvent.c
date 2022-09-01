@@ -99,7 +99,10 @@ main(int argc, char *argv[])
     int argerr = 0;
     int flag;
     int index = 0;
-    int rc = 0;
+
+    crm_exit_t exit_code = CRM_EX_OK;
+    int rc = pcmk_rc_ok;
+
     servicelog *slog = NULL;
     struct sl_event *event = NULL;
     uint64_t event_id = 0;
@@ -143,27 +146,27 @@ main(int argc, char *argv[])
 
     if (sscanf(argv[optind], "%" U64TS, &event_id) != 1) {
         crm_err("Error: could not read event_id from args!");
-        rc = 1;
+        exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     if (event_id == 0) {
         crm_err("Error: event_id is 0!");
-        rc = 1;
+        exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     rc = servicelog_open(&slog, 0);     /* flags is one of SL_FLAG_xxx */
     if (rc != 0) {
         crm_err("Error: Failed to open the servicelog, rc = %d", rc);
-        rc = 1;
+        exit_code = CRM_EX_OSERR;
         goto done;
     }
 
     rc = servicelog_event_get(slog, event_id, &event);
     if (rc != 0) {
         crm_err("Error: Failed to get event from the servicelog, rc = %d", rc);
-        rc = 1;
+        exit_code = CRM_EX_OSERR;
         goto done;
     }
 
@@ -182,7 +185,6 @@ main(int argc, char *argv[])
     } else {
         crm_err("Could not update %s=%s: %s (%d)",
                 health_component, health_status, pcmk_rc_str(rc), rc);
-        rc = 1;
     }
 
   done:
@@ -195,5 +197,9 @@ main(int argc, char *argv[])
     }
 
     closelog();
-    return rc;
+
+    if (exit_code == CRM_EX_OK) {
+        exit_code = pcmk_rc2exitc(rc);
+    }
+    crm_exit(exit_code);
 }
