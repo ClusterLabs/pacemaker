@@ -22,13 +22,6 @@
 #include <unistd.h>
 #include <inttypes.h>  // PRIu64, SCNu64
 
-#ifndef PCMK__CONFIG_H
-#  define PCMK__CONFIG_H
-#  include <config.h>
-#endif
-
-#include <crm/common/xml.h>
-#include <crm/common/util.h>
 #include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_attrd_internal.h>
 
