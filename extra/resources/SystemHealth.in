@@ -68,32 +68,6 @@ Expects to have a fully populated OCF RA-compliant environment set.
 END
 }
 
-SystemHealth_check_tools() {
-    which servicelog_notify > /dev/null 2>&1
-    RC=$?
-
-    if [ $RC -ne 0 ]; then
-        ocf_log err "servicelog_notify not found!"
-        return $OCF_ERR_INSTALLED
-    fi
-
-    which "$daemon_name" > /dev/null 2>&1
-    RC=$?
-
-    if [ $RC -ne 0 ]; then
-        ocf_log err "$daemon_name not found!"
-        return $OCF_ERR_INSTALLED
-    fi
-
-    test -x "$OCF_RESKEY_program"
-    RC=$?
-
-    if [ $RC -ne 0 ]; then
-        ocf_log err "$OCF_RESKEY_program not found!"
-        return $OCF_ERR_INSTALLED
-    fi
-}
-
 SystemHealth_start() {
     SystemHealth_monitor
     RC=$?
@@ -203,44 +177,19 @@ SystemHealth_monitor() {
 }
 
 SystemHealth_validate() {
-
-    SystemHealth_check_tools
-    RC=$?
-
-    if [ $RC -ne 0 ]; then
-        return $RC
-    fi
-
-    return $OCF_SUCCESS
+    check_binary servicelog_notify
+    check_binary "$daemon_name"
+    check_binary "$OCF_RESKEY_program"
 }
 
-case $__OCF_ACTION in
-meta-data)      meta_data
-                exit $OCF_SUCCESS
-                ;;
-usage|help)     SystemHealth_usage
-                exit $OCF_SUCCESS
-                ;;
-esac
-
-SystemHealth_check_tools
-RC=$?
-
-if [ $RC -ne 0 ]; then
-        case "$__OCF_ACTION" in
-        stop)           exit $OCF_SUCCESS;;
-        *)              exit $RC;;
-        esac
-fi
-
 case "$__OCF_ACTION" in
-start)          SystemHealth_start;;
+start)          SystemHealth_validate; SystemHealth_start;;
 stop)           SystemHealth_stop;;
-monitor)        SystemHealth_monitor;;
-validate-all)   ;;
-*)              SystemHealth_usage
-                exit $OCF_ERR_UNIMPLEMENTED
-                ;;
+monitor)        SystemHealth_validate; SystemHealth_monitor;;
+validate-all)   SystemHealth_validate;;
+meta-data)      meta_data; exit $OCF_SUCCESS;;
+usage|help)     SystemHealth_usage; exit $OCF_SUCCESS;;
+*)              SystemHealth_usage; exit $OCF_ERR_UNIMPLEMENTED;;
 esac
 rc=$?
 ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
