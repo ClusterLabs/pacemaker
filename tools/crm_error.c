@@ -16,12 +16,28 @@
 
 #define SUMMARY "crm_error - display name or description of a Pacemaker error code"
 
+GError *error = NULL;
+
 struct {
-    gboolean as_exit_code;
-    gboolean as_rc;
     gboolean with_name;
     gboolean do_list;
-} options;
+    enum pcmk_result_type result_type; // How to interpret result codes
+} options = {
+    .result_type = pcmk_result_legacy,
+};
+
+static gboolean
+result_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    if (pcmk__str_any_of(option_name, "--exit", "-X", NULL)) {
+        options.result_type = pcmk_result_exitcode;
+    } else if (pcmk__str_any_of(option_name, "--rc", "-r", NULL)) {
+        options.result_type = pcmk_result_rc;
+    }
+
+    return TRUE;
+}
 
 static GOptionEntry entries[] = {
     { "name", 'n', 0, G_OPTION_ARG_NONE, &options.with_name,
@@ -31,10 +47,10 @@ static GOptionEntry entries[] = {
     { "list", 'l', 0, G_OPTION_ARG_NONE, &options.do_list,
       "Show all known errors (enabled by default if no rc is specified)",
       NULL },
-    { "exit", 'X', 0, G_OPTION_ARG_NONE, &options.as_exit_code,
+    { "exit", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, result_type_cb,
       "Interpret as exit code rather than legacy function return value",
       NULL },
-    { "rc", 'r', 0, G_OPTION_ARG_NONE, &options.as_rc,
+    { "rc", 'r', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, result_type_cb,
       "Interpret as return code rather than legacy function return value",
       NULL },
 
@@ -44,18 +60,23 @@ static GOptionEntry entries[] = {
 static void
 get_strings(int rc, const char **name, const char **str)
 {
-    if (options.as_exit_code) {
-        *str = crm_exit_str((crm_exit_t) rc);
-        *name = crm_exit_name(rc);
-    } else if (options.as_rc) {
-        *str = pcmk_rc_str(rc);
-        *name = pcmk_rc_name(rc);
-    } else {
-        *str = pcmk_strerror(rc);
-        *name = pcmk_errorname(rc);
+    switch (options.result_type) {
+        case pcmk_result_legacy:
+            *name = pcmk_errorname(rc);
+            *str = pcmk_strerror(rc);
+            break;
+        case pcmk_result_rc:
+            *name = pcmk_rc_name(rc);
+            *str = pcmk_rc_str(rc);
+            break;
+        case pcmk_result_exitcode:
+            *name = crm_exit_name(rc);
+            *str = crm_exit_str((crm_exit_t) rc);
+            break;
+        default:
+            break;
     }
 }
-
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -72,8 +93,6 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     const char *name = NULL;
     const char *desc = NULL;
-
-    GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -103,7 +122,7 @@ main(int argc, char **argv)
         int start, end, width;
 
         // 256 is a hacky magic number that "should" be enough
-        if (options.as_rc) {
+        if (options.result_type == pcmk_result_rc) {
             start = pcmk_rc_error - 256;
             end = PCMK_CUSTOM_OFFSET;
             width = 4;
