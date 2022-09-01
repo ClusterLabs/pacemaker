@@ -145,8 +145,8 @@ typedef struct cib_api_operations_s {
     /*!
      * \brief Set the local CIB manager as the cluster's primary instance
      *
-     * \param[in] cib           CIB connection
-     * \param[in] call_options  Group of enum cib_call_options flags
+     * \param[in,out] cib           CIB connection
+     * \param[in]     call_options  Group of enum cib_call_options flags
      *
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
@@ -155,8 +155,8 @@ typedef struct cib_api_operations_s {
     /*!
      * \brief Set the local CIB manager as a secondary instance
      *
-     * \param[in] cib           CIB connection
-     * \param[in] call_options  Group of enum cib_call_options flags
+     * \param[in,out] cib           CIB connection
+     * \param[in]     call_options  Group of enum cib_call_options flags
      *
      * \return Legacy Pacemaker return code (in particular, pcmk_ok on success)
      */
