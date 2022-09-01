@@ -20,6 +20,11 @@
 daemon_name="ipmiservicelogd"
 pidfile="/var/run/ipmiservicelogd.pid0"
 
+# Defaults
+OCF_RESKEY_program_default="/usr/sbin/notifyServicelogEvent"
+
+: ${OCF_RESKEY_program=${OCF_RESKEY_program_default}}
+
 #######################################################################
 
 meta_data() {
@@ -209,8 +214,6 @@ SystemHealth_validate() {
 
     return $OCF_SUCCESS
 }
-
-: ${OCF_RESKEY_program:=/usr/sbin/notifyServicelogEvent}
 
 case $__OCF_ACTION in
 meta-data)      meta_data
