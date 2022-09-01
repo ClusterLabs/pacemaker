@@ -51,7 +51,6 @@ the health of a system via IPMI.
 <action name="start"        timeout="20s" />
 <action name="stop"         timeout="20s" />
 <action name="monitor"      timeout="20s" />
-<action name="reload"       timeout="20s" />
 <action name="meta-data"    timeout="5s" />
 <action name="validate-all" timeout="20s" />
 </actions>
@@ -238,9 +237,6 @@ case "$__OCF_ACTION" in
 start)          SystemHealth_start;;
 stop)           SystemHealth_stop;;
 monitor)        SystemHealth_monitor;;
-reload)         ocf_log info "Reloading..."
-                SystemHealth_start
-                ;;
 validate-all)   ;;
 *)              SystemHealth_usage
                 exit $OCF_ERR_UNIMPLEMENTED
