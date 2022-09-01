@@ -98,7 +98,8 @@ main(int argc, char **argv)
     }
 
     if (options.do_list) {
-        int start, end;
+        int start = 0;
+        int end = 0;
 
         /* Get length of longest (most negative) standard Pacemaker return code
          * This should be longer than all the values of any other type of return
@@ -108,15 +109,6 @@ main(int argc, char **argv)
         int code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
         int name_width = 0;
 
-        // 256 is a hacky magic number that "should" be enough
-        if (options.result_type == pcmk_result_rc) {
-            start = pcmk_rc_error - 256;
-            end = PCMK_CUSTOM_OFFSET;
-        } else {
-            start = 0;
-            end = 256;
-        }
-
         if (options.with_name) {
             // Get length of longest standard Pacemaker return code name
             for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
@@ -125,7 +117,9 @@ main(int argc, char **argv)
             }
         }
 
-        for (int code = start; code < end; code++) {
+        pcmk__result_bounds(options.result_type, &start, &end);
+
+        for (int code = start; code <= end; code++) {
             if (code == (pcmk_rc_error + 1)) {
                 // Values in between are reserved for callers, no use iterating
                 code = pcmk_rc_ok;
