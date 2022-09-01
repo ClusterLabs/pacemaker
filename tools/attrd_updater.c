@@ -352,8 +352,8 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
     // Create attrd IPC object
     rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
         return ENOTCONN;
     }
 
@@ -362,8 +362,8 @@ send_attrd_query(pcmk__output_t *out, const char *attr_name, const char *attr_no
     // Connect to attrd (without main loop)
     rc = pcmk_connect_ipc(attrd_api, pcmk_ipc_dispatch_sync);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Could not connect to attrd: %s\n",
-                pcmk_rc_str(rc));
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Could not connect to attrd: %s", pcmk_rc_str(rc));
         pcmk_free_ipc_api(attrd_api);
         return rc;
     }
