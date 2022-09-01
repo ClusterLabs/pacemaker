@@ -34,6 +34,7 @@ typedef struct {
     char *path;
     char *tstamp_format;
     char *recipient;
+    char *alert_log_level;
     char **select_attribute_name;
     GHashTable *envvars;
     int timeout;
@@ -61,10 +62,11 @@ enum pcmk__alert_keys_e {
     PCMK__alert_key_timestamp_usec,
     PCMK__alert_key_exec_time,
     PCMK__alert_key_select_kind,
-    PCMK__alert_key_select_attribute_name
+    PCMK__alert_key_select_attribute_name,
+    PCMK__alert_log_level
 };
 
-#define PCMK__ALERT_INTERNAL_KEY_MAX 19
+#define PCMK__ALERT_INTERNAL_KEY_MAX 23
 #define PCMK__ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
 extern const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3];

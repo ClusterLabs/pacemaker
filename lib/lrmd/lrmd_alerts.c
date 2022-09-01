@@ -164,6 +164,15 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
         crm_info("Sending %s alert via %s to %s",
                  kind_s, entry->id, entry->recipient);
 
+        copy_params = alert_envvar2params(copy_params, entry);
+
+        for (head = copy_params; head != NULL; head = head->next) {
+            crm_info("Show CRM %s = %s",head->key, head->value);
+            if (strcmp(head->key, "alert_log_level") == 0) {
+                copy_params = alert_key2param(copy_params, PCMK__alert_log_level, head->value);
+            }
+        }
+
         /* Make a copy of the parameters, because each alert will be unique */
         for (head = params; head != NULL; head = head->next) {
             copy_params = lrmd_key_value_add(copy_params, head->key, head->value);

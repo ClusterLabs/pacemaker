@@ -77,6 +77,9 @@ const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3] =
     },
     [PCMK__alert_key_exec_time] = {
         "CRM_notify_exec_time",         "CRM_alert_exec_time",          NULL
+    },
+    [PCMK__alert_log_level] = {
+        "CRM_notify_log_level",         "CRM_alert_log_level",          NULL
     }
 };
 
