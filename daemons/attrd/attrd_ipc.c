@@ -26,10 +26,6 @@
 
 #include "pacemaker-attrd.h"
 
-#define attrd_send_ack(client, id, flags) \
-    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
-
-extern int minimum_protocol_version;
 static qb_ipcs_service_t *ipcs = NULL;
 
 /*!
@@ -76,7 +72,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
                 free_xml(reply);
                 return NULL;
             }
-            crm_xml_add(host_value, PCMK__XA_ATTR_NODE_NAME, host);
+            pcmk__xe_add_node(host_value, host, 0);
             crm_xml_add(host_value, PCMK__XA_ATTR_VALUE,
                         (v? v->current : NULL));
 
@@ -91,7 +87,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
                     free_xml(reply);
                     return NULL;
                 }
-                crm_xml_add(host_value, PCMK__XA_ATTR_NODE_NAME, v->nodename);
+                pcmk__xe_add_node(host_value, v->nodename, 0);
                 crm_xml_add(host_value, PCMK__XA_ATTR_VALUE, v->current);
             }
         }
@@ -99,23 +95,21 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     return reply;
 }
 
-/*!
- * \internal
- * \brief Respond to client clear-failure request
- *
- * \param[in] xml         Request XML
- */
-void
-attrd_client_clear_failure(xmlNode *xml)
+xmlNode *
+attrd_client_clear_failure(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     const char *rsc, *op, *interval_spec;
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
 
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
         attrd_send_message(NULL, xml);
-        return;
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        return NULL;
     }
 
     rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
@@ -155,24 +149,19 @@ attrd_client_clear_failure(xmlNode *xml)
         crm_xml_replace(xml, PCMK__XA_ATTR_VALUE, NULL);
     }
 
-    attrd_client_update(xml);
+    return attrd_client_update(request);
 }
 
-/*!
- * \internal
- * \brief Respond to a client peer-remove request (i.e. propagate to all peers)
- *
- * \param[in] client_name Name of client that made request (for log messages)
- * \param[in] xml         Root of request XML
- *
- * \return void
- */
-void
-attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
+xmlNode *
+attrd_client_peer_remove(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
+
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     char *host_alloc = NULL;
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
 
     if (host == NULL) {
         int nodeid = 0;
@@ -190,98 +179,74 @@ attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
                 host_alloc = get_node_name(nodeid);
                 host = host_alloc;
             }
-            crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, host);
+            pcmk__xe_add_node(xml, host, 0);
         }
     }
 
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
-                 pcmk__client_name(client), host);
+                 pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 pcmk__client_name(client));
+                 pcmk__client_name(request->ipc_client));
     }
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
-/*!
- * \internal
- * \brief Respond to a client query
- *
- * \param[in] client Who queried us
- * \param[in] query  Root of query XML
- *
- * \return void
- */
-void
-attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                   xmlNode *query)
+xmlNode *
+attrd_client_query(pcmk__request_t *request)
 {
-    const char *attr;
-    const char *origin = crm_element_value(query, F_ORIG);
-    xmlNode *reply;
+    xmlNode *query = request->xml;
+    xmlNode *reply = NULL;
+    const char *attr = NULL;
 
-    if (origin == NULL) {
-        origin = "unknown client";
-    }
-    crm_debug("Query arrived from %s", origin);
+    crm_debug("Query arrived from %s", pcmk__client_name(request->ipc_client));
 
     /* Request must specify attribute name to query */
     attr = crm_element_value(query, PCMK__XA_ATTR_NAME);
     if (attr == NULL) {
-        crm_warn("Ignoring malformed query from %s (no attribute name given)",
-                 origin);
-        return;
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Ignoring malformed query from %s (no attribute name given)",
+                            pcmk__client_name(request->ipc_client));
+        return NULL;
     }
 
     /* Build the XML reply */
     reply = build_query_reply(attr, crm_element_value(query,
                                                       PCMK__XA_ATTR_NODE_NAME));
     if (reply == NULL) {
-        crm_err("Could not respond to query from %s: could not create XML reply",
-                 origin);
-        return;
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Could not respond to query from %s: could not create XML reply",
+                            pcmk__client_name(request->ipc_client));
+        return NULL;
+    } else {
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
-    crm_log_xml_trace(reply, "Reply");
 
-    /* Send the reply to the client */
-    client->request_id = 0;
-    {
-        int rc = pcmk__ipc_send_xml(client, id, reply, flags);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Could not respond to query from %s: %s " CRM_XS " rc=%d",
-                    origin, pcmk_rc_str(rc), rc);
-        }
-    }
-    free_xml(reply);
+    request->ipc_client->request_id = 0;
+    return reply;
 }
 
-/*!
- * \internal
- * \brief Respond to a client refresh request (i.e. write out all attributes)
- *
- * \return void
- */
-void
-attrd_client_refresh(void)
+xmlNode *
+attrd_client_refresh(pcmk__request_t *request)
 {
     crm_info("Updating all attributes");
+
+    attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
     attrd_write_attributes(true, true);
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
-/*!
- * \internal
- * \brief Respond to a client update request
- *
- * \param[in] xml         Root of request XML
- *
- * \return void
- */
-void
-attrd_client_update(xmlNode *xml)
+xmlNode *
+attrd_client_update(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     attribute_t *a = NULL;
     char *host;
     const char *attr, *value, *regex;
@@ -296,6 +261,7 @@ attrd_client_update(xmlNode *xml)
              * just broadcast the big message and they'll handle it.
              */
             attrd_send_message(NULL, xml);
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
             /* Second, if they do not support that protocol version, split it
              * up into individual messages and call attrd_client_update on
@@ -303,11 +269,15 @@ attrd_client_update(xmlNode *xml)
              */
             for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;
                  child = crm_next_same_xml(child)) {
-                attrd_client_update(child);
+                request->xml = child;
+                /* Calling pcmk__set_result is handled by one of these calls to
+                 * attrd_client_update, so no need to do it again here.
+                 */
+                attrd_client_update(request);
             }
         }
 
-        return;
+        return NULL;
     }
 
     host = crm_element_value_copy(xml, PCMK__XA_ATTR_NODE_NAME);
@@ -322,7 +292,9 @@ attrd_client_update(xmlNode *xml)
 
         crm_debug("Setting %s to %s", regex, value);
         if (regcomp(r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            crm_err("Bad regex '%s' for update", regex);
+            pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                                "Bad regex '%s' for update from client %s", regex,
+                                pcmk__client_name(request->ipc_client));
 
         } else {
             g_hash_table_iter_init(&aIter, attributes);
@@ -335,27 +307,38 @@ attrd_client_update(xmlNode *xml)
                     attrd_send_message(NULL, xml);
                 }
             }
+
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         }
 
         free(host);
         regfree(r_patt);
         free(r_patt);
-        return;
+        return NULL;
 
     } else if (attr == NULL) {
         crm_err("Update request did not specify attribute or regular expression");
+        pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
+                            "Client %s update request did not specify attribute or regular expression",
+                            pcmk__client_name(request->ipc_client));
         free(host);
-        return;
+        return NULL;
     }
 
     if (host == NULL) {
         crm_trace("Inferring host");
         host = strdup(attrd_cluster->uname);
-        crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, host);
-        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, attrd_cluster->nodeid);
+        pcmk__xe_add_node(xml, host, attrd_cluster->nodeid);
     }
 
     a = g_hash_table_lookup(attributes, attr);
+
+    if (a == NULL && pcmk__str_eq(request->op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+        pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
+                            "Attribute %s does not exist", attr);
+        free(host);
+        return NULL;
+    }
 
     /* If value was specified using ++ or += notation, expand to real value */
     if (value) {
@@ -382,6 +365,8 @@ attrd_client_update(xmlNode *xml)
     free(host);
 
     attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 /*!
@@ -455,7 +440,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
     xmlNode *xml = NULL;
-    const char *op;
 
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK((c != NULL) && (client != NULL), return 0);
@@ -463,53 +447,33 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
+
     xml = pcmk__client_data2xml(client, data, &id, &flags);
+
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__ipc_send_ack(client, id, flags, "ack", NULL, CRM_EX_PROTOCOL);
         return 0;
-    }
-
-    CRM_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-
-    op = crm_element_value(xml, PCMK__XA_TASK);
-
-    if (client->name == NULL) {
-        const char *value = crm_element_value(xml, F_ORIG);
-        client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
-    }
-
-    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_clear_failure(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_update(xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
-        attrd_send_ack(client, id, flags);
-        attrd_client_refresh();
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
-        /* queries will get reply, so no ack is necessary */
-        attrd_client_query(client, id, flags, xml);
 
     } else {
-        crm_info("Ignoring request from client %s with unknown operation %s",
-                 pcmk__client_name(client), op);
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = xml,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        CRM_ASSERT(client->user != NULL);
+        pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
+
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        attrd_handle_request(&request);
+        pcmk__reset_request(&request);
     }
 
     free_xml(xml);

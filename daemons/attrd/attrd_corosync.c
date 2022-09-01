@@ -28,10 +28,7 @@ extern crm_exit_t attrd_exit_status;
 static void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
-    const char *op = crm_element_value(xml, PCMK__XA_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    bool peer_won = false;
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -44,34 +41,23 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
          * needed). Ignore all other messages.
          */
         return;
-    }
 
-    peer_won = attrd_check_for_new_writer(peer, xml);
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = NULL,
+            .ipc_id         = 0,
+            .ipc_flags      = 0,
+            .peer           = crm_element_value(xml, F_ORIG),
+            .xml            = xml,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
 
-    if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                         PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-        attrd_peer_update(peer, xml, host, false);
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
+        CRM_CHECK(request.op != NULL, return);
 
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_none)) {
-        attrd_peer_sync(peer, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_none)) {
-        attrd_peer_remove(host, true, peer->uname);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_none)) {
-        /* It is not currently possible to receive this as a peer command,
-         * but will be, if we one day enable propagating this operation.
-         */
-        attrd_peer_clear_failure(peer, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_none)
-               && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-        attrd_peer_sync_response(peer, peer_won, xml);
-
-    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_none)) {
-        /* Ignore. The flush command was removed in 2.0.0 but may be
-         * received from peers running older versions.
-         */
+        attrd_handle_request(&request);
+        pcmk__reset_request(&request);
     }
 }
 
@@ -424,16 +410,10 @@ attrd_cluster_connect(void)
     return pcmk_ok;
 }
 
-/*!
- * \internal
- * \brief Clear failure-related attributes
- *
- * \param[in] peer  Peer that sent clear request
- * \param[in] xml   Request XML
- */
 void
-attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
+attrd_peer_clear_failure(pcmk__request_t *request)
 {
+    xmlNode *xml = request->xml;
     const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
     const char *op = crm_element_value(xml, PCMK__XA_ATTR_OPERATION);
@@ -442,6 +422,8 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
+
+    crm_node_t *peer = crm_get_peer(0, request->peer);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",
@@ -569,7 +551,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
              child = crm_next_same_xml(child)) {
             /* Set the node name on the child message, assuming it isn't already. */
             if (crm_element_value(child, PCMK__XA_ATTR_NODE_NAME) == NULL) {
-                crm_xml_add(child, PCMK__XA_ATTR_NODE_NAME, host);
+                pcmk__xe_add_node(xml, host, 0);
             }
 
             attrd_peer_update_one(peer, child, filter);

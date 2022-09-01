@@ -73,6 +73,7 @@ libcrmcommon_la_SOURCES	+= lists.c
 libcrmcommon_la_SOURCES	+= logging.c
 libcrmcommon_la_SOURCES	+= mainloop.c
 libcrmcommon_la_SOURCES	+= messages.c
+libcrmcommon_la_SOURCES	+= nodes.c
 libcrmcommon_la_SOURCES	+= nvpair.c
 libcrmcommon_la_SOURCES	+= operations.c
 libcrmcommon_la_SOURCES	+= options.c

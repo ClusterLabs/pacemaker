@@ -709,10 +709,7 @@ create_purge_node_request(pcmk_ipc_api_t *api, const char *node_name,
             crm_xml_add(request, F_TYPE, T_ATTRD);
             crm_xml_add(request, F_ORIG, crm_system_name);
             crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-            crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node_name);
-            if (nodeid > 0) {
-                crm_xml_add_int(request, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
-            }
+            pcmk__xe_add_node(request, node_name, nodeid);
             break;
 
         case pcmk_ipc_controld:

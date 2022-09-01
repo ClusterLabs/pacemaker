@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/messages_internal.h>
 #include <crm/cib/internal.h>
 
 /*
@@ -42,6 +43,9 @@
  *                      message
  */
 #define ATTRD_PROTOCOL_VERSION "4"
+
+#define attrd_send_ack(client, id, flags) \
+    pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
@@ -146,17 +150,15 @@ int attrd_cluster_connect(void);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
-void attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml);
+void attrd_peer_clear_failure(pcmk__request_t *request);
 void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
 
-void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);
-void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
-void attrd_client_clear_failure(xmlNode *xml);
-void attrd_client_update(xmlNode *xml);
-void attrd_client_refresh(void);
-void attrd_client_query(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                        xmlNode *query);
+xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
+xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
+xmlNode *attrd_client_update(pcmk__request_t *request);
+xmlNode *attrd_client_refresh(pcmk__request_t *request);
+xmlNode *attrd_client_query(pcmk__request_t *request);
 gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
@@ -170,8 +172,12 @@ void attrd_write_attribute(attribute_t *a, bool ignore_delay);
 void attrd_write_attributes(bool all, bool ignore_delay);
 void attrd_write_or_elect_attribute(attribute_t *a);
 
+extern int minimum_protocol_version;
 void attrd_update_minimum_protocol_ver(const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
+
+void attrd_unregister_handlers(void);
+void attrd_handle_request(pcmk__request_t *request);
 
 #endif /* PACEMAKER_ATTRD__H */
