@@ -17,6 +17,9 @@
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
 
+daemon_name="ipmiservicelogd"
+pidfile="/var/run/ipmiservicelogd.pid0"
+
 #######################################################################
 
 meta_data() {
@@ -70,11 +73,11 @@ SystemHealth_check_tools() {
         return $OCF_ERR_INSTALLED
     fi
 
-    which ipmiservicelogd > /dev/null 2>&1
+    which "$daemon_name" > /dev/null 2>&1
     RC=$?
 
     if [ $RC -ne 0 ]; then
-        ocf_log err "ipmiservicelogd not found!"
+        ocf_log err "$daemon_name not found!"
         return $OCF_ERR_INSTALLED
     fi
 
@@ -106,11 +109,11 @@ SystemHealth_start() {
         return $OCF_ERR_GENERIC
     fi
 
-    ipmiservicelogd smi 0 > /dev/null 2>&1 &
+    "$daemon_name" smi 0 > /dev/null 2>&1 &
     RC=$?
 
     if [ $RC -ne 0 ]; then
-        ocf_log err "Could not start ipmiservicelogd!"
+        ocf_log err "Could not start $daemon_name!"
         return $OCF_ERR_GENERIC
     fi
 
@@ -132,11 +135,11 @@ SystemHealth_stop() {
     if [ $RC -eq $OCF_ERR_GENERIC ]; then
         return $OCF_ERR_GENERIC
     elif [ $RC -eq  $OCF_SUCCESS ]; then
-        killall ipmiservicelogd
+        killall "$daemon_name"
         RC1=$?
 
         if [ $RC1 -ne 0 ]; then
-            ocf_log err "Could not stop ipmiservicelogd!"
+            ocf_log err "Could not stop $daemon_name!"
         fi
 
         servicelog_notify --remove --command="$OCF_RESKEY_program" > /dev/null 2>&1
@@ -165,19 +168,19 @@ SystemHealth_monitor() {
     # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
     # That is THREE states, not just yes/no.
 
-    if [ ! -f /var/run/ipmiservicelogd.pid0 ]; then
-        ocf_log debug "ipmiservicelogd is not running!"
+    if [ ! -f "$pidfile" ]; then
+        ocf_log debug "$daemon_name is not running!"
         return $OCF_NOT_RUNNING
     fi
 
-    ps -p "$(cat /var/run/ipmiservicelogd.pid0)" >/dev/null 2>&1
+    pid=$(cat $pidfile)
+
+    ps -p "$pid" >/dev/null 2>&1
     RC=$?
 
     if [ $RC -ne 0 ]; then
-        ocf_log debug "ipmiservicelogd's pid $(cat /var/run/ipmiservicelogd.pid0) is not running!"
-
-        rm /var/run/ipmiservicelogd.pid0
-
+        ocf_log debug "${daemon_name}'s pid $pid is not running!"
+        rm "$pidfile"
         return $OCF_ERR_GENERIC
     fi
 
