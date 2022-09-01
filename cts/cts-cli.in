@@ -1868,17 +1868,33 @@ EOF
     cmd="crm_rule"
     test_assert $CRM_EX_USAGE 0
 
+    desc="crm_rule given no arguments (XML)"
+    cmd="crm_rule --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
     desc="crm_rule given no rule to check"
     cmd="crm_rule -c"
     test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given no rule to check (XML)"
+    cmd="crm_rule -c --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
 
     desc="crm_rule given invalid input XML"
     cmd="crm_rule -c -r blahblah -X 'invalidxml'"
     test_assert $CRM_EX_DATAERR 0
 
+    desc="crm_rule given invalid input XML (XML)"
+    cmd="crm_rule -c -r blahblah -X 'invalidxml' --output-as=xml"
+    test_assert_validate $CRM_EX_DATAERR 0
+
     desc="crm_rule given invalid input XML on stdin"
     cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X -"
     test_assert $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML on stdin (XML)"
+    cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X - --output-as=xml"
+    test_assert_validate $CRM_EX_DATAERR 0
 
     desc="Try to check a rule that doesn't exist"
     cmd="crm_rule -c -r blahblah"
@@ -1886,11 +1902,15 @@ EOF
 
     desc="Try to check a rule that doesn't exist, with XML output"
     cmd="crm_rule -c -r blahblah --output-as=xml"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     desc="Try to check a rule that has too many date_expressions"
     cmd="crm_rule -c -r cli-rule-too-many-date-expressions"
     test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule that has too many date_expressions (XML)"
+    cmd="crm_rule -c -r cli-rule-too-many-date-expressions --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Verify basic rule is expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
@@ -1898,19 +1918,31 @@ EOF
 
     desc="Verify basic rule is expired, with XML output"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml"
-    test_assert $CRM_EX_EXPIRED 0
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify basic rule worked in the past"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101"
     test_assert $CRM_EX_OK 0
 
+    desc="Verify basic rule worked in the past (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Verify basic rule is not yet in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
     test_assert $CRM_EX_NOT_YET_IN_EFFECT 0
 
+    desc="Verify basic rule is not yet in effect (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet --output-as=xml"
+    test_assert_validate $CRM_EX_NOT_YET_IN_EFFECT 0
+
     desc="Verify date_spec rule with years has expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years"
     test_assert $CRM_EX_EXPIRED 0
+
+    desc="Verify date_spec rule with years has expired (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify multiple rules at once"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years"
@@ -1918,23 +1950,39 @@ EOF
 
     desc="Verify multiple rules at once, with XML output"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
-    test_assert $CRM_EX_EXPIRED 0
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify date_spec rule with years is in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"
     test_assert $CRM_EX_OK 0
 
+    desc="Verify date_spec rule with years is in effect (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Try to check a rule whose date_spec does not contain years="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule whose date_spec does not contain years= (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule whose date_spec contains years= and moon="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule whose date_spec contains years= and moon= (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule with no date_expression"
     cmd="crm_rule -c -r cli-no-date_expression-rule"
     test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule with no date_expression (XML)"
+    cmd="crm_rule -c -r cli-no-date_expression-rule --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     unset CIB_shadow_dir
 }

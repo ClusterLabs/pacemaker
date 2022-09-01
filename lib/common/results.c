@@ -199,6 +199,10 @@ static struct pcmk__rc_info {
       "Unable to parse CIB XML",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_duplicate_id",
+      "Two or more XML elements have the same ID",
+      -pcmk_err_generic,
+    },
 };
 
 #define PCMK__N_RC (sizeof(pcmk__rcs) / sizeof(struct pcmk__rc_info))
@@ -672,6 +676,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_no_input:
             return CRM_EX_NOINPUT;
+
+        case pcmk_rc_duplicate_id:
+            return CRM_EX_MULTIPLE;
 
         default:
             return CRM_EX_ERROR;
