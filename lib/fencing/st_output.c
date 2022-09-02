@@ -412,11 +412,16 @@ stonith_event_text(pcmk__output_t *out, va_list args)
     const char *succeeded = va_arg(args, const char *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    gchar *desc = stonith__history_description(event, full_history, succeeded,
-                                               show_opts);
+    if (out->is_quiet(out)) {
+        pcmk__formatted_printf(out, "%lld\n", (long long) event->completed);
+    } else {
+        gchar *desc = stonith__history_description(event, full_history, succeeded,
+                                                   show_opts);
 
-    pcmk__indented_printf(out, "%s\n", desc);
-    g_free(desc);
+        pcmk__indented_printf(out, "%s\n", desc);
+        g_free(desc);
+    }
+
     return pcmk_rc_ok;
 }
 
