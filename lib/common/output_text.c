@@ -335,6 +335,10 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
     CRM_ASSERT(out != NULL);
 
+    if (!pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
+        return;
+    }
+
     len = vfprintf(out->dest, format, args);
     CRM_ASSERT(len >= 0);
 }
