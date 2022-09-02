@@ -2523,7 +2523,27 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
 static int
-resource_config(pcmk__output_t *out, va_list args) {
+resource_config_default(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    gboolean raw = va_arg(args, gboolean);
+
+    char *rsc_xml = NULL;
+
+    if (raw) {
+        rsc_xml = dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
+    } else {
+        rsc_xml = dump_xml_formatted(rsc->xml);
+    }
+
+    out->output_xml(out, "xml", rsc_xml);
+
+    free(rsc_xml);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
+static int
+resource_config_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gboolean raw = va_arg(args, gboolean);
 
@@ -2973,7 +2993,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "promotion-score", "default", promotion_score },
     { "promotion-score", "xml", promotion_score_xml },
-    { "resource-config", "default", resource_config },
+    { "resource-config", "default", resource_config_default },
+    { "resource-config", "text", resource_config_text },
     { "resource-history", "default", resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },

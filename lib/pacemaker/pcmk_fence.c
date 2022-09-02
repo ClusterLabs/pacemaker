@@ -276,12 +276,11 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
         out->increment_list(out);
     }
 
-    if (latest) {
-        if (out->is_quiet(out)) {
-            pcmk__formatted_printf(out, "%lld\n", (long long) latest->completed);
-        } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest, false, NULL,
-                         (uint32_t) pcmk_show_failed_detail);
+    if (latest && (out->is_quiet(out) || !verbose)) {
+        out->message(out, "stonith-event", latest, false, NULL,
+                     (uint32_t) pcmk_show_failed_detail);
+
+        if (!out->is_quiet(out)) {
             out->increment_list(out);
         }
     }

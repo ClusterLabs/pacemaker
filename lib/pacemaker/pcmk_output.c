@@ -584,6 +584,21 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
 static int
+health_default(pcmk__output_t *out, va_list args)
+{
+    const char *sys_from G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *host_from = va_arg(args, const char *);
+    const char *fsa_state = va_arg(args, const char *);
+    const char *result = va_arg(args, const char *);
+
+    return out->info(out, "Controller on %s in state %s: %s",
+                     pcmk__s(host_from, "unknown node"),
+                     pcmk__s(fsa_state, "unknown"),
+                     pcmk__s(result, "unknown result"));
+}
+
+PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
+static int
 health_text(pcmk__output_t *out, va_list args)
 {
     const char *sys_from G_GNUC_UNUSED = va_arg(args, const char *);
@@ -619,6 +634,20 @@ health_xml(pcmk__output_t *out, va_list args)
                                  "result", pcmk__s(result, ""),
                                  NULL);
     return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
+static int
+pacemakerd_health_default(pcmk__output_t *out, va_list args)
+{
+    const char *sys_from = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
+
+    return out->info(out, "Status of %s: '%s' (last updated %s)",
+                     pcmk__s(sys_from, "unknown node"),
+                     pcmk__s(state, "unknown state"),
+                     pcmk__s(last_updated, "at unknown time"));
 }
 
 PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
@@ -690,6 +719,16 @@ profile_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
+dc_default(pcmk__output_t *out, va_list args)
+{
+    const char *dc = va_arg(args, const char *);
+
+    return out->info(out, "Designated Controller is: %s",
+                     pcmk__s(dc, "not yet elected"));
+}
+
+PCMK__OUTPUT_ARGS("dc", "const char *")
+static int
 dc_text(pcmk__output_t *out, va_list args)
 {
     const char *dc = va_arg(args, const char *);
@@ -715,6 +754,19 @@ dc_xml(pcmk__output_t *out, va_list args)
                                  "node_name", pcmk__s(dc, ""),
                                  NULL);
     return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
+static int
+crmadmin_node_default(pcmk__output_t *out, va_list args)
+{
+    const char *type = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *id = va_arg(args, const char *);
+    gboolean BASH_EXPORT G_GNUC_UNUSED = va_arg(args, gboolean);
+
+    return out->info(out, "%s node: %s (%s)", type ? type : "cluster",
+                     pcmk__s(name, "<null>"), pcmk__s(id, "<null>"));
 }
 
 PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
@@ -1929,13 +1981,16 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-status", "default", pcmk__cluster_status_text },
     { "cluster-status", "html", cluster_status_html },
     { "cluster-status", "xml", cluster_status_xml },
-    { "crmadmin-node", "default", crmadmin_node_text },
+    { "crmadmin-node", "default", crmadmin_node_default },
+    { "crmadmin-node", "text", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
-    { "dc", "default", dc_text },
+    { "dc", "default", dc_default},
+    { "dc", "text", dc_text },
     { "dc", "xml", dc_xml },
     { "digests", "default", digests_text },
     { "digests", "xml", digests_xml },
-    { "health", "default", health_text },
+    { "health", "default", health_default },
+    { "health", "text", health_text },
     { "health", "xml", health_xml },
     { "inject-attr", "default", inject_attr },
     { "inject-attr", "xml", inject_attr_xml },
@@ -1959,7 +2014,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "locations-list", "xml", locations_list_xml },
     { "node-action", "default", node_action },
     { "node-action", "xml", node_action_xml },
-    { "pacemakerd-health", "default", pacemakerd_health_text },
+    { "pacemakerd-health", "default", pacemakerd_health_default },
+    { "pacemakerd-health", "text", pacemakerd_health_text },
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "profile", "default", profile_default, },
     { "profile", "xml", profile_xml },
