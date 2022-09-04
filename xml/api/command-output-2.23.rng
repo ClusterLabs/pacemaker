@@ -8,19 +8,7 @@
 
     <define name="command-output">
         <element name="command">
-            <attribute name="code"> <data type="integer" /> </attribute>
-            <optional>
-                <element name="output">
-                    <attribute name="source"><value>stdout</value></attribute>
-                    <text />
-                </element>
-            </optional>
-            <optional>
-                <element name="output">
-                    <attribute name="source"><value>stderr</value></attribute>
-                    <text />
-                </element>
-            </optional>
+            <externalRef href="subprocess-output-2.23.rng" />
         </element>
     </define>
 </grammar>

@@ -229,12 +229,12 @@
             </optional>
             <ref name="agent-status"/>
             <optional>
-                <choice>
-                    <element name="command">
+                <element name="command">
+                    <choice>
                         <text />
-                    </element>
-                    <externalRef href="command-output-1.0.rng"/>
-                </choice>
+                        <externalRef href="subprocess-output-2.23.rng"/>
+                    </choice>
+                </element>
             </optional>
         </element>
     </define>

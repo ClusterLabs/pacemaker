@@ -45,7 +45,7 @@
             <attribute name="agent"> <text /> </attribute>
             <attribute name="valid"> <data type="boolean" /> </attribute>
             <optional>
-                <externalRef href="command-output-1.0.rng" />
+                <externalRef href="command-output-2.23.rng" />
             </optional>
         </element>
     </define>
