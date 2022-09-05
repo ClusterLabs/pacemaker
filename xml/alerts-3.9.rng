@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-alerts"/>
+  </start>
+
+  <define name="element-alerts">
+    <optional>
+    <element name="alerts">
+      <zeroOrMore>
+        <element name="alert">
+          <attribute name="id"><data type="ID"/></attribute>
+          <optional>
+            <attribute name="description"><text/></attribute>
+          </optional>
+          <!-- path to the script called for alert -->
+          <attribute name="path"><text/></attribute>
+          <interleave>
+            <ref name="element-alert-extra"/>
+            <optional>
+              <element name="select">
+                <interleave>
+                  <optional>
+                    <element name="select_attributes">
+                      <zeroOrMore>
+                        <element name="attribute">
+                          <attribute name="id"><data type="ID"/></attribute>
+                          <attribute name="name"><text/></attribute>
+                        </element>
+                      </zeroOrMore>
+                    </element>
+                  </optional>
+                  <optional>
+                    <element name="select_fencing">
+                      <empty/>
+                    </element>
+                  </optional>
+                  <optional>
+                    <element name="select_nodes">
+                      <empty/>
+                    </element>
+                  </optional>
+                  <optional>
+                    <element name="select_resources">
+                      <empty/>
+                    </element>
+                  </optional>
+                </interleave>
+              </element>
+            </optional>
+            <zeroOrMore>
+              <element name="recipient">
+                <attribute name="id"><data type="ID"/></attribute>
+                <optional>
+                  <attribute name="description"><text/></attribute>
+                </optional>
+                <attribute name="value"><text/></attribute>
+                <ref name="element-alert-extra"/>
+              </element>
+            </zeroOrMore>
+          </interleave>
+        </element>
+      </zeroOrMore>
+    </element>
+    </optional>
+  </define>
+
+  <define name="element-alert-extra">
+      <zeroOrMore>
+        <choice>
+          <element name="meta_attributes">
+            <externalRef href="nvset-3.9.rng"/>
+          </element>
+          <element name="instance_attributes">
+            <externalRef href="nvset-3.9.rng"/>
+          </element>
+        </choice>
+      </zeroOrMore>
+  </define>
+
+</grammar>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="options"/>
+  </start>
+
+  <!--
+   see upgrade-2.10.xsl
+   - cibtr:table for="cluster-properties"
+   -->
+  <define name="cluster_property_set.nvpair.name-value-unsupported">
+    <choice>
+      <group>
+        <attribute name="name">
+          <value type="string">cluster-infrastructure</value>
+        </attribute>
+        <attribute name="value">
+          <data type="string">
+            <except>
+              <choice>
+                <value>heartbeat</value>
+                <value>openais</value>
+                <value>classic openais</value>
+                <value>classic openais (with plugin)</value>
+                <value>cman</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+      </group>
+      <group>
+        <attribute name="name">
+          <data type="string">
+            <except>
+              <choice>
+                <value>cluster-infrastructure</value>
+                <value>cluster_recheck_interval</value>
+                <value>dc_deadtime</value>
+                <value>default-action-timeout</value>
+                <value>default_action_timeout</value>
+                <value>default-migration-threshold</value>
+                <value>default_migration_threshold</value>
+                <value>default-resource-failure-stickiness</value>
+                <value>default_resource_failure_stickiness</value>
+                <value>default-resource-stickiness</value>
+                <value>default_resource_stickiness</value>
+                <value>election_timeout</value>
+                <value>expected-quorum-votes</value>
+                <value>is-managed-default</value>
+                <value>is_managed_default</value>
+                <value>no_quorum_policy</value>
+                <value>notification-agent</value>
+                <value>notification-recipient</value>
+                <value>remove_after_stop</value>
+                <value>shutdown_escalation</value>
+                <value>startup_fencing</value>
+                <value>stonith_action</value>
+                <value>stonith_enabled</value>
+                <value>stop_orphan_actions</value>
+                <value>stop_orphan_resources</value>
+                <value>symmetric_cluster</value>
+                <value>transition_idle_timeout</value>
+              </choice>
+            </except>
+          </data>
+        </attribute>
+        <optional>
+          <attribute name="value"><text/></attribute>
+        </optional>
+      </group>
+    </choice>
+  </define>
+
+  <define name="options">
+    <interleave>
+      <element name="crm_config">
+        <zeroOrMore>
+          <element name="cluster_property_set">
+            <grammar>
+              <include href="nvset-3.9.rng">
+                <define name="element-nvset.name-value">
+                  <parentRef name="cluster_property_set.nvpair.name-value-unsupported"/>
+                </define>
+              </include>
+            </grammar>
+          </element>
+        </zeroOrMore>
+      </element>
+      <optional>
+        <element name="rsc_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <externalRef href="nvset-3.9.rng"/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+      <optional>
+        <element name="op_defaults">
+          <zeroOrMore>
+            <element name="meta_attributes">
+              <externalRef href="nvset-3.9.rng"/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+    </interleave>
+  </define>
+
+</grammar>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
       <ref name="element-constraints"/>
@@ -88,7 +88,12 @@
             </attribute>
           </optional>
           <optional>
-            <externalRef href="score.rng"/>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="kind">
+                <ref name="order-types"/>
+              </attribute>
+             </choice>
           </optional>
           <oneOrMore>
             <element name="resource_ref">
@@ -105,6 +110,9 @@
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
         <externalRef href="score.rng"/>
+      </optional>
+      <optional>
+        <attribute name="influence"><text/></attribute>
       </optional>
       <optional>
         <ref name="element-lifetime"/>
@@ -128,12 +136,6 @@
             <attribute name="with-rsc-role">
               <ref name="attribute-roles"/>
             </attribute>
-          </optional>
-          <optional>
-            <attribute name="rsc-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="with-rsc-instance"><data type="integer"/></attribute>
           </optional>
         </group>
       </choice>
@@ -177,17 +179,11 @@
               <ref name="attribute-actions"/>
             </attribute>
           </optional>
-          <optional>
-            <attribute name="first-instance"><data type="integer"/></attribute>
-          </optional>
-          <optional>
-            <attribute name="then-instance"><data type="integer"/></attribute>
-          </optional>
         </group>
       </choice>
     </element>
   </define>
- 
+
   <define name="element-rsc_ticket">
     <element name="rsc_ticket">
       <attribute name="id"><data type="ID"/></attribute>
@@ -234,7 +230,7 @@
       <value>stop</value>
     </choice>
   </define>
-      
+
   <define name="attribute-roles">
     <choice>
       <value>Stopped</value>
@@ -261,5 +257,5 @@
       </oneOrMore>
     </element>
   </define>
-  
+
 </grammar>
