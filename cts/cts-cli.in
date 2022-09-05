@@ -1683,7 +1683,7 @@ function test_validity() {
 
     create_shadow_cib pacemaker-1.2
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
+    export PCMK_trace_functions=apply_upgrade,update_validation
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -1756,7 +1756,7 @@ test_upgrade() {
 
     create_shadow_cib pacemaker-2.10
     orig_trace_fns="$PCMK_trace_functions"
-    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
+    export PCMK_trace_functions=apply_upgrade,update_validation
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
