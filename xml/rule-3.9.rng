@@ -146,16 +146,7 @@
     <element name="duration">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-        <attribute name="hours"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="monthdays"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="weekdays"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="yearsdays"><text/></attribute>
+        <attribute name="years"><text/></attribute>
       </optional>
       <optional>
         <attribute name="months"><text/></attribute>
@@ -164,7 +155,18 @@
         <attribute name="weeks"><text/></attribute>
       </optional>
       <optional>
-        <attribute name="years"><text/></attribute>
+        <attribute name="hours"><text/></attribute>
+      </optional>
+
+      <!-- @COMPAT: The below attributes are invalid for duration -->
+      <optional>
+        <attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
       </optional>
       <optional>
         <attribute name="weekyears"><text/></attribute>
@@ -179,31 +181,33 @@
     <element name="date_spec">
       <attribute name="id"><data type="ID"/></attribute>
       <optional>
-        <attribute name="hours"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="monthdays"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="weekdays"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="yearsdays"><text/></attribute>
+        <attribute name="years"><text/></attribute>
       </optional>
       <optional>
         <attribute name="months"><text/></attribute>
       </optional>
       <optional>
-        <attribute name="weeks"><text/></attribute>
+        <attribute name="monthdays"><text/></attribute>
       </optional>
       <optional>
-        <attribute name="years"><text/></attribute>
+        <attribute name="hours"><text/></attribute>
       </optional>
       <optional>
         <attribute name="weekyears"><text/></attribute>
       </optional>
       <optional>
+        <attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
         <attribute name="moon"><text/></attribute>
+      </optional>
+
+      <!-- @COMPAT: The below attributes are invalid for date_spec -->
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
       </optional>
     </element>
   </define>
