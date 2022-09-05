@@ -122,12 +122,13 @@ itself, allowing for more sophistication down the road.
 3. Modify `${base}-${X}.${Y}.rng` as required.
 4. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
 5. Commit.
-6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local 
+6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
+6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local
    source directory.
 7. The CIB validity and upgrade regression tests will break after the schema is
    updated. Run `cts/cts-cli -s` to make the expected outputs reflect the
    changes made so far, and run `git diff` to ensure that these changes look
-   sane. Finally, commit the changes. 
+   sane. Finally, commit the changes.
 8. Similarly, with the new major version `${X}`, it's advisable to refresh
    scheduler tests at some point. See the instructions in `cts/README.md`.
 
