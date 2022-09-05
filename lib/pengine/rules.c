@@ -288,9 +288,7 @@ update_field(crm_time_t *t, xmlNode *xml, const char *attr,
 crm_time_t *
 pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 {
-    crm_time_t *end = crm_time_new_undefined();
-
-    crm_time_set(end, start);
+    crm_time_t *end = pcmk_copy_time(start);
 
     update_field(end, duration_spec, "years", crm_time_add_years);
     update_field(end, duration_spec, "months", crm_time_add_months);
