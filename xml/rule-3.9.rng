@@ -98,9 +98,7 @@
             </group>
             <group>
               <attribute name="start"><text/></attribute>
-              <element name="duration">
-                <ref name="date-common"/>
-              </element>
+              <ref name="duration"/>
             </group>
           </choice>
         </group>
@@ -116,9 +114,7 @@
         </group>
         <group>
           <attribute name="operation"><value>date_spec</value></attribute>
-          <element name="date_spec">
-            <ref name="date-common"/>
-          </element> 
+          <ref name="date_spec"/>
         </group>
       </choice>
     </element> 
@@ -149,35 +145,70 @@
     </element>
   </define>
 
-  <define name="date-common">
-    <attribute name="id"><data type="ID"/></attribute>
-    <optional>
-      <attribute name="hours"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="monthdays"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="weekdays"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="yearsdays"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="months"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="weeks"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="years"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="weekyears"><text/></attribute>
-    </optional>
-    <optional>
-      <attribute name="moon"><text/></attribute>
-    </optional>
+  <define name="duration">
+    <element name="duration">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="months"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="years"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekyears"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="moon"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+  <define name="date_spec">
+    <element name="date_spec">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="months"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="years"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekyears"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="moon"><text/></attribute>
+      </optional>
+    </element>
   </define>
 
 </grammar>
