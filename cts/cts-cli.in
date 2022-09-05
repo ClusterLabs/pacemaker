@@ -60,6 +60,9 @@ VALGRIND_OPTS="
 err_fifo=$(mktemp ${TMPDIR:-/tmp}/cts-cli.err_fifo.XXXXXXXXXX)
 mkfifo "$err_fifo"
 
+# Log test errors to stderr
+export PCMK_stderr=1
+
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
 CRM_EX_ERROR=1
@@ -1302,8 +1305,8 @@ function test_acl_loop() {
     TMPXML="$1"
 
     # Make sure we're rejecting things for the right reasons
+    orig_trace_fns="$PCMK_trace_functions"
     export PCMK_trace_functions=pcmk__check_acl,pcmk__apply_creation_acl
-    export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
 
@@ -1574,6 +1577,8 @@ function test_acl_loop() {
     desc="$CIB_user: Replace - delete attribute (deny overrides allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 function test_acls() {
@@ -1677,8 +1682,8 @@ function test_validity() {
     TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
 
     create_shadow_cib pacemaker-1.2
+    orig_trace_fns="$PCMK_trace_functions"
     export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
-    export PCMK_stderr=1
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -1741,6 +1746,7 @@ function test_validity() {
 
     unset CIB_shadow_dir
     rm -f "$TMPGOOD" "$TMPBAD"
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 test_upgrade() {
@@ -1749,6 +1755,8 @@ test_upgrade() {
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
 
     create_shadow_cib pacemaker-2.10
+    orig_trace_fns="$PCMK_trace_functions"
+    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -1793,6 +1801,7 @@ EOF
 
     unset CIB_shadow_dir
     rm -f "$TMPXML"
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 test_rules() {
