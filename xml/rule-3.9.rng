@@ -155,7 +155,16 @@
         <attribute name="weeks"><text/></attribute>
       </optional>
       <optional>
+        <attribute name="days"><text/></attribute>
+      </optional>
+      <optional>
         <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="minutes"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="seconds"><text/></attribute>
       </optional>
 
       <!-- @COMPAT: The below attributes are invalid for duration -->
@@ -191,6 +200,15 @@
       </optional>
       <optional>
         <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="minutes"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="seconds"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yeardays"><text/></attribute>
       </optional>
       <optional>
         <attribute name="weekyears"><text/></attribute>
