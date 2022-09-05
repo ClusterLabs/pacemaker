@@ -343,6 +343,7 @@ extern "C" {
 #  define XML_RULE_ATTR_BOOLEAN_OP	"boolean-op"
 
 #  define XML_TAG_EXPRESSION		"expression"
+#  define PCMK_XE_DATE_EXPRESSION	"date_expression"
 #  define XML_EXPR_ATTR_ATTRIBUTE	"attribute"
 #  define XML_EXPR_ATTR_OPERATION	"operation"
 #  define XML_EXPR_ATTR_VALUE		"value"
