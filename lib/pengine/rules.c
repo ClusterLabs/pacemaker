@@ -110,19 +110,19 @@ find_expression_type(xmlNode * expr)
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
     tag = crm_element_name(expr);
 
-    if (pcmk__str_eq(tag, "date_expression", pcmk__str_casei)) {
+    if (pcmk__str_eq(tag, PCMK_XE_DATE_EXPRESSION, pcmk__str_casei)) {
         return time_expr;
 
-    } else if (pcmk__str_eq(tag, "rsc_expression", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_RSC_EXPRESSION, pcmk__str_casei)) {
         return rsc_expr;
 
-    } else if (pcmk__str_eq(tag, "op_expression", pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_OP_EXPRESSION, pcmk__str_casei)) {
         return op_expr;
 
     } else if (pcmk__str_eq(tag, XML_TAG_RULE, pcmk__str_casei)) {
         return nested_rule;
 
-    } else if (!pcmk__str_eq(tag, "expression", pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(tag, XML_TAG_EXPRESSION, pcmk__str_casei)) {
         return not_expr;
 
     } else if (pcmk__strcase_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
