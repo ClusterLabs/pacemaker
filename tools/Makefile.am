@@ -57,13 +57,6 @@ sbin_PROGRAMS		= attrd_updater \
 			  iso8601 \
 			  stonith_admin
 
-if BUILD_SERVICELOG
-sbin_PROGRAMS		+= notifyServicelogEvent
-endif
-if BUILD_OPENIPMI_SERVICELOG
-sbin_PROGRAMS		+= ipmiservicelogd
-endif
-
 ## SOURCES
 
 # A few tools are just thin wrappers around crm_attribute.
@@ -162,17 +155,5 @@ stonith_admin_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la \
 			  $(top_builddir)/lib/common/libcrmcommon.la
-
-if BUILD_SERVICELOG
-notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
-notifyServicelogEvent_CFLAGS	= $(SERVICELOG_CFLAGS)
-notifyServicelogEvent_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la $(SERVICELOG_LIBS)
-endif
-
-if BUILD_OPENIPMI_SERVICELOG
-ipmiservicelogd_SOURCES	= ipmiservicelogd.c
-ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS)
-ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
-endif
 
 CLEANFILES = $(man8_MANS)

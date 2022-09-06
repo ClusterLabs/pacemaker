@@ -583,12 +583,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 # Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
-# For now, don't package the servicelog-related binaries built only for
-# ppc64le when certain dependencies are installed. If they get more exercise by
-# advanced users, we can reconsider.
-rm -f %{buildroot}/%{_sbindir}/notifyServicelogEvent
-rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
-
 # Byte-compile Python sources where suitable and the distro procedures known
 %if %{defined py_byte_compile}
 %{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}

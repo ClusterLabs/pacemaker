@@ -1635,37 +1635,6 @@ AS_IF([test $with_gnutls -ne $DISABLED],
 AC_SUBST([PC_NAME_GNUTLS])
 AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -ne $DISABLED])
 
-dnl ========================================================================
-dnl    System Health
-dnl ========================================================================
-
-dnl Check if servicelog development package is installed
-SERVICELOG=servicelog-1
-SERVICELOG_EXISTS="no"
-AC_MSG_CHECKING([for $SERVICELOG packages])
-AS_IF([$PKG_CONFIG --exists $SERVICELOG],
-      [
-          PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
-          SERVICELOG_EXISTS="yes"
-          PCMK_FEATURES="$PCMK_FEATURES servicelog"
-      ])
-AC_MSG_RESULT([$SERVICELOG_EXISTS])
-AM_CONDITIONAL(BUILD_SERVICELOG, test x"$SERVICELOG_EXISTS" = x"yes")
-
-dnl Check if OpenIMPI packages and servicelog are installed
-OPENIPMI="OpenIPMI OpenIPMIposix"
-OPENIPMI_SERVICELOG_EXISTS="no"
-AC_MSG_CHECKING([for $SERVICELOG $OPENIPMI packages])
-AS_IF([$PKG_CONFIG --exists $OPENIPMI $SERVICELOG],
-      [
-          PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
-          REQUIRE_HEADER([malloc.h])
-          OPENIPMI_SERVICELOG_EXISTS="yes"
-          PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
-      ])
-AC_MSG_RESULT([$OPENIPMI_SERVICELOG_EXISTS])
-AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test x"$OPENIPMI_SERVICELOG_EXISTS" = x"yes")
-
 # --- ASAN/UBSAN/TSAN (see man gcc) ---
 # when using SANitizers, we need to pass the -fsanitize..
 # to both CFLAGS and LDFLAGS. The CFLAGS/LDFLAGS must be
