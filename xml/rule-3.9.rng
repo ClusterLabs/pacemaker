@@ -90,17 +90,16 @@
         <group>
           <attribute name="operation"><value>in_range</value></attribute>
           <choice>
-            <group>
-              <optional>
-                <attribute name="start"><text/></attribute>
-              </optional>
-              <attribute name="end"><text/></attribute>
-            </group>
+            <attribute name="start"><text/></attribute>
+            <attribute name="end"><text/></attribute>
             <group>
               <attribute name="start"><text/></attribute>
-              <ref name="duration"/>
+              <attribute name="end"><text/></attribute>
             </group>
           </choice>
+          <optional>
+            <ref name="duration"/>
+          </optional>
         </group>
         <group>
           <attribute name="operation"><value>gt</value></attribute>
@@ -108,9 +107,7 @@
         </group>
         <group>
           <attribute name="operation"><value>lt</value></attribute>
-          <choice>
-            <attribute name="end"><text/></attribute>
-          </choice>
+          <attribute name="end"><text/></attribute>
         </group>
         <group>
           <attribute name="operation"><value>date_spec</value></attribute>
