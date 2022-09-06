@@ -1936,11 +1936,11 @@ main(int argc, char **argv)
         }
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, data_set, TRUE);
+            rc = cli_resource_print(rsc, data_set, true);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(rsc, data_set, FALSE);
+            rc = cli_resource_print(rsc, data_set, false);
             break;
 
         case cmd_why:
