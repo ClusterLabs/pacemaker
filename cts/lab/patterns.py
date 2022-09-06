@@ -296,11 +296,8 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["pacemaker-controld"] = [
-#                    "WARN: determine_online_status: Node .* is unclean",
-#                    "Scheduling node .* for fencing",
-# Only if the node wasn't the DC:  "State transition S_IDLE",
-                    "State transition .* -> S_IDLE",
-                    ]
+            r"State transition .* -> S_IDLE",
+        ]
         self.components["pacemaker-controld-ignore"] = []
 
         self.components["pacemaker-attrd"] = []

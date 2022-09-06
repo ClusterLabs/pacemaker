@@ -393,7 +393,7 @@ pcmk__fence_guest(pe_node_t *node)
                                                      NULL, FALSE,
                                                      node->details->data_set);
 
-        crm_info("Implying guest node %s is down (action %d) after %s fencing",
+        crm_info("Implying guest %s is down (action %d) after %s fencing",
                  pe__node_name(node), stonith_op->id,
                  pe__node_name(stop->node));
         order_actions(parent_stonith_op, stonith_op,
@@ -402,7 +402,7 @@ pcmk__fence_guest(pe_node_t *node)
     } else if (stop) {
         order_actions(stop, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
-        crm_info("Implying guest node %s is down (action %d) "
+        crm_info("Implying guest %s is down (action %d) "
                  "after container %s is stopped (action %d)",
                  pe__node_name(node), stonith_op->id,
                  container->id, stop->id);
@@ -419,14 +419,14 @@ pcmk__fence_guest(pe_node_t *node)
 
         if (stop) {
             order_actions(stop, stonith_op, pe_order_optional);
-            crm_info("Implying guest node %s is down (action %d) "
+            crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
                      pe__node_name(node), stonith_op->id, stop->id);
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
-            crm_info("Implying guest node %s is down (action %d) ",
+            crm_info("Implying guest %s is down (action %d) ",
                      pe__node_name(node), stonith_op->id);
         }
     }

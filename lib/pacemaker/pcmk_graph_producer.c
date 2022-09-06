@@ -592,7 +592,7 @@ should_add_action_to_graph(pe_action_t *action)
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
-                  "assuming will be runnable on guest node %s",
+                  "assuming will be runnable on guest %s",
                   action->uuid, action->id, pe__node_name(action->node));
 
     } else if (!action->node->details->online) {
