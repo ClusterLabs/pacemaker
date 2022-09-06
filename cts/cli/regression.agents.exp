@@ -1,0 +1,33 @@
+=#=#=#= Begin test: Validate a valid resource configuration =#=#=#=
+Operation validate (ocf:pacemaker:Dummy) returned 0 (ok)
+=#=#=#= End test: Validate a valid resource configuration - OK (0) =#=#=#=
+* Passed: crm_resource   - Validate a valid resource configuration
+=#=#=#= Begin test: Validate a valid resource configuration (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml">
+  <resource-agent-action action="validate" class="ocf" type="Dummy" provider="pacemaker">
+    <overrides/>
+    <agent-status code="0" message="ok" execution_code="0" execution_message="complete"/>
+  </resource-agent-action>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Validate a valid resource configuration (XML) - OK (0) =#=#=#=
+* Passed: crm_resource   - Validate a valid resource configuration (XML)
+=#=#=#= Begin test: Validate an invalid resource configuration =#=#=#=
+crm_resource: Error performing operation: Not configured
+Operation validate (ocf:pacemaker:Dummy) returned 6 (not configured)
+=#=#=#= End test: Validate an invalid resource configuration - Not configured (6) =#=#=#=
+* Passed: crm_resource   - Validate an invalid resource configuration
+=#=#=#= Begin test: Validate an invalid resource configuration (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml">
+  <resource-agent-action action="validate" class="ocf" type="Dummy" provider="pacemaker">
+    <overrides/>
+    <agent-status code="6" message="not configured" execution_code="0" execution_message="complete"/>
+  </resource-agent-action>
+  <status code="6" message="Not configured">
+    <errors>
+      <error>crm_resource: Error performing operation: Not configured</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Validate an invalid resource configuration (XML) - Not configured (6) =#=#=#=
+* Passed: crm_resource   - Validate an invalid resource configuration (XML)

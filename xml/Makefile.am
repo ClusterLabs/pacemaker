@@ -69,7 +69,17 @@ API_request_base	= command-output	\
 CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 
 # Names of all schemas (including top level and those included by others)
-API_base		= $(API_request_base) fence-event failure generic-list item node-attrs node-history nodes resources status
+API_base		= $(API_request_base)	\
+			  failure		\
+			  fence-event 		\
+			  generic-list		\
+			  item			\
+			  node-attrs		\
+			  node-history		\
+			  nodes			\
+			  resources		\
+			  status		\
+			  subprocess-output
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
 # Static schema files and transforms (only CIB has transforms)

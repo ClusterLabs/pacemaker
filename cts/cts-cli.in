@@ -22,7 +22,8 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set').
+                 Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -61,6 +62,7 @@ CRM_EX_ERROR=1
 CRM_EX_INVALID_PARAM=2
 CRM_EX_UNIMPLEMENT_FEATURE=3
 CRM_EX_INSUFFICIENT_PRIV=4
+CRM_EX_NOT_CONFIGURED=6
 CRM_EX_USAGE=64
 CRM_EX_DATAERR=65
 CRM_EX_CONFIG=78
@@ -173,6 +175,34 @@ function test_assert() {
 
 function test_assert_validate() {
     _test_assert $1 1 $2
+}
+
+# Tests that depend on resource agents and must be run in an installed
+# environment
+function test_agents() {
+    desc="Validate a valid resource configuration"
+    cmd="crm_resource --validate --class ocf --provider pacemaker --agent Dummy"
+    test_assert $CRM_EX_OK 0
+
+    desc="Validate a valid resource configuration (XML)"
+    cmd="crm_resource --validate --class ocf --provider pacemaker --agent Dummy"
+    cmd="$cmd --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Make the Dummy configuration invalid (op_sleep can't be a generic string)
+    export OCF_RESKEY_op_sleep=asdf
+
+    desc="Validate an invalid resource configuration"
+    cmd="crm_resource --validate --class ocf --provider pacemaker --agent Dummy"
+    test_assert $CRM_EX_NOT_CONFIGURED 0
+
+    desc="Validate an invalid resource configuration (XML)"
+    cmd="crm_resource --validate --class ocf --provider pacemaker --agent Dummy"
+    cmd="$cmd --output-as=xml"
+    test_assert_validate $CRM_EX_NOT_CONFIGURED 0
+
+    unset OCF_RESKEY_op_sleep
+    export OCF_RESKEY_op_sleep
 }
 
 function test_crm_mon() {
@@ -2110,6 +2140,7 @@ done
 
 for t in $tests; do
     case "$t" in
+        agents) ;;
         dates) ;;
         tools) ;;
         acls) ;;
