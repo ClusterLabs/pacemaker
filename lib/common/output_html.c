@@ -435,6 +435,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     htmlNodePtr node = NULL;
 
     CRM_ASSERT(out != NULL);
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "html", pcmk__str_none), return NULL);
 
     node = pcmk__output_create_xml_text_node(out, element_name, text);
 
