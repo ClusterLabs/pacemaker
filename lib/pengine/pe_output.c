@@ -342,6 +342,16 @@ is_mixed_version(pe_working_set_t *data_set) {
     return false;
 }
 
+static char *
+formatted_xml_buf(pe_resource_t *rsc, gboolean raw)
+{
+    if (raw) {
+        return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
+    } else {
+        return dump_xml_formatted(rsc->xml);
+    }
+}
+
 PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "uint32_t", "uint32_t")
 static int
 cluster_summary(pcmk__output_t *out, va_list args) {
@@ -2527,13 +2537,21 @@ resource_config(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gboolean raw = va_arg(args, gboolean);
 
-    char *rsc_xml = NULL;
+    char *rsc_xml = formatted_xml_buf(rsc, raw);
 
-    if (raw) {
-        rsc_xml = dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
-    } else {
-        rsc_xml = dump_xml_formatted(rsc->xml);
-    }
+    out->output_xml(out, "xml", rsc_xml);
+
+    free(rsc_xml);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
+static int
+resource_config_text(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    gboolean raw = va_arg(args, gboolean);
+
+    char *rsc_xml = formatted_xml_buf(rsc, raw);
 
     pcmk__formatted_printf(out, "Resource XML:\n");
     out->output_xml(out, "xml", rsc_xml);
@@ -2974,6 +2992,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "promotion-score", "default", promotion_score },
     { "promotion-score", "xml", promotion_score_xml },
     { "resource-config", "default", resource_config },
+    { "resource-config", "text", resource_config_text },
     { "resource-history", "default", resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
