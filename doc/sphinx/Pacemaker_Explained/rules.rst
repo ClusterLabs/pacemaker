@@ -282,7 +282,8 @@ A ``date_expression`` element may optionally contain a ``date_spec`` or
    |               |   ``start`` (if specified) and before either ``end`` (if  |
    |               |   specified) or ``start`` plus the value of the           |
    |               |   ``duration`` element (if one is contained in the        |
-   |               |   ``date_expression``)                                    |
+   |               |   ``date_expression``). If both ``end`` and ``duration``  |
+   |               |   are specified, ``duration`` is ignored.                 |
    |               | * ``date_spec:`` True if the current date/time matches    |
    |               |   the specification given in the contained ``date_spec``  |
    |               |   element (described below)                               |
@@ -314,6 +315,16 @@ supplied is ignored.
    |               |    pair: id; date_spec                                    |
    |               |                                                           |
    |               | A unique name for this element (required)                 |
+   +---------------+-----------------------------------------------------------+
+   | seconds       | .. index::                                                |
+   |               |    pair: seconds; date_spec                               |
+   |               |                                                           |
+   |               | Allowed values: 0-59                                      |
+   +---------------+-----------------------------------------------------------+
+   | minutes       | .. index::                                                |
+   |               |    pair: minutes; date_spec                               |
+   |               |                                                           |
+   |               | Allowed values: 0-59                                      |
    +---------------+-----------------------------------------------------------+
    | hours         | .. index::                                                |
    |               |    pair: hours; date_spec                                 |
@@ -427,6 +438,11 @@ containing a single number. Any attribute not supplied is ignored.
    |               |    pair: hours; duration                                  |
    |               |                                                           |
    |               | This many hours will be added to the total duration       |
+   +---------------+-----------------------------------------------------------+
+   | days          | .. index::                                                |
+   |               |    pair: days; duration                                   |
+   |               |                                                           |
+   |               | This many days will be added to the total duration        |
    +---------------+-----------------------------------------------------------+
    | weeks         | .. index::                                                |
    |               |    pair: weeks; duration                                  |
