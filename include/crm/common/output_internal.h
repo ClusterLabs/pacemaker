@@ -359,6 +359,9 @@ struct pcmk__output_s {
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
      *
+     * \note It is possible for a formatter that supports this method to
+     *       still not print anything out if is_quiet returns true.
+     *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
      * \param[in]     ... Arguments to be formatted.
@@ -377,6 +380,9 @@ struct pcmk__output_s {
      *
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
+     *
+     * \note Formatters that support this method should always generate output,
+     *       even if is_quiet returns true.
      *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
