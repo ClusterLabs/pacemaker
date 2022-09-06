@@ -322,7 +322,7 @@
       <transient_attributes id="hex-1">
         <instance_attributes id="status-hex-1">
           <nvpair id="status-hex-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-1-master-drbd-r0" name="master-drbd-r0" value="10000"/>
+          <nvpair id="status-hex-1-promoted-drbd-r0" name="master-drbd-r0" value="10000"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -399,7 +399,7 @@
       <transient_attributes id="hex-2">
         <instance_attributes id="status-hex-2">
           <nvpair id="status-hex-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-2-master-drbd-r0" name="master-drbd-r0" value="10000"/>
+          <nvpair id="status-hex-2-promoted-drbd-r0" name="master-drbd-r0" value="10000"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -474,7 +474,7 @@
       <transient_attributes id="hex-3">
         <instance_attributes id="status-hex-3">
           <nvpair id="status-hex-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-hex-3-master-drbd-r1" name="master-drbd-r1" value="10000"/>
+          <nvpair id="status-hex-3-promoted-drbd-r1" name="master-drbd-r1" value="10000"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

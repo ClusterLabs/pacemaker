@@ -65,8 +65,8 @@ controld_disconnect_cib_manager(void)
     fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
     cib_free_callbacks(fsa_cib_conn);
     if (fsa_cib_conn->state != cib_disconnected) {
-        /* Does not require a set_slave() reply to sign out from based. */
-        fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
+        fsa_cib_conn->cmds->set_secondary(fsa_cib_conn,
+                                          cib_scope_local|cib_discard_reply);
         fsa_cib_conn->cmds->signoff(fsa_cib_conn);
     }
 
@@ -154,7 +154,7 @@ do_cib_control(long long action,
 
 /*!
  * \internal
- * \brief Get CIB call options to use local scope if master unavailable
+ * \brief Get CIB call options to use local scope if primary is unavailable
  *
  * \return CIB call options
  */
@@ -319,8 +319,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     // Ask CIB to delete the entry
     xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
-    rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, xpath, NULL,
-                         NULL, call_options|cib_xpath, user_name);
+    rc = cib_internal_op(fsa_cib_conn, PCMK__CIB_REQUEST_DELETE, NULL, xpath,
+                         NULL, NULL, call_options|cib_xpath, user_name);
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);

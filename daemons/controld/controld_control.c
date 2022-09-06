@@ -406,7 +406,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 }
 
 static int32_t
-crmd_ipc_closed(qb_ipcs_connection_t * c)
+ipc_client_disconnected(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
@@ -422,10 +422,10 @@ crmd_ipc_closed(qb_ipcs_connection_t * c)
 }
 
 static void
-crmd_ipc_destroy(qb_ipcs_connection_t * c)
+ipc_connection_destroyed(qb_ipcs_connection_t *c)
 {
     crm_trace("Connection %p", c);
-    crmd_ipc_closed(c);
+    ipc_client_disconnected(c);
 }
 
 /*	 A_STOP	*/
@@ -449,8 +449,8 @@ do_started(long long action,
         .connection_accept = accept_controller_client,
         .connection_created = NULL,
         .msg_process = dispatch_controller_ipc,
-        .connection_closed = crmd_ipc_closed,
-        .connection_destroyed = crmd_ipc_destroy
+        .connection_closed = ipc_client_disconnected,
+        .connection_destroyed = ipc_connection_destroyed
     };
 
     if (cur_state != S_STARTING) {
@@ -514,7 +514,7 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-static pcmk__cluster_option_t crmd_opts[] = {
+static pcmk__cluster_option_t controller_options[] = {
     /* name, old name, type, allowed values,
      * default value, validator,
      * short description,
@@ -622,25 +622,23 @@ static pcmk__cluster_option_t crmd_opts[] = {
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
         "0", controld_verify_stonith_watchdog_timeout,
-        N_("How long to wait before we can assume nodes are safely down "
-            "when watchdog-based self-fencing via SBD is in use"),
-        N_("If nonzero, along with `have-watchdog=true` automatically set by the "
-            "cluster, when fencing is required, watchdog-based self-fencing "
-            "will be performed via SBD without requiring a fencing resource "
-            "explicitly configured. "
-            "If `stonith-watchdog-timeout` is set to a positive value, unseen "
-            "nodes are assumed to self-fence within this much time. +WARNING:+ "
-            "It must be ensured that this value is larger than the "
-            "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes. "
-            "Pacemaker verifies the settings individually on all nodes and "
-            "prevents startup or shuts down if configured wrongly on the fly. "
-            "It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is set to "
-            "the same value on all nodes. "
-            "If `stonith-watchdog-timeout` is set to a negative value, and "
-            "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
-            "+WARNING:+ In this case, it's essential (currently not verified by "
-            "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
-            "all nodes.")
+        N_("How long before nodes can be assumed to be safely down when "
+           "watchdog-based self-fencing via SBD is in use"),
+        N_("If this is set to a positive value, lost nodes are assumed to "
+           "self-fence using watchdog-based SBD within this much time. This "
+           "does not require a fencing resource to be explicitly configured, "
+           "though a fence_watchdog resource can be configured, to limit use "
+           "to specific nodes. If this is set to 0 (the default), the cluster "
+           "will never assume watchdog-based self-fencing. If this is set to a "
+           "negative value, the cluster will use twice the local value of the "
+           "`SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, "
+           "or otherwise treat this as 0. WARNING: When used, this timeout "
+           "must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use "
+           "watchdog-based SBD, and Pacemaker will refuse to start on any of "
+           "those nodes where this is not true for the local value or SBD is "
+           "not active. When this is set to a negative value, "
+           "`SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes "
+           "that use SBD, otherwise data corruption or loss could occur.")
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
@@ -667,22 +665,17 @@ crmd_metadata(void)
                                            "Pacemaker controller options",
                                            "Cluster options used by Pacemaker's "
                                                "controller",
-                                           crmd_opts, PCMK__NELEM(crmd_opts));
+                                           controller_options,
+                                           PCMK__NELEM(controller_options));
     printf("%s", s);
     free(s);
 }
 
-static void
-verify_crmd_options(GHashTable * options)
-{
-    pcmk__validate_cluster_options(options, crmd_opts, PCMK__NELEM(crmd_opts));
-}
-
 static const char *
-crmd_pref(GHashTable * options, const char *name)
+controller_option(GHashTable *options, const char *name)
 {
-    return pcmk__cluster_option(options, crmd_opts, PCMK__NELEM(crmd_opts),
-                                name);
+    return pcmk__cluster_option(options, controller_options,
+                                PCMK__NELEM(controller_options), name);
 }
 
 static void
@@ -726,51 +719,53 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pe_unpack_nvpairs(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL,
                       config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
-    verify_crmd_options(config_hash);
+    pcmk__validate_cluster_options(config_hash, controller_options,
+                                   PCMK__NELEM(controller_options));
 
-    value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
+    value = controller_option(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_parse_interval_spec(value);
 
-    value = crmd_pref(config_hash, "node-action-limit"); /* Also checks migration-limit */
+    value = controller_option(config_hash, "node-action-limit");
     throttle_update_job_max(value);
 
-    value = crmd_pref(config_hash, "load-threshold");
+    value = controller_option(config_hash, "load-threshold");
     if(value) {
         throttle_set_load_target(strtof(value, NULL) / 100.0);
     }
 
-    value = crmd_pref(config_hash, "no-quorum-policy");
+    value = controller_option(config_hash, "no-quorum-policy");
     if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
 
-    set_fence_reaction(crmd_pref(config_hash, XML_CONFIG_ATTR_FENCE_REACTION));
+    set_fence_reaction(controller_option(config_hash,
+                                         XML_CONFIG_ATTR_FENCE_REACTION));
 
-    value = crmd_pref(config_hash,"stonith-max-attempts");
+    value = controller_option(config_hash, "stonith-max-attempts");
     update_stonith_max_attempts(value);
 
-    value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+    value = controller_option(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
     shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
     crm_debug("Shutdown escalation occurs if DC has not responded to request in %ums",
               shutdown_escalation_timer->period_ms);
 
-    value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
+    value = controller_option(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
     controld_set_election_period(value);
 
-    value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
+    value = controller_option(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_interval_ms = crm_parse_interval_spec(value);
     crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
 
-    value = crmd_pref(config_hash, "transition-delay");
+    value = controller_option(config_hash, "transition-delay");
     transition_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = crmd_pref(config_hash, "join-integration-timeout");
+    value = controller_option(config_hash, "join-integration-timeout");
     integration_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = crmd_pref(config_hash, "join-finalization-timeout");
+    value = controller_option(config_hash, "join-finalization-timeout");
     finalization_timer->period_ms = crm_parse_interval_spec(value);
 
-    value = crmd_pref(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
+    value = controller_option(config_hash, XML_CONFIG_ATTR_SHUTDOWN_LOCK);
     controld_shutdown_lock_enabled = crm_is_true(value);
 
     free(fsa_cluster_name);
@@ -835,7 +830,7 @@ crm_shutdown(int nsig)
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     if (shutdown_escalation_timer->period_ms == 0) {
-        const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
+        const char *value = controller_option(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
 
         shutdown_escalation_timer->period_ms = crm_parse_interval_spec(value);
     }

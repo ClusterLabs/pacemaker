@@ -6,7 +6,7 @@ Overview
 
 In a basic Pacemaker high-availability cluster [#]_ each node runs the full
 cluster stack of Corosync and all Pacemaker components.  This allows great
-flexibility but limits scalability to around 16 nodes.
+flexibility but limits scalability to around 32 nodes.
 
 To allow for scalability to dozens or even hundreds of nodes, Pacemaker
 allows nodes not running the full cluster stack to integrate into the cluster
@@ -117,7 +117,7 @@ the guest nodes do not run the cluster stack. This means they will never become
 the DC, initiate fencing actions or participate in quorum voting.
 
 On the other hand, this also means that they are not bound to the scalability
-limits associated with the cluster stack (no 16-node corosync member limits to
+limits associated with the cluster stack (no 32-node corosync member limits to
 deal with). That isn't to say that guest nodes can scale indefinitely, but it
 is known that guest nodes scale horizontally much further than cluster nodes.
 
@@ -129,7 +129,8 @@ be able to do with cluster nodes. They even show up in ``crm_mon`` output as
 nodes.
 
 To solidify the concept, below is an example that is very similar to an actual
-deployment we test in our developer environment to verify guest node scalability:
+deployment that we tested in a developer environment to verify guest node
+scalability:
 
 * 16 cluster nodes running the full Corosync + Pacemaker stack
 * 64 Pacemaker-managed virtual machine resources running ``pacemaker-remoted``

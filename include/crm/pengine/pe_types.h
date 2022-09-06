@@ -294,13 +294,6 @@ struct pe_node_s {
 #  define pe_rsc_needs_fencing              0x20000000ULL
 #  define pe_rsc_needs_unfencing            0x40000000ULL
 
-enum pe_graph_flags {
-    pe_graph_none = 0x00000,
-    pe_graph_updated_first = 0x00001,
-    pe_graph_updated_then = 0x00002,
-    pe_graph_disable = 0x00004,
-};
-
 /* *INDENT-OFF* */
 enum pe_action_flags {
     pe_action_pseudo = 0x00001,

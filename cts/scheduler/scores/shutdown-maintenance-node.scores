@@ -1,5 +1,5 @@
 
-pcmk__native_allocate: dummy1 allocation score on sle12sp2-1: 0
-pcmk__native_allocate: dummy1 allocation score on sle12sp2-2: INFINITY
-pcmk__native_allocate: st-sbd allocation score on sle12sp2-1: 0
-pcmk__native_allocate: st-sbd allocation score on sle12sp2-2: 0
+pcmk__primitive_assign: dummy1 allocation score on sle12sp2-1: 0
+pcmk__primitive_assign: dummy1 allocation score on sle12sp2-2: INFINITY
+pcmk__primitive_assign: st-sbd allocation score on sle12sp2-1: 0
+pcmk__primitive_assign: st-sbd allocation score on sle12sp2-2: 0

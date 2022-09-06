@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the Pacemaker project contributors
+ * Copyright 2018-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,11 @@
 
 // Decent chunk size for processing large amounts of data
 #define PCMK__BUFFER_SIZE 4096
+
+#if defined(PCMK__UNIT_TESTING)
+#undef G_GNUC_INTERNAL
+#define G_GNUC_INTERNAL
+#endif
 
 /* When deleting portions of an XML tree, we keep a record so we can know later
  * (e.g. when checking differences) that something was deleted.
@@ -63,7 +68,7 @@ G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-int pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
+int pcmk__element_xpath(const char *prefix, const xmlNode *xml, char *buffer,
                         int offset, size_t buffer_size);
 
 G_GNUC_INTERNAL
@@ -77,7 +82,7 @@ xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
 
 G_GNUC_INTERNAL
 void pcmk__xe_log(int log_level, const char *file, const char *function,
-                  int line, const char *prefix, xmlNode *data, int depth,
+                  int line, const char *prefix, const xmlNode *data, int depth,
                   int options);
 
 G_GNUC_INTERNAL
@@ -284,6 +289,12 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
  */
 int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
                                        pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
+
+
+/*
+ * Utils
+ */
+#define PCMK__PW_BUFFER_LEN 500
 
 
 #endif  // CRMCOMMON_PRIVATE__H

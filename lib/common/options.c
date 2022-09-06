@@ -280,26 +280,37 @@ pcmk__cli_help(char cmd, crm_exit_t exit_code)
  *
  * \param[in] option  Environment variable name (without prefix)
  *
- * \return Value of environment variable option
+ * \return Value of environment variable option, or NULL in case of
+ *         option name too long or value not found
  */
 const char *
 pcmk__env_option(const char *option)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
     const char *value = NULL;
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
-    }
+    CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    value = getenv(env_name);
-    if (value != NULL) {
-        crm_trace("Found %s = %s", env_name, value);
-        return value;
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+
+        if (rv < 0) {
+            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                    strerror(errno));
+            return NULL;
+        }
+
+        if (rv >= sizeof(env_name)) {
+            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            continue;
+        }
+
+        value = getenv(env_name);
+        if (value != NULL) {
+            crm_trace("Found %s = %s", env_name, value);
+            return value;
+        }
     }
 
     crm_trace("Nothing found for %s", option);
@@ -318,24 +329,38 @@ pcmk__env_option(const char *option)
 void
 pcmk__set_env_option(const char *option, const char *value)
 {
+    const char *const prefixes[] = {"PCMK_", "HA_"};
     char env_name[NAME_MAX];
 
-    snprintf(env_name, NAME_MAX, "PCMK_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
-    }
+    CRM_CHECK(!pcmk__str_empty(option) && (strchr(option, '=') == NULL),
+              return);
 
-    snprintf(env_name, NAME_MAX, "HA_%s", option);
-    if (value) {
-        crm_trace("Setting %s to %s", env_name, value);
-        setenv(env_name, value, 1);
-    } else {
-        crm_trace("Unsetting %s", env_name);
-        unsetenv(env_name);
+    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+
+        if (rv < 0) {
+            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                    strerror(errno));
+            return;
+        }
+
+        if (rv >= sizeof(env_name)) {
+            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            continue;
+        }
+
+        if (value != NULL) {
+            crm_trace("Setting %s to %s", env_name, value);
+            rv = setenv(env_name, value, 1);
+        } else {
+            crm_trace("Unsetting %s", env_name);
+            rv = unsetenv(env_name);
+        }
+
+        if (rv < 0) {
+            crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
+                    env_name, strerror(errno));
+        }
     }
 }
 
@@ -347,7 +372,7 @@ pcmk__set_env_option(const char *option, const char *value)
  * or a list of daemon names, return true if the option is enabled for a given
  * daemon.
  *
- * \param[in] daemon   Daemon name
+ * \param[in] daemon   Daemon name (can be NULL)
  * \param[in] option   Pacemaker environment variable name
  *
  * \return true if variable is enabled for daemon, otherwise false
@@ -357,7 +382,9 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
 {
     const char *value = pcmk__env_option(option);
 
-    return (value != NULL) && (crm_is_true(value) || strstr(value, daemon));
+    return (value != NULL)
+        && (crm_is_true(value)
+            || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
 }
 
 
@@ -614,7 +641,6 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
     int lpc = 0;
 
     g_string_append_printf(s, "<?xml version=\"1.0\"?>"
-                              "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
                               "<resource-agent name=\"%s\">\n"
                               "  <version>%s</version>\n",
                               name, PCMK_OCF_VERSION);

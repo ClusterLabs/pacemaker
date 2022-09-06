@@ -99,7 +99,7 @@ create_request_adv(const char *task, xmlNode * msg_data,
  * \note The caller is responsible for freeing the result using free_xml().
  */
 xmlNode *
-create_reply_adv(xmlNode *original_request, xmlNode *xml_response_data,
+create_reply_adv(const xmlNode *original_request, xmlNode *xml_response_data,
                  const char *origin)
 {
     xmlNode *reply = NULL;
@@ -151,11 +151,9 @@ create_reply_adv(xmlNode *original_request, xmlNode *xml_response_data,
 }
 
 xmlNode *
-get_message_xml(xmlNode *msg, const char *field)
+get_message_xml(const xmlNode *msg, const char *field)
 {
-    xmlNode *tmp = first_named_child(msg, field);
-
-    return pcmk__xml_first_child(tmp);
+    return pcmk__xml_first_child(first_named_child(msg, field));
 }
 
 gboolean

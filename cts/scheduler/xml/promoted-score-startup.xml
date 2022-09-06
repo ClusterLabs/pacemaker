@@ -13,12 +13,12 @@
     <nodes>
       <node id="1" uname="srv1">
         <instance_attributes id="nodes-1">
-          <nvpair id="nodes-1-master-pgsqld" name="master-pgsqld" value="1001"/>
+          <nvpair id="nodes-1-promoted-pgsqld" name="master-pgsqld" value="1001"/>
         </instance_attributes>
       </node>
       <node id="2" uname="srv2">
         <instance_attributes id="nodes-2">
-          <nvpair id="nodes-2-master-pgsqld" name="master-pgsqld" value="1000"/>
+          <nvpair id="nodes-2-promoted-pgsqld" name="master-pgsqld" value="1000"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -49,20 +49,20 @@
       </clone>
       <primitive class="ocf" id="pgsql-master-ip" provider="heartbeat" type="IPaddr2">
         <instance_attributes id="pgsql-master-ip-instance_attributes">
-          <nvpair id="pgsql-master-ip-instance_attributes-ip" name="ip" value="192.168.122.50"/>
-          <nvpair id="pgsql-master-ip-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          <nvpair id="pgsql-promoted-ip-instance_attributes-ip" name="ip" value="192.168.122.50"/>
+          <nvpair id="pgsql-promoted-ip-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
         </instance_attributes>
         <operations>
-          <op id="pgsql-master-ip-start-interval-0s" interval="0s" name="start" timeout="20s"/>
-          <op id="pgsql-master-ip-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
-          <op id="pgsql-master-ip-monitor-interval-10s" interval="10s" name="monitor"/>
+          <op id="pgsql-promoted-ip-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="pgsql-promoted-ip-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          <op id="pgsql-promoted-ip-monitor-interval-10s" interval="10s" name="monitor"/>
         </operations>
       </primitive>
     </resources>
     <constraints>
-      <rsc_colocation id="colocation-pgsql-master-ip-pgsql-ha-INFINITY" rsc="pgsql-master-ip" rsc-role="Started" score="INFINITY" with-rsc="pgsql-ha" with-rsc-role="Promoted"/>
-      <rsc_order first="pgsql-ha" first-action="promote" id="order-pgsql-ha-pgsql-master-ip-Mandatory" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="start"/>
-      <rsc_order first="pgsql-ha" first-action="demote" id="order-pgsql-ha-pgsql-master-ip-Mandatory-1" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="stop"/>
+      <rsc_colocation id="colocation-pgsql-promoted-ip-pgsql-ha-INFINITY" rsc="pgsql-master-ip" rsc-role="Started" score="INFINITY" with-rsc="pgsql-ha" with-rsc-role="Promoted"/>
+      <rsc_order first="pgsql-ha" first-action="promote" id="order-pgsql-ha-pgsql-promoted-ip-Mandatory" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="start"/>
+      <rsc_order first="pgsql-ha" first-action="demote" id="order-pgsql-ha-pgsql-promoted-ip-Mandatory-1" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="stop"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-options">

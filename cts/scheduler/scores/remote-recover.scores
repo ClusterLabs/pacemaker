@@ -1,13 +1,13 @@
 
-pcmk__native_allocate: fake allocation score on rhel7-alt1: 0
-pcmk__native_allocate: fake allocation score on rhel7-alt2: 0
-pcmk__native_allocate: fake allocation score on rhel7-alt3: 0
-pcmk__native_allocate: fake allocation score on rhel7-alt4: INFINITY
-pcmk__native_allocate: rhel7-alt4 allocation score on rhel7-alt1: 0
-pcmk__native_allocate: rhel7-alt4 allocation score on rhel7-alt2: 0
-pcmk__native_allocate: rhel7-alt4 allocation score on rhel7-alt3: 0
-pcmk__native_allocate: rhel7-alt4 allocation score on rhel7-alt4: -INFINITY
-pcmk__native_allocate: shooter allocation score on rhel7-alt1: 0
-pcmk__native_allocate: shooter allocation score on rhel7-alt2: 0
-pcmk__native_allocate: shooter allocation score on rhel7-alt3: 0
-pcmk__native_allocate: shooter allocation score on rhel7-alt4: -INFINITY
+pcmk__primitive_assign: fake allocation score on rhel7-alt1: 0
+pcmk__primitive_assign: fake allocation score on rhel7-alt2: 0
+pcmk__primitive_assign: fake allocation score on rhel7-alt3: 0
+pcmk__primitive_assign: fake allocation score on rhel7-alt4: INFINITY
+pcmk__primitive_assign: rhel7-alt4 allocation score on rhel7-alt1: 0
+pcmk__primitive_assign: rhel7-alt4 allocation score on rhel7-alt2: 0
+pcmk__primitive_assign: rhel7-alt4 allocation score on rhel7-alt3: 0
+pcmk__primitive_assign: rhel7-alt4 allocation score on rhel7-alt4: -INFINITY
+pcmk__primitive_assign: shooter allocation score on rhel7-alt1: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-alt2: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-alt3: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-alt4: -INFINITY

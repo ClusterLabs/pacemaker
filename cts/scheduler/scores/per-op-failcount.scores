@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: prmDummy allocation score on rh73-01-snmp: -INFINITY
-pcmk__native_allocate: prmDummy allocation score on rh73-02-snmp: 200
-pcmk__native_allocate: prmStonith1-1 allocation score on rh73-01-snmp: 0
-pcmk__native_allocate: prmStonith1-1 allocation score on rh73-02-snmp: INFINITY
-pcmk__native_allocate: prmStonith2-1 allocation score on rh73-01-snmp: INFINITY
-pcmk__native_allocate: prmStonith2-1 allocation score on rh73-02-snmp: 0
+pcmk__primitive_assign: prmDummy allocation score on rh73-01-snmp: -INFINITY
+pcmk__primitive_assign: prmDummy allocation score on rh73-02-snmp: 200
+pcmk__primitive_assign: prmStonith1-1 allocation score on rh73-01-snmp: 0
+pcmk__primitive_assign: prmStonith1-1 allocation score on rh73-02-snmp: INFINITY
+pcmk__primitive_assign: prmStonith2-1 allocation score on rh73-01-snmp: INFINITY
+pcmk__primitive_assign: prmStonith2-1 allocation score on rh73-02-snmp: 0

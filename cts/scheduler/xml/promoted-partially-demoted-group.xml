@@ -354,9 +354,9 @@
       </lrm>
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-vip-165-fw" name="master-vip-165-fw" value="1000"/>
-          <nvpair id="status-2-master-vip-164-fw" name="master-vip-164-fw" value="1000"/>
-          <nvpair id="status-2-master-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
+          <nvpair id="status-2-promoted-vip-165-fw" name="master-vip-165-fw" value="1000"/>
+          <nvpair id="status-2-promoted-vip-164-fw" name="master-vip-164-fw" value="1000"/>
+          <nvpair id="status-2-promoted-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
         </instance_attributes>
       </transient_attributes>
@@ -364,10 +364,10 @@
     <node_state id="1" uname="sd01-0" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-vip-165-fw" name="master-vip-165-fw" value="1000"/>
-          <nvpair id="status-1-master-vip-164-fw" name="master-vip-164-fw" value="1000"/>
+          <nvpair id="status-1-promoted-vip-165-fw" name="master-vip-165-fw" value="1000"/>
+          <nvpair id="status-1-promoted-vip-164-fw" name="master-vip-164-fw" value="1000"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-master-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
+          <nvpair id="status-1-promoted-cdev-pool-0-drbd" name="master-cdev-pool-0-drbd" value="10000"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="1">

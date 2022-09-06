@@ -9,12 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/unittest_internal.h>
+
 #include <limits.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 readable_interval(void **state)
@@ -26,13 +23,5 @@ readable_interval(void **state)
     assert_string_equal(pcmk__readable_interval(UINT_MAX), "49d17h2m47.295s");
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(readable_interval),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(readable_interval))

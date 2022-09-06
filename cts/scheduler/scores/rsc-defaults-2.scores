@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: dummy-rsc allocation score on cluster01: 0
-pcmk__native_allocate: dummy-rsc allocation score on cluster02: 0
-pcmk__native_allocate: fencing allocation score on cluster01: 0
-pcmk__native_allocate: fencing allocation score on cluster02: 0
-pcmk__native_allocate: ping-rsc-ping allocation score on cluster01: 0
-pcmk__native_allocate: ping-rsc-ping allocation score on cluster02: 0
+pcmk__primitive_assign: dummy-rsc allocation score on cluster01: 0
+pcmk__primitive_assign: dummy-rsc allocation score on cluster02: 0
+pcmk__primitive_assign: fencing allocation score on cluster01: 0
+pcmk__primitive_assign: fencing allocation score on cluster02: 0
+pcmk__primitive_assign: ping-rsc-ping allocation score on cluster01: 0
+pcmk__primitive_assign: ping-rsc-ping allocation score on cluster02: 0

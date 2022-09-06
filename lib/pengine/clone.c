@@ -210,7 +210,8 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     crm_xml_add(child_copy, XML_RSC_ATTR_INCARNATION, inc_num);
 
-    if (common_unpack(child_copy, &child_rsc, rsc, data_set) == FALSE) {
+    if (pe__unpack_resource(child_copy, &child_rsc, rsc,
+                            data_set) != pcmk_rc_ok) {
         pe_err("Failed unpacking resource %s", crm_element_value(child_copy, XML_ATTR_ID));
         child_rsc = NULL;
         goto bail;
@@ -260,15 +261,16 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         if (promoted_max == NULL) {
             // @COMPAT deprecated since 2.0.0
             promoted_max = g_hash_table_lookup(rsc->meta,
-                                               PCMK_XE_PROMOTED_MAX_LEGACY);
+                                               PCMK_XA_PROMOTED_MAX_LEGACY);
         }
 
         promoted_node_max = g_hash_table_lookup(rsc->meta,
                                                 XML_RSC_ATTR_PROMOTED_NODEMAX);
         if (promoted_node_max == NULL) {
             // @COMPAT deprecated since 2.0.0
-            promoted_node_max = g_hash_table_lookup(rsc->meta,
-                                                    PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
+            promoted_node_max =
+                g_hash_table_lookup(rsc->meta,
+                                    PCMK_XA_PROMOTED_NODE_MAX_LEGACY);
         }
 
         // Use 1 as default but 0 for minimum and invalid
@@ -635,7 +637,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     }
 
     /* Promoted */
-    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    promoted_list = g_list_sort(promoted_list, pe__cmp_node_name);
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
@@ -651,7 +653,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     list_text_len = 0;
 
     /* Started/Unpromoted */
-    started_list = g_list_sort(started_list, sort_node_uname);
+    started_list = g_list_sort(started_list, pe__cmp_node_name);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
@@ -706,7 +708,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
                 list = g_hash_table_get_values(rsc->known_on);
             }
 
-            list = g_list_sort(list, sort_node_uname);
+            list = g_list_sort(list, pe__cmp_node_name);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
@@ -921,7 +923,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     /* Promoted */
-    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    promoted_list = g_list_sort(promoted_list, pe__cmp_node_name);
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
@@ -945,7 +947,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     /* Started/Unpromoted */
-    started_list = g_list_sort(started_list, sort_node_uname);
+    started_list = g_list_sort(started_list, pe__cmp_node_name);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
@@ -1002,7 +1004,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 list = g_hash_table_get_values(rsc->known_on);
             }
 
-            list = g_list_sort(list, sort_node_uname);
+            list = g_list_sort(list, pe__cmp_node_name);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
 

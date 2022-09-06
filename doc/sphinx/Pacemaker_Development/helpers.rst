@@ -214,7 +214,8 @@ is no ``lib/common/tests/acls`` directory.
      SUBDIRS = agents acls cmdline flags operations strings utils xpath results
 
 * Create a new ``acls`` directory, copying the ``Makefile.am`` from some other
-  directory.
+  directory.  At this time, each ``Makefile.am`` is largely boilerplate with
+  very little that needs to change from directory to directory.
 * cd into ``acls``
 * Get rid of any existing values for ``check_PROGRAMS`` and set it to
   ``pcmk_acl_required_test`` like so:
@@ -222,6 +223,15 @@ is no ``lib/common/tests/acls`` directory.
   .. code-block:: none
 
      check_PROGRAMS = pcmk_acl_required_test
+
+* Double check that ``$(top_srcdir)/mk/tap.mk`` and ``$(top_srcdir)/mk/unittest.mk``
+  are included in the ``Makefile.am``.  These files contain all the flags necessary
+  for most unit tests.  If necessary, individual settings can be overridden like so:
+
+  .. code-block:: none
+
+     AM_CPPFLAGS += -I$(top_srcdir)
+     LDADD += $(top_builddir)/lib/pengine/libpe_status_test.la
 
 * Follow the steps in `Testing a new function in an already testable source file`_
   to create the new ``pcmk_acl_required_test.c`` file.
@@ -302,24 +312,14 @@ here's the basic structure:
 
    #include <crm_internal.h>
 
-   #include <stdarg.h>
-   #include <stddef.h>
-   #include <stdint.h>
-   #include <setjmp.h>
-   #include <cmocka.h>
+   #include <crm/common/unittest_internal.h>
 
    /* Put your test-specific includes here */
 
    /* Put your test functions here */
 
-   int
-   main(int argc, char **argv)
-   {
-       /* Register your test functions here */
-
-       cmocka_set_message_output(CM_OUTPUT_TAP);
-       return cmocka_run_group_tests(tests, NULL, NULL);
-   }
+   PCMK__UNIT_TEST(NULL, NULL,
+                   /* Register your test functions here */)
 
 Each test-specific function should test one aspect of the library function,
 though it can include many assertions if there are many ways of testing that
@@ -339,13 +339,42 @@ expression matching:
    }
 
 Each test-specific function must also be registered or it will not be called.
-This is done with ``cmocka_unit_test()`` in the ``main`` function:
+This is done with ``cmocka_unit_test()`` in the ``PCMK__UNIT_TEST`` macro:
 
 .. code-block:: c
 
-   const struct CMUnitTest tests[] = {
-       cmocka_unit_test(regex),
-   };
+   PCMK__UNIT_TEST(NULL, NULL,
+                   cmocka_unit_test(regex))
+
+Most unit tests do not require a setup and teardown function to be executed
+around the entire group of tests.  On occassion, this may be necessary.  Simply
+pass those functions in as the first two parameters to ``PCMK__UNIT_TEST``
+instead of using NULL.
+
+Assertions
+__________
+
+In addition to the `assertions provided by <https://api.cmocka.org/group__cmocka__asserts.html>`_,
+``unittest_internal.h`` also provides ``pcmk__assert_asserts``.  This macro takes an
+expression and verifies that the expression aborts due to a failed call to
+``CRM_ASSERT`` or some other similar function.  It can be used like so:
+
+.. code-block:: c
+
+   static void
+   null_input_variables(void **state)
+   {
+       long long start, end;
+
+       pcmk__assert_asserts(pcmk__parse_ll_range("1234", NULL, &end));
+       pcmk__assert_asserts(pcmk__parse_ll_range("1234", &start, NULL));
+   }
+
+Here, ``pcmk__parse_ll_range`` expects non-NULL for its second and third
+arguments.  If one of those arguments is NULL, ``CRM_ASSERT`` will fail and
+the program will abort.  ``pcmk__assert_asserts`` checks that the code would
+abort and the test passes.  If the code does not abort, the test fails.
+
 
 Running
 _______
@@ -437,6 +466,46 @@ The failure is in ``lib/common/tests/strings/test-suite.log``:
 
 At this point, you need to determine whether your test case is incorrect or
 whether the code being tested is incorrect.  Fix whichever is wrong and continue.
+
+
+Code Coverage
+#############
+
+Figuring out what needs unit tests written is the purpose of a code coverage tool.
+The Pacemaker build process uses ``lcov`` and special make targets to generate
+an HTML coverage report that can be inspected with any web browser.
+
+To start, you'll need to install the ``lcov`` package which is included in most
+distributions.  Next, reconfigure and rebuild the source tree:
+
+.. code-block:: none
+
+   $ ./configure --with-coverage
+   $ make
+
+Then simply run ``make coverage``.  This will do the same thing as ``make check``,
+but will generate a bunch of intermediate files as part of the compiler's output.
+Essentially, the coverage tools run all the unit tests and make a note if a given
+line if code is executed as a part of some test program.  This will include not
+just things run as part of the tests but anything in the setup and teardown
+functions as well.
+
+Afterwards, the HTML report will be in ``coverage/index.html``.  You can drill down
+into individual source files to see exactly which lines are covered and which are
+not, which makes it easy to target new unit tests.  Note that sometimes, it is
+impossible to achieve 100% coverage for a source file.  For instance, how do you
+test a function with a return type of void that simply returns on some condition?
+
+Note that Pacemaker's overall code coverage numbers are very low at the moment.
+One reason for this is the large amount of code in the ``daemons`` directory that
+will be very difficult to write unit tests for.  For now, it is best to focus
+efforts on increasing the coverage on individual libraries.
+
+Additionally, there is a ``coverage-cts`` target that does the same thing but
+instead of testing ``make check``, it tests ``cts/cts-cli``.  The idea behind this
+target is to see what parts of our command line tools are covered by our regression
+tests.  It is probably best to clean and rebuild the source tree when switching
+between these various targets.
 
 
 Debugging

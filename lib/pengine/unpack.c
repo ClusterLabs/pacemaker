@@ -447,7 +447,8 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->digest_cache = pcmk__strkey_table(free,
                                                           pe__free_digests);
 
-    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
+    data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node,
+                                           pe__cmp_node_name);
     return new_node;
 }
 
@@ -574,12 +575,6 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             if (new_node == NULL) {
                 return FALSE;
             }
-
-/* 		if(data_set->have_quorum == FALSE */
-/* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
-/* 			/\* start shutting resources down *\/ */
-/* 			new_node->weight = -INFINITY; */
-/* 		} */
 
             handle_startup_fencing(data_set, new_node);
 
@@ -761,7 +756,7 @@ destroy_tag(gpointer data)
  * \return TRUE
  *
  * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
- *       be used when common_unpack() calls resource_location()
+ *       be used when pe__unpack_resource() calls resource_location()
  */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
@@ -794,7 +789,10 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         }
 
         crm_trace("Unpacking <%s id='%s'>", crm_element_name(xml_obj), id);
-        if (common_unpack(xml_obj, &new_rsc, NULL, data_set) && (new_rsc != NULL)) {
+        if ((pe__unpack_resource(xml_obj, &new_rsc, NULL,
+                                 data_set) == pcmk_rc_ok)
+            && (new_rsc != NULL)) {
+
             data_set->resources = g_list_append(data_set->resources, new_rsc);
             pe_rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
@@ -815,7 +813,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         link_rsc2remotenode(data_set, rsc);
     }
 
-    data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
+    data_set->resources = g_list_sort(data_set->resources,
+                                      pe__cmp_rsc_priority);
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* Ignore */
 
@@ -1692,7 +1691,7 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
     crm_log_xml_debug(xml_rsc, "Orphan resource");
 
-    if (!common_unpack(xml_rsc, &rsc, NULL, data_set)) {
+    if (pe__unpack_resource(xml_rsc, &rsc, NULL, data_set) != pcmk_rc_ok) {
         return NULL;
     }
 
@@ -3472,8 +3471,8 @@ remap_operation(xmlNode *xml_op, pe_resource_t *rsc, pe_node_t *node,
                 *status = PCMK_EXEC_NOT_SUPPORTED;
                 break;
             }
-            // fall through
         }
+            // fall through
 
         case PCMK_OCF_NOT_INSTALLED:
         case PCMK_OCF_INVALID_PARAM:

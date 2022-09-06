@@ -50,7 +50,7 @@ extern "C" {
 typedef const xmlChar *pcmkXmlStr;
 
 gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
-xmlNode *get_message_xml(xmlNode * msg, const char *field);
+xmlNode *get_message_xml(const xmlNode *msg, const char *field);
 
 xmlDoc *getDocPtr(xmlNode * node);
 
@@ -156,7 +156,8 @@ gboolean can_prune_leaf(xmlNode * xml_node);
 /*
  * Searching & Modifying
  */
-xmlNode *find_xml_node(xmlNode * cib, const char *node_path, gboolean must_find);
+xmlNode *find_xml_node(const xmlNode *root, const char *search_path,
+                       gboolean must_find);
 
 void xml_remove_prop(xmlNode * obj, const char *name);
 
@@ -286,7 +287,7 @@ void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
-bool xml_patch_versions(xmlNode *patchset, int add[3], int del[3]);
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 xmlNode *xml_create_patchset(
     int format, xmlNode *source, xmlNode *target, bool *config, bool manage_version);
@@ -295,7 +296,7 @@ int xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version);
 void patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target, bool with_digest);
 
 void save_xml_to_file(xmlNode * xml, const char *desc, const char *filename);
-char *xml_get_path(xmlNode *xml);
+char *xml_get_path(const xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);

@@ -106,21 +106,6 @@ class AsyncRemoteCmd(Thread):
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
-class RemotePrimitives(object):
-    def __init__(self, Command=None, CpCommand=None):
-        if CpCommand:
-            self.CpCommand = CpCommand
-        else:
-            #        -B: batch mode, -q: no stats (quiet)
-            self.CpCommand = "scp -B -q"
-
-        if Command:
-            self.Command = Command
-        else:
-            #   -n: no stdin, -x: no X11,
-            #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding
-            self.Command = "ssh -l root -n -x -o ServerAliveInterval=5 -o ConnectTimeout=10 -o TCPKeepAlive=yes -o ServerAliveCountMax=3 "
-
 class RemoteExec(object):
     '''This is an abstract remote execution class.  It runs a command on another
        machine - somehow.  The somehow is up to us.  This particular
@@ -128,8 +113,9 @@ class RemoteExec(object):
        Most of the work is done by fork/exec of ssh or scp.
     '''
 
-    def __init__(self, rsh, silent=False):
-        self.rsh = rsh
+    def __init__(self, command, cp_command, silent=False):
+        self.command = command
+        self.cp_command = cp_command
         self.silent = silent
         self.logger = LogFactory()
 
@@ -154,7 +140,7 @@ class RemoteExec(object):
         if sysname == None or sysname.lower() == self.OurNode or sysname == "localhost":
             ret = command
         else:
-            ret = self.rsh.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
+            ret = self.command + " " + sysname + " '" + self._fixcmd(command) + "'"
         #print ("About to run %s\n" % ret)
         return ret
 
@@ -238,7 +224,7 @@ class RemoteExec(object):
 
     def cp(self, source, target, silent=False):
         '''Perform a remote copy'''
-        cpstring = self.rsh.CpCommand  + " \'" + source + "\'"  + " \'" + target + "\'"
+        cpstring = self.cp_command  + " \'" + source + "\'"  + " \'" + target + "\'"
         rc = os.system(cpstring)
         if trace_rsh:
             silent = False
@@ -258,27 +244,33 @@ class RemoteExec(object):
 
 class RemoteFactory(object):
     # Class variables
-    rsh = RemotePrimitives()
+
+    # -n: no stdin, -x: no X11,
+    # -o ServerAliveInterval=5: disconnect after 3*5s if the server
+    # stops responding
+    command = ("ssh -l root -n -x -o ServerAliveInterval=5 "
+               "-o ConnectTimeout=10 -o TCPKeepAlive=yes "
+               "-o ServerAliveCountMax=3 ")
+
+    # -B: batch mode, -q: no stats (quiet)
+    cp_command = "scp -B -q"
+
     instance = None
 
     def getInstance(self):
         if not RemoteFactory.instance:
-            RemoteFactory.instance = RemoteExec(RemoteFactory.rsh, False)
+            RemoteFactory.instance = RemoteExec(RemoteFactory.command,
+                                                RemoteFactory.cp_command,
+                                                False)
         return RemoteFactory.instance
 
     def new(self, silent=False):
-        return RemoteExec(RemoteFactory.rsh, silent)
-
-    def enable_docker(self):
-        print("Using DOCKER backend for connections to cluster nodes")
-
-        RemoteFactory.rsh.Command = "/usr/libexec/phd/docker/phd_docker_remote_cmd "
-        RemoteFactory.rsh.CpCommand = "/usr/libexec/phd/docker/phd_docker_cp"
+        return RemoteExec(RemoteFactory.command, RemoteFactory.cp_command,
+                          silent)
 
     def enable_qarsh(self):
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         print("Using QARSH for connections to cluster nodes")
 
-        RemoteFactory.rsh.Command = "qarsh -t 300 -l root"
-        RemoteFactory.rsh.CpCommand = "qacp -q"
-
+        RemoteFactory.command = "qarsh -t 300 -l root"
+        RemoteFactory.cp_command = "qacp -q"

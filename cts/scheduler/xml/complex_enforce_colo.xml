@@ -178,16 +178,16 @@
             <op id="galera-start-timeout-120" interval="0s" name="start" timeout="120"/>
             <op id="galera-stop-timeout-120" interval="0s" name="stop" timeout="120"/>
             <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
-            <op id="galera-monitor-interval-10-role-Master" interval="10" name="monitor" role="Promoted" timeout="30"/>
-            <op id="galera-monitor-interval-30-role-Slave" interval="30" name="monitor" role="Unpromoted" timeout="30"/>
+            <op id="galera-monitor-interval-10-role-Promoted" interval="10" name="monitor" role="Promoted" timeout="30"/>
+            <op id="galera-monitor-interval-30-role-Unpromoted" interval="30" name="monitor" role="Unpromoted" timeout="30"/>
             <op id="galera-demote-timeout-120" interval="0s" name="demote" timeout="120"/>
             <op id="galera-promote-timeout-300s-on-fail-block" interval="0s" name="promote" on-fail="block" timeout="300s"/>
           </operations>
         </primitive>
-        <meta_attributes id="galera-master-meta_attributes">
-          <nvpair id="galera-master-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="galera-master-meta_attributes-promoted-max" name="promoted-max" value="3"/>
-          <nvpair id="galera-master-meta_attributes-ordered" name="ordered" value="true"/>
+        <meta_attributes id="galera-promoted-meta_attributes">
+          <nvpair id="galera-promoted-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="galera-promoted-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+          <nvpair id="galera-promoted-meta_attributes-ordered" name="ordered" value="true"/>
         </meta_attributes>
       </clone>
       <clone id="rabbitmq-server-clone">
@@ -636,7 +636,7 @@
       <rsc_order first="vip-ceilometer" first-action="start" id="order-vip-ceilometer-lb-haproxy-clone-Optional" kind="Optional" then="lb-haproxy-clone" then-action="start"/>
       <rsc_colocation id="colocation-vip-ceilometer-lb-haproxy-clone-INFINITY" rsc="vip-ceilometer" score="INFINITY" with-rsc="lb-haproxy-clone"/>
       <rsc_order first="lb-haproxy-clone" first-action="start" id="order-lb-haproxy-clone-keystone-clone-mandatory" then="keystone-clone" then-action="start"/>
-      <rsc_order first="galera-master" first-action="start" id="order-galera-master-keystone-clone-mandatory" then="keystone-clone" then-action="start"/>
+      <rsc_order first="galera-master" first-action="start" id="order-galera-promoted-keystone-clone-mandatory" then="keystone-clone" then-action="start"/>
       <rsc_order first="rabbitmq-server-clone" first-action="start" id="order-rabbitmq-server-clone-keystone-clone-mandatory" then="keystone-clone" then-action="start"/>
       <rsc_order first="memcached-clone" first-action="start" id="order-memcached-clone-keystone-clone-mandatory" then="keystone-clone" then-action="start"/>
       <rsc_order first="keystone-clone" first-action="start" id="order-keystone-clone-glance-registry-clone-mandatory" then="glance-registry-clone" then-action="start"/>
@@ -939,7 +939,7 @@
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-1-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rhos6-node1"/>
-          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-promoted-galera" name="master-galera" value="100"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -1177,7 +1177,7 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-2-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rhos6-node2"/>
         </instance_attributes>
       </transient_attributes>
@@ -1415,7 +1415,7 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-promoted-galera" name="master-galera" value="100"/>
           <nvpair id="status-3-rmq-node-attr-rabbitmq-server" name="rmq-node-attr-rabbitmq-server" value="rabbit@rhos6-node3"/>
         </instance_attributes>
       </transient_attributes>

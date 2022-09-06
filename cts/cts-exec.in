@@ -7,6 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import psutil
 import stat
 import sys
 import subprocess
@@ -101,6 +102,45 @@ def output_from_command(command):
     return output.split("\n")
 
 
+def killall(process_names=[], terminate=False):
+    """ Kill all instances of every process in a list """
+
+    if not process_names:
+        return
+
+    procs = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] in process_names:
+            procs.append(proc)
+
+    if terminate:
+        for proc in procs:
+            proc.terminate()
+        gone, alive = psutil.wait_procs(procs, timeout=3)
+        procs = alive
+
+    for proc in procs:
+        proc.kill()
+
+
+def is_proc_running(process_name):
+    """ Check whether a process with a given name is running """
+
+    for proc in psutil.process_iter(["name"]):
+        if proc.info["name"] == process_name:
+            return True
+    return False
+
+
+def exit_if_proc_running(process_name):
+    """ Exit with error if a given process is running """
+
+    if is_proc_running(process_name):
+        print("Error: %s is already running!" % process_name)
+        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        sys.exit(CrmExit.ERROR)
+
+
 class TestError(Exception):
     """ Base class for exceptions in this module """
     pass
@@ -193,9 +233,15 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 pacemaker-fenced lt-pacemaker-fenced pacemaker-execd lt-pacemaker-execd cts-exec-helper lt-cts-exec-helper pacemaker-remoted")
-        test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        test.wait()
+        killall([
+            "pacemaker-fenced",
+            "lt-pacemaker-fenced",
+            "pacemaker-execd",
+            "lt-pacemaker-execd",
+            "cts-exec-helper",
+            "lt-cts-exec-helper",
+            "pacemaker-remoted",
+        ])
 
         additional_args = ""
 
@@ -1237,6 +1283,13 @@ def main(argv):
     if opts.options['show-usage']:
         show_usage()
         sys.exit(CrmExit.OK)
+
+    if opts.options['pacemaker-remote']:
+        daemon_name = "pacemaker-remoted"
+    else:
+        daemon_name = "pacemaker-execd"
+
+    exit_if_proc_running(daemon_name)
 
     # Create a temporary directory for log files (the directory will
     # automatically be erased when done)

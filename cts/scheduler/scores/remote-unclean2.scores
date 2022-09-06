@@ -1,9 +1,9 @@
 
-pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto1: 0
-pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto2: 0
-pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto3: 0
-pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto4: -INFINITY
-pcmk__native_allocate: shooter allocation score on rhel7-auto1: 0
-pcmk__native_allocate: shooter allocation score on rhel7-auto2: 0
-pcmk__native_allocate: shooter allocation score on rhel7-auto3: 0
-pcmk__native_allocate: shooter allocation score on rhel7-auto4: -INFINITY
+pcmk__primitive_assign: rhel7-auto4 allocation score on rhel7-auto1: 0
+pcmk__primitive_assign: rhel7-auto4 allocation score on rhel7-auto2: 0
+pcmk__primitive_assign: rhel7-auto4 allocation score on rhel7-auto3: 0
+pcmk__primitive_assign: rhel7-auto4 allocation score on rhel7-auto4: -INFINITY
+pcmk__primitive_assign: shooter allocation score on rhel7-auto1: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-auto2: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-auto3: 0
+pcmk__primitive_assign: shooter allocation score on rhel7-auto4: -INFINITY

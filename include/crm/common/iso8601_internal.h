@@ -17,13 +17,14 @@
 
 typedef struct pcmk__time_us pcmk__time_hr_t;
 
-pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target, crm_time_t *dt);
-void pcmk__time_set_hr_dt(crm_time_t *target, pcmk__time_hr_t *hr_dt);
+pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target,
+                                       const crm_time_t *dt);
+void pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt);
 pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
 pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
-char *pcmk__time_format_hr(const char *format, pcmk__time_hr_t *hr_dt);
-const char *pcmk__epoch2str(time_t *when);
+char *pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt);
+const char *pcmk__epoch2str(const time_t *when);
 const char *pcmk__readable_interval(guint interval_ms);
 
 struct pcmk__time_us {

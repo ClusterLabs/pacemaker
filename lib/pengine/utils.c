@@ -17,6 +17,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include "pe_status_private.h"
+
 extern bool pcmk__is_daemon;
 
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -159,11 +161,41 @@ pe__node_list2table(GList *list)
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Compare two nodes by name, with numeric portions sorted numerically
+ *
+ * Sort two node names case-insensitively like strcasecmp(), but with any
+ * numeric portions of the name sorted numerically. For example, "node10" will
+ * sort higher than "node9" but lower than "remotenode9".
+ *
+ * \param[in] a  First node to compare (can be \c NULL)
+ * \param[in] b  Second node to compare (can be \c NULL)
+ *
+ * \retval -1 \c a comes before \c b (or \c a is \c NULL and \c b is not)
+ * \retval  0 \c a and \c b are equal (or both are \c NULL)
+ * \retval  1 \c a comes after \c b (or \c b is \c NULL and \c a is not)
+ */
 gint
-sort_node_uname(gconstpointer a, gconstpointer b)
+pe__cmp_node_name(gconstpointer a, gconstpointer b)
 {
-    return pcmk__numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
-                                    ((const pe_node_t *) b)->details->uname);
+    const pe_node_t *node1 = (const pe_node_t *) a;
+    const pe_node_t *node2 = (const pe_node_t *) b;
+
+    if ((node1 == NULL) && (node2 == NULL)) {
+        return 0;
+    }
+
+    if (node1 == NULL) {
+        return -1;
+    }
+
+    if (node2 == NULL) {
+        return 1;
+    }
+
+    return pcmk__numeric_strcasecmp(node1->details->uname,
+                                    node2->details->uname);
 }
 
 /*!
@@ -181,7 +213,8 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
     pcmk__output_t *out = data_set->priv;
 
     // Sort the nodes so the output is consistent for regression tests
-    GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
+    GList *list = g_list_sort(g_hash_table_get_values(nodes),
+                              pe__cmp_node_name);
 
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -274,8 +307,22 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
     }
 }
 
+/*!
+ * \internal
+ * \brief Compare two resources by priority
+ *
+ * \param[in] a  First resource to compare (can be \c NULL)
+ * \param[in] b  Second resource to compare (can be \c NULL)
+ *
+ * \retval -1 \c a->priority > \c b->priority (or \c b is \c NULL and \c a is
+ *            not)
+ * \retval  0 \c a->priority == \c b->priority (or both \c a and \c b are
+ *            \c NULL)
+ * \retval  1 \c a->priority < \c b->priority (or \c a is \c NULL and \c b is
+ *            not)
+ */
 gint
-sort_rsc_priority(gconstpointer a, gconstpointer b)
+pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
 {
     const pe_resource_t *resource1 = (const pe_resource_t *)a;
     const pe_resource_t *resource2 = (const pe_resource_t *)b;
@@ -676,7 +723,7 @@ pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set)
  * \brief Wrapper for pe_unpack_nvpairs() using a cluster working set
  */
 void
-pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                            pe_rule_eval_data_t *rule_data, GHashTable *hash,
                            const char *always_first, gboolean overwrite,
                            pe_working_set_t *data_set)

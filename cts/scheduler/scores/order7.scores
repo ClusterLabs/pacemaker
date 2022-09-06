@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: rsc1 allocation score on node1: 0
-pcmk__native_allocate: rsc2 allocation score on node1: 0
-pcmk__native_allocate: rsc3 allocation score on node1: 0
-pcmk__native_allocate: rscA allocation score on node1: -INFINITY
-pcmk__native_allocate: rscB allocation score on node1: 0
-pcmk__native_allocate: rscC allocation score on node1: 0
+pcmk__primitive_assign: rsc1 allocation score on node1: 0
+pcmk__primitive_assign: rsc2 allocation score on node1: 0
+pcmk__primitive_assign: rsc3 allocation score on node1: 0
+pcmk__primitive_assign: rscA allocation score on node1: -INFINITY
+pcmk__primitive_assign: rscB allocation score on node1: 0
+pcmk__primitive_assign: rscC allocation score on node1: 0

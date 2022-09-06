@@ -11,15 +11,15 @@ pcmk__group_allocate: d1 allocation score on hex-13: 0
 pcmk__group_allocate: d1 allocation score on hex-14: 0
 pcmk__group_allocate: g0 allocation score on hex-13: 0
 pcmk__group_allocate: g0 allocation score on hex-14: 0
-pcmk__native_allocate: d0 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: d0 allocation score on hex-14: -INFINITY
-pcmk__native_allocate: d1 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: d1 allocation score on hex-14: -INFINITY
-pcmk__native_allocate: fencing-sbd allocation score on hex-13: -INFINITY
-pcmk__native_allocate: fencing-sbd allocation score on hex-14: 0
-pcmk__native_allocate: s0:0 allocation score on hex-13: 0
-pcmk__native_allocate: s0:0 allocation score on hex-14: 0
-pcmk__native_allocate: s0:1 allocation score on hex-13: -INFINITY
-pcmk__native_allocate: s0:1 allocation score on hex-14: 0
+pcmk__primitive_assign: d0 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: d0 allocation score on hex-14: -INFINITY
+pcmk__primitive_assign: d1 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: d1 allocation score on hex-14: -INFINITY
+pcmk__primitive_assign: fencing-sbd allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: fencing-sbd allocation score on hex-14: 0
+pcmk__primitive_assign: s0:0 allocation score on hex-13: 0
+pcmk__primitive_assign: s0:0 allocation score on hex-14: 0
+pcmk__primitive_assign: s0:1 allocation score on hex-13: -INFINITY
+pcmk__primitive_assign: s0:1 allocation score on hex-14: 0
 s0:0 promotion score on hex-13: -1
 s0:1 promotion score on hex-14: -1

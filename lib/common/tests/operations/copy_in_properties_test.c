@@ -9,13 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/unittest_internal.h>
+
 #include <glib.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 target_is_NULL(void **state)
@@ -60,14 +56,7 @@ copying_is_successful(void **state)
     assert_string_equal(xml_1_value, xml_2_value);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(target_is_NULL),
-        cmocka_unit_test(src_is_NULL),
-        cmocka_unit_test(copying_is_successful),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(target_is_NULL),
+                cmocka_unit_test(src_is_NULL),
+                cmocka_unit_test(copying_is_successful))

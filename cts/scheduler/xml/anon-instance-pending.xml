@@ -155,7 +155,7 @@
     <node_state id="3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member">
       <transient_attributes id="3">
         <instance_attributes id="status-3">
-          <nvpair id="status-3-master-clone1rsc" name="master-clone1rsc" value="10"/>
+          <nvpair id="status-3-promoted-clone1rsc" name="master-clone1rsc" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">

@@ -91,9 +91,8 @@ dnl ========================================================================
 dnl A particular compiler can be forced by setting the CC environment variable
 AC_PROG_CC
 
-dnl Use at least C99 if possible. This will generate an "obsolete" warning
-dnl since autoconf 2.70, but is needed for older versions.
-AC_PROG_CC_STDC
+dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
+m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
 
 dnl C++ is not needed for build, just maintainer utilities
 AC_PROG_CXX
@@ -730,14 +729,14 @@ AC_CHECK_HEADER([sys/socket.h], [
         # Linux
         AC_CHECK_TYPE([struct ucred], [
             us_auth=peercred_ucred;
-            AC_DEFINE([US_AUTH_PEERCRED_UCRED], [1],
+            AC_DEFINE([HAVE_UCRED], [1],
                       [Define if Unix socket auth method is
                        getsockopt(s, SO_PEERCRED, &ucred, ...)])
         ], [
             # OpenBSD
             AC_CHECK_TYPE([struct sockpeercred], [
                 us_auth=localpeercred_sockepeercred;
-                AC_DEFINE([US_AUTH_PEERCRED_SOCKPEERCRED], [1],
+                AC_DEFINE([HAVE_SOCKPEERCRED], [1],
                           [Define if Unix socket auth method is
                            getsockopt(s, SO_PEERCRED, &sockpeercred, ...)])
             ], [], [[#include <sys/socket.h>]])
@@ -750,14 +749,14 @@ AS_IF([test -z "${us_auth}"], [
     # FreeBSD
     AC_CHECK_DECL([getpeereid], [
         us_auth=getpeereid;
-        AC_DEFINE([US_AUTH_GETPEEREID], [1],
+        AC_DEFINE([HAVE_GETPEEREID], [1],
                   [Define if Unix socket auth method is
                    getpeereid(s, &uid, &gid)])
     ], [
         # Solaris/OpenIndiana
         AC_CHECK_DECL([getpeerucred], [
             us_auth=getpeerucred;
-            AC_DEFINE([US_AUTH_GETPEERUCRED], [1],
+            AC_DEFINE([HAVE_GETPEERUCRED], [1],
                       [Define if Unix socket auth method is
                        getpeercred(s, &ucred)])
         ], [
@@ -781,7 +780,7 @@ AS_CASE(["$host_os"],
         ])
 
 AC_SUBST(INIT_EXT)
-AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
+AC_DEFINE_UNQUOTED([HAVE_LINUX_PROCFS], [$PROCFS],
                    [Define to 1 if procfs is supported])
 
 AS_CASE(["$host_cpu"],
@@ -833,12 +832,6 @@ dnl ===============================================
 
 PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
 export PATH
-
-dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
-dnl was NOT being expanded all the time thus causing things to fail.
-AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
-AS_IF([test x"${LIBTOOL}" != x""], [],
-      [AC_MSG_FAILURE([Could not find required build tool libtool (or equivalent)])])
 
 dnl Pacemaker's executable python scripts will invoke the python specified by
 dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
@@ -1140,7 +1133,9 @@ return n == 1 ? 0 : 1;
 ]])],
                                  pf_cv_var_sscanf="yes", pf_cv_var_sscanf="no", pf_cv_var_sscanf="no"))
 
-AS_IF([test x"$pf_cv_var_sscanf" = x"yes"], [AC_DEFINE(SSCANF_HAS_M, 1, [ ])])
+AS_IF([test x"$pf_cv_var_sscanf" = x"yes"],
+      [AC_DEFINE([HAVE_SSCANF_M], [1],
+                 [Define to 1 if sscanf %m modifier is available])])
 
 dnl ========================================================================
 dnl   bzip2
@@ -1410,7 +1405,7 @@ HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
                   [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
                   [HAVE_dbus=0])
-AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
+AC_DEFINE_UNQUOTED(HAVE_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 dnl libdbus 1.5.12+ (2012-03) / 1.6.0+ (2012-06)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
@@ -1767,6 +1762,7 @@ dnl otherwise none of both
     EXTRA_FLAGS="$EXTRA_FLAGS -Wendif-labels"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wfloat-equal"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wformat-security"
+    EXTRA_FLAGS="$EXTRA_FLAGS -Wimplicit-fallthrough"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wmissing-prototypes"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wmissing-declarations"
     EXTRA_FLAGS="$EXTRA_FLAGS -Wnested-externs"
@@ -1780,7 +1776,7 @@ dnl otherwise none of both
 
     AS_IF([test x"$gcc_diagnostic_push_pull" = x"yes"],
           [
-              AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+              AC_DEFINE([HAVE_FORMAT_NONLITERAL], [],
                         [gcc can complain about nonliterals in format])
               EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2 -Wformat-nonliteral"
           ],
@@ -2033,6 +2029,7 @@ CONFIG_FILES_EXEC([cts/cts-cli],
                   [extra/resources/ClusterMon],
                   [extra/resources/HealthSMART],
                   [extra/resources/SysInfo],
+                  [extra/resources/controld],
                   [extra/resources/ifspeed],
                   [extra/resources/o2cb],
                   [maint/bumplibs],
@@ -2104,11 +2101,14 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/lists/Makefile                     \
                 lib/common/tests/nvpair/Makefile                    \
                 lib/common/tests/operations/Makefile                \
+                lib/common/tests/options/Makefile                   \
+                lib/common/tests/output/Makefile                    \
                 lib/common/tests/procfs/Makefile                    \
                 lib/common/tests/results/Makefile                   \
                 lib/common/tests/scores/Makefile                    \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
+                lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
                 lib/gnu/Makefile                                    \
@@ -2127,7 +2127,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pengine/tests/Makefile                          \
                 lib/pengine/tests/native/Makefile                   \
                 lib/pengine/tests/rules/Makefile                    \
+                lib/pengine/tests/status/Makefile                   \
                 lib/pengine/tests/unpack/Makefile                   \
+                lib/pengine/tests/utils/Makefile                    \
                 lib/services/Makefile                               \
                 maint/Makefile                                      \
                 po/Makefile.in                                      \

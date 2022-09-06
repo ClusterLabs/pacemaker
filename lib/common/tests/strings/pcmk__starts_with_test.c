@@ -9,11 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 bad_input(void **state) {
@@ -34,14 +30,6 @@ starts_with(void **state) {
     assert_true(pcmk__starts_with("xyz", ""));
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(bad_input),
-        cmocka_unit_test(starts_with),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(bad_input),
+                cmocka_unit_test(starts_with))

@@ -44,11 +44,11 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="child1-master-with-parent-master" score="INFINITY" rsc="child1" rsc-role="Promoted" with-rsc="parent" with-rsc-role="Promoted"/>
-      <rsc_colocation id="child1-service-with-child1-master" score="INFINITY" rsc="child1-service" with-rsc="child1" with-rsc-role="Promoted"/>
-      <rsc_colocation id="child2-master-with-parent-master" score="INFINITY" rsc="child2" rsc-role="Promoted" with-rsc="parent" with-rsc-role="Promoted"/>
-      <rsc_colocation id="child2-service-with-child2-master" score="INFINITY" rsc="child2-service" with-rsc="child2" with-rsc-role="Promoted"/>
-      <rsc_colocation id="parent-service-with-parent-master" score="INFINITY" rsc="parent-service" with-rsc="parent" with-rsc-role="Promoted"/>
+      <rsc_colocation id="child1-promoted-with-parent-promoted" score="INFINITY" rsc="child1" rsc-role="Promoted" with-rsc="parent" with-rsc-role="Promoted"/>
+      <rsc_colocation id="child1-service-with-child1-promoted" score="INFINITY" rsc="child1-service" with-rsc="child1" with-rsc-role="Promoted"/>
+      <rsc_colocation id="child2-promoted-with-parent-promoted" score="INFINITY" rsc="child2" rsc-role="Promoted" with-rsc="parent" with-rsc-role="Promoted"/>
+      <rsc_colocation id="child2-service-with-child2-promoted" score="INFINITY" rsc="child2-service" with-rsc="child2" with-rsc-role="Promoted"/>
+      <rsc_colocation id="parent-service-with-parent-promoted" score="INFINITY" rsc="parent-service" with-rsc="parent" with-rsc-role="Promoted"/>
     </constraints>
   </configuration>
   <status>
@@ -57,9 +57,9 @@
         <instance_attributes id="status-3232235522">
           <nvpair id="status-3232235522-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232235522-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3232235522-master-stateful-child2" name="master-stateful-child2" value="10"/>
-          <nvpair id="status-3232235522-master-stateful-child1" name="master-stateful-child1" value="10"/>
-          <nvpair id="status-3232235522-master-stateful-parent" name="master-stateful-parent" value="10"/>
+          <nvpair id="status-3232235522-promoted-stateful-child2" name="master-stateful-child2" value="10"/>
+          <nvpair id="status-3232235522-promoted-stateful-child1" name="master-stateful-child1" value="10"/>
+          <nvpair id="status-3232235522-promoted-stateful-parent" name="master-stateful-parent" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3232235522">
@@ -90,9 +90,9 @@
         <instance_attributes id="status-3232235521">
           <nvpair id="status-3232235521-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3232235521-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3232235521-master-stateful-child2" name="master-stateful-child2" value="5"/>
-          <nvpair id="status-3232235521-master-stateful-child1" name="master-stateful-child1" value="5"/>
-          <nvpair id="status-3232235521-master-stateful-parent" name="master-stateful-parent" value="5"/>
+          <nvpair id="status-3232235521-promoted-stateful-child2" name="master-stateful-child2" value="5"/>
+          <nvpair id="status-3232235521-promoted-stateful-child1" name="master-stateful-child1" value="5"/>
+          <nvpair id="status-3232235521-promoted-stateful-parent" name="master-stateful-parent" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3232235521">

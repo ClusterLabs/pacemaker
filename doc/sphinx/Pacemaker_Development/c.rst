@@ -216,6 +216,14 @@ Simple example of an internal function with a Doxygen comment block:
       return strlen(s) + 1;
    }
 
+Function arguments are marked as ``[in]`` for input only, ``[out]`` for output
+only, or ``[in,out]`` for both input and output. ``[in,out]`` should be used
+for struct pointer arguments if *any* data reachable by the pointer might
+change. For example, if the struct contains a ``GHashTable *`` member, a
+doxygen block for a function that inserts data into the hash table should mark
+the struct pointer argument as ``[in,out]`` even if the struct members
+themselves are not changed.
+
 
 Public API Deprecation
 ______________________

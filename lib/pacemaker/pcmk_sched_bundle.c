@@ -61,9 +61,17 @@ get_containers_or_children(pe_resource_t *rsc)
            get_container_list(rsc) : rsc->children;
 }
 
+/*!
+ * \internal
+ * \brief Assign a bundle resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                      pe_working_set_t *data_set)
+pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     GList *containers = NULL;
     GList *nodes = NULL;
@@ -76,14 +84,14 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = pcmk__sort_nodes(nodes, NULL, data_set);
+    nodes = pcmk__sort_nodes(nodes, NULL);
     containers = g_list_sort(containers, pcmk__cmp_instance);
     distribute_children(rsc, containers, nodes, bundle_data->nreplicas,
-                        bundle_data->nreplicas_per_host, data_set);
+                        bundle_data->nreplicas_per_host, rsc->cluster);
     g_list_free(nodes);
     g_list_free(containers);
 
@@ -96,7 +104,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         if (replica->ip) {
             pe_rsc_trace(rsc, "Allocating bundle %s IP %s",
                          rsc->id, replica->ip->id);
-            replica->ip->cmds->allocate(replica->ip, prefer, data_set);
+            replica->ip->cmds->assign(replica->ip, prefer);
         }
 
         container_host = replica->container->allocated_to;
@@ -108,14 +116,13 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pcmk__new_colocation("child-remote-with-docker-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
-                                 NULL, true, data_set);
+                                 NULL, true, rsc->cluster);
         }
 
         if (replica->remote) {
             pe_rsc_trace(rsc, "Allocating bundle %s connection %s",
                          rsc->id, replica->remote->id);
-            replica->remote->cmds->allocate(replica->remote, prefer,
-                                            data_set);
+            replica->remote->cmds->assign(replica->remote, prefer);
         }
 
         // Explicitly allocate replicas' children before bundle child
@@ -136,8 +143,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
-            replica->child->cmds->allocate(replica->child, replica->node,
-                                           data_set);
+            replica->child->cmds->assign(replica->child, replica->node);
             pe__clear_resource_flags(replica->child->parent,
                                        pe_rsc_allocating);
         }
@@ -156,7 +162,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_trace(rsc, "Allocating bundle %s child %s",
                      rsc->id, bundle_data->child->id);
-        bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
+        bundle_data->child->cmds->assign(bundle_data->child, prefer);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
@@ -165,7 +171,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
 
 void
-pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
+pcmk__bundle_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *action = NULL;
     GList *containers = NULL;
@@ -181,21 +187,20 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         CRM_ASSERT(replica);
         if (replica->ip) {
-            replica->ip->cmds->create_actions(replica->ip, data_set);
+            replica->ip->cmds->create_actions(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->create_actions(replica->container,
-                                                     data_set);
+            replica->container->cmds->create_actions(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->create_actions(replica->remote, data_set);
+            replica->remote->cmds->create_actions(replica->remote);
         }
     }
 
-    clone_create_pseudo_actions(rsc, containers, NULL, NULL,  data_set);
+    clone_create_pseudo_actions(rsc, containers, NULL, NULL);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
+        bundle_data->child->cmds->create_actions(bundle_data->child);
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
@@ -214,8 +219,7 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-pcmk__bundle_internal_constraints(pe_resource_t *rsc,
-                                  pe_working_set_t *data_set)
+pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -225,30 +229,24 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
 
     if (bundle_data->child) {
         pcmk__order_resource_actions(rsc, RSC_START, bundle_data->child,
-                                     RSC_START, pe_order_implies_first_printed,
-                                     data_set);
+                                     RSC_START, pe_order_implies_first_printed);
         pcmk__order_resource_actions(rsc, RSC_STOP, bundle_data->child,
-                                     RSC_STOP, pe_order_implies_first_printed,
-                                     data_set);
+                                     RSC_STOP, pe_order_implies_first_printed);
 
         if (bundle_data->child->children) {
             pcmk__order_resource_actions(bundle_data->child, RSC_STARTED, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOPPED, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
         } else {
             pcmk__order_resource_actions(bundle_data->child, RSC_START, rsc,
                                          RSC_STARTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
             pcmk__order_resource_actions(bundle_data->child, RSC_STOP, rsc,
                                          RSC_STOPPED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
         }
     }
 
@@ -259,40 +257,36 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
         CRM_ASSERT(replica);
         CRM_ASSERT(replica->container);
 
-        replica->container->cmds->internal_constraints(replica->container,
-                                                       data_set);
+        replica->container->cmds->internal_constraints(replica->container);
 
         pcmk__order_starts(rsc, replica->container,
-                           pe_order_runnable_left|pe_order_implies_first_printed,
-                           data_set);
+                           pe_order_runnable_left|pe_order_implies_first_printed);
 
         if (replica->child) {
             pcmk__order_stops(rsc, replica->child,
-                              pe_order_implies_first_printed, data_set);
+                              pe_order_implies_first_printed);
         }
         pcmk__order_stops(rsc, replica->container,
-                          pe_order_implies_first_printed, data_set);
+                          pe_order_implies_first_printed);
         pcmk__order_resource_actions(replica->container, RSC_START, rsc,
-                                     RSC_STARTED, pe_order_implies_then_printed,
-                                     data_set);
+                                     RSC_STARTED,
+                                     pe_order_implies_then_printed);
         pcmk__order_resource_actions(replica->container, RSC_STOP, rsc,
-                                     RSC_STOPPED, pe_order_implies_then_printed,
-                                     data_set);
+                                     RSC_STOPPED,
+                                     pe_order_implies_then_printed);
 
         if (replica->ip) {
-            replica->ip->cmds->internal_constraints(replica->ip, data_set);
+            replica->ip->cmds->internal_constraints(replica->ip);
 
             // Start IP then container
             pcmk__order_starts(replica->ip, replica->container,
-                               pe_order_runnable_left|pe_order_preserve,
-                               data_set);
+                               pe_order_runnable_left|pe_order_preserve);
             pcmk__order_stops(replica->container, replica->ip,
-                              pe_order_implies_first|pe_order_preserve,
-                              data_set);
+                              pe_order_implies_first|pe_order_preserve);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
                                  replica->container, NULL, NULL, true,
-                                 data_set);
+                                 rsc->cluster);
         }
 
         if (replica->remote) {
@@ -301,8 +295,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
              * colocated relative to the container, we don't need to do anything
              * explicit here with IP.
              */
-            replica->remote->cmds->internal_constraints(replica->remote,
-                                                        data_set);
+            replica->remote->cmds->internal_constraints(replica->remote);
         }
 
         if (replica->child) {
@@ -314,33 +307,29 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
     }
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
+        bundle_data->child->cmds->internal_constraints(bundle_data->child);
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             pcmk__promotable_restart_ordering(rsc);
 
             /* child demoted before global demoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_DEMOTED, rsc,
                                          RSC_DEMOTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
 
             /* global demote before child demote */
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, bundle_data->child,
                                          RSC_DEMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
 
             /* child promoted before global promoted */
             pcmk__order_resource_actions(bundle_data->child, RSC_PROMOTED, rsc,
                                          RSC_PROMOTED,
-                                         pe_order_implies_then_printed,
-                                         data_set);
+                                         pe_order_implies_then_printed);
 
             /* global promote before child promote */
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, bundle_data->child,
                                          RSC_PROMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
         }
     }
 }
@@ -390,7 +379,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = pcmk__sort_nodes(scratch, NULL, data_set);
+    scratch = pcmk__sort_nodes(scratch, NULL);
 
     for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -405,18 +394,6 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
   done:
     g_list_free(scratch);
     return pair;
-}
-
-void
-pcmk__bundle_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
-{
-    /* -- Never called --
-     *
-     * Instead we add the colocation constraints to the child and call from there
-     */
-    CRM_ASSERT(FALSE);
 }
 
 int copies_per_node(pe_resource_t * rsc) 
@@ -460,37 +437,54 @@ int copies_per_node(pe_resource_t * rsc)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
-pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *constraint,
-                               pe_working_set_t *data_set)
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                               pcmk__colocation_t *colocation,
+                               bool for_dependent)
 {
     GList *allocated_primaries = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(constraint != NULL, return);
-    CRM_CHECK(dependent != NULL,
-              pe_err("dependent was NULL for %s", constraint->id); return);
-    CRM_CHECK(primary != NULL,
-              pe_err("primary was NULL for %s", constraint->id); return);
+    /* This should never be called for the bundle itself as a dependent.
+     * Instead, we add its colocation constraints to its replicas and call the
+     * apply_coloc_score() for the replicas as dependents.
+     */
+    CRM_ASSERT(!for_dependent);
+
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
     CRM_ASSERT(dependent->variant == pe_native);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         pe_rsc_trace(primary, "%s is still provisional", primary->id);
         return;
 
-    } else if(constraint->dependent->variant > pe_group) {
+    } else if (colocation->dependent->variant > pe_group) {
         pe_resource_t *primary_replica = compatible_replica(dependent, primary,
                                                             RSC_ROLE_UNKNOWN,
-                                                            FALSE, data_set);
+                                                            FALSE,
+                                                            dependent->cluster);
 
         if (primary_replica) {
             pe_rsc_debug(primary, "Pairing %s with %s",
                          dependent->id, primary_replica->id);
-            dependent->cmds->rsc_colocation_lh(dependent, primary_replica,
-                                               constraint, data_set);
+            dependent->cmds->apply_coloc_score(dependent, primary_replica,
+                                               colocation, true);
 
-        } else if (constraint->score >= INFINITY) {
+        } else if (colocation->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s",
                        dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true);
@@ -505,16 +499,16 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
 
     get_bundle_variant_data(bundle_data, primary);
     pe_rsc_trace(primary, "Processing constraint %s: %s -> %s %d",
-                 constraint->id, dependent->id, primary->id, constraint->score);
+                 colocation->id, dependent->id, primary->id, colocation->score);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (constraint->score < INFINITY) {
-            replica->container->cmds->rsc_colocation_rh(dependent,
+        if (colocation->score < INFINITY) {
+            replica->container->cmds->apply_coloc_score(dependent,
                                                         replica->container,
-                                                        constraint, data_set);
+                                                        colocation, false);
 
         } else {
             pe_node_t *chosen = replica->container->fns->location(replica->container,
@@ -524,23 +518,23 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->primary_role >= RSC_ROLE_PROMOTED)
+            if ((colocation->primary_role >= RSC_ROLE_PROMOTED)
                 && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
             pe_rsc_trace(primary, "Allowing %s: %s %d",
-                         constraint->id, chosen->details->uname,
+                         colocation->id, chosen->details->uname,
                          chosen->weight);
             allocated_primaries = g_list_prepend(allocated_primaries, chosen);
         }
     }
 
-    if (constraint->score >= INFINITY) {
+    if (colocation->score >= INFINITY) {
         node_list_exclude(dependent->allowed_nodes, allocated_primaries, FALSE);
     }
     g_list_free(allocated_primaries);
@@ -631,17 +625,15 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
     return NULL;
 }
 
-static enum pe_graph_flags
+static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, enum pe_action_flags flags,
-                                enum pe_action_flags filter,
-                                enum pe_ordering type,
+                                pe_node_t *node, uint32_t filter, uint32_t type,
                                 pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     GList *children = NULL;
     gboolean current = FALSE;
-    enum pe_graph_flags changed = pe_graph_none;
+    uint32_t changed = pcmk__updated_none;
 
     /* Fix this - lazy */
     if (pcmk__ends_with(first->uuid, "_stopped_0")
@@ -655,7 +647,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
         pe_resource_t *first_child = find_compatible_child(then_child,
                                                            first->rsc,
                                                            RSC_ROLE_UNKNOWN,
-                                                           current, data_set);
+                                                           current);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
@@ -668,10 +660,10 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
              *   on the same node as then_child, then they must
              *   not be allowed to start
              */
-            if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
+            if (pcmk_any_flags_set(type, pe_order_runnable_left|pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if (pcmk__assign_resource(then_child, NULL, true)) {
-                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
+                    pcmk__set_updated_flags(changed, first, pcmk__updated_then);
                 }
             }
 
@@ -751,14 +743,17 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                           then_action->uuid,
                           pcmk_is_set(then_action->flags, pe_action_optional),
                           type);
-                pe__set_graph_flags(changed, first,
-                                    pe_graph_updated_first|pe_graph_updated_then);
+                pcmk__set_updated_flags(changed, first,
+                                        pcmk__updated_first|pcmk__updated_then);
             }
             if(first_action && then_action) {
-                changed |= then_child->cmds->update_actions(first_action,
-                    then_action, node,
-                    first_child->cmds->action_flags(first_action, node),
-                    filter, type, data_set);
+                changed |= then_child->cmds->update_ordered_actions(first_action,
+                                                                    then_action,
+                                                                    node,
+                                                                    first_child->cmds->action_flags(first_action, node),
+                                                                    filter,
+                                                                    type,
+                                                                    data_set);
             } else {
                 crm_err("Nothing found either for %s (%p) or %s (%p) %s",
                         first_child->id, first_action,
@@ -806,44 +801,71 @@ can_interleave_actions(pe_action_t *first, pe_action_t *then)
     return interleave;
 }
 
-enum pe_graph_flags
+/*!
+ * \internal
+ * \brief Update two actions according to an ordering between them
+ *
+ * Given information about an ordering of two actions, update the actions'
+ * flags (and runnable_before members if appropriate) as appropriate for the
+ * ordering. In some cases, the ordering could be disabled as well.
+ *
+ * \param[in] first     'First' action in an ordering
+ * \param[in] then      'Then' action in an ordering
+ * \param[in] node      If not NULL, limit scope of ordering to this node
+ *                      (only used when interleaving instances)
+ * \param[in] flags     Action flags for \p first for ordering purposes
+ * \param[in] filter    Action flags to limit scope of certain updates (may
+ *                      include pe_action_optional to affect only mandatory
+ *                      actions, and pe_action_runnable to affect only
+ *                      runnable actions)
+ * \param[in] type      Group of enum pe_ordering flags to apply
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+uint32_t
 pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
-                           pe_node_t *node, enum pe_action_flags flags,
-                           enum pe_action_flags filter, enum pe_ordering type,
-                           pe_working_set_t *data_set)
+                           pe_node_t *node, uint32_t flags, uint32_t filter,
+                           uint32_t type, pe_working_set_t *data_set)
 {
-    enum pe_graph_flags changed = pe_graph_none;
+    uint32_t changed = pcmk__updated_none;
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = multi_update_interleave_actions(first, then, node, flags,
-                                                  filter, type, data_set);
+        changed = multi_update_interleave_actions(first, then, node, filter,
+                                                  type, data_set);
 
     } else if(then->rsc) {
         GList *gIter = NULL;
         GList *children = NULL;
 
         // Handle the 'primitive' ordering case
-        changed |= native_update_actions(first, then, node, flags, filter,
-                                         type, data_set);
+        changed |= pcmk__update_ordered_actions(first, then, node, flags,
+                                                filter, type, data_set);
 
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);
         for (gIter = children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *then_child = (pe_resource_t *) gIter->data;
-            enum pe_graph_flags then_child_changed = pe_graph_none;
+            uint32_t then_child_changed = pcmk__updated_none;
             pe_action_t *then_child_action = find_first_action(then_child->actions, NULL, then->task, node);
 
             if (then_child_action) {
-                enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
+                uint32_t then_child_flags = then_child->cmds->action_flags(then_child_action,
+                                                                           node);
 
                 if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |= then_child->cmds->update_actions(first,
-                        then_child_action, node, flags, filter, type, data_set);
+                    then_child_changed |= then_child->cmds->update_ordered_actions(first,
+                                                                                   then_child_action,
+                                                                                   node,
+                                                                                   flags,
+                                                                                   filter,
+                                                                                   type,
+                                                                                   data_set);
                 }
                 changed |= then_child_changed;
-                if (then_child_changed & pe_graph_updated_then) {
+                if (pcmk_is_set(then_child_changed, pcmk__updated_then)) {
                     for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
 
@@ -891,8 +913,14 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
 void
-pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
+pcmk__bundle_expand(pe_resource_t *rsc)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -901,7 +929,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
     get_bundle_variant_data(bundle_data, rsc);
 
     if (bundle_data->child) {
-        bundle_data->child->cmds->expand(bundle_data->child, data_set);
+        bundle_data->child->cmds->add_actions_to_graph(bundle_data->child);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -910,7 +938,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote, data_set)) {
+            && pe__bundle_needs_remote_name(replica->remote, rsc->cluster)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -924,7 +952,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
             // Replace the value in replica->remote->xml (if appropriate)
             calculated_addr = pe__add_bundle_remote_name(replica->remote,
-                                                         data_set,
+                                                         rsc->cluster,
                                                          nvpair, "value");
             if (calculated_addr) {
                 /* Since this is for the bundle as a resource, and not any
@@ -934,10 +962,8 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                  * parameters.
                  */
                 GHashTable *params = pe_rsc_params(replica->remote,
-                                                   NULL, data_set);
+                                                   NULL, rsc->cluster);
 
-                crm_trace("Set address for bundle connection %s to bundle host %s",
-                          replica->remote->id, calculated_addr);
                 g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                      strdup(calculated_addr));
@@ -954,26 +980,34 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
             }
         }
         if (replica->ip) {
-            replica->ip->cmds->expand(replica->ip, data_set);
+            replica->ip->cmds->add_actions_to_graph(replica->ip);
         }
         if (replica->container) {
-            replica->container->cmds->expand(replica->container, data_set);
+            replica->container->cmds->add_actions_to_graph(replica->container);
         }
         if (replica->remote) {
-            replica->remote->cmds->expand(replica->remote, data_set);
+            replica->remote->cmds->add_actions_to_graph(replica->remote);
         }
     }
 }
 
-gboolean
-pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
-                          pe_action_t *complete, gboolean force,
-                          pe_working_set_t * data_set)
+/*!
+ * \internal
+ *
+ * \brief Schedule any probes needed for a resource on a node
+ *
+ * \param[in] rsc   Resource to create probe for
+ * \param[in] node  Node to create probe on
+ *
+ * \return true if any probe was created, otherwise false
+ */
+bool
+pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node)
 {
-    bool any_created = FALSE;
+    bool any_created = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    CRM_CHECK(rsc != NULL, return FALSE);
+    CRM_CHECK(rsc != NULL, return false);
 
     get_bundle_variant_data(bundle_data, rsc);
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -981,59 +1015,52 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
         pe__bundle_replica_t *replica = gIter->data;
 
         CRM_ASSERT(replica);
-        if (replica->ip) {
-            any_created |= replica->ip->cmds->create_probe(replica->ip, node,
-                                                           complete, force,
-                                                           data_set);
+        if ((replica->ip != NULL)
+            && replica->ip->cmds->create_probe(replica->ip, node)) {
+            any_created = true;
         }
-        if (replica->child && (node->details == replica->node->details)) {
-            any_created |= replica->child->cmds->create_probe(replica->child,
-                                                              node, complete,
-                                                              force, data_set);
+        if ((replica->child != NULL) && (node->details == replica->node->details)
+            && replica->child->cmds->create_probe(replica->child, node)) {
+            any_created = true;
         }
-        if (replica->container) {
-            bool created = replica->container->cmds->create_probe(replica->container,
-                                                                  node, complete,
-                                                                  force, data_set);
+        if ((replica->container != NULL)
+            && replica->container->cmds->create_probe(replica->container,
+                                                      node)) {
+            any_created = true;
 
-            if(created) {
-                any_created = TRUE;
-                /* If we're limited to one replica per host (due to
-                 * the lack of an IP range probably), then we don't
-                 * want any of our peer containers starting until
-                 * we've established that no other copies are already
-                 * running.
-                 *
-                 * Partly this is to ensure that nreplicas_per_host is
-                 * observed, but also to ensure that the containers
-                 * don't fail to start because the necessary port
-                 * mappings (which won't include an IP for uniqueness)
-                 * are already taken
-                 */
+            /* If we're limited to one replica per host (due to
+             * the lack of an IP range probably), then we don't
+             * want any of our peer containers starting until
+             * we've established that no other copies are already
+             * running.
+             *
+             * Partly this is to ensure that nreplicas_per_host is
+             * observed, but also to ensure that the containers
+             * don't fail to start because the necessary port
+             * mappings (which won't include an IP for uniqueness)
+             * are already taken
+             */
 
-                for (GList *tIter = bundle_data->replicas;
-                     tIter && (bundle_data->nreplicas_per_host == 1);
-                     tIter = tIter->next) {
-                    pe__bundle_replica_t *other = tIter->data;
+            for (GList *tIter = bundle_data->replicas;
+                 tIter && (bundle_data->nreplicas_per_host == 1);
+                 tIter = tIter->next) {
+                pe__bundle_replica_t *other = tIter->data;
 
-                    if ((other != replica) && (other != NULL)
-                        && (other->container != NULL)) {
+                if ((other != replica) && (other != NULL)
+                    && (other->container != NULL)) {
 
-                        pcmk__new_ordering(replica->container,
-                                           pcmk__op_key(replica->container->id, RSC_STATUS, 0),
-                                           NULL, other->container,
-                                           pcmk__op_key(other->container->id, RSC_START, 0),
-                                           NULL,
-                                           pe_order_optional|pe_order_same_node,
-                                           data_set);
-                    }
+                    pcmk__new_ordering(replica->container,
+                                       pcmk__op_key(replica->container->id, RSC_STATUS, 0),
+                                       NULL, other->container,
+                                       pcmk__op_key(other->container->id, RSC_START, 0),
+                                       NULL,
+                                       pe_order_optional|pe_order_same_node,
+                                       rsc->cluster);
                 }
             }
         }
-        if (replica->container && replica->remote
-            && replica->remote->cmds->create_probe(replica->remote, node,
-                                                   complete, force,
-                                                   data_set)) {
+        if ((replica->container != NULL) && (replica->remote != NULL)
+            && replica->remote->cmds->create_probe(replica->remote, node)) {
 
             /* Do not probe the remote resource until we know where the
              * container is running. This is required for REMOTE_CONTAINER_HACK
@@ -1045,14 +1072,14 @@ pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node,
                                                    probe_uuid, NULL, node);
 
             free(probe_uuid);
-            if (probe) {
-                any_created = TRUE;
+            if (probe != NULL) {
+                any_created = true;
                 crm_trace("Ordering %s probe on %s",
                           replica->remote->id, node->details->uname);
                 pcmk__new_ordering(replica->container,
                                    pcmk__op_key(replica->container->id, RSC_START, 0),
                                    NULL, replica->remote, NULL, probe,
-                                   pe_order_probe, data_set);
+                                   pe_order_probe, rsc->cluster);
             }
         }
     }

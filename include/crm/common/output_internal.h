@@ -567,7 +567,7 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  * \param[in]     options Format-specific command line options.  These will be
  *                        added to the context.  This argument can also be NULL.
  *
- * \return 0 on success or an error code on error.
+ * \return Standard Pacemaker return code
  */
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
@@ -861,6 +861,13 @@ void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 int pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml);
 int pcmk__log_output_new(pcmk__output_t **out);
+
+#if defined(PCMK__UNIT_TESTING)
+/* If we are building libcrmcommon_test.a, add this accessor function so we can
+ * inspect the internal formatters hash table.
+ */
+GHashTable *pcmk__output_formatters(void);
+#endif
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

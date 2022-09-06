@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: lsb_dummy allocation score on node1: 0
-pcmk__native_allocate: lsb_dummy allocation score on node2: 0
-pcmk__native_allocate: lsb_dummy allocation score on node3: 0
-pcmk__native_allocate: stonith-1 allocation score on node1: 0
-pcmk__native_allocate: stonith-1 allocation score on node2: 0
-pcmk__native_allocate: stonith-1 allocation score on node3: 0
+pcmk__primitive_assign: lsb_dummy allocation score on node1: 0
+pcmk__primitive_assign: lsb_dummy allocation score on node2: 0
+pcmk__primitive_assign: lsb_dummy allocation score on node3: 0
+pcmk__primitive_assign: stonith-1 allocation score on node1: 0
+pcmk__primitive_assign: stonith-1 allocation score on node2: 0
+pcmk__primitive_assign: stonith-1 allocation score on node3: 0

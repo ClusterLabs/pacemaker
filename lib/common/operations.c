@@ -263,7 +263,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 
     CRM_CHECK(magic != NULL, return FALSE);
 
-#ifdef SSCANF_HAS_M
+#ifdef HAVE_SSCANF_M
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
     key = calloc(1, strlen(magic) - 3); // magic must have >=4 other characters

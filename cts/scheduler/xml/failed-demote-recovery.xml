@@ -45,9 +45,9 @@
             <op id="DB2_HADR-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
           </operations>
         </primitive>
-        <meta_attributes id="DB2_HADR-master-meta_attributes">
-          <nvpair id="DB2_HADR-master-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="DB2_HADR-master-meta_attributes-promotable" name="promotable" value="true"/>
+        <meta_attributes id="DB2_HADR-promoted-meta_attributes">
+          <nvpair id="DB2_HADR-promoted-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="DB2_HADR-promoted-meta_attributes-promotable" name="promotable" value="true"/>
         </meta_attributes>
       </clone>
     </resources>
@@ -77,7 +77,7 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-db2hadr_db2inst1_sample_fal" name="db2hadr_db2inst1_sample_fal" value="S0000026.LOG"/>
-          <nvpair id="status-2-master-DB2_HADR" name="master-DB2_HADR" value="-1"/>
+          <nvpair id="status-2-promoted-DB2_HADR" name="master-DB2_HADR" value="-1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -102,7 +102,7 @@
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-fail-count-DB2_HADR" name="fail-count-DB2_HADR" value="2"/>
           <nvpair id="status-2-last-failure-DB2_HADR" name="last-failure-DB2_HADR" value="1512045470"/>
-          <nvpair id="status-2-master-DB2_HADR" name="master-DB2_HADR" value="-1"/>
+          <nvpair id="status-2-promoted-DB2_HADR" name="master-DB2_HADR" value="-1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

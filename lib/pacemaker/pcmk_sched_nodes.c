@@ -109,11 +109,6 @@ pcmk__copy_node_list(const GList *list, bool reset)
     return result;
 }
 
-struct node_weight_s {
-    pe_node_t *active;
-    pe_working_set_t *data_set;
-};
-
 /*!
  * \internal
  * \brief Compare two nodes for allocation desirability
@@ -133,7 +128,7 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pe_node_t *node1 = (const pe_node_t *) a;
     const pe_node_t *node2 = (const pe_node_t *) b;
-    struct node_weight_s *nw = data;
+    pe_node_t *active = (pe_node_t *) data;
 
     int node1_weight = 0;
     int node2_weight = 0;
@@ -172,12 +167,12 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // If appropriate, compare node utilization
 
-    if (pcmk__str_eq(nw->data_set->placement_strategy, "minimal",
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "minimal",
                      pcmk__str_casei)) {
         goto equal;
     }
 
-    if (pcmk__str_eq(nw->data_set->placement_strategy, "balanced",
+    if (pcmk__str_eq(node1->details->data_set->placement_strategy, "balanced",
                      pcmk__str_casei)) {
         result = pcmk__compare_node_capacities(node1, node2);
         if (result < 0) {
@@ -208,13 +203,13 @@ compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 
     // Check whether one node is already running desired resource
 
-    if (nw->active != NULL) {
-        if (nw->active->details == node1->details) {
+    if (active != NULL) {
+        if (active->details == node1->details) {
             crm_trace("%s (%d) > %s (%d) : active",
                       node1->details->uname, node1->details->num_resources,
                       node2->details->uname, node2->details->num_resources);
             return -1;
-        } else if (nw->active->details == node2->details) {
+        } else if (active->details == node2->details) {
             crm_trace("%s (%d) < %s (%d) : active",
                       node1->details->uname, node1->details->num_resources,
                       node2->details->uname, node2->details->num_resources);
@@ -239,12 +234,9 @@ equal:
  * \return New head of sorted list
  */
 GList *
-pcmk__sort_nodes(GList *nodes, pe_node_t *active_node,
-                 pe_working_set_t *data_set)
+pcmk__sort_nodes(GList *nodes, pe_node_t *active_node)
 {
-    struct node_weight_s nw = { active_node, data_set };
-
-    return g_list_sort_with_data(nodes, compare_nodes, &nw);
+    return g_list_sort_with_data(nodes, compare_nodes, active_node);
 }
 
 /*!

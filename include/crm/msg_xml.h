@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,8 +46,8 @@ extern "C" {
 /* These have been deprecated as CIB <clone> element attributes (aliases for
  * "promoted-max" and "promoted-node-max") since 2.0.0.
  */
-#define PCMK_XE_PROMOTED_MAX_LEGACY         "master-max"
-#define PCMK_XE_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
+#define PCMK_XA_PROMOTED_MAX_LEGACY         "master-max"
+#define PCMK_XA_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
 
 /*
  * Older constants that don't follow current naming

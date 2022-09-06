@@ -139,19 +139,19 @@ static struct pcmk__rc_info {
       "Operation requires quorum",
       -pcmk_err_no_quorum,
     },
-    { "pcmk_rc_ipc_pid_only",
-      "IPC server process is active but not accepting connections",
+    { "pcmk_rc_ipc_unauthorized",
+      "IPC server is blocked by unauthorized process",
       -pcmk_err_generic,
     },
     { "pcmk_rc_ipc_unresponsive",
       "IPC server is unresponsive",
       -pcmk_err_generic,
     },
-    { "pcmk_rc_ipc_unauthorized",
-      "IPC server is blocked by unauthorized process",
+    { "pcmk_rc_ipc_pid_only",
+      "IPC server process is active but not accepting connections",
       -pcmk_err_generic,
     },
-    { "pcmk_rc_op_unsatisifed",
+    { "pcmk_rc_op_unsatisfied",
       "Not applicable under current conditions",
       -pcmk_err_generic,
     },
@@ -193,6 +193,14 @@ static struct pcmk__rc_info {
     },
     { "pcmk_rc_invalid_transition",
       "Cluster simulation produced invalid transition",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_unpack_error",
+      "Unable to parse CIB XML",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_duplicate_id",
+      "Two or more XML elements have the same ID",
       -pcmk_err_generic,
     },
 };
@@ -582,6 +590,7 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_schema_validation:
         case pcmk_rc_transform_failed:
+        case pcmk_rc_unpack_error:
             return CRM_EX_CONFIG;
 
         case pcmk_rc_bad_nvpair:
@@ -667,6 +676,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_no_input:
             return CRM_EX_NOINPUT;
+
+        case pcmk_rc_duplicate_id:
+            return CRM_EX_MULTIPLE;
 
         default:
             return CRM_EX_ERROR;

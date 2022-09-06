@@ -24,13 +24,13 @@
           <operations>
             <op id="fake-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="fake-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
-            <op id="fake-monitor-interval-10-role-Master" interval="10" name="monitor" role="Promoted" timeout="20"/>
-            <op id="fake-monitor-interval-10-role-Slave" interval="10" name="monitor" role="Unpromoted" timeout="20"/>
+            <op id="fake-monitor-interval-10-role-Promoted" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="fake-monitor-interval-10-role-Unpromoted" interval="10" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
-        <meta_attributes id="fake-master-meta_attributes">
-          <nvpair id="fake-master-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="fake-master-meta_attributes-notify" name="notify" value="true"/>
+        <meta_attributes id="fake-promoted-meta_attributes">
+          <nvpair id="fake-promoted-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="fake-promoted-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
       </clone>
     </resources>
@@ -53,7 +53,7 @@
         <instance_attributes id="status-1">
           <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-1-master-fake" name="master-fake" value="5"/>
+          <nvpair id="status-1-promoted-fake" name="master-fake" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -72,7 +72,7 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-3-master-fake" name="master-fake" value="5"/>
+          <nvpair id="status-3-promoted-fake" name="master-fake" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -91,7 +91,7 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-2-master-fake" name="master-fake" value="5"/>
+          <nvpair id="status-2-promoted-fake" name="master-fake" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

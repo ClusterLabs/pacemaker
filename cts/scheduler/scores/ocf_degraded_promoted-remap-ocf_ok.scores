@@ -5,11 +5,11 @@ pcmk__clone_allocate: state:0 allocation score on rhel8-1: INFINITY
 pcmk__clone_allocate: state:0 allocation score on rhel8-2: 0
 pcmk__clone_allocate: state:1 allocation score on rhel8-1: 0
 pcmk__clone_allocate: state:1 allocation score on rhel8-2: INFINITY
-pcmk__native_allocate: state:0 allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: state:0 allocation score on rhel8-2: 0
-pcmk__native_allocate: state:1 allocation score on rhel8-1: -INFINITY
-pcmk__native_allocate: state:1 allocation score on rhel8-2: INFINITY
-pcmk__native_allocate: xvmfence allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: xvmfence allocation score on rhel8-2: 0
+pcmk__primitive_assign: state:0 allocation score on rhel8-1: INFINITY
+pcmk__primitive_assign: state:0 allocation score on rhel8-2: 0
+pcmk__primitive_assign: state:1 allocation score on rhel8-1: -INFINITY
+pcmk__primitive_assign: state:1 allocation score on rhel8-2: INFINITY
+pcmk__primitive_assign: xvmfence allocation score on rhel8-1: INFINITY
+pcmk__primitive_assign: xvmfence allocation score on rhel8-2: 0
 state:0 promotion score on rhel8-1: 10
 state:1 promotion score on rhel8-2: 5

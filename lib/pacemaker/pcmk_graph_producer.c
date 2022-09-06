@@ -902,8 +902,8 @@ create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
  * \internal
  * \brief Add an action to the transition graph XML if appropriate
  *
- * \param[in] action    Action to possibly add
- * \param[in] data_set  Cluster working set
+ * \param[in] data       Action to possibly add
+ * \param[in] user_data  Cluster working set
  *
  * \note This will de-duplicate the action inputs, meaning that the
  *       pe_action_wrapper_t:type flags can no longer be relied on to retain
@@ -914,9 +914,12 @@ create_graph_synapse(pe_action_t *action, pe_working_set_t *data_set)
  *       particular combinations of flags -- such code must be done before
  *       pcmk__create_graph().)
  */
-void
-pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
+static void
+add_action_to_graph(gpointer data, gpointer user_data)
 {
+    pe_action_t *action = (pe_action_t *) data;
+    pe_working_set_t *data_set = (pe_working_set_t *) user_data;
+
     xmlNode *syn = NULL;
     xmlNode *set = NULL;
     xmlNode *in = NULL;
@@ -935,6 +938,11 @@ pcmk__add_action_to_graph(pe_action_t *action, pe_working_set_t *data_set)
         return;
     }
     pe__set_action_flags(action, pe_action_dumped);
+
+    crm_trace("Adding action %d (%s%s%s) to graph",
+              action->id, action->uuid,
+              ((action->node == NULL)? "" : " on "),
+              ((action->node == NULL)? "" : action->node->details->uname));
 
     syn = create_graph_synapse(action, data_set);
     set = create_xml_node(syn, "action_set");
@@ -986,6 +994,31 @@ pcmk__log_transition_summary(const char *filename)
     if (crm_config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a resource's actions to the transition graph
+ *
+ * \param[in] rsc  Resource whose actions should be added
+ */
+void
+pcmk__add_rsc_actions_to_graph(pe_resource_t *rsc)
+{
+    GList *iter = NULL;
+
+    CRM_ASSERT(rsc != NULL);
+    pe_rsc_trace(rsc, "Adding actions for %s to graph", rsc->id);
+
+    // First add the resource's own actions
+    g_list_foreach(rsc->actions, add_action_to_graph, rsc->cluster);
+
+    // Then recursively add its children's actions (appropriate to variant)
+    for (iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child_rsc = (pe_resource_t *) iter->data;
+
+        child_rsc->cmds->add_actions_to_graph(child_rsc);
     }
 }
 
@@ -1050,7 +1083,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
         pe_resource_t *rsc = (pe_resource_t *) iter->data;
 
         pe_rsc_trace(rsc, "Processing actions for %s", rsc->id);
-        rsc->cmds->expand(rsc, data_set);
+        rsc->cmds->add_actions_to_graph(rsc);
     }
 
     // Add pseudo-action for list of nodes with maintenance state update
@@ -1082,7 +1115,7 @@ pcmk__create_graph(pe_working_set_t *data_set)
             }
         }
 
-        pcmk__add_action_to_graph(action, data_set);
+        add_action_to_graph((gpointer) action, (gpointer) data_set);
     }
 
     crm_log_xml_trace(data_set->graph, "graph");

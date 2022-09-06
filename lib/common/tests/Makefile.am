@@ -18,9 +18,12 @@ SUBDIRS = \
 	lists		\
 	nvpair 		\
 	operations	\
+	options		\
+	output 		\
 	procfs		\
 	results		\
 	scores		\
 	strings		\
 	utils		\
+	xml 		\
 	xpath

@@ -170,8 +170,8 @@
         <instance_attributes id="status-178325681">
           <nvpair id="status-178325681-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-178325681-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-178325681-master-default" name="master-default" value="100"/>
-          <nvpair id="status-178325681-pending-master-default" name="pending-master-default" value=""/>
+          <nvpair id="status-178325681-promoted-default" name="master-default" value="100"/>
+          <nvpair id="status-178325681-pending-promoted-default" name="pending-master-default" value=""/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="178325681">
@@ -241,8 +241,8 @@
         <instance_attributes id="status-178325584">
           <nvpair id="status-178325584-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-178325584-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-178325584-master-default" name="master-default" value="100"/>
-          <nvpair id="status-178325584-pending-master-default" name="pending-master-default" value=""/>
+          <nvpair id="status-178325584-promoted-default" name="master-default" value="100"/>
+          <nvpair id="status-178325584-pending-promoted-default" name="pending-master-default" value=""/>
           <nvpair id="status-178325584-last-failure-sle12-kvm" name="last-failure-sle12-kvm" value="1422200459"/>
         </instance_attributes>
       </transient_attributes>

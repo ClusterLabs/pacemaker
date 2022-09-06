@@ -1,5 +1,5 @@
 
-pcmk__native_allocate: dummy allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: dummy allocation score on rhel8-2: 0
-pcmk__native_allocate: xvmfence allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: xvmfence allocation score on rhel8-2: 0
+pcmk__primitive_assign: dummy allocation score on rhel8-1: INFINITY
+pcmk__primitive_assign: dummy allocation score on rhel8-2: 0
+pcmk__primitive_assign: xvmfence allocation score on rhel8-1: INFINITY
+pcmk__primitive_assign: xvmfence allocation score on rhel8-2: 0

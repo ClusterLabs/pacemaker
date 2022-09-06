@@ -14,7 +14,7 @@
 #  include <glib.h>
 #  include "crm/services.h"
 
-#if SUPPORT_DBUS
+#if HAVE_DBUS
 #  include <dbus/dbus.h>
 #endif
 
@@ -38,7 +38,7 @@ struct svc_action_private_s {
     mainloop_io_t *stdout_gsource;
 
     int stdin_fd;
-#if SUPPORT_DBUS
+#if HAVE_DBUS
     DBusPendingCall* pending;
     unsigned timerid;
 #endif
@@ -93,7 +93,7 @@ void services_untrack_op(svc_action_t *op);
 G_GNUC_INTERNAL
 gboolean is_op_blocked(const char *rsc);
 
-#if SUPPORT_DBUS
+#if HAVE_DBUS
 G_GNUC_INTERNAL
 void services_set_op_pending(svc_action_t *op, DBusPendingCall *pending);
 #endif

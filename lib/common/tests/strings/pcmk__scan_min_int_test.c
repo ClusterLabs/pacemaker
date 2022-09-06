@@ -9,11 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 empty_input_string(void **state)
@@ -57,16 +53,8 @@ input_just_right(void **state)
     assert_int_equal(result, 2048);
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input_string),
-        cmocka_unit_test(input_below_minimum),
-        cmocka_unit_test(input_above_maximum),
-        cmocka_unit_test(input_just_right),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
-
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input_string),
+                cmocka_unit_test(input_below_minimum),
+                cmocka_unit_test(input_above_maximum),
+                cmocka_unit_test(input_just_right))

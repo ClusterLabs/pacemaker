@@ -9,14 +9,14 @@
 
 #include <crm_internal.h>
 
-#if defined(US_AUTH_PEERCRED_UCRED) || defined(US_AUTH_PEERCRED_SOCKPEERCRED)
-#  ifdef US_AUTH_PEERCRED_UCRED
+#if defined(HAVE_UCRED) || defined(HAVE_SOCKPEERCRED)
+#  ifdef HAVE_UCRED
 #    ifndef _GNU_SOURCE
 #      define _GNU_SOURCE
 #    endif
 #  endif
 #  include <sys/socket.h>
-#elif defined(US_AUTH_GETPEERUCRED)
+#elif defined(HAVE_GETPEERUCRED)
 #  include <ucred.h>
 #endif
 
@@ -571,6 +571,7 @@ pcmk_disconnect_ipc(pcmk_ipc_api_t *api)
                 // This should always be the case already, but to be safe
                 api->free_on_disconnect = false;
 
+                crm_ipc_close(ipc);
                 crm_ipc_destroy(ipc);
                 ipc_post_disconnect(api);
             }
@@ -708,10 +709,7 @@ create_purge_node_request(pcmk_ipc_api_t *api, const char *node_name,
             crm_xml_add(request, F_TYPE, T_ATTRD);
             crm_xml_add(request, F_ORIG, crm_system_name);
             crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-            crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, node_name);
-            if (nodeid > 0) {
-                crm_xml_add_int(request, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
-            }
+            pcmk__xe_add_node(request, node_name, nodeid);
             break;
 
         case pcmk_ipc_controld:
@@ -1367,7 +1365,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
 {
     int ret = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
-#if defined(US_AUTH_PEERCRED_UCRED)
+#if defined(HAVE_UCRED)
     struct ucred ucred;
     socklen_t ucred_len = sizeof(ucred);
 #endif
@@ -1378,13 +1376,13 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
     }
 #endif
 
-#if defined(US_AUTH_PEERCRED_UCRED)
+#if defined(HAVE_UCRED)
     if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
                     &ucred, &ucred_len)
                 && ucred_len == sizeof(ucred)) {
         found_pid = ucred.pid; found_uid = ucred.uid; found_gid = ucred.gid;
 
-#elif defined(US_AUTH_PEERCRED_SOCKPEERCRED)
+#elif defined(HAVE_SOCKPEERCRED)
     struct sockpeercred sockpeercred;
     socklen_t sockpeercred_len = sizeof(sockpeercred);
 
@@ -1394,11 +1392,11 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
         found_pid = sockpeercred.pid;
         found_uid = sockpeercred.uid; found_gid = sockpeercred.gid;
 
-#elif defined(US_AUTH_GETPEEREID)
+#elif defined(HAVE_GETPEEREID)
     if (!getpeereid(sock, &found_uid, &found_gid)) {
         found_pid = PCMK__SPECIAL_PID;  /* cannot obtain PID (FreeBSD) */
 
-#elif defined(US_AUTH_GETPEERUCRED)
+#elif defined(HAVE_GETPEERUCRED)
     ucred_t *ucred;
     if (!getpeerucred(sock, &ucred)) {
         errno = 0;

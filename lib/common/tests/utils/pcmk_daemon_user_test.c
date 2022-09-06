@@ -8,14 +8,13 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/common/unittest_internal.h>
+
+#include "crmcommon_private.h"
 #include "mock_private.h"
 
 #include <pwd.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 #include <sys/types.h>
 
 static void
@@ -26,6 +25,12 @@ no_matching_pwent(void **state)
 
     // Set getpwnam_r() return value and result parameter
     pcmk__mock_getpwnam_r = true;
+
+    expect_string(__wrap_getpwnam_r, name, "hacluster");
+    expect_any(__wrap_getpwnam_r, pwd);
+    expect_any(__wrap_getpwnam_r, buf);
+    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, ENOENT);
     will_return(__wrap_getpwnam_r, NULL);
 
@@ -49,6 +54,12 @@ entry_found(void **state)
 
     // Set getpwnam_r() return value and result parameter
     pcmk__mock_getpwnam_r = true;
+
+    expect_string(__wrap_getpwnam_r, name, "hacluster");
+    expect_any(__wrap_getpwnam_r, pwd);
+    expect_any(__wrap_getpwnam_r, buf);
+    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, 0);
     will_return(__wrap_getpwnam_r, &returned_ent);
 
@@ -67,13 +78,6 @@ entry_found(void **state)
     pcmk__mock_getpwnam_r = false;
 }
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(no_matching_pwent),
-        cmocka_unit_test(entry_found),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(no_matching_pwent),
+                cmocka_unit_test(entry_found))

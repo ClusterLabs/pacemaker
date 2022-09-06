@@ -8,20 +8,16 @@
  */
 
 #include <crm_internal.h>
-#include "mock_private.h"
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
 
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
-#if SUPPORT_PROCFS
+#if HAVE_LINUX_PROCFS
 
 static void
 no_exe_file(void **state)
@@ -30,6 +26,10 @@ no_exe_file(void **state)
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
+
+    expect_string(__wrap_readlink, path, "/proc/1000/exe");
+    expect_value(__wrap_readlink, buf, path);
+    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
     will_return(__wrap_readlink, ENOENT);
     will_return(__wrap_readlink, NULL);
 
@@ -45,6 +45,10 @@ contents_too_long(void **state)
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
+
+    expect_string(__wrap_readlink, path, "/proc/1000/exe");
+    expect_value(__wrap_readlink, buf, path);
+    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/more/than/10/characters");
 
@@ -61,6 +65,10 @@ contents_ok(void **state)
 
     // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
+
+    expect_string(__wrap_readlink, path, "/proc/1000/exe");
+    expect_value(__wrap_readlink, buf, path);
+    expect_value(__wrap_readlink, bufsize, sizeof(path) - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");
 
@@ -71,18 +79,12 @@ contents_ok(void **state)
     pcmk__mock_readlink = false;
 }
 
-#endif // SUPPORT_PROCFS
+#endif // HAVE_LINUX_PROCFS
 
-int main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-#if SUPPORT_PROCFS
-        cmocka_unit_test(no_exe_file),
-        cmocka_unit_test(contents_too_long),
-        cmocka_unit_test(contents_ok),
+PCMK__UNIT_TEST(NULL, NULL,
+#if HAVE_LINUX_PROCFS
+                cmocka_unit_test(no_exe_file),
+                cmocka_unit_test(contents_too_long),
+                cmocka_unit_test(contents_ok)
 #endif
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+               )

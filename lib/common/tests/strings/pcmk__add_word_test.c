@@ -9,13 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 add_words(void **state)
@@ -91,18 +85,10 @@ add_with_comma_and_space(void **state)
     free(list);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(add_words),
-        cmocka_unit_test(add_with_no_len),
-        cmocka_unit_test(add_nothing),
-        cmocka_unit_test(add_with_null),
-        cmocka_unit_test(add_with_comma),
-        cmocka_unit_test(add_with_comma_and_space),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(add_words),
+                cmocka_unit_test(add_with_no_len),
+                cmocka_unit_test(add_nothing),
+                cmocka_unit_test(add_with_null),
+                cmocka_unit_test(add_with_comma),
+                cmocka_unit_test(add_with_comma_and_space))

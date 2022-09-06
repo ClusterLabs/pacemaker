@@ -136,12 +136,12 @@
         <meta_attributes id="Connectivity-meta_attributes"/>
       </clone>
       <clone id="master-1">
-        <meta_attributes id="master-1-meta">
-          <nvpair id="master-1-promotable" name="promotable" value="true"/>
-          <nvpair id="master-1-promoted-node-max" name="promoted-node-max" value="1"/>
-          <nvpair id="master-1-clone-max" name="clone-max" value="5"/>
-          <nvpair id="master-1-promoted-max" name="promoted-max" value="1"/>
-          <nvpair id="master-1-clone-node-max" name="clone-node-max" value="1"/>
+        <meta_attributes id="promoted-1-meta">
+          <nvpair id="promoted-1-promotable" name="promotable" value="true"/>
+          <nvpair id="promoted-1-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="promoted-1-clone-max" name="clone-max" value="5"/>
+          <nvpair id="promoted-1-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="promoted-1-clone-node-max" name="clone-node-max" value="1"/>
         </meta_attributes>
         <primitive class="ocf" id="stateful-1" provider="pacemaker" type="Stateful">
           <operations>
@@ -253,8 +253,8 @@
           <expression attribute="connected" id="m1-connected-2" operation="not_defined"/>
         </rule>
       </rsc_location>
-      <rsc_order first="master-1" first-action="promote" id="group-1-after-master-1" kind="Mandatory" then="group-1" then-action="start"/>
-      <rsc_colocation id="group-1-with-master-1" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Promoted"/>
+      <rsc_order first="master-1" first-action="promote" id="group-1-after-promoted-1" kind="Mandatory" then="group-1" then-action="start"/>
+      <rsc_colocation id="group-1-with-promoted-1" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Promoted"/>
       <rsc_order first="group-1" first-action="start" id="lsb-dummy-after-group-1" kind="Mandatory" then="lsb-dummy" then-action="start"/>
       <rsc_colocation id="lsb-dummy-with-group-1" rsc="lsb-dummy" score="INFINITY" with-rsc="group-1"/>
       <rsc_location id="cli-prefer-container1" rsc="container1" role="Started" node="rhel7-2" score="INFINITY"/>
@@ -291,7 +291,7 @@
         <instance_attributes id="status-4">
           <nvpair id="status-4-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-4-connected" name="connected" value="1"/>
-          <nvpair id="status-4-master-stateful-1" name="master-stateful-1" value="10"/>
+          <nvpair id="status-4-promoted-stateful-1" name="master-stateful-1" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="4">
@@ -435,7 +435,7 @@
       <transient_attributes id="1">
         <instance_attributes id="status-1">
           <nvpair id="status-1-connected" name="connected" value="1"/>
-          <nvpair id="status-1-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-1-promoted-stateful-1" name="master-stateful-1" value="5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -444,7 +444,7 @@
         <instance_attributes id="status-2">
           <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-2-connected" name="connected" value="1"/>
-          <nvpair id="status-2-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-2-promoted-stateful-1" name="master-stateful-1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="2">
@@ -515,7 +515,7 @@
         <instance_attributes id="status-5">
           <nvpair id="status-5-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-5-connected" name="connected" value="1"/>
-          <nvpair id="status-5-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-5-promoted-stateful-1" name="master-stateful-1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="5">
@@ -586,7 +586,7 @@
         <instance_attributes id="status-3">
           <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
           <nvpair id="status-3-connected" name="connected" value="1"/>
-          <nvpair id="status-3-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-3-promoted-stateful-1" name="master-stateful-1" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="3">
@@ -654,7 +654,7 @@
     <node_state remote_node="true" id="lxc1" uname="lxc1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="lxc1">
         <instance_attributes id="status-lxc1">
-          <nvpair id="status-lxc1-master-lxc-ms" name="master-lxc-ms" value="10"/>
+          <nvpair id="status-lxc1-promoted-lxc-ms" name="master-lxc-ms" value="10"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="lxc1">
@@ -668,7 +668,7 @@
     <node_state remote_node="true" id="lxc2" uname="lxc2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
       <transient_attributes id="lxc2">
         <instance_attributes id="status-lxc2">
-          <nvpair id="status-lxc2-master-lxc-ms" name="master-lxc-ms" value="5"/>
+          <nvpair id="status-lxc2-promoted-lxc-ms" name="master-lxc-ms" value="5"/>
         </instance_attributes>
       </transient_attributes>
       <lrm id="lxc2">

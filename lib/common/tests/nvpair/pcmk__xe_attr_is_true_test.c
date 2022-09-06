@@ -8,15 +8,9 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/xml_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+#include <crm/common/xml_internal.h>
 
 static void
 empty_input(void **state)
@@ -50,15 +44,7 @@ attr_present(void **state)
     free_xml(node);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input),
-        cmocka_unit_test(attr_missing),
-        cmocka_unit_test(attr_present),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input),
+                cmocka_unit_test(attr_missing),
+                cmocka_unit_test(attr_present))

@@ -1,8 +1,8 @@
  digraph "g" {
-"MASTER_IP_start_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
-"MASTER_IP_stop_0 fc16-builder2" -> "MASTER_IP_start_0 fc16-builder" [ style = bold]
-"MASTER_IP_stop_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
-"SLAVE_IP_start_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
-"SLAVE_IP_stop_0 fc16-builder" -> "SLAVE_IP_start_0 fc16-builder2" [ style = bold]
-"SLAVE_IP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"PROMOTED_IP_start_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
+"PROMOTED_IP_stop_0 fc16-builder2" -> "PROMOTED_IP_start_0 fc16-builder" [ style = bold]
+"PROMOTED_IP_stop_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
+"UNPROMOTED_IP_start_0 fc16-builder2" [ style=bold color="green" fontcolor="black"]
+"UNPROMOTED_IP_stop_0 fc16-builder" -> "UNPROMOTED_IP_start_0 fc16-builder2" [ style = bold]
+"UNPROMOTED_IP_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
 }

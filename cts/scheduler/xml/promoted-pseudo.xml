@@ -125,7 +125,7 @@
           <nvpair id="status-sambuca.linbit-probe_complete" name="probe_complete" value="true"/>
           <nvpair name="last-failure-fs_float" id="status-sambuca.linbit-last-failure-fs_float" value="1252936481"/>
           <nvpair id="status-sambuca.linbit-fail-count-fs_float" name="fail-count-fs_float" value="INFINITY"/>
-          <nvpair id="status-sambuca.linbit-master-drbd_float:0" name="master-drbd_float:0" value="50"/>
+          <nvpair id="status-sambuca.linbit-promoted-drbd_float:0" name="master-drbd_float:0" value="50"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

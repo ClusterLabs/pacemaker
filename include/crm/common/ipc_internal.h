@@ -27,7 +27,7 @@ extern "C" {
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
 
-#include <crm_config.h>             // US_AUTH_GETPEEREID
+#include <crm_config.h>             // HAVE_GETPEEREID
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>    // mainloop_io_t
 
@@ -49,7 +49,7 @@ extern "C" {
 // Timeout (in seconds) to use for IPC client sends, reply waits, etc.
 #define PCMK__IPC_TIMEOUT 120
 
-#if defined(US_AUTH_GETPEEREID)
+#if defined(HAVE_GETPEEREID)
 /* on FreeBSD, we don't want to expose "non-yieldable PID" (leading to
    "IPC liveness check only") as its nominal representation, which could
    cause confusion -- this is unambiguous as long as there's no
@@ -111,13 +111,11 @@ struct pcmk__remote_s {
     mainloop_io_t *source;
 
     /* CIB-only */
-    bool authenticated;
     char *token;
 
     /* TLS only */
 #  ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
-    bool tls_handshake_complete;
 #  endif
 };
 
@@ -125,16 +123,40 @@ enum pcmk__client_flags {
     // Lower 32 bits are reserved for server (not library) use
 
     // Next 8 bits are reserved for client type (sort of a cheap enum)
-    pcmk__client_ipc        = (UINT64_C(1) << 32), // Client uses plain IPC
-    pcmk__client_tcp        = (UINT64_C(1) << 33), // Client uses TCP connection
+
+    //! Client uses plain IPC
+    pcmk__client_ipc                    = (UINT64_C(1) << 32),
+
+    //! Client uses TCP connection
+    pcmk__client_tcp                    = (UINT64_C(1) << 33),
+
 #  ifdef HAVE_GNUTLS_GNUTLS_H
-    pcmk__client_tls        = (UINT64_C(1) << 34), // Client uses TCP with TLS
+    //! Client uses TCP with TLS
+    pcmk__client_tls                    = (UINT64_C(1) << 34),
 #  endif
 
     // The rest are client attributes
-    pcmk__client_proxied    = (UINT64_C(1) << 40), // Client IPC is proxied
-    pcmk__client_privileged = (UINT64_C(1) << 41), // root or cluster user
-    pcmk__client_to_proxy   = (UINT64_C(1) << 42), // Local client to be proxied
+
+    //! Client IPC is proxied
+    pcmk__client_proxied                = (UINT64_C(1) << 40),
+
+    //! Client is run by root or cluster user
+    pcmk__client_privileged             = (UINT64_C(1) << 41),
+
+    //! Local client to be proxied
+    pcmk__client_to_proxy               = (UINT64_C(1) << 42),
+
+    /*!
+     * \brief Client IPC connection accepted
+     *
+     * Used only for remote CIB connections via \c remote-tls-port.
+     */
+    pcmk__client_authenticated          = (UINT64_C(1) << 43),
+
+#  ifdef HAVE_GNUTLS_GNUTLS_H
+    //! Client TLS handshake is complete
+    pcmk__client_tls_handshake_complete = (UINT64_C(1) << 44),
+#  endif
 };
 
 #define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))
@@ -198,9 +220,9 @@ void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
 
 void pcmk__client_cleanup(void);
 
-pcmk__client_t *pcmk__find_client(qb_ipcs_connection_t *c);
+pcmk__client_t *pcmk__find_client(const qb_ipcs_connection_t *c);
 pcmk__client_t *pcmk__find_client_by_id(const char *id);
-const char *pcmk__client_name(pcmk__client_t *c);
+const char *pcmk__client_name(const pcmk__client_t *c);
 const char *pcmk__client_type_str(uint64_t client_type);
 
 pcmk__client_t *pcmk__new_unauth_client(void *key);

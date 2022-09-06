@@ -9,11 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
 
 static void
 all_set(void **state) {
@@ -32,14 +28,6 @@ one_is_set(void **state) {
     assert_false(pcmk_is_set(0x00f, 0x010));
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(all_set),
-        cmocka_unit_test(one_is_set),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(all_set),
+                cmocka_unit_test(one_is_set))

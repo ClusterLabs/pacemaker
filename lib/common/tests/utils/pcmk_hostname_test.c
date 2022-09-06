@@ -8,15 +8,10 @@
  */
 
 #include <crm_internal.h>
-#include "mock_private.h"
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+#include "mock_private.h"
 
 #include <sys/utsname.h>
 
@@ -27,6 +22,8 @@ uname_succeeded_test(void **state)
 
     // Set uname() return value and buf parameter node name
     pcmk__mock_uname = true;
+
+    expect_any(__wrap_uname, buf);
     will_return(__wrap_uname, 0);
     will_return(__wrap_uname, "somename");
 
@@ -44,6 +41,8 @@ uname_failed_test(void **state)
 {
     // Set uname() return value and buf parameter node name
     pcmk__mock_uname = true;
+
+    expect_any(__wrap_uname, buf);
     will_return(__wrap_uname, -1);
     will_return(__wrap_uname, NULL);
 
@@ -52,14 +51,6 @@ uname_failed_test(void **state)
     pcmk__mock_uname = false;
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(uname_succeeded_test),
-        cmocka_unit_test(uname_failed_test),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(uname_succeeded_test),
+                cmocka_unit_test(uname_failed_test))

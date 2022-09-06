@@ -1,7 +1,7 @@
 
-pcmk__native_allocate: fence_db1 allocation score on 407888-db1: 0
-pcmk__native_allocate: fence_db1 allocation score on 407892-db2: 100
-pcmk__native_allocate: fence_db2 allocation score on 407888-db1: 100
-pcmk__native_allocate: fence_db2 allocation score on 407892-db2: 0
-pcmk__native_allocate: nfs_snet_ip allocation score on 407888-db1: 100
-pcmk__native_allocate: nfs_snet_ip allocation score on 407892-db2: 0
+pcmk__primitive_assign: fence_db1 allocation score on 407888-db1: 0
+pcmk__primitive_assign: fence_db1 allocation score on 407892-db2: 100
+pcmk__primitive_assign: fence_db2 allocation score on 407888-db1: 100
+pcmk__primitive_assign: fence_db2 allocation score on 407892-db2: 0
+pcmk__primitive_assign: nfs_snet_ip allocation score on 407888-db1: 100
+pcmk__primitive_assign: nfs_snet_ip allocation score on 407892-db2: 0

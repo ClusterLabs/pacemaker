@@ -463,6 +463,7 @@ Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      %{pkgname_procps}
 Requires:      psmisc
+Requires:      %{python_name}-psutil
 BuildArch:     noarch
 
 # systemd Python bindings are a separate package in some distros

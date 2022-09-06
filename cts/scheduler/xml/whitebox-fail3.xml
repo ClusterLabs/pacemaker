@@ -45,8 +45,8 @@
         </meta_attributes>
       </primitive>
       <clone id="W-master">
-        <meta_attributes id="W-master-meta">
-          <nvpair id="W-master-meta-promotable" name="promotable" value="true"/>
+        <meta_attributes id="W-promoted-meta">
+          <nvpair id="W-promoted-meta-promotable" name="promotable" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="W" provider="pacemaker" type="Stateful">
           <operations>
@@ -55,8 +55,8 @@
         </primitive>
       </clone>
       <clone id="X-master">
-        <meta_attributes id="X-master-meta">
-          <nvpair id="X-master-meta-promotable" name="promotable" value="true"/>
+        <meta_attributes id="X-promoted-meta">
+          <nvpair id="X-promoted-meta-promotable" name="promotable" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="X" provider="pacemaker" type="Stateful">
           <operations>
@@ -95,8 +95,8 @@
       <transient_attributes id="24815808">
         <instance_attributes id="status-24815808">
           <nvpair id="status-24815808-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-24815808-master-W" name="master-W" value="10"/>
-          <nvpair id="status-24815808-master-X" name="master-X" value="10"/>
+          <nvpair id="status-24815808-promoted-W" name="master-W" value="10"/>
+          <nvpair id="status-24815808-promoted-X" name="master-X" value="10"/>
           <nvpair id="status-24815808-last-failure-18builder" name="last-failure-18builder" value="1363197583"/>
           <nvpair id="status-24815808-fail-count-18node1" name="fail-count-18node1" value="INFINITY"/>
           <nvpair id="status-24815808-last-failure-18node1" name="last-failure-18node1" value="1363197583"/>

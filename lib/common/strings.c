@@ -1020,6 +1020,8 @@ pcmk__char_in_any_str(int ch, ...)
 int
 pcmk__numeric_strcasecmp(const char *s1, const char *s2)
 {
+    CRM_ASSERT((s1 != NULL) && (s2 != NULL));
+
     while (*s1 && *s2) {
         if (isdigit(*s1) && isdigit(*s2)) {
             // If node names contain a number, sort numerically

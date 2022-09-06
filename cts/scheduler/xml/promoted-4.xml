@@ -129,13 +129,13 @@
         <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
           <operations>
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor" timeout="10s"/>
-            <op name="monitor" interval="6s" id="ocf_msdummy_master_monitor" timeout="10s" role="Promoted"/>
+            <op name="monitor" interval="6s" id="ocf_msdummy_promoted_monitor" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="instance_attributes.id22548">
             <nvpair id="nvpair.id22554" name="logfile" value="/var/log/cts_ocfdummy.log"/>
           </instance_attributes>
         </primitive>
-        <meta_attributes id="clone-master_rsc_1.meta">
+        <meta_attributes id="clone-promoted_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-231" name="promotable" value="true"/>
           <nvpair id="nvpair.meta.auto-232" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-224" name="clone-max" value="8"/>

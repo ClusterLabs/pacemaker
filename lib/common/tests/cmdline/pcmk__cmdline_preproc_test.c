@@ -8,14 +8,12 @@
  */
 
 #include <crm_internal.h>
+
+#include <crm/common/unittest_internal.h>
 #include <crm/common/cmdline_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 #include <glib.h>
+#include <stdint.h>
 
 #define LISTS_EQ(a, b) { \
     assert_int_equal(g_strv_length((gchar **) (a)), g_strv_length((gchar **) (b))); \
@@ -143,24 +141,16 @@ string_arg_with_dash_3(void **state) {
     g_strfreev(processed);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(empty_input),
-        cmocka_unit_test(no_specials),
-        cmocka_unit_test(single_dash),
-        cmocka_unit_test(double_dash),
-        cmocka_unit_test(special_args),
-        cmocka_unit_test(special_arg_at_end),
-        cmocka_unit_test(long_arg),
-        cmocka_unit_test(negative_score),
-        cmocka_unit_test(negative_score_2),
-        cmocka_unit_test(string_arg_with_dash),
-        cmocka_unit_test(string_arg_with_dash_2),
-        cmocka_unit_test(string_arg_with_dash_3),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(empty_input),
+                cmocka_unit_test(no_specials),
+                cmocka_unit_test(single_dash),
+                cmocka_unit_test(double_dash),
+                cmocka_unit_test(special_args),
+                cmocka_unit_test(special_arg_at_end),
+                cmocka_unit_test(long_arg),
+                cmocka_unit_test(negative_score),
+                cmocka_unit_test(negative_score_2),
+                cmocka_unit_test(string_arg_with_dash),
+                cmocka_unit_test(string_arg_with_dash_2),
+                cmocka_unit_test(string_arg_with_dash_3))

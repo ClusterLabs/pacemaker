@@ -13,11 +13,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 #include <grp.h>
 
 #include <cmocka.h>
@@ -49,11 +51,16 @@
  *   cases for examples.
  */
 
-
+// LCOV_EXCL_START
 /* calloc()
  *
- * If pcmk__mock_calloc is set to true, later calls to malloc() will return
- * NULL.
+ * If pcmk__mock_calloc is set to true, later calls to calloc() will return
+ * NULL and must be preceded by:
+ *
+ *     expect_*(__wrap_calloc, nmemb[, ...]);
+ *     expect_*(__wrap_calloc, size[, ...]);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_calloc = false;
@@ -61,7 +68,12 @@ bool pcmk__mock_calloc = false;
 void *
 __wrap_calloc(size_t nmemb, size_t size)
 {
-    return pcmk__mock_calloc? NULL : __real_calloc(nmemb, size);
+    if (!pcmk__mock_calloc) {
+        return __real_calloc(nmemb, size);
+    }
+    check_expected(nmemb);
+    check_expected(size);
+    return NULL;
 }
 
 
@@ -70,7 +82,10 @@ __wrap_calloc(size_t nmemb, size_t size)
  * If pcmk__mock_getenv is set to true, later calls to getenv() must be preceded
  * by:
  *
+ *     expect_*(__wrap_getenv, name[, ...]);
  *     will_return(__wrap_getenv, return_value);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_getenv = false;
@@ -78,7 +93,84 @@ bool pcmk__mock_getenv = false;
 char *
 __wrap_getenv(const char *name)
 {
-    return pcmk__mock_getenv? mock_ptr_type(char *) : __real_getenv(name);
+    if (!pcmk__mock_getenv) {
+        return __real_getenv(name);
+    }
+    check_expected_ptr(name);
+    return mock_ptr_type(char *);
+}
+
+
+/* setenv()
+ *
+ * If pcmk__mock_setenv is set to true, later calls to setenv() must be preceded
+ * by:
+ *
+ *     expect_*(__wrap_setenv, name[, ...]);
+ *     expect_*(__wrap_setenv, value[, ...]);
+ *     expect_*(__wrap_setenv, overwrite[, ...]);
+ *     will_return(__wrap_setenv, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ *
+ * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
+ */
+bool pcmk__mock_setenv = false;
+
+int
+__wrap_setenv(const char *name, const char *value, int overwrite)
+{
+    if (!pcmk__mock_setenv) {
+        return __real_setenv(name, value, overwrite);
+    }
+    check_expected_ptr(name);
+    check_expected_ptr(value);
+    check_expected(overwrite);
+    errno = mock_type(int);
+    return (errno == 0)? 0 : -1;
+}
+
+
+/* unsetenv()
+ *
+ * If pcmk__mock_unsetenv is set to true, later calls to unsetenv() must be
+ * preceded by:
+ *
+ *     expect_*(__wrap_unsetenv, name[, ...]);
+ *     will_return(__wrap_setenv, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ *
+ * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
+ */
+bool pcmk__mock_unsetenv = false;
+
+int
+__wrap_unsetenv(const char *name)
+{
+    if (!pcmk__mock_unsetenv) {
+        return __real_unsetenv(name);
+    }
+    check_expected_ptr(name);
+    errno = mock_type(int);
+    return (errno == 0)? 0 : -1;
+}
+
+
+/* getpid()
+ *
+ * If pcmk__mock_getpid is set to true, later calls to getpid() must be preceded
+ * by:
+ *
+ *     will_return(__wrap_getpid, return_value);
+ */
+
+bool pcmk__mock_getpid = false;
+
+pid_t
+__wrap_getpid(void)
+{
+    return pcmk__mock_getpid? mock_type(pid_t) : __real_getpid();
 }
 
 
@@ -160,13 +252,54 @@ __wrap_endgrent(void) {
 }
 
 
+/* fopen()
+ *
+ * If pcmk__mock_fopen is set to true, later calls to fopen() must be
+ * preceded by:
+ *
+ *     expect_*(__wrap_fopen, pathname[, ...]);
+ *     expect_*(__wrap_fopen, mode[, ...]);
+ *     will_return(__wrap_fopen, errno_to_set);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ */
+
+bool pcmk__mock_fopen = false;
+
+FILE *
+__wrap_fopen(const char *pathname, const char *mode)
+{
+    if (pcmk__mock_fopen) {
+        check_expected_ptr(pathname);
+        check_expected_ptr(mode);
+        errno = mock_type(int);
+
+        if (errno != 0) {
+            return NULL;
+        } else {
+            return __real_fopen(pathname, mode);
+        }
+
+    } else {
+        return __real_fopen(pathname, mode);
+    }
+}
+
+
 /* getpwnam_r()
  *
  * If pcmk__mock_getpwnam_r is set to true, later calls to getpwnam_r() must be
  * preceded by:
  *
+ *     expect_*(__wrap_getpwnam_r, name[, ...]);
+ *     expect_*(__wrap_getpwnam_r, pwd[, ...]);
+ *     expect_*(__wrap_getpwnam_r, buf[, ...]);
+ *     expect_*(__wrap_getpwnam_r, buflen[, ...]);
+ *     expect_*(__wrap_getpwnam_r, result[, ...]);
  *     will_return(__wrap_getpwnam_r, return_value);
  *     will_return(__wrap_getpwnam_r, ptr_to_result_struct);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_getpwnam_r = false;
@@ -178,6 +311,11 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
     if (pcmk__mock_getpwnam_r) {
         int retval = mock_type(int);
 
+        check_expected_ptr(name);
+        check_expected_ptr(pwd);
+        check_expected_ptr(buf);
+        check_expected(buflen);
+        check_expected_ptr(result);
         *result = mock_ptr_type(struct passwd *);
         return retval;
 
@@ -190,8 +328,13 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
  * If pcmk__mock_readlink is set to true, later calls to readlink() must be
  * preceded by:
  *
+ *     expect_*(__wrap_readlink, path[, ...]);
+ *     expect_*(__wrap_readlink, buf[, ...]);
+ *     expect_*(__wrap_readlink, bufsize[, ...]);
  *     will_return(__wrap_readlink, errno_to_set);
  *     will_return(__wrap_readlink, link_contents);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  *
  * The mocked function will return 0 if errno_to_set is 0, and -1 otherwise.
  */
@@ -205,6 +348,9 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
     if (pcmk__mock_readlink) {
         const char *contents = NULL;
 
+        check_expected_ptr(path);
+        check_expected_ptr(buf);
+        check_expected(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);
 
@@ -220,13 +366,39 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
 }
 
 
+/* strdup()
+ *
+ * If pcmk__mock_strdup is set to true, later calls to strdup() will return
+ * NULL and must be preceded by:
+ *
+ *     expect_*(__wrap_strdup, s[, ...]);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
+ */
+
+bool pcmk__mock_strdup = false;
+
+char *
+__wrap_strdup(const char *s)
+{
+    if (!pcmk__mock_strdup) {
+        return __real_strdup(s);
+    }
+    check_expected_ptr(s);
+    return NULL;
+}
+
+
 /* uname()
  *
  * If pcmk__mock_uname is set to true, later calls to uname() must be preceded
  * by:
  *
+ *     expect_*(__wrap_uname, buf[, ...]);
  *     will_return(__wrap_uname, return_value);
  *     will_return(__wrap_uname, node_name_for_buf_parameter_to_uname);
+ *
+ * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
 bool pcmk__mock_uname = false;
@@ -235,8 +407,12 @@ int
 __wrap_uname(struct utsname *buf)
 {
     if (pcmk__mock_uname) {
-        int retval = mock_type(int);
-        char *result = mock_ptr_type(char *);
+        int retval = 0;
+        char *result = NULL;
+
+        check_expected_ptr(buf);
+        retval = mock_type(int);
+        result = mock_ptr_type(char *);
 
         if (result != NULL) {
             strcpy(buf->nodename, result);
@@ -247,3 +423,5 @@ __wrap_uname(struct utsname *buf)
         return __real_uname(buf);
     }
 }
+
+// LCOV_EXCL_STOP

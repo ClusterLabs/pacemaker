@@ -719,6 +719,8 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
     int rc = pcmk_rc_ok;
     cib_t *cib_conn = NULL;
 
+    CRM_ASSERT(cib_object != NULL);
+
     if (cib == NULL) {
         cib_conn = cib_new();
     } else {
@@ -742,11 +744,10 @@ cib__signon_query(cib_t **cib, xmlNode **cib_object)
         cib__clean_up_connection(&cib_conn);
     }
 
-    if (cib_object == NULL) {
+    if (*cib_object == NULL) {
         return pcmk_rc_no_input;
-    } else {
-        return rc;
     }
+    return rc;
 }
 
 int

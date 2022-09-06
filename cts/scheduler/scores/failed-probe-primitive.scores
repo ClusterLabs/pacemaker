@@ -1,9 +1,9 @@
 
-pcmk__native_allocate: Fencing allocation score on cluster01: 0
-pcmk__native_allocate: Fencing allocation score on cluster02: 0
-pcmk__native_allocate: dummy-1 allocation score on cluster01: -INFINITY
-pcmk__native_allocate: dummy-1 allocation score on cluster02: -INFINITY
-pcmk__native_allocate: dummy-2 allocation score on cluster01: -INFINITY
-pcmk__native_allocate: dummy-2 allocation score on cluster02: 0
-pcmk__native_allocate: dummy-3 allocation score on cluster01: -INFINITY
-pcmk__native_allocate: dummy-3 allocation score on cluster02: -INFINITY
+pcmk__primitive_assign: Fencing allocation score on cluster01: 0
+pcmk__primitive_assign: Fencing allocation score on cluster02: 0
+pcmk__primitive_assign: dummy-1 allocation score on cluster01: -INFINITY
+pcmk__primitive_assign: dummy-1 allocation score on cluster02: -INFINITY
+pcmk__primitive_assign: dummy-2 allocation score on cluster01: -INFINITY
+pcmk__primitive_assign: dummy-2 allocation score on cluster02: 0
+pcmk__primitive_assign: dummy-3 allocation score on cluster01: -INFINITY
+pcmk__primitive_assign: dummy-3 allocation score on cluster02: -INFINITY

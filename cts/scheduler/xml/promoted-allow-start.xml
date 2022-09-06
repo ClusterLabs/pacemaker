@@ -50,7 +50,7 @@
       <transient_attributes id="7a1be228-afbe-426b-9459-5c6e9d377508">
         <instance_attributes id="status-7a1be228-afbe-426b-9459-5c6e9d377508">
           <nvpair id="status-7a1be228-afbe-426b-9459-5c6e9d377508-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-7a1be228-afbe-426b-9459-5c6e9d377508-master-res_Stateful_1:1" name="master-res_Stateful_1:1" value="-5"/>
+          <nvpair id="status-7a1be228-afbe-426b-9459-5c6e9d377508-promoted-res_Stateful_1:1" name="master-res_Stateful_1:1" value="-5"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
@@ -77,7 +77,7 @@
       <transient_attributes id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0">
         <instance_attributes id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0">
           <nvpair id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0-probe_complete" name="probe_complete" value="true"/>
-          <nvpair id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0-master-res_Stateful_1:0" name="master-res_Stateful_1:0" value="10"/>
+          <nvpair id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0-promoted-res_Stateful_1:0" name="master-res_Stateful_1:0" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

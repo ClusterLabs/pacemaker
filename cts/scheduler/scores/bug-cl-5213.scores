@@ -5,11 +5,11 @@ pcmk__clone_allocate: pgsql:0 allocation score on srv01: 0
 pcmk__clone_allocate: pgsql:0 allocation score on srv02: INFINITY
 pcmk__clone_allocate: pgsql:1 allocation score on srv01: INFINITY
 pcmk__clone_allocate: pgsql:1 allocation score on srv02: 0
-pcmk__native_allocate: A-master allocation score on srv01: 0
-pcmk__native_allocate: A-master allocation score on srv02: INFINITY
-pcmk__native_allocate: pgsql:0 allocation score on srv01: 0
-pcmk__native_allocate: pgsql:0 allocation score on srv02: INFINITY
-pcmk__native_allocate: pgsql:1 allocation score on srv01: INFINITY
-pcmk__native_allocate: pgsql:1 allocation score on srv02: -INFINITY
+pcmk__primitive_assign: A-master allocation score on srv01: 0
+pcmk__primitive_assign: A-master allocation score on srv02: INFINITY
+pcmk__primitive_assign: pgsql:0 allocation score on srv01: 0
+pcmk__primitive_assign: pgsql:0 allocation score on srv02: INFINITY
+pcmk__primitive_assign: pgsql:1 allocation score on srv01: INFINITY
+pcmk__primitive_assign: pgsql:1 allocation score on srv02: -INFINITY
 pgsql:0 promotion score on srv02: -INFINITY
 pgsql:1 promotion score on srv01: -INFINITY

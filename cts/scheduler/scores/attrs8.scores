@@ -1,3 +1,3 @@
 
-pcmk__native_allocate: rsc1 allocation score on node1: 200
-pcmk__native_allocate: rsc1 allocation score on node2: 400
+pcmk__primitive_assign: rsc1 allocation score on node1: 200
+pcmk__primitive_assign: rsc1 allocation score on node2: 400

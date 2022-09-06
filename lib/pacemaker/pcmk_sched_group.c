@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,9 +81,17 @@ expand_group_colocations(pe_resource_t *rsc)
     rsc->rsc_cons_lhs = NULL;
 }
 
+/*!
+ * \internal
+ * \brief Assign a group resource to a node
+ *
+ * \param[in] rsc     Resource to assign to a node
+ * \param[in] prefer  Node to prefer, if all else is equal
+ *
+ * \return Node that \p rsc is assigned to, if assigned entirely to one node
+ */
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
-                     pe_working_set_t *data_set)
+pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
@@ -111,8 +119,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     expand_group_colocations(rsc);
 
-    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes, data_set);
+    pe__show_node_weights(!pcmk_is_set(rsc->cluster->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, rsc->cluster);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -120,7 +128,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
         pe_rsc_trace(rsc, "Allocating group %s member %s",
                      rsc->id, child_rsc->id);
-        node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
+        node = child_rsc->cmds->assign(child_rsc, prefer);
         if (group_node == NULL) {
             group_node = node;
         }
@@ -139,7 +147,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 void group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child);
 
 void
-group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_create_actions(pe_resource_t *rsc)
 {
     pe_action_t *op = NULL;
     const char *value = NULL;
@@ -150,7 +158,7 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->create_actions(child_rsc, data_set);
+        child_rsc->cmds->create_actions(child_rsc);
         group_update_pseudo_status(rsc, child_rsc);
     }
 
@@ -158,28 +166,36 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
-                       RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
+                       RSC_STARTED, NULL,
+                       TRUE /* !group_data->child_starting */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
-                       RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
+                       RSC_STOPPED, NULL,
+                       TRUE /* !group_data->child_stopping */ ,
+                       TRUE, rsc->cluster);
     pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
-        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE,
+                           rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
-        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
+        op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE,
+                           TRUE, rsc->cluster);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 }
@@ -222,7 +238,7 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
 }
 
 void
-group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
+group_internal_constraints(pe_resource_t *rsc)
 {
     GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
@@ -233,11 +249,11 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     get_group_variant_data(group_data, rsc);
 
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
-                                 pe_order_optional, data_set);
+                                 pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                 pe_order_runnable_left, data_set);
+                                 pe_order_runnable_left);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -247,7 +263,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         int started =
             pe_order_runnable_left | pe_order_implies_then | pe_order_implies_then_printed;
 
-        child_rsc->cmds->internal_constraints(child_rsc, data_set);
+        child_rsc->cmds->internal_constraints(child_rsc);
 
         if (last_rsc == NULL) {
             if (group_data->ordered) {
@@ -259,66 +275,60 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
                                  child_rsc, last_rsc, NULL, NULL,
                                  pcmk_is_set(child_rsc->flags, pe_rsc_critical),
-                                 data_set);
+                                 rsc->cluster);
         }
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
-                                         stop|pe_order_implies_first_printed,
-                                         data_set);
+                                         stop|pe_order_implies_first_printed);
 
             pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, rsc,
-                                         RSC_DEMOTED, stopped, data_set);
+                                         RSC_DEMOTED, stopped);
 
             pcmk__order_resource_actions(child_rsc, RSC_PROMOTE, rsc,
-                                         RSC_PROMOTED, started, data_set);
+                                         RSC_PROMOTED, started);
 
             pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                          RSC_PROMOTE,
-                                         pe_order_implies_first_printed,
-                                         data_set);
+                                         pe_order_implies_first_printed);
 
         }
 
-        pcmk__order_starts(rsc, child_rsc, pe_order_implies_first_printed,
-                           data_set);
+        pcmk__order_starts(rsc, child_rsc, pe_order_implies_first_printed);
         pcmk__order_stops(rsc, child_rsc,
-                          stop|pe_order_implies_first_printed, data_set);
+                          stop|pe_order_implies_first_printed);
 
         pcmk__order_resource_actions(child_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stopped, data_set);
+                                     stopped);
         pcmk__order_resource_actions(child_rsc, RSC_START, rsc, RSC_STARTED,
-                                     started, data_set);
+                                     started);
 
         if (group_data->ordered == FALSE) {
             pcmk__order_starts(rsc, child_rsc,
-                               start|pe_order_implies_first_printed, data_set);
+                               start|pe_order_implies_first_printed);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
                                              RSC_PROMOTE,
-                                             start|pe_order_implies_first_printed,
-                                             data_set);
+                                             start|pe_order_implies_first_printed);
             }
 
         } else if (last_rsc != NULL) {
-            pcmk__order_starts(last_rsc, child_rsc, start, data_set);
+            pcmk__order_starts(last_rsc, child_rsc, start);
             pcmk__order_stops(child_rsc, last_rsc,
-                              pe_order_optional|pe_order_restart, data_set);
+                              pe_order_optional|pe_order_restart);
 
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(last_rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, start, data_set);
+                                             RSC_PROMOTE, start);
                 pcmk__order_resource_actions(child_rsc, RSC_DEMOTE, last_rsc,
-                                             RSC_DEMOTE, pe_order_optional,
-                                             data_set);
+                                             RSC_DEMOTE, pe_order_optional);
             }
 
         } else {
-            pcmk__order_starts(rsc, child_rsc, pe_order_none, data_set);
+            pcmk__order_starts(rsc, child_rsc, pe_order_none);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 pcmk__order_resource_actions(rsc, RSC_PROMOTE, child_rsc,
-                                             RSC_PROMOTE, pe_order_none,
-                                             data_set);
+                                             RSC_PROMOTE, pe_order_none);
             }
         }
 
@@ -329,8 +339,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             if (group_data->ordered
                 && last_rsc
                 && last_rsc->running_on == NULL && last_active && last_active->running_on) {
-                pcmk__order_stops(child_rsc, last_active, pe_order_optional,
-                                  data_set);
+                pcmk__order_stops(child_rsc, last_active, pe_order_optional);
             }
             last_active = child_rsc;
         }
@@ -342,34 +351,45 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         int stop_stop_flags = pe_order_implies_then;
         int stop_stopped_flags = pe_order_optional;
 
-        pcmk__order_stops(rsc, last_rsc, stop_stop_flags, data_set);
+        pcmk__order_stops(rsc, last_rsc, stop_stop_flags);
         pcmk__order_resource_actions(last_rsc, RSC_STOP, rsc, RSC_STOPPED,
-                                     stop_stopped_flags, data_set);
+                                     stop_stopped_flags);
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             pcmk__order_resource_actions(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE,
-                                         stop_stop_flags, data_set);
+                                         stop_stop_flags);
             pcmk__order_resource_actions(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED,
-                                         stop_stopped_flags, data_set);
+                                         stop_stopped_flags);
         }
     }
 }
 
+/*!
+ * \internal
+ * \brief Apply a colocation's score to node weights or resource priority
+ *
+ * Given a colocation constraint, apply its score to the dependent's
+ * allowed node weights (if we are still placing resources) or priority (if
+ * we are choosing promotable clone instance roles).
+ *
+ * \param[in] dependent      Dependent resource in colocation
+ * \param[in] primary        Primary resource in colocation
+ * \param[in] colocation     Colocation constraint to apply
+ * \param[in] for_dependent  true if called on behalf of dependent
+ */
 void
-group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
+pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
+                              pcmk__colocation_t *colocation,
+                              bool for_dependent)
 {
     GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
-    if (dependent == NULL) {
-        pe_err("dependent was NULL for %s", constraint->id);
-        return;
+    CRM_CHECK((colocation != NULL) && (dependent != NULL) && (primary != NULL),
+              return);
 
-    } else if (primary == NULL) {
-        pe_err("primary was NULL for %s", constraint->id);
-        return;
+    if (!for_dependent) {
+        goto for_primary;
     }
 
     gIter = dependent->children;
@@ -378,12 +398,12 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     get_group_variant_data(group_data, dependent);
 
     if (group_data->colocated) {
-        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
-                                                         primary, constraint,
-                                                         data_set);
+        group_data->first_child->cmds->apply_coloc_score(group_data->first_child,
+                                                         primary, colocation,
+                                                         true);
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation "
                          "between non-colocated group and %s",
                          dependent->id, primary->id);
@@ -393,46 +413,39 @@ group_rsc_colocation_lh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, primary, constraint,
-                                           data_set);
+        child_rsc->cmds->apply_coloc_score(child_rsc, primary, colocation,
+                                           true);
     }
-}
+    return;
 
-void
-group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
-                        pcmk__colocation_t *constraint,
-                        pe_working_set_t *data_set)
-{
-    GList *gIter = primary->children;
-    group_variant_data_t *group_data = NULL;
-
+for_primary:
+    gIter = primary->children;
     get_group_variant_data(group_data, primary);
     CRM_CHECK(dependent->variant == pe_native, return);
 
-    pe_rsc_trace(primary, "Processing RH %s of constraint %s (LH is %s)",
-                 primary->id, constraint->id, dependent->id);
+    pe_rsc_trace(primary,
+                 "Processing colocation %s (%s with group %s) for primary",
+                 colocation->id, dependent->id, primary->id);
 
     if (pcmk_is_set(primary->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
-        if (constraint->score >= INFINITY) {
-            /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(dependent,
+        if (colocation->score >= INFINITY) {
+            // Dependent can't start until group is fully up
+            group_data->last_child->cmds->apply_coloc_score(dependent,
                                                             group_data->last_child,
-                                                            constraint,
-                                                            data_set);
+                                                            colocation, false);
         } else {
-            /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(dependent,
+            // Dependent can start as long as group is partially up
+            group_data->first_child->cmds->apply_coloc_score(dependent,
                                                              group_data->first_child,
-                                                             constraint,
-                                                             data_set);
+                                                             colocation, false);
         }
 
         return;
 
-    } else if (constraint->score >= INFINITY) {
+    } else if (colocation->score >= INFINITY) {
         pcmk__config_err("%s: Cannot perform mandatory colocation with"
                          " non-colocated group %s", dependent->id, primary->id);
         return;
@@ -441,8 +454,8 @@ group_rsc_colocation_rh(pe_resource_t *dependent, pe_resource_t *primary,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(dependent, child_rsc, constraint,
-                                           data_set);
+        child_rsc->cmds->apply_coloc_score(dependent, child_rsc, colocation,
+                                           false);
     }
 }
 
@@ -491,26 +504,48 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
     return flags;
 }
 
-enum pe_graph_flags
+/*!
+ * \internal
+ * \brief Update two actions according to an ordering between them
+ *
+ * Given information about an ordering of two actions, update the actions'
+ * flags (and runnable_before members if appropriate) as appropriate for the
+ * ordering. In some cases, the ordering could be disabled as well.
+ *
+ * \param[in] first     'First' action in an ordering
+ * \param[in] then      'Then' action in an ordering
+ * \param[in] node      If not NULL, limit scope of ordering to this node
+ *                      (only used when interleaving instances)
+ * \param[in] flags     Action flags for \p first for ordering purposes
+ * \param[in] filter    Action flags to limit scope of certain updates (may
+ *                      include pe_action_optional to affect only mandatory
+ *                      actions, and pe_action_runnable to affect only
+ *                      runnable actions)
+ * \param[in] type      Group of enum pe_ordering flags to apply
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Group of enum pcmk__updated flags indicating what was updated
+ */
+uint32_t
 group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
-                     enum pe_action_flags flags, enum pe_action_flags filter,
-                     enum pe_ordering type, pe_working_set_t *data_set)
+                     uint32_t flags, uint32_t filter, uint32_t type,
+                     pe_working_set_t *data_set)
 {
     GList *gIter = then->rsc->children;
-    enum pe_graph_flags changed = pe_graph_none;
+    uint32_t changed = pcmk__updated_none;
 
     CRM_ASSERT(then->rsc != NULL);
-    changed |= native_update_actions(first, then, node, flags, filter, type,
-                                     data_set);
+    changed |= pcmk__update_ordered_actions(first, then, node, flags, filter,
+                                            type, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
         pe_action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
-            changed |= child->cmds->update_actions(first, child_action, node,
-                                                   flags, filter, type,
-                                                   data_set);
+            changed |= child->cmds->update_ordered_actions(first, child_action,
+                                                           node, flags, filter,
+                                                           type, data_set);
         }
     }
 
@@ -546,54 +581,62 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     g_list_free_full(zero, free);
 }
 
+/*!
+ * \internal
+ * \brief Update nodes with scores of colocated resources' nodes
+ *
+ * Given a table of nodes and a resource, update the nodes' scores with the
+ * scores of the best nodes matching the attribute used for each of the
+ * resource's relevant colocations.
+ *
+ * \param[in,out] rsc      Resource to check colocations for
+ * \param[in]     log_id   Resource ID to use in log messages
+ * \param[in,out] nodes    Nodes to update
+ * \param[in]     attr     Colocation attribute (NULL to use default)
+ * \param[in]     factor   Incorporate scores multiplied by this factor
+ * \param[in]     flags    Bitmask of enum pcmk__coloc_select values
+ *
+ * \note The caller remains responsible for freeing \p *nodes.
+ */
 void
-group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
-{
-    CRM_CHECK(rsc != NULL, return);
-
-    pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
-    native_expand(rsc, data_set);
-
-    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        child_rsc->cmds->expand(child_rsc, data_set);
-    }
-}
-
-GHashTable *
-pcmk__group_merge_weights(pe_resource_t *rsc, const char *primary_id,
-                          GHashTable *nodes, const char *attr, float factor,
-                          uint32_t flags)
+pcmk__group_add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
+                                      GHashTable **nodes, const char *attr,
+                                      float factor, uint32_t flags)
 {
     GList *gIter = rsc->rsc_cons_lhs;
+    pe_resource_t *member = NULL;
     group_variant_data_t *group_data = NULL;
+
+    CRM_CHECK((rsc != NULL) && (nodes != NULL), return);
+
+    if (log_id == NULL) {
+        log_id = rsc->id;
+    }
 
     get_group_variant_data(group_data, rsc);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s",
-                    rsc->id, primary_id);
-        return nodes;
+                    rsc->id, log_id);
+        return;
     }
 
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    nodes = group_data->first_child->cmds->merge_weights(group_data->first_child,
-                                                         primary_id, nodes,
-                                                         attr, factor, flags);
+    member = group_data->first_child;
+    member->cmds->add_colocated_node_scores(member, log_id, nodes, attr,
+                                            factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        nodes = pcmk__native_merge_weights(constraint->dependent, rsc->id,
-                                           nodes, constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           flags);
+        pcmk__add_colocated_node_scores(constraint->dependent, rsc->id, nodes,
+                                        constraint->node_attribute,
+                                        constraint->score / (float) INFINITY,
+                                        flags);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);
-    return nodes;
 }
 
 void

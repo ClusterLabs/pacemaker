@@ -167,8 +167,8 @@
           <expression id="expression.id22822" attribute="pingd-1-node-attribute" operation="defined"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="group-1-prefer-on-drbd-msr-master" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Promoted" score="INFINITY"/>
-      <rsc_colocation id="group-1-never-on-drbd-msr-slave" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Unpromoted" score="-INFINITY"/>
+      <rsc_colocation id="group-1-prefer-on-drbd-msr-promoted" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_colocation id="group-1-never-on-drbd-msr-unpromoted" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Unpromoted" score="-INFINITY"/>
       <rsc_order id="group-1-after-drbd-msr" first="drbd-msr" then="group-1" then-action="start" first-action="promote"/>
       <rsc_location id="pollux-fencing-placement" rsc="pollux-fencing">
         <rule id="pollux-fencing-placement-1" score="INFINITY">

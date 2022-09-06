@@ -101,7 +101,7 @@
           <expression id="expression.id22465" attribute="#uname" operation="eq" value="arc-tkincaidlx.wsicorp.com"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="fs_on_drbd_master" rsc="grp_pgsql_mirror" with-rsc="ms_drbd_7788" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_colocation id="fs_on_drbd_promoted" rsc="grp_pgsql_mirror" with-rsc="ms_drbd_7788" with-rsc-role="Promoted" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

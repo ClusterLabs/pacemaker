@@ -10,6 +10,8 @@
 #ifndef CRM_COMMON_ACL_INTERNAL__H
 #define CRM_COMMON_ACL_INTERNAL__H
 
+#include <string.h>      // strcmp()
+
 /* internal ACL-related utilities */
 
 char *pcmk__uid2username(uid_t uid);

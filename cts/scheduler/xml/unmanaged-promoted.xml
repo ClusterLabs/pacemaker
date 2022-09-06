@@ -145,12 +145,12 @@
         </primitive>
       </clone>
       <clone id="master-1">
-        <meta_attributes id="master-1-meta_attributes">
-          <nvpair id="master-1-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="master-1-meta_attributes-clone-max" name="clone-max" value="4"/>
-          <nvpair id="master-1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="master-1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
-          <nvpair id="master-1-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
+        <meta_attributes id="promoted-1-meta_attributes">
+          <nvpair id="promoted-1-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="promoted-1-meta_attributes-clone-max" name="clone-max" value="4"/>
+          <nvpair id="promoted-1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="promoted-1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="promoted-1-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
         </meta_attributes>
         <primitive class="ocf" id="stateful-1" provider="pacemaker" type="Stateful">
           <operations>
@@ -189,8 +189,8 @@
           <expression attribute="connected" id="m1-is-connected-expression-0" operation="not_defined"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="group-with-master" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Promoted"/>
-      <rsc_order first="master-1" first-action="promote" id="group-after-master" symmetrical="true" then="group-1" then-action="start"/>
+      <rsc_colocation id="group-with-promoted" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Promoted"/>
+      <rsc_order first="master-1" first-action="promote" id="group-after-promoted" symmetrical="true" then="group-1" then-action="start"/>
     </constraints>
   </configuration>
   <status>
@@ -199,7 +199,7 @@
         <instance_attributes id="status-pcmk-3">
           <nvpair id="status-pcmk-3-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-pcmk-3-connected" name="connected" value="1"/>
-          <nvpair id="status-pcmk-3-master-stateful-1.2" name="master-stateful-1:2" value="5"/>
+          <nvpair id="status-pcmk-3-promoted-stateful-1.2" name="master-stateful-1:2" value="5"/>
           <nvpair id="status-pcmk-3-shutdown" name="shutdown" value="1312454971"/>
         </instance_attributes>
       </transient_attributes>
@@ -305,7 +305,7 @@
         <instance_attributes id="status-pcmk-4">
           <nvpair id="status-pcmk-4-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-pcmk-4-connected" name="connected" value="1"/>
-          <nvpair id="status-pcmk-4-master-stateful-1.3" name="master-stateful-1:3" value="5"/>
+          <nvpair id="status-pcmk-4-promoted-stateful-1.3" name="master-stateful-1:3" value="5"/>
           <nvpair id="status-pcmk-4-shutdown" name="shutdown" value="1312454971"/>
         </instance_attributes>
       </transient_attributes>
@@ -315,7 +315,7 @@
         <instance_attributes id="status-pcmk-2">
           <nvpair id="status-pcmk-2-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-pcmk-2-connected" name="connected" value="1"/>
-          <nvpair id="status-pcmk-2-master-stateful-1.0" name="master-stateful-1:0" value="10"/>
+          <nvpair id="status-pcmk-2-promoted-stateful-1.0" name="master-stateful-1:0" value="10"/>
           <nvpair id="status-pcmk-2-shutdown" name="shutdown" value="1312454971"/>
         </instance_attributes>
       </transient_attributes>
@@ -373,7 +373,7 @@
         <instance_attributes id="status-pcmk-1">
           <nvpair id="status-pcmk-1-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-pcmk-1-connected" name="connected" value="1"/>
-          <nvpair id="status-pcmk-1-master-stateful-1.1" name="master-stateful-1:1" value="5"/>
+          <nvpair id="status-pcmk-1-promoted-stateful-1.1" name="master-stateful-1:1" value="5"/>
           <nvpair id="status-pcmk-1-shutdown" name="shutdown" value="1312454971"/>
         </instance_attributes>
       </transient_attributes>

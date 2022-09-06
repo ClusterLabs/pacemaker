@@ -1,13 +1,13 @@
 
-pcmk__native_allocate: dummy1 allocation score on c19.chepkov.lan: 1000
-pcmk__native_allocate: dummy1 allocation score on c20.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy1 allocation score on c21.chepkov.lan: 0
-pcmk__native_allocate: dummy2 allocation score on c19.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy2 allocation score on c20.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy2 allocation score on c21.chepkov.lan: 1000
-pcmk__native_allocate: dummy3 allocation score on c19.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy3 allocation score on c20.chepkov.lan: 0
-pcmk__native_allocate: dummy3 allocation score on c21.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy4 allocation score on c19.chepkov.lan: -INFINITY
-pcmk__native_allocate: dummy4 allocation score on c20.chepkov.lan: 0
-pcmk__native_allocate: dummy4 allocation score on c21.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy1 allocation score on c19.chepkov.lan: 1000
+pcmk__primitive_assign: dummy1 allocation score on c20.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy1 allocation score on c21.chepkov.lan: 0
+pcmk__primitive_assign: dummy2 allocation score on c19.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy2 allocation score on c20.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy2 allocation score on c21.chepkov.lan: 1000
+pcmk__primitive_assign: dummy3 allocation score on c19.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy3 allocation score on c20.chepkov.lan: 0
+pcmk__primitive_assign: dummy3 allocation score on c21.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy4 allocation score on c19.chepkov.lan: -INFINITY
+pcmk__primitive_assign: dummy4 allocation score on c20.chepkov.lan: 0
+pcmk__primitive_assign: dummy4 allocation score on c21.chepkov.lan: -INFINITY

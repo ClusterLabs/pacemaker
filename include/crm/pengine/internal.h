@@ -140,20 +140,6 @@ int pe__set_clone_flag(pe_resource_t *clone, enum pe__clone_flags flag);
                                            #flags_to_clear);                  \
     } while (0)
 
-#define pe__set_graph_flags(graph_flags, gr_action, flags_to_set) do {      \
-        graph_flags = pcmk__set_flags_as(__func__, __LINE__,                \
-                                         LOG_TRACE, "Graph",                \
-                                         (gr_action)->uuid, graph_flags,    \
-                                         (flags_to_set), #flags_to_set);    \
-    } while (0)
-
-#define pe__clear_graph_flags(graph_flags, gr_action, flags_to_clear) do {     \
-        graph_flags = pcmk__clear_flags_as(__func__, __LINE__,                 \
-                                           LOG_TRACE, "Graph",                 \
-                                           (gr_action)->uuid, graph_flags,     \
-                                           (flags_to_clear), #flags_to_clear); \
-    } while (0)
-
 // Some warnings we don't want to print every transition
 
 enum pe_warn_once_e {
@@ -323,8 +309,6 @@ enum rsc_role_e pe__bundle_resource_state(const pe_resource_t *rsc,
 void pe__count_common(pe_resource_t *rsc);
 void pe__count_bundle(pe_resource_t *rsc);
 
-gboolean common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc, pe_resource_t * parent,
-                       pe_working_set_t * data_set);
 void common_free(pe_resource_t * rsc);
 
 pe_node_t *pe__copy_node(const pe_node_t *this_node);
@@ -392,58 +376,57 @@ void pe__show_node_weights_as(const char *file, const char *function,
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes), (data_set))
 
-extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
+xmlNode *find_rsc_op_entry(const pe_resource_t *rsc, const char *key);
 
-extern xmlNode *find_rsc_op_entry(pe_resource_t * rsc, const char *key);
-
-extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *task, pe_node_t * on_node,
-                                  gboolean optional, gboolean foo, pe_working_set_t * data_set);
+pe_action_t *custom_action(pe_resource_t *rsc, char *key, const char *task,
+                           const pe_node_t *on_node, gboolean optional,
+                           gboolean foo, pe_working_set_t *data_set);
 
 #  define delete_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DELETE, 0)
 #  define delete_action(rsc, node, optional) custom_action(		\
 		rsc, delete_key(rsc), CRMD_ACTION_DELETE, node,		\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define stopped_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOPPED, 0)
 #  define stopped_action(rsc, node, optional) custom_action(		\
 		rsc, stopped_key(rsc), CRMD_ACTION_STOPPED, node,	\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define stop_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STOP, 0)
 #  define stop_action(rsc, node, optional) custom_action(			\
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
-		optional, TRUE, data_set);
+		optional, TRUE, rsc->cluster);
 
 #  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define started_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_STARTED, 0)
 #  define started_action(rsc, node, optional) custom_action(		\
 		rsc, started_key(rsc), CRMD_ACTION_STARTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define promote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTE, 0)
 #  define promote_action(rsc, node, optional) custom_action(		\
 		rsc, promote_key(rsc), CRMD_ACTION_PROMOTE, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define promoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_PROMOTED, 0)
 #  define promoted_action(rsc, node, optional) custom_action(		\
 		rsc, promoted_key(rsc), CRMD_ACTION_PROMOTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define demote_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTE, 0)
 #  define demote_action(rsc, node, optional) custom_action(		\
 		rsc, demote_key(rsc), CRMD_ACTION_DEMOTE, node,		\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 #  define demoted_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_DEMOTED, 0)
 #  define demoted_action(rsc, node, optional) custom_action(		\
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
-		optional, TRUE, data_set)
+		optional, TRUE, rsc->cluster)
 
 extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
@@ -496,7 +479,7 @@ pe_base_name_eq(pe_resource_t *rsc, const char *id)
 
 int pe__target_rc_from_xml(xmlNode *xml_op);
 
-gint sort_node_uname(gconstpointer a, gconstpointer b);
+gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
@@ -538,6 +521,7 @@ void trigger_unfencing(
 
 char *pe__action2reason(pe_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
+void pe__add_action_expected_result(pe_action_t *action, int expected_result);
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
@@ -585,7 +569,7 @@ void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
  */
 void pe__register_messages(pcmk__output_t *out);
 
-void pe__unpack_dataset_nvpairs(xmlNode *xml_obj, const char *set_name,
+void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                 pe_rule_eval_data_t *rule_data, GHashTable *hash,
                                 const char *always_first, gboolean overwrite,
                                 pe_working_set_t *data_set);

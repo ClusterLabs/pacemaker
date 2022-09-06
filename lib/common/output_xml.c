@@ -82,11 +82,13 @@ typedef struct private_data_s {
 
 static void
 xml_free_priv(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    if (priv == NULL) {
+    if (out == NULL || out->priv == NULL) {
         return;
     }
+
+    priv = out->priv;
 
     free_xml(priv->root);
     g_queue_free(priv->parent_q);
@@ -98,6 +100,8 @@ xml_free_priv(pcmk__output_t *out) {
 static bool
 xml_init(pcmk__output_t *out) {
     private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL);
 
     /* If xml_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {

@@ -91,7 +91,7 @@
       <rsc_order id="ms-drbd1-before-apache" first="ms-drbd1" then="apache" first-action="promote" then-action="start"/>
       <rsc_colocation id="apache-on-ms-drbd1" rsc="apache" with-rsc="ms-drbd1" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_location id="apache-on-dktest1" rsc="apache" node="dktest1" score="500"/>
-      <rsc_location id="ms-drbd1-master-location" rsc="ms-drbd1">
+      <rsc_location id="ms-drbd1-promoted-location" rsc="ms-drbd1">
         <rule id="ms-drbd1-master-location-rule-1" score="500" role="Promoted">
           <expression id="ms-drbd1-master-location-rule-1-expr-1" attribute="#uname" operation="eq" value="dktest1"/>
         </rule>

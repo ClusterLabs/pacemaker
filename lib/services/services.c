@@ -469,7 +469,7 @@ services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
     return services__execute_file(action) == pcmk_rc_ok;
 }
 
-#if SUPPORT_DBUS
+#if HAVE_DBUS
 /*!
  * \internal
  * \brief Update operation's pending DBus call, unreferencing old one if needed
@@ -504,7 +504,7 @@ services_action_cleanup(svc_action_t * op)
         return;
     }
 
-#if SUPPORT_DBUS
+#if HAVE_DBUS
     if(op->opaque->timerid != 0) {
         crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
@@ -696,7 +696,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
         goto done;
     }
 
-#if SUPPORT_DBUS
+#if HAVE_DBUS
     // In-flight systemd and upstart ops don't have a pid
     if (inflight_systemd_or_upstart(op)) {
         inflight_ops = g_list_remove(inflight_ops, op);

@@ -32,8 +32,8 @@
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
-<resource-agent name="ClusterMon" version="1.1">
-<version>1.0</version>
+<resource-agent name="ClusterMon" version="1.2">
+<version>1.1</version>
 
 <longdesc lang="en">
 This is a ClusterMon Resource Agent.
@@ -43,7 +43,7 @@ It outputs current cluster status to the html.
 
 <parameters>
 
-<parameter name="user" unique="0">
+<parameter name="user">
 <longdesc lang="en">
 The user we want to run crm_mon as
 </longdesc>
@@ -51,7 +51,7 @@ The user we want to run crm_mon as
 <content type="string" default="root" />
 </parameter>
 
-<parameter name="update" unique="0">
+<parameter name="update">
 <longdesc lang="en">
 How frequently should we update the cluster status (in milliseconds).
 For compatibility with old documentation, values less than 1000 will be treated
@@ -61,7 +61,7 @@ as seconds.
 <content type="integer" default="15000" />
 </parameter>
 
-<parameter name="extra_options" unique="0">
+<parameter name="extra_options">
 <longdesc lang="en">
 Additional options to pass to crm_mon.  Eg. -n -r
 </longdesc>
@@ -69,7 +69,7 @@ Additional options to pass to crm_mon.  Eg. -n -r
 <content type="string" default="" />
 </parameter>
 
-<parameter name="pidfile" unique="1">
+<parameter name="pidfile" unique-group="pidfile">
 <longdesc lang="en">
 PID file location to ensure only one instance is running
 </longdesc>
@@ -77,7 +77,7 @@ PID file location to ensure only one instance is running
 <content type="string" default="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid" />
 </parameter>
 
-<parameter name="htmlfile" unique="1" required="0">
+<parameter name="htmlfile" unique-group="htmlfile" required="0">
 <longdesc lang="en">
 Location to write HTML output to.
 </longdesc>
@@ -173,6 +173,11 @@ do
     p)  ocf_log warn "You should not have specified the -p option, since OCF_RESKEY_pidfile is set already!";;
     *)  return $OCF_ERR_ARGS;;
     esac
+
+    case "$OCF_RESKEY_extra_options" in
+    *--output-as*)  ocf_log warn "You should not have specified the -output-as option, since OCF_RESKEY_htmlfile is set already!";;
+    *--output-to*)  ocf_log warn "You should not have specified the -output-to option, since OCF_RESKEY_htmlfile is set already!";;
+    esac
 done
 
 if [ $? -ne 0 ]; then
@@ -189,16 +194,21 @@ fi
 }
 
 ClusterMon_validate() {
-# Existence of the user
-    if [ -n "$OCF_RESKEY_user" ]; then
-        getent passwd "$OCF_RESKEY_user" >/dev/null
-        if [ $? -eq 0 ]; then
-            : Yes, user exists. We can further check his permission on crm_mon if necessary
-        else
-            ocf_log err "The user $OCF_RESKEY_user does not exist!"
-            exit $OCF_ERR_ARGS
+# Host-specific checks
+if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+    # Existence of the user
+        if [ -n "$OCF_RESKEY_user" ]; then
+            getent passwd "$OCF_RESKEY_user" >/dev/null
+            if [ $? -eq 0 ]; then
+                : Yes, user exists. We can further check his permission on crm_mon if necessary
+            else
+                ocf_log err "The user $OCF_RESKEY_user does not exist!"
+                exit $OCF_ERR_ARGS
+            fi
         fi
-    fi
+
+fi
 
 # Pidfile better be an absolute path
     case "$OCF_RESKEY_pidfile" in
@@ -240,7 +250,7 @@ if [ ${OCF_RESKEY_update} -ge 1000 ]; then
     OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
 fi
 
-CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h \"$OCF_RESKEY_htmlfile\""
+CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options --output-as=html --output-to=\"$OCF_RESKEY_htmlfile\""
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data

@@ -12,14 +12,14 @@ cluster using Pacemaker.
 The example cluster will use:
 
 * |CFS_DISTRO| |CFS_DISTRO_VER| as the host operating system
-* Corosync to provide messaging and membership services,
-* Pacemaker 2
-* DRBD as a cost-effective alternative to shared storage,
+* Corosync to provide messaging and membership services
+* Pacemaker 2 as the cluster resource manager
+* DRBD as a cost-effective alternative to shared storage
 * GFS2 as the cluster filesystem (in active/active mode)
 
 Given the graphical nature of the install process, a number of screenshots are
-included. However the guide is primarily composed of commands, the reasons for
-executing them and their expected outputs.
+included. However, the guide is primarily composed of commands, the reasons for
+executing them, and their expected outputs.
 
 
 Table of Contents

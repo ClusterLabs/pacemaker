@@ -7,16 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <glib.h>
 
+#include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/rules_internal.h>
-
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
 
 static void
 run_one_test(const char *t, const char *x, int expected) {
@@ -114,28 +111,20 @@ time_after_monthdays_range(void **state) {
     run_one_test("2001-06-10", "<date_spec id='spec' years='2001' months='6' monthdays='11-15'/>", pcmk_rc_before_range);
 }
 
-int main(int argc, char **argv) {
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(no_time_given),
-        cmocka_unit_test(any_time_satisfies_empty_spec),
-        cmocka_unit_test(time_satisfies_year_spec),
-        cmocka_unit_test(time_after_year_spec),
-        cmocka_unit_test(time_satisfies_year_range),
-        cmocka_unit_test(time_before_year_range),
-        cmocka_unit_test(time_after_year_range),
-        cmocka_unit_test(range_without_start_year_passes),
-        cmocka_unit_test(range_without_end_year_passes),
-
-        cmocka_unit_test(yeardays_satisfies),
-        cmocka_unit_test(time_after_yeardays_spec),
-        cmocka_unit_test(yeardays_feb_29_satisfies),
-
-        cmocka_unit_test(exact_ymd_satisfies),
-        cmocka_unit_test(range_in_month_satisfies),
-        cmocka_unit_test(exact_ymd_after_range),
-        cmocka_unit_test(time_after_monthdays_range),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(no_time_given),
+                cmocka_unit_test(any_time_satisfies_empty_spec),
+                cmocka_unit_test(time_satisfies_year_spec),
+                cmocka_unit_test(time_after_year_spec),
+                cmocka_unit_test(time_satisfies_year_range),
+                cmocka_unit_test(time_before_year_range),
+                cmocka_unit_test(time_after_year_range),
+                cmocka_unit_test(range_without_start_year_passes),
+                cmocka_unit_test(range_without_end_year_passes),
+                cmocka_unit_test(yeardays_satisfies),
+                cmocka_unit_test(time_after_yeardays_spec),
+                cmocka_unit_test(yeardays_feb_29_satisfies),
+                cmocka_unit_test(exact_ymd_satisfies),
+                cmocka_unit_test(range_in_month_satisfies),
+                cmocka_unit_test(exact_ymd_after_range),
+                cmocka_unit_test(time_after_monthdays_range))

@@ -339,19 +339,6 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 
 
-class crm_corosync_docker(crm_corosync):
-    '''
-    Patterns for Corosync version 2 cluster manager class
-    '''
-    def __init__(self, name):
-        crm_corosync.__init__(self, name)
-
-        self.commands.update({
-            "StartCmd"       : "pcmk_start",
-            "StopCmd"        : "pcmk_stop",
-        })
-
-
 class PatternSelector(object):
 
     def __init__(self, name=None):
@@ -362,8 +349,6 @@ class PatternSelector(object):
             crm_corosync("crm-corosync")
         elif name == "crm-corosync":
             crm_corosync(name)
-        elif name == "crm-corosync-docker":
-            crm_corosync_docker(name)
 
     def get_variant(self, variant):
         if variant in patternvariants:

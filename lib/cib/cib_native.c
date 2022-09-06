@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2021 the Pacemaker project contributors
+ * Later changes copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -434,7 +434,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
             break;
 
         default:
-            if (!pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei)) {
+            if (!pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
                 crm_warn("Call failed: %s", pcmk_strerror(rc));
             }
     }

@@ -51,7 +51,7 @@ lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
  * \return Existing action that matches arguments (or NULL if none)
  */
 static pe_action_t *
-find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
+find_existing_action(const char *key, pe_resource_t *rsc, const pe_node_t *node,
                      pe_working_set_t *data_set)
 {
     GList *matches = NULL;
@@ -73,7 +73,8 @@ find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
 }
 
 static xmlNode *
-find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_disabled)
+find_rsc_op_entry_helper(const pe_resource_t *rsc, const char *key,
+                         gboolean include_disabled)
 {
     guint interval_ms = 0;
     gboolean do_retry = TRUE;
@@ -141,7 +142,7 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
 }
 
 xmlNode *
-find_rsc_op_entry(pe_resource_t * rsc, const char *key)
+find_rsc_op_entry(const pe_resource_t *rsc, const char *key)
 {
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
@@ -163,8 +164,9 @@ find_rsc_op_entry(pe_resource_t * rsc, const char *key)
  *       responsibility to free the return value with pe_free_action().
  */
 static pe_action_t *
-new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
-           bool optional, bool for_graph, pe_working_set_t *data_set)
+new_action(char *key, const char *task, pe_resource_t *rsc,
+           const pe_node_t *node, bool optional, bool for_graph,
+           pe_working_set_t *data_set)
 {
     pe_action_t *action = calloc(1, sizeof(pe_action_t));
 
@@ -1041,7 +1043,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
  */
 pe_action_t *
 custom_action(pe_resource_t *rsc, char *key, const char *task,
-              pe_node_t *on_node, gboolean optional, gboolean save_action,
+              const pe_node_t *on_node, gboolean optional, gboolean save_action,
               pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
@@ -1748,4 +1750,26 @@ pe__new_rsc_pseudo_action(pe_resource_t *rsc, const char *task, bool optional,
         pe__set_action_flags(action, pe_action_runnable);
     }
     return action;
+}
+
+/*!
+ * \internal
+ * \brief Add the expected result to an action
+ *
+ * \param[in] action           Action to add expected result to
+ * \param[in] expected_result  Expected result to add
+ *
+ * \note This is more efficient than calling add_hash_param().
+ */
+void
+pe__add_action_expected_result(pe_action_t *action, int expected_result)
+{
+    char *name = NULL;
+
+    CRM_ASSERT((action != NULL) && (action->meta != NULL));
+
+    name = strdup(XML_ATTR_TE_TARGET_RC);
+    CRM_ASSERT (name != NULL);
+
+    g_hash_table_insert(action->meta, name, pcmk__itoa(expected_result));
 }

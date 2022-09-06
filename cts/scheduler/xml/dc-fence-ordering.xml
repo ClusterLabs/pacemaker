@@ -243,7 +243,7 @@
     <node_state id="5" uname="rhel7-5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="5">
         <instance_attributes id="status-5">
-          <nvpair id="status-5-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-5-promoted-stateful-1" name="master-stateful-1" value="5"/>
           <nvpair id="status-5-shutdown" name="shutdown" value="1543430118"/>
         </instance_attributes>
       </transient_attributes>
@@ -303,7 +303,7 @@
     <node_state id="1" uname="rhel7-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="1">
         <instance_attributes id="status-1">
-          <nvpair id="status-1-master-stateful-1" name="master-stateful-1" value="10"/>
+          <nvpair id="status-1-promoted-stateful-1" name="master-stateful-1" value="10"/>
           <nvpair id="status-1-shutdown" name="shutdown" value="1543430118"/>
         </instance_attributes>
       </transient_attributes>
@@ -370,7 +370,7 @@
     <node_state id="2" uname="rhel7-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="2">
         <instance_attributes id="status-2">
-          <nvpair id="status-2-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-2-promoted-stateful-1" name="master-stateful-1" value="5"/>
           <nvpair id="status-2-shutdown" name="shutdown" value="1543430118"/>
         </instance_attributes>
       </transient_attributes>
@@ -488,7 +488,7 @@
     <node_state id="4" uname="rhel7-4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
       <transient_attributes id="4">
         <instance_attributes id="status-4">
-          <nvpair id="status-4-master-stateful-1" name="master-stateful-1" value="5"/>
+          <nvpair id="status-4-promoted-stateful-1" name="master-stateful-1" value="5"/>
           <nvpair id="status-4-shutdown" name="shutdown" value="1543430118"/>
         </instance_attributes>
       </transient_attributes>

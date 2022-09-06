@@ -257,37 +257,37 @@
           <expression attribute="pingd" id="ssh-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-itwiki-master-connected" rsc="ms-itwiki">
+      <rsc_location id="ms-itwiki-promoted-connected" rsc="ms-itwiki">
         <rule boolean-op="or" id="ms-itwiki-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-itwiki-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-itwiki-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-smsprod2-master-connected" rsc="ms-smsprod2">
+      <rsc_location id="ms-smsprod2-promoted-connected" rsc="ms-smsprod2">
         <rule boolean-op="or" id="ms-smsprod2-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-smsprod2-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-smsprod2-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-servsyslog-master-connected" rsc="ms-servsyslog">
+      <rsc_location id="ms-servsyslog-promoted-connected" rsc="ms-servsyslog">
         <rule boolean-op="or" id="ms-servsyslog-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-servsyslog-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-servsyslog-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-bugtrack-master-connected" rsc="ms-bugtrack">
+      <rsc_location id="ms-bugtrack-promoted-connected" rsc="ms-bugtrack">
         <rule boolean-op="or" id="ms-bugtrack-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-bugtrack-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-bugtrack-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-infotos-master-connected" rsc="ms-infotos">
+      <rsc_location id="ms-infotos-promoted-connected" rsc="ms-infotos">
         <rule boolean-op="or" id="ms-infotos-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-infotos-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-infotos-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="ms-medomus-cvs-master-connected" rsc="ms-medomus-cvs">
+      <rsc_location id="ms-medomus-cvs-promoted-connected" rsc="ms-medomus-cvs">
         <rule boolean-op="or" id="ms-medomus-cvs-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression-0" operation="lte" value="0"/>
@@ -465,12 +465,12 @@
       <transient_attributes id="cl-virt-2">
         <instance_attributes id="status-cl-virt-2">
           <nvpair id="status-cl-virt-2-pingd" name="pingd" value="3"/>
-          <nvpair id="status-master-drbd-bugtrack:0-cl-virt-2" name="master-drbd-bugtrack:0" value="75"/>
-          <nvpair id="status-master-drbd-servsyslog:0-cl-virt-2" name="master-drbd-servsyslog:0" value="75"/>
-          <nvpair id="status-master-drbd-itwiki:0-cl-virt-2" name="master-drbd-itwiki:0" value="75"/>
-          <nvpair id="status-master-drbd-smsprod2:0-cl-virt-2" name="master-drbd-smsprod2:0" value="75"/>
-          <nvpair id="status-master-drbd-medomus-cvs:0-cl-virt-2" name="master-drbd-medomus-cvs:0" value="75"/>
-          <nvpair id="status-master-drbd-infotos:0-cl-virt-2" name="master-drbd-infotos:0" value="75"/>
+          <nvpair id="status-promoted-drbd-bugtrack:0-cl-virt-2" name="master-drbd-bugtrack:0" value="75"/>
+          <nvpair id="status-promoted-drbd-servsyslog:0-cl-virt-2" name="master-drbd-servsyslog:0" value="75"/>
+          <nvpair id="status-promoted-drbd-itwiki:0-cl-virt-2" name="master-drbd-itwiki:0" value="75"/>
+          <nvpair id="status-promoted-drbd-smsprod2:0-cl-virt-2" name="master-drbd-smsprod2:0" value="75"/>
+          <nvpair id="status-promoted-drbd-medomus-cvs:0-cl-virt-2" name="master-drbd-medomus-cvs:0" value="75"/>
+          <nvpair id="status-promoted-drbd-infotos:0-cl-virt-2" name="master-drbd-infotos:0" value="75"/>
           <nvpair id="status-cl-virt-2-probe_complete" name="probe_complete" value="true"/>
           <nvpair id="status-cl-virt-2-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
           <nvpair id="status-cl-virt-2-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>

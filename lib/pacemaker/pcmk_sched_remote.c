@@ -59,24 +59,24 @@ state2text(enum remote_connection_state state)
  */
 
 static inline void
-order_start_then_action(pe_resource_t *lh_rsc, pe_action_t *rh_action,
+order_start_then_action(pe_resource_t *first_rsc, pe_action_t *then_action,
                         enum pe_ordering extra, pe_working_set_t *data_set)
 {
-    if ((lh_rsc != NULL) && (rh_action != NULL) && (data_set != NULL)) {
-        pcmk__new_ordering(lh_rsc, start_key(lh_rsc), NULL,
-                           rh_action->rsc, NULL, rh_action,
+    if ((first_rsc != NULL) && (then_action != NULL) && (data_set != NULL)) {
+        pcmk__new_ordering(first_rsc, start_key(first_rsc), NULL,
+                           then_action->rsc, NULL, then_action,
                            pe_order_preserve|pe_order_runnable_left|extra,
                            data_set);
     }
 }
 
 static inline void
-order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
+order_action_then_stop(pe_action_t *first_action, pe_resource_t *then_rsc,
                        enum pe_ordering extra, pe_working_set_t *data_set)
 {
-    if ((lh_action != NULL) && (rh_rsc != NULL) && (data_set != NULL)) {
-        pcmk__new_ordering(lh_action->rsc, NULL, lh_action,
-                           rh_rsc, stop_key(rh_rsc), NULL,
+    if ((first_action != NULL) && (then_rsc != NULL) && (data_set != NULL)) {
+        pcmk__new_ordering(first_action->rsc, NULL, first_action,
+                           then_rsc, stop_key(then_rsc), NULL,
                            pe_order_preserve|extra, data_set);
     }
 }

@@ -9,11 +9,15 @@
 
 #include <crm_internal.h>
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
+#include <crm/common/unittest_internal.h>
+
+static void
+null_ptr(void **state)
+{
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp(NULL, NULL));
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp("a", NULL));
+    pcmk__assert_asserts(pcmk__numeric_strcasecmp(NULL, "a"));
+}
 
 static void
 no_numbers(void **state)
@@ -67,16 +71,9 @@ unequal_lengths(void **state)
     assert_int_equal(pcmk__numeric_strcasecmp("node1abc", "node1ab"), 1);
 }
 
-int
-main(int argc, char **argv)
-{
-    const struct CMUnitTest tests[] = {
-        cmocka_unit_test(no_numbers),
-        cmocka_unit_test(trailing_numbers),
-        cmocka_unit_test(middle_numbers),
-        cmocka_unit_test(unequal_lengths),
-    };
-
-    cmocka_set_message_output(CM_OUTPUT_TAP);
-    return cmocka_run_group_tests(tests, NULL, NULL);
-}
+PCMK__UNIT_TEST(NULL, NULL,
+                cmocka_unit_test(null_ptr),
+                cmocka_unit_test(no_numbers),
+                cmocka_unit_test(trailing_numbers),
+                cmocka_unit_test(middle_numbers),
+                cmocka_unit_test(unequal_lengths))

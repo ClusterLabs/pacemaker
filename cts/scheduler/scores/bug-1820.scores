@@ -5,7 +5,7 @@ pcmk__group_allocate: test1 allocation score on star: INFINITY
 pcmk__group_allocate: test1 allocation score on world: 1000
 pcmk__group_allocate: test2 allocation score on star: 0
 pcmk__group_allocate: test2 allocation score on world: 0
-pcmk__native_allocate: test1 allocation score on star: -INFINITY
-pcmk__native_allocate: test1 allocation score on world: 1000
-pcmk__native_allocate: test2 allocation score on star: -INFINITY
-pcmk__native_allocate: test2 allocation score on world: 0
+pcmk__primitive_assign: test1 allocation score on star: -INFINITY
+pcmk__primitive_assign: test1 allocation score on world: 1000
+pcmk__primitive_assign: test2 allocation score on star: -INFINITY
+pcmk__primitive_assign: test2 allocation score on world: 0

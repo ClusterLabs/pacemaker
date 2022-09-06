@@ -69,17 +69,20 @@ Descriptions of these instance attributes can be retrieved using the following
 
 .. code-block:: none
 
-    # pcs resource describe remote
-    ocf:pacemaker:remote - remote resource agent
+    [root@pcmk-1 ~]# pcs resource describe remote
+    Assumed agent name 'ocf:pacemaker:remote' (deduced from 'remote')
+    ocf:pacemaker:remote - Pacemaker Remote connection
 
     Resource options:
-      server: Server location to connect to (IP address or resolvable host name)
-      port: TCP port at which to contact Pacemaker Remote executor
-      reconnect_interval: If this is a positive time interval, the cluster will attempt to
-                          reconnect to a remote node after an active connection has been
-                          lost at this interval. Otherwise, the cluster will attempt to
-                          reconnect immediately (after any fencing needed).
-
+      server (unique group: address): Server location to connect to (IP address
+                                      or resolvable host name)
+      port (unique group: address): TCP port at which to contact Pacemaker
+                                    Remote executor
+      reconnect_interval: If this is a positive time interval, the cluster will
+                          attempt to reconnect to a remote node after an active
+                          connection has been lost at this interval. Otherwise,
+                          the cluster will attempt to reconnect immediately
+                          (after any fencing needed).
 
 When defining a remote node's connection resource, it is common and recommended
 to name the connection resource the same as the remote node's hostname. By
@@ -118,11 +121,11 @@ varies by OS, but usually they are set in the ``/etc/sysconfig/pacemaker`` or
     # preferred if available. When listening on an IPv6 address, IPv4 clients will
     # be supported (via IPv4-mapped IPv6 addresses).
     # PCMK_remote_address="192.0.2.1"
-    
+
     # Use this TCP port number when connecting to a Pacemaker Remote node. This
     # value must be the same on all nodes. The default is "3121".
     # PCMK_remote_port=3121
-    
+
     # Use these GnuTLS cipher priorities for TLS connections. See:
     #
     #   https://gnutls.org/manual/html_node/Priority-Strings.html
@@ -131,7 +134,7 @@ varies by OS, but usually they are set in the ``/etc/sysconfig/pacemaker`` or
     # ":+DHE-PSK:+PSK" for Pacemaker Remote connections, as they are required for
     # the respective functionality.
     # PCMK_tls_priorities="NORMAL"
-    
+
     # Set bounds on the bit length of the prime number generated for Diffie-Hellman
     # parameters needed by TLS connections. The default is not to set any bounds.
     #

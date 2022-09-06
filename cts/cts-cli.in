@@ -62,6 +62,7 @@ CRM_EX_INVALID_PARAM=2
 CRM_EX_UNIMPLEMENT_FEATURE=3
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
+CRM_EX_DATAERR=65
 CRM_EX_CONFIG=78
 CRM_EX_OLD=103
 CRM_EX_DIGEST=104
@@ -611,9 +612,29 @@ function test_tools() {
     cmd="crm_simulate --live-check --show-attrs"
     test_assert $CRM_EX_OK 0
 
-    desc="Delete a transient (fail-count) node attribute"
-    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    desc="Set a second transient node attribute"
+    cmd="crm_attribute -n fail-count-bar -v 5 -N node1 -t status"
     test_assert $CRM_EX_OK
+
+    desc="Query node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 --query"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -v 10"
+    test_assert $CRM_EX_OK
+
+    desc="Delete node attributes by pattern"
+    cmd="crm_attribute -t status -P fail-count -N node1 -D"
+    test_assert $CRM_EX_OK
+
+    desc="crm_attribute given invalid pattern usage"
+    cmd="crm_attribute -t nodes -P fail-count -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_attribute given invalid delete usage"
+    cmd="crm_attribute -t nodes -N node1 -D"
+    test_assert $CRM_EX_USAGE 0
 
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
@@ -643,6 +664,18 @@ function test_tools() {
     desc="Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_OK
+
+    desc="crm_resource run with extra arguments"
+    cmd="crm_resource foo bar"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_resource given both -r and resource config"
+    cmd="crm_resource -r xyz --class ocf --provider pacemaker --agent Dummy"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_resource given resource config with invalid action"
+    cmd="crm_resource --class ocf --provider pacemaker --agent Dummy -D"
+    test_assert $CRM_EX_USAGE 0
 
     desc="Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p is-managed -v false"
@@ -680,6 +713,10 @@ function test_tools() {
     cmd="crm_resource -L --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
+    desc="Implicitly list the configured resources"
+    cmd="crm_resource"
+    test_assert $CRM_EX_OK 0
+
     desc="List IDs of instantiated resources"
     cmd="crm_resource -l"
     test_assert $CRM_EX_OK 0
@@ -707,6 +744,10 @@ function test_tools() {
     desc="Try to move a resource to its existing location"
     cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_EXISTS
+
+    desc="Try to move a resource that doesn't exist"
+    cmd="crm_resource -r xyz --move --node node1"
+    test_assert $CRM_EX_NOSUCH 0
 
     desc="Move a resource from its existing location"
     cmd="crm_resource -r dummy --move"
@@ -905,7 +946,6 @@ function test_tools() {
 
     unset CIB_shadow
     unset CIB_shadow_dir
-    rm -f "$TMPXML" "$TMPORIG"
 
     desc="Create an XML patchset"
     cmd="crm_diff -o $test_home/cli/crm_diff_old.xml -n $test_home/cli/crm_diff_new.xml"
@@ -1031,6 +1071,86 @@ function test_tools() {
     cmd="crm_resource --locate -r promotable-rsc:1 --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
+    desc="Try to move an instance of a cloned resource"
+    cmd="crm_resource -r promotable-rsc:0 --move --node node1"
+    test_assert $CRM_EX_INVALID_PARAM 0
+
+    # Create a sandbox copy of crm_mon.xml
+    cibadmin -Q > "$TMPXML"
+    export CIB_file="$TMPXML"
+
+    desc="Query a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Delete a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D"
+    test_assert $CRM_EX_OK 0
+
+    desc="Delete a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after deleting a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after deleting a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
+    desc="Update a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after updating a nonexistent promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query after updating a nonexistent promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Update an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 5"
+    test_assert $CRM_EX_OK 0
+
+    desc="Update an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -v 5 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after updating an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_OK 0
+
+    desc="Query after updating an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Delete an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D"
+    test_assert $CRM_EX_OK 0
+
+    desc="Delete an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Query after deleting an existing promotable score attribute"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G"
+    test_assert $CRM_EX_NOSUCH 0
+
+    desc="Query after deleting an existing promotable score attribute (XML)"
+    cmd="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml"
+    test_assert_validate $CRM_EX_NOSUCH 0
+
     unset CIB_file
 
     export CIB_file="-"
@@ -1048,6 +1168,7 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+    rm -f "$TMPXML" "$TMPORIG"
 }
 
 INVALID_PERIODS=(
@@ -1743,17 +1864,53 @@ EOF
     cibadmin -C -o constraints -x "$TMPXML"
     rm -f "$TMPXML"
 
+    desc="crm_rule given no arguments"
+    cmd="crm_rule"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given no arguments (XML)"
+    cmd="crm_rule --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="crm_rule given no rule to check"
+    cmd="crm_rule -c"
+    test_assert $CRM_EX_USAGE 0
+
+    desc="crm_rule given no rule to check (XML)"
+    cmd="crm_rule -c --output-as=xml"
+    test_assert_validate $CRM_EX_USAGE 0
+
+    desc="crm_rule given invalid input XML"
+    cmd="crm_rule -c -r blahblah -X 'invalidxml'"
+    test_assert $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML (XML)"
+    cmd="crm_rule -c -r blahblah -X 'invalidxml' --output-as=xml"
+    test_assert_validate $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML on stdin"
+    cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X -"
+    test_assert $CRM_EX_DATAERR 0
+
+    desc="crm_rule given invalid input XML on stdin (XML)"
+    cmd="echo 'invalidxml' | crm_rule -c -r blahblah -X - --output-as=xml"
+    test_assert_validate $CRM_EX_DATAERR 0
+
     desc="Try to check a rule that doesn't exist"
     cmd="crm_rule -c -r blahblah"
     test_assert $CRM_EX_NOSUCH
 
     desc="Try to check a rule that doesn't exist, with XML output"
     cmd="crm_rule -c -r blahblah --output-as=xml"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert_validate $CRM_EX_NOSUCH 0
 
     desc="Try to check a rule that has too many date_expressions"
     cmd="crm_rule -c -r cli-rule-too-many-date-expressions"
     test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule that has too many date_expressions (XML)"
+    cmd="crm_rule -c -r cli-rule-too-many-date-expressions --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Verify basic rule is expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired"
@@ -1761,19 +1918,31 @@ EOF
 
     desc="Verify basic rule is expired, with XML output"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml"
-    test_assert $CRM_EX_EXPIRED 0
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify basic rule worked in the past"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101"
     test_assert $CRM_EX_OK 0
 
+    desc="Verify basic rule worked in the past (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Verify basic rule is not yet in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet"
     test_assert $CRM_EX_NOT_YET_IN_EFFECT 0
 
+    desc="Verify basic rule is not yet in effect (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet --output-as=xml"
+    test_assert_validate $CRM_EX_NOT_YET_IN_EFFECT 0
+
     desc="Verify date_spec rule with years has expired"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years"
     test_assert $CRM_EX_EXPIRED 0
+
+    desc="Verify date_spec rule with years has expired (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify multiple rules at once"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years"
@@ -1781,23 +1950,39 @@ EOF
 
     desc="Verify multiple rules at once, with XML output"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml"
-    test_assert $CRM_EX_EXPIRED 0
+    test_assert_validate $CRM_EX_EXPIRED 0
 
     desc="Verify date_spec rule with years is in effect"
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201"
     test_assert $CRM_EX_OK 0
 
+    desc="Verify date_spec rule with years is in effect (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     desc="Try to check a rule whose date_spec does not contain years="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule whose date_spec does not contain years= (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule whose date_spec contains years= and moon="
     cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon"
-    test_assert $CRM_EX_NOSUCH 0
+    test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule whose date_spec contains years= and moon= (XML)"
+    cmd="crm_rule -c -r cli-prefer-rule-dummy-date_spec-years-moon --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     desc="Try to check a rule with no date_expression"
     cmd="crm_rule -c -r cli-no-date_expression-rule"
     test_assert $CRM_EX_UNIMPLEMENT_FEATURE 0
+
+    desc="Try to check a rule with no date_expression (XML)"
+    cmd="crm_rule -c -r cli-no-date_expression-rule --output-as=xml"
+    test_assert_validate $CRM_EX_UNIMPLEMENT_FEATURE 0
 
     unset CIB_shadow_dir
 }
