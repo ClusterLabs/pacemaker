@@ -22,7 +22,8 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set').
+                 Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -173,6 +174,12 @@ function test_assert() {
 
 function test_assert_validate() {
     _test_assert $1 1 $2
+}
+
+# Tests that depend on resource agents and must be run in an installed
+# environment
+function test_agents() {
+    :
 }
 
 function test_crm_mon() {
@@ -2110,6 +2117,7 @@ done
 
 for t in $tests; do
     case "$t" in
+        agents) ;;
         dates) ;;
         tools) ;;
         acls) ;;
