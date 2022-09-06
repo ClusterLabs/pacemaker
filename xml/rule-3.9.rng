@@ -12,10 +12,12 @@
         <attribute name="id-ref"><data type="IDREF"/></attribute>
         <group>
           <attribute name="id"><data type="ID"/></attribute>
-          <choice>
-            <externalRef href="score.rng"/>
-            <attribute name="score-attribute"><text/></attribute>
-          </choice>
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
           <optional>
             <attribute name="boolean-op">
               <choice>
