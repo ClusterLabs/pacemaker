@@ -116,7 +116,13 @@
         <element name="op_defaults">
           <zeroOrMore>
             <element name="meta_attributes">
-              <externalRef href="nvset-3.9.rng"/>
+              <grammar>
+                <include href="nvset-3.9.rng">
+                  <define name="element-nvset.rule">
+                    <parentRef name="element-rule-op_defaults"/>
+                  </define>
+                </include>
+              </grammar>
             </element>
           </zeroOrMore>
         </element>
