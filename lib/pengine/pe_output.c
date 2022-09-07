@@ -2387,14 +2387,14 @@ node_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     if (rsc) {
         out->list_item(out, NULL, "%s: %s allocation score on %s: %s",
@@ -2406,14 +2406,14 @@ node_weight(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
@@ -2496,13 +2496,13 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 promotion_score(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
     pe_node_t *chosen = va_arg(args, pe_node_t *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     out->list_item(out, NULL, "%s promotion score on %s: %s",
                    child_rsc->id,
@@ -2511,13 +2511,13 @@ promotion_score(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 promotion_score_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
     pe_node_t *chosen = va_arg(args, pe_node_t *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
                                                    "id", child_rsc->id,

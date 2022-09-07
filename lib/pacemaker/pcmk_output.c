@@ -1554,14 +1554,15 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
+                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
+                  "GList *")
 int
 pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
-    gboolean fence_history = va_arg(args, gboolean);
+    enum pcmk__fence_history fence_history = va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
@@ -1608,7 +1609,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) && fence_history) {
+    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
+        fence_history != pcmk__fence_history_none) {
         if (history_rc == 0) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
                                                                   GINT_TO_POINTER(st_failed));
@@ -1641,7 +1643,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     }
 
     /* Print stonith history */
-    if (fence_history && pcmk_any_flags_set(section_opts, pcmk_section_fencing_all)) {
+    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
+        fence_history != pcmk__fence_history_none) {
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -1674,14 +1677,15 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *", "GList *")
+                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
+                  "GList *")
 static int
 cluster_status_xml(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
-    gboolean fence_history = va_arg(args, gboolean);
+    enum pcmk__fence_history fence_history = va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
@@ -1728,7 +1732,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     }
 
     /* Print stonith history */
-    if (pcmk_is_set(section_opts, pcmk_section_fencing_all) && fence_history) {
+    if (pcmk_is_set(section_opts, pcmk_section_fencing_all) &&
+        fence_history != pcmk__fence_history_none) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
                      unames, section_opts, show_opts, FALSE);
     }
@@ -1748,7 +1753,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("cluster-status", "pe_working_set_t *", "crm_exit_t", "stonith_history_t *",
-                  "gboolean", "uint32_t", "uint32_t", "const char *", "GList *",
+                  "enum pcmk__fence_history", "uint32_t", "uint32_t", "const char *", "GList *",
                   "GList *")
 static int
 cluster_status_html(pcmk__output_t *out, va_list args)
@@ -1756,7 +1761,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *stonith_history = va_arg(args, stonith_history_t *);
-    gboolean fence_history = va_arg(args, gboolean);
+    enum pcmk__fence_history fence_history = va_arg(args, int);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
     const char *prefix = va_arg(args, const char *);
@@ -1801,7 +1806,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) && fence_history) {
+    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
+        fence_history != pcmk__fence_history_none) {
         if (history_rc == 0) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
                                                                   GINT_TO_POINTER(st_failed));
@@ -1819,7 +1825,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     /* Print stonith history */
-    if (fence_history && pcmk_any_flags_set(section_opts, pcmk_section_fencing_all)) {
+    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
+        fence_history != pcmk__fence_history_none) {
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -1859,15 +1866,16 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
+                  "const char *", "const char *")
 static int
 attribute_default(pcmk__output_t *out, va_list args)
 {
-    char *scope = va_arg(args, char *);
-    char *instance = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *value = va_arg(args, char *);
-    char *host = va_arg(args, char *);
+    const char *scope = va_arg(args, const char *);
+    const char *instance = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    const char *host = va_arg(args, const char *);
 
     GString *s = g_string_sized_new(50);
 
@@ -1893,15 +1901,16 @@ attribute_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
+                  "const char *", "const char *")
 static int
 attribute_xml(pcmk__output_t *out, va_list args)
 {
-    char *scope = va_arg(args, char *);
-    char *instance = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *value = va_arg(args, char *);
-    char *host = va_arg(args, char *);
+    const char *scope = va_arg(args, const char *);
+    const char *instance = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    const char *host = va_arg(args, const char *);
 
     xmlNodePtr node = NULL;
 
