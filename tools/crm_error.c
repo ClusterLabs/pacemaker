@@ -57,27 +57,6 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
-static void
-get_strings(int rc, const char **name, const char **str)
-{
-    switch (options.result_type) {
-        case pcmk_result_legacy:
-            *name = pcmk_errorname(rc);
-            *str = pcmk_strerror(rc);
-            break;
-        case pcmk_result_rc:
-            *name = pcmk_rc_name(rc);
-            *str = pcmk_rc_str(rc);
-            break;
-        case pcmk_result_exitcode:
-            *name = crm_exit_name(rc);
-            *str = crm_exit_str((crm_exit_t) rc);
-            break;
-        default:
-            break;
-    }
-}
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -137,7 +116,8 @@ main(int argc, char **argv)
                 // Values in between are reserved for callers, no use iterating
                 code = pcmk_rc_ok;
             }
-            get_strings(code, &name, &desc);
+
+            pcmk_result_get_strings(code, options.result_type, &name, &desc);
             if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 // Undefined
             } else if(options.with_name) {
@@ -157,7 +137,7 @@ main(int argc, char **argv)
             }
 
             pcmk__scan_min_int(processed_args[lpc], &code, INT_MIN);
-            get_strings(code, &name, &desc);
+            pcmk_result_get_strings(code, options.result_type, &name, &desc);
             if (options.with_name) {
                 printf("%s - %s\n", name, desc);
             } else {
