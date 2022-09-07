@@ -80,6 +80,43 @@
     </element>
   </define>
 
+  <!-- A rule element in a rsc_defaults element -->
+  <define name="element-rule-rsc_defaults">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression"/>
+              <ref name="date_expression"/>
+              <ref name="rsc_expression"/>
+              <ref name="element-rule-rsc_defaults"/>
+
+              <!--
+               @COMPAT: The below expression type is invalid for
+               element-rule-rsc_defaults
+               -->
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!--
+           @COMPAT: The below score attributes are invalid for
+           element-rule-rsc_defaults
+           -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
   <!-- Attributes that are common to all rule elements -->
   <define name="rule-common">
     <attribute name="id"><data type="ID"/></attribute>
