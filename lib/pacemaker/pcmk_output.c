@@ -770,9 +770,9 @@ crmadmin_node(pcmk__output_t *out, va_list args)
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
     const char *id = va_arg(args, const char *);
-    gboolean BASH_EXPORT = va_arg(args, gboolean);
+    gboolean bash_export = va_arg(args, gboolean);
 
-    if (BASH_EXPORT) {
+    if (bash_export) {
         return out->info(out, "export %s=%s",
                          pcmk__s(name, "<null>"), pcmk__s(id, ""));
     } else {
@@ -791,7 +791,7 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
         const char *type G_GNUC_UNUSED = va_arg(args, const char *);
         const char *name = va_arg(args, const char *);
         const char *id G_GNUC_UNUSED = va_arg(args, const char *);
-        gboolean BASH_EXPORT G_GNUC_UNUSED = va_arg(args, gboolean);
+        gboolean bash_export G_GNUC_UNUSED = va_arg(args, gboolean);
 
         pcmk__formatted_printf(out, "%s\n", pcmk__s(name, "<null>"));
         return pcmk_rc_ok;
@@ -805,6 +805,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
     const char *id = va_arg(args, const char *);
+    gboolean bash_export G_GNUC_UNUSED = va_arg(args, gboolean);
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "cluster",

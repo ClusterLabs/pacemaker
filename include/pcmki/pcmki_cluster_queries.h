@@ -20,6 +20,6 @@
 int pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_timeout_ms);
 int pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms);
 int pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeout_ms);
-int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT);
+int pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export);
 
 #endif
