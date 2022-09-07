@@ -518,9 +518,9 @@ fi
 
 : ${ha_pseudo_resource_name:="ifspeed-${OCF_RESOURCE_INSTANCE}"}
 
-attrd_options='-q'
+attrd_options=''
 if ocf_is_true "${OCF_RESKEY_debug}" ; then
-    attrd_options=''
+    attrd_options='-VV'
 fi
 
 validate || exit $?
