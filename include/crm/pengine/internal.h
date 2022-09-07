@@ -365,7 +365,7 @@ extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, 
 
 /* Printing functions for debug */
 extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
-extern void pe__output_node(pe_node_t * node, gboolean details, pcmk__output_t *out);
+extern void pe__output_node(pe_node_t * node, bool details, pcmk__output_t *out);
 
 void pe__show_node_weights_as(const char *file, const char *function,
                               int line, bool to_log, pe_resource_t *rsc,

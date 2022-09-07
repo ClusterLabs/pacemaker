@@ -38,12 +38,12 @@ compare_attribute(gconstpointer a, gconstpointer b)
  * \param[in]  attrname       The attribute to find.
  * \param[out] expected_score The expected value for this attribute.
  *
- * \return TRUE if extended information should be printed, FALSE otherwise
+ * \return true if extended information should be printed, false otherwise
  * \note Currently, extended information is only supported for ping/pingd
  *       resources, for which a message will be printed if connectivity is lost
  *       or degraded.
  */
-static gboolean
+static bool
 add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
                const char *attrname, int *expected_score)
 {
@@ -58,7 +58,7 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
         if (rsc->children != NULL) {
             if (add_extra_info(node, rsc->children, data_set, attrname,
                                expected_score)) {
-                return TRUE;
+                return true;
             }
         }
 
@@ -97,10 +97,10 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
             }
             *expected_score = host_list_num * multiplier_i;
 
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 static GList *
@@ -201,7 +201,7 @@ last_changed_string(const char *last_written, const char *user,
 
 static char *
 op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
-                  int rc, gboolean print_timing) {
+                  int rc, bool print_timing) {
     const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
     char *interval_str = NULL;
     char *buf = NULL;
@@ -275,7 +275,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 }
 
 static char *
-resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
+resource_history_string(pe_resource_t *rsc, const char *rsc_id, bool all,
                         int failcount, time_t last_failure) {
     char *buf = NULL;
 
@@ -343,7 +343,7 @@ is_mixed_version(pe_working_set_t *data_set) {
 }
 
 static char *
-formatted_xml_buf(pe_resource_t *rsc, gboolean raw)
+formatted_xml_buf(pe_resource_t *rsc, bool raw)
 {
     if (raw) {
         return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
@@ -363,7 +363,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -377,7 +377,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(data_set);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum,
                      dc_version_s, dc_name, mixed_version);
         free(dc_name);
@@ -389,19 +389,19 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-options", data_set);
     }
 
@@ -427,7 +427,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -442,7 +442,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(data_set);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum,
                      dc_version_s, dc_name, mixed_version);
         free(dc_name);
@@ -454,12 +454,12 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
@@ -1437,7 +1437,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         }
 
         id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
+        if (!parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL)) {
             continue;
         }
 
@@ -1553,7 +1553,7 @@ node_html(pcmk__output_t *out, va_list args) {
 
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
-                PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources");
+                PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
                 out->message(out, crm_map_element_name(rsc->xml), show_opts,
@@ -2047,7 +2047,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             const char *name = aIter->data;
             const char *value = NULL;
             int expected_score = 0;
-            gboolean add_extra = FALSE;
+            bool add_extra = false;
 
             value = pe_node_attribute_raw(node, name);
 
@@ -2204,7 +2204,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Node List");
 
         out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
     }
@@ -2247,7 +2247,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, print_spacer == TRUE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node List");
 
         // Determine whether to display node individually or in a list
         if (node->details->unclean || node->details->pending
@@ -3013,7 +3013,7 @@ pe__register_messages(pcmk__output_t *out) {
 }
 
 void
-pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
+pe__output_node(pe_node_t *node, bool details, pcmk__output_t *out)
 {
     if (node == NULL) {
         crm_trace("<NULL>");

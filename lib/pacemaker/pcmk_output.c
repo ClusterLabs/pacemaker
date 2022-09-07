@@ -21,7 +21,7 @@
 
 static char *
 colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
-                   gboolean dependents) {
+                   bool dependents) {
     char *retval = NULL;
 
     if (cons->primary_role > RSC_ROLE_STARTED) {
@@ -80,7 +80,7 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
             pe_node_t *node = (pe_node_t *) lpc2->data;
 
             if (add_header) {
-                PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "locations");
+                PCMK__OUTPUT_LIST_HEADER(out, false, rc, "locations");
             }
 
             pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_LOCATION,
@@ -115,9 +115,9 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     int len = 0;
     char *reason = NULL;
     char *details = NULL;
-    bool same_host = FALSE;
-    bool same_role = FALSE;
-    bool need_role = FALSE;
+    bool same_host = false;
+    bool same_role = false;
+    bool need_role = false;
 
     static int rsc_width = 5;
     static int detail_width = 5;
@@ -136,15 +136,15 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if ((rsc->role > RSC_ROLE_STARTED)
         || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
-        need_role = TRUE;
+        need_role = true;
     }
 
     if(origin != NULL && destination != NULL && origin->details == destination->details) {
-        same_host = TRUE;
+        same_host = true;
     }
 
     if(rsc->role == rsc->next_role) {
-        same_role = TRUE;
+        same_role = true;
     }
 
     if (need_role && (origin == NULL)) {
@@ -239,9 +239,9 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     char *change_str = NULL;
 
-    bool same_host = FALSE;
-    bool same_role = FALSE;
-    bool need_role = FALSE;
+    bool same_host = false;
+    bool same_role = false;
+    bool need_role = false;
     xmlNode *xml = NULL;
 
     CRM_ASSERT(action);
@@ -253,15 +253,15 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     if ((rsc->role > RSC_ROLE_STARTED)
         || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
-        need_role = TRUE;
+        need_role = true;
     }
 
     if(origin != NULL && destination != NULL && origin->details == destination->details) {
-        same_host = TRUE;
+        same_host = true;
     }
 
     if(rsc->role == rsc->next_role) {
-        same_role = TRUE;
+        same_role = true;
     }
 
     change_str = g_ascii_strdown(change, -1);
@@ -372,7 +372,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources %s is colocated with", rsc->id);
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources %s is colocated with", rsc->id);
 
         if (pcmk_is_set(cons->primary->flags, pe_rsc_allocating)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
@@ -380,7 +380,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        hdr = colocations_header(cons->primary, cons, FALSE);
+        hdr = colocations_header(cons->primary, cons, false);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
@@ -450,7 +450,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources colocated with %s", rsc->id);
 
         if (pcmk_is_set(cons->dependent->flags, pe_rsc_allocating)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
@@ -458,7 +458,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        hdr = colocations_header(cons->dependent, cons, TRUE);
+        hdr = colocations_header(cons->dependent, cons, true);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
@@ -528,7 +528,7 @@ locations_list(pcmk__output_t *out, va_list args) {
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Locations");
+            PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
                            pe__node_name(node),
                            pcmk_readable_score(node->weight), cons->id,
@@ -961,7 +961,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     moving = (current != NULL) && (next != NULL)
              && (current->details != next->details);
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
+    possible_matches = pe__resource_actions(rsc, next, RSC_START, false);
     if (possible_matches) {
         start = possible_matches->data;
         g_list_free(possible_matches);
@@ -972,7 +972,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     } else {
         start_node = current;
     }
-    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, FALSE);
+    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, false);
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
@@ -981,20 +981,20 @@ rsc_action_default(pcmk__output_t *out, va_list args)
          * stop_unexpected, and not stopping on its current node, but it should
          * be stopping elsewhere.
          */
-        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, FALSE);
+        possible_matches = pe__resource_actions(rsc, NULL, RSC_STOP, false);
         if (possible_matches != NULL) {
             stop = possible_matches->data;
             g_list_free(possible_matches);
         }
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);
+    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, false);
     if (possible_matches) {
         promote = possible_matches->data;
         g_list_free(possible_matches);
     }
 
-    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, FALSE);
+    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, false);
     if (possible_matches) {
         demote = possible_matches->data;
         g_list_free(possible_matches);
@@ -1005,7 +1005,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
 
         CRM_CHECK(next != NULL, return rc);
 
-        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
+        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, false);
         if (possible_matches) {
             migrate_op = possible_matches->data;
         }

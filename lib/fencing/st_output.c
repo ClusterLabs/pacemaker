@@ -263,7 +263,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Fencing History");
+            PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Fencing History");
             out->message(out, "stonith-event", hp,
                          pcmk_all_flags_set(section_opts,
                                             pcmk_section_fencing_all),
