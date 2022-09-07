@@ -117,26 +117,26 @@ itself, allowing for more sophistication down the road.
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng`,
    such that the new file name increments the highest number of any schema file,
    not just the file being edited.
-1. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
+2. Commit the copy, e.g. `"Low: xml: clone ${base} schema in preparation for
    changes"`. This way, the actual change will be obvious in the commit history.
-1. Modify `${base}-${X}.${Y}.rng` as required.
-1. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
-1. Commit
-1. `make -C xml clean; make -C xml all` to rebuild the schemas in the local
+3. Modify `${base}-${X}.${Y}.rng` as required.
+4. If required, add an XSLT file, and update `xslt\_SCRIPTS` in `xml/Makefile.am`.
+5. Commit.
+6. Run `make -C xml clean; make -C xml` to rebuild the schemas in the local 
    source directory.
-1. The CIB validity regression tests will break after the schema is updated.
-   Run `cts/cts-cli -s` to make the referential outcomes reflect the transient
-   changes made so far, `git diff` to ensure the these changes look sane, then
-   commit them.
-1. Similarly, with the new major version `${X}`, it's advisable to refresh
-   scheduler tests at some point, see the instructions in `cts/README.md`.
+7. The CIB validity and upgrade regression tests will break after the schema is
+   updated. Run `cts/cts-cli -s` to make the expected outputs reflect the
+   changes made so far, and run `git diff` to ensure that these changes look
+   sane. Finally, commit the changes. 
+8. Similarly, with the new major version `${X}`, it's advisable to refresh
+   scheduler tests at some point. See the instructions in `cts/README.md`.
 
 ## Using a New Schema
 
 New features will not be available until the cluster administrator:
 
 1. Updates all the nodes
-1. Runs the equivalent of `cibadmin --upgrade --force`
+2. Runs the equivalent of `cibadmin --upgrade --force`
 
 ## Random Notes
 
