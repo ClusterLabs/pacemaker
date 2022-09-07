@@ -1168,7 +1168,6 @@ Resource XML:
 (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
 (unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
 (unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-Resource XML:
 <pacemaker-result api-version="X" request="crm_resource -q -r dummy --output-as=xml">
   <resource_config>
     <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
