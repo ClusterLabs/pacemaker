@@ -347,6 +347,8 @@ enum pcmk_result_type {
     pcmk_result_exec_status = 3,  //!< Execution status
 };
 
+int pcmk_result_get_strings(int code, enum pcmk_result_type type,
+                            const char **name, const char **desc);
 const char *pcmk_rc_name(int rc);
 const char *pcmk_rc_str(int rc);
 crm_exit_t pcmk_rc2exitc(int rc);

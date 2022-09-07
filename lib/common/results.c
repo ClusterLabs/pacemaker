@@ -25,6 +25,54 @@
 G_DEFINE_QUARK(pcmk-rc-error-quark, pcmk__rc_error)
 G_DEFINE_QUARK(pcmk-exitc-error-quark, pcmk__exitc_error)
 
+// General (all result code types)
+
+/*!
+ * \brief Get the name and description of a given result code
+ *
+ * A result code can be interpreted as a member of any one of several families.
+ *
+ * \param[in]  code  The result code to look up
+ * \param[in]  type  How \p code should be interpreted
+ * \param[out] name  Where to store the result code's name
+ * \param[out] desc  Where to store the result code's description
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk_result_get_strings(int code, enum pcmk_result_type type, const char **name,
+                        const char **desc)
+{
+    const char *code_name = NULL;
+    const char *code_desc = NULL;
+
+    switch (type) {
+        case pcmk_result_legacy:
+            code_name = pcmk_errorname(code);
+            code_desc = pcmk_strerror(code);
+            break;
+        case pcmk_result_rc:
+            code_name = pcmk_rc_name(code);
+            code_desc = pcmk_rc_str(code);
+            break;
+        case pcmk_result_exitcode:
+            code_name = crm_exit_name(code);
+            code_desc = crm_exit_str((crm_exit_t) code);
+            break;
+        default:
+            return pcmk_rc_undetermined;
+    }
+
+    if (name != NULL) {
+        *name = code_name;
+    }
+    
+    if (desc != NULL) {
+        *desc = code_desc;
+    }
+    return pcmk_rc_ok;
+}
+
 // @COMPAT Legacy function return codes
 
 //! \deprecated Use standard return codes and pcmk_rc_name() instead
