@@ -70,7 +70,6 @@ int
 main(int argc, char **argv)
 {
     crm_exit_t exit_code = CRM_EX_OK;
-    int rc = pcmk_rc_ok;
     const char *name = NULL;
     const char *desc = NULL;
 
@@ -109,22 +108,24 @@ main(int argc, char **argv)
             width = 3;
         }
 
-        for (rc = start; rc < end; rc++) {
-            if (rc == (pcmk_rc_error + 1)) {
+        for (int code = start; code < end; code++) {
+            if (code == (pcmk_rc_error + 1)) {
                 // Values in between are reserved for callers, no use iterating
-                rc = pcmk_rc_ok;
+                code = pcmk_rc_ok;
             }
-            get_strings(rc, &name, &desc);
+            get_strings(code, &name, &desc);
             if (pcmk__str_eq(name, "Unknown", pcmk__str_null_matches) || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 // Undefined
             } else if(options.with_name) {
-                printf("% .*d: %-26s  %s\n", width, rc, name, desc);
+                printf("% .*d: %-26s  %s\n", width, code, name, desc);
             } else {
-                printf("% .*d: %s\n", width, rc, desc);
+                printf("% .*d: %s\n", width, code, desc);
             }
         }
 
     } else {
+        int code = 0;
+
         if (g_strv_length(processed_args) < 2) {
             char *help = g_option_context_get_help(context, TRUE, NULL);
             fprintf(stderr, "%s", help);
@@ -139,8 +140,8 @@ main(int argc, char **argv)
                 continue;
             }
 
-            pcmk__scan_min_int(processed_args[lpc], &rc, INT_MIN);
-            get_strings(rc, &name, &desc);
+            pcmk__scan_min_int(processed_args[lpc], &code, INT_MIN);
+            get_strings(code, &name, &desc);
             if (options.with_name) {
                 printf("%s - %s\n", name, desc);
             } else {
