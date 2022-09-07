@@ -1164,6 +1164,26 @@ Resource XML:
 </primitive>
 =#=#=#= End test: Show XML configuration of resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show XML configuration of resource
+=#=#=#= Begin test: Show XML configuration of resource, output as XML =#=#=#=
+(unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
+(unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
+(unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+Resource XML:
+<pacemaker-result api-version="X" request="crm_resource -q -r dummy --output-as=xml">
+  <resource_config>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <xml><![CDATA[<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+  <meta_attributes id="dummy-meta_attributes"/>
+  <instance_attributes id="dummy-instance_attributes">
+    <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+  </instance_attributes>
+</primitive>
+]]></xml>
+  </resource_config>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show XML configuration of resource, output as XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Show XML configuration of resource, output as XML
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
 (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
 (unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
@@ -4547,9 +4567,47 @@ Resources colocated with clone:
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
 =#=#=#= Begin test: List all nodes =#=#=#=
-11
+cluster node: overcloud-controller-0 (1)
+cluster node: overcloud-controller-1 (2)
+cluster node: overcloud-controller-2 (3)
+cluster node: overcloud-galera-0 (4)
+cluster node: overcloud-galera-1 (5)
+cluster node: overcloud-galera-2 (6)
+guest node: lxc1 (lxc1)
+guest node: lxc2 (lxc2)
+remote node: overcloud-rabbit-0 (overcloud-rabbit-0)
+remote node: overcloud-rabbit-1 (overcloud-rabbit-1)
+remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
 =#=#=#= End test: List all nodes - OK (0) =#=#=#=
 * Passed: crmadmin       - List all nodes
+=#=#=#= Begin test: Minimally list all nodes =#=#=#=
+overcloud-controller-0
+overcloud-controller-1
+overcloud-controller-2
+overcloud-galera-0
+overcloud-galera-1
+overcloud-galera-2
+lxc1
+lxc2
+overcloud-rabbit-0
+overcloud-rabbit-1
+overcloud-rabbit-2
+=#=#=#= End test: Minimally list all nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - Minimally list all nodes
+=#=#=#= Begin test: List all nodes as bash exports =#=#=#=
+export overcloud-controller-0=1
+export overcloud-controller-1=2
+export overcloud-controller-2=3
+export overcloud-galera-0=4
+export overcloud-galera-1=5
+export overcloud-galera-2=6
+export lxc1=lxc1
+export lxc2=lxc2
+export overcloud-rabbit-0=overcloud-rabbit-0
+export overcloud-rabbit-1=overcloud-rabbit-1
+export overcloud-rabbit-2=overcloud-rabbit-2
+=#=#=#= End test: List all nodes as bash exports - OK (0) =#=#=#=
+* Passed: crmadmin       - List all nodes as bash exports
 =#=#=#= Begin test: List cluster nodes =#=#=#=
 6
 =#=#=#= End test: List cluster nodes - OK (0) =#=#=#=
