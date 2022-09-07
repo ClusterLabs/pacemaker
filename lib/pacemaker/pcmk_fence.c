@@ -270,7 +270,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
             continue;
         }
 
-        out->message(out, "stonith-event", hp, true,
+        out->message(out, "stonith-event", hp, true, false,
                      stonith__later_succeeded(hp, history),
                      (uint32_t) pcmk_show_failed_detail);
         out->increment_list(out);
@@ -278,9 +278,10 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 
     if (latest) {
         if (out->is_quiet(out)) {
-            pcmk__formatted_printf(out, "%lld\n", (long long) latest->completed);
+            out->message(out, "stonith-event", latest, false, true, NULL,
+                         (uint32_t) pcmk_show_failed_detail);
         } else if (!verbose) { // already printed if verbose
-            out->message(out, "stonith-event", latest, false, NULL,
+            out->message(out, "stonith-event", latest, false, false, NULL,
                          (uint32_t) pcmk_show_failed_detail);
             out->increment_list(out);
         }

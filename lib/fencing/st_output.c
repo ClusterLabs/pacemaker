@@ -173,7 +173,7 @@ failed_history(pcmk__output_t *out, va_list args)
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Fencing Actions");
         out->message(out, "stonith-event", hp,
                      pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
-                     stonith__later_succeeded(hp, history), show_opts);
+                     false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
 
@@ -204,7 +204,7 @@ stonith_history(pcmk__output_t *out, va_list args)
             out->message(out, "stonith-event", hp,
                          pcmk_all_flags_set(section_opts,
                                             pcmk_section_fencing_all),
-                         stonith__later_succeeded(hp, history), show_opts);
+                         false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
     }
@@ -235,7 +235,7 @@ full_history(pcmk__output_t *out, va_list args)
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
         out->message(out, "stonith-event", hp,
                      pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
-                     stonith__later_succeeded(hp, history), show_opts);
+                     false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
 
@@ -267,7 +267,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
             out->message(out, "stonith-event", hp,
                          pcmk_all_flags_set(section_opts,
                                             pcmk_section_fencing_all),
-                         stonith__later_succeeded(hp, history), show_opts);
+                         false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
 
@@ -364,7 +364,7 @@ pending_actions(pcmk__output_t *out, va_list args)
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Pending Fencing Actions");
         out->message(out, "stonith-event", hp,
                      pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
-                     stonith__later_succeeded(hp, history), show_opts);
+                     false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
 
@@ -372,13 +372,14 @@ pending_actions(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "const char *",
-                  "uint32_t")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "bool",
+                  "const char *", "uint32_t")
 static int
 stonith_event_html(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     bool full_history = va_arg(args, int);
+    bool completed_only G_GNUC_UNUSED = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
@@ -402,31 +403,38 @@ stonith_event_html(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "const char *",
-                  "uint32_t")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "bool",
+                  "const char *", "uint32_t")
 static int
 stonith_event_text(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     bool full_history = va_arg(args, int);
+    bool completed_only = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    gchar *desc = stonith__history_description(event, full_history, succeeded,
-                                               show_opts);
+    if (completed_only) {
+        pcmk__formatted_printf(out, "%lld\n", (long long) event->completed);
+    } else {
+        gchar *desc = stonith__history_description(event, full_history, succeeded,
+                                                   show_opts);
 
-    pcmk__indented_printf(out, "%s\n", desc);
-    g_free(desc);
+        pcmk__indented_printf(out, "%s\n", desc);
+        g_free(desc);
+    }
+
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "const char *",
-                  "uint32_t")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "bool",
+                  "const char *", "uint32_t")
 static int
 stonith_event_xml(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     bool full_history G_GNUC_UNUSED = va_arg(args, int);
+    bool completed_only G_GNUC_UNUSED = va_arg(args, int);
     const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
