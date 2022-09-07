@@ -65,7 +65,7 @@ meta_data() {
         cat <<END
 <?xml version="1.0"?>
 <resource-agent name="ifspeed" version="1.1">
-<version>1.0</version>
+<version>1.1</version>
 
 <longdesc lang="en">
 Every time the monitor action is run, this resource agent records (in the CIB)
@@ -95,7 +95,7 @@ speed of the currently active port is used.
 
 <parameters>
 
-<parameter name="name" unique="1">
+<parameter name="name" unique-group="name">
 <longdesc lang="en">
 The name of the attribute to set.  This is the name to be used in the constraints.
 </longdesc>
@@ -103,7 +103,7 @@ The name of the attribute to set.  This is the name to be used in the constraint
 <content type="string" default="${OCF_RESKEY_name_default}"/>
 </parameter>
 
-<parameter name="iface" unique="0" required="1">
+<parameter name="iface" unique-group="iface" required="1">
 <longdesc lang="en">
 Network interface to monitor.
 </longdesc>
@@ -111,7 +111,7 @@ Network interface to monitor.
 <content type="string" default=""/>
 </parameter>
 
-<parameter name="ip" unique="0" required="0">
+<parameter name="ip" unique-group="ip">
 <longdesc lang="en">
 Try to detect interface name by detecting the interface that holds the IP address.
 The IPv4 (dotted quad notation) or IPv6 address (colon hexadecimal notation)
@@ -122,7 +122,7 @@ example IPv6 "2001:db8:DC28:0:0:FC57:D4C8:1FFF".
 <content type="string" default="" />
 </parameter>
 
-<parameter name="bridge_ports" unique="0">
+<parameter name="bridge_ports" unique-group="iface">
 <longdesc lang="en">
 If not null and OCF_RESKEY_iface is a bridge, list of bridge ports to consider.
 Default is all ports which have designated_bridge=root_id.
@@ -131,7 +131,7 @@ Default is all ports which have designated_bridge=root_id.
 <content type="string" default="${OCF_RESKEY_bridge_ports_default}"/>
 </parameter>
 
-<parameter name="weight_base" unique="0">
+<parameter name="weight_base">
 <longdesc lang="en">
 Relative weight of 1Gbps in interface speed.
 Can be used to tune how big attribute value will be.
@@ -140,7 +140,7 @@ Can be used to tune how big attribute value will be.
 <content type="integer" default="${OCF_RESKEY_weight_base_default}"/>
 </parameter>
 
-<parameter name="dampen" unique="0">
+<parameter name="dampen">
 <longdesc lang="en">
 The time to wait (dampening) for further changes to occur.
 </longdesc>
@@ -148,7 +148,7 @@ The time to wait (dampening) for further changes to occur.
 <content type="integer" default="${OCF_RESKEY_dampen_default}"/>
 </parameter>
 
-<parameter name="debug" unique="0">
+<parameter name="debug">
 <longdesc lang="en">
 Log what have been done more verbosely.
 </longdesc>
