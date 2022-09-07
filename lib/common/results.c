@@ -73,6 +73,48 @@ pcmk_result_get_strings(int code, enum pcmk_result_type type, const char **name,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Get the lower and upper bounds of a result code family
+ *
+ * \param[in]   type    Type of result code
+ * \param[out]  lower   Where to store the lower bound
+ * \param[out]  upper   Where to store the upper bound
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note There is no true upper bound on standard Pacemaker return codes or
+ *       legacy return codes. All system \p errno values are valid members of
+ *       these result code families, and there is no global upper limit nor a
+ *       constant by which to refer to the highest \p errno value on a given
+ *       system.
+ */
+int
+pcmk__result_bounds(enum pcmk_result_type type, int *lower, int *upper)
+{
+    CRM_ASSERT((lower != NULL) && (upper != NULL));
+
+    switch (type) {
+        case pcmk_result_legacy:
+            *lower = pcmk_ok;
+            *upper = 256;   // should be enough for almost any system error code
+            break;
+        case pcmk_result_rc:
+            *lower = pcmk_rc_error - pcmk__n_rc + 1;
+            *upper = 256;
+            break;
+        case pcmk_result_exitcode:
+            *lower = CRM_EX_OK;
+            *upper = CRM_EX_MAX;
+            break;
+        default:
+            *lower = 0;
+            *upper = -1;
+            return pcmk_rc_undetermined;
+    }
+    return pcmk_rc_ok;
+}
+
 // @COMPAT Legacy function return codes
 
 //! \deprecated Use standard return codes and pcmk_rc_name() instead

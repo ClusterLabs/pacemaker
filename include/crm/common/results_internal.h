@@ -12,6 +12,10 @@
 
 #include <glib.h>               // GQuark
 
+// Generic result code type
+
+int pcmk__result_bounds(enum pcmk_result_type, int *lower, int *upper);
+
 // Standard Pacemaker API return codes
 
 extern const size_t pcmk__n_rc;
