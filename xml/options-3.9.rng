@@ -6,6 +6,16 @@
   </start>
 
   <!--
+   Include rule definitions so that we can override element-nvset.rule based on
+   context
+   -->
+  <include href="rule-3.9.rng">
+    <start combine="choice">
+      <notAllowed/>
+    </start>
+  </include>
+
+  <!--
    see upgrade-2.10.xsl
    - cibtr:table for="cluster-properties"
    -->
@@ -91,7 +101,13 @@
         <element name="rsc_defaults">
           <zeroOrMore>
             <element name="meta_attributes">
-              <externalRef href="nvset-3.9.rng"/>
+              <grammar>
+                <include href="nvset-3.9.rng">
+                  <define name="element-nvset.rule">
+                    <parentRef name="element-rule-rsc_defaults"/>
+                  </define>
+                </include>
+              </grammar>
             </element>
           </zeroOrMore>
         </element>

@@ -27,6 +27,11 @@
     </optional>
   </define>
 
+  <!-- Allow easy redefinition in parent grammars -->
+  <define name="element-nvset.rule">
+    <externalRef href="rule-3.9.rng"/>
+  </define>
+
   <define name="element-nvset">
    <choice>
    <attribute name="id-ref"><data type="IDREF"/></attribute>
@@ -34,7 +39,7 @@
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
-        <externalRef href="rule-3.9.rng"/>
+        <ref name="element-nvset.rule"/>
       </optional>
         <zeroOrMore>
           <element name="nvpair">
