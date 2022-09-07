@@ -43,7 +43,13 @@
           <attribute name="node"><text/></attribute>
         </group>
         <oneOrMore>
-          <externalRef href="rule-3.9.rng"/>
+          <grammar>
+            <include href="rule-3.9.rng">
+              <start>
+                <ref name="element-rule-location"/>
+              </start>
+            </include>
+          </grammar>
         </oneOrMore>
       </choice>
       <optional>
@@ -253,7 +259,13 @@
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>
-        <externalRef href="rule-3.9.rng"/>
+        <grammar>
+          <include href="rule-3.9.rng">
+            <start>
+              <ref name="element-rule-location"/>
+            </start>
+          </include>
+        </grammar>
       </oneOrMore>
     </element>
   </define>
