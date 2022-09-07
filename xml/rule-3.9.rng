@@ -6,73 +6,104 @@
       <ref name="element-rule"/>
   </start>
 
+  <!--
+   The COMPAT comments below mark items that are invalid in their given context
+   and should be removed at a compatibility break.
+   -->
+
+  <!--
+   A rule element that doesn't match any of the special cases defined below
+   -->
   <define name="element-rule">
     <element name="rule">
       <choice>
         <attribute name="id-ref"><data type="IDREF"/></attribute>
         <group>
-          <attribute name="id"><data type="ID"/></attribute>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression"/>
+              <ref name="date_expression"/>
+              <ref name="element-rule"/>
+
+              <!--
+               @COMPAT: The below expression types are invalid for element-rule
+               -->
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!--
+           @COMPAT: The below score attributes are invalid for element-rule
+           -->
           <optional>
             <choice>
               <externalRef href="score.rng"/>
               <attribute name="score-attribute"><text/></attribute>
             </choice>
           </optional>
-          <optional>
-            <attribute name="boolean-op">
-              <choice>
-                <value>or</value>
-                <value>and</value>
-              </choice>
-            </attribute>
-          </optional>
-          <optional>
-            <attribute name="role"><text/></attribute>
-          </optional>
-          <oneOrMore>
-            <choice>
-              <ref name="expression"/>
-              <ref name="date_expression"/>
-              <ref name="rsc_expression"/>
-              <ref name="op_expression"/>
-              <ref name="element-rule"/>
-            </choice>
-          </oneOrMore>
         </group>
       </choice>
     </element>
   </define>
 
+  <!-- A rule element in a location constraint -->
+  <define name="element-rule-location">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression-location"/>
+              <ref name="date_expression"/>
+              <ref name="element-rule-location"/>
+
+              <!--
+               @COMPAT: The below expression types are invalid for
+               element-rule-location
+               -->
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- Attributes that are common to all rule elements -->
+  <define name="rule-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <optional>
+      <attribute name="boolean-op">
+        <choice>
+          <value>or</value>
+          <value>and</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="role"><text/></attribute>
+    </optional>
+  </define>
+
   <!-- A node attribute expression -->
   <define name="expression">
     <element name="expression">
-      <attribute name="id"><data type="ID"/></attribute>
-      <attribute name="attribute"><text/></attribute>
-      <attribute name="operation">
-        <choice>
-          <value>lt</value>
-          <value>gt</value>
-          <value>lte</value>
-          <value>gte</value>
-          <value>eq</value>
-          <value>ne</value>
-          <value>defined</value>
-          <value>not_defined</value>
-        </choice>
-      </attribute>
-      <optional>
-        <attribute name="value"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="type" ann:defaultValue="string">
-          <choice>
-            <value>string</value>
-            <value>integer</value>
-            <value>number</value>
-            <value>version</value>
-          </choice>
-        </attribute>
-      </optional>
+      <ref name="expression-common"/>
+
+      <!--
+       @COMPAT: The value-source attribute is invalid for expression
+       -->
       <optional>
         <attribute name="value-source" ann:defaultValue="literal">
           <choice>
@@ -83,6 +114,53 @@
         </attribute>
       </optional>
     </element>
+  </define>
+
+  <!-- A node attribute expression in a location constraint -->
+  <define name="expression-location">
+    <element name="expression">
+      <ref name="expression-common"/>
+      <optional>
+        <attribute name="value-source" ann:defaultValue="literal">
+          <choice>
+            <value>literal</value>
+            <value>param</value>
+            <value>meta</value>
+          </choice>
+        </attribute>
+      </optional>
+    </element>
+  </define>
+
+  <!-- Attributes that are common to all <expression> elements -->
+  <define name="expression-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <attribute name="attribute"><text/></attribute>
+    <attribute name="operation">
+      <choice>
+        <value>lt</value>
+        <value>gt</value>
+        <value>lte</value>
+        <value>gte</value>
+        <value>eq</value>
+        <value>ne</value>
+        <value>defined</value>
+        <value>not_defined</value>
+      </choice>
+    </attribute>
+    <optional>
+      <attribute name="value"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="type" ann:defaultValue="string">
+        <choice>
+          <value>string</value>
+          <value>integer</value>
+          <value>number</value>
+          <value>version</value>
+        </choice>
+      </attribute>
+    </optional>
   </define>
 
   <define name="date_expression">
