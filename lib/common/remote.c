@@ -23,7 +23,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <inttypes.h>  /* X32T ~ PRIx32 */
+#include <inttypes.h>   // PRIx32
 
 #include <glib.h>
 #include <bzlib.h>
@@ -106,8 +106,8 @@ localized_remote_header(pcmk__remote_t *remote)
 
         CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
         if(endian != ENDIAN_LOCAL) {
-            crm_err("Invalid message detected, endian mismatch: %" X32T
-                    " is neither %" X32T " nor the swab'd %" X32T,
+            crm_err("Invalid message detected, endian mismatch: %" PRIx32
+                    " is neither %" PRIx32 " nor the swab'd %" PRIx32,
                     ENDIAN_LOCAL, header->endian, endian);
             return NULL;
         }
