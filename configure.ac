@@ -791,41 +791,6 @@ AS_CASE(["$host_cpu"],
                     ])
         ])
 
-# C99 doesn't guarantee uint64_t type and related format specifiers, but
-# prerequisites, corosync + libqb, use that widely, so the target platforms
-# are already pre-constrained to those "64bit-clean" (doesn't imply native
-# bit width) and hence we deliberately refrain from artificial surrogates
-# (sans manipulation through cached values).
-AC_CACHE_VAL(
-    [pcmk_cv_decl_inttypes],
-    [
-        AC_CHECK_DECLS(
-            [PRIu64, PRIu32, PRIx32,
-             SCNu64],
-            [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32 SCNu64"],
-            [
-                # test shall only react on "no" cached result & error out respectively
-                AS_IF([test "x$ac_cv_have_decl_PRIu64" = x"no"],
-                      [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])],
-                      [test "x$ac_cv_have_decl_PRIu32" = x"no"],
-                      [AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])],
-                      [test "x$ac_cv_have_decl_PRIx32" = x"no"],
-                      [AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])],
-                      [test "x$ac_cv_have_decl_SCNu64" = x"no"],
-                      [AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])])
-            ],
-            [[#include <inttypes.h>]]
-        )
-    ]
-)
-(
-    set $pcmk_cv_decl_inttypes
-    AC_DEFINE_UNQUOTED([U64T],  [$1], [Correct format specifier for U64T])
-    AC_DEFINE_UNQUOTED([U32T],  [$2], [Correct format specifier for U32T])
-    AC_DEFINE_UNQUOTED([X32T],  [$3], [Correct format specifier for X32T])
-    AC_DEFINE_UNQUOTED([U64TS], [$4], [Correct format specifier for U64TS])
-)
-
 dnl ===============================================
 dnl Program Paths
 dnl ===============================================
