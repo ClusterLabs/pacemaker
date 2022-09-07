@@ -150,8 +150,8 @@ stonith__history_description(stonith_history_t *history, bool full_history,
 
 PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *",
                   "uint32_t", "uint32_t", "gboolean")
-int
-stonith__failed_history(pcmk__output_t *out, va_list args)
+static int
+failed_history(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
@@ -183,8 +183,8 @@ stonith__failed_history(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("fencing-list", "stonith_history_t *", "GList *", "uint32_t",
                   "uint32_t", "gboolean")
-int
-stonith__history(pcmk__output_t *out, va_list args)
+static int
+stonith_history(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
@@ -215,8 +215,8 @@ stonith__history(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *",
                   "GList *", "uint32_t", "uint32_t", "gboolean")
-int
-stonith__full_history(pcmk__output_t *out, va_list args)
+static int
+full_history(pcmk__output_t *out, va_list args)
 {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -340,8 +340,8 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("pending-fencing-list", "stonith_history_t *", "GList *",
                   "uint32_t", "uint32_t", "gboolean")
-int
-stonith__pending_actions(pcmk__output_t *out, va_list args)
+static int
+pending_actions(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
@@ -544,15 +544,15 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "failed-fencing-list", "default", stonith__failed_history },
-    { "fencing-list", "default", stonith__history },
-    { "full-fencing-list", "default", stonith__full_history },
+    { "failed-fencing-list", "default", failed_history },
+    { "fencing-list", "default", stonith_history },
+    { "full-fencing-list", "default", full_history },
     { "full-fencing-list", "xml", full_history_xml },
     { "last-fenced", "html", last_fenced_html },
     { "last-fenced", "log", last_fenced_text },
     { "last-fenced", "text", last_fenced_text },
     { "last-fenced", "xml", last_fenced_xml },
-    { "pending-fencing-list", "default", stonith__pending_actions },
+    { "pending-fencing-list", "default", pending_actions },
     { "stonith-event", "html", stonith_event_html },
     { "stonith-event", "log", stonith_event_text },
     { "stonith-event", "text", stonith_event_text },
