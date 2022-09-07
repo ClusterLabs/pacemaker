@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         xmlns:ann="http://relaxng.org/ns/compatibility/annotations/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-rule"/>
+  </start>
+
+  <!--
+   The COMPAT comments below mark items that are invalid in their given context
+   and should be removed at a compatibility break.
+   -->
+
+  <!--
+   A rule element that doesn't match any of the special cases defined below
+   -->
+  <define name="element-rule">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression"/>
+              <ref name="date_expression"/>
+              <ref name="element-rule"/>
+
+              <!--
+               @COMPAT: The below expression types are invalid for element-rule
+               -->
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!--
+           @COMPAT: The below score attributes are invalid for element-rule
+           -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- A rule element in a location constraint -->
+  <define name="element-rule-location">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression-location"/>
+              <ref name="date_expression"/>
+              <ref name="element-rule-location"/>
+
+              <!--
+               @COMPAT: The below expression types are invalid for
+               element-rule-location
+               -->
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- A rule element in a rsc_defaults element -->
+  <define name="element-rule-rsc_defaults">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression"/>
+              <ref name="date_expression"/>
+              <ref name="rsc_expression"/>
+              <ref name="element-rule-rsc_defaults"/>
+
+              <!--
+               @COMPAT: The below expression type is invalid for
+               element-rule-rsc_defaults
+               -->
+              <ref name="op_expression"/>
+            </choice>
+          </oneOrMore>
+
+          <!--
+           @COMPAT: The below score attributes are invalid for
+           element-rule-rsc_defaults
+           -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- A rule element in an op_defaults element -->
+  <define name="element-rule-op_defaults">
+    <element name="rule">
+      <choice>
+        <attribute name="id-ref"><data type="IDREF"/></attribute>
+        <group>
+          <ref name="rule-common"/>
+          <oneOrMore>
+            <choice>
+              <ref name="expression"/>
+              <ref name="date_expression"/>
+              <ref name="rsc_expression"/>
+              <ref name="op_expression"/>
+              <ref name="element-rule-op_defaults"/>
+            </choice>
+          </oneOrMore>
+
+          <!--
+           @COMPAT: The below score attributes are invalid for
+           element-rule-op_defaults
+           -->
+          <optional>
+            <choice>
+              <externalRef href="score.rng"/>
+              <attribute name="score-attribute"><text/></attribute>
+            </choice>
+          </optional>
+        </group>
+      </choice>
+    </element>
+  </define>
+
+  <!-- Attributes that are common to all rule elements -->
+  <define name="rule-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <optional>
+      <attribute name="boolean-op">
+        <choice>
+          <value>or</value>
+          <value>and</value>
+        </choice>
+      </attribute>
+    </optional>
+    <optional>
+      <attribute name="role"><text/></attribute>
+    </optional>
+  </define>
+
+  <!-- A node attribute expression -->
+  <define name="expression">
+    <element name="expression">
+      <ref name="expression-common"/>
+
+      <!--
+       @COMPAT: The value-source attribute is invalid for expression
+       -->
+      <optional>
+        <attribute name="value-source" ann:defaultValue="literal">
+          <choice>
+            <value>literal</value>
+            <value>param</value>
+            <value>meta</value>
+          </choice>
+        </attribute>
+      </optional>
+    </element>
+  </define>
+
+  <!-- A node attribute expression in a location constraint -->
+  <define name="expression-location">
+    <element name="expression">
+      <ref name="expression-common"/>
+      <optional>
+        <attribute name="value-source" ann:defaultValue="literal">
+          <choice>
+            <value>literal</value>
+            <value>param</value>
+            <value>meta</value>
+          </choice>
+        </attribute>
+      </optional>
+    </element>
+  </define>
+
+  <!-- Attributes that are common to all <expression> elements -->
+  <define name="expression-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <attribute name="attribute"><text/></attribute>
+    <attribute name="operation">
+      <choice>
+        <value>lt</value>
+        <value>gt</value>
+        <value>lte</value>
+        <value>gte</value>
+        <value>eq</value>
+        <value>ne</value>
+        <value>defined</value>
+        <value>not_defined</value>
+      </choice>
+    </attribute>
+    <optional>
+      <attribute name="value"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="type" ann:defaultValue="string">
+        <choice>
+          <value>string</value>
+          <value>integer</value>
+          <value>number</value>
+          <value>version</value>
+        </choice>
+      </attribute>
+    </optional>
+  </define>
+
+  <define name="date_expression">
+    <element name="date_expression">
+      <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+        <group>
+          <attribute name="operation"><value>in_range</value></attribute>
+          <choice>
+            <attribute name="start"><text/></attribute>
+            <attribute name="end"><text/></attribute>
+            <group>
+              <attribute name="start"><text/></attribute>
+              <attribute name="end"><text/></attribute>
+            </group>
+          </choice>
+          <optional>
+            <ref name="duration"/>
+          </optional>
+        </group>
+        <group>
+          <attribute name="operation"><value>gt</value></attribute>
+          <attribute name="start"><text/></attribute>
+        </group>
+        <group>
+          <attribute name="operation"><value>lt</value></attribute>
+          <attribute name="end"><text/></attribute>
+        </group>
+        <group>
+          <attribute name="operation"><value>date_spec</value></attribute>
+          <ref name="date_spec"/>
+        </group>
+      </choice>
+    </element> 
+  </define>
+
+  <define name="rsc_expression">
+    <element name="rsc_expression">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="class"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="provider"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="type"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+  <define name="op_expression">
+    <element name="op_expression">
+      <attribute name="id"><data type="ID"/></attribute>
+      <attribute name="name"><text/></attribute>
+      <optional>
+        <attribute name="interval"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+  <define name="duration">
+    <element name="duration">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="years"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="months"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="days"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="minutes"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="seconds"><text/></attribute>
+      </optional>
+
+      <!-- @COMPAT: The below attributes are invalid for duration -->
+      <optional>
+        <attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekyears"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="moon"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+  <define name="date_spec">
+    <element name="date_spec">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="years"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="months"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="monthdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="hours"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="minutes"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="seconds"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="yeardays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekyears"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weeks"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="weekdays"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="moon"><text/></attribute>
+      </optional>
+
+      <!-- @COMPAT: The below attributes are invalid for date_spec -->
+      <optional>
+        <attribute name="yearsdays"><text/></attribute>
+      </optional>
+    </element>
+  </define>
+
+</grammar>

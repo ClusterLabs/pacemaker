@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="element-resources"/>
+  </start>
+
+  <define name="element-resources">
+    <element name="resources">
+      <zeroOrMore>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-template"/>
+          <ref name="element-group"/>
+          <ref name="element-clone"/>
+          <ref name="element-master"/>
+          <ref name="element-bundle"/>
+        </choice>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <!--
+   see upgrade-2.10.xsl
+   - cibtr:table for="resource-meta-attributes"
+   -->
+  <define name="primitive-template.meta_attributes.nvpair.name-unsupported">
+    <attribute name="name">
+      <data type="string">
+        <except>
+          <choice>
+            <value>isolation</value>
+            <value>isolation-host</value>
+            <value>isolation-instance</value>
+            <value>isolation-wrapper</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
+  <define name="element-resource-extra.primitive-template">
+    <zeroOrMore>
+      <choice>
+        <element name="meta_attributes">
+          <grammar>
+            <include href="nvset-3.9.rng">
+              <define name="element-nvset.name">
+                <parentRef name="primitive-template.meta_attributes.nvpair.name-unsupported"/>
+              </define>
+            </include>
+          </grammar>
+        </element>
+        <element name="instance_attributes">
+          <externalRef href="nvset-3.9.rng"/>
+        </element>
+      </choice>
+    </zeroOrMore>
+  </define>
+
+  <define name="element-primitive">
+    <element name="primitive">
+      <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <choice>
+          <group>
+            <ref name="element-resource-class"/>
+            <attribute name="type"><text/></attribute>
+          </group>
+          <attribute name="template"><data type="IDREF"/></attribute>
+        </choice>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra.primitive-template"/>
+        <ref name="element-operations"/>
+        <zeroOrMore>
+          <element name="utilization">
+            <externalRef href="nvset-3.9.rng"/>
+          </element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-template">
+    <element name="template">
+      <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <ref name="element-resource-class"/>
+        <attribute name="type"><text/></attribute>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra.primitive-template"/>
+        <ref name="element-operations"/>
+        <zeroOrMore>
+          <element name="utilization">
+            <externalRef href="nvset-3.9.rng"/>
+          </element>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-bundle">
+    <element name="bundle">
+      <interleave>
+        <attribute name="id"><data type="ID"/></attribute>
+        <optional>
+          <attribute name="description"><text/></attribute>
+        </optional>
+        <ref name="element-resource-extra"/>
+        <choice>
+          <element name="docker">
+            <attribute name="image"><text/></attribute>
+            <optional>
+              <attribute name="replicas"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="replicas-per-host"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <choice>
+                <attribute name="masters"><data type="integer"/></attribute>
+                <attribute name="promoted-max"><data type="integer"/></attribute>
+              </choice>
+            </optional>
+            <optional>
+              <attribute name="run-command"> <text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="network"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="options"><text/></attribute>
+            </optional>
+          </element>
+          <element name="rkt">
+            <attribute name="image"><text/></attribute>
+            <optional>
+              <attribute name="replicas"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="replicas-per-host"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <choice>
+                <attribute name="masters"><data type="integer"/></attribute>
+                <attribute name="promoted-max"><data type="integer"/></attribute>
+              </choice>
+            </optional>
+            <optional>
+              <attribute name="run-command"> <text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="network"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="options"><text/></attribute>
+            </optional>
+          </element>
+          <element name="podman">
+            <attribute name="image"><text/></attribute>
+            <optional>
+              <attribute name="replicas"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="replicas-per-host"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <choice>
+                <attribute name="masters"><data type="integer"/></attribute>
+                <attribute name="promoted-max"><data type="integer"/></attribute>
+              </choice>
+            </optional>
+            <optional>
+              <attribute name="run-command"> <text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="network"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="options"><text/></attribute>
+            </optional>
+          </element>
+        </choice>
+        <optional>
+          <element name="network">
+            <optional>
+              <attribute name="ip-range-start"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="control-port"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="host-interface"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="host-netmask"><data type="integer"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="add-host"><data type="boolean"/></attribute>
+            </optional>
+            <zeroOrMore>
+              <element name="port-mapping">
+                <attribute name="id"><data type="ID"/></attribute>
+                <choice>
+                  <group>
+                    <attribute name="port"><data type="integer"/></attribute>
+                    <optional>
+                      <attribute name="internal-port"><data type="integer"/></attribute>
+                    </optional>
+                  </group>
+                  <attribute name="range">
+                    <data type="string">
+                      <param name="pattern">([0-9\-]+)</param>
+                    </data>
+                  </attribute>
+                </choice>
+              </element>
+            </zeroOrMore>
+          </element>
+        </optional>
+        <optional>
+          <element name="storage">
+            <zeroOrMore>
+              <element name="storage-mapping">
+                <attribute name="id"><data type="ID"/></attribute>
+                <choice>
+                  <attribute name="source-dir"><text/></attribute>
+                  <attribute name="source-dir-root"><text/></attribute>
+                </choice>
+                <attribute name="target-dir"><text/></attribute>
+                <optional>
+                  <attribute name="options"><text/></attribute>
+                </optional>
+              </element>
+            </zeroOrMore>
+          </element>
+        </optional>
+        <optional>
+          <ref name="element-primitive"/>
+        </optional>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-group">
+    <element name="group">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <oneOrMore>
+          <ref name="element-primitive"/>
+        </oneOrMore>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-clone">
+    <element name="clone">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-group"/>
+        </choice>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-master">
+    <element name="master">
+      <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="description"><text/></attribute>
+      </optional>
+      <interleave>
+        <ref name="element-resource-extra"/>
+        <choice>
+          <ref name="element-primitive"/>
+          <ref name="element-group"/>
+        </choice>
+      </interleave>
+    </element>
+  </define>
+
+  <define name="element-resource-extra">
+    <zeroOrMore>
+      <choice>
+        <element name="meta_attributes">
+          <externalRef href="nvset-3.9.rng"/>
+        </element>
+        <element name="instance_attributes">
+          <externalRef href="nvset-3.9.rng"/>
+        </element>
+      </choice>
+    </zeroOrMore>
+  </define>
+
+  <!--
+   see upgrade-2.10.xsl
+   - cibtr:table for="resources-operation"
+   -->
+  <define name="op.meta_attributes.nvpair.name-unsupported">
+    <attribute name="name">
+      <data type="string">
+        <except>
+          <choice>
+            <value>requires</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
+  <define name="element-resource-extra.op">
+    <zeroOrMore>
+      <choice>
+        <element name="meta_attributes">
+          <grammar>
+            <include href="nvset-3.9.rng">
+              <define name="element-nvset.name">
+                <parentRef name="op.meta_attributes.nvpair.name-unsupported"/>
+              </define>
+            </include>
+          </grammar>
+        </element>
+        <element name="instance_attributes">
+          <externalRef href="nvset-3.9.rng"/>
+        </element>
+      </choice>
+    </zeroOrMore>
+  </define>
+
+  <define name="element-operations">
+    <optional>
+      <element name="operations">
+        <optional>
+          <attribute name="id"><data type="ID"/></attribute>
+        </optional>
+        <optional>
+          <attribute name="id-ref"><data type="IDREF"/></attribute>
+        </optional>
+        <zeroOrMore>
+          <element name="op">
+            <attribute name="id"><data type="ID"/></attribute>
+            <attribute name="name"><text/></attribute>
+            <attribute name="interval"><text/></attribute>
+            <optional>
+              <attribute name="description"><text/></attribute>
+            </optional>
+            <optional>
+              <choice>
+                <attribute name="start-delay"><text/></attribute>
+                <attribute name="interval-origin"><text/></attribute>
+              </choice>
+            </optional>
+            <optional>
+              <attribute name="timeout"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="enabled"><data type="boolean"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="record-pending"><data type="boolean"/></attribute>
+            </optional>
+            <optional>
+              <attribute name="role">
+                <choice>
+                  <value>Stopped</value>
+                  <value>Started</value>
+                  <value>Promoted</value>
+                  <value>Unpromoted</value>
+                  <value>Slave</value>
+                  <value>Master</value>
+                </choice>
+              </attribute>
+            </optional>
+            <optional>
+              <attribute name="on-fail">
+                <choice>
+                  <value>ignore</value>
+                  <value>block</value>
+                  <value>demote</value>
+                  <value>stop</value>
+                  <value>restart</value>
+                  <value>standby</value>
+                  <value>fence</value>
+                  <value>restart-container</value>
+                </choice>
+              </attribute>
+            </optional>
+            <ref name="element-resource-extra.op"/>
+          </element>
+        </zeroOrMore>
+      </element>
+    </optional>
+  </define>
+
+  <define name="element-resource-class">
+    <choice>
+      <group>
+        <attribute name="class"><value>ocf</value></attribute>
+        <attribute name="provider"><text/></attribute>
+      </group>
+      <attribute name="class">
+        <choice>
+          <value>lsb</value>
+          <value>heartbeat</value>
+          <value>stonith</value>
+          <value>upstart</value>
+          <value>service</value>
+          <value>systemd</value>
+          <value>nagios</value>
+        </choice>
+      </attribute>
+    </choice>
+  </define>
+</grammar>
