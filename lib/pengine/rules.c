@@ -110,29 +110,29 @@ find_expression_type(xmlNode * expr)
     attr = crm_element_value(expr, XML_EXPR_ATTR_ATTRIBUTE);
     tag = crm_element_name(expr);
 
-    if (pcmk__str_eq(tag, PCMK_XE_DATE_EXPRESSION, pcmk__str_casei)) {
+    if (pcmk__str_eq(tag, PCMK_XE_DATE_EXPRESSION, pcmk__str_none)) {
         return time_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_RSC_EXPRESSION, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_RSC_EXPRESSION, pcmk__str_none)) {
         return rsc_expr;
 
-    } else if (pcmk__str_eq(tag, PCMK_XE_OP_EXPRESSION, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, PCMK_XE_OP_EXPRESSION, pcmk__str_none)) {
         return op_expr;
 
-    } else if (pcmk__str_eq(tag, XML_TAG_RULE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(tag, XML_TAG_RULE, pcmk__str_none)) {
         return nested_rule;
 
-    } else if (!pcmk__str_eq(tag, XML_TAG_EXPRESSION, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(tag, XML_TAG_EXPRESSION, pcmk__str_none)) {
         return not_expr;
 
-    } else if (pcmk__strcase_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
+    } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {
         return loc_expr;
 
-    } else if (pcmk__str_eq(attr, CRM_ATTR_ROLE, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(attr, CRM_ATTR_ROLE, pcmk__str_none)) {
         return role_expr;
 
 #if ENABLE_VERSIONED_ATTRS
-    } else if (pcmk__str_eq(attr, CRM_ATTR_RA_VERSION, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(attr, CRM_ATTR_RA_VERSION, pcmk__str_none)) {
         return version_expr;
 #endif
     }
