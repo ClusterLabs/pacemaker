@@ -587,13 +587,13 @@ should_add_action_to_graph(pe_action_t *action)
     if (pcmk_is_set(action->flags, pe_action_dc)) {
         crm_trace("Action %s (%d) should be dumped: "
                   "can run on DC instead of %s",
-                  action->uuid, action->id, action->node->details->uname);
+                  action->uuid, action->id, pe__node_name(action->node));
 
     } else if (pe__is_guest_node(action->node)
                && !action->node->details->remote_requires_reset) {
         crm_trace("Action %s (%d) should be dumped: "
-                  "assuming will be runnable on guest node %s",
-                  action->uuid, action->id, action->node->details->uname);
+                  "assuming will be runnable on guest %s",
+                  action->uuid, action->id, pe__node_name(action->node));
 
     } else if (!action->node->details->online) {
         pe_err("Skipping action %s (%d) "
@@ -744,8 +744,8 @@ should_add_input_to_graph(pe_action_t *action, pe_action_wrapper_t *input)
                       "anti-colocation node mismatch %s vs %s",
                       action->uuid, action->id,
                       input->action->uuid, input->action->id,
-                      action->node->details->uname,
-                      input->action->node->details->uname);
+                      pe__node_name(action->node),
+                      pe__node_name(input->action->node));
             input->type = pe_order_none;
             return false;
 
@@ -1106,9 +1106,9 @@ pcmk__create_graph(pe_working_set_t *data_set)
              */
             if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 || (data_set->no_quorum_policy == no_quorum_ignore)) {
-                crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
+                crm_crit("Cannot %s %s because of %s:%s%s (%s)",
                          action->node->details->unclean? "fence" : "shut down",
-                         action->node->details->uname, action->rsc->id,
+                         pe__node_name(action->node), action->rsc->id,
                          pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
                          pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
                          action->uuid);

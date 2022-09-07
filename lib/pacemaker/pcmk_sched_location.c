@@ -34,13 +34,13 @@ get_node_score(const char *rule, const char *score, bool raw,
         const char *attr_score = pe_node_attribute_calculated(node, score, rsc);
 
         if (attr_score == NULL) {
-            crm_debug("Rule %s: node %s did not have a value for %s",
-                      rule, node->details->uname, score);
+            crm_debug("Rule %s: %s did not have a value for %s",
+                      rule, pe__node_name(node), score);
             score_f = -INFINITY;
 
         } else {
-            crm_debug("Rule %s: node %s had value %s for %s",
-                      rule, node->details->uname, attr_score, score);
+            crm_debug("Rule %s: %s had value %s for %s",
+                      rule, pe__node_name(node), attr_score, score);
             score_f = char2score(attr_score);
         }
     }
@@ -148,7 +148,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                               data_set->now, next_change, &match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
-                  node->details->uname);
+                  pe__node_name(node));
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 
@@ -166,8 +166,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             if (!do_and) {
                 local->weight = pcmk__add_scores(local->weight, score_f);
             }
-            crm_trace("node %s now has weight %d",
-                      node->details->uname, local->weight);
+            crm_trace("%s now has weight %d",
+                      pe__node_name(node), local->weight);
 
         } else if (do_and && !accept) {
             // Remove it
@@ -175,7 +175,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
             if (delete != NULL) {
                 match_L = g_list_remove(match_L, delete);
-                crm_trace("node %s did not match", node->details->uname);
+                crm_trace("%s did not match", pe__node_name(node));
             }
             free(delete);
         }
@@ -653,14 +653,14 @@ pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
                                                            node->details->id);
         if (weighted_node == NULL) {
             pe_rsc_trace(rsc, "* = %d on %s",
-                         node->weight, node->details->uname);
+                         node->weight, pe__node_name(node));
             weighted_node = pe__copy_node(node);
             g_hash_table_insert(rsc->allowed_nodes,
                                 (gpointer) weighted_node->details->id,
                                 weighted_node);
         } else {
             pe_rsc_trace(rsc, "* + %d on %s",
-                         node->weight, node->details->uname);
+                         node->weight, pe__node_name(node));
             weighted_node->weight = pcmk__add_scores(weighted_node->weight,
                                                      node->weight);
         }

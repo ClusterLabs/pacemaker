@@ -245,7 +245,7 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
         pe_rsc_trace(then->rsc,
                      "%s then %s: mapped pe_order_implies_then_on_node to "
                      "pe_order_implies_then on %s",
-                     first->uuid, then->uuid, node->details->uname);
+                     first->uuid, then->uuid, pe__node_name(node));
     }
 
     if (pcmk_is_set(order->type, pe_order_implies_then)) {
@@ -545,8 +545,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node != NULL) {
-                pe_rsc_trace(first->rsc, "Found node %s for 'first' %s",
-                             first_node->details->uname, first->uuid);
+                pe_rsc_trace(first->rsc, "Found %s for 'first' %s",
+                             pe__node_name(first_node), first->uuid);
             }
         }
 
@@ -556,8 +556,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node != NULL) {
-                pe_rsc_trace(then->rsc, "Found node %s for 'then' %s",
-                             then_node->details->uname, then->uuid);
+                pe_rsc_trace(then->rsc, "Found %s for 'then' %s",
+                             pe__node_name(then_node), then->uuid);
             }
         }
 
@@ -568,8 +568,8 @@ pcmk__update_action_for_orderings(pe_action_t *then, pe_working_set_t *data_set)
 
             pe_rsc_trace(then->rsc,
                          "Disabled ordering %s on %s then %s on %s: not same node",
-                         other->action->uuid, first_node->details->uname,
-                         then->uuid, then_node->details->uname);
+                         other->action->uuid, pe__node_name(first_node),
+                         then->uuid, pe__node_name(then_node));
             other->type = pe_order_none;
             continue;
         }
@@ -1460,10 +1460,10 @@ pcmk__output_actions(pe_working_set_t *data_set)
 
         if (pe__is_guest_node(action->node)) {
             node_name = crm_strdup_printf("%s (resource: %s)",
-                                          action->node->details->uname,
+                                          pe__node_name(action->node),
                                           action->node->details->remote_rsc->container->id);
         } else if (action->node != NULL) {
-            node_name = crm_strdup_printf("%s", action->node->details->uname);
+            node_name = crm_strdup_printf("%s", pe__node_name(action->node));
         }
 
         out->message(out, "node-action", task, node_name, action->reason);
@@ -1503,7 +1503,7 @@ schedule_cancel(pe_resource_t *rsc, const char *call_id, const char *task,
 
     crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
              pcmk__readable_interval(interval_ms), task, rsc->id,
-             pcmk__s(node->details->uname, "unknown node"), reason);
+             pe__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
 
@@ -1723,7 +1723,7 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
         if (action_in_config(rsc, task, interval_ms)) {
             pe_rsc_trace(rsc, "%s-interval %s for %s on %s is in configuration",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
-                         node->details->uname);
+                         pe__node_name(node));
         } else if (pcmk_is_set(rsc->cluster->flags,
                                pe_flag_stop_action_orphans)) {
             schedule_cancel(rsc,
@@ -1733,14 +1733,14 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
         } else {
             pe_rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
                          pcmk__readable_interval(interval_ms), task, rsc->id,
-                         node->details->uname);
+                         pe__node_name(node));
             return true;
         }
     }
 
     crm_trace("Checking %s-interval %s for %s on %s for configuration changes",
               pcmk__readable_interval(interval_ms), task, rsc->id,
-              node->details->uname);
+              pe__node_name(node));
     task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, node, rsc->cluster);
 
@@ -1752,7 +1752,7 @@ pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op)
                       "Only 'private' parameters to %s-interval %s for %s "
                       "on %s changed: %s",
                       pcmk__readable_interval(interval_ms), task, rsc->id,
-                      node->details->uname,
+                      pe__node_name(node),
                       crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
         return false;
@@ -1869,12 +1869,12 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
         pe_rsc_trace(rsc,
                      "Skipping configuration check for %s "
                      "because no longer active on %s",
-                     rsc->id, node->details->uname);
+                     rsc->id, pe__node_name(node));
         return;
     }
 
     pe_rsc_trace(rsc, "Checking for configuration changes for %s on %s",
-                 rsc->id, node->details->uname);
+                 rsc->id, pe__node_name(node));
 
     if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
         DeleteRsc(rsc, node, FALSE, rsc->cluster);
@@ -1953,7 +1953,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
 static void
 process_node_history(pe_node_t *node, xmlNode *lrm_rscs, pe_working_set_t *data_set)
 {
-    crm_trace("Processing history for node %s", node->details->uname);
+    crm_trace("Processing node history for %s", pe__node_name(node));
     for (xmlNode *rsc_entry = first_named_child(lrm_rscs, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 

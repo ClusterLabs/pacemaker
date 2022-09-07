@@ -127,7 +127,7 @@ probe_action(pe_resource_t *rsc, pe_node_t *node)
     char *key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
 
     crm_debug("Scheduling probe of %s %s on %s",
-              role2text(rsc->role), rsc->id, node->details->uname);
+              role2text(rsc->role), rsc->id, pe__node_name(node));
 
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE,
                           rsc->cluster);
@@ -481,10 +481,8 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
     pe__set_action_flags(after, pe_action_tracking);
 
     crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
-              probe->uuid,
-              ((probe->node == NULL)? "" : probe->node->details->uname),
-              after->uuid,
-              ((after->node == NULL)? "" : after->node->details->uname));
+              probe->uuid, pe__node_name(probe->node),
+              after->uuid, pe__node_name(after->node));
 
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
@@ -575,10 +573,9 @@ add_restart_orderings_for_probe(pe_action_t *probe, pe_action_t *after,
 
         crm_trace("Recursively adding probe restart orderings for "
                   "'%s@%s then %s@%s' (type=%#.6x)",
-                  after->uuid,
-                  ((after->node == NULL)? "" : after->node->details->uname),
+                  after->uuid, pe__node_name(after->node),
                   after_wrapper->action->uuid,
-                  ((after_wrapper->action->node == NULL)? "" : after_wrapper->action->node->details->uname),
+                  pe__node_name(after_wrapper->action->node),
                   after_wrapper->type);
 
         add_restart_orderings_for_probe(probe, after_wrapper->action, data_set);

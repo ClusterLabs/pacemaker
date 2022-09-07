@@ -324,7 +324,7 @@ pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            char *s = crm_strdup_printf("offline node: %s", node->details->uname);
+            char *s = crm_strdup_printf("offline node: %s", pe__node_name(node));
             /* coverity[leaked_storage] False positive */
             pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);

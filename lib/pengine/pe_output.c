@@ -2065,7 +2065,7 @@ node_capacity(pcmk__output_t *out, va_list args)
     const char *comment = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, node->details->uname);
+                                        comment, pe__node_name(node));
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
@@ -2791,7 +2791,7 @@ resource_util(pcmk__output_t *out, va_list args)
     const char *fn = va_arg(args, const char *);
 
     char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        fn, rsc->id, node->details->uname);
+                                        fn, rsc->id, pe__node_name(node));
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
     out->list_item(out, NULL, "%s", dump_text);
@@ -3004,7 +3004,8 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
     CRM_ASSERT(node->details);
     crm_trace("%sNode %s: (weight=%d, fixed=%s)",
               node->details->online ? "" : "Unavailable/Unclean ",
-              node->details->uname, node->weight, node->fixed ? "True" : "False");
+              pe__node_name(node), node->weight,
+              node->fixed ? "True" : "False");
 
     if (details) {
         char *pe_mutable = strdup("\t\t");

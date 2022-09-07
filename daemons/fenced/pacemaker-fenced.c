@@ -732,7 +732,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         crm_info("Device %s has been disabled on %s: unknown", rsc->id, stonith_our_uname);
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            crm_trace("Available: %s = %d", node->details->uname, node->weight);
+            crm_trace("Available: %s = %d", pe__node_name(node), node->weight);
         }
 
         return;

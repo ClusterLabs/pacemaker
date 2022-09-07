@@ -47,22 +47,23 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
     local_node = pcmk__top_allowed_node(rsc, node);
 
     if (local_node == NULL) {
-        crm_warn("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
+        crm_warn("%s cannot run on %s: node not allowed",
+                 rsc->id, pe__node_name(node));
         goto bail;
 
     } else if (local_node->weight < 0) {
         common_update_score(rsc, node->details->id, local_node->weight);
         pe_rsc_trace(rsc, "%s cannot run on %s: Parent node weight doesn't allow it.",
-                     rsc->id, node->details->uname);
+                     rsc->id, pe__node_name(node));
 
     } else if (local_node->count < limit) {
         pe_rsc_trace(rsc, "%s can run on %s (already running %d)",
-                     rsc->id, node->details->uname, local_node->count);
+                     rsc->id, pe__node_name(node), local_node->count);
         return local_node;
 
     } else {
         pe_rsc_trace(rsc, "%s cannot run on %s: node full (%d >= %d)",
-                     rsc->id, node->details->uname, local_node->count, limit);
+                     rsc->id, pe__node_name(node), local_node->count, limit);
     }
 
   bail:
@@ -102,7 +103,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
         if (local_prefer == NULL || local_prefer->weight < 0) {
             pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id,
-                         prefer->details->uname);
+                         pe__node_name(prefer));
             return NULL;
         }
     }
@@ -114,7 +115,7 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
     chosen = rsc->cmds->assign(rsc, prefer);
     if (chosen && prefer && (chosen->details != prefer->details)) {
         crm_info("Not pre-allocating %s to %s because %s is better",
-                 rsc->id, prefer->details->uname, chosen->details->uname);
+                 rsc->id, pe__node_name(prefer), pe__node_name(chosen));
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = backup;
         pcmk__unassign_resource(rsc);
@@ -223,26 +224,26 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
         pe_rsc_trace(rsc,
                      "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                     child->id, child_node->details->uname, max - allocated,
+                     child->id, pe__node_name(child_node), max - allocated,
                      max);
 
         if (!pcmk__node_available(child_node, true, false)) {
             pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                         child_node->details->uname, child->id);
+                         pe__node_name(child_node), child->id);
             continue;
         }
 
         if ((local_node != NULL) && (local_node->count >= loop_max)) {
             pe_rsc_trace(rsc,
                          "Not pre-allocating because %s already allocated "
-                         "optimal instances", child_node->details->uname);
+                         "optimal instances", pe__node_name(child_node));
             continue;
         }
 
         if (allocate_instance(child, child_node, all_coloc, per_host_max,
                               data_set)) {
             pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                         child_node->details->uname);
+                         pe__node_name(child_node));
             allocated++;
         }
     }
@@ -258,7 +259,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
 
             if (local_node == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
-                        child->id, child_node->details->uname);
+                        child->id, pe__node_name(child_node));
             }
         }
 
@@ -637,8 +638,8 @@ is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_r
         return TRUE;
 
     } else if (node) {
-        crm_trace("%s - %s vs %s", child_rsc->id, node->details->uname,
-                  local_node->details->uname);
+        crm_trace("%s - %s vs %s", child_rsc->id, pe__node_name(node),
+                  pe__node_name(local_node));
 
     } else {
         crm_trace("%s - not allocated %d", child_rsc->id, current);
@@ -795,7 +796,7 @@ pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 
             if (chosen != NULL && is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
                 pe_rsc_trace(primary, "Allowing %s: %s %d",
-                             colocation->id, chosen->details->uname,
+                             colocation->id, pe__node_name(chosen),
                              chosen->weight);
                 affected_nodes = g_list_prepend(affected_nodes, chosen);
             }
@@ -875,7 +876,7 @@ summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 
         child_action = find_first_action(child->actions, NULL, task_s, child->children ? NULL : node);
         pe_rsc_trace(action->rsc, "Checking for %s in %s on %s (%s)", task_s, child->id,
-                     node ? node->details->uname : "none", child_action?child_action->uuid:"NA");
+                     pe__node_name(node), child_action?child_action->uuid:"NA");
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 

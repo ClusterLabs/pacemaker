@@ -88,7 +88,7 @@ order_start_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
                      * its status with it.
                      */
                     pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                                 target->details->uname);
+                                 pe__node_name(target));
                     order_actions(stonith_op, action,
                                   pe_order_optional | pe_order_runnable_left);
                 }
@@ -169,11 +169,11 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
         if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
-                       target->details->uname);
+                       pe__node_name(target));
         } else {
             crm_info("%s is implicit %s %s is fenced",
                      action->uuid, (order_implicit? "after" : "because"),
-                     target->details->uname);
+                     pe__node_name(target));
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
@@ -200,7 +200,7 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
          * resources instead of the above.
          */
          crm_info("Moving healthy resource %s off %s before fencing",
-                  rsc->id, node->details->uname);
+                  rsc->id, pe__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(CRM_OP_FENCE), stonith_op,
                             pe_order_optional, data_set);
@@ -221,10 +221,10 @@ order_stop_vs_fencing(pe_resource_t *rsc, pe_action_t *stonith_op,
             if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
                 pe_rsc_info(rsc,
                             "Demote of failed resource %s is implicit after %s is fenced",
-                            rsc->id, target->details->uname);
+                            rsc->id, pe__node_name(target));
             } else {
                 pe_rsc_info(rsc, "%s is implicit after %s is fenced",
-                            action->uuid, target->details->uname);
+                            action->uuid, pe__node_name(target));
             }
 
             /* The demote would never complete and is now implied by the
@@ -393,18 +393,18 @@ pcmk__fence_guest(pe_node_t *node)
                                                      NULL, FALSE,
                                                      node->details->data_set);
 
-        crm_info("Implying guest node %s is down (action %d) after %s fencing",
-                 node->details->uname, stonith_op->id,
-                 stop->node->details->uname);
+        crm_info("Implying guest %s is down (action %d) after %s fencing",
+                 pe__node_name(node), stonith_op->id,
+                 pe__node_name(stop->node));
         order_actions(parent_stonith_op, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
 
     } else if (stop) {
         order_actions(stop, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
-        crm_info("Implying guest node %s is down (action %d) "
+        crm_info("Implying guest %s is down (action %d) "
                  "after container %s is stopped (action %d)",
-                 node->details->uname, stonith_op->id,
+                 pe__node_name(node), stonith_op->id,
                  container->id, stop->id);
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
@@ -419,15 +419,15 @@ pcmk__fence_guest(pe_node_t *node)
 
         if (stop) {
             order_actions(stop, stonith_op, pe_order_optional);
-            crm_info("Implying guest node %s is down (action %d) "
+            crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
-                     node->details->uname, stonith_op->id, stop->id);
+                     pe__node_name(node), stonith_op->id, stop->id);
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
-            crm_info("Implying guest node %s is down (action %d) ",
-                     node->details->uname, stonith_op->id);
+            crm_info("Implying guest %s is down (action %d) ",
+                     pe__node_name(node), stonith_op->id);
         }
     }
 

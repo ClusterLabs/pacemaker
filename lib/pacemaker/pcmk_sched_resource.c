@@ -121,7 +121,7 @@ pcmk__rsc_agent_changed(pe_resource_t *rsc, pe_node_t *node,
             if (active_on_node) {
                 crm_notice("Forcing restart of %s on %s "
                            "because %s changed from '%s' to '%s'",
-                           rsc->id, node->details->uname, attr_list[i],
+                           rsc->id, pe__node_name(node), attr_list[i],
                            pcmk__s(old_value, ""), pcmk__s(value, ""));
             }
         }
@@ -347,7 +347,7 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 
             crm_debug("All nodes for resource %s are unavailable, unclean or "
                       "shutting down (%s can%s run resources, with weight %d)",
-                      rsc->id, chosen->details->uname,
+                      rsc->id, pe__node_name(chosen),
                       (pcmk__node_available(chosen, true, false)? "" : "not"),
                       chosen->weight);
             pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
@@ -395,7 +395,7 @@ pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
         return false;
     }
 
-    crm_debug("Assigning %s to %s", rsc->id, chosen->details->uname);
+    crm_debug("Assigning %s to %s", rsc->id, pe__node_name(chosen));
     rsc->allocated_to = pe__copy_node(chosen);
 
     chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc,
@@ -470,7 +470,7 @@ pcmk__unassign_resource(pe_resource_t *rsc)
         return;
     }
 
-    crm_info("Unassigning %s from %s", rsc->id, old->details->uname);
+    crm_info("Unassigning %s from %s", rsc->id, pe__node_name(old));
     pe__set_resource_flags(rsc, pe_rsc_provisional);
     rsc->allocated_to = NULL;
 
@@ -532,7 +532,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
         crm_warn("%s cannot run on %s due to reaching migration threshold "
                  "(clean up resource to allow again)"
                  CRM_XS " failures=%d migration-threshold=%d",
-                 rsc_to_ban->id, node->details->uname, fail_count,
+                 rsc_to_ban->id, pe__node_name(node), fail_count,
                  rsc->migration_threshold);
         if (failed != NULL) {
             *failed = rsc_to_ban;
@@ -543,7 +543,7 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     crm_info("%s can fail %d more time%s on "
              "%s before reaching migration threshold (%d)",
              rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
-             node->details->uname, rsc->migration_threshold);
+             pe__node_name(node), rsc->migration_threshold);
     return false;
 }
 
@@ -802,14 +802,14 @@ cmp_instance_by_colocation(const pe_resource_t *instance1,
     // Compare nodes by updated scores
     if (node1->weight < node2->weight) {
         crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->weight, node1->details->uname,
-                  instance2->id, node2->weight, node2->details->uname);
+                  instance1->id, node1->weight, pe__node_name(node1),
+                  instance2->id, node2->weight, pe__node_name(node2));
         rc = 1;
 
     } else if (node1->weight > node2->weight) {
         crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->weight, node1->details->uname,
-                  instance2->id, node2->weight, node2->details->uname);
+                  instance1->id, node1->weight, pe__node_name(node1),
+                  instance2->id, node2->weight, pe__node_name(node2));
         rc = -1;
     }
 
@@ -857,7 +857,7 @@ node_is_allowed(const pe_resource_t *rsc, pe_node_t **node)
                                                   (*node)->details->id);
         if ((allowed == NULL) || (allowed->weight < 0)) {
             pe_rsc_trace(rsc, "%s: current location (%s) is unavailable",
-                         rsc->id, (*node)->details->uname);
+                         rsc->id, pe__node_name(*node));
             *node = NULL;
             return false;
         }
