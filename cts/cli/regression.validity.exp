@@ -341,13 +341,13 @@ update_validation 	info: Transformed the configuration from pacemaker-1.2 to pac
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 
@@ -382,13 +382,13 @@ Schema validation of configuration is disabled (enabling is encouraged and preve
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 
@@ -519,13 +519,13 @@ validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constr
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
+unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
 Transition Summary:
 

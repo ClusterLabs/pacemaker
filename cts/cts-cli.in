@@ -56,6 +56,13 @@ VALGRIND_OPTS="
     --suppressions=$test_home/valgrind-pcmk.suppressions
 "
 
+# Named pipe for saving a command's stderr in _test_assert()
+err_fifo=$(mktemp ${TMPDIR:-/tmp}/cts-cli.err_fifo.XXXXXXXXXX)
+mkfifo "$err_fifo"
+
+# Log test errors to stderr
+export PCMK_stderr=1
+
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
 CRM_EX_ERROR=1
@@ -128,9 +135,11 @@ function _test_assert() {
 
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
 
-    export outfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.output.XXXXXXXXXX)
-    eval $VALGRIND_CMD $cmd 2>&1 | tee $outfile
+    # Capture stderr and stdout separately, then print them consecutively
+    out=$(eval $VALGRIND_CMD $cmd 2> "$err_fifo")
     rc=$?
+    cat "$err_fifo"
+    [ -n "$out" ] && echo "$out"
 
     if [ x$cib != x0 ]; then
         printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
@@ -143,7 +152,7 @@ function _test_assert() {
         # The sed command filters out the "- validates" line that xmllint will output
         # on success.  grep cannot be used here because "grep -v 'validates$'" will
         # return an exit code of 1 if its input consists entirely of "- validates".
-        $XMLLINT_CMD --noout --relaxng "$PCMK_schema_directory/api/api-result.rng" "$outfile" 2>&1 | sed -n '/validates$/ !p'
+        echo "$out" | $XMLLINT_CMD --noout --relaxng "$PCMK_schema_directory/api/api-result.rng" - 2>&1 | sed -n '/validates$/ !p'
         rc=$?
 
         if [ $rc = 0 ]; then
@@ -1296,8 +1305,8 @@ function test_acl_loop() {
     TMPXML="$1"
 
     # Make sure we're rejecting things for the right reasons
+    orig_trace_fns="$PCMK_trace_functions"
     export PCMK_trace_functions=pcmk__check_acl,pcmk__apply_creation_acl
-    export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
 
@@ -1568,6 +1577,8 @@ function test_acl_loop() {
     desc="$CIB_user: Replace - delete attribute (deny overrides allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 function test_acls() {
@@ -1671,8 +1682,8 @@ function test_validity() {
     TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
 
     create_shadow_cib pacemaker-1.2
-    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
-    export PCMK_stderr=1
+    orig_trace_fns="$PCMK_trace_functions"
+    export PCMK_trace_functions=apply_upgrade,update_validation
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -1735,6 +1746,7 @@ function test_validity() {
 
     unset CIB_shadow_dir
     rm -f "$TMPGOOD" "$TMPBAD"
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 test_upgrade() {
@@ -1743,6 +1755,8 @@ test_upgrade() {
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
 
     create_shadow_cib pacemaker-2.10
+    orig_trace_fns="$PCMK_trace_functions"
+    export PCMK_trace_functions=apply_upgrade,update_validation
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -1787,6 +1801,7 @@ EOF
 
     unset CIB_shadow_dir
     rm -f "$TMPXML"
+    export PCMK_trace_functions="$orig_trace_fns"
 }
 
 test_rules() {
@@ -2230,6 +2245,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
+rm -rf "${err_fifo}"
 
 failed=0
 
