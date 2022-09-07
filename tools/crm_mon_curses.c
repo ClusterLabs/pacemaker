@@ -457,13 +457,13 @@ cluster_status_console(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "int", "const char *",
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "bool", "const char *",
                   "uint32_t")
 static int
 stonith_event_console(pcmk__output_t *out, va_list args)
 {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
-    int full_history = va_arg(args, int);
+    bool full_history = va_arg(args, int);
     const char *succeeded = va_arg(args, const char *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
