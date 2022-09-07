@@ -218,6 +218,13 @@ validate() {
             fi
         fi
     fi
+    if [ "$1" = "10" ]; then
+        if [ "$(uname)" != "Linux" ] ; then
+            ocf_log err "This resource agent works only on Linux"
+            ocf_exit_reason "not Linux"
+            exit $OCF_ERR_INSTALLED
+        fi
+    fi
     return $OCF_SUCCESS
 }
 
@@ -510,12 +517,6 @@ case $__OCF_ACTION in
         ;;
 esac
 
-if [ "$(uname)" != "Linux" ] ; then
-    ocf_log err "This resource agent works only on Linux"
-    ocf_exit_reason "not Linux"
-    exit $OCF_ERR_INSTALLED
-fi
-
 : ${ha_pseudo_resource_name:="ifspeed-${OCF_RESOURCE_INSTANCE}"}
 
 attrd_options=''
@@ -523,19 +524,21 @@ if ocf_is_true "${OCF_RESKEY_debug}" ; then
     attrd_options='-VV'
 fi
 
-validate || exit $?
-
 case "$__OCF_ACTION" in
     start)
+        validate 10
         start
         ;;
     stop)
+        validate 10
         stop
         ;;
     monitor)
+        validate 10
         monitor
         ;;
     validate-all)
+        validate "$OCF_CHECK_LEVEL"
         ;;
     *)
         usage
