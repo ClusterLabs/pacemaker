@@ -355,11 +355,11 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "gboolean")
+PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "bool")
 static int
 rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -400,11 +400,11 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "gboolean")
+PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "bool")
 static int
 rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -433,11 +433,11 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "gboolean")
+PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "bool")
 static int
 rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -478,11 +478,11 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "gboolean")
+PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "bool")
 static int
 rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -547,12 +547,12 @@ locations_list_xml(pcmk__output_t *out, va_list args) {
     return do_locations_list_xml(out, rsc, true);
 }
 
-PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "gboolean")
+PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "bool")
 static int
 stacks_and_constraints(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     pcmk__unpack_constraints(data_set);
 
@@ -569,12 +569,12 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "gboolean")
+PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "bool")
 static int
 stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    bool recursive = va_arg(args, int);
 
     pcmk__unpack_constraints(data_set);
 
@@ -763,14 +763,14 @@ dc_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "bool")
 static int
 crmadmin_node(pcmk__output_t *out, va_list args)
 {
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
     const char *id = va_arg(args, const char *);
-    gboolean bash_export = va_arg(args, gboolean);
+    bool bash_export = va_arg(args, int);
 
     if (bash_export) {
         return out->info(out, "export %s=%s",
@@ -781,7 +781,7 @@ crmadmin_node(pcmk__output_t *out, va_list args)
     }
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "bool")
 static int
 crmadmin_node_text(pcmk__output_t *out, va_list args)
 {
@@ -791,21 +791,21 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
         const char *type G_GNUC_UNUSED = va_arg(args, const char *);
         const char *name = va_arg(args, const char *);
         const char *id G_GNUC_UNUSED = va_arg(args, const char *);
-        gboolean bash_export G_GNUC_UNUSED = va_arg(args, gboolean);
+        bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
         pcmk__formatted_printf(out, "%s\n", pcmk__s(name, "<null>"));
         return pcmk_rc_ok;
     }
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "bool")
 static int
 crmadmin_node_xml(pcmk__output_t *out, va_list args)
 {
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
     const char *id = va_arg(args, const char *);
-    gboolean bash_export G_GNUC_UNUSED = va_arg(args, gboolean);
+    bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "cluster",
@@ -1583,7 +1583,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
         CHECK_RC(rc, out->message(out, "resource-list", data_set, show_opts,
-                                  TRUE, unames, resources, rc == pcmk_rc_ok));
+                                  true, unames, resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
@@ -1697,7 +1697,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
         out->message(out, "node-list", data_set->nodes, unames, resources,
-                     show_opts, FALSE);
+                     show_opts, false);
     }
 
     /* Print resources section, if needed */
@@ -1706,12 +1706,12 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
         uint32_t full_show_opts = show_opts & ~pcmk_show_brief;
 
         out->message(out, "resource-list", data_set, full_show_opts,
-                     FALSE, unames, resources, FALSE);
+                     false, unames, resources, false);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
-        out->message(out, "node-attribute-list", data_set, show_opts, FALSE,
+        out->message(out, "node-attribute-list", data_set, show_opts, false,
                      unames, resources);
     }
 
@@ -1720,7 +1720,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
      */
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
-                     resources, section_opts, show_opts, FALSE);
+                     resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
@@ -1728,25 +1728,25 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     show_opts, FALSE);
+                     show_opts, false);
     }
 
     /* Print stonith history */
     if (pcmk_is_set(section_opts, pcmk_section_fencing_all) &&
         fence_history != pcmk__fence_history_none) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
-                     unames, section_opts, show_opts, FALSE);
+                     unames, section_opts, show_opts, false);
     }
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", data_set, FALSE);
+        out->message(out, "ticket-list", data_set, false);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", data_set, prefix, resources, show_opts,
-                     FALSE);
+                     false);
     }
 
     return pcmk_rc_ok;
@@ -1774,18 +1774,18 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
         out->message(out, "node-list", data_set->nodes, unames, resources,
-                     show_opts, FALSE);
+                     show_opts, false);
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        out->message(out, "resource-list", data_set, show_opts, TRUE, unames,
-                     resources, FALSE);
+        out->message(out, "resource-list", data_set, show_opts, true, unames,
+                     resources, false);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
-        out->message(out, "node-attribute-list", data_set, show_opts, FALSE,
+        out->message(out, "node-attribute-list", data_set, show_opts, false,
                      unames, resources);
     }
 
@@ -1794,7 +1794,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
      */
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
-                     resources, section_opts, show_opts, FALSE);
+                     resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
@@ -1802,7 +1802,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     show_opts, FALSE);
+                     show_opts, false);
     }
 
     /* Print failed stonith actions */
@@ -1814,7 +1814,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
             if (hp) {
                 out->message(out, "failed-fencing-list", stonith_history, unames,
-                             section_opts, show_opts, FALSE);
+                             section_opts, show_opts, false);
             }
         } else {
             out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -1840,27 +1840,27 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
             if (hp) {
                 out->message(out, "fencing-list", hp, unames, section_opts,
-                             show_opts, FALSE);
+                             show_opts, false);
             }
         } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
                 out->message(out, "pending-fencing-list", hp, unames,
-                             section_opts, show_opts, FALSE);
+                             section_opts, show_opts, false);
             }
         }
     }
 
     /* Print tickets if requested */
     if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
-        out->message(out, "ticket-list", data_set, FALSE);
+        out->message(out, "ticket-list", data_set, false);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", data_set, prefix, resources, show_opts,
-                     FALSE);
+                     false);
     }
 
     return pcmk_rc_ok;

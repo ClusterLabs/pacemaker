@@ -1821,7 +1821,7 @@ main(int argc, char **argv)
             all = g_list_prepend(all, (gpointer) "*");
             rc = out->message(out, "resource-list", data_set,
                               pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
-                              TRUE, all, all, FALSE);
+                              true, all, all, false);
             g_list_free(all);
 
             if (rc == pcmk_rc_no_output) {

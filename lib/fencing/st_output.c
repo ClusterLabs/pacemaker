@@ -149,7 +149,7 @@ stonith__history_description(stonith_history_t *history, bool full_history,
 }
 
 PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *",
-                  "uint32_t", "uint32_t", "gboolean")
+                  "uint32_t", "uint32_t", "bool")
 static int
 failed_history(pcmk__output_t *out, va_list args)
 {
@@ -157,7 +157,7 @@ failed_history(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -182,7 +182,7 @@ failed_history(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("fencing-list", "stonith_history_t *", "GList *", "uint32_t",
-                  "uint32_t", "gboolean")
+                  "uint32_t", "bool")
 static int
 stonith_history(pcmk__output_t *out, va_list args)
 {
@@ -190,7 +190,7 @@ stonith_history(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -214,7 +214,7 @@ stonith_history(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *",
-                  "GList *", "uint32_t", "uint32_t", "gboolean")
+                  "GList *", "uint32_t", "uint32_t", "bool")
 static int
 full_history(pcmk__output_t *out, va_list args)
 {
@@ -223,7 +223,7 @@ full_history(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -244,7 +244,7 @@ full_history(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *",
-                  "GList *", "uint32_t", "uint32_t", "gboolean")
+                  "GList *", "uint32_t", "uint32_t", "bool")
 static int
 full_history_xml(pcmk__output_t *out, va_list args)
 {
@@ -253,7 +253,7 @@ full_history_xml(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
+    bool print_spacer G_GNUC_UNUSED = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -339,7 +339,7 @@ last_fenced_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("pending-fencing-list", "stonith_history_t *", "GList *",
-                  "uint32_t", "uint32_t", "gboolean")
+                  "uint32_t", "uint32_t", "bool")
 static int
 pending_actions(pcmk__output_t *out, va_list args)
 {
@@ -347,7 +347,7 @@ pending_actions(pcmk__output_t *out, va_list args)
     GList *only_node = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
