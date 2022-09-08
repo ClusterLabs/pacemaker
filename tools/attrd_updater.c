@@ -97,6 +97,26 @@ section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
     return TRUE;
 }
 
+static gboolean
+wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_all);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, "local", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_all);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local);
+        return TRUE;
+    } else if (pcmk__str_eq(optarg, "all", pcmk__str_none)) {
+        pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_all);
+        pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_sync_all);
+        return TRUE;
+    } else {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--wait= must be one of 'no', 'local', 'all'");
+        return FALSE;
+    }
+}
+
 #define INDENT "                              "
 
 static GOptionEntry required_entries[] = {
@@ -174,6 +194,12 @@ static GOptionEntry addl_entries[] = {
     { "private", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, private_cb,
       "If this creates a new attribute, never write the attribute to CIB",
       NULL },
+
+    { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
+      "Wait until the attribute change has propagated to the given point\n"
+      INDENT "before returning.  Values are 'no', 'local', 'all'.  Default\n"
+      INDENT "is 'no' (return immediately).",
+      "UNTIL" },
 
     { NULL }
 };
