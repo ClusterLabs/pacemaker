@@ -145,9 +145,11 @@ bool pcmk__valid_sbd_timeout(const char *value);
 #define PCMK__META_ALLOW_UNHEALTHY_NODES    "allow-unhealthy-nodes"
 
 // Constants for enumerated values for various options
+#define PCMK__VALUE_CLUSTER                 "cluster"
 #define PCMK__VALUE_CUSTOM                  "custom"
 #define PCMK__VALUE_FENCING                 "fencing"
 #define PCMK__VALUE_GREEN                   "green"
+#define PCMK__VALUE_LOCAL                   "local"
 #define PCMK__VALUE_MIGRATE_ON_RED          "migrate-on-red"
 #define PCMK__VALUE_NONE                    "none"
 #define PCMK__VALUE_NOTHING                 "nothing"
