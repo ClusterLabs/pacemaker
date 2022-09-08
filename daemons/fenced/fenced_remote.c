@@ -123,9 +123,9 @@ struct peer_count_data {
  * \internal
  * \brief Increment a counter if a device has not been executed yet
  *
- * \param[in] key        Device ID (ignored)
- * \param[in] value      Device properties
- * \param[in] user_data  Peer count data
+ * \param[in]     key        Device ID (ignored)
+ * \param[in]     value      Device properties
+ * \param[in,out] user_data  Peer count data
  */
 static void
 count_peer_device(gpointer key, gpointer value, gpointer user_data)
@@ -366,7 +366,7 @@ undo_op_remap(remote_fencing_op_t *op)
  * \note The caller is responsible for freeing the result.
  */
 static xmlNode *
-fencing_result2xml(remote_fencing_op_t *op)
+fencing_result2xml(const remote_fencing_op_t *op)
 {
     xmlNode *notify_data = create_xml_node(NULL, T_STONITH_NOTIFY_FENCE);
 
@@ -390,7 +390,7 @@ fencing_result2xml(remote_fencing_op_t *op)
  * \param[in] op_merged  Whether this operation is a duplicate of another
  */
 void
-fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
+fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 {
     static int count = 0;
     xmlNode *bcast = create_xml_node(NULL, T_STONITH_REPLY);
@@ -421,8 +421,8 @@ fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged)
  * \internal
  * \brief Reply to a local request originator and notify all subscribed clients
  *
- * \param[in] op         Fencer operation that completed
- * \param[in] data       Top-level XML to add notification to
+ * \param[in,out] op    Fencer operation that completed
+ * \param[in,out] data  Top-level XML to add notification to
  */
 static void
 handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
@@ -467,8 +467,8 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
  * \internal
  * \brief Finalize all duplicates of a given fencer operation
  *
- * \param[in] op         Fencer operation that completed
- * \param[in] data       Top-level XML to add notification to
+ * \param[in,out] op    Fencer operation that completed
+ * \param[in,out] data  Top-level XML to add notification to
  */
 static void
 finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
@@ -517,10 +517,10 @@ delegate_from_xml(xmlNode *xml)
  * each peer (including the executioner) uses it to process that broadcast and
  * notify its IPC clients of the result.
  *
- * \param[in] op      Fencer operation that completed
- * \param[in] data    If not NULL, XML reply of last delegated fencing operation
- * \param[in] dup     Whether this operation is a duplicate of another
- *                    (in which case, do not broadcast the result)
+ * \param[in,out] op      Fencer operation that completed
+ * \param[in,out] data    If not NULL, XML reply of last delegated operation
+ * \param[in]     dup     Whether this operation is a duplicate of another
+ *                        (in which case, do not broadcast the result)
  *
  *  \note The operation result should be set before calling this function.
  */
@@ -626,7 +626,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
  * \internal
  * \brief Finalize a watchdog fencer op after the waiting time expires
  *
- * \param[in] userdata  Fencer operation that completed
+ * \param[in,out] userdata  Fencer operation that completed
  *
  * \return G_SOURCE_REMOVE (which tells glib not to restart timer)
  */
@@ -667,8 +667,8 @@ remote_op_timeout_one(gpointer userdata)
  * \internal
  * \brief Finalize a remote fencer operation that timed out
  *
- * \param[in] op      Fencer operation that timed out
- * \param[in] reason  Readable description of what step timed out
+ * \param[in,out] op      Fencer operation that timed out
+ * \param[in]     reason  Readable description of what step timed out
  */
 static void
 finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
@@ -697,7 +697,7 @@ finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
  * \internal
  * \brief Finalize a remote fencer operation that timed out
  *
- * \param[in] userdata  Fencer operation that timed out
+ * \param[in,out] userdata  Fencer operation that timed out
  *
  * \return G_SOURCE_REMOVE (which tells glib not to restart timer)
  */
@@ -964,12 +964,13 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
 }
 
 /*!
- * \brief Check to see if this operation is a duplicate of another in flight
- * operation. If so merge this operation into the inflight operation, and mark
- * it as a duplicate.
+ * \internal
+ * \brief If fencing operation is a duplicate, merge it into the other one
+ *
+ * \param[in,out] op  Fencing operation to check
  */
 static void
-merge_duplicates(remote_fencing_op_t * op)
+merge_duplicates(remote_fencing_op_t *op)
 {
     GHashTableIter iter;
     remote_fencing_op_t *other = NULL;
@@ -1066,13 +1067,13 @@ static uint32_t fencing_active_peers(void)
  * \internal
  * \brief Process a manual confirmation of a pending fence action
  *
- * \param[in]  client  IPC client that sent confirmation
- * \param[in]  msg     Request XML with manual confirmation
+ * \param[in]     client  IPC client that sent confirmation
+ * \param[in,out] msg     Request XML with manual confirmation
  *
  * \return Standard Pacemaker return code
  */
 int
-fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
+fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 {
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
@@ -1112,7 +1113,7 @@ fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
  *                     once the owner finishes execution)
  */
 void *
-create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
+create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_NEVER);
@@ -1237,7 +1238,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
  * \return Newly created operation on success, otherwise NULL
  */
 remote_fencing_op_t *
-initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
+initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
                            gboolean manual_ack)
 {
     int query_timeout = 0;
@@ -1456,9 +1457,9 @@ struct timeout_data {
  * \internal
  * \brief Add timeout to a total if device has not been executed yet
  *
- * \param[in] key        GHashTable key (device ID)
- * \param[in] value      GHashTable value (device properties)
- * \param[in] user_data  Timeout data
+ * \param[in]     key        GHashTable key (device ID)
+ * \param[in]     value      GHashTable value (device properties)
+ * \param[in,out] user_data  Timeout data
  */
 static void
 add_device_timeout(gpointer key, gpointer value, gpointer user_data)
@@ -1590,9 +1591,9 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
  * \internal
  * \brief Advance an operation to the next device in its topology
  *
- * \param[in] op      Fencer operation to advance
- * \param[in] device  ID of device that just completed
- * \param[in] msg     If not NULL, XML reply of last delegated fencing operation
+ * \param[in,out] op      Fencer operation to advance
+ * \param[in]     device  ID of device that just completed
+ * \param[in,out] msg     If not NULL, XML reply of last delegated operation
  */
 static void
 advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
@@ -1670,9 +1671,9 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
  * \internal
  * \brief Ask a peer to execute a fencing operation
  *
- * \param[in] op      Fencing operation to be executed
- * \param[in] peer    If NULL or topology is in use, choose best peer to execute
- *                    the fencing, otherwise use this peer
+ * \param[in,out] op      Fencing operation to be executed
+ * \param[in,out] peer    If NULL or topology is in use, choose best peer to
+ *                        execute the fencing, otherwise use this peer
  */
 static void
 request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
@@ -1878,9 +1879,11 @@ sort_peers(gconstpointer a, gconstpointer b)
 /*!
  * \internal
  * \brief Determine if all the devices in the topology are found or not
+ *
+ * \param[in] op  Fencing operation with topology to check
  */
 static gboolean
-all_topology_devices_found(remote_fencing_op_t * op)
+all_topology_devices_found(const remote_fencing_op_t *op)
 {
     GList *device = NULL;
     GList *iter = NULL;
@@ -1923,15 +1926,16 @@ all_topology_devices_found(remote_fencing_op_t * op)
  * \internal
  * \brief Parse action-specific device properties from XML
  *
- * \param[in]     msg     XML element containing the properties
+ * \param[in]     xml     XML element containing the properties
  * \param[in]     peer    Name of peer that sent XML (for logs)
  * \param[in]     device  Device ID (for logs)
  * \param[in]     action  Action the properties relate to (for logs)
+ * \param[in,out] op      Fencing operation that properties are being parsed for
  * \param[in]     phase   Phase the properties relate to
  * \param[in,out] props   Device properties to update
  */
 static void
-parse_action_specific(xmlNode *xml, const char *peer, const char *device,
+parse_action_specific(const xmlNode *xml, const char *peer, const char *device,
                       const char *action, remote_fencing_op_t *op,
                       enum st_remap_phase phase, device_properties_t *props)
 {
@@ -1989,7 +1993,7 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
  * \param[in]     device    ID of device being parsed
  */
 static void
-add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
+add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
                       peer_device_info_t *peer, const char *device)
 {
     xmlNode *child;
@@ -2039,7 +2043,8 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
  * \return Newly allocated result structure with parsed reply
  */
 static peer_device_info_t *
-add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml)
+add_result(remote_fencing_op_t *op, const char *host, int ndevices,
+           const xmlNode *xml)
 {
     peer_device_info_t *peer = calloc(1, sizeof(peer_device_info_t));
     xmlNode *child;
@@ -2084,7 +2089,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
  *       formed, and stonith_query() for how the peer formed its XML reply.
  */
 int
-process_remote_stonith_query(xmlNode * msg)
+process_remote_stonith_query(xmlNode *msg)
 {
     int ndevices = 0;
     gboolean host_is_target = FALSE;

@@ -74,7 +74,7 @@ static void search_devices_record_result(struct device_search_s *search, const c
 
 static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
-static enum fenced_target_by unpack_level_kind(xmlNode *level);
+static enum fenced_target_by unpack_level_kind(const xmlNode *level);
 
 typedef struct async_command_s {
 
@@ -115,18 +115,18 @@ typedef struct async_command_s {
     stonith_device_t *activating_on;
 } async_command_t;
 
-static xmlNode *construct_async_reply(async_command_t *cmd,
+static xmlNode *construct_async_reply(const async_command_t *cmd,
                                       const pcmk__action_result_t *result);
 
 static gboolean
-is_action_required(const char *action, stonith_device_t *device)
+is_action_required(const char *action, const stonith_device_t *device)
 {
     return device && device->automatic_unfencing && pcmk__str_eq(action, "on",
                                                                  pcmk__str_casei);
 }
 
 static int
-get_action_delay_max(stonith_device_t * device, const char * action)
+get_action_delay_max(const stonith_device_t *device, const char *action)
 {
     const char *value = NULL;
     int delay_max = 0;
@@ -144,7 +144,7 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 }
 
 static int
-get_action_delay_base(stonith_device_t *device, const char *action,
+get_action_delay_base(const stonith_device_t *device, const char *action,
                       const char *target)
 {
     char *hash_value = NULL;
@@ -211,7 +211,8 @@ get_action_delay_base(stonith_device_t *device, const char *action,
  *       the device is registered, whether by CIB change or API call.
  */
 static int
-get_action_timeout(stonith_device_t * device, const char *action, int default_timeout)
+get_action_timeout(const stonith_device_t *device, const char *action,
+                   int default_timeout)
 {
     if (action && device && device->params) {
         char buffer[64] = { 0, };
@@ -423,10 +424,10 @@ get_agent_metadata_cb(gpointer data) {
  * \internal
  * \brief Call a command's action callback for an internal (not library) result
  *
- * \param[in] cmd               Command to report result for
- * \param[in] execution_status  Execution status to use for result
- * \param[in] exit_status       Exit status to use for result
- * \param[in] exit_reason       Exit reason to use for result
+ * \param[in,out] cmd               Command to report result for
+ * \param[in]     execution_status  Execution status to use for result
+ * \param[in]     exit_status       Exit status to use for result
+ * \param[in]     exit_reason       Exit reason to use for result
  */
 static void
 report_internal_result(async_command_t *cmd, int exit_status,
@@ -973,11 +974,11 @@ map_action(GHashTable *params, const char *action, const char *value)
  * \internal
  * \brief Create device parameter table from XML
  *
- * \param[in]     name    Device name (used for logging only)
- * \param[in,out] params  Device parameters
+ * \param[in]  name    Device name (used for logging only)
+ * \param[in]  dev     XML containing device parameters
  */
 static GHashTable *
-xml2device_params(const char *name, xmlNode *dev)
+xml2device_params(const char *name, const xmlNode *dev)
 {
     GHashTable *params = xml2list(dev);
     const char *value;
@@ -1321,7 +1322,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
  * \brief Checks to see if an identical device already exists in the device_list
  */
 static stonith_device_t *
-device_has_duplicate(stonith_device_t * device)
+device_has_duplicate(const stonith_device_t *device)
 {
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
@@ -1492,7 +1493,7 @@ stonith_device_remove(const char *id, bool from_cib)
  * \note This function is used only for log messages.
  */
 static int
-count_active_levels(stonith_topology_t * tp)
+count_active_levels(const stonith_topology_t *tp)
 {
     int lpc = 0;
     int count = 0;
@@ -1542,7 +1543,7 @@ init_topology_list(void)
 }
 
 char *
-stonith_level_key(xmlNode *level, enum fenced_target_by mode)
+stonith_level_key(const xmlNode *level, enum fenced_target_by mode)
 {
     if (mode == fenced_target_by_unknown) {
         mode = unpack_level_kind(level);
@@ -1573,7 +1574,7 @@ stonith_level_key(xmlNode *level, enum fenced_target_by mode)
  * \return How to identify target of \p level
  */
 static int
-unpack_level_kind(xmlNode *level)
+unpack_level_kind(const xmlNode *level)
 {
     if (crm_element_value(level, XML_ATTR_STONITH_TARGET) != NULL) {
         return fenced_target_by_name;
@@ -2224,7 +2225,8 @@ struct st_query_data {
  */
 static void
 add_action_specific_attributes(xmlNode *xml, const char *action,
-                               stonith_device_t *device, const char *target)
+                               const stonith_device_t *device,
+                               const char *target)
 {
     int action_specific_timeout;
     int delay_max;
@@ -2280,7 +2282,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  * \param[in]     allow_suicide  Whether self-fencing is allowed
  */
 static void
-add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
+add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
                const char *target, gboolean allow_suicide)
 {
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
@@ -2301,8 +2303,9 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
  * \param[in]     allow_suicide  Whether self-fencing is allowed
  */
 static void
-add_action_reply(xmlNode *xml, const char *action, stonith_device_t *device,
-               const char *target, gboolean allow_suicide)
+add_action_reply(xmlNode *xml, const char *action,
+                 const stonith_device_t *device, const char *target,
+                 gboolean allow_suicide)
 {
     xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
 
@@ -2430,7 +2433,8 @@ done:
  * \param[in] op_merged  Whether this command was merged with an earlier one
  */
 static void
-log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
+log_async_result(const async_command_t *cmd,
+                 const pcmk__action_result_t *result,
                  int pid, const char *next, bool op_merged)
 {
     int log_level = LOG_ERR;
@@ -2514,7 +2518,7 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
  * \param[in] merged   If true, command was merged with another, not executed
  */
 static void
-send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
+send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result,
                  int pid, bool merged)
 {
     xmlNode *reply = NULL;
@@ -2846,8 +2850,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
  *       request.
  */
 xmlNode *
-fenced_construct_reply(xmlNode *request, xmlNode *data,
-                       pcmk__action_result_t *result)
+fenced_construct_reply(const xmlNode *request, xmlNode *data,
+                       const pcmk__action_result_t *result)
 {
     xmlNode *reply = NULL;
 
@@ -2902,7 +2906,8 @@ fenced_construct_reply(xmlNode *request, xmlNode *data,
  * \param[in] result  Command result
  */
 static xmlNode *
-construct_async_reply(async_command_t *cmd, const pcmk__action_result_t *result)
+construct_async_reply(const async_command_t *cmd,
+                      const pcmk__action_result_t *result)
 {
     xmlNode *reply = create_xml_node(NULL, T_STONITH_REPLY);
 
@@ -2979,10 +2984,10 @@ check_alternate_host(const char *target)
  * \internal
  * \brief Send a reply to a CPG peer or IPC client
  *
- * \param[in] reply         XML reply to send
- * \param[in] call_options  Send synchronously if st_opt_sync_call is set here
- * \param[in] remote_peer   If not NULL, name of peer node to send CPG reply
- * \param[in] client        If not NULL, client to send IPC reply
+ * \param[in]     reply         XML reply to send
+ * \param[in]     call_options  Send synchronously if st_opt_sync_call is set
+ * \param[in]     remote_peer   If not NULL, name of peer node to send CPG reply
+ * \param[in,out] client        If not NULL, client to send IPC reply
  */
 static void
 stonith_send_reply(xmlNode *reply, int call_options, const char *remote_peer,
@@ -3068,7 +3073,7 @@ remove_relay_op(xmlNode * request)
  * \return true if sender is peer or privileged client, otherwise false
  */
 static inline bool
-is_privileged(pcmk__client_t *c, const char *op)
+is_privileged(const pcmk__client_t *c, const char *op)
 {
     if ((c == NULL) || pcmk_is_set(c->flags, pcmk__client_privileged)) {
         return true;
@@ -3541,11 +3546,11 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
  * \internal
  * \brief Handle a message from an IPC client or CPG peer
  *
- * \param[in] client      If not NULL, IPC client that sent message
- * \param[in] id          If from IPC client, IPC message ID
- * \param[in] flags       Message flags
- * \param[in] message     Message XML
- * \param[in] remote_peer If not NULL, CPG peer that sent message
+ * \param[in,out] client      If not NULL, IPC client that sent message
+ * \param[in]     id          If from IPC client, IPC message ID
+ * \param[in]     flags       Message flags
+ * \param[in,out] message     Message XML
+ * \param[in]     remote_peer If not NULL, CPG peer that sent message
  */
 void
 stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,

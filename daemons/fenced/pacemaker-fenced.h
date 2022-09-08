@@ -157,7 +157,7 @@ typedef struct remote_fencing_op_s {
     pcmk__action_result_t result;
 } remote_fencing_op_t;
 
-void fenced_broadcast_op_result(remote_fencing_op_t *op, bool op_merged);
+void fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged);
 
 // Fencer-specific client flags
 enum st_client_flags {
@@ -223,7 +223,7 @@ int stonith_device_register(xmlNode *msg, gboolean from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
-char *stonith_level_key(xmlNode * msg, int mode);
+char *stonith_level_key(const xmlNode *msg, int mode);
 void fenced_register_level(xmlNode *msg, char **desc,
                            pcmk__action_result_t *result);
 void fenced_unregister_level(xmlNode *msg, char **desc,
@@ -234,8 +234,8 @@ stonith_topology_t *find_topology_for_host(const char *host);
 void do_local_reply(xmlNode *notify_src, pcmk__client_t *client,
                     int call_options);
 
-xmlNode *fenced_construct_reply(xmlNode *request, xmlNode *data,
-                                pcmk__action_result_t *result);
+xmlNode *fenced_construct_reply(const xmlNode *request, xmlNode *data,
+                                const pcmk__action_result_t *result);
 
 void
  do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
@@ -250,7 +250,7 @@ void fenced_send_level_notification(const char *op,
                                     const pcmk__action_result_t *result,
                                     const char *desc);
 
-remote_fencing_op_t *initiate_remote_stonith_op(pcmk__client_t *client,
+remote_fencing_op_t *initiate_remote_stonith_op(const pcmk__client_t *client,
                                                 xmlNode *request,
                                                 gboolean manual_ack);
 
@@ -269,7 +269,8 @@ bool fencing_peer_active(crm_node_t *peer);
 
 void set_fencing_completed(remote_fencing_op_t * op);
 
-int fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg);
+int fenced_handle_manual_confirmation(const pcmk__client_t *client,
+                                      xmlNode *msg);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 

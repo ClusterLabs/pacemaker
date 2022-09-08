@@ -543,7 +543,7 @@ start_child(pcmk_child_t * child)
  * \internal
  * \brief Check the liveness of the child based on IPC name and PID if tracked
  *
- * \param[inout] child  Child tracked data
+ * \param[in,out] child  Child tracked data
  *
  * \return Standard Pacemaker return code
  *
