@@ -750,6 +750,7 @@ handle_ping(xmlNode *msg)
 {
     const char *value = NULL;
     xmlNode *ping = NULL;
+    xmlNode *reply = NULL;
 
     // Build reply
 
@@ -767,11 +768,11 @@ handle_ping(xmlNode *msg)
     crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
 
     // Send reply
-    msg = create_reply(msg, ping);
+    reply = create_reply(msg, ping);
     free_xml(ping);
-    if (msg) {
-        (void) relay_message(msg, TRUE);
-        free_xml(msg);
+    if (reply != NULL) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
     }
 
     // Nothing further to do
@@ -827,6 +828,7 @@ handle_node_info_request(xmlNode *msg)
     const char *value = NULL;
     crm_node_t *node = NULL;
     int node_id = 0;
+    xmlNode *reply = NULL;
     xmlNode *reply_data = NULL;
 
     // Build reply
@@ -860,11 +862,11 @@ handle_node_info_request(xmlNode *msg)
     }
 
     // Send reply
-    msg = create_reply(msg, reply_data);
+    reply = create_reply(msg, reply_data);
     free_xml(reply_data);
-    if (msg) {
-        (void) relay_message(msg, TRUE);
-        free_xml(msg);
+    if (reply != NULL) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
     }
 
     // Nothing further to do
