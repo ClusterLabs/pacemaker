@@ -24,8 +24,6 @@
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
-#define MAX_XPATH_LEN	4096
-
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
         char *xpath;
@@ -85,47 +83,35 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
                   crm_element_name(xml), acl->xpath);
 
     } else {
-        int offset = 0;
-        char buffer[MAX_XPATH_LEN];
+        GString *buf = g_string_sized_new(128);
 
-        if (tag) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//%s", tag);
-        } else {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//*");
+        g_string_printf(buf, "//%s", pcmk__s(tag, "*"));
+
+        if ((ref != NULL) || (attr != NULL)) {
+            g_string_append_c(buf, '[');
         }
 
-        if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[");
-        }
-
-        if (ref) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@id='%s'", ref);
+        if (ref != NULL) {
+            g_string_append_printf(buf, "@" XML_ATTR_ID "='%s'", ref);
         }
 
         // NOTE: schema currently does not allow this
-        if (ref && attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               " and ");
+        if ((ref != NULL) && (attr != NULL)) {
+            g_string_append(buf, " and ");
         }
 
-        if (attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@%s", attr);
+        if (attr != NULL) {
+            g_string_append_printf(buf, "@%s", attr);
         }
 
-        if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "]");
+        if ((ref != NULL) || (attr != NULL)) {
+            g_string_append_c(buf, ']');
         }
 
-        CRM_LOG_ASSERT(offset > 0);
-        acl->xpath = strdup(buffer);
+        acl->xpath = strdup((const char *) buf->str);
         CRM_ASSERT(acl->xpath != NULL);
 
+        g_string_free(buf, TRUE);
         crm_trace("Unpacked ACL <%s> element as xpath: %s",
                   crm_element_name(xml), acl->xpath);
     }
