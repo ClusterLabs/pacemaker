@@ -53,7 +53,9 @@ do_cib_replaced(const char *event, xmlNode * msg)
         change_section = (uint32_t) value;
     }
 
-    if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
+    if (pcmk_any_flags_set(change_section, cib_change_section_nodes
+                                           |cib_change_section_status)) {
+
         /* start the join process again so we get everyone's LRM status */
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
 
