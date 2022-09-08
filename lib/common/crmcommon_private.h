@@ -68,8 +68,7 @@ G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
-int pcmk__element_xpath(const xmlNode *xml, char *buffer, int offset,
-                        size_t buffer_size);
+GString *pcmk__element_xpath(const xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_created(xmlNode *xml);

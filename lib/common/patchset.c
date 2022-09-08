@@ -92,19 +92,18 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
     // If this XML node is new, just report that
     if (patchset && pcmk_is_set(p->flags, pcmk__xf_created)) {
-        int offset = 0;
-        char buffer[PCMK__BUFFER_SIZE];
+        GString *xpath = pcmk__element_xpath(xml->parent);
 
-        if (pcmk__element_xpath(xml->parent, buffer, offset,
-                                sizeof(buffer)) > 0) {
+        if (xpath != NULL) {
             int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "create");
-            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION, position);
             add_node_copy(change, xml);
+            g_string_free(xpath, TRUE);
         }
 
         return;
@@ -121,16 +120,16 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         }
 
         if (change == NULL) {
-            int offset = 0;
-            char buffer[PCMK__BUFFER_SIZE];
+            GString *xpath = pcmk__element_xpath(xml);
 
-            if (pcmk__element_xpath(xml, buffer, offset, sizeof(buffer)) > 0) {
+            if (xpath != NULL) {
                 change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
                 crm_xml_add(change, XML_DIFF_OP, "modify");
-                crm_xml_add(change, XML_DIFF_PATH, buffer);
+                crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
 
                 change = create_xml_node(change, XML_DIFF_LIST);
+                g_string_free(xpath, TRUE);
             }
         }
 
@@ -172,18 +171,19 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
     p = xml->_private;
     if (patchset && pcmk_is_set(p->flags, pcmk__xf_moved)) {
-        int offset = 0;
-        char buffer[PCMK__BUFFER_SIZE];
+        GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
                   xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
-        if (pcmk__element_xpath(xml, buffer, offset, sizeof(buffer)) > 0) {
+
+        if (xpath != NULL) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "move");
-            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
+            g_string_free(xpath, TRUE);
         }
     }
 }

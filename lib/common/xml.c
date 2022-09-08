@@ -803,27 +803,30 @@ free_xml_with_position(xmlNode * child, int position)
             xmlFreeDoc(doc);
 
         } else if (pcmk__check_acl(child, NULL, pcmk__xf_acl_write) == FALSE) {
-            int offset = 0;
-            char buffer[PCMK__BUFFER_SIZE];
+            GString *xpath = NULL;
 
-            pcmk__element_xpath(child, buffer, offset, sizeof(buffer));
-            crm_trace("Cannot remove %s %x", buffer, p->flags);
+            pcmk__log_else(LOG_TRACE, return);
+            xpath = pcmk__element_xpath(child);
+            qb_log_from_external_source(__func__, __FILE__,
+                                        "Cannot remove %s %x", LOG_TRACE,
+                                        __LINE__, 0, (const char *) xpath->str,
+                                        p->flags);
+            g_string_free(xpath, TRUE);
             return;
 
         } else {
             if (doc && pcmk__tracking_xml_changes(child, FALSE)
                 && !pcmk_is_set(p->flags, pcmk__xf_created)) {
-                int offset = 0;
-                char buffer[PCMK__BUFFER_SIZE];
 
-                if (pcmk__element_xpath(child, buffer, offset,
-                                        sizeof(buffer)) > 0) {
+                char *xpath = xml_get_path(child);
+
+                if (xpath != NULL) {
                     pcmk__deleted_xml_t *deleted_obj = NULL;
 
-                    crm_trace("Deleting %s %p from %p", buffer, child, doc);
+                    crm_trace("Deleting %s %p from %p", xpath, child, doc);
 
                     deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
-                    deleted_obj->path = strdup(buffer);
+                    deleted_obj->path = xpath;
 
                     deleted_obj->position = -1;
                     /* Record the "position" only for XML comments for now */

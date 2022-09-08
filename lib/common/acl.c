@@ -664,22 +664,25 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
     CRM_ASSERT(xml->doc->_private);
 
     if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
-        int offset = 0;
         xmlNode *parent = xml;
-        char buffer[MAX_XPATH_LEN];
         xml_private_t *docp = xml->doc->_private;
-
-        offset = pcmk__element_xpath(xml, buffer, offset, sizeof(buffer));
-        if (name) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[@%s]", name);
-        }
-        CRM_LOG_ASSERT(offset > 0);
+        GString *xpath = NULL;
 
         if (docp->acls == NULL) {
-            crm_trace("User '%s' without ACLs denied %s access to %s",
-                      docp->user, acl_to_text(mode), buffer);
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+            pcmk__log_else(LOG_TRACE, return false);
+            xpath = pcmk__element_xpath(xml);
+            if (name != NULL) {
+                g_string_append_printf(xpath, "[@%s]", name);
+            }
+
+            qb_log_from_external_source(__func__, __FILE__,
+                                        "User '%s' without ACLs denied %s "
+                                        "access to %s", LOG_TRACE, __LINE__, 0,
+                                        docp->user, acl_to_text(mode),
+                                        (const char *) xpath->str);
+            g_string_free(xpath, TRUE);
             return false;
         }
 
@@ -702,18 +705,40 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 return true;
 
             } else if (pcmk_is_set(p->flags, pcmk__xf_acl_deny)) {
-                crm_trace("%sACL denies user '%s' %s access to %s",
-                          (parent != xml) ? "Parent " : "", docp->user,
-                          acl_to_text(mode), buffer);
                 pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+                pcmk__log_else(LOG_TRACE, return false);
+                xpath = pcmk__element_xpath(xml);
+                if (name != NULL) {
+                    g_string_append_printf(xpath, "[@%s]", name);
+                }
+
+                qb_log_from_external_source(__func__, __FILE__,
+                                            "%sACL denies user '%s' %s access "
+                                            "to %s", LOG_TRACE, __LINE__, 0,
+                                            (parent != xml)? "Parent ": "",
+                                            docp->user, acl_to_text(mode),
+                                            (const char *) xpath->str);
+                g_string_free(xpath, TRUE);
                 return false;
             }
             parent = parent->parent;
         }
 
-        crm_trace("Default ACL denies user '%s' %s access to %s",
-                  docp->user, acl_to_text(mode), buffer);
         pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+        pcmk__log_else(LOG_TRACE, return false);
+        xpath = pcmk__element_xpath(xml);
+        if (name != NULL) {
+            g_string_append_printf(xpath, "[@%s]", name);
+        }
+
+        qb_log_from_external_source(__func__, __FILE__,
+                                    "Default ACL denies user '%s' %s access to "
+                                    "%s", LOG_TRACE, __LINE__, 0,
+                                    docp->user, acl_to_text(mode),
+                                    (const char *) xpath->str);
+        g_string_free(xpath, TRUE);
         return false;
     }
 
