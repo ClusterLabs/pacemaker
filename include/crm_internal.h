@@ -71,6 +71,7 @@
 #define PCMK__XA_ATTR_RESOURCE          "attr_resource"
 #define PCMK__XA_ATTR_SECTION           "attr_section"
 #define PCMK__XA_ATTR_SET               "attr_set"
+#define PCMK__XA_ATTR_SYNC_POINT        "attr_sync_point"
 #define PCMK__XA_ATTR_USER              "attr_user"
 #define PCMK__XA_ATTR_UUID              "attr_key"
 #define PCMK__XA_ATTR_VALUE             "attr_value"
@@ -108,5 +109,12 @@
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 
 #define PCMK__CONTROLD_CMD_NODES        "list-nodes"
+
+/*
+ * Sync point values
+ */
+
+#define PCMK__ATTRD_SYNC_POINT_LOCAL    "local"
+#define PCMK__ATTRD_SYNC_POINT_ALL      "all"
 
 #endif                          /* CRM_INTERNAL__H */
