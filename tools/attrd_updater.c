@@ -47,7 +47,7 @@ struct {
     gchar *attr_node;
     gchar *attr_set;
     char *attr_value;
-    int attr_options;
+    uint32_t attr_options;
     gboolean query_all;
     gboolean quiet;
 } options = {
