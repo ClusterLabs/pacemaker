@@ -176,13 +176,14 @@ update_abort_priority(pcmk__graph_t *graph, int priority,
 
 void
 abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
-                       const char *abort_text, xmlNode * reason, const char *fn, int line)
+                       const char *abort_text, const xmlNode *reason,
+                       const char *fn, int line)
 {
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
     int level = LOG_INFO;
-    xmlNode *diff = NULL;
-    xmlNode *change = NULL;
+    const xmlNode *diff = NULL;
+    const xmlNode *change = NULL;
 
     CRM_CHECK(transition_graph != NULL, return);
 
@@ -212,7 +213,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
     }
 
     if(reason) {
-        xmlNode *search = NULL;
+        const xmlNode *search = NULL;
 
         for(search = reason; search; search = search->parent) {
             if (pcmk__str_eq(XML_TAG_DIFF, TYPE(search), pcmk__str_casei)) {

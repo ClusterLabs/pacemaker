@@ -248,7 +248,7 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
  */
 static void
 abort_for_stonith_failure(enum pcmk__graph_next abort_action,
-                          const char *target, xmlNode *reason)
+                          const char *target, const xmlNode *reason)
 {
     /* If stonith repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
@@ -440,7 +440,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
  * \internal
  * \brief Handle an event notification from the fencing API
  *
- * \param[in] st     Fencing API connection
+ * \param[in] st     Fencing API connection (ignored)
  * \param[in] event  Fencing API event notification
  */
 static void
@@ -900,7 +900,7 @@ fence_with_delay(const char *target, const char *type, const char *delay)
  * \internal
  * \brief Execute a fencing action from a transition graph
  *
- * \param[in] graph   Transition graph being executed
+ * \param[in] graph   Transition graph being executed (ignored)
  * \param[in] action  Fencing action to execute
  *
  * \return Standard Pacemaker return code

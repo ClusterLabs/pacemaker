@@ -45,11 +45,11 @@ controld_shutdown_schedulerd_ipc(void)
  * \internal
  * \brief Save CIB query result to file, raising FSA error
  *
- * \param[in] msg        Ignored
- * \param[in] call_id    Call ID of CIB query
- * \param[in] rc         Return code of CIB query
- * \param[in] output     Result of CIB query
- * \param[in] user_data  Unique identifier for filename (will be freed)
+ * \param[in]     msg        Ignored
+ * \param[in]     call_id    Call ID of CIB query
+ * \param[in]     rc         Return code of CIB query
+ * \param[in,out] output     Result of CIB query
+ * \param[in]     user_data  Unique identifier for filename
  *
  * \note This is intended to be called after a scheduler connection fails.
  */
@@ -57,7 +57,7 @@ static void
 save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
                   void *user_data)
 {
-    char *id = user_data;
+    const char *id = user_data;
 
     register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     CRM_CHECK(id != NULL, return);
@@ -281,6 +281,8 @@ controld_stop_sched_timer(void)
  * \brief Set the scheduler request currently being waited on
  *
  * \param[in] ref  Request to expect reply to (or NULL for none)
+ *
+ * \note This function takes ownership of \p ref.
  */
 void
 controld_expect_sched_reply(char *ref)

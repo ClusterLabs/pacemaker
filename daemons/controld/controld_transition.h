@@ -47,7 +47,7 @@ void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
                        const char *abort_text, guint delay_ms);
 void abort_transition_graph(int abort_priority,
                             enum pcmk__graph_next abort_action,
-                            const char *abort_text, xmlNode *reason,
+                            const char *abort_text, const xmlNode *reason,
                             const char *fn, int line);
 
 #  define trigger_graph()	trigger_graph_processing(__func__, __LINE__)

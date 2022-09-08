@@ -40,8 +40,10 @@ static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
 static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
 
-static lrmd_event_data_t *construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op,
-                                       const char *rsc_id, const char *operation);
+static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
+                                       const xmlNode *rsc_op,
+                                       const char *rsc_id,
+                                       const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                           const char *operation, xmlNode *msg);
 
@@ -266,9 +268,9 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
  * \param[in] ack_sys    IPC system name to ack
  */
 static void
-send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
-                 const char *rsc_id, lrmd_rsc_info_t *rsc, const char *task,
-                 const char *ack_host, const char *ack_sys)
+send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
+                 const char *rsc_id, const lrmd_rsc_info_t *rsc,
+                 const char *task, const char *ack_host, const char *ack_sys)
 {
     lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
 
@@ -675,8 +677,9 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 }
 
 static gboolean
-build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op,
-                       const char *node_name, const char *src)
+build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
+                       lrmd_event_data_t *op, const char *node_name,
+                       const char *src)
 {
     int target_rc = 0;
     xmlNode *xml_op = NULL;
@@ -998,11 +1001,10 @@ delete_rsc_entry(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rs
  * \internal
  * \brief Erase an LRM history entry from the CIB, given the operation data
  *
- * \param[in] lrm_state  LRM state of the desired node
  * \param[in] op         Operation whose history should be deleted
  */
 static void
-erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
+erase_lrm_history_by_op(const lrmd_event_data_t *op)
 {
     xmlNode *xml_top = NULL;
 
@@ -1061,7 +1063,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
  * \param[in] call_id    If specified, delete entry only if it has this call ID
  */
 static void
-erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
+erase_lrm_history_by_id(const lrm_state_t *lrm_state, const char *rsc_id,
                         const char *key, const char *orig_op, int call_id)
 {
     char *op_xpath = NULL;
@@ -1254,10 +1256,10 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
  * \internal
  * \brief Retrieve resource information from LRM
  *
- * \param[in]  lrm_state LRM connection to use
- * \param[in]  rsc_xml   XML containing resource configuration
- * \param[in]  do_create If true, register resource with LRM if not already
- * \param[out] rsc_info  Where to store resource information obtained from LRM
+ * \param[in,out]  lrm_state  Executor connection state to use
+ * \param[in]      rsc_xml    XML containing resource configuration
+ * \param[in]      do_create  If true, register resource if not already
+ * \param[out]     rsc_info   Where to store information obtained from executor
  *
  * \retval pcmk_ok   Success (and rsc_info holds newly allocated result)
  * \retval -EINVAL   Required information is missing from arguments
@@ -1268,8 +1270,8 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
  * \note Caller is responsible for freeing result on success.
  */
 static int
-get_lrm_resource(lrm_state_t *lrm_state, xmlNode *rsc_xml, gboolean do_create,
-                 lrmd_rsc_info_t **rsc_info)
+get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
+                 gboolean do_create, lrmd_rsc_info_t **rsc_info)
 {
     const char *id = ID(rsc_xml);
 
@@ -1444,14 +1446,14 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
  * execution result, with specified error status (except for notify actions,
  * which will always be treated as successful).
  *
- * \param[in] lrm_state  Executor connection that action is for
- * \param[in] action     Action XML from request
- * \param[in] rc         Desired return code to use
- * \param[in] op_status  Desired operation status to use
- * \param[in] exit_reason  Human-friendly detail, if error
+ * \param[in,out] lrm_state    Executor connection that action is for
+ * \param[in]     action       Action XML from request
+ * \param[in]     rc           Desired return code to use
+ * \param[in]     op_status    Desired operation status to use
+ * \param[in]     exit_reason  Human-friendly detail, if error
  */
 static void
-synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
+synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
                         int op_status, enum ocf_exitcode rc,
                         const char *exit_reason)
 {
@@ -1499,7 +1501,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
  * \return LRM operation target node name (local node or Pacemaker Remote node)
  */
 static const char *
-lrm_op_target(xmlNode *xml)
+lrm_op_target(const xmlNode *xml)
 {
     const char *target = NULL;
 
@@ -1967,8 +1969,8 @@ resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
 #endif
 
 static lrmd_event_data_t *
-construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
-             const char *operation)
+construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
+             const char *rsc_id, const char *operation)
 {
     lrmd_event_data_t *op = NULL;
     const char *op_delay = NULL;
@@ -2101,15 +2103,15 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
  * Reply with a synthesized event result directly, as opposed to going through
  * the executor.
  *
- * \param[in] to_host  Host to send result to
- * \param[in] to_sys   IPC name to send result to (NULL for transition engine)
- * \param[in] rsc      Type information about resource the result is for
- * \param[in] op       Event with result to send
- * \param[in] rsc_id   ID of resource the result is for
+ * \param[in]     to_host  Host to send result to
+ * \param[in]     to_sys   IPC name to send result (NULL for transition engine)
+ * \param[in]     rsc      Type information about resource the result is for
+ * \param[in,out] op       Event with result to send
+ * \param[in]     rsc_id   ID of resource the result is for
  */
 void
 controld_ack_event_directly(const char *to_host, const char *to_sys,
-                            lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
+                            const lrmd_rsc_info_t *rsc, lrmd_event_data_t *op,
                             const char *rsc_id)
 {
     xmlNode *reply = NULL;
@@ -2645,7 +2647,7 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
  * \param[in] confirmed  Whether to log that graph action was confirmed
  */
 static void
-log_executor_event(lrmd_event_data_t *op, const char *op_key,
+log_executor_event(const lrmd_event_data_t *op, const char *op_key,
                    const char *node_name, int update_id, gboolean confirmed)
 {
     int log_level = LOG_ERR;
@@ -2712,7 +2714,7 @@ log_executor_event(lrmd_event_data_t *op, const char *op_key,
 
 void
 process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
-                  active_op_t *pending, xmlNode *action_xml)
+                  active_op_t *pending, const xmlNode *action_xml)
 {
     char *op_id = NULL;
     char *op_key = NULL;
@@ -2853,7 +2855,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
          * have been waiting for it to finish.
          */
         if (lrm_state) {
-            erase_lrm_history_by_op(lrm_state, op);
+            erase_lrm_history_by_op(op);
         }
 
         /* If the recurring operation had failed, the lrm_rsc_op is recorded as

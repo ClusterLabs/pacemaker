@@ -196,7 +196,7 @@ log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 }
 
 struct ra_metadata_s *
-metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
+metadata_cache_update(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
                       const char *metadata_str)
 {
     char *key = NULL;
@@ -321,15 +321,15 @@ err:
  * \internal
  * \brief Get meta-data for a resource
  *
- * \param[in] lrm_state  Use meta-data cache from this executor connection
- * \param[in] rsc        Resource to get meta-data for
- * \param[in] source     Allowed meta-data sources (bitmask of enum
- *                       controld_metadata_source_e values)
+ * \param[in,out] lrm_state  Use meta-data cache from this executor connection
+ * \param[in]     rsc        Resource to get meta-data for
+ * \param[in]     source     Allowed meta-data sources (bitmask of
+ *                           enum controld_metadata_source_e values)
  *
  * \return Meta-data cache entry for given resource, or NULL if not available
  */
 struct ra_metadata_s *
-controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
                           uint32_t source)
 {
     struct ra_metadata_s *metadata = NULL;

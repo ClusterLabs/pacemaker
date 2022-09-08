@@ -113,7 +113,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
  * \return TRUE if this was not a direct nack, success or lrm status refresh
  */
 static gboolean
-update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
+update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
                  int target_rc, gboolean do_update, gboolean ignore_failures)
 {
     guint interval_ms = 0;

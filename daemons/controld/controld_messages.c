@@ -501,14 +501,14 @@ authorize_version(xmlNode *message_data, const char *field,
  * that nothing further needs to be done with the message. If the message is not
  * a hello, just return true to indicate it needs further processing.
  *
- * \param[in] client_msg     XML of IPC message
- * \param[in] curr_client    If IPC is not proxied, client that sent message
- * \param[in] proxy_session  If IPC is proxied, the session ID
+ * \param[in]     client_msg     XML of IPC message
+ * \param[in,out] curr_client    If IPC is not proxied, client that sent message
+ * \param[in]     proxy_session  If IPC is proxied, the session ID
  *
  * \return true if message needs further processing, false if it doesn't
  */
 bool
-controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
+controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_client,
                                const char *proxy_session)
 {
     xmlNode *message_data = NULL;
@@ -718,7 +718,7 @@ handle_lrm_delete(xmlNode *stored_msg)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_remote_state(xmlNode *msg)
+handle_remote_state(const xmlNode *msg)
 {
     const char *remote_uname = ID(msg);
     crm_node_t *remote_peer;
@@ -746,7 +746,7 @@ handle_remote_state(xmlNode *msg)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_ping(xmlNode *msg)
+handle_ping(const xmlNode *msg)
 {
     const char *value = NULL;
     xmlNode *ping = NULL;
@@ -782,10 +782,12 @@ handle_ping(xmlNode *msg)
 /*!
  * \brief Handle a PCMK__CONTROLD_CMD_NODES message
  *
+ * \param[in] request  Message XML
+ *
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_node_list(xmlNode *request)
+handle_node_list(const xmlNode *request)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -823,7 +825,7 @@ handle_node_list(xmlNode *request)
  * \return Next FSA input
  */
 static enum crmd_fsa_input
-handle_node_info_request(xmlNode *msg)
+handle_node_info_request(const xmlNode *msg)
 {
     const char *value = NULL;
     crm_node_t *node = NULL;
