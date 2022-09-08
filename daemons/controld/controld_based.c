@@ -31,7 +31,9 @@ do_cib_updated(const char *event, xmlNode * msg)
 void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
-    int change_section = cib_change_section_nodes | cib_change_section_status;
+    uint32_t change_section = cib_change_section_nodes
+                              |cib_change_section_status;
+    long long value = 0;
 
     crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (AM_I_DC == FALSE) {
@@ -43,7 +45,14 @@ do_cib_replaced(const char *event, xmlNode * msg)
         return;
     }
 
-    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
+    if ((crm_element_value_ll(msg, F_CIB_CHANGE_SECTION, &value) < 0)
+        || (value < 0) || (value > UINT32_MAX)) {
+
+        crm_trace("Couldn't parse '%s' from message", F_CIB_CHANGE_SECTION);
+    } else {
+        change_section = (uint32_t) value;
+    }
+
     if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
         /* start the join process again so we get everyone's LRM status */
         populate_cib_nodes(node_update_quick|node_update_all, __func__);

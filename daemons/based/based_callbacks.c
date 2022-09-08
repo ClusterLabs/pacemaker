@@ -1210,7 +1210,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *current_nodes_digest = NULL;
     char *current_alerts_digest = NULL;
     char *current_status_digest = NULL;
-    int change_section = cib_change_section_nodes | cib_change_section_alerts | cib_change_section_status;
+    uint32_t change_section = cib_change_section_nodes
+                              |cib_change_section_alerts
+                              |cib_change_section_status;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
