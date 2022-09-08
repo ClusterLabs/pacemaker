@@ -827,15 +827,15 @@ handle_node_info_request(xmlNode *msg)
     const char *value = NULL;
     crm_node_t *node = NULL;
     int node_id = 0;
-    xmlNode *reply = NULL;
+    xmlNode *reply_data = NULL;
 
     // Build reply
 
-    reply = create_xml_node(NULL, XML_CIB_TAG_NODE);
-    crm_xml_add(reply, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    crm_xml_add(reply_data, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+    pcmk__xe_set_bool_attr(reply_data, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
     // Check whether client requested node info by ID and/or name
     crm_element_value_int(msg, XML_ATTR_ID, &node_id);
@@ -851,17 +851,17 @@ handle_node_info_request(xmlNode *msg)
 
     node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
-        crm_xml_add_int(reply, XML_ATTR_ID, node->id);
-        crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
-        crm_xml_add(reply, XML_ATTR_UNAME, node->uname);
-        crm_xml_add(reply, XML_NODE_IS_PEER, node->state);
-        pcmk__xe_set_bool_attr(reply, XML_NODE_IS_REMOTE,
+        crm_xml_add_int(reply_data, XML_ATTR_ID, node->id);
+        crm_xml_add(reply_data, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply_data, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(reply_data, XML_NODE_IS_PEER, node->state);
+        pcmk__xe_set_bool_attr(reply_data, XML_NODE_IS_REMOTE,
                                pcmk_is_set(node->flags, crm_remote_node));
     }
 
     // Send reply
-    msg = create_reply(msg, reply);
-    free_xml(reply);
+    msg = create_reply(msg, reply_data);
+    free_xml(reply_data);
     if (msg) {
         (void) relay_message(msg, TRUE);
         free_xml(msg);
