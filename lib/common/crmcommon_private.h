@@ -58,11 +58,7 @@ typedef struct xml_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
-void pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
-                    int *max, int depth);
-
-G_GNUC_INTERNAL
-void pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c);
+void pcmk__xml2text(xmlNodePtr data, int options, GString *buffer, int depth);
 
 G_GNUC_INTERNAL
 bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
