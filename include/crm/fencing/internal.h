@@ -174,12 +174,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define STONITH_WATCHDOG_AGENT_INTERNAL "#watchdog"
 #  define STONITH_WATCHDOG_ID             "watchdog"
 
-/* Exported for crm_mon to reference */
-int stonith__failed_history(pcmk__output_t *out, va_list args);
-int stonith__history(pcmk__output_t *out, va_list args);
-int stonith__full_history(pcmk__output_t *out, va_list args);
-int stonith__pending_actions(pcmk__output_t *out, va_list args);
-
 stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
                                                  bool (*matching_fn)(stonith_history_t *, void *),
                                                  void *user_data);

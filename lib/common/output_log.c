@@ -310,10 +310,7 @@ pcmk__output_set_log_level(pcmk__output_t *out, int log_level) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
-
-    if (!pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "log", pcmk__str_none), return);
 
     priv = out->priv;
     priv->log_level = log_level;

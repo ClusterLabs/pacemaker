@@ -139,7 +139,7 @@ int
 pcmk__output_cluster_status(pcmk__output_t *out, stonith_t *st, cib_t *cib,
                             xmlNode *current_cib, enum pcmk__fence_history fence_history,
                             uint32_t show, uint32_t show_opts, char *only_node,
-                            char *only_rsc, char *neg_location_prefix, bool simple_output)
+                            char *only_rsc, const char *neg_location_prefix, bool simple_output)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
@@ -239,7 +239,7 @@ pcmk_status(xmlNodePtr *xml)
 int
 pcmk__status(pcmk__output_t *out, cib_t *cib, enum pcmk__fence_history fence_history,
              uint32_t show, uint32_t show_opts, char *only_node, char *only_rsc,
-             char *neg_location_prefix, bool simple_output)
+             const char *neg_location_prefix, bool simple_output)
 {
     xmlNode *current_cib = NULL;
     int rc = pcmk_rc_ok;

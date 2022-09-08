@@ -409,7 +409,7 @@ struct node_data {
     int found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
-    gboolean BASH_EXPORT;
+    gboolean bash_export;
 };
 
 static void
@@ -424,13 +424,13 @@ remote_node_print_helper(xmlNode *result, void *user_data)
     out->message(out, "crmadmin-node", data->type,
                  name ? name : id,
                  id,
-                 data->BASH_EXPORT);
+                 data->bash_export);
     data->found++;
 }
 
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
+pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;
@@ -441,7 +441,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
         struct node_data data = {
             .out = out,
             .found = 0,
-            .BASH_EXPORT = BASH_EXPORT
+            .bash_export = bash_export
         };
 
         out->begin_list(out, NULL, NULL, "nodes");

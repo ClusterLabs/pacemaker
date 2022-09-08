@@ -764,6 +764,10 @@ function test_tools() {
     cmd="crm_resource -q -r dummy"
     test_assert $CRM_EX_OK 0
 
+    desc="Show XML configuration of resource, output as XML"
+    cmd="crm_resource -q -r dummy --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
     test_assert $CRM_EX_USAGE
@@ -1028,7 +1032,15 @@ function test_tools() {
     export CIB_file="$test_home/cli/crmadmin-cluster-remote-guest-nodes.xml"
 
     desc="List all nodes"
-    cmd="crmadmin -N | wc -l | grep 11"
+    cmd="crmadmin -N"
+    test_assert $CRM_EX_OK 0
+
+    desc="Minimally list all nodes"
+    cmd="crmadmin -N -q"
+    test_assert $CRM_EX_OK 0
+
+    desc="List all nodes as bash exports"
+    cmd="crmadmin -N -B"
     test_assert $CRM_EX_OK 0
 
     desc="List cluster nodes"

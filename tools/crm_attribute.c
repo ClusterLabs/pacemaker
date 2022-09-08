@@ -45,15 +45,16 @@ GError *error = NULL;
 crm_exit_t exit_code = CRM_EX_OK;
 uint64_t cib_opts = cib_sync_call;
 
-PCMK__OUTPUT_ARGS("attribute", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("attribute", "const char *", "const char *", "const char *",
+                  "const char *", "const char *")
 static int
 attribute_text(pcmk__output_t *out, va_list args)
 {
-    char *scope = va_arg(args, char *);
-    char *instance = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *value = va_arg(args, char *);
-    char *host G_GNUC_UNUSED = va_arg(args, char *);
+    const char *scope = va_arg(args, const char *);
+    const char *instance = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    const char *host G_GNUC_UNUSED = va_arg(args, const char *);
 
     if (out->quiet) {
         if (value != NULL) {
@@ -562,11 +563,14 @@ output_one_attribute(xmlNode *node, void *userdata)
     const char *value = crm_element_value(node, XML_NVPAIR_ATTR_VALUE);
     const char *host = crm_element_value(node, PCMK__XA_ATTR_NODE_NAME);
 
+    const char *type = options.type;
+    const char *attr_id = options.attr_id;
+
     if (od->use_pattern && !pcmk__str_eq(name, options.attr_pattern, pcmk__str_regex)) {
         return pcmk_rc_ok;
     }
 
-    od->out->message(od->out, "attribute", options.type, options.attr_id, name, value, host);
+    od->out->message(od->out, "attribute", type, attr_id, name, value, host);
     od->did_output = true;
     crm_info("Read %s='%s' %s%s",
              pcmk__s(name, "<null>"), pcmk__s(value, ""),
@@ -599,8 +603,15 @@ command_query(pcmk__output_t *out, cib_t *cib)
     }
 
     if (rc == ENXIO && options.attr_default) {
-        out->message(out, "attribute", options.type, options.attr_id,
-                     options.attr_name, options.attr_default, options.dest_uname);
+        /* Make static analysis happy */
+        const char *type = options.type;
+        const char *attr_id = options.attr_id;
+        const char *attr_name = options.attr_name;
+        const char *attr_default = options.attr_default;
+        const char *dest_uname = options.dest_uname;
+
+        out->message(out, "attribute", type, attr_id, attr_name, attr_default,
+                     dest_uname);
         rc = pcmk_rc_ok;
 
     } else if (rc != pcmk_rc_ok) {

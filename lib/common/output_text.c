@@ -334,6 +334,7 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
 
     CRM_ASSERT(out != NULL);
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
 
     len = vfprintf(out->dest, format, args);
     CRM_ASSERT(len >= 0);
@@ -355,10 +356,7 @@ G_GNUC_PRINTF(2, 0)
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     CRM_ASSERT(out != NULL);
-
-    if (!pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
-        return;
-    }
+    CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
 
     if (fancy) {
         int level = 0;

@@ -1821,7 +1821,7 @@ main(int argc, char **argv)
             all = g_list_prepend(all, (gpointer) "*");
             rc = out->message(out, "resource-list", data_set,
                               pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
-                              TRUE, all, all, FALSE);
+                              true, all, all, false);
             g_list_free(all);
 
             if (rc == pcmk_rc_no_output) {
@@ -1936,11 +1936,11 @@ main(int argc, char **argv)
         }
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, data_set, TRUE);
+            rc = cli_resource_print(rsc, data_set, true);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(rsc, data_set, FALSE);
+            rc = cli_resource_print(rsc, data_set, false);
             break;
 
         case cmd_why:

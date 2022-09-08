@@ -359,6 +359,9 @@ struct pcmk__output_s {
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
      *
+     * \note It is possible for a formatter that supports this method to
+     *       still not print anything out if is_quiet returns true.
+     *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
      * \param[in]     ... Arguments to be formatted.
@@ -377,6 +380,9 @@ struct pcmk__output_s {
      *
      * \note A newline will automatically be added to the end of the format
      *       string, so callers should not include a newline.
+     *
+     * \note Formatters that support this method should always generate output,
+     *       even if is_quiet returns true.
      *
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
@@ -631,10 +637,15 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table);
  * \brief A printf-like function.
  *
  * This function writes to out->dest and indents the text to the current level
- * of the text formatter's nesting.  This should be used when implementing
- * custom message functions instead of printf.
+ * of the text formatter's nesting.  This function should be used when implementing
+ * custom message functions for the text output format.  It should not be used
+ * for any other purpose.
  *
- * \param[in,out] out The output functions structure.
+ * Typically, this function should be used instead of printf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     ...    Arguments to be passed to the format string.
  */
 void
 pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
@@ -644,8 +655,10 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
  * \brief A vprintf-like function.
  *
  * This function is like pcmk__indented_printf(), except it takes a va_list instead
- * of a list of arguments.  This should be used when implementing custom message
- * functions instead of vprintf.
+ * of a list of arguments.  This function should be used when implementing custom
+ * functions for the text output format.  It should not be used for any other purpose.
+ *
+ * Typically, this function should be used instead of vprintf.
  *
  * \param[in,out] out    The output functions structure.
  * \param[in]     format The format string.
@@ -659,10 +672,13 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_
  * \internal
  * \brief A printf-like function.
  *
- * This function writes to out->dest without indenting the text.  This should be
- * used with implementing custom message functions instead of printf.
+ * This function writes to out->dest without indenting the text.  This function
+ * should be used when implementing custom message functions for the text output
+ * format.  It should not be used for any other purpose.
  *
- * \param[in,out] out The output functions structure.
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     ...    Arguments to be passed to the format string.
  */
 void
 pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
@@ -672,8 +688,9 @@ pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRIN
  * \brief A vprintf-like function.
  *
  * This function is like pcmk__formatted_printf(), except it takes a va_list instead
- * of a list of arguments.  This should be used when implementing custom message
- * functions instead of vprintf.
+ * of a list of arguments.  This function should be used when implementing custom
+ * message functions for the text output format.  It should not be used for any
+ * other purpose.
  *
  * \param[in,out] out    The output functions structure.
  * \param[in]     format The format string.

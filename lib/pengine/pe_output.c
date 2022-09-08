@@ -38,12 +38,12 @@ compare_attribute(gconstpointer a, gconstpointer b)
  * \param[in]  attrname       The attribute to find.
  * \param[out] expected_score The expected value for this attribute.
  *
- * \return TRUE if extended information should be printed, FALSE otherwise
+ * \return true if extended information should be printed, false otherwise
  * \note Currently, extended information is only supported for ping/pingd
  *       resources, for which a message will be printed if connectivity is lost
  *       or degraded.
  */
-static gboolean
+static bool
 add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
                const char *attrname, int *expected_score)
 {
@@ -58,7 +58,7 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
         if (rsc->children != NULL) {
             if (add_extra_info(node, rsc->children, data_set, attrname,
                                expected_score)) {
-                return TRUE;
+                return true;
             }
         }
 
@@ -97,10 +97,10 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
             }
             *expected_score = host_list_num * multiplier_i;
 
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 static GList *
@@ -201,7 +201,7 @@ last_changed_string(const char *last_written, const char *user,
 
 static char *
 op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
-                  int rc, gboolean print_timing) {
+                  int rc, bool print_timing) {
     const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
     char *interval_str = NULL;
     char *buf = NULL;
@@ -275,7 +275,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 }
 
 static char *
-resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
+resource_history_string(pe_resource_t *rsc, const char *rsc_id, bool all,
                         int failcount, time_t last_failure) {
     char *buf = NULL;
 
@@ -342,6 +342,16 @@ is_mixed_version(pe_working_set_t *data_set) {
     return false;
 }
 
+static char *
+formatted_xml_buf(pe_resource_t *rsc, bool raw)
+{
+    if (raw) {
+        return dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
+    } else {
+        return dump_xml_formatted(rsc->xml);
+    }
+}
+
 PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "uint32_t", "uint32_t")
 static int
 cluster_summary(pcmk__output_t *out, va_list args) {
@@ -353,7 +363,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -367,7 +377,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(data_set);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum,
                      dc_version_s, dc_name, mixed_version);
         free(dc_name);
@@ -379,19 +389,19 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_options)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-options", data_set);
     }
 
@@ -417,7 +427,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     const char *stack_s = get_cluster_stack(data_set);
 
     if (pcmk_is_set(section_opts, pcmk_section_stack)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-stack", stack_s);
     }
 
@@ -432,7 +442,7 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         char *dc_name = data_set->dc_node ? pe__node_display_name(data_set->dc_node, pcmk_is_set(show_opts, pcmk_show_node_id)) : NULL;
         bool mixed_version = is_mixed_version(data_set);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-dc", data_set->dc_node, quorum,
                      dc_version_s, dc_name, mixed_version);
         free(dc_name);
@@ -444,12 +454,12 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
         const char *client = crm_element_value(data_set->input, XML_ATTR_UPDATE_CLIENT);
         const char *origin = crm_element_value(data_set->input, XML_ATTR_UPDATE_ORIG);
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times", last_written, user, client, origin);
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_counts)) {
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Cluster Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-counts", g_list_length(data_set->nodes),
                      data_set->ninstances, data_set->disabled_resources,
                      data_set->blocked_resources);
@@ -640,14 +650,14 @@ ban_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("ban-list", "pe_working_set_t *", "const char *", "GList *",
-                  "uint32_t", "gboolean")
+                  "uint32_t", "bool")
 static int
 ban_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     const char *prefix = va_arg(args, const char *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     GList *gIter, *gIter2;
     int rc = pcmk_rc_no_output;
@@ -1395,14 +1405,14 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
-                  "GList *", "uint32_t", "gboolean")
+                  "GList *", "uint32_t", "bool")
 static int
 failed_action_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
@@ -1427,7 +1437,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         }
 
         id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
+        if (!parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL)) {
             continue;
         }
 
@@ -1499,13 +1509,13 @@ status_node(pe_node_t *node, xmlNodePtr parent, uint32_t show_opts)
     }
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "bool",
                   "GList *", "GList *")
 static int
 node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean full = va_arg(args, gboolean);
+    bool full = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1543,7 +1553,7 @@ node_html(pcmk__output_t *out, va_list args) {
 
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
-                PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources");
+                PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources");
 
                 show_opts |= pcmk_show_rsc_only;
                 out->message(out, crm_map_element_name(rsc->xml), show_opts,
@@ -1624,13 +1634,12 @@ node_text_status(pe_node_t *node)
     return "OFFLINE";
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
-                  "GList *", "GList *")
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "bool", "GList *", "GList *")
 static int
 node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean full = va_arg(args, gboolean);
+    bool full = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1711,13 +1720,12 @@ node_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "gboolean",
-                  "GList *", "GList *")
+PCMK__OUTPUT_ARGS("node", "pe_node_t *", "uint32_t", "bool", "GList *", "GList *")
 static int
 node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
-    gboolean full = va_arg(args, gboolean);
+    bool full = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1796,12 +1804,12 @@ node_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "bool", "int")
 static int
 node_attribute_text(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
-    gboolean add_extra = va_arg(args, gboolean);
+    bool add_extra = va_arg(args, int);
     int expected_score = va_arg(args, int);
 
     if (add_extra) {
@@ -1826,12 +1834,12 @@ node_attribute_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "bool", "int")
 static int
 node_attribute_html(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
-    gboolean add_extra = va_arg(args, gboolean);
+    bool add_extra = va_arg(args, int);
     int expected_score = va_arg(args, int);
 
     if (add_extra) {
@@ -1969,12 +1977,12 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
+PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "bool", "int")
 static int
 node_attribute_xml(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
-    gboolean add_extra = va_arg(args, gboolean);
+    bool add_extra = va_arg(args, int);
     int expected_score = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
@@ -1992,12 +2000,12 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-attribute-list", "pe_working_set_t *", "uint32_t",
-                  "gboolean", "GList *", "GList *")
+                  "bool", "GList *", "GList *")
 static int
 node_attribute_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -2031,13 +2039,13 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
 
-        out->message(out, "node", node, show_opts, FALSE, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, false, only_node, only_rsc);
 
         for (GList *aIter = attr_list; aIter != NULL; aIter = aIter->next) {
             const char *name = aIter->data;
             const char *value = NULL;
             int expected_score = 0;
-            gboolean add_extra = FALSE;
+            bool add_extra = false;
 
             value = pe_node_attribute_raw(node, name);
 
@@ -2145,12 +2153,12 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
-                out->message(out, "node", node, show_opts, FALSE, only_node,
+                out->message(out, "node", node, show_opts, false, only_node,
                              only_rsc);
             }
 
-            out->message(out, "resource-history", rsc, rsc_id, FALSE,
-                         failcount, last_failure, FALSE);
+            out->message(out, "resource-history", rsc, rsc_id, false,
+                         failcount, last_failure, false);
         } else {
             GList *op_list = get_operation_list(rsc_entry);
             pe_resource_t *rsc = pe_find_resource(data_set->resources,
@@ -2162,7 +2170,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
 
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
-                out->message(out, "node", node, show_opts, FALSE, only_node,
+                out->message(out, "node", node, show_opts, false, only_node,
                              only_rsc);
             }
 
@@ -2175,14 +2183,14 @@ node_history_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "bool")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
+    bool print_spacer G_GNUC_UNUSED = va_arg(args, int);
 
     int rc = pcmk_rc_no_output;
 
@@ -2194,23 +2202,23 @@ node_list_html(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Node List");
 
-        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, true, only_node, only_rsc);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "bool")
 static int
 node_list_text(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -2237,7 +2245,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, print_spacer == TRUE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node List");
 
         // Determine whether to display node individually or in a list
         if (node->details->unclean || node->details->pending
@@ -2278,7 +2286,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         }
 
         /* If we get here, node is in bad state, or we're grouping by node */
-        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, true, only_node, only_rsc);
         free(node_name);
     }
 
@@ -2308,14 +2316,14 @@ node_list_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "gboolean")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "uint32_t", "bool")
 static int
 node_list_xml(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
+    bool print_spacer G_GNUC_UNUSED = va_arg(args, int);
 
     out->begin_list(out, NULL, NULL, "nodes");
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
@@ -2326,7 +2334,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        out->message(out, "node", node, show_opts, TRUE, only_node, only_rsc);
+        out->message(out, "node", node, show_opts, true, only_node, only_rsc);
     }
     out->end_list(out);
 
@@ -2334,7 +2342,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
-                  "uint32_t", "uint32_t", "gboolean")
+                  "uint32_t", "uint32_t", "bool")
 static int
 node_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -2342,7 +2350,7 @@ node_summary(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
     uint32_t section_opts = va_arg(args, uint32_t);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     xmlNode *node_state = NULL;
     xmlNode *cib_status = pcmk_find_cib_element(data_set->input,
@@ -2377,14 +2385,14 @@ node_summary(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     if (rsc) {
         out->list_item(out, NULL, "%s: %s allocation score on %s: %s",
@@ -2396,14 +2404,14 @@ node_weight(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "const char *")
 static int
 node_weight_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *prefix = va_arg(args, const char *);
     const char *uname = va_arg(args, const char *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
                                                    "function", prefix,
@@ -2486,13 +2494,13 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 promotion_score(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
     pe_node_t *chosen = va_arg(args, pe_node_t *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     out->list_item(out, NULL, "%s promotion score on %s: %s",
                    child_rsc->id,
@@ -2501,13 +2509,13 @@ promotion_score(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 promotion_score_xml(pcmk__output_t *out, va_list args)
 {
     pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
     pe_node_t *chosen = va_arg(args, pe_node_t *);
-    char *score = va_arg(args, char *);
+    const char *score = va_arg(args, const char *);
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
                                                    "id", child_rsc->id,
@@ -2521,19 +2529,27 @@ promotion_score_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
+PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean raw = va_arg(args, gboolean);
+    bool raw = va_arg(args, int);
 
-    char *rsc_xml = NULL;
+    char *rsc_xml = formatted_xml_buf(rsc, raw);
 
-    if (raw) {
-        rsc_xml = dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
-    } else {
-        rsc_xml = dump_xml_formatted(rsc->xml);
-    }
+    out->output_xml(out, "xml", rsc_xml);
+
+    free(rsc_xml);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "bool")
+static int
+resource_config_text(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    bool raw = va_arg(args, int);
+
+    char *rsc_xml = formatted_xml_buf(rsc, raw);
 
     pcmk__formatted_printf(out, "Resource XML:\n");
     out->output_xml(out, "xml", rsc_xml);
@@ -2542,15 +2558,15 @@ resource_config(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
+PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "bool", "int", "time_t", "bool")
 static int
 resource_history_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
-    gboolean all = va_arg(args, gboolean);
+    bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
-    gboolean as_header = va_arg(args, gboolean);
+    bool as_header = va_arg(args, int);
 
     char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
 
@@ -2564,15 +2580,15 @@ resource_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
+PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "bool", "int", "time_t", "bool")
 static int
 resource_history_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
-    gboolean all = va_arg(args, gboolean);
+    bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, int);
-    gboolean as_header = va_arg(args, gboolean);
+    bool as_header = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",
                                                      "id", rsc_id,
@@ -2600,7 +2616,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         }
     }
 
-    if (as_header == FALSE) {
+    if (!as_header) {
         pcmk__output_xml_pop_parent(out);
     }
 
@@ -2621,17 +2637,17 @@ print_resource_header(pcmk__output_t *out, uint32_t show_opts)
 }
 
 
-PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "uint32_t",
-                  "gboolean", "GList *", "GList *", "gboolean")
+PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "uint32_t", "bool",
+                  "GList *", "GList *", "bool")
 static int
 resource_list(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     uint32_t show_opts = va_arg(args, uint32_t);
-    gboolean print_summary = va_arg(args, gboolean);
+    bool print_summary = va_arg(args, int);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     GList *rsc_iter;
     int rc = pcmk_rc_no_output;
@@ -2765,8 +2781,8 @@ resource_operation_list(pcmk__output_t *out, va_list args)
             int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
                                              NULL, data_set);
 
-            out->message(out, "resource-history", rsc, rsc_printable_id(rsc), TRUE,
-                         failcount, last_failure, TRUE);
+            out->message(out, "resource-history", rsc, rsc_printable_id(rsc), true,
+                         failcount, last_failure, true);
             rc = pcmk_rc_ok;
         }
 
@@ -2884,11 +2900,11 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("ticket-list", "pe_working_set_t *", "gboolean")
+PCMK__OUTPUT_ARGS("ticket-list", "pe_working_set_t *", "bool")
 static int
 ticket_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
-    gboolean print_spacer = va_arg(args, gboolean);
+    bool print_spacer = va_arg(args, int);
 
     GHashTableIter iter;
     gpointer key, value;
@@ -2974,6 +2990,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "promotion-score", "default", promotion_score },
     { "promotion-score", "xml", promotion_score_xml },
     { "resource-config", "default", resource_config },
+    { "resource-config", "text", resource_config_text },
     { "resource-history", "default", resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
@@ -2991,43 +3008,4 @@ static pcmk__message_entry_t fmt_functions[] = {
 void
 pe__register_messages(pcmk__output_t *out) {
     pcmk__register_messages(out, fmt_functions);
-}
-
-void
-pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
-{
-    if (node == NULL) {
-        crm_trace("<NULL>");
-        return;
-    }
-
-    CRM_ASSERT(node->details);
-    crm_trace("%sNode %s: (weight=%d, fixed=%s)",
-              node->details->online ? "" : "Unavailable/Unclean ",
-              pe__node_name(node), node->weight,
-              node->fixed ? "True" : "False");
-
-    if (details) {
-        char *pe_mutable = strdup("\t\t");
-        GList *gIter = node->details->running_rsc;
-        GList *all = NULL;
-
-        all = g_list_prepend(all, (gpointer) "*");
-
-        crm_trace("\t\t===Node Attributes");
-        g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
-        free(pe_mutable);
-
-        crm_trace("\t\t=== Resources");
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-            uint32_t show_opts = pe_print_pending;
-
-            out->message(out, crm_map_element_name(rsc->xml), show_opts,
-                         rsc, all, all);
-        }
-
-        g_list_free(all);
-    }
 }
