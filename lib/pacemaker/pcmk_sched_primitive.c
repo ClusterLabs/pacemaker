@@ -16,7 +16,8 @@
 
 #include "libpacemaker_private.h"
 
-gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
+gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
+                   pe_working_set_t *data_set);
 static bool StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
@@ -1328,7 +1329,8 @@ NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional)
 }
 
 gboolean
-DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set)
+DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
+          pe_working_set_t *data_set)
 {
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed",
