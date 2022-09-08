@@ -806,7 +806,7 @@ free_xml_with_position(xmlNode * child, int position)
             int offset = 0;
             char buffer[PCMK__BUFFER_SIZE];
 
-            pcmk__element_xpath(NULL, child, buffer, offset, sizeof(buffer));
+            pcmk__element_xpath(child, buffer, offset, sizeof(buffer));
             crm_trace("Cannot remove %s %x", buffer, p->flags);
             return;
 
@@ -816,7 +816,7 @@ free_xml_with_position(xmlNode * child, int position)
                 int offset = 0;
                 char buffer[PCMK__BUFFER_SIZE];
 
-                if (pcmk__element_xpath(NULL, child, buffer, offset,
+                if (pcmk__element_xpath(child, buffer, offset,
                                         sizeof(buffer)) > 0) {
                     pcmk__deleted_xml_t *deleted_obj = NULL;
 

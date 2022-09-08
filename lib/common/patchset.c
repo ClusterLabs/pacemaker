@@ -95,7 +95,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         int offset = 0;
         char buffer[PCMK__BUFFER_SIZE];
 
-        if (pcmk__element_xpath(NULL, xml->parent, buffer, offset,
+        if (pcmk__element_xpath(xml->parent, buffer, offset,
                                 sizeof(buffer)) > 0) {
             int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
@@ -124,8 +124,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             int offset = 0;
             char buffer[PCMK__BUFFER_SIZE];
 
-            if (pcmk__element_xpath(NULL, xml, buffer, offset,
-                                    sizeof(buffer)) > 0) {
+            if (pcmk__element_xpath(xml, buffer, offset, sizeof(buffer)) > 0) {
                 change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
                 crm_xml_add(change, XML_DIFF_OP, "modify");
@@ -178,8 +177,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         crm_trace("%s.%s moved to position %d",
                   xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
-        if (pcmk__element_xpath(NULL, xml, buffer, offset,
-                                sizeof(buffer)) > 0) {
+        if (pcmk__element_xpath(xml, buffer, offset, sizeof(buffer)) > 0) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "move");

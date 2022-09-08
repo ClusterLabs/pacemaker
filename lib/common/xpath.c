@@ -267,14 +267,13 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
 }
 
 int
-pcmk__element_xpath(const char *prefix, const xmlNode *xml, char *buffer,
-                    int offset, size_t buffer_size)
+pcmk__element_xpath(const xmlNode *xml, char *buffer, int offset,
+                    size_t buffer_size)
 {
     const char *id = ID(xml);
 
-    if(offset == 0 && prefix == NULL && xml->parent) {
-        offset = pcmk__element_xpath(NULL, xml->parent, buffer, offset,
-                                     buffer_size);
+    if ((offset == 0) && (xml->parent != NULL)) {
+        offset = pcmk__element_xpath(xml->parent, buffer, offset, buffer_size);
     }
 
     if(id) {
@@ -294,7 +293,7 @@ xml_get_path(const xmlNode *xml)
     int offset = 0;
     char buffer[PCMK__BUFFER_SIZE];
 
-    if (pcmk__element_xpath(NULL, xml, buffer, offset, sizeof(buffer)) > 0) {
+    if (pcmk__element_xpath(xml, buffer, offset, sizeof(buffer)) > 0) {
         return strdup(buffer);
     }
     return NULL;

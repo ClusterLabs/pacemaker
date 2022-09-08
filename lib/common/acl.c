@@ -669,8 +669,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         char buffer[MAX_XPATH_LEN];
         xml_private_t *docp = xml->doc->_private;
 
-        offset = pcmk__element_xpath(NULL, xml, buffer, offset,
-                                     sizeof(buffer));
+        offset = pcmk__element_xpath(xml, buffer, offset, sizeof(buffer));
         if (name) {
             offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
                                "[@%s]", name);
