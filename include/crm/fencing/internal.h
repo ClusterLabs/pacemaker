@@ -18,11 +18,13 @@
 
 enum st_device_flags
 {
+    st_device_supports_none   = 0x0000,
     st_device_supports_list   = 0x0001,
     st_device_supports_status = 0x0002,
     st_device_supports_reboot = 0x0004,
     st_device_supports_parameter_plug = 0x0008,
     st_device_supports_parameter_port = 0x0010,
+    st_device_supports_on = 0x0020,
 };
 
 #define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
@@ -132,6 +134,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
 #  define F_STONITH_DELEGATE      "st_delegate"
+#  define F_STONITH_DEVICE_SUPPORT_FLAGS "st_device_support_flags"
 /*! The node initiating the stonith operation.  If an operation
  * is relayed, this is the last node the operation lands on. When
  * in standalone mode, origin is the client's id that originated the

@@ -61,6 +61,8 @@ typedef struct device_properties_s {
     int delay_max[st_phase_max];
     /* Action-specific base delay for each phase */
     int delay_base[st_phase_max];
+    /* Group of enum st_device_flags */
+    uint32_t device_support_flags;
 } device_properties_t;
 
 typedef struct {
@@ -116,6 +118,7 @@ free_stonith_remote_op_list(void)
 struct peer_count_data {
     const remote_fencing_op_t *op;
     gboolean verified_only;
+    uint32_t support_action_only;
     int count;
 };
 
@@ -134,7 +137,8 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
     struct peer_count_data *data = user_data;
 
     if (!props->executed[data->op->phase]
-        && (!data->verified_only || props->verified)) {
+        && (!data->verified_only || props->verified)
+        && ((data->support_action_only == st_device_supports_none) || pcmk_is_set(props->device_support_flags, data->support_action_only))) {
         ++(data->count);
     }
 }
@@ -146,17 +150,19 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
  * \param[in] op             Operation that results are for
  * \param[in] peer           Peer to count
  * \param[in] verified_only  Whether to count only verified devices
+ * \param[in] support_action_only Whether to count only devices that support action
  *
  * \return Number of devices available to peer that were not already executed
  */
 static int
 count_peer_devices(const remote_fencing_op_t *op,
-                   const peer_device_info_t *peer, gboolean verified_only)
+                   const peer_device_info_t *peer, gboolean verified_only, uint32_t support_on_action_only)
 {
     struct peer_count_data data;
 
     data.op = op;
     data.verified_only = verified_only;
+    data.support_action_only = support_on_action_only;
     data.count = 0;
     if (peer) {
         g_hash_table_foreach(peer->devices, count_peer_device, &data);
@@ -176,10 +182,13 @@ count_peer_devices(const remote_fencing_op_t *op,
  */
 static device_properties_t *
 find_peer_device(const remote_fencing_op_t *op, const peer_device_info_t *peer,
-                 const char *device)
+                 const char *device, uint32_t support_action_only)
 {
     device_properties_t *props = g_hash_table_lookup(peer->devices, device);
 
+    if (props && support_action_only != st_device_supports_none && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+        return NULL;
+    }
     return (props && !props->executed[op->phase]
            && !props->disallowed[op->phase])? props : NULL;
 }
@@ -199,14 +208,15 @@ static gboolean
 grab_peer_device(const remote_fencing_op_t *op, peer_device_info_t *peer,
                  const char *device, gboolean verified_devices_only)
 {
-    device_properties_t *props = find_peer_device(op, peer, device);
+    device_properties_t *props = find_peer_device(op, peer, device, 
+                                     pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none);
 
     if ((props == NULL) || (verified_devices_only && !props->verified)) {
         return FALSE;
     }
 
     crm_trace("Removing %s from %s (%d remaining)",
-              device, peer->host, count_peer_devices(op, peer, FALSE));
+              device, peer->host, count_peer_devices(op, peer, FALSE, st_device_supports_none));
     props->executed[op->phase] = TRUE;
     return TRUE;
 }
@@ -1356,8 +1366,8 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
             }
 
         } else if ((peer->tried == FALSE)
-                   && count_peer_devices(op, peer, verified_devices_only)) {
-
+                   && count_peer_devices(op, peer, verified_devices_only, 
+                          pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on : st_device_supports_none)) {
             /* No topology: Use the current best peer */
             crm_trace("Simple fencing");
             return peer;
@@ -1515,7 +1525,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
 
-                    if (find_peer_device(op, peer, device_list->data)) {
+                    if (find_peer_device(op, peer, device_list->data, 
+                            pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             device_list->data);
                         break;
@@ -1908,7 +1919,7 @@ all_topology_devices_found(remote_fencing_op_t * op)
                 if (skip_target && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
                     continue;
                 }
-                match = find_peer_device(op, peer, device->data);
+                match = find_peer_device(op, peer, device->data, st_device_supports_none);
             }
             if (!match) {
                 return FALSE;
@@ -1995,6 +2006,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     xmlNode *child;
     int verified = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
+    int flags = st_device_supports_on; /* Old nodes that don't set the flag assume they support the on action */
 
     /* Add a new entry to this peer's devices list */
     CRM_ASSERT(props != NULL);
@@ -2007,6 +2019,9 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                   peer->host, device);
         props->verified = TRUE;
     }
+
+    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+    props->device_support_flags = flags;
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
@@ -2147,7 +2162,7 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (op->state == st_query) {
-        int nverified = count_peer_devices(op, peer, TRUE);
+        int nverified = count_peer_devices(op, peer, TRUE, pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on : st_device_supports_none);
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
