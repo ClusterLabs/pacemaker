@@ -98,23 +98,8 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
     static struct qb_log_callsite *digest_cs = NULL;
 
     crm_trace("Begin digest %s", do_filter?"filtered":"");
-    if (do_filter && BEST_EFFORT_STATUS) {
-        /* Exclude the status calculation from the digest
-         *
-         * This doesn't mean it won't be sync'd, we just won't be paranoid
-         * about it being an _exact_ copy
-         *
-         * We don't need it to be exact, since we throw it away and regenerate
-         * from our peers whenever a new DC is elected anyway
-         *
-         * Importantly, this reduces the amount of XML to copy+export as
-         * well as the amount of data for MD5 needs to operate on
-         */
-
-    } else {
-        pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0),
-                       &buffer, &offset, &max, 0);
-    }
+    pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0), &buffer,
+                   &offset, &max, 0);
 
     CRM_ASSERT(buffer != NULL);
     digest = crm_md5sum(buffer);
