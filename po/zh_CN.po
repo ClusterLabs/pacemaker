@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-02-11 13:46+0800\n"
+"POT-Creation-Date: 2022-07-27 18:32+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -48,9 +48,9 @@ msgid ""
 "administration, but may also be used in Pacemaker configuration rules via "
 "the #cluster-name node attribute, and by higher-level tools and resource "
 "agents."
-msgstr "该可选值主要是为了方便用户管理使用，"
-"也可以在pacemaker 配置规则中通过 #cluster-name 节点属性配置使用，"
-"也可以通过高级工具和资源代理使用。"
+msgstr ""
+"该可选值主要是为了方便用户管理使用，也可以在pacemaker 配置规则中通过 "
+"#cluster-name 节点属性配置使用，也可以通过高级工具和资源代理使用。"
 
 #: daemons/controld/controld_control.c:545
 msgid "How long to wait for a response from other nodes during start-up"
@@ -75,6 +75,19 @@ msgid ""
 "Polling interval to recheck cluster state and evaluate rules with date "
 "specifications"
 msgstr "重新检查集群状态并且评估具有日期规格的配置规则的轮询间隔"
+
+#: daemons/controld/controld_control.c:556
+msgid ""
+"Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
+"cluster state for failure timeouts and most time-based rules. However, it "
+"will also recheck the cluster after this amount of inactivity, to evaluate "
+"rules with date specifications and serve as a fail-safe for certain types of "
+"scheduler bugs."
+msgstr ""
+"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态以评估大多数基于时间"
+"的规则以及过期的错误。然而无论如何，在集群经过该时间间隔的不活动状态后，它还"
+"将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障"
+"保护。"
 
 #: daemons/controld/controld_control.c:565
 msgid "Maximum amount of system load that should be used by cluster nodes"
@@ -102,24 +115,27 @@ msgid ""
 "communication. Allowed values are \"stop\" to attempt to immediately stop "
 "Pacemaker and stay stopped, or \"panic\" to attempt to immediately reboot "
 "the local node, falling back to stop on failure."
-msgstr "如果有错误的 fence 配置，或者在使用 fabric fence 机制 (并不会切断集群通信），"
-"则集群节点可能会收到针对自己的 fence 结果通知。允许的值为 \"stop\" 尝试立即停止 pacemaker "
-"并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败时返回执行stop。"
+msgstr ""
+"如果有错误的 fence 配置，或者在使用 fabric fence 机制 (并不会切断集群通信），"
+"则集群节点可能会收到针对自己的 fence 结果通知。允许的值为 \"stop\" 尝试立即停"
+"止 pacemaker 并保持停用状态,或者 \"panic\" 尝试立即重新启动本地节点，并在失败"
+"时返回执行stop。"
 
 #: daemons/controld/controld_control.c:587
 msgid ""
 "Declare an election failed if it is not decided within this much time. If "
 "you need to adjust this value, it probably indicates the presence of a bug."
 msgstr ""
-"如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可能代表"
-"存在某些缺陷。"
+"如果集群在本项设置时间内没有作出决定则宣布选举失败。如果您需要调整该值，这可"
+"能代表存在某些缺陷。"
 
 #: daemons/controld/controld_control.c:595
 msgid ""
 "Exit immediately if shutdown does not complete within this much time. If you "
 "need to adjust this value, it probably indicates the presence of a bug."
-msgstr "如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表"
-"存在某些缺陷。"
+msgstr ""
+"如果在这段时间内关机仍未完成，则立即退出。如果您需要调整该值，这可能代表存在"
+"某些缺陷。"
 
 #: daemons/controld/controld_control.c:603
 #: daemons/controld/controld_control.c:610
@@ -132,23 +148,24 @@ msgstr "如果您需要调整该值，这可能代表存在某些缺陷。"
 msgid ""
 "*** Advanced Use Only *** Enabling this option will slow down cluster "
 "recovery under all conditions"
-msgstr ""
-"*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
+msgstr "*** Advanced Use Only *** 启用此选项将在所有情况下减慢集群恢复的速度"
 
 #: daemons/controld/controld_control.c:618
 msgid ""
 "Delay cluster recovery for this much time to allow for additional events to "
 "occur. Useful if your configuration is sensitive to the order in which ping "
 "updates arrive."
-msgstr "集群恢复将被推迟指定的时间间隔，以等待更多事件发生。"
-"如果您的配置对 ping 更新到达的顺序很敏感，这就很有用"
+msgstr ""
+"集群恢复将被推迟指定的时间间隔，以等待更多事件发生。如果您的配置对 ping 更新"
+"到达的顺序很敏感，这就很有用"
 
 #: daemons/controld/controld_control.c:625
 msgid ""
 "How long to wait before we can assume nodes are safely down when watchdog-"
 "based self-fencing via SBD is in use"
-msgstr "当基于 watchdog 的自我 fence 机制通过SBD 被执行时，"
-"我们可以假设节点安全关闭之前需要等待多长时间"
+msgstr ""
+"当基于 watchdog 的自我 fence 机制通过SBD 被执行时，我们可以假设节点安全关闭之"
+"前需要等待多长时间"
 
 #: daemons/controld/controld_control.c:627
 msgid ""
@@ -166,12 +183,15 @@ msgid ""
 "be used. +WARNING:+ In this case, it's essential (currently not verified by "
 "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on all nodes."
 msgstr ""
-"如果值非零，且集群设置了 `have-watchdog=true` ，当需要 fence 操作时，基于 watchdog 的自我 fence 机制将通过SBD执行，"
-"而不需要显式配置 fence 资源。如果 `stonith-watchdog-timeout` 被设为正值，则假定不可见的节点在这段时间内自我fence。"
-" +WARNING:+ 必须确保该值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变量。Pacemaker将在所有节点上单独验证设置，"
-"如发现有错误的动态配置，将防止节点启动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。"
-"如果 `stonith-watchdog-timeout` 设置为负值。并且设置了 `SBD_WATCHDOG_TIMEOUT` ，则将使用该值的两倍，"
-" +WARNING:+ 在这种情况下，必须将所有节点上 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值(目前没有通过pacemaker验证)。"
+"如果值非零，且集群设置了 `have-watchdog=true` ，当需要 fence 操作时，基于 "
+"watchdog 的自我 fence 机制将通过SBD执行，而不需要显式配置 fence 资源。如果 "
+"`stonith-watchdog-timeout` 被设为正值，则假定不可见的节点在这段时间内自我"
+"fence。 +WARNING:+ 必须确保该值大于所有节点上的`SBD_WATCHDOG_TIMEOUT` 环境变"
+"量。Pacemaker将在所有节点上单独验证设置，如发现有错误的动态配置，将防止节点启"
+"动或关闭。强烈建议在所有节点上将 `SBD_WATCHDOG_TIMEOUT` 设置为相同的值。如果 "
+"`stonith-watchdog-timeout` 设置为负值。并且设置了 `SBD_WATCHDOG_TIMEOUT` ，则"
+"将使用该值的两倍， +WARNING:+ 在这种情况下，必须将所有节点上 "
+"`SBD_WATCHDOG_TIMEOUT` 设置为相同的值(目前没有通过pacemaker验证)。"
 
 #: daemons/controld/controld_control.c:648
 msgid ""
@@ -179,19 +199,7 @@ msgid ""
 "attempted on a target"
 msgstr "fence操作失败多少次会停止立即尝试"
 
-#: daemons/controld/controld_control.c:556
-msgid ""
-"Pacemaker is primarily event-driven, and looks ahead to know when to recheck "
-"cluster state for failure timeouts and most time-based rules. However, it "
-"will also recheck the cluster after this amount of inactivity, to evaluate "
-"rules with date specifications and serve as a fail-safe for certain types of "
-"scheduler bugs."
-msgstr ""
-"Pacemaker 主要是通过事件驱动的，并能预期重新检查集群状态以评估大多数基于时间"
-"的规则以及过期的错误。然而无论如何，在集群经过该时间间隔的不活动状态后，它还"
-"将重新检查集群，以评估具有日期规格的规则，并为某些类型的调度程序缺陷提供故障保护。"
-
-#: daemons/fenced/pacemaker-fenced.c:1464
+#: daemons/fenced/pacemaker-fenced.c:1442
 #, c-format
 msgid ""
 " <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -201,7 +209,7 @@ msgstr ""
 " <longdesc lang=\"zh\">实例属性可用于所有stonith类资源，并由Pacemaker的fence"
 "守护程序使用（以前称为stonithd）</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1469
+#: daemons/fenced/pacemaker-fenced.c:1447
 #, c-format
 msgid ""
 " <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-"
@@ -209,7 +217,7 @@ msgid ""
 msgstr ""
 " <shortdesc lang=\"zh\">可用于所有stonith类资源的实例属性</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1492
+#: daemons/fenced/pacemaker-fenced.c:1470
 #, fuzzy, c-format
 msgid ""
 "    <longdesc lang=\"en\">Some devices do not support the standard 'port' "
@@ -226,7 +234,7 @@ msgstr ""
 "使用值'%s'可用来告诉集群不提供任何额外的参数\n"
 "     </longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1504
+#: daemons/fenced/pacemaker-fenced.c:1482
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to "
@@ -235,7 +243,7 @@ msgstr ""
 "    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
 "代'port'</shortdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1515
+#: daemons/fenced/pacemaker-fenced.c:1493
 #, c-format
 msgid ""
 "    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to "
@@ -244,7 +252,7 @@ msgstr ""
 "    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群"
 "的节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
 
-#: daemons/fenced/pacemaker-fenced.c:1521
+#: daemons/fenced/pacemaker-fenced.c:1499
 #, c-format
 msgid ""
 "    <shortdesc lang=\"en\">A mapping of host names to ports numbers for "
@@ -253,15 +261,71 @@ msgstr ""
 "    <shortdesc lang=\"zh\">为不支持主机名的设备提供主机名和端口号的映射</"
 "shortdesc>\n"
 
-#: lib/cib/cib_utils.c:558
+#: daemons/fenced/pacemaker-fenced.c:1508
+#, c-format
+msgid "    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n"
+msgstr "    <longdesc lang=\"zh\">例如. node1,node2,node3</longdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1514
+#, fuzzy, c-format
+msgid ""
+"    <shortdesc lang=\"en\">A list of machines controlled by this device "
+"(Optional unless %s=static-list).</shortdesc>\n"
+msgstr ""
+"    <shortdesc lang=\"zh\">为不支持主机名的设备提供主机名和端口号的映射</"
+"shortdesc>\n"
+
+#: daemons/fenced/pacemaker-fenced.c:1533
+#, c-format
+msgid ""
+"    <shortdesc lang=\"en\">How to determine which machines are controlled by "
+"the device.</shortdesc>\n"
+msgstr ""
+"    <shortdesc lang = \"zh\">如何确定哪些机器由设备控制。</shortdesc> \n"
+
+#: daemons/fenced/pacemaker-fenced.c:1546
+#, c-format
+msgid ""
+"    <longdesc lang=\"en\">This prevents double fencing when using slow "
+"devices such as sbd.\n"
+"Use this to enable a random delay for fencing actions.\n"
+"The overall delay is derived from this random delay value adding a static "
+"delay so that the sum is kept below the maximum delay.</longdesc>\n"
+msgstr ""
+"     <longdesc lang = \"zh\">使用慢速设备（例如sbd使用它来启用随机延迟进行击"
+"剑动作。\n"
+"总体延迟是从这个随机延迟值添加添加静态延迟的延迟值，以使总和保持在最大延迟以"
+"下。</longdesc> \n"
+
+#: daemons/fenced/pacemaker-fenced.c:1575
+#, c-format
+msgid ""
+"    <shortdesc lang=\"en\">Enable a base delay for fencing actions and "
+"specify base delay value.</shortdesc>\n"
+msgstr ""
+"    <shortdesc lang = \"zh\">如何确定哪些机器由设备控制。</shortdesc> \n"
+
+#: daemons/fenced/pacemaker-fenced.c:1588
+#, c-format
+msgid ""
+"    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to "
+"be configured first.\n"
+"Then use this to specify the maximum number of actions can be performed in "
+"parallel on this device. -1 is unlimited.</longdesc>\n"
+msgstr ""
+"<longdesc lang = \"zh\"> cluster属性consurrent fencing = true需要首先配置。\n"
+"然后使用它来指定可以在此设备上并行执行的最大动作数。-1是无限的。</"
+"longdesc> \n"
+
+#: lib/cib/cib_utils.c:559
 msgid "Enable Access Control Lists (ACLs) for the CIB"
 msgstr "为CIB启用访问控制列表(ACL)"
 
-#: lib/cib/cib_utils.c:564
+#: lib/cib/cib_utils.c:565
 msgid "Maximum IPC message backlog before disconnecting a cluster daemon"
 msgstr "断开集群守护程序之前的最大IPC消息积压"
 
-#: lib/cib/cib_utils.c:565
+#: lib/cib/cib_utils.c:566
 msgid ""
 "Raise this if log has \"Evicting client\" messages for cluster daemon PIDs "
 "(a good value is the number of resources in the cluster multiplied by the "
@@ -270,7 +334,7 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:591
+#: lib/common/options.c:594
 msgid "  Allowed values: "
 msgstr ""
 
@@ -278,12 +342,12 @@ msgstr ""
 msgid "Whether watchdog integration is enabled"
 msgstr "是否启用看门狗集成设置"
 
-#: tools/crm_resource.c:1405
+#: tools/crm_resource.c:1408
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1411
+#: tools/crm_resource.c:1414
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
