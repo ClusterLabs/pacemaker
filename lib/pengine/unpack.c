@@ -2582,43 +2582,41 @@ set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
-#define STATUS_PATH_MAX 1024
 static xmlNode *
 find_lrm_op(const char *resource, const char *op, const char *node, const char *source,
             int target_rc, pe_working_set_t *data_set)
 {
-    int offset = 0;
-    char xpath[STATUS_PATH_MAX];
+    GString *xpath = NULL;
     xmlNode *xml = NULL;
 
     CRM_CHECK((resource != NULL) && (op != NULL) && (node != NULL),
               return NULL);
 
-    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//node_state[@uname='%s']", node);
-    offset +=
-        snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//" XML_LRM_TAG_RESOURCE "[@id='%s']",
-                 resource);
+    xpath = g_string_sized_new(256);
+    g_string_append_printf(xpath,
+                           "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+                           "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
+                           "/" XML_LRM_TAG_RSC_OP
+                           "[@" XML_LRM_ATTR_TASK "='%s'",
+                           node, resource, op);
 
     /* Need to check against transition_magic too? */
     if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
-                     source);
+        g_string_append_printf(xpath,
+                               "and @" XML_LRM_ATTR_MIGRATE_TARGET "='%s']",
+                               source);
 
     } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
-                     source);
+        g_string_append_printf(xpath,
+                               "and @" XML_LRM_ATTR_MIGRATE_SOURCE "='%s']",
+                               source);
     } else {
-        offset +=
-            snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                     "/" XML_LRM_TAG_RSC_OP "[@operation='%s']", op);
+        g_string_append_c(xpath, ']');
     }
 
-    CRM_LOG_ASSERT(offset > 0);
-    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    xml = get_xpath_object((const char *) xpath->str, data_set->input,
+                           LOG_DEBUG);
+    g_string_free(xpath, TRUE);
 
     if (xml && target_rc >= 0) {
         int rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -2637,21 +2635,21 @@ static xmlNode *
 find_lrm_resource(const char *rsc_id, const char *node_name,
                   pe_working_set_t *data_set)
 {
-    int offset = 0;
-    char xpath[STATUS_PATH_MAX];
+    GString *xpath = NULL;
     xmlNode *xml = NULL;
 
     CRM_CHECK((rsc_id != NULL) && (node_name != NULL), return NULL);
 
-    offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                       "//node_state[@uname='%s']", node_name);
-    offset +=
-        snprintf(xpath + offset, STATUS_PATH_MAX - offset,
-                 "//" XML_LRM_TAG_RESOURCE "[@id='%s']", rsc_id);
+    xpath = g_string_sized_new(256);
+    g_string_append_printf(xpath,
+                           "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
+                           "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']",
+                           node_name, rsc_id);
 
-    CRM_LOG_ASSERT(offset > 0);
-    xml = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    xml = get_xpath_object((const char *) xpath->str, data_set->input,
+                           LOG_DEBUG);
 
+    g_string_free(xpath, TRUE);
     return xml;
 }
 
