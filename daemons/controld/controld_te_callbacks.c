@@ -458,13 +458,14 @@ te_update_diff_v2(xmlNode *diff)
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
-                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS, pcmk__str_casei)) {
+                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS,
+                                   pcmk__str_none)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
