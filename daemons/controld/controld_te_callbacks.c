@@ -419,7 +419,13 @@ te_update_diff_v2(xmlNode *diff)
             crm_trace("Ignoring %s change for version field", op);
             continue;
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if ((strcmp(op, "move") == 0)
+                   && (strstr(xpath,
+                              "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+                              "/" XML_CIB_TAG_RESOURCES) == NULL)) {
+            /* We still need to consider moves within the resources section,
+             * since they affect placement order.
+             */
             crm_trace("Ignoring move change at %s", xpath);
             continue;
         }
@@ -434,7 +440,7 @@ te_update_diff_v2(xmlNode *diff)
                 match = match->children;
             }
 
-        } else if (strcmp(op, "delete") != 0) {
+        } else if (!pcmk__str_any_of(op, "delete", "move", NULL)) {
             crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
                      op, xpath);
             continue;
