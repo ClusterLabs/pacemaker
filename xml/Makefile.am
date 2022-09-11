@@ -31,6 +31,7 @@ numeric_versions = $(shell ls -1 $(1) \
 			  | sed -n -e 's/^.*-\([0-9][0-9.]*\).rng$$/\1/p' \
 			  | sort -u -t. -k 1,1n -k 2,2n -k 3,3n)
 
+# @COMPAT: pacemaker-next is deprecated since 2.1.5
 version_pairs = $(join \
 			    $(1),$(addprefix \
 			      -,$(wordlist \
@@ -113,6 +114,7 @@ CIB_max			?= $(lastword $(CIB_numeric_versions))
 MON_max 			?= $(lastword $(MON_numeric_versions))
 
 # Sorted lists of all schema versions (including "next")
+# @COMPAT: pacemaker-next is deprecated since 2.1.5
 API_versions		= next $(API_numeric_versions)
 CIB_versions		= next $(CIB_numeric_versions)
 
