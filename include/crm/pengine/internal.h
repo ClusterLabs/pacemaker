@@ -152,6 +152,7 @@ enum pe_warn_once_e {
     pe_wo_neg_threshold = (1 << 6),
     pe_wo_remove_after  = (1 << 7),
     pe_wo_ping_node     = (1 << 8),
+    pe_wo_order_inst    = (1 << 9),
 };
 
 extern uint32_t pe_wo;
