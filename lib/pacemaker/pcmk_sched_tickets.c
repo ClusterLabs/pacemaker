@@ -290,11 +290,17 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     const char *state = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_ROLE);
 
-    // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
+    // @COMPAT: Deprecated since 2.1.5
     const char *instance = crm_element_value(xml_obj,
                                              XML_COLOC_ATTR_SOURCE_INSTANCE);
 
     pe_resource_t *rsc = NULL;
+
+    if (instance != NULL) {
+        pe_warn_once(pe_wo_coloc_inst,
+                     "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
+                     "deprecated and will be removed in a future release.");
+    }
 
     CRM_CHECK(xml_obj != NULL, return);
 

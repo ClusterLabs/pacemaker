@@ -496,9 +496,10 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                                  XML_COLOC_ATTR_TARGET_ROLE);
     const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
 
-    // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
+    // @COMPAT: Deprecated since 2.1.5
     const char *dependent_instance = crm_element_value(xml_obj,
                                                        XML_COLOC_ATTR_SOURCE_INSTANCE);
+    // @COMPAT: Deprecated since 2.1.5
     const char *primary_instance = crm_element_value(xml_obj,
                                                      XML_COLOC_ATTR_TARGET_INSTANCE);
 
@@ -506,6 +507,18 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                                                               dependent_id);
     pe_resource_t *primary = pcmk__find_constraint_resource(data_set->resources,
                                                             primary_id);
+
+    if (dependent_instance != NULL) {
+        pe_warn_once(pe_wo_coloc_inst,
+                     "Support for " XML_COLOC_ATTR_SOURCE_INSTANCE " is "
+                     "deprecated and will be removed in a future release.");
+    }
+
+    if (primary_instance != NULL) {
+        pe_warn_once(pe_wo_coloc_inst,
+                     "Support for " XML_COLOC_ATTR_TARGET_INSTANCE " is "
+                     "deprecated and will be removed in a future release.");
+    }
 
     if (dependent == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
