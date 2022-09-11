@@ -333,10 +333,9 @@ without requiring a password to be entered each time:
 ### Tests for scheduler
 
 The source `*.xml` files are preferably kept in sync with the newest
-major (and only major, which is enough) schema version, unless justified
-otherwise (e.g. testing a feature backed only in `pacemaker-next` special
-version of the schema), since these tests are not meant to double as
-schema upgrade ones (unless some cases expressly designated so).
+major (and only major, which is enough) schema version, since these
+tests are not meant to double as schema upgrade ones (except some cases
+expressly designated as such).
 
 Currently and unless something goes wrong, the procedure of upgrading
 these tests en masse is as easy as:
