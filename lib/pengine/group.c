@@ -101,9 +101,18 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     xmlNode *xml_obj = rsc->xml;
     xmlNode *xml_native_rsc = NULL;
     group_variant_data_t *group_data = NULL;
+
+    // @COMPAT: group_ordered is deprecated since 2.1.5
     const char *group_ordered = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ORDERED);
     const char *group_colocated = g_hash_table_lookup(rsc->meta, "collocated");
     const char *clone_id = NULL;
+
+    if (group_ordered != NULL) {
+        pe_warn_once(pe_wo_group_order,
+                     "Support for the " XML_RSC_ATTR_ORDERED " meta attribute "
+                     "for groups is deprecated and will be removed in a future "
+                     "release. Use a resource set instead.");
+    }
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 

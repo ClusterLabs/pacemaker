@@ -154,6 +154,7 @@ enum pe_warn_once_e {
     pe_wo_ping_node     = (1 << 8),
     pe_wo_order_inst    = (1 << 9),
     pe_wo_coloc_inst    = (1 << 10),
+    pe_wo_group_order   = (1 << 11),
 };
 
 extern uint32_t pe_wo;
