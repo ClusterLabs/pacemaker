@@ -1,6 +1,6 @@
 
 galera:0 promotion score on galera-bundle-0: 100
-galera:1 promotion score on galera-bundle-1: 100
+galera:1 promotion score on galera-bundle-1: -1
 galera:2 promotion score on galera-bundle-2: -1
 pcmk__bundle_assign: galera-bundle allocation score on node1: 0
 pcmk__bundle_assign: galera-bundle allocation score on node2: 0
