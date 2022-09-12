@@ -531,5 +531,4 @@ _______
        ``validate-with`` property.
 
 .. [#] As of Pacemaker 2.0.0, only schema versions pacemaker-1.0 and higher
-       are supported (excluding pacemaker-1.1, which was an experimental schema
-       now known as pacemaker-next).
+       are supported (excluding pacemaker-1.1, which was a special case).

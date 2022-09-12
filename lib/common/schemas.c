@@ -84,6 +84,7 @@ xml_log(int priority, const char *fmt, ...)
 static int
 xml_latest_schema_index(void)
 {
+    // @COMPAT: pacemaker-next is deprecated since 2.1.5
     return xml_schema_max - 3; // index from 0, ignore "pacemaker-next"/"none"
 }
 
@@ -423,6 +424,7 @@ crm_schema_init(void)
         free(namelist);
     }
 
+    // @COMPAT: Deprecated since 2.1.5
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
                NULL, NULL, FALSE, -1);
 
@@ -603,6 +605,13 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     }
 
     CRM_CHECK(xml != NULL, return FALSE);
+
+    if (pcmk__str_eq(known_schemas[method].name, "pacemaker-next",
+                     pcmk__str_none)) {
+        crm_warn("The pacemaker-next schema is deprecated and will be removed "
+                 "in a future release.");
+    }
+
     doc = getDocPtr(xml);
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    known_schemas[method].name);

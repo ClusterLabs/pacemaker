@@ -16,9 +16,6 @@ A versioned schema offers transparent backward and forward compatibility.
   supplemental transformations to promote cluster configurations based on
   older, incompatible schema versions into the desired form.
 
-- It allows experimental features with a possibly unstable configuration
-  interface to be developed using the special `next` version of the schema.
-
 ## Mapping Pacemaker Versions to Schema Versions
 
 | Pacemaker | Latest Schema | Changed
@@ -50,19 +47,9 @@ generated from the other files via the Makefile.
 
 # Updating schema files #
 
-## Experimental features ##
+## New features ##
 
-Experimental features go into `${base}-next.rng` where `${base}` is the
-affected portion of the schema. If such a file does not already exist,
-create it by copying the most recent `${base}-${X}.${Y}.rng`.
-
-Pacemaker will not use the experimental schema by default; the cluster
-administrator must explicitly set the `validate-with` property appropriately to
-use it.
-
-## Stable features ##
-
-The current stable version is determined at runtime when
+The current schema version is determined at runtime when
 crm\_schema\_init() scans the CRM\_SCHEMA\_DIRECTORY.
 
 It will have the form `pacemaker-${X}.${Y}` and the highest
@@ -142,7 +129,6 @@ New features will not be available until the cluster administrator:
 ## Random Notes
 
 From the source directory, run `make -C xml diff` to see the changes
-in the current schema (compared to the previous ones) and also the
-pending changes in `pacemaker-next`.
+in the current schema (compared to the previous ones).
 Alternatively, if the intention is to grok the overall historical schema
 evolution, use `make -C xml fulldiff`.

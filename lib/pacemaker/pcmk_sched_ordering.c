@@ -217,7 +217,9 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
  *
  * \param[in] xml            Ordering XML
  * \param[in] resource_attr  XML attribute name for resource ID
- * \param[in] instance_attr  XML attribute name for instance number
+ * \param[in] instance_attr  XML attribute name for instance number.
+ *                           This option is deprecated and will be removed in a
+ *                           future release.
  * \param[in] data_set       Cluster working set
  *
  * \return Resource corresponding to \p id, or NULL if none
@@ -226,6 +228,7 @@ static pe_resource_t *
 get_ordering_resource(xmlNode *xml, const char *resource_attr,
                       const char *instance_attr, pe_working_set_t *data_set)
 {
+    // @COMPAT: instance_attr and instance_id variables deprecated since 2.1.5
     pe_resource_t *rsc = NULL;
     const char *rsc_id = crm_element_value(xml, resource_attr);
     const char *instance_id = crm_element_value(xml, instance_attr);
@@ -244,6 +247,11 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
     }
 
     if (instance_id != NULL) {
+        pe_warn_once(pe_wo_order_inst,
+                     "Support for " XML_ORDER_ATTR_FIRST_INSTANCE " and "
+                     XML_ORDER_ATTR_THEN_INSTANCE " is deprecated and will be "
+                     "removed in a future release.");
+
         if (!pe_rsc_is_clone(rsc)) {
             pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                              "is not a clone but instance '%s' was requested",
