@@ -147,11 +147,13 @@ extern GHashTable *attributes;
 #define CIB_OP_TIMEOUT_S 120
 
 int attrd_cluster_connect(void);
-void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
+void attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
+                       bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, bool uncache, const char *source);
 void attrd_peer_clear_failure(pcmk__request_t *request);
-void attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml);
+void attrd_peer_sync_response(const crm_node_t *peer, bool peer_won,
+                              xmlNode *xml);
 
 void attrd_broadcast_protocol(void);
 xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
@@ -161,8 +163,8 @@ xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
 gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
 
-xmlNode *attrd_add_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
-                             bool force_write);
+xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
+                             const attribute_value_t *v, bool force_write);
 void attrd_clear_value_seen(void);
 void attrd_free_attribute(gpointer data);
 void attrd_free_attribute_value(gpointer data);

@@ -373,9 +373,9 @@ attrd_client_update(pcmk__request_t *request)
  * \internal
  * \brief Accept a new client IPC connection
  *
- * \param[in] c    New connection
- * \param[in] uid  Client user id
- * \param[in] gid  Client group id
+ * \param[in,out] c    New connection
+ * \param[in]     uid  Client user id
+ * \param[in]     gid  Client group id
  *
  * \return pcmk_ok on success, -errno otherwise
  */
@@ -421,7 +421,7 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
  * \internal
  * \brief Destroy a client IPC connection
  *
- * \param[in] c  Connection to destroy
+ * \param[in,out] c  Connection to destroy
  *
  * \note We handle a destroyed connection the same as a closed one,
  *       but we need a separate handler because the return type is different.

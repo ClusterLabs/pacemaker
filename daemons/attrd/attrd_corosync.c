@@ -117,7 +117,7 @@ attrd_cpg_destroy(gpointer unused)
  * \return Local instance of attribute value
  */
 static attribute_value_t *
-broadcast_local_value(attribute_t *a)
+broadcast_local_value(const attribute_t *a)
 {
     attribute_value_t *v = g_hash_table_lookup(a->values, attrd_cluster->uname);
     xmlNode *sync = create_xml_node(NULL, __func__);
@@ -134,7 +134,7 @@ broadcast_local_value(attribute_t *a)
  * \internal
  * \brief Ensure a Pacemaker Remote node is in the correct peer cache
  *
- * \param[in]
+ * \param[in] node_name  Name of Pacemaker Remote node to check
  */
 static void
 cache_remote_node(const char *node_name)
@@ -158,14 +158,15 @@ cache_remote_node(const char *node_name)
  * \internal
  * \brief Return host's hash table entry (creating one if needed)
  *
- * \param[in] values Hash table of values
- * \param[in] host Name of peer to look up
- * \param[in] xml XML describing the attribute
+ * \param[in,out] values Hash table of values
+ * \param[in]     host   Name of peer to look up
+ * \param[in]     xml    XML describing the attribute
  *
  * \return Pointer to new or existing hash table entry
  */
 static attribute_value_t *
-attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
+attrd_lookup_or_create_value(GHashTable *values, const char *host,
+                             const xmlNode *xml)
 {
     attribute_value_t *v = g_hash_table_lookup(values, host);
     int is_remote = 0;
@@ -249,9 +250,9 @@ record_peer_nodeid(attribute_value_t *v, const char *host)
 }
 
 static void
-update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *attr,
-                    const char *value, const char *host, bool filter,
-                    int is_force_write)
+update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
+                    const char *attr, const char *value, const char *host,
+                    bool filter, int is_force_write)
 {
     attribute_value_t *v = NULL;
 
@@ -316,7 +317,7 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
 }
 
 static void
-attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
+attrd_peer_update_one(const crm_node_t *peer, xmlNode *xml, bool filter)
 {
     attribute_t *a = NULL;
     const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
@@ -362,7 +363,7 @@ attrd_peer_update_one(crm_node_t *peer, xmlNode *xml, bool filter)
 }
 
 static void
-broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml)
+broadcast_unseen_local_values(void)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
@@ -454,12 +455,12 @@ attrd_peer_clear_failure(pcmk__request_t *request)
  * \internal
  * \brief Load attributes from a peer sync response
  *
- * \param[in] peer      Peer that sent clear request
- * \param[in] peer_won  Whether peer is the attribute writer
- * \param[in] xml       Request XML
+ * \param[in]     peer      Peer that sent clear request
+ * \param[in]     peer_won  Whether peer is the attribute writer
+ * \param[in,out] xml       Request XML
  */
 void
-attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
+attrd_peer_sync_response(const crm_node_t *peer, bool peer_won, xmlNode *xml)
 {
     crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
              peer->uname);
@@ -483,7 +484,7 @@ attrd_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
         /* If any attributes are still not marked as seen, the writer doesn't
          * know about them, so send all peers an update with them.
          */
-        broadcast_unseen_local_values(peer, xml);
+        broadcast_unseen_local_values();
     }
 }
 
@@ -544,7 +545,8 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 }
 
 void
-attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
+attrd_peer_update(const crm_node_t *peer, xmlNode *xml, const char *host,
+                  bool filter)
 {
     if (xml_has_children(xml)) {
         for (xmlNode *child = first_named_child(xml, XML_ATTR_OP); child != NULL;

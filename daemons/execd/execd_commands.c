@@ -112,7 +112,7 @@ static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
  * \return true if timespec has been set (i.e. is nonzero), false otherwise
  */
 static inline bool
-time_is_set(struct timespec *timespec)
+time_is_set(const struct timespec *timespec)
 {
     return (timespec != NULL) &&
            ((timespec->tv_sec != 0) || (timespec->tv_nsec != 0));
@@ -147,7 +147,7 @@ get_current_time(struct timespec *t_current, struct timespec *t_orig)
  *       24 days or more.
  */
 static int
-time_diff_ms(struct timespec *now, struct timespec *old)
+time_diff_ms(const struct timespec *now, const struct timespec *old)
 {
     int diff_ms = 0;
 
@@ -172,7 +172,7 @@ time_diff_ms(struct timespec *now, struct timespec *old)
  * command, so we report the entire time since then and not just the time since
  * the most recent command (for recurring and systemd operations).
  *
- * \param[in] cmd  Executor command object to reset
+ * \param[in,out] cmd  Executor command object to reset
  *
  * \note It's not obvious what the queued time should be for a systemd
  *       start/stop operation, which might go like this:
@@ -193,7 +193,7 @@ cmd_original_times(lrmd_cmd_t * cmd)
 #endif
 
 static inline bool
-action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
+action_matches(const lrmd_cmd_t *cmd, const char *action, guint interval_ms)
 {
     return (cmd->interval_ms == interval_ms)
            && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
@@ -208,7 +208,7 @@ action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
  * \param[in] queue_time_ms  Queue time in milliseconds, if known
  */
 static void
-log_finished(lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
+log_finished(const lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
 {
     int log_level = LOG_INFO;
     GString *str = g_string_sized_new(100); // reasonable starting size
@@ -419,11 +419,14 @@ start_delay_helper(gpointer data)
 /*!
  * \internal
  * \brief Check whether a list already contains the equivalent of a given action
+ *
+ * \param[in] action_list  List to search
+ * \param[in] cmd          Action to search for
  */
 static lrmd_cmd_t *
-find_duplicate_action(GList *action_list, lrmd_cmd_t *cmd)
+find_duplicate_action(const GList *action_list, const lrmd_cmd_t *cmd)
 {
-    for (GList *item = action_list; item != NULL; item = item->next) {
+    for (const GList *item = action_list; item != NULL; item = item->next) {
         lrmd_cmd_t *dup = item->data;
 
         if (action_matches(cmd, dup->action, dup->interval_ms)) {
@@ -965,10 +968,10 @@ action_complete(svc_action_t * action)
  * \internal
  * \brief Process the result of a fence device action (start, stop, or monitor)
  *
- * \param[in] cmd               Fence device action that completed
- * \param[in] exit_status       Fencer API exit status for action
- * \param[in] execution_status  Fencer API execution status for action
- * \param[in] exit_reason       Human-friendly detail, if action failed
+ * \param[in,out] cmd               Fence device action that completed
+ * \param[in]     exit_status       Fencer API exit status for action
+ * \param[in]     execution_status  Fencer API execution status for action
+ * \param[in]     exit_reason       Human-friendly detail, if action failed
  */
 static void
 stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
@@ -1135,14 +1138,15 @@ stonith_connection_failed(void)
  * Start a stonith resource by registering it with the fencer.
  * (Stonith agents don't have a start command.)
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to start
- * \param[in] cmd          Start command to execute
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in]     rsc          Stonith resource to start
+ * \param[in]     cmd          Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
+                    const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
     char *value = NULL;
@@ -1180,8 +1184,8 @@ execd_stonith_start(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
  * Stop a stonith resource by unregistering it with the fencer.
  * (Stonith agents don't have a stop command.)
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to stop
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in]     rsc          Stonith resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
@@ -1199,9 +1203,9 @@ execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
  * \internal
  * \brief Initiate a stonith resource agent recurring "monitor" action
  *
- * \param[in] stonith_api  Connection to fencer
- * \param[in] rsc          Stonith resource to monitor
- * \param[in] cmd          Monitor command being executed
+ * \param[in,out] stonith_api  Connection to fencer
+ * \param[in,out] rsc          Stonith resource to monitor
+ * \param[in]     cmd          Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */

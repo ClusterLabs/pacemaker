@@ -47,6 +47,10 @@ debug_log(int level, const char *str)
 /*!
  * \internal
  * \brief Read (more) TLS handshake data from client
+ *
+ * \param[in,out] client  IPC client doing handshake
+ *
+ * \return 0 on success or more data needed, -1 on error
  */
 static int
 remoted__read_handshake_data(pcmk__client_t *client)
