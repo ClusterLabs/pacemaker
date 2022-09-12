@@ -610,7 +610,8 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
 
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
-                                         const pe_resource_t *rsc);
+                                         const pe_resource_t *rsc,
+                                         enum pe__rsc_node node_type);
 const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(const pe_resource_t *rsc,
                             const pe_working_set_t *data_set);
