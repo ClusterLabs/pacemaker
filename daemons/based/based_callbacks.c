@@ -1210,7 +1210,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *current_nodes_digest = NULL;
     char *current_alerts_digest = NULL;
     char *current_status_digest = NULL;
-    int change_section = cib_change_section_nodes | cib_change_section_alerts | cib_change_section_status;
+    uint32_t change_section = cib_change_section_nodes
+                              |cib_change_section_alerts
+                              |cib_change_section_status;
 
     CRM_ASSERT(cib_status == pcmk_ok);
 
@@ -1338,17 +1340,34 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             result_status_digest = calculate_section_digest("//" XML_TAG_CIB "/" XML_CIB_TAG_STATUS, result_cib);
             crm_trace("result-digest %s:%s:%s", result_nodes_digest, result_alerts_digest, result_status_digest);
 
-            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_nodes;
-            }
-            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_alerts;
-            }
-            if (pcmk__str_eq(current_status_digest, result_status_digest, pcmk__str_none)) {
-                change_section = change_section ^ cib_change_section_status;
+            if (pcmk__str_eq(current_nodes_digest, result_nodes_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_nodes, "nodes");
             }
 
-            if (change_section) {
+            if (pcmk__str_eq(current_alerts_digest, result_alerts_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_alerts, "alerts");
+            }
+
+            if (pcmk__str_eq(current_status_digest, result_status_digest,
+                             pcmk__str_none)) {
+                change_section =
+                    pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,
+                                         "CIB change section",
+                                         "change_section", change_section,
+                                         cib_change_section_status, "status");
+            }
+
+            if (change_section != cib_change_section_none) {
                 send_r_notify = TRUE;
             }
             

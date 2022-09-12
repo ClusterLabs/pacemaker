@@ -146,7 +146,7 @@ void cib_diff_notify(int options, const char *client, const char *call_id,
                      const char *op, xmlNode *update, int result,
                      xmlNode *old_cib);
 void cib_replace_notify(const char *origin, xmlNode *update, int result,
-                        xmlNode *diff, int change_section);
+                        xmlNode *diff, uint32_t change_section);
 
 static inline const char *
 cib_config_lookup(const char *opt)

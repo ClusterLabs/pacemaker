@@ -71,11 +71,16 @@
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
+/*!
+ * \internal
+ * \enum cib_change_section_info
+ * \brief Flags to indicate which sections of the CIB have changed
+ */
 enum cib_change_section_info {
-    cib_change_section_none     = 0x00000000,
-    cib_change_section_nodes    = 0x00000001,
-    cib_change_section_alerts   = 0x00000002,
-    cib_change_section_status   = 0x00000004
+    cib_change_section_none     = 0,        //!< No sections have changed
+    cib_change_section_nodes    = (1 << 0), //!< The nodes section has changed
+    cib_change_section_alerts   = (1 << 1), //!< The alerts section has changed
+    cib_change_section_status   = (1 << 2), //!< The status section has changed
 };
 
 

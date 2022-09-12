@@ -419,7 +419,13 @@ te_update_diff_v2(xmlNode *diff)
             crm_trace("Ignoring %s change for version field", op);
             continue;
 
-        } else if (strcmp(op, "move") == 0) {
+        } else if ((strcmp(op, "move") == 0)
+                   && (strstr(xpath,
+                              "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+                              "/" XML_CIB_TAG_RESOURCES) == NULL)) {
+            /* We still need to consider moves within the resources section,
+             * since they affect placement order.
+             */
             crm_trace("Ignoring move change at %s", xpath);
             continue;
         }
@@ -434,7 +440,7 @@ te_update_diff_v2(xmlNode *diff)
                 match = match->children;
             }
 
-        } else if (strcmp(op, "delete") != 0) {
+        } else if (!pcmk__str_any_of(op, "delete", "move", NULL)) {
             crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
                      op, xpath);
             continue;
@@ -458,13 +464,14 @@ te_update_diff_v2(xmlNode *diff)
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             abort_transition(INFINITY, pcmk__graph_restart,
                              "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
-                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS, pcmk__str_casei)) {
+                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS,
+                                   pcmk__str_none)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
