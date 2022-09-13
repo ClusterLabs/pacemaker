@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <crm/common/mainloop.h>        // mainloop_io_t, ipc_client_callbacks
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/remote_internal.h> // pcmk__remote_t
-#include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t
+#include <crm/lrmd.h>           // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
 
 int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
 
@@ -34,6 +34,12 @@ int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
 
 int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
+
+int lrmd__metadata_async(lrmd_rsc_info_t *rsc,
+                         void (*callback)(int pid,
+                                          const pcmk__action_result_t *result,
+                                          void *user_data),
+                         void *user_data);
 
 void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
                       int op_status, const char *exit_reason);
