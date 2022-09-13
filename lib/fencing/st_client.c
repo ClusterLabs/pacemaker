@@ -502,10 +502,11 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
     return count;
 }
 
+// See stonith_api_operations_t:metadata() documentation
 static int
-stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
-                            const char *namespace, char **output,
-                            int timeout_sec)
+stonith_api_device_metadata(stonith_t *stonith, int call_options,
+                            const char *agent, const char *namespace,
+                            char **output, int timeout_sec)
 {
     /* By executing meta-data directly, we can get it from stonith_admin when
      * the cluster is not running, which is important for higher-level tools.
