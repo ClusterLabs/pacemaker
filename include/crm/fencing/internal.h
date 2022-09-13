@@ -52,10 +52,10 @@ struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
 
 stonith_action_t *stonith__action_create(const char *agent,
-                                         const char *_action,
+                                         const char *action_name,
                                          const char *target,
                                          uint32_t target_nodeid,
-                                         int timeout,
+                                         int timeout_sec,
                                          GHashTable *device_args,
                                          GHashTable *port_map,
                                          const char *host_arg);

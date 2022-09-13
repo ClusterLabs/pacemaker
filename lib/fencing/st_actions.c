@@ -244,24 +244,39 @@ stonith__action_result(stonith_action_t *action)
 }
 
 #define FAILURE_MAX_RETRIES 2
+
+/*!
+ * \internal
+ * \brief Create a new fencing action to be executed
+ *
+ * \param[in] agent          Fence agent to use
+ * \param[in] action_name    Fencing action to be executed
+ * \param[in] target         Name of target of fencing action (if known)
+ * \param[in] target_nodeid  Node ID of target of fencing action (if known)
+ * \param[in] timeout_sec    Timeout to be used when executing action
+ * \param[in] device_args    Parameters to pass to fence agent
+ * \param[in] port_map       Mapping of target names to device ports
+ * \param[in] host_arg       Agent parameter used to pass target name
+ *
+ * \return Newly created fencing action (asserts on error, never NULL)
+ */
 stonith_action_t *
-stonith__action_create(const char *agent, const char *_action,
+stonith__action_create(const char *agent, const char *action_name,
                        const char *target, uint32_t target_nodeid,
-                       int timeout, GHashTable *device_args,
+                       int timeout_sec, GHashTable *device_args,
                        GHashTable *port_map, const char *host_arg)
 {
-    stonith_action_t *action;
+    stonith_action_t *action = calloc(1, sizeof(stonith_action_t));
 
-    action = calloc(1, sizeof(stonith_action_t));
     CRM_ASSERT(action != NULL);
 
-    action->args = make_args(agent, _action, target, target_nodeid,
+    action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);
     crm_debug("Preparing '%s' action targeting %s using agent %s",
-              _action, pcmk__s(target, "no node"), agent);
+              action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
-    action->action = strdup(_action);
-    action->timeout = action->remaining_timeout = timeout;
+    action->action = strdup(action_name);
+    action->timeout = action->remaining_timeout = timeout_sec;
     action->max_retries = FAILURE_MAX_RETRIES;
 
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN,
@@ -271,7 +286,7 @@ stonith__action_create(const char *agent, const char *_action,
         char buffer[512];
         const char *value = NULL;
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", _action);
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", action_name);
         value = g_hash_table_lookup(device_args, buffer);
 
         if (value) {
