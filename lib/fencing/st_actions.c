@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +32,7 @@ struct stonith_action_s {
     char *action;
     GHashTable *args;
     int timeout;
-    int async;
+    bool async;
     void *userdata;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
                      void *user_data);
@@ -681,7 +682,7 @@ stonith_action_execute_async(stonith_action_t * action,
     action->userdata = userdata;
     action->done_cb = done;
     action->fork_cb = fork_cb;
-    action->async = 1;
+    action->async = true;
 
     return internal_stonith_action_execute(action);
 }
