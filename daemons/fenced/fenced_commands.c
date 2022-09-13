@@ -61,6 +61,8 @@ struct device_search_s {
     void (*callback) (GList * devices, void *user_data);
     /* devices capable of performing requested action (or off if remapping) */
     GList *capable;
+    /* Whether to perform searches that support the action */
+    uint32_t support_action_only;
 };
 
 static gboolean stonith_device_dispatch(gpointer user_data);
@@ -936,6 +938,8 @@ read_action_metadata(stonith_device_t *device)
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_on);
         }
 
         if (action && pcmk__xe_attr_is_true(match, "on_target")) {
@@ -1988,8 +1992,13 @@ static void
 search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence)
 {
     search->replies_received++;
-
     if (can_fence && device) {
+        if (search->support_action_only != st_device_supports_none) {
+            stonith_device_t *dev = g_hash_table_lookup(device_list, device);
+            if (dev && !pcmk_is_set(dev->flags, search->support_action_only)) {
+                return;
+            }
+        }
         search->capable = g_list_append(search->capable, strdup(device));
     }
 
@@ -2168,7 +2177,7 @@ search_devices(gpointer key, gpointer value, gpointer user_data)
 #define DEFAULT_QUERY_TIMEOUT 20
 static void
 get_capable_devices(const char *host, const char *action, int timeout, bool suicide, void *user_data,
-                    void (*callback) (GList * devices, void *user_data))
+                    void (*callback) (GList * devices, void *user_data), uint32_t support_action_only)
 {
     struct device_search_s *search;
     guint ndevices = g_hash_table_size(device_list);
@@ -2192,6 +2201,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
+    search->support_action_only = support_action_only;
 
     /* We are guaranteed this many replies, even if a device is
      * unregistered while the search is in progress.
@@ -2353,6 +2363,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
@@ -2829,7 +2840,8 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
         /* If we get to here, then self-fencing is implicitly allowed */
         get_capable_devices(host, cmd->action, cmd->default_timeout,
-                            TRUE, cmd, stonith_fence_get_devices_cb);
+                            TRUE, cmd, stonith_fence_get_devices_cb, 
+                            pcmk__str_eq(cmd->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none);
     }
 
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
@@ -3170,7 +3182,7 @@ handle_query_request(pcmk__request_t *request)
     crm_element_value_int(request->xml, F_STONITH_TIMEOUT, &timeout);
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options, st_opt_allow_suicide),
-                        query, stonith_query_capable_device_cb);
+                        query, stonith_query_capable_device_cb, st_device_supports_none);
     return NULL;
 }
 
