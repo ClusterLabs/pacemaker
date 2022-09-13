@@ -220,6 +220,46 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     return pcmk_check_rules(xml, input, date, rule_ids);
 }
 
+/*
+ * \enum pcmk_rc_disp_flags
+ * \brief Bit flags to control which fields of result code info are displayed
+ */
+enum pcmk_rc_disp_flags {
+    pcmk_rc_disp_none = 0,          //!< (Does nothing)
+    pcmk_rc_disp_code = (1 << 0),   //!< Display result code number
+    pcmk_rc_disp_name = (1 << 1),   //!< Display result code name
+    pcmk_rc_disp_desc = (1 << 2),   //!< Display result code description
+};
+
+/*
+ * \brief Display the name and/or description of a result code
+ *
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     code   The result code
+ * \param[in]     type   Interpret \c code as this type of result code.
+ *                       Supported values: \c pcmk_result_legacy,
+ *                       \c pcmk_result_rc, \c pcmk_result_exitcode.
+ * \param[in]     flags  Group of \c pcmk_rc_disp_flags
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_show_result_code(xmlNodePtr *xml, int code, enum pcmk_result_type type,
+                          uint32_t flags);
+
+/*!
+ * \brief List all valid result codes in a particular family
+ *
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     type   The family of result codes to list. Supported
+ *                       values: \c pcmk_result_legacy, \c pcmk_result_rc,
+ *                       \c pcmk_result_exitcode.
+ * \param[in]     flags  Group of \c pcmk_rc_disp_flags
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_result_codes(xmlNodePtr *xml, enum pcmk_result_type type,
+                           uint32_t flags);
+
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!

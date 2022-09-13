@@ -8,15 +8,16 @@
  */
 
 #include <crm_internal.h>
+#include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
 
 #include <crm/crm.h>
 
-#define SUMMARY "crm_error - display name or description of a Pacemaker error code"
+#include <pacemaker-internal.h>
 
-GError *error = NULL;
+#define SUMMARY "crm_error - display name or description of a Pacemaker error code"
 
 struct {
     gboolean with_name;
@@ -57,11 +58,19 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, group, "[-- <rc> [<rc>...]]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[-- <rc> [<rc>...]]");
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -70,14 +79,18 @@ int
 main(int argc, char **argv)
 {
     crm_exit_t exit_code = CRM_EX_OK;
-    const char *name = NULL;
-    const char *desc = NULL;
+    int rc = pcmk_rc_ok;
+
+    pcmk__output_t *out = NULL;
+
+    GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -85,11 +98,13 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_error", args->verbosity);
 
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_error is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_OK);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
     }
 
     if (g_strv_length(processed_args) < 2) {
@@ -97,72 +112,51 @@ main(int argc, char **argv)
         options.do_list = TRUE;
     }
 
-    if (options.do_list) {
-        int start = 0;
-        int end = 0;
-        int code = 0;
+    if (args->version) {
+        out->version(out, false);
+        goto done;
+    }
 
-        /* Get length of longest (most negative) standard Pacemaker return code
-         * This should be longer than all the values of any other type of return
-         * code.
-         */
-        long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
-        int code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
-        int name_width = 0;
+    pcmk__register_lib_messages(out);
+
+    if (options.do_list) {
+        uint32_t flags = pcmk_rc_disp_code|pcmk_rc_disp_desc;
 
         if (options.with_name) {
-            // Get length of longest standard Pacemaker return code name
-            for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
-                int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
-                name_width = QB_MAX(name_width, len);
-            }
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__list_result_codes", flags,
+                                       pcmk_rc_disp_name, "pcmk_rc_disp_name");
         }
-
-        pcmk__result_bounds(options.result_type, &start, &end);
-
-        code = start;
-        while (code <= end) {
-            if (code == (pcmk_rc_error + 1)) {
-                /* Values between here and pcmk_rc_ok are reserved for callers,
-                 * so skip them
-                 */
-                code = pcmk_rc_ok;
-                continue;
-            }
-            pcmk_result_get_strings(code, options.result_type, &name, &desc);
-
-            if ((name == NULL)
-                || pcmk__str_any_of(name, "Unknown", "CRM_EX_UNKNOWN", NULL)) {
-
-                code++;
-                continue;
-            }
-
-            if (options.with_name) {
-                printf("% *d: %-*s  %s\n", code_width, code, name_width, name,
-                       desc);
-            } else {
-                printf("% *d: %s\n", code_width, code, desc);
-            }
-            code++;
-        }
+        pcmk__list_result_codes(out, options.result_type, flags);
 
     } else {
-        int code = 0;
+        uint32_t flags = pcmk_rc_disp_desc;
+
+        // For text output, print only "[name -] description" by default
+        if (args->verbosity > 0) {
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__show_result_code", flags,
+                                       pcmk_rc_disp_code, "pcmk_rc_disp_code");
+        }
+
+        if (options.with_name) {
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "pcmk_rc_disp_flags",
+                                       "pcmk__show_result_code", flags,
+                                       pcmk_rc_disp_name, "pcmk_rc_disp_name");
+        }
 
         /* Skip #1 because that's the program name. */
         for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
+            int code = 0;
+
             if (pcmk__str_eq(processed_args[lpc], "--", pcmk__str_none)) {
                 continue;
             }
-
             pcmk__scan_min_int(processed_args[lpc], &code, INT_MIN);
-            pcmk_result_get_strings(code, options.result_type, &name, &desc);
-            if (options.with_name) {
-                printf("%s - %s\n", name, desc);
-            } else {
-                printf("%s\n", desc);
-            }
+            pcmk__show_result_code(out, code, options.result_type, flags);
         }
     }
 
@@ -170,6 +164,11 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
-    return exit_code;
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    crm_exit(exit_code);
 }

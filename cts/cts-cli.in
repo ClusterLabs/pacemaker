@@ -22,7 +22,9 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools crm_mon acls validity upgrade rules feature_set').
+ -t 'TEST [...]' Run only specified tests
+                 (default: 'dates error_codes tools crm_mon acls validity
+                            upgrade rules feature_set').
                  Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
@@ -41,7 +43,7 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates tools crm_mon acls validity upgrade rules feature_set"
+tests="dates error_codes tools crm_mon acls validity upgrade rules feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -536,6 +538,191 @@ function test_crm_mon() {
 
     rm -r "$CIB_file"
     unset CIB_file
+}
+
+function test_error_codes() {
+    # Note: At the time of this writing, crm_error returns success even for
+    # unknown error codes. We don't want to cause a regression by changing that.
+
+    # Due to the way _test_assert() formats output, we need "crm_error" to be
+    # the first token of cmd. We can't start with a parenthesis or variable
+    # assignment. However, in the "list result codes" tests, we also need to
+    # save some output for later processing. We'll use a named pipe for this.
+    crm_error_fifo=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_error_fifo.XXXXXXXXXX)
+    mkfifo "$crm_error_fifo"
+
+    # Legacy return codes
+    #
+    # Don't test unknown legacy code. FreeBSD includes a colon in strerror(),
+    # while other distros do not.
+    desc="Get legacy return code"
+    cmd="crm_error -- 201"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get legacy return code (XML)"
+    cmd="crm_error --output-as=xml -- 201"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get legacy return code (with name)"
+    cmd="crm_error -n -- 201"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get legacy return code (with name) (XML)"
+    cmd="crm_error -n --output-as=xml -- 201"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get multiple legacy return codes"
+    cmd="crm_error -- 201 202"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get multiple legacy return codes (XML)"
+    cmd="crm_error --output-as=xml -- 201 202"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get multiple legacy return codes (with names)"
+    cmd="crm_error -n -- 201 202"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get multiple legacy return codes (with names) (XML)"
+    cmd="crm_error -n --output-as=xml -- 201 202"
+    test_assert_validate $CRM_EX_OK 0
+
+    # We can only rely on our custom codes, so we'll spot-check codes 201-209
+    desc="List legacy return codes (spot check)"
+    cmd="crm_error -l | grep 20[1-9]"
+    test_assert $CRM_EX_OK 0
+
+    desc="List legacy return codes (spot check) (XML)"
+    cmd="crm_error -l --output-as=xml > $crm_error_fifo; rc=$?"
+    cmd="$cmd; cat $crm_error_fifo"
+    cmd="$cmd | grep -E -v '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"
+    cmd="$cmd; (exit $rc)"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List legacy return codes (spot check) (with names)"
+    cmd="crm_error -n -l | grep 20[1-9]"
+    test_assert $CRM_EX_OK 0
+
+    desc="List legacy return codes (spot check) (with names) (XML)"
+    cmd="crm_error -n -l --output-as=xml > $crm_error_fifo; rc=$?"
+    cmd="$cmd; cat $crm_error_fifo"
+    cmd="$cmd | grep -E -v '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"
+    cmd="$cmd; (exit $rc)"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Standard Pacemaker return codes
+    #
+    # Don't test positive (system) error codes, which may vary by OS
+
+    desc="Get unknown Pacemaker return code"
+    cmd="crm_error -r -- -10000"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get unknown Pacemaker return code (XML)"
+    cmd="crm_error -r --output-as=xml -- -10000"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get unknown Pacemaker return code (with name)"
+    cmd="crm_error -n -r -- -10000"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get unknown Pacemaker return code (with name) (XML)"
+    cmd="crm_error -n -r --output-as=xml -- -10000"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Negative return codes require parsing out the "--" explicitly, so we need
+    # to test them as a separate case
+    desc="Get negative Pacemaker return code"
+    cmd="crm_error -r -- -1005"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get negative Pacemaker return code (XML)"
+    cmd="crm_error -r --output-as=xml -- -1005"
+    test_assert_validate $CRM_EX_OK 0
+
+    # Testing name lookups for negative return codes only is sufficient
+    desc="Get negative Pacemaker return code (with name)"
+    cmd="crm_error -n -r -- -1005"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get negative Pacemaker return code (with name) (XML)"
+    cmd="crm_error -n -r --output-as=xml -- -1005"
+    test_assert_validate $CRM_EX_OK 0
+
+    # We can only rely on our custom codes (negative and zero)
+    desc="List Pacemaker return codes (non-positive)"
+    cmd="crm_error -l -r | grep -E '^[[:blank:]]*(-[[:digit:]]+|0):'"
+    test_assert $CRM_EX_OK 0
+
+    desc="List Pacemaker return codes (non-positive) (XML)"
+    cmd="crm_error -l -r --output-as=xml > $crm_error_fifo; rc=$?"
+    cmd="$cmd; cat $crm_error_fifo"
+    cmd="$cmd | grep -E -v '<result-code.*code=\"[[:digit:]]'"
+    cmd="$cmd; (exit $rc)"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List Pacemaker return codes (non-positive) (with names)"
+    cmd="crm_error -n -l -r | grep -E '^[[:blank:]]*(-[[:digit:]]+|0):'"
+    test_assert $CRM_EX_OK 0
+
+    desc="List Pacemaker return codes (non-positive) (with names) (XML)"
+    cmd="crm_error -n -l -r --output-as=xml > $crm_error_fifo; rc=$?"
+    cmd="$cmd; cat $crm_error_fifo"
+    cmd="$cmd | grep -E -v '<result-code.*code=\"[[:digit:]]'"
+    cmd="$cmd; (exit $rc)"
+    test_assert_validate $CRM_EX_OK 0
+
+    # crm_exit_t exit codes
+
+    desc="Get unknown crm_exit_t exit code"
+    cmd="crm_error -X -- -10000"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get unknown crm_exit_t exit code (XML)"
+    cmd="crm_error -X --output-as=xml -- -10000"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get unknown crm_exit_t exit code (with name)"
+    cmd="crm_error -n -X -- -10000"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get unknown crm_exit_t exit code (with name) (XML)"
+    cmd="crm_error -n -X --output-as=xml -- -10000"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get crm_exit_t exit code"
+    cmd="crm_error -X -- 1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get crm_exit_t exit code (XML)"
+    cmd="crm_error -X --output-as=xml -- 1"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get crm_exit_t exit code (with name)"
+    cmd="crm_error -n -X -- 1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get crm_exit_t exit code (with name) (XML)"
+    cmd="crm_error -n -X --output-as=xml -- 1"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get all crm_exit_t exit codes"
+    cmd="crm_error -l -X"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get all crm_exit_t exit codes (XML)"
+    cmd="crm_error -l -X --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="Get all crm_exit_t exit codes (with name)"
+    cmd="crm_error -l -n -X"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get all crm_exit_t exit codes (with name) (XML)"
+    cmd="crm_error -l -n -X --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    rm -f "$crm_error_fifo"
 }
 
 function test_tools() {
@@ -2169,6 +2356,7 @@ for t in $tests; do
     case "$t" in
         agents) ;;
         dates) ;;
+        error_codes) ;;
         tools) ;;
         acls) ;;
         validity) ;;
@@ -2257,7 +2445,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
-rm -rf "${err_fifo}"
+rm -f "${err_fifo}"
 
 failed=0
 
