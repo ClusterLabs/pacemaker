@@ -73,9 +73,9 @@ G_GNUC_INTERNAL
 xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
 
 G_GNUC_INTERNAL
-void pcmk__xe_log(int log_level, const char *file, const char *function,
-                  int line, const char *prefix, const xmlNode *data, int depth,
-                  int options);
+void pcmk__xml_log(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const xmlNode *data, int depth,
+                   int options);
 
 G_GNUC_INTERNAL
 void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,

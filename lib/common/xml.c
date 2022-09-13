@@ -1479,8 +1479,8 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
 
 // Log an XML element (and any children) in a formatted way
 void
-pcmk__xe_log(int log_level, const char *file, const char *function, int line,
-             const char *prefix, const xmlNode *data, int depth, int options)
+pcmk__xml_log(int log_level, const char *file, const char *function, int line,
+              const char *prefix, const xmlNode *data, int depth, int options)
 {
     const char *name = NULL;
     const char *hidden = NULL;
@@ -1559,9 +1559,9 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
     } else if (pcmk_is_set(options, xml_log_option_children)) {
         for (child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            pcmk__xe_log(log_level, file, function, line, prefix, child,
-                         depth + 1,
-                         options|xml_log_option_open|xml_log_option_close);
+            pcmk__xml_log(log_level, file, function, line, prefix, child,
+                          depth + 1,
+                          options|xml_log_option_open|xml_log_option_close);
         }
     }
 
@@ -1597,9 +1597,9 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
 
     if (pcmk_all_flags_set(p->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         /* Continue and log full subtree */
-        pcmk__xe_log(log_level, file, function, line, prefix_m, data, depth,
-                     options|xml_log_option_open|xml_log_option_close
-                        |xml_log_option_children);
+        pcmk__xml_log(log_level, file, function, line, prefix_m, data, depth,
+                      options|xml_log_option_open|xml_log_option_close
+                          |xml_log_option_children);
 
     } else if (pcmk_is_set(p->flags, pcmk__xf_dirty)) {
         int spaces = 0;
@@ -1624,8 +1624,8 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
             flags = prefix;
         }
 
-        pcmk__xe_log(log_level, file, function, line, flags, data, depth,
-                     options|xml_log_option_open);
+        pcmk__xml_log(log_level, file, function, line, flags, data, depth,
+                      options|xml_log_option_open);
 
         for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
             const char *aname = (const char*) a->name;
@@ -1667,8 +1667,8 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
                             depth + 1, options);
         }
 
-        pcmk__xe_log(log_level, file, function, line, prefix, data, depth,
-                     options|xml_log_option_close);
+        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
+                      options|xml_log_option_close);
 
     } else {
         for (child = pcmk__xml_first_child(data); child != NULL;
@@ -1737,9 +1737,9 @@ log_data_element(int log_level, const char *file, const char *function,
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
         }
     } else {
-        pcmk__xe_log(log_level, file, function, line, prefix, data, depth,
-                     options|xml_log_option_open|xml_log_option_close
-                        |xml_log_option_children);
+        pcmk__xml_log(log_level, file, function, line, prefix, data, depth,
+                      options|xml_log_option_open|xml_log_option_close
+                          |xml_log_option_children);
     }
     free(prefix_m);
 }

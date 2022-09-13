@@ -518,18 +518,18 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
                 char *prefix = crm_strdup_printf("++ %s: ", xpath);
 
                 max = strlen(prefix);
-                pcmk__xe_log(log_level, __FILE__, function, __LINE__, prefix,
-                             change->children, 0,
-                             xml_log_option_formatted|xml_log_option_open);
+                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
+                              change->children, 0,
+                              xml_log_option_formatted|xml_log_option_open);
 
                 for (lpc = 2; lpc < max; lpc++) {
                     prefix[lpc] = ' ';
                 }
 
-                pcmk__xe_log(log_level, __FILE__, function, __LINE__, prefix,
-                             change->children, 0,
-                             xml_log_option_formatted|xml_log_option_close
-                                |xml_log_option_children);
+                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
+                              change->children, 0,
+                              xml_log_option_formatted|xml_log_option_close
+                                  |xml_log_option_children);
                 free(prefix);
 
             } else if (strcmp(op, "move") == 0) {
