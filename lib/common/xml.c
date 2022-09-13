@@ -1477,7 +1477,7 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
     free(p_value);
 }
 
-// Log an XML element (and any children) in a formatted way
+// Log an XML element or comment (and any children) in a formatted way
 void
 pcmk__xml_log(int log_level, const char *file, const char *function, int line,
               const char *prefix, const xmlNode *data, int depth, int options)
@@ -1487,7 +1487,9 @@ pcmk__xml_log(int log_level, const char *file, const char *function, int line,
 
     xmlNode *child = NULL;
 
-    if ((data == NULL) || (log_level == LOG_NEVER)) {
+    if ((data == NULL) || (log_level == LOG_NEVER)
+        || ((data->type != XML_COMMENT_NODE)
+            && (data->type != XML_ELEMENT_NODE))) {
         return;
     }
 
