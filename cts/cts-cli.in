@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2023 the Pacemaker project contributors
+# Copyright 2008-2024 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -3375,6 +3375,7 @@ done
 
 for t in $tests; do
     case "$t" in
+        access_render) ;;
         agents) ;;
         daemons) ;;
         dates) ;;
