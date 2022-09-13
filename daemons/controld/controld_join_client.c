@@ -34,7 +34,7 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
  * \param[in] msg  A join message from the DC
  */
 static void
-update_dc_expected(xmlNode *msg)
+update_dc_expected(const xmlNode *msg)
 {
     if (fsa_our_dc && pcmk__xe_attr_is_true(msg, F_CRM_DC_LEAVING)) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);

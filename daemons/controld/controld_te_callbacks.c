@@ -634,7 +634,7 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 /*!
  * \brief Handle a timeout in node-to-node communication
  *
- * \param[in] data  Pointer to graph action
+ * \param[in,out] data  Pointer to graph action
  *
  * \return FALSE (indicating that source should be not be re-added)
  */

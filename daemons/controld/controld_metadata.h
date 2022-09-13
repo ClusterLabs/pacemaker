@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 the Pacemaker project contributors
+ * Copyright 2017-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,10 +74,10 @@ void metadata_cache_reset(GHashTable *mdc);
 void metadata_cache_fini(void);
 
 struct ra_metadata_s *metadata_cache_update(GHashTable *mdc,
-                                            lrmd_rsc_info_t *rsc,
+                                            const lrmd_rsc_info_t *rsc,
                                             const char *metadata_str);
 struct ra_metadata_s *controld_get_rsc_metadata(lrm_state_t *lrm_state,
-                                                lrmd_rsc_info_t *rsc,
+                                                const lrmd_rsc_info_t *rsc,
                                                 uint32_t source);
 
 static inline const char *

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -683,15 +683,15 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
  * \internal
  * \brief Initiate a resource agent action
  *
- * \param[in]  lrm_state       Executor state object
- * \param[in]  rsc_id          ID of resource for action
- * \param[in]  action          Action to execute
- * \param[in]  userdata        String to copy and pass to execution callback
- * \param[in]  interval_ms     Action interval (in milliseconds)
- * \param[in]  timeout_ms      Action timeout (in milliseconds)
- * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
- * \param[in]  params          Resource parameters
- * \param[out] call_id         Where to store call ID on success
+ * \param[in,out] lrm_state       Executor state object
+ * \param[in]     rsc_id          ID of resource for action
+ * \param[in]     action          Action to execute
+ * \param[in]     userdata        String to copy and pass to execution callback
+ * \param[in]     interval_ms     Action interval (in milliseconds)
+ * \param[in]     timeout_ms      Action timeout (in milliseconds)
+ * \param[in]     start_delay_ms  Delay (in ms) before initiating action
+ * \param[in,out] params          Resource parameters
+ * \param[out]    call_id         Where to store call ID on success
  *
  * \return Standard Pacemaker return code
  * \note This takes ownership of \p params, which should not be used or freed

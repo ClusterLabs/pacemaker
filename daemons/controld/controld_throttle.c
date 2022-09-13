@@ -250,7 +250,8 @@ throttle_load_avg(float *load)
  * \return Throttle mode corresponding to load value
  */
 static enum throttle_state_e
-throttle_check_thresholds(float load, const char *desc, float thresholds[4])
+throttle_check_thresholds(float load, const char *desc,
+                          const float thresholds[4])
 {
     if (load > thresholds[3]) {
         crm_notice("Extreme %s detected: %f", desc, load);

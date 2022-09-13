@@ -299,7 +299,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
  * \param[in] cmd  Completed remote RA command
  */
 static void
-check_remote_node_state(remote_ra_cmd_t *cmd)
+check_remote_node_state(const remote_ra_cmd_t *cmd)
 {
     /* Only successful actions can change node state */
     if (!pcmk__result_ok(&(cmd->result))) {
@@ -1107,22 +1107,22 @@ handle_dup:
  * \internal
  * \brief Execute an action using the (internal) ocf:pacemaker:remote agent
  *
- * \param[in]  lrm_state       Executor state object for remote connection
- * \param[in]  rsc_id          Connection resource ID
- * \param[in]  action          Action to execute
- * \param[in]  userdata        String to copy and pass to execution callback
- * \param[in]  interval_ms     Action interval (in milliseconds)
- * \param[in]  timeout_ms      Action timeout (in milliseconds)
- * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
- * \param[in]  params          Connection resource parameters
- * \param[out] call_id         Where to store call ID on success
+ * \param[in]     lrm_state      Executor state object for remote connection
+ * \param[in]     rsc_id         Connection resource ID
+ * \param[in]     action         Action to execute
+ * \param[in]     userdata       String to copy and pass to execution callback
+ * \param[in]     interval_ms    Action interval (in milliseconds)
+ * \param[in]     timeout_ms     Action timeout (in milliseconds)
+ * \param[in]     start_delay_ms Delay (in milliseconds) before executing action
+ * \param[in,out] params         Connection resource parameters
+ * \param[out]    call_id        Where to store call ID on success
  *
  * \return Standard Pacemaker return code
  * \note This takes ownership of \p params, which should not be used or freed
  *       after calling this function.
  */
 int
-controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
+controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
                               const char *action, const char *userdata,
                               guint interval_ms, int timeout_ms,
                               int start_delay_ms, lrmd_key_value_t *params,
@@ -1234,7 +1234,7 @@ remote_ra_fail(const char *node_name)
  * \internal
  * \brief Check a pseudo-action for Pacemaker Remote node side effects
  *
- * \param[in] xml  XML of pseudo-action to check
+ * \param[in,out] xml  XML of pseudo-action to check
  */
 void
 remote_ra_process_pseudo(xmlNode *xml)
@@ -1302,9 +1302,8 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
  * \internal
  * \brief Check a pseudo-action holding updates for maintenance state
  *
- * \param[in] xml  XML of pseudo-action to check
+ * \param[in,out] xml  XML of pseudo-action to check
  */
-
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
