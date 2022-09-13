@@ -36,6 +36,7 @@ dist_cli_DATA	= cli/constraints.xml 				\
 		  cli/regression.acls.exp			\
 		  cli/regression.crm_mon.exp			\
 		  cli/regression.dates.exp			\
+		  cli/regression.error_codes.exp		\
 		  cli/regression.feature_set.exp		\
 		  cli/regression.rules.exp			\
 		  cli/regression.tools.exp			\
