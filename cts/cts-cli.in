@@ -58,12 +58,18 @@ VALGRIND_OPTS="
     --suppressions=$test_home/valgrind-pcmk.suppressions
 "
 
-# Named pipe for saving a command's stderr in _test_assert()
-err_fifo=$(mktemp ${TMPDIR:-/tmp}/cts-cli.err_fifo.XXXXXXXXXX)
-mkfifo "$err_fifo"
+# Temp file for saving a command's stderr in _test_assert()
+test_assert_errfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.ta_errfile.XXXXXXXXXX)
 
 # Log test errors to stderr
 export PCMK_stderr=1
+
+# Output when PCMK_trace_functions is undefined is different from when it's
+# empty. Later we save the value of PCMK_trace_functions, do work, and restore
+# the original value. Getting back to the initial state is simplest if we assume
+# the variable is defined.
+: ${PCMK_trace_functions=""}
+export PCMK_trace_functions
 
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
@@ -138,9 +144,9 @@ function _test_assert() {
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
 
     # Capture stderr and stdout separately, then print them consecutively
-    out=$(eval $VALGRIND_CMD $cmd 2> "$err_fifo")
+    out=$(eval $VALGRIND_CMD $cmd 2> "$test_assert_errfile")
     rc=$?
-    cat "$err_fifo"
+    cat "$test_assert_errfile"
     [ -n "$out" ] && echo "$out"
 
     if [ x$cib != x0 ]; then
@@ -547,9 +553,9 @@ function test_error_codes() {
     # Due to the way _test_assert() formats output, we need "crm_error" to be
     # the first token of cmd. We can't start with a parenthesis or variable
     # assignment. However, in the "list result codes" tests, we also need to
-    # save some output for later processing. We'll use a named pipe for this.
-    crm_error_fifo=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_error_fifo.XXXXXXXXXX)
-    mkfifo "$crm_error_fifo"
+    # save some output for later processing. We'll use a temp file for this.
+    local TMPFILE
+    TMPFILE=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_error_out.XXXXXXXXXX)
 
     # Legacy return codes
     #
@@ -593,9 +599,8 @@ function test_error_codes() {
     test_assert $CRM_EX_OK 0
 
     desc="List legacy return codes (spot check) (XML)"
-    cmd="crm_error -l --output-as=xml > $crm_error_fifo; rc=$?"
-    cmd="$cmd; cat $crm_error_fifo"
-    cmd="$cmd | grep -E -v '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"
+    cmd="crm_error -l --output-as=xml > $TMPFILE; rc=$?"
+    cmd="$cmd; grep -Ev '<result-code.*code=\"([^2]|2[^0]|20[^1-9])' $TMPFILE"
     cmd="$cmd; (exit $rc)"
     test_assert_validate $CRM_EX_OK 0
 
@@ -604,9 +609,8 @@ function test_error_codes() {
     test_assert $CRM_EX_OK 0
 
     desc="List legacy return codes (spot check) (with names) (XML)"
-    cmd="crm_error -n -l --output-as=xml > $crm_error_fifo; rc=$?"
-    cmd="$cmd; cat $crm_error_fifo"
-    cmd="$cmd | grep -E -v '<result-code.*code=\"([^2]|2[^0]|20[^1-9])'"
+    cmd="crm_error -n -l --output-as=xml > $TMPFILE; rc=$?"
+    cmd="$cmd; grep -Ev '<result-code.*code=\"([^2]|2[^0]|20[^1-9])' $TMPFILE"
     cmd="$cmd; (exit $rc)"
     test_assert_validate $CRM_EX_OK 0
 
@@ -655,9 +659,8 @@ function test_error_codes() {
     test_assert $CRM_EX_OK 0
 
     desc="List Pacemaker return codes (non-positive) (XML)"
-    cmd="crm_error -l -r --output-as=xml > $crm_error_fifo; rc=$?"
-    cmd="$cmd; cat $crm_error_fifo"
-    cmd="$cmd | grep -E -v '<result-code.*code=\"[[:digit:]]'"
+    cmd="crm_error -l -r --output-as=xml > $TMPFILE; rc=$?"
+    cmd="$cmd; grep -E -v '<result-code.*code=\"[[:digit:]]' $TMPFILE"
     cmd="$cmd; (exit $rc)"
     test_assert_validate $CRM_EX_OK 0
 
@@ -666,9 +669,8 @@ function test_error_codes() {
     test_assert $CRM_EX_OK 0
 
     desc="List Pacemaker return codes (non-positive) (with names) (XML)"
-    cmd="crm_error -n -l -r --output-as=xml > $crm_error_fifo; rc=$?"
-    cmd="$cmd; cat $crm_error_fifo"
-    cmd="$cmd | grep -E -v '<result-code.*code=\"[[:digit:]]'"
+    cmd="crm_error -n -l -r --output-as=xml > $TMPFILE; rc=$?"
+    cmd="$cmd; grep -E -v '<result-code.*code=\"[[:digit:]]' $TMPFILE"
     cmd="$cmd; (exit $rc)"
     test_assert_validate $CRM_EX_OK 0
 
@@ -722,7 +724,7 @@ function test_error_codes() {
     cmd="crm_error -l -n -X --output-as=xml"
     test_assert_validate $CRM_EX_OK 0
 
-    rm -f "$crm_error_fifo"
+    rm -f "$TMPFILE"
 }
 
 function test_tools() {
@@ -2415,6 +2417,11 @@ for t in $tests; do
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
+        -e 's/.*\(crm_time_parse_duration\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(crm_time_parse_period\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(crm_time_parse_sec\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(log_xmllib_err\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(parse_date\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(pcmk__.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
@@ -2445,7 +2452,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
-rm -f "${err_fifo}"
+rm -f "${test_assert_errfile}"
 
 failed=0
 
