@@ -1377,15 +1377,216 @@ st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void
     }
 }
 
+static pcmk__cluster_option_t fencer_options[] = {
+    /* name, old name, type, allowed values,
+     * default value, validator,
+     * short description,
+     * long description
+     */
+    {
+        PCMK_STONITH_HOST_ARGUMENT, NULL, "string", NULL, "port", NULL,
+        N_("Advanced use only: An alternate parameter to supply instead of 'port'"),
+        N_("some devices do not support the "
+           "standard 'port' parameter or may provide additional ones. Use "
+           "this to specify an alternate, device-specific, parameter "
+           "that should indicate the machine to be fenced. A value of "
+           "none can be used to tell the cluster not to supply any "
+           "additional parameters.")
+    },
+    {
+        PCMK_STONITH_HOST_MAP,NULL, "string", NULL, "", NULL,
+        N_("A mapping of host names to ports numbers for devices that do not support host names."),
+        N_("Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2")
+    },
+    {
+        PCMK_STONITH_HOST_LIST,NULL, "string", NULL, "", NULL,
+        N_("Eg. node1,node2,node3"),
+        N_("A list of machines controlled by "
+               "this device (Optional unless pcmk_host_list=static-list)")
+    },
+    {
+        PCMK_STONITH_HOST_CHECK,NULL, "string", NULL, "dynamic-list", NULL,
+        N_("How to determine which machines are controlled by the device."),
+        N_("Allowed values: dynamic-list "
+               "(query the device via the 'list' command), static-list "
+               "(check the pcmk_host_list attribute), status "
+               "(query the device via the 'status' command), "
+               "none (assume every device can fence every "
+               "machine)")
+    },
+    {
+        PCMK_STONITH_DELAY_MAX,NULL, "time", NULL, "0s", NULL,
+        N_("Enable a base delay for fencing actions and specify base delay value."),
+        N_("Enable a delay of no more than the "
+               "time specified before executing fencing actions. Pacemaker "
+               "derives the overall delay by taking the value of "
+               "pcmk_delay_base and adding a random delay value such "
+               "that the sum is kept below this maximum.")
+    },
+    {
+        PCMK_STONITH_DELAY_BASE,NULL, "string", NULL, "0s", NULL,
+        N_("Enable a base delay for "
+               "fencing actions and specify base delay value."),
+        N_("This enables a static delay for "
+               "fencing actions, which can help avoid \"death matches\" where "
+               "two nodes try to fence each other at the same time. If "
+               "pcmk_delay_max  is also used, a random delay will be "
+               "added such that the total delay is kept below that value."
+               "This can be set to a single time value to apply to any node "
+               "targeted by this device (useful if a separate device is "
+               "configured for each target), or to a node map (for example, "
+               "\"node1:1s;node2:5\") to set a different value per target.")
+    },
+    {
+        PCMK_STONITH_ACTION_LIMIT,NULL, "integer", NULL, "1", NULL,
+        N_("The maximum number of actions can be performed in parallel on this device"),
+        N_("Cluster property concurrent-fencing=true needs to be configured first."
+             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.")
+    },
+    {
+	"pcmk_reboot_action",NULL, "string", NULL, "reboot", NULL,
+	N_("Advanced use only: An alternate command to run instead of 'reboot'"),
+        N_("Some devices do not support the standard commands or may provide additional ones.\n"
+                 "Use this to specify an alternate, device-specific, command that implements the \'reboot\' action.")
+    },
+    {
+	"pcmk_reboot_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for reboot actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal."
+	   "Use this to specify an alternate, device-specific, timeout for \'reboot\' actions.")
+    },
+    {
+	"pcmk_reboot_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the 'reboot' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'reboot\' actions before giving up.")
+    },
+    {
+	"pcmk_off_action",NULL, "string", NULL, "off", NULL,
+	N_("Advanced use only: An alternate command to run instead of \'off\'"),
+        N_("Some devices do not support the standard commands or may provide additional ones."
+                 "Use this to specify an alternate, device-specific, command that implements the \'off\' action.")
+    },
+    {
+	"pcmk_off_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for off actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal."
+	   "Use this to specify an alternate, device-specific, timeout for \'off\' actions.")
+    },
+    {
+	"pcmk_off_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the 'off' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'off\' actions before giving up.")
+    },
+    {
+	"pcmk_on_action",NULL, "string", NULL, "on", NULL,
+	N_("Advanced use only: An alternate command to run instead of 'on'"),
+        N_("Some devices do not support the standard commands or may provide additional ones."
+                 "Use this to specify an alternate, device-specific, command that implements the \'on\' action.")
+    },
+    {
+	"pcmk_on_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for on actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal."
+	   "Use this to specify an alternate, device-specific, timeout for \'on\' actions.")
+    },
+    {
+	"pcmk_on_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the 'on' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'on\' actions before giving up.")
+    },
+    {
+	"pcmk_list_action",NULL, "string", NULL, "list", NULL,
+	N_("Advanced use only: An alternate command to run instead of \'list\'"),
+        N_("Some devices do not support the standard commands or may provide additional ones."
+                 "Use this to specify an alternate, device-specific, command that implements the \'list\' action.")
+    },
+    {
+	"pcmk_list_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for list actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal."
+	   "Use this to specify an alternate, device-specific, timeout for \'list\' actions.")
+    },
+    {
+	"pcmk_list_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the \'list\' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'list\' actions before giving up.")
+    },
+    {
+	"pcmk_monitor_action",NULL, "string", NULL, "monitor", NULL,
+	N_("Advanced use only: An alternate command to run instead of \'monitor\'"),
+        N_("Some devices do not support the standard commands or may provide additional ones."
+                 "Use this to specify an alternate, device-specific, command that implements the \'monitor\' action.")
+    },
+    {
+	"pcmk_monitor_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for monitor actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal.\n"
+	   "Use this to specify an alternate, device-specific, timeout for \'monitor\' actions.")
+    },
+    {
+	"pcmk_monitor_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the \'monitor\' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'monitor\' actions before giving up.")
+    },
+    {
+	"pcmk_status_action",NULL, "string", NULL, "status", NULL,
+	N_("Advanced use only: An alternate command to run instead of \'status\'"),
+        N_("Some devices do not support the standard commands or may provide additional ones."
+                 "Use this to specify an alternate, device-specific, command that implements the \'status\' action.")
+    },
+    {
+	"pcmk_status_timeout",NULL, "time", NULL, "60s", NULL,
+	N_("Advanced use only: Specify an alternate timeout to use for status actions instead of stonith-timeout"),
+        N_("Some devices need much more/less time to complete than normal."
+	   "Use this to specify an alternate, device-specific, timeout for \'status\' actions.")
+    },
+    {
+	"pcmk_status_retries",NULL, "integer", NULL, "2", NULL,
+	N_("Advanced use only: The maximum number of times to retry the \'status\' command within the timeout period"),
+        N_("Some devices do not support multiple connections."
+           " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation,      if there is time remaining."
+           " Use this option to alter the number of times Pacemaker retries \'status\' actions before giving up.")
+    },
+};
+
+void
+fencer_metadata(void)
+{
+    char *s = pcmk__format_option_metadata("pacemaker-fenced",
+                                            "Instance attributes available for all \"stonith\"-class resources",
+                                            "Instance attributes available for all \"stonith\"-class resources"
+                                                "and used by Pacemaker's fence daemon, formerly known as stonithd",
+                                           fencer_options,
+                                           PCMK__NELEM(fencer_options));
+    printf("%s", s);
+    free(s);
+}
+
+/*
+static const char *
+fenceder_options(GHashTable *options, const char *name)
+{
+    return pcmk__cluster_option(options, fenceder_options,
+                                PCMK__NELEM(fenceder_options), name);
+}
+*/
 int
 main(int argc, char **argv)
 {
     int flag;
-    int lpc = 0;
     int argerr = 0;
     int option_index = 0;
     crm_cluster_t *cluster = NULL;
-    const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
     crm_ipc_t *old_instance = NULL;
     int rc = pcmk_rc_ok;
 
@@ -1435,179 +1636,9 @@ main(int argc, char **argv)
     }
 
     if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
-        printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
-        printf("<resource-agent name=\"pacemaker-fenced\">\n");
-        printf(" <version>1.0</version>\n");
-        printf(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources"
-                                       " and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>\n");
-#ifdef ENABLE_NLS 
-        printf(_(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources"
-                                       " and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>\n"));
-#endif
-        printf(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n");
-#ifdef ENABLE_NLS 
-        printf(_(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n"));
-#endif
-        printf(" <parameters>\n");
-
-#if 0
-        // priority is not implemented yet
-        printf("  <parameter name=\"priority\" unique=\"0\">\n");
-        printf("    <shortdesc lang=\"en\">Devices that are not in a topology "
-               "are tried in order of highest to lowest integer priority</shortdesc>\n");
-        printf("    <content type=\"integer\" default=\"0\"/>\n");
-        printf("  </parameter>\n");
-#endif
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_HOST_ARGUMENT);
-        printf("    <longdesc lang=\"en\">Some devices do not support the "
-               "standard 'port' parameter or may provide additional ones. Use "
-               "this to specify an alternate, device-specific, parameter "
-               "that should indicate the machine to be fenced. A value of "
-               "'%s' can be used to tell the cluster not to supply any "
-               "additional parameters.\n"
-               "    </longdesc>\n", PCMK__VALUE_NONE);
-#ifdef ENABLE_NLS
-        printf(_("    <longdesc lang=\"en\">Some devices do not support the "
-               "standard 'port' parameter or may provide additional ones. Use "
-               "this to specify an alternate, device-specific, parameter "
-               "that should indicate the machine to be fenced. A value of "
-               "'%s' can be used to tell the cluster not to supply any "
-               "additional parameters.\n"
-               "    </longdesc>\n"), PCMK__VALUE_NONE);
-#endif
-        printf
-            ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
-#ifdef ENABLE_NLS 
-        printf
-            (_("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n"));
-#endif
-        printf("    <content type=\"string\" default=\"port\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_HOST_MAP);
-        printf
-            ("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
-#ifdef ENABLE_NLS
-        printf
-            (_("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n"));
-#endif
-        printf
-            ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
-#ifdef ENABLE_NLS
-        printf
-            (_("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n"));
-#endif
-        printf("    <content type=\"string\" default=\"\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_HOST_LIST);
-        printf("    <longdesc lang=\"en\">Eg. node1,node2,node3</longdesc>\n");
-        printf("    <shortdesc lang=\"en\">A list of machines controlled by "
-               "this device (Optional unless %s=static-list).</shortdesc>\n",
-               PCMK_STONITH_HOST_CHECK);
-        printf("    <content type=\"string\" default=\"\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_HOST_CHECK);
-        printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
-               "(query the device via the 'list' command), static-list "
-               "(check the " PCMK_STONITH_HOST_LIST " attribute), status "
-               "(query the device via the 'status' command), "
-               PCMK__VALUE_NONE " (assume every device can fence every "
-               "machine)</longdesc>\n");
-        printf
-            ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
-        printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_DELAY_MAX);
-        printf("    <longdesc lang=\"en\">This prevents double fencing when "
-               "using slow devices such as sbd.\nUse this to enable a random "
-               "delay for fencing actions.\nThe overall delay is derived from "
-               "this random delay value adding a static delay so that the sum "
-               "is kept below the maximum delay.</longdesc>\n");
-        printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
-               "time specified before executing fencing actions. Pacemaker "
-               "derives the overall delay by taking the value of "
-               PCMK_STONITH_DELAY_BASE " and adding a random delay value such "
-               "that the sum is kept below this maximum.</shortdesc>\n");
-        printf("    <content type=\"time\" default=\"0s\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_DELAY_BASE);
-        printf("    <longdesc lang=\"en\">This enables a static delay for "
-               "fencing actions, which can help avoid \"death matches\" where "
-               "two nodes try to fence each other at the same time. If "
-               PCMK_STONITH_DELAY_MAX " is also used, a random delay will be "
-               "added such that the total delay is kept below that value.\n"
-               "This can be set to a single time value to apply to any node "
-               "targeted by this device (useful if a separate device is "
-               "configured for each target), or to a node map (for example, "
-               "\"node1:1s;node2:5\") to set a different value per target.\n"
-               "    </longdesc>\n");
-        printf("    <shortdesc lang=\"en\">Enable a base delay for "
-               "fencing actions and specify base delay value.</shortdesc>\n");
-        printf("    <content type=\"string\" default=\"0s\"/>\n");
-        printf("  </parameter>\n");
-
-        printf("  <parameter name=\"%s\" unique=\"0\">\n",
-               PCMK_STONITH_ACTION_LIMIT);
-        printf
-            ("    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to be configured first.\n"
-             "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
-        printf
-            ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
-        printf("    <content type=\"integer\" default=\"1\"/>\n");
-        printf("  </parameter>\n");
-
-
-        for (lpc = 0; lpc < PCMK__NELEM(actions); lpc++) {
-            printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
-            printf
-                ("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
-                 "Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n",
-                 actions[lpc]);
-            printf
-                ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",
-                 actions[lpc]);
-            printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
-            printf("  </parameter>\n");
-
-            printf("  <parameter name=\"pcmk_%s_timeout\" unique=\"0\">\n", actions[lpc]);
-            printf
-                ("    <longdesc lang=\"en\">Some devices need much more/less time to complete than normal.\n"
-                 "Use this to specify an alternate, device-specific, timeout for '%s' actions.</longdesc>\n",
-                 actions[lpc]);
-            printf
-                ("    <shortdesc lang=\"en\">Advanced use only: Specify an alternate timeout to use for %s actions instead of stonith-timeout</shortdesc>\n",
-                 actions[lpc]);
-            printf("    <content type=\"time\" default=\"60s\"/>\n");
-            printf("  </parameter>\n");
-
-            printf("  <parameter name=\"pcmk_%s_retries\" unique=\"0\">\n", actions[lpc]);
-            printf("    <longdesc lang=\"en\">Some devices do not support multiple connections."
-                   " Operations may 'fail' if the device is busy with another task so Pacemaker will automatically retry the operation, if there is time remaining."
-                   " Use this option to alter the number of times Pacemaker retries '%s' actions before giving up."
-                   "</longdesc>\n", actions[lpc]);
-            printf
-                ("    <shortdesc lang=\"en\">Advanced use only: The maximum number of times to retry the '%s' command within the timeout period</shortdesc>\n",
-                 actions[lpc]);
-            printf("    <content type=\"integer\" default=\"2\"/>\n");
-            printf("  </parameter>\n");
-        }
-
-        printf(" </parameters>\n");
-        printf("</resource-agent>\n");
+	fencer_metadata();
         return CRM_EX_OK;
-    }
-
+    }    
     if (optind != argc) {
         ++argerr;
     }
@@ -1622,13 +1653,13 @@ main(int argc, char **argv)
 
     old_instance = crm_ipc_new("stonith-ng", 0);
     if (crm_ipc_connect(old_instance)) {
-        /* IPC end-point already up */
+        // IPC end-point already up 
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("pacemaker-fenced is already active, aborting startup");
         crm_exit(CRM_EX_OK);
     } else {
-        /* not up or not authentic, we'll proceed either way */
+        // not up or not authentic, we'll proceed either way 
         crm_ipc_destroy(old_instance);
         old_instance = NULL;
     }
@@ -1690,7 +1721,7 @@ main(int argc, char **argv)
     pcmk__output_set_log_level(out, LOG_TRACE);
     fenced_data_set->priv = out;
 
-    /* Create the mainloop and run it... */
+    // Create the mainloop and run it... 
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
     g_main_loop_run(mainloop);

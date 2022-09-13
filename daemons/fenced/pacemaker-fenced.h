@@ -271,6 +271,7 @@ void set_fencing_completed(remote_fencing_op_t * op);
 
 int fenced_handle_manual_confirmation(const pcmk__client_t *client,
                                       xmlNode *msg);
+void fencer_metadata(void);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 
