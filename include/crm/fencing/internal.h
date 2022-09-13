@@ -72,6 +72,12 @@ int stonith__execute_async(stonith_action_t *action, void *userdata,
                                          void *user_data),
                            void (*fork_cb) (int pid, void *user_data));
 
+int stonith__metadata_async(const char *agent, int timeout_sec,
+                            void (*callback)(int pid,
+                                             const pcmk__action_result_t *result,
+                                             void *user_data),
+                            void *user_data);
+
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,

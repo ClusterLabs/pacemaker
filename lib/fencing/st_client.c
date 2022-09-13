@@ -2426,6 +2426,86 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
 /*!
  * \internal
+ * \brief Retrieve fence agent meta-data asynchronously
+ *
+ * \param[in] agent        Agent to execute
+ * \param[in] timeout_sec  Error if not complete within this time
+ * \param[in] callback     Function to call with result (this will always be
+ *                         called, whether by this function directly or later
+ *                         via the main loop, and on success the metadata will
+ *                         be in its result argument's action_stdout)
+ * \param[in] user_data    User data to pass to callback
+ *
+ * \return Standard Pacemaker return code
+ * \note The caller must use a main loop. This function is not a
+ *       stonith_api_operations_t method because it does not need a stonith_t
+ *       object and does not go through the fencer, but executes the agent
+ *       directly.
+ */
+int
+stonith__metadata_async(const char *agent, int timeout_sec,
+                        void (*callback)(int pid,
+                                         const pcmk__action_result_t *result,
+                                         void *user_data),
+                        void *user_data)
+{
+    switch (stonith_get_namespace(agent, NULL)) {
+        case st_namespace_rhcs:
+            {
+                stonith_action_t *action = NULL;
+                int rc = pcmk_ok;
+
+                action = stonith__action_create(agent, "metadata", NULL, 0,
+                                                timeout_sec, NULL, NULL, NULL);
+
+                rc = stonith__execute_async(action, user_data, callback, NULL);
+                if (rc != pcmk_ok) {
+                    callback(0, stonith__action_result(action), user_data);
+                    stonith__destroy_action(action);
+                }
+                return pcmk_legacy2rc(rc);
+            }
+
+#if HAVE_STONITH_STONITH_H
+        case st_namespace_lha:
+            // LHA metadata is simply synthesized, so simulate async
+            {
+                pcmk__action_result_t result = {
+                    .exit_status = CRM_EX_OK,
+                    .execution_status = PCMK_EXEC_DONE,
+                    .exit_reason = NULL,
+                    .action_stdout = NULL,
+                    .action_stderr = NULL,
+                };
+
+                stonith__lha_metadata(agent, timeout_sec,
+                                      &result.action_stdout);
+                callback(0, &result, user_data);
+                pcmk__reset_result(&result);
+                return pcmk_rc_ok;
+            }
+#endif
+
+        default:
+            {
+                pcmk__action_result_t result = {
+                    .exit_status = CRM_EX_ERROR,
+                    .execution_status = PCMK_EXEC_ERROR_HARD,
+                    .exit_reason = crm_strdup_printf("No such agent '%s'",
+                                                     agent),
+                    .action_stdout = NULL,
+                    .action_stderr = NULL,
+                };
+
+                callback(0, &result, user_data);
+                pcmk__reset_result(&result);
+                return ENOENT;
+            }
+    }
+}
+
+/*!
+ * \internal
  * \brief Return the exit status from an async action callback
  *
  * \param[in] data  Callback data
