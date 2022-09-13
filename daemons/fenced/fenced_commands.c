@@ -550,8 +550,8 @@ stonith_device_execute(stonith_device_t * device)
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
     cmd->activating_on = device;
-    exec_rc = stonith_action_execute_async(action, (void *)cmd,
-                                           cmd->done_cb, fork_cb);
+    exec_rc = stonith__execute_async(action, (void *)cmd, cmd->done_cb,
+                                     fork_cb);
     if (exec_rc < 0) {
         cmd->activating_on = NULL;
         cmd->done_cb(0, stonith__action_result(action), cmd);

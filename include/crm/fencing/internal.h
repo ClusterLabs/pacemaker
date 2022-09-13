@@ -66,13 +66,11 @@ void stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result);
 void stonith__xe_get_result(xmlNode *xml, pcmk__action_result_t *result);
 xmlNode *stonith__find_xe_with_result(xmlNode *xml);
 
-int
-stonith_action_execute_async(stonith_action_t * action,
-                             void *userdata,
-                             void (*done) (int pid,
-                                           const pcmk__action_result_t *result,
-                                           void *user_data),
-                             void (*fork_cb) (int pid, void *user_data));
+int stonith__execute_async(stonith_action_t *action, void *userdata,
+                           void (*done) (int pid,
+                                         const pcmk__action_result_t *result,
+                                         void *user_data),
+                           void (*fork_cb) (int pid, void *user_data));
 
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
