@@ -504,7 +504,8 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
 
 static int
 stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
-                            const char *namespace, char **output, int timeout)
+                            const char *namespace, char **output,
+                            int timeout_sec)
 {
     /* By executing meta-data directly, we can get it from stonith_admin when
      * the cluster is not running, which is important for higher-level tools.
@@ -512,16 +513,20 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
 
+    if (timeout_sec <= 0) {
+        timeout_sec = CRMD_METADATA_CALL_TIMEOUT;
+    }
+
     crm_trace("Looking up metadata for %s agent %s",
               stonith_namespace2text(ns), agent);
 
     switch (ns) {
         case st_namespace_rhcs:
-            return stonith__rhcs_metadata(agent, timeout, output);
+            return stonith__rhcs_metadata(agent, timeout_sec, output);
 
 #if HAVE_STONITH_STONITH_H
         case st_namespace_lha:
-            return stonith__lha_metadata(agent, timeout, output);
+            return stonith__lha_metadata(agent, timeout_sec, output);
 #endif
 
         default:
@@ -1710,8 +1715,8 @@ stonith_api_delete(stonith_t * stonith)
 static int
 stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
                      const char *namespace_s, const char *agent,
-                     stonith_key_value_t *params, int timeout, char **output,
-                     char **error_output)
+                     stonith_key_value_t *params, int timeout_sec,
+                     char **output, char **error_output)
 {
     /* Validation should be done directly via the agent, so we can get it from
      * stonith_admin when the cluster is not running, which is important for
@@ -1757,17 +1762,21 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         *error_output = NULL;
     }
 
+    if (timeout_sec <= 0) {
+        timeout_sec = CRMD_METADATA_CALL_TIMEOUT; // Questionable
+    }
+
     switch (stonith_get_namespace(agent, namespace_s)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
-                                        params_table, host_arg, timeout,
+                                        params_table, host_arg, timeout_sec,
                                         output, error_output);
             break;
 
 #if HAVE_STONITH_STONITH_H
         case st_namespace_lha:
             rc = stonith__lha_validate(st, call_options, target, agent,
-                                       params_table, timeout, output,
+                                       params_table, timeout_sec, output,
                                        error_output);
             break;
 #endif
