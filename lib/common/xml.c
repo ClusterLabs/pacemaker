@@ -1478,14 +1478,17 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
 }
 
 // Log an XML element or comment (and any children) in a formatted way
-void
-pcmk__xml_log(int log_level, const char *file, const char *function, int line,
-              const char *prefix, const xmlNode *data, int depth, int options)
+static void
+log_xml_node_and_children(GString *buffer, int log_level, const char *file,
+                          const char *function, int line, const char *prefix,
+                          const xmlNode *data, int depth, int options)
 {
     const char *name = NULL;
     const char *hidden = NULL;
 
     xmlNode *child = NULL;
+
+    CRM_ASSERT(buffer != NULL);
 
     if ((data == NULL) || (log_level == LOG_NEVER)
         || ((data->type != XML_COMMENT_NODE)
@@ -1495,9 +1498,9 @@ pcmk__xml_log(int log_level, const char *file, const char *function, int line,
 
     name = crm_element_name(data);
 
-    if (pcmk_is_set(options, xml_log_option_open)) {
-        GString *buffer = g_string_sized_new(128);
+    g_string_truncate(buffer, 0);
 
+    if (pcmk_is_set(options, xml_log_option_open)) {
         insert_prefix(options, buffer, depth);
 
         if (data->type == XML_COMMENT_NODE) {
@@ -1549,7 +1552,6 @@ pcmk__xml_log(int log_level, const char *file, const char *function, int line,
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
                          (const char *) buffer->str);
-        g_string_free(buffer, TRUE);
     }
 
     if(data->type == XML_COMMENT_NODE) {
@@ -1561,22 +1563,39 @@ pcmk__xml_log(int log_level, const char *file, const char *function, int line,
     } else if (pcmk_is_set(options, xml_log_option_children)) {
         for (child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
-            pcmk__xml_log(log_level, file, function, line, prefix, child,
-                          depth + 1,
-                          options|xml_log_option_open|xml_log_option_close);
+
+            log_xml_node_and_children(buffer, log_level, file, function, line,
+                                      prefix, child, depth + 1,
+                                      options|xml_log_option_open
+                                          |xml_log_option_close);
         }
     }
 
     if (pcmk_is_set(options, xml_log_option_close)) {
-        GString *buffer = g_string_sized_new(64);
+        g_string_truncate(buffer, 0);
 
         insert_prefix(options, buffer, depth);
         g_string_append_printf(buffer, "</%s>", name);
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
                          (const char *) buffer->str);
-        g_string_free(buffer, TRUE);
     }
+}
+
+// Log an XML element or comment (and any children) in a formatted way
+void
+pcmk__xml_log(int log_level, const char *file, const char *function, int line,
+              const char *prefix, const xmlNode *data, int depth, int options)
+{
+    /* Allocate a buffer once, for log_xml_node_and_children() to truncate and
+     * reuse in recursive calls
+     */
+    GString *buffer = g_string_sized_new(1024);
+
+    log_xml_node_and_children(buffer, log_level, file, function, line, prefix,
+                              data, depth, options);
+
+    g_string_free(buffer, TRUE);
 }
 
 // Log XML portions that have been marked as changed
