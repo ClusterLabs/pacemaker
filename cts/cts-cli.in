@@ -64,6 +64,13 @@ test_assert_errfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.ta_errfile.XXXXXXXXXX)
 # Log test errors to stderr
 export PCMK_stderr=1
 
+# Output when PCMK_trace_functions is undefined is different from when it's
+# empty. Later we save the value of PCMK_trace_functions, do work, and restore
+# the original value. Getting back to the initial state is simplest if we assume
+# the variable is defined.
+: ${PCMK_trace_functions=""}
+export PCMK_trace_functions
+
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
 CRM_EX_ERROR=1
@@ -2410,6 +2417,11 @@ for t in $tests; do
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
+        -e 's/.*\(crm_time_parse_duration\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(crm_time_parse_period\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(crm_time_parse_sec\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(log_xmllib_err\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(parse_date\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(pcmk__.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
