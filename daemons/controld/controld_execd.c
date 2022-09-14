@@ -694,18 +694,8 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
 
     target_rc = rsc_op_expected_rc(op);
 
-    /* there is a small risk in formerly mixed clusters that it will
-     * be sub-optimal.
-     *
-     * however with our upgrade policy, the update we send should
-     * still be completely supported anyway
-     */
     caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-    CRM_LOG_ASSERT(caller_version != NULL);
-
-    if(caller_version == NULL) {
-        caller_version = CRM_FEATURE_SET;
-    }
+    CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
                                       fsa_our_uname, src);
