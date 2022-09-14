@@ -359,7 +359,7 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'reboot' actions before giving up."
 msgstr ""
-""一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会 'fail' ，因此Pacemaker将自动重试（如果剩下时间）。 使用此选项更改Pacemaker在放弃之前进行'reboot' 操作的次数。
+"一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会 'fail' ，因此Pacemaker将自动重试（如果剩下时间）。 使用此选项更改Pacemaker在放弃之前进行'reboot' 操作的次数."
 
 #: daemons/fenced/pacemaker-fenced.c:1467
 #, fuzzy
