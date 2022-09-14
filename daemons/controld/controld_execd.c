@@ -1569,32 +1569,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 }
 
 static void
-handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
-                  const char *from_host, const char *from_sys)
-{
-    int rc = pcmk_ok;
-    xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
-
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
-    crm_info("Forced a local resource history refresh: call=%d", rc);
-
-    if (!pcmk__str_eq(CRM_SYSTEM_CRMD, from_sys, pcmk__str_casei)) {
-        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
-                                        from_sys, CRM_SYSTEM_LRMD,
-                                        fsa_our_uuid);
-
-        crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
-
-        if (relay_message(reply, TRUE) == FALSE) {
-            crm_log_xml_err(reply, "Unable to route reply");
-        }
-        free_xml(reply);
-    }
-
-    free_xml(fragment);
-}
-
-static void
 handle_query_op(xmlNode *msg, lrm_state_t *lrm_state)
 {
     xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
@@ -1806,7 +1780,12 @@ do_lrm_invoke(long long action,
                           from_sys);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
-        handle_refresh_op(lrm_state, user_name, from_host, from_sys);
+        /* @COMPAT This can only be sent by crm_resource --refresh on a
+         * Pacemaker Remote node running Pacemaker 1.1.9, which is extremely
+         * unlikely. It previously would cause the controller to re-write its
+         * resource history to the CIB. Just ignore it.
+         */
+        crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_none)) {
         handle_query_op(input->msg, lrm_state);
