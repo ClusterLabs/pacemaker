@@ -827,19 +827,26 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     return FALSE;
 }
 
-static xmlNode *
-do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
+xmlNode *
+controld_query_executor_state(const char *node_name)
 {
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(node_name);
+
+    if (!lrm_state) {
+        crm_err("Could not find executor state for node %s", node_name);
+        return NULL;
+    }
 
     peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
-    xml_state = create_node_state_update(peer, update_flags, NULL,
-                                         __func__);
+    xml_state = create_node_state_update(peer,
+                                         node_update_cluster|node_update_peer,
+                                         NULL, __func__);
     if (xml_state == NULL) {
         return NULL;
     }
@@ -854,19 +861,6 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     crm_log_xml_trace(xml_state, "Current executor state");
 
     return xml_state;
-}
-
-xmlNode *
-controld_query_executor_state(const char *node_name)
-{
-    lrm_state_t *lrm_state = lrm_state_find(node_name);
-
-    if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", node_name);
-        return NULL;
-    }
-    return do_lrm_query_internal(lrm_state,
-                                 node_update_cluster|node_update_peer);
 }
 
 /*!
