@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -84,7 +84,7 @@ pcmk__free_arg_context(GOptionContext *context);
  *
  * \note This is simply a convenience wrapper to reduce duplication
  */
-void pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[]);
+void pcmk__add_main_args(GOptionContext *context, const GOptionEntry entries[]);
 
 /*!
  * \internal
@@ -100,7 +100,7 @@ void pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[]);
  */
 void pcmk__add_arg_group(GOptionContext *context, const char *name,
                          const char *header, const char *desc,
-                         GOptionEntry entries[]);
+                         const GOptionEntry entries[]);
 
 /*!
  * \internal
@@ -111,8 +111,7 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  * as surrounding arguments containing spaces with quotes and escaping any
  * single quotes in the string.
  *
- * \param[in] argv The command line, typically as returned from
- *                 pcmk__cmdline_preproc.
+ * \param[in,out] argv  Command line (typically from pcmk__cmdline_preproc())
  */
 gchar *pcmk__quote_cmdline(gchar **argv);
 
@@ -156,7 +155,7 @@ gchar *pcmk__quote_cmdline(gchar **argv);
  *                    These letters will all have pre-processing applied.
  */
 gchar **
-pcmk__cmdline_preproc(char **argv, const char *special);
+pcmk__cmdline_preproc(char *const *argv, const char *special);
 
 /*!
  * \internal

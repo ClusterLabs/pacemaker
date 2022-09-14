@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,9 +49,9 @@ typedef struct {
 /*!
  * \brief Make an IPC request to the scheduler for the transition graph
  *
- * \param[in]  api IPC API connection
- * \param[in]  cib The CIB to create a transition graph for
- * \param[out] ref The reference ID a response will have
+ * \param[in,out] api  IPC API connection
+ * \param[in]     cib  The CIB to create a transition graph for
+ * \param[out]    ref  The reference ID a response will have
  *
  * \return Standard Pacemaker return code
  */

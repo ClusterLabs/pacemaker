@@ -268,6 +268,9 @@ pcmk__xe_next(const xmlNode *child)
  * \internal
  * \brief Like pcmk__xe_set_props, but takes a va_list instead of
  *        arguments directly.
+ *
+ * \param[in,out] node   XML to add attributes to
+ * \param[in]     pairs  NULL-terminated list of name/value pairs to add
  */
 void
 pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);

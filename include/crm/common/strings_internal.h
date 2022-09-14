@@ -122,8 +122,8 @@ pcmk__intkey_table_lookup(GHashTable *hash_table, int key)
  * \internal
  * \brief Remove a key/value from a hash table with integer keys
  *
- * \param[in] hash_table  Table to modify
- * \param[in] key         Integer key of entry to remove
+ * \param[in,out] hash_table  Table to modify
+ * \param[in]     key         Integer key of entry to remove
  *
  * \return Whether \p key was found and removed from \p hash_table
  */

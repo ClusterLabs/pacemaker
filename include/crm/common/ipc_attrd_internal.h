@@ -50,13 +50,13 @@ typedef struct {
  * \internal
  * \brief Send a request to pacemaker-attrd to clear resource failure
  *
- * \param[in] api           pacemaker-attrd IPC object
- * \param[in] node          Affect only this node (or NULL for all nodes)
- * \param[in] resource      Name of resource to clear (or NULL for all)
- * \param[in] operation     Name of operation to clear (or NULL for all)
- * \param[in] interval_spec If operation is not NULL, its interval
- * \param[in] user_name     ACL user to pass to pacemaker-attrd
- * \param[in] options       Bitmask of pcmk__node_attr_opts
+ * \param[in,out] api           pacemaker-attrd IPC object
+ * \param[in]     node          Affect only this node (or NULL for all nodes)
+ * \param[in]     resource      Name of resource to clear (or NULL for all)
+ * \param[in]     operation     Name of operation to clear (or NULL for all)
+ * \param[in]     interval_spec If operation is not NULL, its interval
+ * \param[in]     user_name     ACL user to pass to pacemaker-attrd
+ * \param[in]     options       Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -76,11 +76,11 @@ int pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
  *
  * \brief Delete a previously set attribute by setting its value to NULL
  *
- * \param[in] api           Connection to pacemaker-attrd (or NULL to use
- *                          a temporary new connection)
- * \param[in] node          Delete attribute for this node (or NULL for current node)
- * \param[in] name          Attribute name
- * \param[in] options       Bitmask of pcmk__node_attr_opts
+ * \param[in,out] api      Connection to pacemaker-attrd (or NULL to use
+ *                         a temporary new connection)
+ * \param[in]     node     Delete attribute for this node (or NULL for local)
+ * \param[in]     name     Attribute name
+ * \param[in]     options  Bitmask of pcmk__node_attr_opts
  *
  * \return Standard Pacemaker return code
  */
@@ -91,8 +91,8 @@ int pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Purge a node from pacemaker-attrd
  *
- * \param[in] api           pacemaker-attrd IPC object
- * \param[in] node          Node to remove
+ * \param[in,out] api           pacemaker-attrd IPC object
+ * \param[in]     node          Node to remove
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -108,11 +108,11 @@ int pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node);
  * \internal
  * \brief Get the value of an attribute from pacemaker-attrd
  *
- * \param[in] api           Connection to pacemaker-attrd
- * \param[in] node          Look up the attribute for this node
- *                          (or NULL for all nodes)
- * \param[in] name          Attribute name
- * \param[in] options       Bitmask of pcmk__node_attr_opts
+ * \param[in,out] api           Connection to pacemaker-attrd
+ * \param[in]     node          Look up the attribute for this node
+ *                              (or NULL for all nodes)
+ * \param[in]     name          Attribute name
+ * \param[in]     options       Bitmask of pcmk__node_attr_opts
  *
  * \return Standard Pacemaker return code
  */
@@ -123,8 +123,8 @@ int pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *nam
  * \internal
  * \brief Tell pacemaker-attrd to update the CIB with current values
  *
- * \param[in] api           pacemaker-attrd IPC object
- * \param[in] node          Affect only this node (or NULL for all nodes)
+ * \param[in,out] api   pacemaker-attrd IPC object
+ * \param[in]     node  Affect only this node (or NULL for all nodes)
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -140,14 +140,14 @@ int pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node);
  * \internal
  * \brief Update an attribute's value, time to wait, or both
  *
- * \param[in] api           pacemaker-attrd IPC object
- * \param[in] node          Affect only this node (or NULL for current node)
- * \param[in] name          Attribute name
- * \param[in] value         The attribute's new value, or NULL to unset
- * \param[in] dampen        The new time to wait value, or NULL to unset
- * \param[in] set           ID of attribute set to use (or NULL to choose first)
- * \param[in] user_name     ACL user to pass to pacemaker-attrd
- * \param[in] options       Bitmask of pcmk__node_attr_opts
+ * \param[in,out] api        pacemaker-attrd IPC object
+ * \param[in]     node       Affect only this node (or NULL for current node)
+ * \param[in]     name       Attribute name
+ * \param[in]     value      The attribute's new value, or NULL to unset
+ * \param[in]     dampen     The new time to wait value, or NULL to unset
+ * \param[in]     set        ID of attribute set to use (or NULL for first)
+ * \param[in]     user_name  ACL user to pass to pacemaker-attrd
+ * \param[in]     options    Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is
@@ -165,12 +165,12 @@ int pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *na
  * \internal
  * \brief Like pcmk__attrd_api_update, but for multiple attributes at once
  *
- * \param[in] api           pacemaker-attrd IPC object
- * \param[in] attrs         A list of pcmk__attr_query_pair_t structs
- * \param[in] dampen        The new time to wait value, or NULL to unset
- * \param[in] set           ID of attribute set to use (or NULL to choose first)
- * \param[in] user_name     ACL user to pass to pacemaker-attrd
- * \param[in] options       Bitmask of pcmk__node_attr_opts
+ * \param[in,out] api        pacemaker-attrd IPC object
+ * \param[in,out] attrs      A list of pcmk__attr_query_pair_t structs
+ * \param[in]     dampen     The new time to wait value, or NULL to unset
+ * \param[in]     set        ID of attribute set to use (or NULL for first)
+ * \param[in]     user_name  ACL user to pass to pacemaker-attrd
+ * \param[in]     options    Bitmask of pcmk__node_attr_opts
  *
  * \note If \p api is NULL, a new temporary connection will be created
  *       just for this operation and destroyed afterwards.  If \p api is

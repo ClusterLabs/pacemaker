@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2021 the Pacemaker project contributors
+ * Copyright 2009-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,7 +86,7 @@ struct ipc_client_callbacks {
     /*!
      * \brief Destroy function for mainloop IPC connection client data
      *
-     * \param[in] userdata  User data passed when creating mainloop source
+     * \param[in,out] userdata  User data passed when creating mainloop source
      */
     void (*destroy) (gpointer userdata);
 };
@@ -131,7 +131,7 @@ struct mainloop_fd_callbacks {
     /*!
      * \brief Dispatch function for mainloop file descriptor with data ready
      *
-     * \param[in] userdata  User data passed when creating mainloop source
+     * \param[in,out] userdata  User data passed when creating mainloop source
      *
      * \return Negative value to remove source, anything else to keep it
      */
@@ -140,7 +140,7 @@ struct mainloop_fd_callbacks {
     /*!
      * \brief Destroy function for mainloop file descriptor client data
      *
-     * \param[in] userdata  User data passed when creating mainloop source
+     * \param[in,out] userdata  User data passed when creating mainloop source
      */
     void (*destroy) (gpointer userdata);
 };

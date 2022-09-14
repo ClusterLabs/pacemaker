@@ -87,7 +87,7 @@ void pcmk__reset_request(pcmk__request_t *request);
  *         if unknown
  */
 static inline const char *
-pcmk__request_origin_type(pcmk__request_t *request)
+pcmk__request_origin_type(const pcmk__request_t *request)
 {
     if ((request != NULL) && (request->ipc_client != NULL)) {
         return "client";
@@ -108,7 +108,7 @@ pcmk__request_origin_type(pcmk__request_t *request)
  *         "(unspecified)" if unknown
  */
 static inline const char *
-pcmk__request_origin(pcmk__request_t *request)
+pcmk__request_origin(const pcmk__request_t *request)
 {
     if ((request != NULL) && (request->ipc_client != NULL)) {
         return pcmk__client_name(request->ipc_client);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the Pacemaker project contributors
+ * Copyright 2019-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,7 +123,7 @@ pcmk__free_arg_context(GOptionContext *context) {
 }
 
 void
-pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[])
+pcmk__add_main_args(GOptionContext *context, const GOptionEntry entries[])
 {
     GOptionGroup *main_group = g_option_context_get_main_group(context);
 
@@ -133,7 +133,7 @@ pcmk__add_main_args(GOptionContext *context, GOptionEntry entries[])
 void
 pcmk__add_arg_group(GOptionContext *context, const char *name,
                     const char *header, const char *desc,
-                    GOptionEntry entries[])
+                    const GOptionEntry entries[])
 {
     GOptionGroup *group = NULL;
 
@@ -215,7 +215,7 @@ pcmk__quote_cmdline(gchar **argv)
 }
 
 gchar **
-pcmk__cmdline_preproc(char **argv, const char *special) {
+pcmk__cmdline_preproc(char *const *argv, const char *special) {
     GPtrArray *arr = NULL;
     bool saw_dash_dash = false;
     bool copy_option = false;
@@ -267,7 +267,7 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
          */
         if (g_str_has_prefix(argv[i], "-") && !g_str_has_prefix(argv[i], "--")) {
             /* Skip over leading dash */
-            char *ch = argv[i]+1;
+            const char *ch = argv[i]+1;
 
             /* This looks like the start of a number, which means it is a negative
              * number.  It's probably the argument to the preceeding option, but

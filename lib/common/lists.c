@@ -11,11 +11,11 @@
 #include <crm/common/lists_internal.h>
 
 GList*
-pcmk__subtract_lists(GList *from, GList *items, GCompareFunc cmp)
+pcmk__subtract_lists(GList *from, const GList *items, GCompareFunc cmp)
 {
     GList *result = g_list_copy(from);
 
-    for (GList *item = items; item != NULL; item = item->next) {
+    for (const GList *item = items; item != NULL; item = item->next) {
         GList *match = g_list_find_custom(result, item->data, cmp);
 
         if (match != NULL) {
