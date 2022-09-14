@@ -1569,20 +1569,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 }
 
 static void
-handle_query_op(xmlNode *msg, lrm_state_t *lrm_state)
-{
-    xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
-    xmlNode *reply = create_reply(msg, data);
-
-    if (relay_message(reply, TRUE) == FALSE) {
-        crm_err("Unable to route reply");
-        crm_log_xml_err(reply, "reply");
-    }
-    free_xml(reply);
-    free_xml(data);
-}
-
-static void
 handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   const char *from_host, const char *user_name,
                   gboolean is_remote_node)
@@ -1786,9 +1772,6 @@ do_lrm_invoke(long long action,
          * resource history to the CIB. Just ignore it.
          */
         crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
-
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_none)) {
-        handle_query_op(input->msg, lrm_state);
 
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
