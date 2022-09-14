@@ -1,7 +1,7 @@
 """ Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2022 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
@@ -1222,7 +1222,7 @@ class MaintenanceMode(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"schedulerd.*: Recover %s\s*\(.*\)" % self.rid,
+            r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self.rid,
             r"Unknown operation: fail",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
@@ -1321,7 +1321,7 @@ class ResourceRecover(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"schedulerd.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
+            r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self.rid, self.rid_alt),
             r"Unknown operation: fail",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
@@ -2553,7 +2553,7 @@ class RemoteLXC(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for ping",
-            r"schedulerd.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
+            r"schedulerd.*: Recover\s+(ping|lxc-ms|container)\s+\(.*\)",
             # The orphaned lxc-ms resource causes an expected transition error
             # that is a result of the scheduler not having knowledge that the
             # promotable resource used to be a clone. As a result, it looks like that 
@@ -3047,7 +3047,7 @@ class RemoteStonithd(RemoteDriver):
             r"Software caused connection abort",
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
-            r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
+            r"schedulerd.*:\s+Recover\s+remote-.*\s+\(.*\)",
             r"error: Result of monitor operation for .* on remote-.*: Internal communication failure",
         ]
 
@@ -3113,7 +3113,7 @@ class RemoteRscFailure(RemoteDriver):
 
     def errorstoignore(self):
         ignore_pats = [
-            r"schedulerd.*: Recover remote-rsc\s*\(.*\)",
+            r"schedulerd.*: Recover\s+remote-rsc\s+\(.*\)",
             r"Dummy.*: No process state file found",
         ]
 
