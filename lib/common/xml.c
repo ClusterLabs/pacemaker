@@ -818,15 +818,19 @@ free_xml_with_position(xmlNode * child, int position)
             if (doc && pcmk__tracking_xml_changes(child, FALSE)
                 && !pcmk_is_set(p->flags, pcmk__xf_created)) {
 
-                char *xpath = xml_get_path(child);
+                GString *xpath = pcmk__element_xpath(child);
 
                 if (xpath != NULL) {
                     pcmk__deleted_xml_t *deleted_obj = NULL;
 
-                    crm_trace("Deleting %s %p from %p", xpath, child, doc);
+                    crm_trace("Deleting %s %p from %p",
+                              (const char *) xpath->str, child, doc);
 
                     deleted_obj = calloc(1, sizeof(pcmk__deleted_xml_t));
-                    deleted_obj->path = xpath;
+                    deleted_obj->path = strdup((const char *) xpath->str);
+
+                    CRM_ASSERT(deleted_obj->path != NULL);
+                    g_string_free(xpath, TRUE);
 
                     deleted_obj->position = -1;
                     /* Record the "position" only for XML comments for now */

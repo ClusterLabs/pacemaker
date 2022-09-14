@@ -163,6 +163,8 @@ void pcmk__xe_remove_matching_attrs(xmlNode *element,
                                     bool (*match)(xmlAttrPtr, void *),
                                     void *user_data);
 
+GString *pcmk__element_xpath(const xmlNode *xml);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for

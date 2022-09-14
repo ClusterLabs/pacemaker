@@ -239,14 +239,16 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
                    pcmk__btoa(transition_graph->complete));
 
     } else if(change == NULL) {
-        char *local_path = xml_get_path(reason);
+        GString *local_path = pcmk__element_xpath(reason);
+        CRM_ASSERT(local_path != NULL);
 
         do_crm_log(level, "Transition %d aborted by %s.%s: %s "
                    CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                    transition_graph->id, TYPE(reason), ID(reason), abort_text,
-                   add[0], add[1], add[2], fn, line, local_path,
+                   add[0], add[1], add[2], fn, line,
+                   (const char *) local_path->str,
                    pcmk__btoa(transition_graph->complete));
-        free(local_path);
+        g_string_free(local_path, TRUE);
 
     } else {
         const char *kind = NULL;
