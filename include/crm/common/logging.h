@@ -113,7 +113,7 @@ void crm_log_deinit(void);
  * \param[in] argc    The number of command line parameters
  * \param[in] argv    The command line parameter values
  */
-void crm_log_preinit(const char *entity, int argc, char **argv);
+void crm_log_preinit(const char *entity, int argc, char *const *argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
                       gboolean to_stderr, int argc, char **argv, gboolean quiet);
 

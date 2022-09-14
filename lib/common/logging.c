@@ -733,7 +733,7 @@ crm_priority2int(const char *name)
  * \param[in] argv    The command line parameter values
  */
 static void
-set_identity(const char *entity, int argc, char **argv)
+set_identity(const char *entity, int argc, char *const *argv)
 {
     if (crm_system_name != NULL) {
         return; // Already set, don't overwrite
@@ -762,7 +762,7 @@ set_identity(const char *entity, int argc, char **argv)
 }
 
 void
-crm_log_preinit(const char *entity, int argc, char **argv)
+crm_log_preinit(const char *entity, int argc, char *const *argv)
 {
     /* Configure libqb logging with nothing turned on */
 
