@@ -686,7 +686,6 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     struct ra_metadata_s *metadata = NULL;
     const char *caller_version = NULL;
     lrm_state_t *lrm_state = NULL;
-    uint32_t metadata_source = controld_metadata_from_agent;
 
     if (op == NULL) {
         return FALSE;
@@ -719,19 +718,14 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
         return TRUE;
     }
 
-    /* Getting meta-data from cache is OK unless this is a successful start
-     * action -- always refresh from the agent for those, in case the
-     * resource agent was updated.
+    /* Ideally the metadata is cached, and the agent is just a fallback.
      *
-     * @TODO Only refresh the meta-data after starts if the agent actually
-     * changed (using something like inotify, or a hash or modification time of
-     * the agent executable).
+     * @TODO Go through all callers and ensure they get metadata asynchronously
+     * first.
      */
-    if ((op->op_status != PCMK_EXEC_DONE) || (op->rc != target_rc)
-        || !pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
-        metadata_source |= controld_metadata_from_cache;
-    }
-    metadata = controld_get_rsc_metadata(lrm_state, rsc, metadata_source);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc,
+                                         controld_metadata_from_agent
+                                         |controld_metadata_from_cache);
     if (metadata == NULL) {
         return TRUE;
     }
@@ -1688,6 +1682,56 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
                     user_name, input, unregister);
 }
 
+// User data for asynchronous metadata execution
+struct metadata_cb_data {
+    lrmd_rsc_info_t *rsc;   // Copy of resource information
+    xmlNode *input_xml;     // Copy of FSA input XML
+};
+
+static struct metadata_cb_data *
+new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
+{
+    struct metadata_cb_data *data = NULL;
+
+    data = calloc(1, sizeof(struct metadata_cb_data));
+    CRM_ASSERT(data != NULL);
+    data->input_xml = copy_xml(input_xml);
+    data->rsc = lrmd_copy_rsc_info(rsc);
+    return data;
+}
+
+static void
+free_metadata_cb_data(struct metadata_cb_data *data)
+{
+    lrmd_free_rsc_info(data->rsc);
+    free_xml(data->input_xml);
+    free(data);
+}
+
+/*!
+ * \internal
+ * \brief Execute an action after metadata has been retrieved
+ *
+ * \param[in] pid        Ignored
+ * \param[in] result     Result of metadata action
+ * \param[in] user_data  Metadata callback data
+ */
+static void
+metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
+{
+    struct metadata_cb_data *data = (struct metadata_cb_data *) user_data;
+
+    struct ra_metadata_s *md = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(lrm_op_target(data->input_xml));
+
+    if ((lrm_state != NULL) && pcmk__result_ok(result)) {
+        md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
+                                     result->action_stdout);
+    }
+    do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
+    free_metadata_cb_data(data);
+}
+
 /*	 A_LRM_INVOKE	*/
 void
 do_lrm_invoke(long long action,
@@ -1830,9 +1874,40 @@ do_lrm_invoke(long long action,
         } else {
             struct ra_metadata_s *md = NULL;
 
-            md = controld_get_rsc_metadata(lrm_state, rsc,
-                                           controld_metadata_from_cache);
-            do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
+            /* Getting metadata from cache is OK except for start actions --
+             * always refresh from the agent for those, in case the resource
+             * agent was updated.
+             *
+             * @TODO Only refresh metadata for starts if the agent actually
+             * changed (using something like inotify, or a hash or modification
+             * time of the agent executable).
+             */
+            if (strcmp(operation, CRMD_ACTION_START) != 0) {
+                md = controld_get_rsc_metadata(lrm_state, rsc,
+                                               controld_metadata_from_cache);
+            }
+
+            if ((md == NULL) && crm_op_needs_metadata(rsc->standard,
+                                                      operation)) {
+                /* Most likely, we'll need the agent metadata to record the
+                 * pending operation and the operation result. Get it now rather
+                 * than wait until then, so the metadata action doesn't eat into
+                 * the real action's timeout.
+                 *
+                 * @TODO Metadata is retrieved via direct execution of the
+                 * agent, which has a couple of related issues: the executor
+                 * should execute agents, not the controller; and metadata for
+                 * Pacemaker Remote nodes should be collected on those nodes,
+                 * not locally.
+                 */
+                struct metadata_cb_data *data = NULL;
+
+                data = new_metadata_cb_data(rsc, input->xml);
+                (void) lrmd__metadata_async(rsc, metadata_complete,
+                                            (void *) data);
+            } else {
+                do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
+            }
         }
 
         lrmd_free_rsc_info(rsc);

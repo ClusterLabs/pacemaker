@@ -356,17 +356,19 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
         return NULL;
     }
 
-    /* For now, we always collect resource agent meta-data via a local,
-     * synchronous, direct execution of the agent. This has multiple issues:
-     * the executor should execute agents, not the controller; meta-data for
-     * Pacemaker Remote nodes should be collected on those nodes, not
-     * locally; and the meta-data call shouldn't eat into the timeout of the
-     * real action being performed.
+    /* For most actions, metadata was cached asynchronously before action
+     * execution (via metadata_complete()).
      *
-     * These issues are planned to be addressed by having the scheduler
-     * schedule a meta-data cache check at the beginning of each transition.
-     * Once that is working, this block will only be a fallback in case the
-     * initial collection fails.
+     * However if that failed, and for other actions, retrieve the metadata now
+     * via a local, synchronous, direct execution of the agent.
+     *
+     * This has multiple issues, which is why this is just a fallback: the
+     * executor should execute agents, not the controller; metadata for
+     * Pacemaker Remote nodes should be collected on those nodes, not locally;
+     * the metadata call shouldn't eat into the timeout of the real action being
+     * performed; and the synchronous call blocks the controller (which also
+     * means that if the metadata action tries to contact the controller,
+     * everything will hang until the timeout).
      */
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
