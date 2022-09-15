@@ -2878,7 +2878,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);
 
-            metadata_cache_update(lrm_state->metadata_cache, rsc, metadata);
+            controld_cache_metadata(lrm_state->metadata_cache, rsc, metadata);
             free(metadata);
         }
     }

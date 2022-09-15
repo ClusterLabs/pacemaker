@@ -149,13 +149,11 @@ ra_param_from_xml(xmlNode *param_xml)
 
     p = calloc(1, sizeof(struct ra_param_s));
     if (p == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
         return NULL;
     }
 
     p->rap_name = strdup(param_name);
     if (p->rap_name == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
         free(p);
         return NULL;
     }
@@ -196,10 +194,11 @@ log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 }
 
 struct ra_metadata_s *
-metadata_cache_update(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
-                      const char *metadata_str)
+controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
+                        const char *metadata_str)
 {
     char *key = NULL;
+    const char *reason = NULL;
     xmlNode *metadata = NULL;
     xmlNode *match = NULL;
     struct ra_metadata_s *md = NULL;
@@ -210,20 +209,19 @@ metadata_cache_update(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
 
     key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
     if (!key) {
-        crm_crit("Invalid resource agent standard or type provided");
+        reason = "Invalid resource agent standard or type";
         goto err;
     }
 
     metadata = string2xml(metadata_str);
     if (!metadata) {
-        crm_err("Metadata for %s:%s:%s is not valid XML",
-                rsc->standard, rsc->provider, rsc->type);
+        reason = "Metadata is not valid XML";
         goto err;
     }
 
     md = calloc(1, sizeof(struct ra_metadata_s));
     if (md == NULL) {
-        crm_crit("Could not allocate memory for resource metadata");
+        reason = "Could not allocate memory";
         goto err;
     }
 
@@ -281,6 +279,7 @@ metadata_cache_update(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
             struct ra_param_s *p = ra_param_from_xml(match);
 
             if (p == NULL) {
+                reason = "Could not allocate memory";
                 goto err;
             }
             if (pcmk_is_set(p->rap_flags, ra_param_private)) {
@@ -311,6 +310,9 @@ metadata_cache_update(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     return md;
 
 err:
+    crm_warn("Unable to update metadata for %s (%s%s%s:%s): %s",
+             rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+             pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
     free_xml(metadata);
     metadata_free(md);
@@ -377,13 +379,8 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
         return NULL;
     }
 
-    metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
-                                     metadata_str);
+    metadata = controld_cache_metadata(lrm_state->metadata_cache, rsc,
+                                       metadata_str);
     free(metadata_str);
-    if (metadata == NULL) {
-        crm_warn("Failed to update metadata for %s (%s%s%s:%s)",
-                 rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
-                 ((rsc->provider == NULL)? "" : rsc->provider), rsc->type);
-    }
     return metadata;
 }
