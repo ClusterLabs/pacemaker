@@ -257,6 +257,9 @@ update_attr_on_host(attribute_t *a, crm_node_t *peer, xmlNode *xml, const char *
 
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
+    crm_debug("Hit local sync point for attribute %s", attr);
+    attrd_alert_waitlist_clients(attrd_sync_point_local);
+
     if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
         && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 

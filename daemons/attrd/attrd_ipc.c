@@ -18,6 +18,7 @@
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/acl_internal.h>
+#include <crm/common/attrd_internal.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
@@ -471,6 +472,11 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
         request.op = crm_element_value_copy(request.xml, PCMK__XA_TASK);
         CRM_CHECK(request.op != NULL, return 0);
+
+        /* If this client supplied a sync point it wants to wait for, add it to
+         * the wait list.
+         */
+        attrd_add_client_to_waitlist(&request);
 
         attrd_handle_request(&request);
         pcmk__reset_request(&request);

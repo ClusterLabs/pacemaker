@@ -180,4 +180,13 @@ mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *a
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
 
+enum attrd_sync_point {
+    attrd_sync_point_local,
+    attrd_sync_point_all,
+};
+
+void attrd_add_client_to_waitlist(pcmk__request_t *request);
+void attrd_alert_waitlist_clients(enum attrd_sync_point sync_point);
+bool attrd_client_on_waitlist(pcmk__request_t *request);
+
 #endif /* PACEMAKER_ATTRD__H */
