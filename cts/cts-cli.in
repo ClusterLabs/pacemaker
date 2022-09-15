@@ -58,7 +58,8 @@ VALGRIND_OPTS="
     --suppressions=$test_home/valgrind-pcmk.suppressions
 "
 
-# Temp file for saving a command's stderr in _test_assert()
+# Temp files for saving a command's stdout/stderr in _test_assert()
+test_assert_outfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.ta_outfile.XXXXXXXXXX)
 test_assert_errfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.ta_errfile.XXXXXXXXXX)
 
 # Log test errors to stderr
@@ -144,10 +145,10 @@ function _test_assert() {
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
 
     # Capture stderr and stdout separately, then print them consecutively
-    out=$(eval $VALGRIND_CMD $cmd 2> "$test_assert_errfile")
+    eval $VALGRIND_CMD $cmd > "$test_assert_outfile" 2> "$test_assert_errfile"
     rc=$?
     cat "$test_assert_errfile"
-    [ -n "$out" ] && echo "$out"
+    cat "$test_assert_outfile"
 
     if [ x$cib != x0 ]; then
         printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
@@ -160,7 +161,9 @@ function _test_assert() {
         # The sed command filters out the "- validates" line that xmllint will output
         # on success.  grep cannot be used here because "grep -v 'validates$'" will
         # return an exit code of 1 if its input consists entirely of "- validates".
-        echo "$out" | $XMLLINT_CMD --noout --relaxng "$PCMK_schema_directory/api/api-result.rng" - 2>&1 | sed -n '/validates$/ !p'
+        $XMLLINT_CMD --noout --relaxng \
+            "$PCMK_schema_directory/api/api-result.rng" "$test_assert_outfile" \
+             2>&1 | sed -n '/validates$/ !p'
         rc=$?
 
         if [ $rc = 0 ]; then
@@ -2452,6 +2455,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
+rm -f "${test_assert_outfile}"
 rm -f "${test_assert_errfile}"
 
 failed=0
