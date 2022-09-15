@@ -385,14 +385,20 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register fencing level for specified node, pattern or attribute
      *
-     * \param[in] st          Fencer connection to use
-     * \param[in] options     Bitmask of stonith_call_options to pass to fencer
-     * \param[in] node        If not NULL, target level by this node name
-     * \param[in] pattern     If not NULL, target by node name using this regex
-     * \param[in] attr        If not NULL, target by this node attribute
-     * \param[in] value       If not NULL, target by this node attribute value
-     * \param[in] level       Index number of level to add
-     * \param[in] device_list Devices to use in level
+     * \param[in,out] st           Fencer connection to use
+     * \param[in]     options      Group of enum stonith_call_options
+     * \param[in]     node         If not NULL, register level targeting this
+     *                             node by name
+     * \param[in]     pattern      If not NULL, register level targeting nodes
+     *                             whose names match this regular expression
+     * \param[in]     attr         If this and \p value are not NULL, register
+     *                             level targeting nodes with this node
+     *                             attribute set to \p value
+     * \param[in]     value        If this and \p attr are not NULL, register
+     *                             level targeting nodes with node attribute
+     *                             \p attr set to this
+     * \param[in]     level        Topology level number to remove
+     * \param[in]     device_list  Devices to use in level
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
@@ -401,8 +407,8 @@ typedef struct stonith_api_operations_s
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
-                               const char *attr, const char *value,
-                               int level, stonith_key_value_t *device_list);
+                               const char *attr, const char *value, int level,
+                               const stonith_key_value_t *device_list);
 
     /*!
      * \brief Validate an arbitrary stonith device configuration
