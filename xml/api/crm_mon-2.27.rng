@@ -86,6 +86,9 @@
             <optional>
                 <element name="last_update">
                     <attribute name="time"> <text /> </attribute>
+                    <optional>
+                        <attribute name="origin"> <text /> </attribute>
+                    </optional>
                 </element>
                 <element name="last_change">
                     <attribute name="time"> <text /> </attribute>
