@@ -209,11 +209,17 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register a fencing level for specified node with local fencer
      *
+     * \param[in,out] st           Fencer connection to use
+     * \param[in]     options      Group of enum stonith_call_options
+     * \param[in]     node         Target node to register level for
+     * \param[in]     level        Topology level number to register
+     * \param[in]     device_list  Devices to register in level
+     *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*register_level)(
-        stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
+    int (*register_level)(stonith_t *st, int options, const char *node,
+                          int level, const stonith_key_value_t *device_list);
 
     /*!
      * \brief Retrieve a fence agent's metadata
