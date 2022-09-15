@@ -191,56 +191,17 @@ msgid ""
 "attempted on a target"
 msgstr "fence操作失败多少次会停止立即尝试"
 
-#: daemons/fenced/pacemaker-fenced.c:1388
-#, fuzzy
-msgid "Advanced use only: An alternate parameter to supply instead of 'port'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1389
-#, fuzzy
-msgid ""
-"some devices do not support the standard 'port' parameter or may provide "
-"additional ones. Use this to specify an alternate, device-specific, "
-"parameter that should indicate the machine to be fenced. A value of none can "
-"be used to tell the cluster not to supply any additional parameters."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1398
-#, fuzzy
-msgid ""
-"A mapping of host names to ports numbers for devices that do not support "
-"host names."
-msgstr ""
-"    <shortdesc lang=\"zh\">为不支持主机名的设备提供主机名和端口号的映射</"
-"shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1399
-#, fuzzy
-msgid ""
-"Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and "
-"ports 2 and 3 for node2"
-msgstr ""
-"    <longdesc lang=\"zh\">例如：pcmk_host_map=\"node:1;node2:2,3\"表示让集群"
-"的节点node1使用端口1，节点node2使用端口2和端口3。</longdesc>\n"
 
 #: daemons/fenced/pacemaker-fenced.c:1403
 msgid "Eg. node1,node2,node3"
-msgstr "例如. node1,node2,node3"
+msgstr "例如 node1,node2,node3"
 
 #: daemons/fenced/pacemaker-fenced.c:1404
 msgid ""
 "A list of machines controlled by this device (Optional unless "
 "pcmk_host_list=static-list)"
 msgstr ""
-"该设备控制的机器列表(除非可选 pcmk_host_list =静态列表)"
+"该设备控制的机器列表(可选参数，除非 pcmk_host_list 设置为 static-list)"
 
 #: daemons/fenced/pacemaker-fenced.c:1409
 msgid "How to determine which machines are controlled by the device."
@@ -254,12 +215,12 @@ msgid ""
 msgstr ""
 "允许的值：Dynamic-List（通过“列表”命令查询设备），"
 "静态列表（检查PCMK_HOST_LIST属性），状态（通过'status'命令查询设备），"
-"无（假设每个设备都可frnce 每个机器 ）"
+"无（假设每个设备都可fence 每台机器 ）"
 
 #: daemons/fenced/pacemaker-fenced.c:1419
 #: daemons/fenced/pacemaker-fenced.c:1428
 msgid "Enable a base delay for fencing actions and specify base delay value."
-msgstr "启用fencing 操作的基本延迟并指定基本延迟值。"
+msgstr "在执行 fencing 操作前启用不超过指定时间的延迟。"
 
 #: daemons/fenced/pacemaker-fenced.c:1420
 msgid ""
@@ -269,7 +230,7 @@ msgid ""
 "below this maximum."
 msgstr ""
 "启用不超过执行fencing之前指定的时间的延迟。"
-" Pacemaker通过获取PCMK_DELAY_BASE的值并添加随机延迟值来得出总体延迟,"
+" Pacemaker通过获取pcmk_delay_base的值并添加随机延迟值来得出总体延迟,"
 "从而使总和保持在此最大值以下。"
 
 #: daemons/fenced/pacemaker-fenced.c:1430
@@ -282,18 +243,18 @@ msgid ""
 "configured for each target), or to a node map (for example, \"node1:1s;"
 "node2:5\") to set a different value per target."
 msgstr ""
-"这使fencing 动作有静态延迟，这可以帮助避免"
-"\"death matches\"两个节点试图同时互相fence."
-"如果还使用了PCMK_DELAY_MAX，则将添加随机延迟，"
+"这使fencing 操作启用静态延迟，这可以帮助避免"
+"\"death matches\"即两个节点试图同时互相fence."
+"如果还使用了pcmk_delay_max，则将添加随机延迟，"
 "以使总延迟保持在该值以下。可以将其设置为单个时间值，"
-"以应用于该设备针对的任何节点（如果配置了单独的设备，则有用 对于每个目标）"
-"或到节点映射（例如，\" node1：1s; node2：5 \"）以设置每个目标的不同值。"
+"以应用于该设备针对的任何节点（适用于为每个目标分别配置了各自的设备的情况）"
+"， 或着设置为一个节点映射 （例如，\"node1:1s;node2:5\"）从而为每个目标设置不同值。"
 
 #: daemons/fenced/pacemaker-fenced.c:1442
 msgid ""
 "The maximum number of actions can be performed in parallel on this device"
 msgstr ""
-"最大行为数可以在此设备上并行执行"
+"可以在该设备上并发执行的最多操作数量"
 
 #: daemons/fenced/pacemaker-fenced.c:1443
 msgid ""
@@ -301,49 +262,14 @@ msgid ""
 "use this to specify the maximum number of actions can be performed in "
 "parallel on this device. -1 is unlimited."
 msgstr ""
-"Cluster 属性 concurrent-fencing = true需要首先配置。然后使用它来指定可以在此设备上并行执行的最大动作数。 -1是无限的"
-
-#: daemons/fenced/pacemaker-fenced.c:1448
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'reboot'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1449
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.\n"
-"Use this to specify an alternate, device-specific, command that implements "
-"the 'reboot' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"需要首先配置集群属性 concurrent-fencing=true 。然后使用此参数指定可以在该设备上并发执行的最多操作数量。 -1 代表没有限制"
 
 #: daemons/fenced/pacemaker-fenced.c:1454
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for reboot actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于'reboot' 操作的替代超时，而不是stonith timeout"
-
-#: daemons/fenced/pacemaker-fenced.c:1455
-#, fuzzy
-msgid ""
-"Some devices need much more/less time to complete than normal.Use this to "
-"specify an alternate, device-specific, timeout for 'reboot' actions."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"仅高级使用：指定用于'reboot' 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1460
 msgid ""
@@ -359,48 +285,16 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'reboot' actions before giving up."
 msgstr ""
-"一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会 'fail' ，因此Pacemaker将自动重试（如果剩下时间）。 使用此选项更改Pacemaker在放弃之前进行'reboot' 操作的次数."
-
-#: daemons/fenced/pacemaker-fenced.c:1467
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'off'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1468
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.Use this to specify an alternate, device-specific, command that "
-"implements the 'off' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+"因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'reboot' 操作的次数."
 
 #: daemons/fenced/pacemaker-fenced.c:1473
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for off actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于off 操作的替代超时，而不是stonith timeout"
-
-#: daemons/fenced/pacemaker-fenced.c:1474
-#, fuzzy
-msgid ""
-"Some devices need much more/less time to complete than normal.Use this to "
-"specify an alternate, device-specific, timeout for 'off' actions."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"仅高级使用：指定用于off 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1479
 msgid ""
@@ -416,54 +310,23 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'off' actions before giving up."
 msgstr ""
-
-#: daemons/fenced/pacemaker-fenced.c:1486
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'on'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1487
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.Use this to specify an alternate, device-specific, command that "
-"implements the 'on' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'off' 操作的次数."
 
 #: daemons/fenced/pacemaker-fenced.c:1492
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for on actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于on 操作的替代超时，而不是stonith timeout"
-
-#: daemons/fenced/pacemaker-fenced.c:1493
-#, fuzzy
-msgid ""
-"Some devices need much more/less time to complete than normal.Use this to "
-"specify an alternate, device-specific, timeout for 'on' actions."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"仅高级使用：指定用于on 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1498
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'on' command "
 "within the timeout period"
 msgstr ""
-"仅高级使用：在超时期内重试'on'命令的最大次数"
+"仅高级使用：在超时前重试'on'命令的最大次数"
 
 #: daemons/fenced/pacemaker-fenced.c:1499
 msgid ""
@@ -472,54 +335,23 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'on' actions before giving up."
 msgstr ""
-
-#: daemons/fenced/pacemaker-fenced.c:1505
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'list'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1506
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.Use this to specify an alternate, device-specific, command that "
-"implements the 'list' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'on' 操作的次数."
 
 #: daemons/fenced/pacemaker-fenced.c:1511
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for list actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于list 操作的替代超时，而不是stonith timeout"
-
-#: daemons/fenced/pacemaker-fenced.c:1512
-#, fuzzy
-msgid ""
-"Some devices need much more/less time to complete than normal.Use this to "
-"specify an alternate, device-specific, timeout for 'list' actions."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"仅高级使用：指定用于list 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1517
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'list' command "
 "within the timeout period"
 msgstr ""
-"仅高级使用：在超时期内重试'list'命令的最大次数"
+"仅高级使用：在超时前重试'list'命令的最大次数"
 
 #: daemons/fenced/pacemaker-fenced.c:1518
 msgid ""
@@ -528,34 +360,17 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'list' actions before giving up."
 msgstr ""
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'list' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1524
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'monitor'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1525
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.Use this to specify an alternate, device-specific, command that "
-"implements the 'monitor' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
 
 #: daemons/fenced/pacemaker-fenced.c:1530
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for monitor actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于monitor 操作的替代超时，而不是stonith timeout"
+"仅高级使用：指定用于monitor 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1531
 msgid ""
@@ -563,7 +378,7 @@ msgid ""
 "Use this to specify an alternate, device-specific, timeout for 'monitor' "
 "actions."
 msgstr ""
-"仅高级使用：在超时期内重试'monitor'命令的最大次数"
+"仅高级使用：在超时前重试'monitor'命令的最大次数"
 
 #: daemons/fenced/pacemaker-fenced.c:1536
 msgid ""
@@ -578,54 +393,24 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'monitor' actions before giving up."
 msgstr ""
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'monitor' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1543
-#, fuzzy
-msgid "Advanced use only: An alternate command to run instead of 'status'"
-msgstr ""
-"    <shortdesc lang=\"zh\">Advanced use only:(仅限高级使用)备用参数可替"
-"代'port'</shortdesc>\n"
-
-#: daemons/fenced/pacemaker-fenced.c:1544
-#, fuzzy
-msgid ""
-"Some devices do not support the standard commands or may provide additional "
-"ones.Use this to specify an alternate, device-specific, command that "
-"implements the 'status' action."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
 
 #: daemons/fenced/pacemaker-fenced.c:1549
 msgid ""
 "Advanced use only: Specify an alternate timeout to use for status actions "
 "instead of stonith-timeout"
 msgstr ""
-"仅高级使用：指定用于status 操作的替代超时，而不是stonith timeout"
-
-#: daemons/fenced/pacemaker-fenced.c:1550
-#, fuzzy
-msgid ""
-"Some devices need much more/less time to complete than normal.Use this to "
-"specify an alternate, device-specific, timeout for 'status' actions."
-msgstr ""
-"    <longdesc lang=\"zh\">某些设备可能不支持使用标准的'port'(端口)参数，也可"
-"能会提供额外的端口参数。\n"
-"使用此参数可以为需要fence(防护)的机器指定一个备用的，专用于该设备的参数,该参"
-"数应指出要fence的机器。\n"
-"使用值'%s'可用来告诉集群不提供任何额外的参数\n"
-"     </longdesc>\n"
+"仅高级使用：指定用于status 操作的替代超时，而不是stonith-timeout"
 
 #: daemons/fenced/pacemaker-fenced.c:1555
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'status' command "
 "within the timeout period"
 msgstr ""
-"仅高级使用：在超时期内重试'status'命令的最大次数"
+"仅高级使用：在超时前重试'status'命令的最大次数"
 
 #: daemons/fenced/pacemaker-fenced.c:1556
 msgid ""
@@ -634,6 +419,9 @@ msgid ""
 "the operation,      if there is time remaining. Use this option to alter the "
 "number of times Pacemaker retries 'status' actions before giving up."
 msgstr ""
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'status' 操作的次数."
 
 #: lib/cib/cib_utils.c:559
 msgid "Enable Access Control Lists (ACLs) for the CIB"
