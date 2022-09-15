@@ -4256,7 +4256,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cent7-host1 cent7-host2 ]
-  * GuestOnline: [ httpd-bundle1-0@cent7-host2 httpd-bundle2-0@cent7-host2 ]
+  * GuestOnline: [ httpd-bundle1-0@cent7-host1 httpd-bundle2-0@cent7-host2 ]
 
 Active Resources:
   * Resource Group: group1:
@@ -4281,7 +4281,7 @@ Cluster Summary:
 Node List:
   * Node cent7-host1 (3232262828): online, feature set <3.15.1
   * Node cent7-host2 (3232262829): online, feature set <3.15.1
-  * GuestNode httpd-bundle1-0@cent7-host2: online
+  * GuestNode httpd-bundle1-0@cent7-host1: online
   * GuestNode httpd-bundle2-0@cent7-host2: online
 
 Active Resources:
