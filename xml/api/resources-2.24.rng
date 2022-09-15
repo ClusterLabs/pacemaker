@@ -94,6 +94,9 @@
             <optional>
                 <attribute name="pending"> <text/> </attribute>
             </optional>
+            <optional>
+                <attribute name="locked_to"> <text/> </attribute>
+            </optional>
             <zeroOrMore>
                 <element name="node">
                     <attribute name="name"> <text/> </attribute>
