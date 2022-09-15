@@ -413,25 +413,27 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Validate an arbitrary stonith device configuration
      *
-     * \param[in]  st            Stonithd connection to use
-     * \param[in]  call_options  Bitmask of stonith_call_options to use with fencer
-     * \param[in]  rsc_id        ID used to replace CIB secrets in params
-     * \param[in]  namespace_s   Namespace of fence agent to validate (optional)
-     * \param[in]  agent         Fence agent to validate
-     * \param[in]  params        Configuration parameters to pass to fence agent
-     * \param[in]  timeout       Fail if no response within this many seconds
-     * \param[out] output        If non-NULL, where to store any agent output
-     * \param[out] error_output  If non-NULL, where to store agent error output
+     * \param[in,out] st            Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     rsc_id        ID used to replace CIB secrets in \p params
+     * \param[in]     namespace_s   Type of fence agent to validate ("redhat"
+     *                              or "stonith-ng" for RHCS-style, "internal"
+     *                              for Pacemaker-internal devices, "heartbeat"
+     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     agent         Fence agent to validate
+     * \param[in]     params        Configuration parameters to pass to agent
+     * \param[in]     timeout       Fail if no response within this many seconds
+     * \param[out]    output        If non-NULL, where to store any agent output
+     * \param[out]    error_output  If non-NULL, where to store agent error output
      *
      * \return pcmk_ok if validation succeeds, -errno otherwise
-     *
      * \note If pcmk_ok is returned, the caller is responsible for freeing
-     *       the output (if requested).
+     *       the output (if requested) with free().
      */
     int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
                     const char *namespace_s, const char *agent,
-                    stonith_key_value_t *params, int timeout, char **output,
-                    char **error_output);
+                    const stonith_key_value_t *params, int timeout,
+                    char **output, char **error_output);
 
     /*!
      * \brief Issue a fencing action against a node with requested fencing delay.
