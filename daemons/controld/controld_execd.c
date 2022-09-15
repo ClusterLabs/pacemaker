@@ -45,7 +45,8 @@ static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
                                        const char *rsc_id,
                                        const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-                          const char *operation, xmlNode *msg);
+                          const char *operation, xmlNode *msg,
+                          struct ra_metadata_s *md);
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
@@ -1827,26 +1828,12 @@ do_lrm_invoke(long long action,
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
-        } else if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
-                                    CRMD_ACTION_RELOAD_AGENT, NULL)) {
-            /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
-             * will schedule reload-agent actions only. In either case, we need
-             * to map that to whatever the resource agent actually supports.
-             * Default to the OCF 1.1 name.
-             */
+        } else {
             struct ra_metadata_s *md = NULL;
-            const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
 
             md = controld_get_rsc_metadata(lrm_state, rsc,
                                            controld_metadata_from_cache);
-            if ((md != NULL)
-                && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
-                reload_name = CRMD_ACTION_RELOAD;
-            }
-            do_lrm_rsc_op(lrm_state, rsc, reload_name, input->xml);
-
-        } else {
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
+            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, md);
         }
 
         lrmd_free_rsc_info(rsc);
@@ -2196,7 +2183,7 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 
 static void
 do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-              const char *operation, xmlNode *msg)
+              const char *operation, xmlNode *msg, struct ra_metadata_s *md)
 {
     int rc;
     int call_id = 0;
@@ -2215,6 +2202,21 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
         if (transition == NULL) {
             crm_log_xml_err(msg, "Missing transition number");
+        }
+    }
+
+    if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
+                         CRMD_ACTION_RELOAD_AGENT, NULL)) {
+        /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
+         * will schedule reload-agent actions only. In either case, we need
+         * to map that to whatever the resource agent actually supports.
+         * Default to the OCF 1.1 name.
+         */
+        if ((md != NULL)
+            && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
+            operation = CRMD_ACTION_RELOAD;
+        } else {
+            operation = CRMD_ACTION_RELOAD_AGENT;
         }
     }
 
