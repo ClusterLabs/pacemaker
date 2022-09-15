@@ -45,8 +45,7 @@ static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
                                        const char *rsc_id,
                                        const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-                          const char *operation, xmlNode *msg,
-                          struct ra_metadata_s *md);
+                          xmlNode *msg, struct ra_metadata_s *md);
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
@@ -1833,7 +1832,7 @@ do_lrm_invoke(long long action,
 
             md = controld_get_rsc_metadata(lrm_state, rsc,
                                            controld_metadata_from_cache);
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, md);
+            do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
         }
 
         lrmd_free_rsc_info(rsc);
@@ -2182,8 +2181,8 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 }
 
 static void
-do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-              const char *operation, xmlNode *msg, struct ra_metadata_s *md)
+do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
+              struct ra_metadata_s *md)
 {
     int rc;
     int call_id = 0;
@@ -2192,17 +2191,18 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     lrmd_key_value_t *params = NULL;
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
+    const char *operation = NULL;
     gboolean stop_recurring = FALSE;
     const char *nack_reason = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(operation != NULL, return);
+    CRM_CHECK((rsc != NULL) && (msg != NULL), return);
 
-    if (msg != NULL) {
-        transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
-        if (transition == NULL) {
-            crm_log_xml_err(msg, "Missing transition number");
-        }
+    operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
+    CRM_CHECK(!pcmk__str_empty(operation), return);
+
+    transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+    if (pcmk__str_empty(transition)) {
+        crm_log_xml_err(msg, "Missing transition number");
     }
 
     if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
@@ -2261,7 +2261,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     crm_notice("Requesting local execution of %s operation for %s on %s "
                CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
-               transition, rsc->id, operation, op->interval_ms);
+               pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
     if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
