@@ -413,6 +413,7 @@ pcmk__mk_html_output(char **argv) {
     retval->subprocess_output = html_subprocess_output;
     retval->version = html_version;
     retval->info = html_info;
+    retval->transient = html_info;
     retval->err = html_err;
     retval->output_xml = html_output_xml;
 

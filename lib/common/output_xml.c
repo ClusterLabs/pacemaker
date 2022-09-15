@@ -418,6 +418,7 @@ pcmk__mk_xml_output(char **argv) {
     retval->subprocess_output = xml_subprocess_output;
     retval->version = xml_version;
     retval->info = xml_info;
+    retval->transient = xml_info;
     retval->err = xml_err;
     retval->output_xml = xml_output_xml;
 
