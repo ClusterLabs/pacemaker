@@ -22,6 +22,8 @@
 #include <crm/msg_xml.h>
 #include "crmcommon_private.h"
 
+static int call_id = 0;
+
 static void
 set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 {
@@ -140,9 +142,19 @@ create_attrd_op(const char *user_name)
 {
     xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
+    /* Increment the call ID, which must be positive to avoid conflicting with
+     * error codes. This shouldn't be a problem unless the client mucked with
+     * it or the counter wrapped around.
+     */
+    call_id++;
+    if (call_id < 1) {
+        call_id = 1;
+    }
+
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
     crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
+    crm_xml_add_int(attrd_op, F_ATTRD_CALLID, call_id);
 
     return attrd_op;
 }

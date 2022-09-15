@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define F_ATTRD_CALLID          "attrd_callid"
+
 // Options for clients to use with functions below
 enum pcmk__node_attr_opts {
     pcmk__node_attr_none       = 0,
