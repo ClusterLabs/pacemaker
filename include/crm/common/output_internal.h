@@ -28,7 +28,7 @@ extern "C" {
  */
 
 
-#  define PCMK__API_VERSION "2.23"
+#  define PCMK__API_VERSION "2.24"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))

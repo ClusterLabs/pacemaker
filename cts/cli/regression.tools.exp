@@ -635,8 +635,7 @@ crm_attribute: Error: must specify attribute name or pattern to delete
 =#=#=#= End test: crm_attribute given invalid delete usage - Incorrect usage (64) =#=#=#=
 * Passed: crm_attribute  - crm_attribute given invalid delete usage
 =#=#=#= Begin test: Digest calculation =#=#=#=
-Digest: 
-=#=#=#= Current cib after: Digest calculation =#=#=#=
+Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
 <cib epoch="10" num_updates="6" admin_epoch="0">
   <configuration>
     <crm_config>
