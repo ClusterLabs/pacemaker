@@ -2,7 +2,7 @@ Current cluster status:
   * Node List:
     * Online: [ metal-1 metal-2 metal-3 ]
     * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
-    * GuestOnline: [ galera-bundle-0@metal-1 galera-bundle-1@metal-2 galera-bundle-2@metal-3 redis-bundle-0@metal-1 redis-bundle-1@metal-2 redis-bundle-2@metal-3 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: storage-clone [storage]:
@@ -68,7 +68,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ metal-1 metal-2 metal-3 ]
     * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
-    * GuestOnline: [ galera-bundle-1@metal-2 galera-bundle-2@metal-3 redis-bundle-0@metal-1 redis-bundle-1@metal-2 redis-bundle-2@metal-3 ]
+    * GuestOnline: [ galera-bundle-1 galera-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Clone Set: storage-clone [storage]:

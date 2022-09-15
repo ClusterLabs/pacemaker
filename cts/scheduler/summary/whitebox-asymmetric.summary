@@ -30,7 +30,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ 18builder ]
-    * GuestOnline: [ 18node2@18builder ]
+    * GuestOnline: [ 18node2 ]
 
   * Full List of Resources:
     * fence_false	(stonith:fence_false):	 Stopped

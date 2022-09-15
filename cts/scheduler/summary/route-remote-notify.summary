@@ -2,7 +2,7 @@ Using the original execution date of: 2018-10-31 11:51:32Z
 Current cluster status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ rabbitmq-bundle-0@controller-0 rabbitmq-bundle-1@controller-1 rabbitmq-bundle-2@controller-2 ]
+    * GuestOnline: [ rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
@@ -77,7 +77,7 @@ Using the original execution date of: 2018-10-31 11:51:32Z
 Revised Cluster Status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ rabbitmq-bundle-1@controller-1 rabbitmq-bundle-2@controller-2 ]
+    * GuestOnline: [ rabbitmq-bundle-1 rabbitmq-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:

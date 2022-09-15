@@ -2,7 +2,7 @@ Using the original execution date of: 2020-05-14 10:49:31Z
 Current cluster status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ galera-bundle-0@controller-0 galera-bundle-1@controller-1 galera-bundle-2@controller-2 ovn-dbs-bundle-0@controller-0 ovn-dbs-bundle-1@controller-1 ovn-dbs-bundle-2@controller-2 rabbitmq-bundle-0@controller-0 rabbitmq-bundle-1@controller-1 rabbitmq-bundle-2@controller-2 redis-bundle-0@controller-0 redis-bundle-1@controller-1 redis-bundle-2@controller-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
@@ -77,7 +77,7 @@ Using the original execution date of: 2020-05-14 10:49:31Z
 Revised Cluster Status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
-    * GuestOnline: [ galera-bundle-0@controller-0 galera-bundle-1@controller-1 galera-bundle-2@controller-2 ovn-dbs-bundle-1@controller-1 ovn-dbs-bundle-2@controller-2 rabbitmq-bundle-0@controller-0 rabbitmq-bundle-1@controller-1 rabbitmq-bundle-2@controller-2 redis-bundle-0@controller-0 redis-bundle-1@controller-1 redis-bundle-2@controller-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:

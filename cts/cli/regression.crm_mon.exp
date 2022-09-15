@@ -9,7 +9,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -488,7 +488,7 @@ Active Resources:
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 =#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
@@ -502,7 +502,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -582,10 +582,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -728,7 +728,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
@@ -808,10 +808,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -847,13 +847,13 @@ Node List:
       * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted
       * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started
-  * GuestNode httpd-bundle-0@cluster01: online:
+  * GuestNode httpd-bundle-0: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-1@cluster02: online:
+  * GuestNode httpd-bundle-1: online:
     * Resources:
       * httpd	(ocf:heartbeat:apache):	 Started
-  * GuestNode httpd-bundle-2@: OFFLINE:
+  * GuestNode httpd-bundle-2: OFFLINE:
     * Resources:
 
 Node Attributes:
@@ -916,10 +916,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -957,10 +957,10 @@ Node List:
       * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
       * 1	(ocf:pacemaker:remote):	Active 
-  * GuestNode httpd-bundle-0@cluster01: online:
+  * GuestNode httpd-bundle-0: online:
     * Resources:
       * 1	(ocf:heartbeat:apache):	Active 
-  * GuestNode httpd-bundle-1@cluster02: online:
+  * GuestNode httpd-bundle-1: online:
     * Resources:
       * 1	(ocf:heartbeat:apache):	Active 
 
@@ -1024,10 +1024,10 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
-  * Node: httpd-bundle-0@cluster01:
+  * Node: httpd-bundle-0:
     * httpd: migration-threshold=1000000:
       * (1) start
-  * Node: httpd-bundle-1@cluster02:
+  * Node: httpd-bundle-1:
     * httpd: migration-threshold=1000000:
       * (1) start
 
@@ -1687,7 +1687,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1803,7 +1803,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1873,7 +1873,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1947,7 +1947,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2031,7 +2031,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -2106,7 +2106,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2196,7 +2196,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -2376,7 +2376,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * No active resources
@@ -2426,7 +2426,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2447,7 +2447,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2576,7 +2576,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2675,7 +2675,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2772,7 +2772,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -2871,7 +2871,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -3822,7 +3822,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: partially-active-group (2 members inactive):
@@ -3843,7 +3843,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Full List of Resources:
   * Resource Group: partially-active-group:
@@ -3866,7 +3866,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Resource Group: partially-active-group (2 members inactive):
@@ -4213,8 +4213,8 @@ Cluster Summary:
   The cluster will not attempt to start, stop or recover services
 
 Node List:
-  * GuestNode httpd-bundle-0@cluster01: maintenance
-  * GuestNode httpd-bundle-1@cluster02: maintenance
+  * GuestNode httpd-bundle-0: maintenance
+  * GuestNode httpd-bundle-1: maintenance
   * Online: [ cluster01 cluster02 ]
 
 Full List of Resources:
@@ -4256,7 +4256,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cent7-host1 cent7-host2 ]
-  * GuestOnline: [ httpd-bundle1-0@cent7-host1 httpd-bundle2-0@cent7-host2 ]
+  * GuestOnline: [ httpd-bundle1-0 httpd-bundle2-0 ]
 
 Active Resources:
   * Resource Group: group1:

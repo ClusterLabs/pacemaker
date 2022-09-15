@@ -3,7 +3,7 @@ Current cluster status:
   * Node List:
     * Online: [ rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * RemoteOnline: [ remote-rhel7-2 ]
-    * GuestOnline: [ lxc1@rhel7-3 lxc2@rhel7-3 stateful-bundle-0@rhel7-5 stateful-bundle-1@rhel7-1 stateful-bundle-2@rhel7-4 ]
+    * GuestOnline: [ lxc1 lxc2 stateful-bundle-0 stateful-bundle-1 stateful-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-4
@@ -66,7 +66,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
     * RemoteOnline: [ remote-rhel7-2 ]
-    * GuestOnline: [ lxc1@rhel7-3 lxc2@rhel7-3 stateful-bundle-0@rhel7-5 stateful-bundle-1@rhel7-1 stateful-bundle-2@rhel7-4 ]
+    * GuestOnline: [ lxc1 lxc2 stateful-bundle-0 stateful-bundle-1 stateful-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-4

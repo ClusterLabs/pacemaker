@@ -39,7 +39,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ dvossel-laptop2 ]
-    * GuestOnline: [ 18builder@dvossel-laptop2 ]
+    * GuestOnline: [ 18builder ]
 
   * Full List of Resources:
     * vm	(ocf:heartbeat:VirtualDomain):	 Started dvossel-laptop2

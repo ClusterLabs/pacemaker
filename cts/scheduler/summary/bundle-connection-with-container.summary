@@ -4,7 +4,7 @@ Current cluster status:
     * Online: [ rhel8-1 rhel8-3 rhel8-4 rhel8-5 ]
     * OFFLINE: [ rhel8-2 ]
     * RemoteOnline: [ remote-rhel8-2 ]
-    * GuestOnline: [ httpd-bundle-1@rhel8-3 httpd-bundle-2@rhel8-1 ]
+    * GuestOnline: [ httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel8-3
@@ -49,7 +49,7 @@ Revised Cluster Status:
     * Online: [ rhel8-1 rhel8-3 rhel8-4 rhel8-5 ]
     * OFFLINE: [ rhel8-2 ]
     * RemoteOnline: [ remote-rhel8-2 ]
-    * GuestOnline: [ httpd-bundle-0@rhel8-1 httpd-bundle-1@rhel8-3 httpd-bundle-2@rhel8-1 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 httpd-bundle-2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel8-3

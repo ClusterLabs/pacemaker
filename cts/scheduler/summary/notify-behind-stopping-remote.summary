@@ -2,7 +2,7 @@ Using the original execution date of: 2018-11-22 20:36:07Z
 Current cluster status:
   * Node List:
     * Online: [ ra1 ra2 ra3 ]
-    * GuestOnline: [ redis-bundle-0@ra1 redis-bundle-1@ra2 redis-bundle-2@ra3 ]
+    * GuestOnline: [ redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]:
@@ -55,7 +55,7 @@ Using the original execution date of: 2018-11-22 20:36:07Z
 Revised Cluster Status:
   * Node List:
     * Online: [ ra1 ra2 ra3 ]
-    * GuestOnline: [ redis-bundle-0@ra1 redis-bundle-2@ra3 ]
+    * GuestOnline: [ redis-bundle-0 redis-bundle-2 ]
 
   * Full List of Resources:
     * Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]:

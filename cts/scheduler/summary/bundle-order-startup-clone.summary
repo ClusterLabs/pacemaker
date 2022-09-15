@@ -66,7 +66,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ metal-1 metal-2 metal-3 ]
     * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
-    * GuestOnline: [ redis-bundle-0@metal-2 ]
+    * GuestOnline: [ redis-bundle-0 ]
 
   * Full List of Resources:
     * Clone Set: storage-clone [storage]:

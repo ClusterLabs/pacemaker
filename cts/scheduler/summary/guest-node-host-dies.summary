@@ -70,7 +70,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
     * OFFLINE: [ rhel7-1 ]
-    * GuestOnline: [ lxc1@rhel7-2 lxc2@rhel7-3 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-4

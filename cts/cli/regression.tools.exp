@@ -4943,7 +4943,7 @@ export overcloud-rabbit-2=overcloud-rabbit-2
 4 of 32 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 [ cluster01 cluster02 ]
-[ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+[ httpd-bundle-0 httpd-bundle-1 ]
 
 Started: [ cluster01 cluster02 ]
 Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -5002,7 +5002,7 @@ Start      httpd:2            ( httpd-bundle-2 )  due to unrunnable httpd-bundle
 Current cluster status:
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5054,7 +5054,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5086,7 +5086,7 @@ Revised Cluster Status:
 Current cluster status:
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5140,7 +5140,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ cluster02 ]
     * OFFLINE: [ cluster01 ]
-    * GuestOnline: [ httpd-bundle-1@cluster02 ]
+    * GuestOnline: [ httpd-bundle-1 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5174,7 +5174,7 @@ Revised Cluster Status:
 Current cluster status:
   * Node List:
     * Online: [ cluster01 cluster02 ]
-    * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+    * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5261,7 +5261,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ cluster01 ]
     * OFFLINE: [ cluster02 ]
-    * GuestOnline: [ httpd-bundle-0@cluster01 ]
+    * GuestOnline: [ httpd-bundle-0 ]
 
   * Full List of Resources:
     * Clone Set: ping-clone [ping]:
@@ -5462,7 +5462,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
-  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+  * GuestOnline: [ httpd-bundle-0 httpd-bundle-1 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:

@@ -3,7 +3,7 @@ Current cluster status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
     * RemoteOnline: [ compute-0 compute-1 ]
-    * GuestOnline: [ galera-bundle-0@database-0 galera-bundle-1@database-1 galera-bundle-2@database-2 ovn-dbs-bundle-0@controller-2 ovn-dbs-bundle-1@controller-0 ovn-dbs-bundle-2@controller-1 rabbitmq-bundle-0@messaging-0 rabbitmq-bundle-1@messaging-1 rabbitmq-bundle-2@messaging-2 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * compute-0	(ocf:pacemaker:remote):	 Started controller-0
@@ -55,54 +55,54 @@ Current cluster status:
       * openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0
 
 Transition Summary:
- * Stop       compute-0                            (               controller-0 )   due to node availability
- * Start      stonith-fence_compute-fence-nova     (                 database-0 )  
- * Stop       compute-unfence-trigger:0            (                  compute-0 )   due to node availability
- * Move       nova-evacuate                        (   database-0 -> database-1 )  
- * Move       stonith-fence_ipmilan-52540033df9c   (   database-1 -> database-2 )  
- * Move       stonith-fence_ipmilan-5254001f5f3c   (  database-2 -> messaging-0 )  
- * Move       stonith-fence_ipmilan-5254003f88b4   ( messaging-0 -> messaging-1 )  
- * Move       stonith-fence_ipmilan-5254007b7920   ( messaging-1 -> messaging-2 )  
- * Move       stonith-fence_ipmilan-525400ffc780   (  messaging-2 -> database-0 )  
- * Move       stonith-fence_ipmilan-5254009cb549   (   database-0 -> database-1 )  
+  * Stop       compute-0                            (               controller-0 )  due to node availability
+  * Start      stonith-fence_compute-fence-nova     (                 database-0 )
+  * Stop       compute-unfence-trigger:0            (                  compute-0 )  due to node availability
+  * Move       nova-evacuate                        (   database-0 -> database-1 )
+  * Move       stonith-fence_ipmilan-52540033df9c   (   database-1 -> database-2 )
+  * Move       stonith-fence_ipmilan-5254001f5f3c   (  database-2 -> messaging-0 )
+  * Move       stonith-fence_ipmilan-5254003f88b4   ( messaging-0 -> messaging-1 )
+  * Move       stonith-fence_ipmilan-5254007b7920   ( messaging-1 -> messaging-2 )
+  * Move       stonith-fence_ipmilan-525400ffc780   (  messaging-2 -> database-0 )
+  * Move       stonith-fence_ipmilan-5254009cb549   (   database-0 -> database-1 )
 
 Executing Cluster Transition:
- * Resource action: stonith-fence_compute-fence-nova start on database-0
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-2
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-0
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-1
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-2
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-1
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-0
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-2
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-1
- * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-0
- * Pseudo action:   compute-unfence-trigger-clone_stop_0
- * Resource action: nova-evacuate   stop on database-0
- * Resource action: stonith-fence_ipmilan-52540033df9c stop on database-1
- * Resource action: stonith-fence_ipmilan-5254001f5f3c stop on database-2
- * Resource action: stonith-fence_ipmilan-5254003f88b4 stop on messaging-0
- * Resource action: stonith-fence_ipmilan-5254007b7920 stop on messaging-1
- * Resource action: stonith-fence_ipmilan-525400ffc780 stop on messaging-2
- * Resource action: stonith-fence_ipmilan-5254009cb549 stop on database-0
- * Resource action: stonith-fence_compute-fence-nova monitor=60000 on database-0
- * Resource action: compute-unfence-trigger stop on compute-0
- * Pseudo action:   compute-unfence-trigger-clone_stopped_0
- * Resource action: nova-evacuate   start on database-1
- * Resource action: stonith-fence_ipmilan-52540033df9c start on database-2
- * Resource action: stonith-fence_ipmilan-5254001f5f3c start on messaging-0
- * Resource action: stonith-fence_ipmilan-5254003f88b4 start on messaging-1
- * Resource action: stonith-fence_ipmilan-5254007b7920 start on messaging-2
- * Resource action: stonith-fence_ipmilan-525400ffc780 start on database-0
- * Resource action: stonith-fence_ipmilan-5254009cb549 start on database-1
- * Resource action: compute-0       stop on controller-0
- * Resource action: nova-evacuate   monitor=10000 on database-1
- * Resource action: stonith-fence_ipmilan-52540033df9c monitor=60000 on database-2
- * Resource action: stonith-fence_ipmilan-5254001f5f3c monitor=60000 on messaging-0
- * Resource action: stonith-fence_ipmilan-5254003f88b4 monitor=60000 on messaging-1
- * Resource action: stonith-fence_ipmilan-5254007b7920 monitor=60000 on messaging-2
- * Resource action: stonith-fence_ipmilan-525400ffc780 monitor=60000 on database-0
- * Resource action: stonith-fence_ipmilan-5254009cb549 monitor=60000 on database-1
+  * Resource action: stonith-fence_compute-fence-nova start on database-0
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-2
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-0
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on messaging-1
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-2
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-1
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on controller-0
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-2
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-1
+  * Cluster action:  clear_failcount for stonith-fence_compute-fence-nova on database-0
+  * Pseudo action:   compute-unfence-trigger-clone_stop_0
+  * Resource action: nova-evacuate   stop on database-0
+  * Resource action: stonith-fence_ipmilan-52540033df9c stop on database-1
+  * Resource action: stonith-fence_ipmilan-5254001f5f3c stop on database-2
+  * Resource action: stonith-fence_ipmilan-5254003f88b4 stop on messaging-0
+  * Resource action: stonith-fence_ipmilan-5254007b7920 stop on messaging-1
+  * Resource action: stonith-fence_ipmilan-525400ffc780 stop on messaging-2
+  * Resource action: stonith-fence_ipmilan-5254009cb549 stop on database-0
+  * Resource action: stonith-fence_compute-fence-nova monitor=60000 on database-0
+  * Resource action: compute-unfence-trigger stop on compute-0
+  * Pseudo action:   compute-unfence-trigger-clone_stopped_0
+  * Resource action: nova-evacuate   start on database-1
+  * Resource action: stonith-fence_ipmilan-52540033df9c start on database-2
+  * Resource action: stonith-fence_ipmilan-5254001f5f3c start on messaging-0
+  * Resource action: stonith-fence_ipmilan-5254003f88b4 start on messaging-1
+  * Resource action: stonith-fence_ipmilan-5254007b7920 start on messaging-2
+  * Resource action: stonith-fence_ipmilan-525400ffc780 start on database-0
+  * Resource action: stonith-fence_ipmilan-5254009cb549 start on database-1
+  * Resource action: compute-0       stop on controller-0
+  * Resource action: nova-evacuate   monitor=10000 on database-1
+  * Resource action: stonith-fence_ipmilan-52540033df9c monitor=60000 on database-2
+  * Resource action: stonith-fence_ipmilan-5254001f5f3c monitor=60000 on messaging-0
+  * Resource action: stonith-fence_ipmilan-5254003f88b4 monitor=60000 on messaging-1
+  * Resource action: stonith-fence_ipmilan-5254007b7920 monitor=60000 on messaging-2
+  * Resource action: stonith-fence_ipmilan-525400ffc780 monitor=60000 on database-0
+  * Resource action: stonith-fence_ipmilan-5254009cb549 monitor=60000 on database-1
 Using the original execution date of: 2020-11-17 07:03:16Z
 
 Revised Cluster Status:
@@ -110,7 +110,7 @@ Revised Cluster Status:
     * Online: [ controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
     * RemoteOnline: [ compute-1 ]
     * RemoteOFFLINE: [ compute-0 ]
-    * GuestOnline: [ galera-bundle-0@database-0 galera-bundle-1@database-1 galera-bundle-2@database-2 ovn-dbs-bundle-0@controller-2 ovn-dbs-bundle-1@controller-0 ovn-dbs-bundle-2@controller-1 rabbitmq-bundle-0@messaging-0 rabbitmq-bundle-1@messaging-1 rabbitmq-bundle-2@messaging-2 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * compute-0	(ocf:pacemaker:remote):	 Stopped
