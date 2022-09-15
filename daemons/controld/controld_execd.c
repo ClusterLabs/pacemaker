@@ -2205,6 +2205,17 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         crm_log_xml_err(msg, "Missing transition number");
     }
 
+    if (lrm_state == NULL) {
+        // This shouldn't be possible, but provide a failsafe just in case
+        crm_err("Cannot execute %s of %s: No executor connection "
+                CRM_XS " transition_key=%s",
+                operation, rsc->id, pcmk__s(transition, ""));
+        synthesize_lrmd_failure(NULL, msg, PCMK_EXEC_INVALID,
+                                PCMK_OCF_UNKNOWN_ERROR,
+                                "No executor connection");
+        return;
+    }
+
     if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
                          CRMD_ACTION_RELOAD_AGENT, NULL)) {
         /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
