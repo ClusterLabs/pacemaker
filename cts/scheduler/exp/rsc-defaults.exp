@@ -89,7 +89,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="14" operation="start" operation_key="ping-rsc-ping_start_0" on_node="cluster02" on_node_uuid="2">
+      <rsc_op id="12" operation="start" operation_key="ping-rsc-ping_start_0" on_node="cluster02" on_node_uuid="2">
         <primitive id="ping-rsc-ping" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  host_list="4.2.2.2"/>
       </rsc_op>

@@ -247,6 +247,25 @@ bool pcmk__check_action_config(pe_resource_t *rsc, pe_node_t *node,
 G_GNUC_INTERNAL
 void pcmk__handle_rsc_config_changes(pe_working_set_t *data_set);
 
+
+// Recurring actions (pcmk_sched_recurring.c)
+
+G_GNUC_INTERNAL
+void pcmk__create_recurring_actions(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__schedule_cancel(pe_resource_t *rsc, const char *call_id,
+                           const char *task, guint interval_ms,
+                           const pe_node_t *node, const char *reason);
+
+G_GNUC_INTERNAL
+void pcmk__reschedule_recurring(pe_resource_t *rsc, const char *task,
+                                guint interval_ms, pe_node_t *node);
+
+G_GNUC_INTERNAL
+bool pcmk__action_is_recurring(const pe_action_t *action);
+
+
 // Producing transition graphs (pcmk_graph_producer.c)
 
 G_GNUC_INTERNAL

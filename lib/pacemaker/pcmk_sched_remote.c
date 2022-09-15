@@ -157,19 +157,6 @@ get_remote_node_state(pe_node_t *node)
     return remote_state_alive;
 }
 
-static int
-is_recurring_action(pe_action_t *action)
-{
-    guint interval_ms;
-
-    if (pcmk__guint_from_hash(action->meta,
-                              XML_LRM_ATTR_INTERVAL_MS, 0,
-                              &interval_ms) != pcmk_rc_ok) {
-        return 0;
-    }
-    return (interval_ms > 0);
-}
-
 /*!
  * \internal
  * \brief Order actions on remote node relative to actions for the connection
@@ -267,7 +254,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
         default:
             /* Wait for the connection resource to be up */
-            if (is_recurring_action(action)) {
+            if (pcmk__action_is_recurring(action)) {
                 /* In case we ever get the recovery logic wrong, force
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
@@ -385,7 +372,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
         default:
             /* Wait for the connection resource to be up */
-            if (is_recurring_action(action)) {
+            if (pcmk__action_is_recurring(action)) {
                 /* In case we ever get the recovery logic wrong, force
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
