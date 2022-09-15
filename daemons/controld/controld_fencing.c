@@ -618,6 +618,16 @@ static gboolean
 te_connect_stonith(gpointer user_data)
 {
     int rc = pcmk_ok;
+    static time_t last_attempt = 0;
+    time_t now = time(NULL);
+
+    /* This callback can get called a LOT if, eg, pacemaker_fenced
+     * goes down, so be a bit more restrained trying to reconnect
+     */
+    if (user_data && now <= last_attempt) {
+        return TRUE;
+    }
+    last_attempt = now;
 
     if (stonith_api == NULL) {
         stonith_api = stonith_api_new();
