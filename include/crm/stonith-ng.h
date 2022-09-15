@@ -180,12 +180,22 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register a fence device with the local fencer
      *
+     * \param[in,out] st         Fencer connection to use
+     * \param[in]     options    Group of enum stonith_call_options
+     * \param[in]     id         ID of fence device to register
+     * \param[in]     namespace  Type of fence agent to search for ("redhat"
+     *                           or "stonith-ng" for RHCS-style, "internal" for
+     *                           Pacemaker-internal devices, "heartbeat" for
+     *                           LHA-style, or "any" or NULL for any)
+     * \param[in]     agent      Name of fence agent for device
+     * \param[in]     params     Fence agent parameters for device
+     *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*register_device)(
-        stonith_t *st, int options, const char *id,
-        const char *provider, const char *agent, stonith_key_value_t *params);
+    int (*register_device)(stonith_t *st, int options, const char *id,
+                           const char *namespace, const char *agent,
+                           const stonith_key_value_t *params);
 
     /*!
      * \brief Unregister a fencing level for specified node with local fencer
