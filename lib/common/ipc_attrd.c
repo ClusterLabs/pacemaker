@@ -168,7 +168,7 @@ destroy_api(pcmk_ipc_api_t *api)
 }
 
 static int
-connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request, int32_t ms_timeout)
 {
     int rc = pcmk_rc_ok;
     int max = 5;
@@ -178,7 +178,7 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
         rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_sync);
 
         if (rc == pcmk_rc_ok) {
-            rc = pcmk__send_ipc_request(api, request);
+            rc = pcmk__send_ipc_request(api, request, ms_timeout);
             break;
         } else if (rc == EAGAIN || rc == EALREADY) {
             sleep(5 - max);
@@ -193,9 +193,9 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
 }
 
 static int
-send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request)
+send_attrd_request(pcmk_ipc_api_t *api, xmlNode *request, int32_t ms_timeout)
 {
-    return pcmk__send_ipc_request(api, request);
+    return pcmk__send_ipc_request(api, request, ms_timeout);
 }
 
 int
@@ -228,14 +228,14 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
             return rc;
         }
 
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
         destroy_api(api);
 
     } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
 
     } else {
-        rc = send_attrd_request(api, request);
+        rc = send_attrd_request(api, request, 0);
     }
 
     free_xml(request);
@@ -301,14 +301,14 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
             return rc;
         }
 
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
         destroy_api(api);
 
     } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
 
     } else {
-        rc = send_attrd_request(api, request);
+        rc = send_attrd_request(api, request, 0);
     }
 
     free_xml(request);
@@ -343,7 +343,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
     crm_xml_add(request, PCMK__XA_TASK, PCMK__ATTRD_CMD_QUERY);
     pcmk__xe_add_node(request, node, 0);
 
-    rc = send_attrd_request(api, request);
+    rc = send_attrd_request(api, request, 0);
     free_xml(request);
 
     if (node) {
@@ -380,14 +380,14 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
             return rc;
         }
 
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
         destroy_api(api);
 
     } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
 
     } else {
-        rc = send_attrd_request(api, request);
+        rc = send_attrd_request(api, request, 0);
     }
 
     free_xml(request);
@@ -447,6 +447,7 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     xmlNode *request = NULL;
     const char *display_host = (node ? node : "localhost");
     const char *target = NULL;
+    int32_t ms_timeout = 0;
 
     if (name == NULL) {
         return EINVAL;
@@ -461,20 +462,24 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
     request = create_attrd_op(user_name);
     populate_update_op(request, node, name, value, dampen, set, options);
 
+    if (pcmk_any_flags_set(options, pcmk__node_attr_sync_all | pcmk__node_attr_sync_local)) {
+        ms_timeout = -1;
+    }
+
     if (api == NULL) {
         rc = create_api(&api);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
 
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, ms_timeout);
         destroy_api(api);
 
     } else if (!pcmk_ipc_is_connected(api)) {
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, ms_timeout);
 
     } else {
-        rc = send_attrd_request(api, request);
+        rc = send_attrd_request(api, request, ms_timeout);
     }
 
     free_xml(request);
@@ -567,7 +572,7 @@ pcmk__attrd_api_update_list(pcmk_ipc_api_t *api, GList *attrs, const char *dampe
             created_api = true;
         }
 
-        rc = connect_and_send_attrd_request(api, request);
+        rc = connect_and_send_attrd_request(api, request, 0);
         free_xml(request);
 
         if (created_api) {

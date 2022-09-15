@@ -78,7 +78,7 @@ post_connect(pcmk_ipc_api_t *api)
     hello = create_hello_message(private->client_uuid, client_name,
                                  PCMK__CONTROLD_API_MAJOR,
                                  PCMK__CONTROLD_API_MINOR);
-    rc = pcmk__send_ipc_request(api, hello);
+    rc = pcmk__send_ipc_request(api, hello, 0);
     free_xml(hello);
     if (rc != pcmk_rc_ok) {
         crm_info("Could not send IPC hello to %s: %s " CRM_XS " rc=%s",
@@ -315,7 +315,7 @@ send_controller_request(pcmk_ipc_api_t *api, xmlNode *request,
     if (crm_element_value(request, XML_ATTR_REFERENCE) == NULL) {
         return EINVAL;
     }
-    rc = pcmk__send_ipc_request(api, request);
+    rc = pcmk__send_ipc_request(api, request, 0);
     if ((rc == pcmk_rc_ok) && reply_is_expected) {
         struct controld_api_private_s *private = api->api_data;
 

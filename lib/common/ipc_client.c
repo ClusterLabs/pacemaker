@@ -608,6 +608,8 @@ pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
  *
  * \param[in] api          IPC API connection
  * \param[in] request      XML request to send
+ * \param[in] ms_timeout   Give up if not sent within this much time
+ *                         (5 seconds if 0, or no timeout if negative)
  *
  * \return Standard Pacemaker return code
  *
@@ -615,7 +617,7 @@ pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
  *       requests, because it handles different dispatch types appropriately.
  */
 int
-pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
+pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request, int32_t ms_timeout)
 {
     int rc;
     xmlNode *reply = NULL;
@@ -634,8 +636,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
         flags = crm_ipc_client_response;
     }
 
-    // The 0 here means a default timeout of 5 seconds
-    rc = crm_ipc_send(api->ipc, request, flags, 0, &reply);
+    rc = crm_ipc_send(api->ipc, request, flags, ms_timeout, &reply);
 
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -759,7 +760,7 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
     if (request == NULL) {
         return EOPNOTSUPP;
     }
-    rc = pcmk__send_ipc_request(api, request);
+    rc = pcmk__send_ipc_request(api, request, 0);
     free_xml(request);
 
     crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
