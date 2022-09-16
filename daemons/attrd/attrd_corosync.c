@@ -124,7 +124,6 @@ broadcast_local_value(const attribute_t *a)
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
     attrd_add_value_xml(sync, a, v, false);
-    attrd_xml_add_writer(sync);
     attrd_send_message(NULL, sync);
     free_xml(sync);
     return v;
