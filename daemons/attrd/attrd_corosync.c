@@ -47,7 +47,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             .ipc_client     = NULL,
             .ipc_id         = 0,
             .ipc_flags      = 0,
-            .peer           = crm_element_value(xml, F_ORIG),
+            .peer           = peer->uname,
             .xml            = xml,
             .call_options   = 0,
             .result         = PCMK__UNKNOWN_RESULT,
