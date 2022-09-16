@@ -214,8 +214,8 @@ msgid ""
 "via the 'status' command), none (assume every device can fence every machine)"
 msgstr ""
 "允许的值：Dynamic-List（通过“列表”命令查询设备），"
-"静态列表（检查pcmk_host_list属性），状态（通过'status'命令查询设备），"
-"无（假设每个设备都可fence 每台机器 ）"
+"static-list（检查pcmk_host_list属性），status（通过'status'命令查询设备），"
+"none（假设每个设备都可fence 每台机器 ）"
 
 #: daemons/fenced/pacemaker-fenced.c:1419
 #: daemons/fenced/pacemaker-fenced.c:1428
@@ -378,13 +378,16 @@ msgid ""
 "Use this to specify an alternate, device-specific, timeout for 'monitor' "
 "actions."
 msgstr ""
-"仅高级使用：在超时前重试'monitor'命令的最大次数"
+" 一些设备不支持多个连接。 如果设备忙于另一个任务，则操作可能会'失败' ，"
+" 因此Pacemaker将自动重试（如果时间允许）。"
+" 使用此选项更改Pacemaker在放弃之前重试'monitor' 操作的次数."
 
 #: daemons/fenced/pacemaker-fenced.c:1536
 msgid ""
 "Advanced use only: The maximum number of times to retry the 'monitor' "
 "command within the timeout period"
 msgstr ""
+"仅高级使用：在超时前重试'monitor'命令的最大次数"
 
 #: daemons/fenced/pacemaker-fenced.c:1537
 msgid ""
