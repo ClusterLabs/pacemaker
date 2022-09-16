@@ -279,16 +279,23 @@ attrd_broadcast_protocol(void)
     crm_debug("Broadcasting attrd protocol version %s for node %s",
               ATTRD_PROTOCOL_VERSION, attrd_cluster->uname);
 
-    attrd_send_message(NULL, attrd_op); /* ends up at attrd_peer_message() */
+    attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
 
     free_xml(attrd_op);
 }
 
 gboolean
-attrd_send_message(crm_node_t * node, xmlNode * data)
+attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm)
 {
     crm_xml_add(data, F_TYPE, T_ATTRD);
     crm_xml_add(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
+
+    /* Request a confirmation from the destination peer node (which could
+     * be all if node is NULL) that the message has been received and
+     * acted upon.
+     */
+    pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+
     attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
 }

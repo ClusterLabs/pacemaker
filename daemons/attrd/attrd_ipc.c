@@ -105,7 +105,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
-        attrd_send_message(NULL, xml);
+        attrd_send_message(NULL, xml, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
     }
@@ -184,7 +184,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
                  pcmk__client_name(request->ipc_client), host);
-        attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
@@ -258,7 +258,7 @@ attrd_client_update(pcmk__request_t *request)
             /* First, if all peers support a certain protocol version, we can
              * just broadcast the big message and they'll handle it.
              */
-            attrd_send_message(NULL, xml);
+            attrd_send_message(NULL, xml, false);
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
             /* Second, if they do not support that protocol version, split it
@@ -302,7 +302,7 @@ attrd_client_update(pcmk__request_t *request)
                 if (status == 0) {
                     crm_trace("Matched %s with %s", attr, regex);
                     crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
-                    attrd_send_message(NULL, xml);
+                    attrd_send_message(NULL, xml, false);
                 }
             }
 
@@ -362,7 +362,23 @@ attrd_client_update(pcmk__request_t *request)
 
     free(host);
 
-    attrd_send_message(NULL, xml); /* ends up at attrd_peer_message() */
+    if (pcmk__str_eq(attrd_request_sync_point(xml), PCMK__VALUE_CLUSTER, pcmk__str_none)) {
+        /* The client is waiting on the cluster-wide sync point.  In this case,
+         * the response ACK is not sent until this attrd broadcasts the update
+         * and receives its own confirmation back from all peers.
+         */
+        attrd_send_message(NULL, xml, true); /* ends up at attrd_peer_message() */
+
+    } else {
+        /* The client is either waiting on the local sync point or was not
+         * waiting on any sync point at all.  For the local sync point, the
+         * response ACK is sent in attrd_peer_update.  For clients not
+         * waiting on any sync point, the response ACK is sent in
+         * handle_update_request immediately before this function was called.
+         */
+        attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
+    }
+
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
 }

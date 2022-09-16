@@ -124,7 +124,7 @@ broadcast_local_value(const attribute_t *a)
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
     attrd_add_value_xml(sync, a, v, false);
-    attrd_send_message(NULL, sync);
+    attrd_send_message(NULL, sync, false);
     free_xml(sync);
     return v;
 }
@@ -387,7 +387,7 @@ broadcast_unseen_local_values(void)
 
     if (sync != NULL) {
         crm_debug("Broadcasting local-only values");
-        attrd_send_message(NULL, sync);
+        attrd_send_message(NULL, sync, false);
         free_xml(sync);
     }
 }
@@ -539,7 +539,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_debug("Syncing values to %s", peer?peer->uname:"everyone");
-    attrd_send_message(peer, sync);
+    attrd_send_message(peer, sync, false);
     free_xml(sync);
 }
 

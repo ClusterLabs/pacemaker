@@ -39,10 +39,11 @@
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
  *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
  *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
- *     4       2.2.0    Multiple attributes can be updated in a single IPC
+ *     4       2.1.5    Multiple attributes can be updated in a single IPC
  *                      message
+ *     5       2.1.5    Peers can request confirmation of a sent message
  */
-#define ATTRD_PROTOCOL_VERSION "4"
+#define ATTRD_PROTOCOL_VERSION "5"
 
 #define attrd_send_ack(client, id, flags) \
     pcmk__ipc_send_ack((client), (id), (flags), "ack", ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
@@ -162,7 +163,7 @@ xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(crm_node_t * node, xmlNode * data);
+gboolean attrd_send_message(crm_node_t *node, xmlNode *data, bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
