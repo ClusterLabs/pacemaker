@@ -213,7 +213,7 @@ msgid ""
 "static-list (check the pcmk_host_list attribute), status (query the device "
 "via the 'status' command), none (assume every device can fence every machine)"
 msgstr ""
-"允许的值：Dynamic-List（通过“列表”命令查询设备），"
+"允许的值：dynamic-list（通过'list'命令查询设备），"
 "static-list（检查pcmk_host_list属性），status（通过'status'命令查询设备），"
 "none（假设每个设备都可fence 每台机器 ）"
 
