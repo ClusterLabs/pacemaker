@@ -83,7 +83,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
         }                                                               \
     } while(1);
 
-static void
+static inline void
 insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 {
     if (options & xml_log_option_formatted) {
@@ -98,7 +98,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
     }
 }
 
-static void
+static inline void
 set_parent_flag(xmlNode *xml, long flag) 
 {
 
@@ -126,7 +126,7 @@ pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag)
 }
 
 // Mark document, element, and all element's parents as changed
-static void
+static inline void
 mark_xml_node_dirty(xmlNode *xml)
 {
     pcmk__set_xml_doc_flag(xml, pcmk__xf_dirty);
@@ -1450,6 +1450,9 @@ crm_xml_escape(const char *text)
     return copy;
 }
 
+/* Keep this inline. De-inlining resulted in a 0.6% average slowdown in
+ * crm_simulate on cts/scheduler/xml during testing.
+ */
 static inline void
 dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max)
 {
