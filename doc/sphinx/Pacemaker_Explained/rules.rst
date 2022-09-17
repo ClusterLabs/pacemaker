@@ -55,6 +55,13 @@ Rule Properties
    |                 |             | instance and will only affect which of    |
    |                 |             | the active instances will be promoted.    |
    +-----------------+-------------+-------------------------------------------+
+   | node            |             | .. index::                                |
+   |                 |             |    pair: rule; node                       |
+   |                 |             |                                           |
+   |                 |             | The name of the node to which this        |
+   |                 |             | constraint applies. Allowed values must   |
+   |                 |             | be an existing node name in configuration.|
+   +-----------------+-------------+-------------------------------------------+
    | score           |             | .. index::                                |
    |                 |             |    pair: rule; score                      |
    |                 |             |                                           |

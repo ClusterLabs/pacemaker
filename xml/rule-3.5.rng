@@ -12,6 +12,9 @@
      <attribute name="id-ref"><data type="IDREF"/></attribute>
      <group>
       <attribute name="id"><data type="ID"/></attribute>
+      <optional>
+        <attribute name="node"><text/></attribute>
+      </optional>
       <choice>
         <externalRef href="score.rng"/>
         <attribute name="score-attribute"><text/></attribute>
