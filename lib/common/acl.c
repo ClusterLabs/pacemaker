@@ -85,27 +85,20 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
     } else {
         GString *buf = g_string_sized_new(128);
 
-        g_string_printf(buf, "//%s", pcmk__s(tag, "*"));
-
-        if ((ref != NULL) || (attr != NULL)) {
-            g_string_append_c(buf, '[');
-        }
-
-        if (ref != NULL) {
-            g_string_append_printf(buf, "@" XML_ATTR_ID "='%s'", ref);
-        }
-
-        // NOTE: schema currently does not allow this
         if ((ref != NULL) && (attr != NULL)) {
-            g_string_append(buf, " and ");
-        }
+            // NOTE: schema currently does not allow this
+            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s' and @%s]",
+                                   pcmk__s(tag, "*"), ref, attr);
 
-        if (attr != NULL) {
-            g_string_append_printf(buf, "@%s", attr);
-        }
+        } else if (ref != NULL) {
+            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s']",
+                                   pcmk__s(tag, "*"), ref);
 
-        if ((ref != NULL) || (attr != NULL)) {
-            g_string_append_c(buf, ']');
+        } else if (attr != NULL) {
+            g_string_append_printf(buf, "//%s[@%s]", pcmk__s(tag, "*"), attr);
+
+        } else {
+            g_string_append_printf(buf, "//%s", pcmk__s(tag, "*"));
         }
 
         acl->xpath = strdup((const char *) buf->str);
