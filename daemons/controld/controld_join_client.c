@@ -272,7 +272,7 @@ do_cl_join_finalize_respond(long long action,
                  FALSE);
 
     /* send our status section to the DC */
-    tmp1 = controld_query_executor_state(fsa_our_uname);
+    tmp1 = controld_query_executor_state();
     if (tmp1 != NULL) {
         xmlNode *reply = create_request(CRM_OP_JOIN_CONFIRM, tmp1, fsa_our_dc,
                                         CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);

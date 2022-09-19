@@ -812,16 +812,16 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 }
 
 xmlNode *
-controld_query_executor_state(const char *node_name)
+controld_query_executor_state(void)
 {
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
-    lrm_state_t *lrm_state = lrm_state_find(node_name);
+    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
 
     if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", node_name);
+        crm_err("Could not find executor state for node %s", fsa_our_uname);
         return NULL;
     }
 
