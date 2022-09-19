@@ -2402,7 +2402,8 @@ lrmd__metadata_async(lrmd_rsc_info_t *rsc,
     CRM_CHECK(callback != NULL, return EINVAL);
 
     if ((rsc == NULL) || (rsc->standard == NULL) || (rsc->type == NULL)) {
-        pcmk__set_result(&result, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR,
+        pcmk__set_result(&result, PCMK_OCF_NOT_CONFIGURED,
+                         PCMK_EXEC_ERROR_FATAL,
                          "Invalid resource specification");
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
