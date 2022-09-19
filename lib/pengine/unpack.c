@@ -2591,18 +2591,22 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     char xpath[STATUS_PATH_MAX];
     xmlNode *xml = NULL;
 
+    CRM_CHECK((resource != NULL) && (op != NULL) && (node != NULL),
+              return NULL);
+
     offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//node_state[@uname='%s']", node);
     offset +=
         snprintf(xpath + offset, STATUS_PATH_MAX - offset, "//" XML_LRM_TAG_RESOURCE "[@id='%s']",
                  resource);
 
     /* Need to check against transition_magic too? */
-    if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
+    if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
                      source);
-    } else if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
+
+    } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
@@ -2636,6 +2640,8 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
     xmlNode *xml = NULL;
+
+    CRM_CHECK((rsc_id != NULL) && (node_name != NULL), return NULL);
 
     offset += snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                        "//node_state[@uname='%s']", node_name);
