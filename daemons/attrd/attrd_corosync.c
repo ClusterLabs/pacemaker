@@ -47,7 +47,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             .ipc_client     = NULL,
             .ipc_id         = 0,
             .ipc_flags      = 0,
-            .peer           = crm_element_value(xml, F_ORIG),
+            .peer           = peer->uname,
             .xml            = xml,
             .call_options   = 0,
             .result         = PCMK__UNKNOWN_RESULT,
@@ -124,7 +124,6 @@ broadcast_local_value(const attribute_t *a)
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
     attrd_add_value_xml(sync, a, v, false);
-    attrd_xml_add_writer(sync);
     attrd_send_message(NULL, sync);
     free_xml(sync);
     return v;
