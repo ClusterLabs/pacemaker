@@ -153,7 +153,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ c09-h05-r630 c09-h06-r630 c09-h07-r630 ]
     * RemoteOnline: [ c09-h08-r630 c09-h09-r630 c09-h10-r630 ]
-    * GuestOnline: [ scale1-bundle-0@c09-h05-r630 scale1-bundle-1@c09-h06-r630 scale1-bundle-2@c09-h07-r630 scale1-bundle-3@c09-h05-r630 scale1-bundle-4@c09-h06-r630 scale1-bundle-5@c09-h07-r630 ]
+    * GuestOnline: [ scale1-bundle-0 scale1-bundle-1 scale1-bundle-2 scale1-bundle-3 scale1-bundle-4 scale1-bundle-5 ]
 
   * Full List of Resources:
     * c09-h08-r630	(ocf:pacemaker:remote):	 Started c09-h05-r630

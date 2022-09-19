@@ -28,7 +28,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ 18builder ]
-    * GuestOnline: [ remote1@18builder remote2@18builder ]
+    * GuestOnline: [ remote1 remote2 ]
 
   * Full List of Resources:
     * FAKE	(ocf:pacemaker:Dummy):	 Started 18builder

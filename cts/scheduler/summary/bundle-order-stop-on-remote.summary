@@ -4,7 +4,7 @@ Current cluster status:
     * RemoteNode database-2: UNCLEAN (offline)
     * Online: [ controller-0 controller-1 controller-2 ]
     * RemoteOnline: [ database-1 messaging-0 messaging-1 messaging-2 ]
-    * GuestOnline: [ galera-bundle-1@controller-2 rabbitmq-bundle-0@controller-2 rabbitmq-bundle-1@controller-2 rabbitmq-bundle-2@controller-2 redis-bundle-0@controller-0 redis-bundle-2@controller-2 ]
+    * GuestOnline: [ galera-bundle-1 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-2 ]
 
   * Full List of Resources:
     * database-0	(ocf:pacemaker:remote):	 Stopped
@@ -181,7 +181,7 @@ Revised Cluster Status:
   * Node List:
     * Online: [ controller-0 controller-1 controller-2 ]
     * RemoteOnline: [ database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
-    * GuestOnline: [ galera-bundle-0@controller-0 galera-bundle-1@controller-2 galera-bundle-2@controller-1 rabbitmq-bundle-0@controller-2 rabbitmq-bundle-1@controller-2 rabbitmq-bundle-2@controller-2 redis-bundle-0@controller-0 redis-bundle-1@controller-1 redis-bundle-2@controller-2 ]
+    * GuestOnline: [ galera-bundle-0 galera-bundle-1 galera-bundle-2 rabbitmq-bundle-0 rabbitmq-bundle-1 rabbitmq-bundle-2 redis-bundle-0 redis-bundle-1 redis-bundle-2 ]
 
   * Full List of Resources:
     * database-0	(ocf:pacemaker:remote):	 Started controller-0

@@ -1,7 +1,7 @@
 Current cluster status:
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
-    * GuestOnline: [ lxc2@18node2 ]
+    * GuestOnline: [ lxc2 ]
 
   * Full List of Resources:
     * container1	(ocf:heartbeat:VirtualDomain):	 Stopped
@@ -42,7 +42,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ 18node1 18node2 18node3 ]
-    * GuestOnline: [ lxc1@18node1 lxc2@18node2 ]
+    * GuestOnline: [ lxc1 lxc2 ]
 
   * Full List of Resources:
     * container1	(ocf:heartbeat:VirtualDomain):	 Started 18node1

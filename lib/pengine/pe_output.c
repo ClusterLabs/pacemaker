@@ -497,9 +497,10 @@ pe__node_display_name(pe_node_t *node, bool print_detail)
 
     CRM_ASSERT((node != NULL) && (node->details != NULL) && (node->details->uname != NULL));
 
-    /* Host is displayed only if this is a guest node */
-    if (pe__is_guest_node(node)) {
-        pe_node_t *host_node = pe__current_node(node->details->remote_rsc);
+    /* Host is displayed only if this is a guest node and detail is requested */
+    if (print_detail && pe__is_guest_node(node)) {
+        const pe_resource_t *container = node->details->remote_rsc->container;
+        const pe_node_t *host_node = pe__current_node(container);
 
         if (host_node && host_node->details) {
             node_host = host_node->details->uname;

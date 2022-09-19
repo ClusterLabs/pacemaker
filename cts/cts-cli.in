@@ -548,6 +548,20 @@ function test_crm_mon() {
 
     rm -r "$CIB_file"
     unset CIB_file
+
+    export CIB_file="$test_home/cli/crm_mon-T180.xml"
+
+    desc="Text output of guest node's container on different node from its"
+    desc="$desc remote resource"
+    cmd="crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output of guest node's container on different node from"
+    desc="$desc its remote resource"
+    cmd="crm_mon -1 --show-detail"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 function test_error_codes() {

@@ -86,7 +86,7 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ c7auto1 c7auto2 c7auto3 ]
-    * GuestOnline: [ c7auto4@c7auto1 ]
+    * GuestOnline: [ c7auto4 ]
 
   * Full List of Resources:
     * shooter	(stonith:fence_phd_kvm):	 Started c7auto2

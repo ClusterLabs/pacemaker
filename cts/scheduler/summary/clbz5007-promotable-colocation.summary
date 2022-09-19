@@ -11,7 +11,7 @@ Current cluster status:
 
 Transition Summary:
   * Move       UNPROMOTED_IP     ( fc16-builder -> fc16-builder2 )
-  * Move       PROMOTED_IP     ( fc16-builder2 -> fc16-builder )
+  * Move       PROMOTED_IP       ( fc16-builder2 -> fc16-builder )
 
 Executing Cluster Transition:
   * Resource action: UNPROMOTED_IP   stop on fc16-builder
