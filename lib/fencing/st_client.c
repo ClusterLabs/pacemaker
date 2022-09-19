@@ -2489,7 +2489,7 @@ stonith__metadata_async(const char *agent, int timeout_sec,
         default:
             {
                 pcmk__action_result_t result = {
-                    .exit_status = CRM_EX_ERROR,
+                    .exit_status = CRM_EX_NOSUCH,
                     .execution_status = PCMK_EXEC_ERROR_HARD,
                     .exit_reason = crm_strdup_printf("No such agent '%s'",
                                                      agent),
