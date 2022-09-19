@@ -2565,7 +2565,7 @@ resource_history_text(pcmk__output_t *out, va_list args) {
     const char *rsc_id = va_arg(args, const char *);
     bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
-    time_t last_failure = va_arg(args, int);
+    time_t last_failure = va_arg(args, time_t);
     bool as_header = va_arg(args, int);
 
     char *buf = resource_history_string(rsc, rsc_id, all, failcount, last_failure);
@@ -2587,7 +2587,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     const char *rsc_id = va_arg(args, const char *);
     bool all = va_arg(args, int);
     int failcount = va_arg(args, int);
-    time_t last_failure = va_arg(args, int);
+    time_t last_failure = va_arg(args, time_t);
     bool as_header = va_arg(args, int);
 
     xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",

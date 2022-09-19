@@ -1736,7 +1736,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
         if (time_diff > 0) {
-            crm_info("Waiting up to %ld seconds for cluster actions to complete", time_diff);
+            crm_info("Waiting up to %lld seconds for cluster actions to complete", (long long) time_diff);
         } else {
             print_pending_actions(out, data_set->actions);
             pe_free_working_set(data_set);
