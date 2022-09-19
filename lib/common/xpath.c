@@ -266,38 +266,49 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     return result;
 }
 
-int
-pcmk__element_xpath(const char *prefix, const xmlNode *xml, char *buffer,
-                    int offset, size_t buffer_size)
+/*!
+ * \internal
+ * \brief Get an XPath string that matches an XML element as closely as possible
+ *
+ * \param[in] xml  The XML element for which to build an XPath string
+ *
+ * \return A \p GString that matches \p xml, or \p NULL if \p xml is \p NULL.
+ *
+ * \note The caller is responsible for freeing the string using
+ *       \p g_string_free().
+ */
+GString *
+pcmk__element_xpath(const xmlNode *xml)
 {
-    const char *id = ID(xml);
+    const xmlNode *parent = NULL;
+    GString *xpath = NULL;
+    const char *id = NULL;
 
-    if(offset == 0 && prefix == NULL && xml->parent) {
-        offset = pcmk__element_xpath(NULL, xml->parent, buffer, offset,
-                                     buffer_size);
+    if (xml == NULL) {
+        return NULL;
     }
 
-    if(id) {
-        offset += snprintf(buffer + offset, buffer_size - offset,
-                           "/%s[@id='%s']", (const char *) xml->name, id);
-    } else if(xml->name) {
-        offset += snprintf(buffer + offset, buffer_size - offset,
-                           "/%s", (const char *) xml->name);
+    parent = xml->parent;
+    xpath = pcmk__element_xpath(parent);
+    if (xpath == NULL) {
+        xpath = g_string_sized_new(256);
     }
 
-    return offset;
-}
-
-char *
-xml_get_path(const xmlNode *xml)
-{
-    int offset = 0;
-    char buffer[PCMK__BUFFER_SIZE];
-
-    if (pcmk__element_xpath(NULL, xml, buffer, offset, sizeof(buffer)) > 0) {
-        return strdup(buffer);
+    // Build xpath like "/" -> "/cib" -> "/cib/configuration"
+    if (parent == NULL) {
+        g_string_append_c(xpath, '/');
+    } else if (parent->parent == NULL) {
+        g_string_append(xpath, TYPE(xml));
+    } else {
+        g_string_append_printf(xpath, "/%s", TYPE(xml));
     }
-    return NULL;
+
+    id = ID(xml);
+    if (id != NULL) {
+        g_string_append_printf(xpath, "[@" XML_ATTR_ID "='%s']", id);
+    }
+
+    return xpath;
 }
 
 char *
@@ -330,3 +341,38 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     free(patt);
     return retval;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+/*!
+ * \deprecated This function will be removed in a future release
+ * \brief Get an XPath string that matches an XML element as closely as possible
+ *
+ * \param[in] xml  The XML element for which to build an XPath string
+ *
+ * \return A string that matches \p xml, or \p NULL if \p xml is \p NULL.
+ *
+ * \note The caller is responsible for freeing the string using free().
+ */
+char *
+xml_get_path(const xmlNode *xml)
+{
+    char *path = NULL;
+    GString *g_path = pcmk__element_xpath(xml);
+
+    if (g_path == NULL) {
+        return NULL;
+    }
+
+    path = strdup((const char *) g_path->str);
+    CRM_ASSERT(path != NULL);
+
+    g_string_free(g_path, TRUE);
+    return path;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -24,8 +24,6 @@
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
-#define MAX_XPATH_LEN	4096
-
 typedef struct xml_acl_s {
         enum xml_private_flags mode;
         char *xpath;
@@ -85,47 +83,28 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
                   crm_element_name(xml), acl->xpath);
 
     } else {
-        int offset = 0;
-        char buffer[MAX_XPATH_LEN];
+        GString *buf = g_string_sized_new(128);
 
-        if (tag) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//%s", tag);
+        if ((ref != NULL) && (attr != NULL)) {
+            // NOTE: schema currently does not allow this
+            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s' and @%s]",
+                                   pcmk__s(tag, "*"), ref, attr);
+
+        } else if (ref != NULL) {
+            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s']",
+                                   pcmk__s(tag, "*"), ref);
+
+        } else if (attr != NULL) {
+            g_string_append_printf(buf, "//%s[@%s]", pcmk__s(tag, "*"), attr);
+
         } else {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "//*");
+            g_string_append_printf(buf, "//%s", pcmk__s(tag, "*"));
         }
 
-        if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[");
-        }
-
-        if (ref) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@id='%s'", ref);
-        }
-
-        // NOTE: schema currently does not allow this
-        if (ref && attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               " and ");
-        }
-
-        if (attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "@%s", attr);
-        }
-
-        if (ref || attr) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "]");
-        }
-
-        CRM_LOG_ASSERT(offset > 0);
-        acl->xpath = strdup(buffer);
+        acl->xpath = strdup((const char *) buf->str);
         CRM_ASSERT(acl->xpath != NULL);
 
+        g_string_free(buf, TRUE);
         crm_trace("Unpacked ACL <%s> element as xpath: %s",
                   crm_element_name(xml), acl->xpath);
     }
@@ -262,14 +241,27 @@ pcmk__apply_acl(xmlNode *xml)
         max = numXpathResults(xpathObj);
 
         for (lpc = 0; lpc < max; lpc++) {
+            static struct qb_log_callsite *trace_cs = NULL;
             xmlNode *match = getXpathResult(xpathObj, lpc);
-            char *path = xml_get_path(match);
 
             p = match->_private;
-            crm_trace("Applying %s ACL to %s matched by %s",
-                      acl_to_text(acl->mode), path, acl->xpath);
             pcmk__set_xml_flags(p, acl->mode);
-            free(path);
+
+            /* Build a GString only if tracing is enabled.
+             * Can't use pcmk__log_else() because the else_action would be
+             * continue.
+             */
+            if (trace_cs == NULL) {
+                trace_cs = qb_log_callsite_get(__func__, __FILE__, "apply_acl",
+                                               LOG_TRACE, __LINE__, 0);
+            }
+            if (crm_is_callsite_active(trace_cs, LOG_TRACE, 0)) {
+                GString *path = pcmk__element_xpath(match);
+                crm_trace("Applying %s ACL to %s matched by %s",
+                          acl_to_text(acl->mode), (const char *) path->str,
+                          acl->xpath);
+                g_string_free(path, TRUE);
+            }
         }
         crm_trace("Applied %s ACL %s (%d match%s)",
                   acl_to_text(acl->mode), acl->xpath, max,
@@ -537,7 +529,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 static bool
 implicitly_allowed(xmlNode *xml)
 {
-    char *path = NULL;
+    GString *path = NULL;
 
     for (xmlAttr *prop = xml->properties; prop != NULL; prop = prop->next) {
         if (strcmp((const char *) prop->name, XML_ATTR_ID) != 0) {
@@ -545,13 +537,15 @@ implicitly_allowed(xmlNode *xml)
         }
     }
 
-    path = xml_get_path(xml);
-    if (strstr(path, "/" XML_CIB_TAG_ACLS "/") != NULL) {
-        free(path);
+    path = pcmk__element_xpath(xml);
+    CRM_ASSERT(path != NULL);
+
+    if (strstr((const char *) path->str, "/" XML_CIB_TAG_ACLS "/") != NULL) {
+        g_string_free(path, TRUE);
         return false;
     }
-    free(path);
 
+    g_string_free(path, TRUE);
     return true;
 }
 
@@ -664,23 +658,25 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
     CRM_ASSERT(xml->doc->_private);
 
     if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
-        int offset = 0;
         xmlNode *parent = xml;
-        char buffer[MAX_XPATH_LEN];
         xml_private_t *docp = xml->doc->_private;
-
-        offset = pcmk__element_xpath(NULL, xml, buffer, offset,
-                                     sizeof(buffer));
-        if (name) {
-            offset += snprintf(buffer + offset, MAX_XPATH_LEN - offset,
-                               "[@%s]", name);
-        }
-        CRM_LOG_ASSERT(offset > 0);
+        GString *xpath = NULL;
 
         if (docp->acls == NULL) {
-            crm_trace("User '%s' without ACLs denied %s access to %s",
-                      docp->user, acl_to_text(mode), buffer);
             pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+            pcmk__log_else(LOG_TRACE, return false);
+            xpath = pcmk__element_xpath(xml);
+            if (name != NULL) {
+                g_string_append_printf(xpath, "[@%s]", name);
+            }
+
+            qb_log_from_external_source(__func__, __FILE__,
+                                        "User '%s' without ACLs denied %s "
+                                        "access to %s", LOG_TRACE, __LINE__, 0,
+                                        docp->user, acl_to_text(mode),
+                                        (const char *) xpath->str);
+            g_string_free(xpath, TRUE);
             return false;
         }
 
@@ -703,18 +699,40 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 return true;
 
             } else if (pcmk_is_set(p->flags, pcmk__xf_acl_deny)) {
-                crm_trace("%sACL denies user '%s' %s access to %s",
-                          (parent != xml) ? "Parent " : "", docp->user,
-                          acl_to_text(mode), buffer);
                 pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+                pcmk__log_else(LOG_TRACE, return false);
+                xpath = pcmk__element_xpath(xml);
+                if (name != NULL) {
+                    g_string_append_printf(xpath, "[@%s]", name);
+                }
+
+                qb_log_from_external_source(__func__, __FILE__,
+                                            "%sACL denies user '%s' %s access "
+                                            "to %s", LOG_TRACE, __LINE__, 0,
+                                            (parent != xml)? "Parent ": "",
+                                            docp->user, acl_to_text(mode),
+                                            (const char *) xpath->str);
+                g_string_free(xpath, TRUE);
                 return false;
             }
             parent = parent->parent;
         }
 
-        crm_trace("Default ACL denies user '%s' %s access to %s",
-                  docp->user, acl_to_text(mode), buffer);
         pcmk__set_xml_doc_flag(xml, pcmk__xf_acl_denied);
+
+        pcmk__log_else(LOG_TRACE, return false);
+        xpath = pcmk__element_xpath(xml);
+        if (name != NULL) {
+            g_string_append_printf(xpath, "[@%s]", name);
+        }
+
+        qb_log_from_external_source(__func__, __FILE__,
+                                    "Default ACL denies user '%s' %s access to "
+                                    "%s", LOG_TRACE, __LINE__, 0,
+                                    docp->user, acl_to_text(mode),
+                                    (const char *) xpath->str);
+        g_string_free(xpath, TRUE);
         return false;
     }
 

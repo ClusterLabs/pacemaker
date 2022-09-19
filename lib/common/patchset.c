@@ -92,19 +92,18 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
     // If this XML node is new, just report that
     if (patchset && pcmk_is_set(p->flags, pcmk__xf_created)) {
-        int offset = 0;
-        char buffer[PCMK__BUFFER_SIZE];
+        GString *xpath = pcmk__element_xpath(xml->parent);
 
-        if (pcmk__element_xpath(NULL, xml->parent, buffer, offset,
-                                sizeof(buffer)) > 0) {
+        if (xpath != NULL) {
             int position = pcmk__xml_position(xml, pcmk__xf_deleted);
 
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "create");
-            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION, position);
             add_node_copy(change, xml);
+            g_string_free(xpath, TRUE);
         }
 
         return;
@@ -121,17 +120,16 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         }
 
         if (change == NULL) {
-            int offset = 0;
-            char buffer[PCMK__BUFFER_SIZE];
+            GString *xpath = pcmk__element_xpath(xml);
 
-            if (pcmk__element_xpath(NULL, xml, buffer, offset,
-                                    sizeof(buffer)) > 0) {
+            if (xpath != NULL) {
                 change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
                 crm_xml_add(change, XML_DIFF_OP, "modify");
-                crm_xml_add(change, XML_DIFF_PATH, buffer);
+                crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
 
                 change = create_xml_node(change, XML_DIFF_LIST);
+                g_string_free(xpath, TRUE);
             }
         }
 
@@ -173,19 +171,19 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
     p = xml->_private;
     if (patchset && pcmk_is_set(p->flags, pcmk__xf_moved)) {
-        int offset = 0;
-        char buffer[PCMK__BUFFER_SIZE];
+        GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
                   xml->name, ID(xml), pcmk__xml_position(xml, pcmk__xf_skip));
-        if (pcmk__element_xpath(NULL, xml, buffer, offset,
-                                sizeof(buffer)) > 0) {
+
+        if (xpath != NULL) {
             change = create_xml_node(patchset, XML_DIFF_CHANGE);
 
             crm_xml_add(change, XML_DIFF_OP, "move");
-            crm_xml_add(change, XML_DIFF_PATH, buffer);
+            crm_xml_add(change, XML_DIFF_PATH, (const char *) xpath->str);
             crm_xml_add_int(change, XML_DIFF_POSITION,
                             pcmk__xml_position(xml, pcmk__xf_deleted));
+            g_string_free(xpath, TRUE);
         }
     }
 }
@@ -520,18 +518,18 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
                 char *prefix = crm_strdup_printf("++ %s: ", xpath);
 
                 max = strlen(prefix);
-                pcmk__xe_log(log_level, __FILE__, function, __LINE__, prefix,
-                             change->children, 0,
-                             xml_log_option_formatted|xml_log_option_open);
+                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
+                              change->children, 0,
+                              xml_log_option_formatted|xml_log_option_open);
 
                 for (lpc = 2; lpc < max; lpc++) {
                     prefix[lpc] = ' ';
                 }
 
-                pcmk__xe_log(log_level, __FILE__, function, __LINE__, prefix,
-                             change->children, 0,
-                             xml_log_option_formatted|xml_log_option_close
-                                |xml_log_option_children);
+                pcmk__xml_log(log_level, __FILE__, function, __LINE__, prefix,
+                              change->children, 0,
+                              xml_log_option_formatted|xml_log_option_close
+                                  |xml_log_option_children);
                 free(prefix);
 
             } else if (strcmp(op, "move") == 0) {
@@ -541,13 +539,9 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
             } else if (strcmp(op, "modify") == 0) {
                 xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
-                char buffer_set[PCMK__BUFFER_SIZE];
-                char buffer_unset[PCMK__BUFFER_SIZE];
-                int o_set = 0;
-                int o_unset = 0;
+                GString *buffer_set = g_string_sized_new(256);
+                GString *buffer_unset = g_string_sized_new(256);
 
-                buffer_set[0] = 0;
-                buffer_unset[0] = 0;
                 for (child = pcmk__xml_first_child(clist); child != NULL;
                      child = pcmk__xml_next(child)) {
                     const char *name = crm_element_value(child, "name");
@@ -557,33 +551,31 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
                     } else if (strcmp(op, "set") == 0) {
                         const char *value = crm_element_value(child, "value");
 
-                        if (o_set > 0) {
-                            o_set += snprintf(buffer_set + o_set,
-                                              PCMK__BUFFER_SIZE - o_set, ", ");
+                        if (buffer_set->len > 0) {
+                            g_string_append(buffer_set, ", ");
                         }
-                        o_set += snprintf(buffer_set + o_set,
-                                          PCMK__BUFFER_SIZE - o_set, "@%s=%s",
-                                          name, value);
+                        g_string_append_printf(buffer_set, "@%s=%s", name, value);
 
                     } else if (strcmp(op, "unset") == 0) {
-                        if (o_unset > 0) {
-                            o_unset += snprintf(buffer_unset + o_unset,
-                                                PCMK__BUFFER_SIZE - o_unset,
-                                                ", ");
+                        if (buffer_unset->len > 0) {
+                            g_string_append(buffer_unset, ", ");
                         }
-                        o_unset += snprintf(buffer_unset + o_unset,
-                                            PCMK__BUFFER_SIZE - o_unset, "@%s",
-                                            name);
+                        g_string_append_printf(buffer_unset, "@%s", name);
                     }
                 }
-                if (o_set) {
+
+                if (buffer_set->len > 0) {
                     do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "+  %s:  %s", xpath, buffer_set);
+                                     "+  %s:  %s", xpath,
+                                     (const char *) buffer_set->str);
                 }
-                if (o_unset) {
+                if (buffer_unset->len > 0) {
                     do_crm_log_alias(log_level, __FILE__, function, __LINE__,
-                                     "-- %s:  %s", xpath, buffer_unset);
+                                     "-- %s:  %s", xpath,
+                                     (const char *) buffer_unset->str);
                 }
+                g_string_free(buffer_set, TRUE);
+                g_string_free(buffer_unset, TRUE);
 
             } else if (strcmp(op, "delete") == 0) {
                 int position = -1;
