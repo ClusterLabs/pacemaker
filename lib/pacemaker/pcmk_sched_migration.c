@@ -220,13 +220,23 @@ pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Get an action name from an action or operation key
+ *
+ * \param[in] action  If not NULL, get action name from here
+ * \param[in] key     If not NULL, get action name from here
+ *
+ * \return Newly allocated copy of action name (or NULL if none available)
+ */
 static char *
-task_from_action_or_key(pe_action_t *action, const char *key)
+task_from_action_or_key(const pe_action_t *action, const char *key)
 {
     char *res = NULL;
 
     if (action != NULL) {
         res = strdup(action->task);
+        CRM_ASSERT(res != NULL);
     } else if (key != NULL) {
         parse_op_key(key, NULL, &res, NULL);
     }
@@ -241,26 +251,20 @@ task_from_action_or_key(pe_action_t *action, const char *key)
  * during a migration as well, so duplicate any such ordering for the
  * corresponding migration actions.
  *
- * \param[in] order     Ordering constraint to check
- * \param[in] data_set  Cluster working set
+ * \param[in,out] order     Ordering constraint to check
  */
 void
-pcmk__order_migration_equivalents(pe__ordering_t *order,
-                                  pe_working_set_t *data_set)
+pcmk__order_migration_equivalents(pe__ordering_t *order)
 {
     char *first_task = NULL;
     char *then_task = NULL;
     bool then_migratable;
     bool first_migratable;
 
-    // Only orderings between two different resources are relevant
+    // Only orderings between unrelated resources are relevant
     if ((order->lh_rsc == NULL) || (order->rh_rsc == NULL)
-        || (order->lh_rsc == order->rh_rsc)) {
-        return;
-    }
-
-    // Constraints between a parent resource and its children are not relevant
-    if (is_parent(order->lh_rsc, order->rh_rsc)
+        || (order->lh_rsc == order->rh_rsc)
+        || is_parent(order->lh_rsc, order->rh_rsc)
         || is_parent(order->rh_rsc, order->lh_rsc)) {
         return;
     }
@@ -277,12 +281,9 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                          order->lh_action_task);
     then_task = task_from_action_or_key(order->rh_action,
                                         order->rh_action_task);
-    if ((first_task == NULL) || (then_task == NULL)) {
-        goto cleanup_order;
-    }
 
-    if (pcmk__str_eq(first_task, RSC_START, pcmk__str_casei)
-        && pcmk__str_eq(then_task, RSC_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(first_task, RSC_START, pcmk__str_none)
+        && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
 
         int flags = pe_order_optional;
 
@@ -293,7 +294,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                pcmk__op_key(order->lh_rsc->id, RSC_MIGRATED, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
-                               NULL, flags, data_set);
+                               NULL, flags, order->lh_rsc->cluster);
         }
 
         if (then_migratable) {
@@ -309,12 +310,12 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                pcmk__op_key(order->lh_rsc->id, RSC_START, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
-                               NULL, flags, data_set);
+                               NULL, flags, order->lh_rsc->cluster);
         }
 
     } else if (then_migratable
-               && pcmk__str_eq(first_task, RSC_STOP, pcmk__str_casei)
-               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_casei)) {
+               && pcmk__str_eq(first_task, RSC_STOP, pcmk__str_none)
+               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_none)) {
 
         int flags = pe_order_optional;
 
@@ -329,7 +330,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                            pcmk__op_key(order->lh_rsc->id, RSC_STOP, 0), NULL,
                            order->rh_rsc,
                            pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
-                           NULL, flags, data_set);
+                           NULL, flags, order->lh_rsc->cluster);
 
         // Also order B's migrate_from after A's stop during partial migrations
         if (order->rh_rsc->partial_migration_target) {
@@ -337,11 +338,11 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                pcmk__op_key(order->lh_rsc->id, RSC_STOP, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATED, 0),
-                               NULL, flags, data_set);
+                               NULL, flags, order->lh_rsc->cluster);
         }
 
-    } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_casei)
-               && pcmk__str_eq(then_task, RSC_START, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(first_task, RSC_PROMOTE, pcmk__str_none)
+               && pcmk__str_eq(then_task, RSC_START, pcmk__str_none)) {
 
         int flags = pe_order_optional;
 
@@ -352,11 +353,11 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                pcmk__op_key(order->lh_rsc->id, RSC_PROMOTE, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
-                               NULL, flags, data_set);
+                               NULL, flags, order->lh_rsc->cluster);
         }
 
-    } else if (pcmk__str_eq(first_task, RSC_DEMOTE, pcmk__str_casei)
-               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(first_task, RSC_DEMOTE, pcmk__str_none)
+               && pcmk__str_eq(then_task, RSC_STOP, pcmk__str_none)) {
 
         int flags = pe_order_optional;
 
@@ -367,7 +368,7 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0),
                                NULL, order->rh_rsc,
                                pcmk__op_key(order->rh_rsc->id, RSC_MIGRATE, 0),
-                               NULL, flags, data_set);
+                               NULL, flags, order->lh_rsc->cluster);
 
             // Also order B migrate_from after A demote during partial migrations
             if (order->rh_rsc->partial_migration_target) {
@@ -375,12 +376,11 @@ pcmk__order_migration_equivalents(pe__ordering_t *order,
                                    pcmk__op_key(order->lh_rsc->id, RSC_DEMOTE, 0),
                                    NULL, order->rh_rsc,
                                    pcmk__op_key(order->rh_rsc->id, RSC_MIGRATED, 0),
-                                   NULL, flags, data_set);
+                                   NULL, flags, order->lh_rsc->cluster);
             }
         }
     }
 
-cleanup_order:
     free(first_task);
     free(then_task);
 }

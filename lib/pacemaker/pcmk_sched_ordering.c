@@ -573,7 +573,7 @@ pcmk__new_ordering(pe_resource_t *first_rsc, char *first_action_task,
 
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints,
                                                     order);
-    pcmk__order_migration_equivalents(order, data_set);
+    pcmk__order_migration_equivalents(order);
 }
 
 /*!
