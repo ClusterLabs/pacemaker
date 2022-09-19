@@ -2416,11 +2416,11 @@ lrmd__metadata_async(lrmd_rsc_info_t *rsc,
                                        callback, user_data);
     }
 
-    action = services__create_resource_action(rsc->type, rsc->standard,
-                                              rsc->provider, rsc->type,
-                                              CRMD_ACTION_METADATA, 0,
-                                              CRMD_METADATA_CALL_TIMEOUT, NULL,
-                                              0);
+    action = services__create_resource_action(pcmk__s(rsc->id, rsc->type),
+                                              rsc->standard, rsc->provider,
+                                              rsc->type, CRMD_ACTION_METADATA,
+                                              0, CRMD_METADATA_CALL_TIMEOUT,
+                                              NULL, 0);
     if (action == NULL) {
         pcmk__set_result(&result, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                          "Out of memory");
