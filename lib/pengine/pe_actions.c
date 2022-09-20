@@ -1387,14 +1387,24 @@ get_complex_task(pe_resource_t * rsc, const char *name, gboolean allow_non_atomi
     return task;
 }
 
+/*!
+ * \internal
+ * \brief Find first matching action in a list
+ *
+ * \param[in] input    List of actions to search
+ * \param[in] uuid     If not NULL, action must have this UUID
+ * \param[in] task     If not NULL, action must have this action name
+ * \param[in] on_node  If not NULL, action must be on this node
+ *
+ * \return First action in list that matches criteria, or NULL if none
+ */
 pe_action_t *
-find_first_action(GList *input, const char *uuid, const char *task, pe_node_t * on_node)
+find_first_action(const GList *input, const char *uuid, const char *task,
+                  const pe_node_t *on_node)
 {
-    GList *gIter = NULL;
-
     CRM_CHECK(uuid || task, return NULL);
 
-    for (gIter = input; gIter != NULL; gIter = gIter->next) {
+    for (const GList *gIter = input; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (uuid != NULL && !pcmk__str_eq(uuid, action->uuid, pcmk__str_casei)) {
