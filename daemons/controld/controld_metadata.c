@@ -348,6 +348,11 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
             free(key);
         }
         if (metadata != NULL) {
+            crm_debug("Retrieved metadata for %s (%s%s%s:%s) from cache",
+                      rsc->id, rsc->standard,
+                      ((rsc->provider == NULL)? "" : ":"),
+                      ((rsc->provider == NULL)? "" : rsc->provider),
+                      rsc->type);
             return metadata;
         }
     }
@@ -370,6 +375,11 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
      * means that if the metadata action tries to contact the controller,
      * everything will hang until the timeout).
      */
+    crm_debug("Retrieving metadata for %s (%s%s%s:%s) synchronously",
+              rsc->id, rsc->standard,
+              ((rsc->provider == NULL)? "" : ":"),
+              ((rsc->provider == NULL)? "" : rsc->provider),
+              rsc->type);
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {

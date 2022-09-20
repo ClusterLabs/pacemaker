@@ -1903,6 +1903,11 @@ do_lrm_invoke(long long action,
                 struct metadata_cb_data *data = NULL;
 
                 data = new_metadata_cb_data(rsc, input->xml);
+                crm_info("Retrieving metadata for %s (%s%s%s:%s) asynchronously",
+                         rsc->id, rsc->standard,
+                         ((rsc->provider == NULL)? "" : ":"),
+                         ((rsc->provider == NULL)? "" : rsc->provider),
+                         rsc->type);
                 (void) lrmd__metadata_async(rsc, metadata_complete,
                                             (void *) data);
             } else {
