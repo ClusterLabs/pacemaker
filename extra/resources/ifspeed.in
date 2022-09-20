@@ -103,7 +103,7 @@ The name of the attribute to set.  This is the name to be used in the constraint
 <content type="string" default="${OCF_RESKEY_name_default}"/>
 </parameter>
 
-<parameter name="iface" unique-group="iface" required="1">
+<parameter name="iface" unique-group="iface">
 <longdesc lang="en">
 Network interface to monitor.
 </longdesc>
