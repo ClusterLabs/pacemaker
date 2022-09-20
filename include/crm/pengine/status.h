@@ -78,10 +78,10 @@ pe_rsc_is_unique_clone(const pe_resource_t *rsc)
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is anonymous clone, FALSE otherwise
+ * \return true if resource is anonymous clone, false otherwise
  */
 static inline bool
-pe_rsc_is_anon_clone(pe_resource_t *rsc)
+pe_rsc_is_anon_clone(const pe_resource_t *rsc)
 {
     return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pe_rsc_unique);
 }
