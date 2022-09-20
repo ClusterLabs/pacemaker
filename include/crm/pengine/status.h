@@ -52,7 +52,7 @@ pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is clone, FALSE otherwise
+ * \return true if resource is clone, false otherwise
  */
 static inline bool
 pe_rsc_is_clone(const pe_resource_t *rsc)
@@ -91,7 +91,7 @@ pe_rsc_is_anon_clone(const pe_resource_t *rsc)
  *
  * \param[in] rsc  Resource to check
  *
- * \return TRUE if resource is part of a bundle, FALSE otherwise
+ * \return true if resource is part of a bundle, false otherwise
  */
 static inline bool
 pe_rsc_is_bundled(pe_resource_t *rsc)
