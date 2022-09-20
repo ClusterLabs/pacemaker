@@ -14,30 +14,34 @@
 extern "C" {
 #endif
 
-/**
+/*!
  * \brief Create a new resource action
  *
  * \param[in] name        Name of resource
- * \param[in] standard    Resource agent standard (ocf, lsb, etc.)
+ * \param[in] standard    Resource agent standard
  * \param[in] provider    Resource agent provider
  * \param[in] agent       Resource agent name
- * \param[in] action      action (start, stop, monitor, etc.)
+ * \param[in] action      Name of action
  * \param[in] interval_ms How often to repeat this action (if 0, execute once)
- * \param[in] timeout     Consider action failed if it does not complete in this many milliseconds
+ * \param[in] timeout     Error if not complete within this many milliseconds
  * \param[in] params      Action parameters
+ * \param[in] flags       Group of enum svc_action_flags
  *
  * \return NULL if not enough memory, otherwise newly allocated action instance
  *         (if its rc member is not PCMK_OCF_UNKNOWN, the action is invalid)
  *
- * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
+ * \note The returned action assumes ownership of \p params.
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
-svc_action_t *services__create_resource_action(const char *name, const char *standard,
-                                      const char *provider, const char *agent,
-                                      const char *action, guint interval_ms,
-                                      int timeout /* ms */, GHashTable *params,
-                                      enum svc_action_flags flags);
+svc_action_t *services__create_resource_action(const char *name,
+                                               const char *standard,
+                                               const char *provider,
+                                               const char *agent,
+                                               const char *action,
+                                               guint interval_ms,
+                                               int timeout, GHashTable *params,
+                                               enum svc_action_flags flags);
 
 const char *services__exit_reason(svc_action_t *action);
 char *services__grab_stdout(svc_action_t *action);

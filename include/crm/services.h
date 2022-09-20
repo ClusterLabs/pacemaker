@@ -26,11 +26,12 @@
 extern "C" {
 #endif
 
-/**
+/*!
  * \file
  * \brief Services API
  * \ingroup core
  */
+
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
@@ -170,112 +171,123 @@ typedef struct svc_action_s {
     svc_action_private_t *opaque;
 } svc_action_t;
 
-/**
+/*!
  * \brief Get a list of files or directories in a given path
  *
- * \param[in] root       full path to a directory to read
- * \param[in] files      return list of files if TRUE or directories if FALSE
- * \param[in] executable if TRUE and files is TRUE, only return executable files
+ * \param[in] root       Full path to a directory to read
+ * \param[in] files      Return list of files if TRUE or directories if FALSE
+ * \param[in] executable If TRUE and files is TRUE, only return executable files
  *
- * \return a list of what was found.  The list items are char *.
- * \note It is the caller's responsibility to free the result with g_list_free_full(list, free).
+ * \return List of what was found as char * items.
+ * \note The caller is responsibile for freeing the result with
+ *       g_list_free_full(list, free).
  */
-    GList *get_directory_list(const char *root, gboolean files, gboolean executable);
+GList *get_directory_list(const char *root, gboolean files,
+                          gboolean executable);
 
-/**
+/*!
  * \brief Get a list of providers
  *
- * \param[in] standard  list providers of this standard (e.g. ocf, lsb, etc.)
+ * \param[in] standard  List providers of this resource agent standard
  *
- * \return a list of providers as char * list items (or NULL if standard does not support providers)
- * \note The caller is responsible for freeing the result using g_list_free_full(list, free).
+ * \return List of providers as char * list items (or NULL if standard does not
+ *         support providers)
+ * \note The caller is responsible for freeing the result using
+ *       g_list_free_full(list, free).
  */
-    GList *resources_list_providers(const char *standard);
+GList *resources_list_providers(const char *standard);
 
-/**
+/*!
  * \brief Get a list of resource agents
  *
- * \param[in] standard  list agents using this standard (e.g. ocf, lsb, etc.) (or NULL for all)
- * \param[in] provider  list agents from this provider (or NULL for all)
+ * \param[in] standard  List agents of this standard (or NULL for all)
+ * \param[in] provider  List agents of this provider (or NULL for all)
  *
- * \return a list of resource agents.  The list items are char *.
- * \note The caller is responsible for freeing the result using g_list_free_full(list, free).
+ * \return List of resource agents as char * items.
+ * \note The caller is responsible for freeing the result using
+ *       g_list_free_full(list, free).
  */
-    GList *resources_list_agents(const char *standard, const char *provider);
+GList *resources_list_agents(const char *standard, const char *provider);
 
-/**
+/*!
  * Get list of available standards
  *
- * \return a list of resource standards. The list items are char *. This list _must_
- *         be destroyed using g_list_free_full(list, free).
+ * \return List of resource standards as char * items.
+ * \note The caller is responsible for freeing the result using
+ *       g_list_free_full(list, free).
  */
-    GList *resources_list_standards(void);
+GList *resources_list_standards(void);
 
-/**
- * Does the given standard, provider, and agent describe a resource that can exist?
+/*!
+ * \brief Check whether a resource agent exists on the local host
  *
- * \param[in] standard  Which class of agent does the resource belong to?
- * \param[in] provider  What provides the agent (NULL for most standards)?
- * \param[in] agent     What is the name of the agent?
+ * \param[in] standard  Resource agent standard of agent to check
+ * \param[in] provider  Provider of agent to check (or NULL)
+ * \param[in] agent     Name of agent to check
  *
- * \return A boolean
+ * \return TRUE if agent exists locally, otherwise FALSE
  */
-    gboolean resources_agent_exists(const char *standard, const char *provider, const char *agent);
+gboolean resources_agent_exists(const char *standard, const char *provider,
+                                const char *agent);
 
-/**
+/*!
  * \brief Create a new resource action
  *
- * \param[in] name        Name of resource
- * \param[in] standard    Resource agent standard (ocf, lsb, etc.)
+ * \param[in] name        Name of resource that action is for
+ * \param[in] standard    Resource agent standard
  * \param[in] provider    Resource agent provider
  * \param[in] agent       Resource agent name
- * \param[in] action      action (start, stop, monitor, etc.)
+ * \param[in] action      Name of action to create
  * \param[in] interval_ms How often to repeat this action (if 0, execute once)
- * \param[in] timeout     Consider action failed if it does not complete in this many milliseconds
+ * \param[in] timeout     Error if not complete within this many milliseconds
  * \param[in] params      Action parameters
  *
- * \return newly allocated action instance
+ * \return Newly allocated action
  *
- * \post After the call, 'params' is owned, and later free'd by the svc_action_t result
+ * \note The returned result assumes ownership of \p params.
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
 svc_action_t *resources_action_create(const char *name, const char *standard,
                                       const char *provider, const char *agent,
                                       const char *action, guint interval_ms,
-                                      int timeout /* ms */, GHashTable *params,
+                                      int timeout, GHashTable *params,
                                       enum svc_action_flags flags);
 
-/**
- * Kick a recurring action so it is scheduled immediately for re-execution
+/*!
+ * \brief Reschedule a recurring action for immediate execution
+ *
+ * \param[in] name         Name of resource that action is for
+ * \param[in] action       Action's name
+ * \param[in] interval_ms  Action's interval (in milliseconds)
+ *
+ * \return TRUE on success, otherwise FALSE
  */
 gboolean services_action_kick(const char *name, const char *action,
                               guint interval_ms);
 
-    const char *resources_find_service_class(const char *agent);
+const char *resources_find_service_class(const char *agent);
 
-/**
- * Utilize services API to execute an arbitrary command.
+/*!
+ * \brief Request execution of an arbitrary command
  *
  * This API has useful infrastructure in place to be able to run a command
  * in the background and get notified via a callback when the command finishes.
  *
- * \param[in] exec command to execute
- * \param[in] args arguments to the command, NULL terminated
+ * \param[in] exec  Full path to command executable
+ * \param[in] args  NULL-terminated list of arguments to pass to command
  *
- * \return a svc_action_t object, used to pass to the execute function
- * (services_action_sync() or services_action_async()) and is
- * provided to the callback.
+ * \return Newly allocated action object
  */
-    svc_action_t *services_action_create_generic(const char *exec, const char *args[]);
+svc_action_t *services_action_create_generic(const char *exec,
+                                             const char *args[]);
 
-    void services_action_cleanup(svc_action_t * op);
-    void services_action_free(svc_action_t * op);
-    int services_action_user(svc_action_t *op, const char *user);
+void services_action_cleanup(svc_action_t *op);
+void services_action_free(svc_action_t *op);
+int services_action_user(svc_action_t *op, const char *user);
+gboolean services_action_sync(svc_action_t *op);
 
-    gboolean services_action_sync(svc_action_t * op);
-
-/**
+/*!
  * \brief Run an action asynchronously, with callback after process is forked
  *
  * \param[in] op                    Action to run
@@ -285,8 +297,6 @@ gboolean services_action_kick(const char *name, const char *action,
  * \param[in] action_fork_callback  Function to call after action process forks
  *                                  (if NULL, any previously set callback will
  *                                  continue to be used)
- *
- * \return Boolean value
  *
  * \retval TRUE if the caller should not free or otherwise use \p op again,
  *         because one of these conditions is true:
@@ -313,15 +323,13 @@ gboolean services_action_async_fork_notify(svc_action_t *op,
         void (*action_callback) (svc_action_t *),
         void (*action_fork_callback) (svc_action_t *));
 
-/**
- * \brief Run an action asynchronously
+/*!
+ * \brief Request asynchronous execution of an action
  *
- * \param[in] op                    Action to run
- * \param[in] action_callback       Function to call when the action completes
- *                                  (if NULL, any previously set callback will
- *                                  continue to be used)
- *
- * \return Boolean value
+ * \param[in,out] op               Action to execute
+ * \param[in]     action_callback  Function to call when the action completes
+ *                                 (if NULL, any previously set callback will
+ *                                 continue to be used)
  *
  * \retval TRUE if the caller should not free or otherwise use \p op again,
  *         because one of these conditions is true:
