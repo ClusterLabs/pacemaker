@@ -591,7 +591,7 @@ do_dc_join_ack(long long action,
     }
     controld_delete_node_state(join_from, section, cib_scope_local);
     if (pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei)) {
-        xmlNode *now_dc_lrmd_state = controld_query_executor_state(fsa_our_uname);
+        xmlNode *now_dc_lrmd_state = controld_query_executor_state();
 
         if (now_dc_lrmd_state != NULL) {
             fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,

@@ -1064,7 +1064,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         return handle_lrm_delete(stored_msg);
 
     } else if ((strcmp(op, CRM_OP_LRM_FAIL) == 0)
-               || (strcmp(op, CRM_OP_LRM_REFRESH) == 0)
+               || (strcmp(op, CRM_OP_LRM_REFRESH) == 0) // @COMPAT
                || (strcmp(op, CRM_OP_REPROBE) == 0)) {
 
         crm_xml_add(stored_msg, F_CRM_SYS_TO, CRM_SYSTEM_LRMD);

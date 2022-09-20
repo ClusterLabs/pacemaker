@@ -744,6 +744,8 @@ pcmk_rc2exitc(int rc)
         case pcmk_rc_multiple:
             return CRM_EX_MULTIPLE;
 
+        case ENODEV:
+        case ENOENT:
         case ENXIO:
         case pcmk_rc_node_unknown:
         case pcmk_rc_unknown_format:

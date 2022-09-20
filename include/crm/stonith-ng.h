@@ -206,14 +206,21 @@ typedef struct stonith_api_operations_s
         stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
 
     /*!
-     * \brief Get the metadata documentation for a resource.
+     * \brief Retrieve a fence agent's metadata
      *
-     * \note Value is returned in output.  Output must be freed when set.
+     * \param[in,out] stonith       Fencer connection
+     * \param[in]     call_options  Group of enum stonith_call_options
+     *                              (currently ignored)
+     * \param[in]     agent         Fence agent to query
+     * \param[in]     namespace     Namespace of fence agent to query (optional)
+     * \param[out]    output        Where to store metadata
+     * \param[in]     timeout_sec   Error if not complete within this time
      *
      * \return Legacy Pacemaker return code
+     * \note The caller is responsible for freeing *output using free().
      */
-    int (*metadata)(stonith_t *st, int options,
-            const char *device, const char *provider, char **output, int timeout);
+    int (*metadata)(stonith_t *stonith, int call_options, const char *agent,
+                    const char *namespace, char **output, int timeout_sec);
 
     /*!
      * \brief Retrieve a list of installed stonith agents

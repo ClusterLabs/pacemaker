@@ -45,7 +45,7 @@ static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
                                        const char *rsc_id,
                                        const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-                          const char *operation, xmlNode *msg);
+                          xmlNode *msg, struct ra_metadata_s *md);
 
 static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                                          int log_level);
@@ -686,7 +686,6 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
     struct ra_metadata_s *metadata = NULL;
     const char *caller_version = NULL;
     lrm_state_t *lrm_state = NULL;
-    uint32_t metadata_source = controld_metadata_from_agent;
 
     if (op == NULL) {
         return FALSE;
@@ -694,18 +693,8 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
 
     target_rc = rsc_op_expected_rc(op);
 
-    /* there is a small risk in formerly mixed clusters that it will
-     * be sub-optimal.
-     *
-     * however with our upgrade policy, the update we send should
-     * still be completely supported anyway
-     */
     caller_version = g_hash_table_lookup(op->params, XML_ATTR_CRM_VERSION);
-    CRM_LOG_ASSERT(caller_version != NULL);
-
-    if(caller_version == NULL) {
-        caller_version = CRM_FEATURE_SET;
-    }
+    CRM_CHECK(caller_version != NULL, caller_version = CRM_FEATURE_SET);
 
     xml_op = pcmk__create_history_xml(parent, op, caller_version, target_rc,
                                       fsa_our_uname, src);
@@ -729,19 +718,14 @@ build_operation_update(xmlNode * parent, const lrmd_rsc_info_t *rsc,
         return TRUE;
     }
 
-    /* Getting meta-data from cache is OK unless this is a successful start
-     * action -- always refresh from the agent for those, in case the
-     * resource agent was updated.
+    /* Ideally the metadata is cached, and the agent is just a fallback.
      *
-     * @TODO Only refresh the meta-data after starts if the agent actually
-     * changed (using something like inotify, or a hash or modification time of
-     * the agent executable).
+     * @TODO Go through all callers and ensure they get metadata asynchronously
+     * first.
      */
-    if ((op->op_status != PCMK_EXEC_DONE) || (op->rc != target_rc)
-        || !pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
-        metadata_source |= controld_metadata_from_cache;
-    }
-    metadata = controld_get_rsc_metadata(lrm_state, rsc, metadata_source);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc,
+                                         controld_metadata_from_agent
+                                         |controld_metadata_from_cache);
     if (metadata == NULL) {
         return TRUE;
     }
@@ -827,19 +811,26 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
     return FALSE;
 }
 
-static xmlNode *
-do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
+xmlNode *
+controld_query_executor_state(void)
 {
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     crm_node_t *peer = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(fsa_our_uname);
+
+    if (!lrm_state) {
+        crm_err("Could not find executor state for node %s", fsa_our_uname);
+        return NULL;
+    }
 
     peer = crm_get_peer_full(0, lrm_state->node_name, CRM_GET_PEER_ANY);
     CRM_CHECK(peer != NULL, return NULL);
 
-    xml_state = create_node_state_update(peer, update_flags, NULL,
-                                         __func__);
+    xml_state = create_node_state_update(peer,
+                                         node_update_cluster|node_update_peer,
+                                         NULL, __func__);
     if (xml_state == NULL) {
         return NULL;
     }
@@ -854,19 +845,6 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     crm_log_xml_trace(xml_state, "Current executor state");
 
     return xml_state;
-}
-
-xmlNode *
-controld_query_executor_state(const char *node_name)
-{
-    lrm_state_t *lrm_state = lrm_state_find(node_name);
-
-    if (!lrm_state) {
-        crm_err("Could not find executor state for node %s", node_name);
-        return NULL;
-    }
-    return do_lrm_query_internal(lrm_state,
-                                 node_update_cluster|node_update_peer);
 }
 
 /*!
@@ -1569,46 +1547,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 }
 
 static void
-handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
-                  const char *from_host, const char *from_sys)
-{
-    int rc = pcmk_ok;
-    xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
-
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
-    crm_info("Forced a local resource history refresh: call=%d", rc);
-
-    if (!pcmk__str_eq(CRM_SYSTEM_CRMD, from_sys, pcmk__str_casei)) {
-        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
-                                        from_sys, CRM_SYSTEM_LRMD,
-                                        fsa_our_uuid);
-
-        crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
-
-        if (relay_message(reply, TRUE) == FALSE) {
-            crm_log_xml_err(reply, "Unable to route reply");
-        }
-        free_xml(reply);
-    }
-
-    free_xml(fragment);
-}
-
-static void
-handle_query_op(xmlNode *msg, lrm_state_t *lrm_state)
-{
-    xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
-    xmlNode *reply = create_reply(msg, data);
-
-    if (relay_message(reply, TRUE) == FALSE) {
-        crm_err("Unable to route reply");
-        crm_log_xml_err(reply, "reply");
-    }
-    free_xml(reply);
-    free_xml(data);
-}
-
-static void
 handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
                   const char *from_host, const char *user_name,
                   gboolean is_remote_node)
@@ -1744,6 +1682,56 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
                     user_name, input, unregister);
 }
 
+// User data for asynchronous metadata execution
+struct metadata_cb_data {
+    lrmd_rsc_info_t *rsc;   // Copy of resource information
+    xmlNode *input_xml;     // Copy of FSA input XML
+};
+
+static struct metadata_cb_data *
+new_metadata_cb_data(lrmd_rsc_info_t *rsc, xmlNode *input_xml)
+{
+    struct metadata_cb_data *data = NULL;
+
+    data = calloc(1, sizeof(struct metadata_cb_data));
+    CRM_ASSERT(data != NULL);
+    data->input_xml = copy_xml(input_xml);
+    data->rsc = lrmd_copy_rsc_info(rsc);
+    return data;
+}
+
+static void
+free_metadata_cb_data(struct metadata_cb_data *data)
+{
+    lrmd_free_rsc_info(data->rsc);
+    free_xml(data->input_xml);
+    free(data);
+}
+
+/*!
+ * \internal
+ * \brief Execute an action after metadata has been retrieved
+ *
+ * \param[in] pid        Ignored
+ * \param[in] result     Result of metadata action
+ * \param[in] user_data  Metadata callback data
+ */
+static void
+metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
+{
+    struct metadata_cb_data *data = (struct metadata_cb_data *) user_data;
+
+    struct ra_metadata_s *md = NULL;
+    lrm_state_t *lrm_state = lrm_state_find(lrm_op_target(data->input_xml));
+
+    if ((lrm_state != NULL) && pcmk__result_ok(result)) {
+        md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
+                                     result->action_stdout);
+    }
+    do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
+    free_metadata_cb_data(data);
+}
+
 /*	 A_LRM_INVOKE	*/
 void
 do_lrm_invoke(long long action,
@@ -1806,10 +1794,12 @@ do_lrm_invoke(long long action,
                           from_sys);
 
     } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_none)) {
-        handle_refresh_op(lrm_state, user_name, from_host, from_sys);
-
-    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_none)) {
-        handle_query_op(input->msg, lrm_state);
+        /* @COMPAT This can only be sent by crm_resource --refresh on a
+         * Pacemaker Remote node running Pacemaker 1.1.9, which is extremely
+         * unlikely. It previously would cause the controller to re-write its
+         * resource history to the CIB. Just ignore it.
+         */
+        crm_notice("Ignoring refresh request from Pacemaker Remote 1.1.9 node");
 
     // @COMPAT DCs <1.1.14 in a rolling upgrade might schedule this op
     } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_none)) {
@@ -1881,26 +1871,48 @@ do_lrm_invoke(long long action,
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
-        } else if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
-                                    CRMD_ACTION_RELOAD_AGENT, NULL)) {
-            /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
-             * will schedule reload-agent actions only. In either case, we need
-             * to map that to whatever the resource agent actually supports.
-             * Default to the OCF 1.1 name.
-             */
-            struct ra_metadata_s *md = NULL;
-            const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
-
-            md = controld_get_rsc_metadata(lrm_state, rsc,
-                                           controld_metadata_from_cache);
-            if ((md != NULL)
-                && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
-                reload_name = CRMD_ACTION_RELOAD;
-            }
-            do_lrm_rsc_op(lrm_state, rsc, reload_name, input->xml);
-
         } else {
-            do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
+            struct ra_metadata_s *md = NULL;
+
+            /* Getting metadata from cache is OK except for start actions --
+             * always refresh from the agent for those, in case the resource
+             * agent was updated.
+             *
+             * @TODO Only refresh metadata for starts if the agent actually
+             * changed (using something like inotify, or a hash or modification
+             * time of the agent executable).
+             */
+            if (strcmp(operation, CRMD_ACTION_START) != 0) {
+                md = controld_get_rsc_metadata(lrm_state, rsc,
+                                               controld_metadata_from_cache);
+            }
+
+            if ((md == NULL) && crm_op_needs_metadata(rsc->standard,
+                                                      operation)) {
+                /* Most likely, we'll need the agent metadata to record the
+                 * pending operation and the operation result. Get it now rather
+                 * than wait until then, so the metadata action doesn't eat into
+                 * the real action's timeout.
+                 *
+                 * @TODO Metadata is retrieved via direct execution of the
+                 * agent, which has a couple of related issues: the executor
+                 * should execute agents, not the controller; and metadata for
+                 * Pacemaker Remote nodes should be collected on those nodes,
+                 * not locally.
+                 */
+                struct metadata_cb_data *data = NULL;
+
+                data = new_metadata_cb_data(rsc, input->xml);
+                crm_info("Retrieving metadata for %s (%s%s%s:%s) asynchronously",
+                         rsc->id, rsc->standard,
+                         ((rsc->provider == NULL)? "" : ":"),
+                         ((rsc->provider == NULL)? "" : rsc->provider),
+                         rsc->type);
+                (void) lrmd__metadata_async(rsc, metadata_complete,
+                                            (void *) data);
+            } else {
+                do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
+            }
         }
 
         lrmd_free_rsc_info(rsc);
@@ -2249,8 +2261,8 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
 }
 
 static void
-do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-              const char *operation, xmlNode *msg)
+do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
+              struct ra_metadata_s *md)
 {
     int rc;
     int call_id = 0;
@@ -2259,16 +2271,43 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     lrmd_key_value_t *params = NULL;
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
+    const char *operation = NULL;
     gboolean stop_recurring = FALSE;
     const char *nack_reason = NULL;
 
-    CRM_CHECK(rsc != NULL, return);
-    CRM_CHECK(operation != NULL, return);
+    CRM_CHECK((rsc != NULL) && (msg != NULL), return);
 
-    if (msg != NULL) {
-        transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
-        if (transition == NULL) {
-            crm_log_xml_err(msg, "Missing transition number");
+    operation = crm_element_value(msg, XML_LRM_ATTR_TASK);
+    CRM_CHECK(!pcmk__str_empty(operation), return);
+
+    transition = crm_element_value(msg, XML_ATTR_TRANSITION_KEY);
+    if (pcmk__str_empty(transition)) {
+        crm_log_xml_err(msg, "Missing transition number");
+    }
+
+    if (lrm_state == NULL) {
+        // This shouldn't be possible, but provide a failsafe just in case
+        crm_err("Cannot execute %s of %s: No executor connection "
+                CRM_XS " transition_key=%s",
+                operation, rsc->id, pcmk__s(transition, ""));
+        synthesize_lrmd_failure(NULL, msg, PCMK_EXEC_INVALID,
+                                PCMK_OCF_UNKNOWN_ERROR,
+                                "No executor connection");
+        return;
+    }
+
+    if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
+                         CRMD_ACTION_RELOAD_AGENT, NULL)) {
+        /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
+         * will schedule reload-agent actions only. In either case, we need
+         * to map that to whatever the resource agent actually supports.
+         * Default to the OCF 1.1 name.
+         */
+        if ((md != NULL)
+            && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
+            operation = CRMD_ACTION_RELOAD;
+        } else {
+            operation = CRMD_ACTION_RELOAD_AGENT;
         }
     }
 
@@ -2313,7 +2352,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     crm_notice("Requesting local execution of %s operation for %s on %s "
                CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
-               transition, rsc->id, operation, op->interval_ms);
+               pcmk__s(transition, ""), rsc->id, operation, op->interval_ms);
 
     if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
@@ -2919,7 +2958,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);
 
-            metadata_cache_update(lrm_state->metadata_cache, rsc, metadata);
+            controld_cache_metadata(lrm_state->metadata_cache, rsc, metadata);
             free(metadata);
         }
     }

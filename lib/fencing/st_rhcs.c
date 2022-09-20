@@ -112,25 +112,24 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
 }
 
 /*!
- * \brief Execute RHCS-compatible agent's meta-data action
+ * \brief Execute RHCS-compatible agent's metadata action
  *
- * \param[in]  agent    Agent to execute
- * \param[in]  timeout  Action timeout
- * \param[out] metadata Where to store output xmlNode (or NULL to ignore)
- *
- * \todo timeout is currently ignored; shouldn't we use it?
+ * \param[in]  agent        Agent to execute
+ * \param[in]  timeout_sec  Action timeout
+ * \param[out] metadata     Where to store output xmlNode (or NULL to ignore)
  */
 static int
-stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
+stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
+                           xmlNode **metadata)
 {
     xmlNode *xml = NULL;
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
-    pcmk__action_result_t *result = NULL;
     stonith_action_t *action = stonith__action_create(agent, "metadata", NULL,
-                                                      0, 5, NULL, NULL, NULL);
+                                                      0, timeout_sec, NULL,
+                                                      NULL, NULL);
     int rc = stonith__execute(action);
-    result = stonith__action_result(action);
+    pcmk__action_result_t *result = stonith__action_result(action);
 
     if (result == NULL) {
         if (rc < 0) {
@@ -208,21 +207,19 @@ stonith__rhcs_get_metadata(const char *agent, int timeout, xmlNode **metadata)
 }
 
 /*!
- * \brief Execute RHCS-compatible agent's meta-data action
+ * \brief Retrieve metadata for RHCS-compatible fence agent
  *
- * \param[in]  agent    Agent to execute
- * \param[in]  timeout  Action timeout
- * \param[out] output   Where to store action output (or NULL to ignore)
- *
- * \todo timeout is currently ignored; shouldn't we use it?
+ * \param[in]  agent        Agent to execute
+ * \param[in]  timeout_sec  Action timeout
+ * \param[out] output       Where to store action output (or NULL to ignore)
  */
 int
-stonith__rhcs_metadata(const char *agent, int timeout, char **output)
+stonith__rhcs_metadata(const char *agent, int timeout_sec, char **output)
 {
     char *buffer = NULL;
     xmlNode *xml = NULL;
 
-    int rc = stonith__rhcs_get_metadata(agent, timeout, &xml);
+    int rc = stonith__rhcs_get_metadata(agent, timeout_sec, &xml);
 
     if (rc != pcmk_ok) {
         free_xml(xml);

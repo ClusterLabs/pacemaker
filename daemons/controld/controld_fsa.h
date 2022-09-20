@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2021 the Pacemaker project contributors
+ * Copyright 2004-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -518,7 +518,7 @@ extern gboolean ever_had_quorum;
 // These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);
-xmlNode *controld_query_executor_state(const char *node_name);
+xmlNode *controld_query_executor_state(void);
 
 const char *fsa_input2string(enum crmd_fsa_input input);
 const char *fsa_state2string(enum crmd_fsa_state state);

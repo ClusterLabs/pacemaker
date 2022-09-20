@@ -446,8 +446,7 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     } else if (pcmk__str_any_of(action->task,
                                 CRM_OP_SHUTDOWN,
-                                CRM_OP_CLEAR_FAILCOUNT,
-                                CRM_OP_LRM_REFRESH, NULL)) {
+                                CRM_OP_CLEAR_FAILCOUNT, NULL)) {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_CRM_EVENT);
 
     } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_none)) {

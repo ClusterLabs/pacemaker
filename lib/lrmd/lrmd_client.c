@@ -2343,6 +2343,122 @@ lrmd_api_delete(lrmd_t * lrmd)
     free(lrmd);
 }
 
+struct metadata_cb {
+     void (*callback)(int pid, const pcmk__action_result_t *result,
+                      void *user_data);
+     void *user_data;
+};
+
+/*!
+ * \internal
+ * \brief Process asynchronous metadata completion
+ *
+ * \param[in] action  Metadata action that completed
+ */
+static void
+metadata_complete(svc_action_t *action)
+{
+    struct metadata_cb *metadata_cb = (struct metadata_cb *) action->cb_data;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
+    pcmk__set_result(&result, action->rc, action->status,
+                     services__exit_reason(action));
+    pcmk__set_result_output(&result, action->stdout_data, action->stderr_data);
+
+    metadata_cb->callback(0, &result, metadata_cb->user_data);
+    result.action_stdout = NULL; // Prevent free, because action owns it
+    result.action_stderr = NULL; // Prevent free, because action owns it
+    pcmk__reset_result(&result);
+    free(metadata_cb);
+}
+
+/*!
+ * \internal
+ * \brief Retrieve agent metadata asynchronously
+ *
+ * \param[in] rsc        Resource agent specification
+ * \param[in] callback   Function to call with result (this will always be
+ *                       called, whether by this function directly or later via
+ *                       the main loop, and on success the metadata will be in
+ *                       its result argument's action_stdout)
+ * \param[in] user_data  User data to pass to callback
+ *
+ * \return Standard Pacemaker return code
+ * \note This function is not a lrmd_api_operations_t method because it does not
+ *       need an lrmd_t object and does not go through the executor, but
+ *       executes the agent directly.
+ */
+int
+lrmd__metadata_async(lrmd_rsc_info_t *rsc,
+                     void (*callback)(int pid,
+                                      const pcmk__action_result_t *result,
+                                      void *user_data),
+                     void *user_data)
+{
+    svc_action_t *action = NULL;
+    struct metadata_cb *metadata_cb = NULL;
+    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+
+    CRM_CHECK(callback != NULL, return EINVAL);
+
+    if ((rsc == NULL) || (rsc->standard == NULL) || (rsc->type == NULL)) {
+        pcmk__set_result(&result, PCMK_OCF_NOT_CONFIGURED,
+                         PCMK_EXEC_ERROR_FATAL,
+                         "Invalid resource specification");
+        callback(0, &result, user_data);
+        pcmk__reset_result(&result);
+        return EINVAL;
+    }
+
+    if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_STONITH) == 0) {
+        return stonith__metadata_async(rsc->type,
+                                       CRMD_METADATA_CALL_TIMEOUT / 1000,
+                                       callback, user_data);
+    }
+
+    action = services__create_resource_action(pcmk__s(rsc->id, rsc->type),
+                                              rsc->standard, rsc->provider,
+                                              rsc->type, CRMD_ACTION_METADATA,
+                                              0, CRMD_METADATA_CALL_TIMEOUT,
+                                              NULL, 0);
+    if (action == NULL) {
+        pcmk__set_result(&result, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Out of memory");
+        callback(0, &result, user_data);
+        pcmk__reset_result(&result);
+        return ENOMEM;
+    }
+    if (action->rc != PCMK_OCF_UNKNOWN) {
+        pcmk__set_result(&result, action->rc, action->status,
+                         services__exit_reason(action));
+        callback(0, &result, user_data);
+        pcmk__reset_result(&result);
+        services_action_free(action);
+        return EINVAL;
+    }
+
+    action->cb_data = calloc(1, sizeof(struct metadata_cb));
+    if (action->cb_data == NULL) {
+        services_action_free(action);
+        pcmk__set_result(&result, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Out of memory");
+        callback(0, &result, user_data);
+        pcmk__reset_result(&result);
+        return ENOMEM;
+    }
+
+    metadata_cb = (struct metadata_cb *) action->cb_data;
+    metadata_cb->callback = callback;
+    metadata_cb->user_data = user_data;
+    if (!services_action_async(action, metadata_complete)) {
+        services_action_free(action);
+        return pcmk_rc_error; // @TODO Derive from action->rc and ->status
+    }
+
+    // The services library has taken responsibility for action
+    return pcmk_rc_ok;
+}
+
 /*!
  * \internal
  * \brief Set the result of an executor event
