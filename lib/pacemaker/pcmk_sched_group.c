@@ -460,7 +460,7 @@ for_primary:
 }
 
 enum pe_action_flags
-group_action_flags(pe_action_t * action, pe_node_t * node)
+group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);

@@ -861,7 +861,8 @@ clone_child_action(pe_action_t * action)
     } while (0)
 
 enum pe_action_flags
-summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
+summary_action_flags(pe_action_t *action, GList *children,
+                     const pe_node_t *node)
 {
     GList *gIter = NULL;
     gboolean any_runnable = FALSE;
@@ -905,7 +906,7 @@ summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 }
 
 enum pe_action_flags
-clone_action_flags(pe_action_t * action, pe_node_t * node)
+clone_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     return summary_action_flags(action, action->rsc->children, node);
 }

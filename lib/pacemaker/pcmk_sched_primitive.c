@@ -1015,7 +1015,7 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
 }
 
 enum pe_action_flags
-native_action_flags(pe_action_t * action, pe_node_t * node)
+native_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     return action->flags;
 }

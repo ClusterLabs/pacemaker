@@ -540,7 +540,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 }
 
 enum pe_action_flags
-pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
+pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
     enum pe_action_flags flags = 0;

@@ -153,7 +153,20 @@ struct resource_alloc_functions_s {
 
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
-    enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
+    /*!
+     * \internal
+     * \brief Return action flags for a given resource action
+     *
+     * \param[in,out] action  Action to get flags for
+     * \param[in]     node    If not NULL, limit effects to this node
+     *
+     * \return Flags appropriate to \p action on \p node
+     * \note For primitives, this will be the same as action->flags regardless
+     *       of node. For collective resources, the flags can differ due to
+     *       multiple instances possibly being involved.
+     */
+    enum pe_action_flags (*action_flags)(pe_action_t *action,
+                                         const pe_node_t *node);
 
     /*!
      * \internal
