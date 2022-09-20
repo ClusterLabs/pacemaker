@@ -73,7 +73,7 @@ char *crm_element_value_copy(const xmlNode *data, const char *name);
  * \return Pointer to copied value (from source)
  */
 static inline const char *
-crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
+crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
 {
     const char *value = crm_element_value(obj1, element);
 

@@ -61,6 +61,9 @@ typedef pcmk__output_t * (*pcmk__output_factory_t)(char **argv);
  * In general, however, 0 should be returned on success and a positive value
  * on error.
  *
+ * \param[in,out] out   Output object to use to display message
+ * \param[in,out] args  Message-specific arguments needed
+ *
  * \note These functions must not call va_start or va_end - that is done
  *       automatically before the custom formatting function is called.
  */
@@ -468,7 +471,7 @@ struct pcmk__output_s {
      * \note This takes into account both the \p quiet value as well as the
      *       current formatter.
      *
-     * \param[in] out The output functions structure.
+     * \param[in,out] out The output functions structure.
      *
      * \return true if output should be supressed, false otherwise.
      */
@@ -478,7 +481,7 @@ struct pcmk__output_s {
      * \internal
      * \brief Output a spacer.  Not all formatters will do this.
      *
-     * \param[in] out The output functions structure.
+     * \param[in,out] out The output functions structure.
      */
     void (*spacer) (pcmk__output_t *out);
 
@@ -487,9 +490,9 @@ struct pcmk__output_s {
      * \brief Output a progress indicator.  This is likely only useful for
      *        plain text, console based formatters.
      *
-     * \param[in] out The output functions structure.
-     * \param[in] end If true, output a newline afterwards.  This should
-     *                only be used the last time this function is called.
+     * \param[in,out] out  The output functions structure
+     * \param[in]     end  If true, output a newline afterwards (this should
+     *                     only be used the last time this function is called)
      *
      */
     void (*progress) (pcmk__output_t *out, bool end);
@@ -577,7 +580,8 @@ int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
  */
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create, GOptionEntry *options);
+                      pcmk__output_factory_t create,
+                      const GOptionEntry *options);
 
 /*!
  * \internal
@@ -591,7 +595,8 @@ pcmk__register_format(GOptionGroup *group, const char *name,
  *
  */
 void
-pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *table);
+pcmk__register_formats(GOptionGroup *group,
+                       const pcmk__supported_format_t *table);
 
 /*!
  * \internal
@@ -628,7 +633,8 @@ pcmk__register_message(pcmk__output_t *out, const char *message_id,
  *                      all be registered.  This array must be NULL-terminated.
  */
 void
-pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table);
+pcmk__register_messages(pcmk__output_t *out,
+                        const pcmk__message_entry_t *table);
 
 /* Functions that are useful for implementing custom message formatters */
 
@@ -788,11 +794,11 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
  * other formatting functions will have their nodes added as children of this new
  * parent.
  *
- * \param[in,out] out  The output functions structure.
- * \param[in]     node The node to be added/
+ * \param[in,out] out     The output functions structure
+ * \param[in]     parent  XML node to add
  */
 void
-pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr node);
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent);
 
 /*!
  * \internal
@@ -870,7 +876,7 @@ G_GNUC_NULL_TERMINATED;
  *
  * \param[in,out] error A GError object potentially containing some error.
  *                      If NULL, do nothing.
- * \param[in]     out   The output functions structure.  If NULL, any errors
+ * \param[in,out] out   The output functions structure.  If NULL, any errors
  *                      will simply be printed to stderr.
  */
 void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);

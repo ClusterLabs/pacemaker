@@ -89,7 +89,9 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
 
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create, GOptionEntry *options) {
+                      pcmk__output_factory_t create,
+                      const GOptionEntry *options)
+{
     CRM_ASSERT(create != NULL && !pcmk__str_empty(name));
 
     if (formatters == NULL) {
@@ -105,14 +107,14 @@ pcmk__register_format(GOptionGroup *group, const char *name,
 }
 
 void
-pcmk__register_formats(GOptionGroup *group, pcmk__supported_format_t *formats) {
-    pcmk__supported_format_t *entry = NULL;
-
+pcmk__register_formats(GOptionGroup *group,
+                       const pcmk__supported_format_t *formats)
+{
     if (formats == NULL) {
         return;
     }
-
-    for (entry = formats; entry->name != NULL; entry++) {
+    for (const pcmk__supported_format_t *entry = formats; entry->name != NULL;
+         entry++) {
         pcmk__register_format(group, entry->name, entry->create, entry->options);
     }
 }
@@ -156,10 +158,10 @@ pcmk__register_message(pcmk__output_t *out, const char *message_id,
 }
 
 void
-pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table) {
-    pcmk__message_entry_t *entry;
-
-    for (entry = table; entry->message_id != NULL; entry++) {
+pcmk__register_messages(pcmk__output_t *out, const pcmk__message_entry_t *table)
+{
+    for (const pcmk__message_entry_t *entry = table; entry->message_id != NULL;
+         entry++) {
         if (pcmk__strcase_any_of(entry->fmt_name, "default", out->fmt_name, NULL)) {
             pcmk__register_message(out, entry->message_id, entry->fn);
         }

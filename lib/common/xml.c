@@ -2969,12 +2969,6 @@ expand_idref(xmlNode * input, xmlNode * top)
     return result;
 }
 
-void
-crm_destroy_xml(gpointer data)
-{
-    free_xml(data);
-}
-
 char *
 pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
 {
@@ -3085,6 +3079,12 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
     return pcmk__xe_match(parent, node_name,
                           ((id == NULL)? id : XML_ATTR_ID), id);
+}
+
+void
+crm_destroy_xml(gpointer data)
+{
+    free_xml(data);
 }
 
 // LCOV_EXCL_STOP

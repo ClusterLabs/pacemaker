@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2021 the Pacemaker project contributors
+ * Copyright 2008-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,8 +37,8 @@ int pcmk__read_handshake_data(pcmk__client_t *client);
  * \internal
  * \brief Perform client TLS handshake after establishing TCP socket
  *
- * \param[in] remote      Newly established remote connection
- * \param[in] timeout_ms  Abort if entire handshake is not complete within this
+ * \param[in,out] remote      Newly established remote connection
+ * \param[in]     timeout_ms  Abort if handshake is not complete within this
  *
  * \return Standard Pacemaker return code
  */

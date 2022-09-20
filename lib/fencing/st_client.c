@@ -291,7 +291,8 @@ stonith_connection_destroy(gpointer user_data)
 
 xmlNode *
 create_device_registration_xml(const char *id, enum stonith_namespace namespace,
-                               const char *agent, stonith_key_value_t *params,
+                               const char *agent,
+                               const stonith_key_value_t *params,
                                const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
@@ -325,9 +326,10 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 }
 
 static int
-stonith_api_register_device(stonith_t * st, int call_options,
-                            const char *id, const char *namespace, const char *agent,
-                            stonith_key_value_t * params)
+stonith_api_register_device(stonith_t *st, int call_options,
+                            const char *id, const char *namespace,
+                            const char *agent,
+                            const stonith_key_value_t *params)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -412,7 +414,7 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
 xmlNode *
 create_level_registration_xml(const char *node, const char *pattern,
                               const char *attr, const char *value,
-                              int level, stonith_key_value_t *device_list)
+                              int level, const stonith_key_value_t *device_list)
 {
     size_t len = 0;
     char *list = NULL;
@@ -451,10 +453,10 @@ create_level_registration_xml(const char *node, const char *pattern,
 }
 
 static int
-stonith_api_register_level_full(stonith_t * st, int options, const char *node,
-                                const char *pattern,
-                                const char *attr, const char *value,
-                                int level, stonith_key_value_t *device_list)
+stonith_api_register_level_full(stonith_t *st, int options, const char *node,
+                                const char *pattern, const char *attr,
+                                const char *value, int level,
+                                const stonith_key_value_t *device_list)
 {
     int rc = 0;
     xmlNode *data = create_level_registration_xml(node, pattern, attr, value,
@@ -469,7 +471,7 @@ stonith_api_register_level_full(stonith_t * st, int options, const char *node,
 
 static int
 stonith_api_register_level(stonith_t * st, int options, const char *node, int level,
-                           stonith_key_value_t * device_list)
+                           const stonith_key_value_t * device_list)
 {
     return stonith_api_register_level_full(st, options, node, NULL, NULL, NULL,
                                            level, device_list);
@@ -1716,7 +1718,7 @@ stonith_api_delete(stonith_t * stonith)
 static int
 stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
                      const char *namespace_s, const char *agent,
-                     stonith_key_value_t *params, int timeout_sec,
+                     const stonith_key_value_t *params, int timeout_sec,
                      char **output, char **error_output)
 {
     /* Validation should be done directly via the agent, so we can get it from

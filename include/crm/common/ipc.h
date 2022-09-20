@@ -97,11 +97,11 @@ typedef struct pcmk_ipc_api_s pcmk_ipc_api_t;
 /*!
  * \brief Callback function type for Pacemaker daemon IPC APIs
  *
- * \param[in] api         IPC API connection
- * \param[in] event_type  The type of event that occurred
- * \param[in] status      Event status
- * \param[in] event_data  Event-specific data
- * \param[in] user_data   Caller data provided when callback was registered
+ * \param[in,out] api         IPC API connection
+ * \param[in]     event_type  The type of event that occurred
+ * \param[in]     status      Event status
+ * \param[in,out] event_data  Event-specific data
+ * \param[in,out] user_data   Caller data provided when callback was registered
  *
  * \note For connection and disconnection events, event_data may be NULL (for
  *       local IPC) or the name of the connected node (for remote IPC, for

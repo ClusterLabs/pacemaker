@@ -204,7 +204,7 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  *                              PCMK__CIB_REQUEST_CREATE,
  *                              PCMK__CIB_REQUEST_MODIFY, and
  *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[in]     existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
+ * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
  * \param[in,out] result_cib    CIB copy to make changes in (used with
  *                              PCMK__CIB_REQUEST_CREATE,
  *                              PCMK__CIB_REQUEST_MODIFY,
@@ -214,9 +214,9 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
  *
  * \return Legacy Pacemaker return code
  */
-int cib_process_xpath(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
+int cib_process_xpath(const char *op, int options, const char *section,
+                      const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode ** answer);
 
 gboolean cib_config_changed(xmlNode * last, xmlNode * next, xmlNode ** diff);
 gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);

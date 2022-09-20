@@ -150,12 +150,19 @@ typedef struct stonith_callback_data_s {
 typedef struct stonith_api_operations_s
 {
     /*!
-     * \brief Destroy the stonith api structure.
+     * \brief Destroy a fencer connection
+     *
+     * \param[in,out] st  Fencer connection to destroy
      */
     int (*free) (stonith_t *st);
 
     /*!
-     * \brief Connect to the local stonith daemon.
+     * \brief Connect to the local fencer
+     *
+     * \param[in,out] st          Fencer connection to connect
+     * \param[in]     name        Client name to use
+     * \param[out]    stonith_fd  If NULL, use a main loop, otherwise
+     *                            store IPC file descriptor here
      *
      * \return Legacy Pacemaker return code
      */
@@ -164,6 +171,8 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Disconnect from the local stonith daemon.
      *
+     * \param[in,out] st  Fencer connection to disconnect
+     *
      * \return Legacy Pacemaker return code
      */
     int (*disconnect)(stonith_t *st);
@@ -171,39 +180,63 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Unregister a fence device with the local fencer
      *
+     * \param[in,out] st       Fencer connection to disconnect
+     * \param[in]     options  Group of enum stonith_call_options
+     * \param[in]     name     ID of fence device to unregister
+     *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*remove_device)(
-        stonith_t *st, int options, const char *name);
+    int (*remove_device)(stonith_t *st, int options, const char *name);
 
     /*!
      * \brief Register a fence device with the local fencer
      *
+     * \param[in,out] st         Fencer connection to use
+     * \param[in]     options    Group of enum stonith_call_options
+     * \param[in]     id         ID of fence device to register
+     * \param[in]     namespace  Type of fence agent to search for ("redhat"
+     *                           or "stonith-ng" for RHCS-style, "internal" for
+     *                           Pacemaker-internal devices, "heartbeat" for
+     *                           LHA-style, or "any" or NULL for any)
+     * \param[in]     agent      Name of fence agent for device
+     * \param[in]     params     Fence agent parameters for device
+     *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*register_device)(
-        stonith_t *st, int options, const char *id,
-        const char *provider, const char *agent, stonith_key_value_t *params);
+    int (*register_device)(stonith_t *st, int options, const char *id,
+                           const char *namespace, const char *agent,
+                           const stonith_key_value_t *params);
 
     /*!
      * \brief Unregister a fencing level for specified node with local fencer
      *
-     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
-     *         on success, otherwise a negative legacy Pacemaker return code
-     */
-    int (*remove_level)(
-        stonith_t *st, int options, const char *node, int level);
-
-    /*!
-     * \brief Register a fencing level for specified node with local fencer
+     * \param[in,out] st       Fencer connection to use
+     * \param[in]     options  Group of enum stonith_call_options
+     * \param[in]     node     Target node to unregister level for
+     * \param[in]     level    Topology level number to unregister
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*register_level)(
-        stonith_t *st, int options, const char *node, int level, stonith_key_value_t *device_list);
+    int (*remove_level)(stonith_t *st, int options, const char *node,
+                        int level);
+
+    /*!
+     * \brief Register a fencing level for specified node with local fencer
+     *
+     * \param[in,out] st           Fencer connection to use
+     * \param[in]     options      Group of enum stonith_call_options
+     * \param[in]     node         Target node to register level for
+     * \param[in]     level        Topology level number to register
+     * \param[in]     device_list  Devices to register in level
+     *
+     * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
+     *         on success, otherwise a negative legacy Pacemaker return code
+     */
+    int (*register_level)(stonith_t *st, int options, const char *node,
+                          int level, const stonith_key_value_t *device_list);
 
     /*!
      * \brief Retrieve a fence agent's metadata
@@ -212,7 +245,10 @@ typedef struct stonith_api_operations_s
      * \param[in]     call_options  Group of enum stonith_call_options
      *                              (currently ignored)
      * \param[in]     agent         Fence agent to query
-     * \param[in]     namespace     Namespace of fence agent to query (optional)
+     * \param[in]     namespace     Type of fence agent to search for ("redhat"
+     *                              or "stonith-ng" for RHCS-style, "internal"
+     *                              for Pacemaker-internal devices, "heartbeat"
+     *                              for LHA-style, or "any" or NULL for any)
      * \param[out]    output        Where to store metadata
      * \param[in]     timeout_sec   Error if not complete within this time
      *
@@ -223,144 +259,210 @@ typedef struct stonith_api_operations_s
                     const char *namespace, char **output, int timeout_sec);
 
     /*!
-     * \brief Retrieve a list of installed stonith agents
+     * \brief Retrieve a list of installed fence agents
      *
-     * \note if provider is not provided, all known agents will be returned
-     * \note list must be freed using stonith_key_value_freeall()
-     * \note call_options parameter is not used, it is reserved for future use.
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     *                              (currently ignored)
+     * \param[in]     namespace     Type of fence agents to list ("redhat"
+     *                              or "stonith-ng" for RHCS-style, "internal" for
+     *                              Pacemaker-internal devices, "heartbeat" for
+     *                              LHA-style, or "any" or NULL for all)
+     * \param[out]    devices       Where to store agent list
+     * \param[in]     timeout       Error if unable to complete within this
+     *                              (currently ignored)
      *
      * \return Number of items in list on success, or negative errno otherwise
+     * \note The caller is responsible for freeing the returned list with
+     *       stonith_key_value_freeall().
      */
-    int (*list_agents)(stonith_t *stonith, int call_options, const char *provider,
-            stonith_key_value_t **devices, int timeout);
+    int (*list_agents)(stonith_t *stonith, int call_options,
+                       const char *namespace, stonith_key_value_t **devices,
+                       int timeout);
 
     /*!
-     * \brief Retrieve string listing hosts and port assignments from a local stonith device.
+     * \brief Get the output of a fence device's list action
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     id            Fence device ID to run list for
+     * \param[out]    list_info     Where to store list output
+     * \param[in]     timeout       Error if unable to complete within this
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*list)(stonith_t *st, int options, const char *id, char **list_output, int timeout);
+    int (*list)(stonith_t *stonith, int call_options, const char *id,
+                char **list_info, int timeout);
 
     /*!
-     * \brief Check to see if a local stonith device is reachable
+     * \brief Check whether a fence device is reachable by monitor action
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     id            Fence device ID to run monitor for
+     * \param[in]     timeout       Error if unable to complete within this
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*monitor)(stonith_t *st, int options, const char *id, int timeout);
+    int (*monitor)(stonith_t *stonith, int call_options, const char *id,
+                   int timeout);
 
     /*!
-     * \brief Check to see if a local stonith device's port is reachable
+     * \brief Check whether a fence device target is reachable by status action
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     id            Fence device ID to run status for
+     * \param[in]     port          Fence target to run status for
+     * \param[in]     timeout       Error if unable to complete within this
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*status)(stonith_t *st, int options, const char *id, const char *port, int timeout);
+    int (*status)(stonith_t *stonith, int call_options, const char *id,
+                  const char *port, int timeout);
 
     /*!
-     * \brief Retrieve a list of registered stonith devices.
+     * \brief List registered fence devices
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     target        Fence target to run status for
+     * \param[out]    devices       Where to store list of fence devices
+     * \param[in]     timeout       Error if unable to complete within this
      *
      * \note If node is provided, only devices that can fence the node id
      *       will be returned.
      *
      * \return Number of items in list on success, or negative errno otherwise
      */
-    int (*query)(stonith_t *st, int options, const char *node,
-            stonith_key_value_t **devices, int timeout);
+    int (*query)(stonith_t *stonith, int call_options, const char *target,
+                 stonith_key_value_t **devices, int timeout);
 
     /*!
-     * \brief Issue a fencing action against a node.
+     * \brief Request that a target get fenced
      *
-     * \note Possible actions are, 'on', 'off', and 'reboot'.
-     *
-     * \param st, stonith connection
-     * \param options, call options
-     * \param node, The target node to fence
-     * \param action, The fencing action to take
-     * \param timeout, The default per device timeout to use with each device
-     *                 capable of fencing the target.
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     node          Fence target
+     * \param[in]     action        "on", "off", or "reboot"
+     * \param[in]     timeout       Default per-device timeout to use with
+     *                              each executed device
+     * \param[in]     tolerance     Accept result of identical fence action
+     *                              completed within this time
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*fence)(stonith_t *st, int options, const char *node, const char *action,
-                 int timeout, int tolerance);
+    int (*fence)(stonith_t *stonith, int call_options, const char *node,
+                 const char *action, int timeout, int tolerance);
 
     /*!
-     * \brief Manually confirm that a node is down.
+     * \brief Manually confirm that a node has been fenced
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     target        Fence target
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*confirm)(stonith_t *st, int options, const char *node);
+    int (*confirm)(stonith_t *stonith, int call_options, const char *target);
 
     /*!
-     * \brief Retrieve a list of fencing operations that have occurred for a specific node.
+     * \brief List fencing actions that have occurred for a target
+     *
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     node          Fence target
+     * \param[out]    history       Where to store list of fencing actions
+     * \param[in]     timeout       Error if unable to complete within this
      *
      * \return Legacy Pacemaker return code
      */
-    int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
-
-    int (*register_notification)(
-        stonith_t *st, const char *event,
-        void (*notify)(stonith_t *st, stonith_event_t *e));
+    int (*history)(stonith_t *stonith, int call_options, const char *node,
+                   stonith_history_t **history, int timeout);
 
     /*!
-     * \brief Remove a previously registered notification for \c event, or all
-     *        notifications if NULL.
+     * \brief Register a callback for fence notifications
      *
-     * \param[in] st     Fencer connection to use
-     * \param[in] event  The event to remove notifications for (may be NULL).
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     event         Event to register for
+     * \param[in]     callback      Callback to register
      *
      * \return Legacy Pacemaker return code
      */
-    int (*remove_notification)(stonith_t *st, const char *event);
+    int (*register_notification)(stonith_t *stonith, const char *event,
+                                 void (*callback)(stonith_t *st,
+                                                  stonith_event_t *e));
 
     /*!
-     * \brief Register a callback to receive the result of an asynchronous call
+     * \brief Unregister callbacks for fence notifications
      *
-     * \param[in] call_id        The call ID to register callback for
-     * \param[in] timeout        Default time to wait until callback expires
-     * \param[in] options        Bitmask of \c stonith_call_options (respects
-     *                           \c st_opt_timeout_updates and
-     *                           \c st_opt_report_only_success)
-     * \param[in] userdata       Pointer that will be given to callback
-     * \param[in] callback_name  Unique name to identify callback
-     * \param[in] callback       The callback function to register
+     * \param[in,out] stonith  Fencer connection to use
+     * \param[in]     event    Event to unregister callbacks for (NULL for all)
      *
-     * \return \c TRUE on success, \c FALSE if call_id is negative, -errno otherwise
+     * \return Legacy Pacemaker return code
      */
-    int (*register_callback)(stonith_t *st,
-        int call_id,
-        int timeout,
-        int options,
-        void *userdata,
-        const char *callback_name,
-        void (*callback)(stonith_t *st, stonith_callback_data_t *data));
+    int (*remove_notification)(stonith_t *stonith, const char *event);
 
     /*!
-     * \brief Remove a registered callback for a given call id
+     * \brief Register a callback for an asynchronous fencing result
+     *
+     * \param[in,out] stonith        Fencer connection to use
+     * \param[in]     call_id        Call ID to register callback for
+     * \param[in]     timeout        Error if result not received in this time
+     * \param[in]     options        Group of enum stonith_call_options
+     *                               (respects \c st_opt_timeout_updates and
+     *                               \c st_opt_report_only_success)
+     * \param[in,out] user_data      Pointer to pass to callback
+     * \param[in]     callback_name  Unique identifier for callback
+     * \param[in]     callback       Callback to register (may be called
+     *                               immediately if \p call_id indicates error)
+     *
+     * \return \c TRUE on success, \c FALSE if call_id indicates error,
+     *         or -EINVAL if \p stonith is not valid
+     */
+    int (*register_callback)(stonith_t *stonith, int call_id, int timeout,
+                             int options, void *user_data,
+                             const char *callback_name,
+                             void (*callback)(stonith_t *st,
+                                              stonith_callback_data_t *data));
+
+    /*!
+     * \brief Unregister callbacks for asynchronous fencing results
+     *
+     * \param[in,out] stonith        Fencer connection to use
+     * \param[in]     call_id        If \p all_callbacks is false, call ID
+     *                               to unregister callback for
+     * \param[in]     all_callbacks  If true, unregister all callbacks
      *
      * \return pcmk_ok
      */
-    int (*remove_callback)(stonith_t *st, int call_id, bool all_callbacks);
+    int (*remove_callback)(stonith_t *stonith, int call_id, bool all_callbacks);
 
     /*!
      * \brief Unregister fencing level for specified node, pattern or attribute
      *
-     * \param[in] st      Fencer connection to use
-     * \param[in] options Bitmask of stonith_call_options to pass to the fencer
-     * \param[in] node    If not NULL, target level by this node name
-     * \param[in] pattern If not NULL, target by node name using this regex
-     * \param[in] attr    If not NULL, target by this node attribute
-     * \param[in] value   If not NULL, target by this node attribute value
-     * \param[in] level   Index number of level to remove
+     * \param[in,out] st       Fencer connection to use
+     * \param[in]     options  Group of enum stonith_call_options
+     * \param[in]     node     If not NULL, unregister level targeting this node
+     * \param[in]     pattern  If not NULL, unregister level targeting nodes
+     *                         whose names match this regular expression
+     * \param[in]     attr     If this and \p value are not NULL, unregister
+     *                         level targeting nodes with this node attribute
+     *                         set to \p value
+     * \param[in]     value    If this and \p attr are not NULL, unregister
+     *                         level targeting nodes with node attribute \p attr
+     *                         set to this
+     * \param[in]     level    Topology level number to remove
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
-     *
-     * \note The caller should set only one of node, pattern or attr/value.
+     * \note The caller should set only one of \p node, \p pattern, or \p attr
+     *       and \p value.
      */
     int (*remove_level_full)(stonith_t *st, int options,
                              const char *node, const char *pattern,
@@ -369,14 +471,20 @@ typedef struct stonith_api_operations_s
     /*!
      * \brief Register fencing level for specified node, pattern or attribute
      *
-     * \param[in] st          Fencer connection to use
-     * \param[in] options     Bitmask of stonith_call_options to pass to fencer
-     * \param[in] node        If not NULL, target level by this node name
-     * \param[in] pattern     If not NULL, target by node name using this regex
-     * \param[in] attr        If not NULL, target by this node attribute
-     * \param[in] value       If not NULL, target by this node attribute value
-     * \param[in] level       Index number of level to add
-     * \param[in] device_list Devices to use in level
+     * \param[in,out] st           Fencer connection to use
+     * \param[in]     options      Group of enum stonith_call_options
+     * \param[in]     node         If not NULL, register level targeting this
+     *                             node by name
+     * \param[in]     pattern      If not NULL, register level targeting nodes
+     *                             whose names match this regular expression
+     * \param[in]     attr         If this and \p value are not NULL, register
+     *                             level targeting nodes with this node
+     *                             attribute set to \p value
+     * \param[in]     value        If this and \p attr are not NULL, register
+     *                             level targeting nodes with node attribute
+     *                             \p attr set to this
+     * \param[in]     level        Topology level number to remove
+     * \param[in]     device_list  Devices to use in level
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
@@ -385,51 +493,55 @@ typedef struct stonith_api_operations_s
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
-                               const char *attr, const char *value,
-                               int level, stonith_key_value_t *device_list);
+                               const char *attr, const char *value, int level,
+                               const stonith_key_value_t *device_list);
 
     /*!
      * \brief Validate an arbitrary stonith device configuration
      *
-     * \param[in]  st            Stonithd connection to use
-     * \param[in]  call_options  Bitmask of stonith_call_options to use with fencer
-     * \param[in]  rsc_id        ID used to replace CIB secrets in params
-     * \param[in]  namespace_s   Namespace of fence agent to validate (optional)
-     * \param[in]  agent         Fence agent to validate
-     * \param[in]  params        Configuration parameters to pass to fence agent
-     * \param[in]  timeout       Fail if no response within this many seconds
-     * \param[out] output        If non-NULL, where to store any agent output
-     * \param[out] error_output  If non-NULL, where to store agent error output
+     * \param[in,out] st            Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     rsc_id        ID used to replace CIB secrets in \p params
+     * \param[in]     namespace_s   Type of fence agent to validate ("redhat"
+     *                              or "stonith-ng" for RHCS-style, "internal"
+     *                              for Pacemaker-internal devices, "heartbeat"
+     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     agent         Fence agent to validate
+     * \param[in]     params        Configuration parameters to pass to agent
+     * \param[in]     timeout       Fail if no response within this many seconds
+     * \param[out]    output        If non-NULL, where to store any agent output
+     * \param[out]    error_output  If non-NULL, where to store agent error output
      *
      * \return pcmk_ok if validation succeeds, -errno otherwise
-     *
      * \note If pcmk_ok is returned, the caller is responsible for freeing
-     *       the output (if requested).
+     *       the output (if requested) with free().
      */
     int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
                     const char *namespace_s, const char *agent,
-                    stonith_key_value_t *params, int timeout, char **output,
-                    char **error_output);
+                    const stonith_key_value_t *params, int timeout,
+                    char **output, char **error_output);
 
     /*!
-     * \brief Issue a fencing action against a node with requested fencing delay.
+     * \brief Request delayed fencing of a target
      *
-     * \note Possible actions are, 'on', 'off', and 'reboot'.
-     *
-     * \param st, stonith connection
-     * \param options, call options
-     * \param node, The target node to fence
-     * \param action, The fencing action to take
-     * \param timeout, The default per device timeout to use with each device
-     *                 capable of fencing the target.
-     * \param delay, Apply a fencing delay. Value -1 means disable also any
-     *               static/random fencing delays from pcmk_delay_base/max
+     * \param[in,out] stonith       Fencer connection to use
+     * \param[in]     call_options  Group of enum stonith_call_options
+     * \param[in]     node          Fence target
+     * \param[in]     action        "on", "off", or "reboot"
+     * \param[in]     timeout       Default per-device timeout to use with
+     *                              each executed device
+     * \param[in]     tolerance     Accept result of identical fence action
+     *                              completed within this time
+     * \param[in]     delay         Execute fencing after this delay (-1
+     *                              disables any delay from pcmk_delay_base
+     *                              and pcmk_delay_max)
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
      */
-    int (*fence_with_delay)(stonith_t *st, int options, const char *node, const char *action,
-                            int timeout, int tolerance, int delay);
+    int (*fence_with_delay)(stonith_t *stonith, int call_options,
+                            const char *node, const char *action, int timeout,
+                            int tolerance, int delay);
 
 } stonith_api_operations_t;
 
@@ -571,9 +683,9 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 bool stonith_agent_exists(const char *agent, int timeout);
 
 /*!
- * \brief Turn stonith action into a more readable string.
+ * \brief Turn fence action into a more readable string
  *
- * \param action Stonith action
+ * \param[in] action  Fence action
  */
 const char *stonith_action_str(const char *action);
 

@@ -39,6 +39,9 @@ char *xml_get_path(const xmlNode *xml);
 //!  \deprecated Use xml_apply_patchset() instead
 gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
+//! \deprecated Do not use (will be removed in a future release)
+void crm_destroy_xml(gpointer data);
+
 //!  \deprecated Use crm_xml_add() with "true" or "false" instead
 static inline const char *
 crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)

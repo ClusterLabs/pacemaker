@@ -301,11 +301,6 @@ char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);
 void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
-/*!
- * \brief xmlNode destructor which can be used in glib collections
- */
-void crm_destroy_xml(gpointer data);
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/xml_compat.h>
 #endif

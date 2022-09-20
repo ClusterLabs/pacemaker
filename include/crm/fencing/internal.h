@@ -81,12 +81,12 @@ int stonith__metadata_async(const char *agent, int timeout_sec,
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,
-                                       stonith_key_value_t *device_list);
+                                       const stonith_key_value_t *device_list);
 
 xmlNode *create_device_registration_xml(const char *id,
                                         enum stonith_namespace namespace,
                                         const char *agent,
-                                        stonith_key_value_t *params,
+                                        const stonith_key_value_t *params,
                                         const char *rsc_provides);
 
 void stonith__register_messages(pcmk__output_t *out);
