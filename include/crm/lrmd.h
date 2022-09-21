@@ -530,9 +530,6 @@ typedef struct lrmd_api_operations_s {
      *
      * \return Number of items in list on success, negative legacy Pacemaker
      *         return code otherwise
-     *
-     * \note When agent is provided, only provider will be returned.
-     * \note When no agent is supplied, all providers will be returned.
      * \note The caller is responsible for freeing *providers with
      *       lrmd_list_freeall().
      */
@@ -547,7 +544,7 @@ typedef struct lrmd_api_operations_s {
      *
      * \return Number of items in list on success, negative legacy Pacemaker
      *         return code otherwise
-     * \note The caller is responsible for freeing *providers with
+     * \note The caller is responsible for freeing *standards with
      *       lrmd_list_freeall().
      */
     int (*list_standards) (lrmd_t *lrmd, lrmd_list_t **standards);
@@ -577,13 +574,13 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Retrieve resource agent metadata synchronously with parameters
      *
-     * \param[in]  lrmd      Executor connection (unused)
-     * \param[in]  standard  Resource agent class
-     * \param[in]  provider  Resource agent provider
-     * \param[in]  agent     Resource agent type
-     * \param[out] output    Where to store metadata (must not be NULL)
-     * \param[in]  options   Group of enum lrmd_call_options flags (unused)
-     * \param[in]  params    Parameters to pass to agent (will be freed)
+     * \param[in]     lrmd      Executor connection (unused)
+     * \param[in]     standard  Resource agent class
+     * \param[in]     provider  Resource agent provider
+     * \param[in]     agent     Resource agent type
+     * \param[out]    output    Where to store metadata (must not be NULL)
+     * \param[in]     options   Group of enum lrmd_call_options flags (unused)
+     * \param[in,out] params    Parameters to pass to agent (will be freed)
      *
      * \return Legacy Pacemaker return code
      *
