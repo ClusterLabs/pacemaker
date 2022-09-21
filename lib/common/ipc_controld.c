@@ -583,7 +583,7 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
  * \return Number of replies expected
  */
 unsigned int
-pcmk_controld_api_replies_expected(pcmk_ipc_api_t *api)
+pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api)
 {
     struct controld_api_private_s *private = api->api_data;
 
