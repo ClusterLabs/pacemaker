@@ -196,7 +196,7 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
                      pe__node_name(chosen), rsc->id, g_list_length(nodes));
     }
 
-    result = pcmk__assign_primitive(rsc, chosen, false);
+    result = pcmk__finalize_assignment(rsc, chosen, false);
     g_list_free(nodes);
     return result;
 }
@@ -395,11 +395,11 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
         }
         pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        pcmk__assign_primitive(rsc, assign_to, true);
+        pcmk__finalize_assignment(rsc, assign_to, true);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
-        pcmk__assign_primitive(rsc, NULL, true);
+        pcmk__finalize_assignment(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && assign_best_node(rsc, prefer)) {

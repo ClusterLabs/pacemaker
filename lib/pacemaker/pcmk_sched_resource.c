@@ -332,7 +332,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  *       actions created for the resource.
  */
 bool
-pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
+pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
 
@@ -438,7 +438,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
         if (rsc->allocated_to != NULL) {
             changed = true;
         }
-        pcmk__assign_primitive(rsc, node, force);
+        pcmk__finalize_assignment(rsc, node, force);
 
     } else {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
