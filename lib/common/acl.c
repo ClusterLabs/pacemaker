@@ -610,7 +610,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
  * \return true if XML node exists and is ACL-denied, false otherwise
  */
 bool
-xml_acl_denied(xmlNode *xml)
+xml_acl_denied(const xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
