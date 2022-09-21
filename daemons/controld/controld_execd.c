@@ -504,11 +504,11 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  * \internal
  * \brief Build XML and string of parameters meeting some criteria, for digest
  *
- * \param[in]  op              Executor event with parameter table to use
- * \param[in]  metadata        Parsed meta-data for executed resource agent
- * \param[in]  param_type      Flag used for selection criteria
- * \param[out] result          Will be set to newly created XML with selected
- *                             parameters as attributes
+ * \param[in]  op          Executor event with parameter table to use
+ * \param[in]  metadata    Parsed meta-data for executed resource agent
+ * \param[in]  param_type  Flag used for selection criteria
+ * \param[out] result      Will be set to newly created XML with selected
+ *                         parameters as attributes
  *
  * \return Newly allocated space-separated string of parameter names
  * \note Selection criteria varies by param_type: for the restart digest, we
@@ -517,15 +517,14 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  *       secure digest, we want parameters that *are* marked private for the
  *       string, but parameters that are *not* marked private for the XML.
  * \note It is the caller's responsibility to free the string return value with
- *       free() and the XML result with free_xml().
+ *       \p g_string_free() and the XML result with \p free_xml().
  */
-static char *
+static GString *
 build_parameter_list(const lrmd_event_data_t *op,
                      const struct ra_metadata_s *metadata,
                      enum ra_param_flags_e param_type, xmlNode **result)
 {
-    char *list = NULL;
-    size_t len = 0;
+    GString *list = NULL;
 
     *result = create_xml_node(NULL, XML_TAG_PARAMS);
 
@@ -566,9 +565,9 @@ build_parameter_list(const lrmd_event_data_t *op,
 
             if (list == NULL) {
                 // We will later search for " WORD ", so start list with a space
-                pcmk__add_word(&list, &len, " ");
+                pcmk__add_word(&list, 256, " ");
             }
-            pcmk__add_word(&list, &len, param->rap_name);
+            pcmk__add_word(&list, 0, param->rap_name);
 
         } else {
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
@@ -583,14 +582,14 @@ build_parameter_list(const lrmd_event_data_t *op,
             }
 
         } else {
-                crm_trace("Removing attr %s from the xml result", param->rap_name);
-                xml_remove_prop(*result, param->rap_name);
+            crm_trace("Removing attr %s from the xml result", param->rap_name);
+            xml_remove_prop(*result, param->rap_name);
         }
     }
 
     if (list != NULL) {
         // We will later search for " WORD ", so end list with a space
-        pcmk__add_word(&list, &len, " ");
+        pcmk__add_word(&list, 0, " ");
     }
     return list;
 }
@@ -599,7 +598,7 @@ static void
 append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
                     xmlNode *update, const char *version)
 {
-    char *list = NULL;
+    GString *list = NULL;
     char *digest = NULL;
     xmlNode *restart = NULL;
 
@@ -632,22 +631,28 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     digest = calculate_operation_digest(restart, version);
     /* Add "op-force-restart" and "op-restart-digest" to indicate the resource supports reload,
      * no matter if it actually supports any parameters with unique="1"). */
-    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list? list: "");
+    crm_xml_add(update, XML_LRM_ATTR_OP_RESTART,
+                (list == NULL)? "" : (const char *) list->str);
     crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
-    crm_trace("%s: %s, %s", op->rsc_id, digest, list);
-    crm_log_xml_trace(restart, "restart digest source");
+    if ((list != NULL) && (list->len > 0)) {
+        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+    } else {
+        crm_trace("%s: %s", op->rsc_id, digest);
+    }
 
+    if (list != NULL) {
+        g_string_free(list, TRUE);
+    }
     free_xml(restart);
     free(digest);
-    free(list);
 }
 
 static void
 append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
                    xmlNode *update, const char *version)
 {
-    char *list = NULL;
+    GString *list = NULL;
     char *digest = NULL;
     xmlNode *secure = NULL;
 
@@ -662,18 +667,17 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
-        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, list);
+        crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, (const char *) list->str);
         crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);
 
-        crm_trace("%s: %s, %s", op->rsc_id, digest, list);
-        crm_log_xml_trace(secure, "secure digest source");
+        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        g_string_free(list, TRUE);
     } else {
         crm_trace("%s: no secure parameters", op->rsc_id);
     }
 
     free_xml(secure);
     free(digest);
-    free(list);
 }
 
 static gboolean

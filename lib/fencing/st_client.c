@@ -416,8 +416,7 @@ create_level_registration_xml(const char *node, const char *pattern,
                               const char *attr, const char *value,
                               int level, const stonith_key_value_t *device_list)
 {
-    size_t len = 0;
-    char *list = NULL;
+    GString *list = NULL;
     xmlNode *data;
 
     CRM_CHECK(node || pattern || (attr && value), return NULL);
@@ -440,15 +439,14 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
-    // cppcheck seems not to understand the abort logic behind pcmk__realloc
-    // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
-        pcmk__add_separated_word(&list, &len, device_list->value, ",");
+        pcmk__add_separated_word(&list, 1024, device_list->value, ",");
     }
 
-    crm_xml_add(data, XML_ATTR_STONITH_DEVICES, list);
-
-    free(list);
+    if (list != NULL) {
+        crm_xml_add(data, XML_ATTR_STONITH_DEVICES, (const char *) list->str);
+        g_string_free(list, TRUE);
+    }
     return data;
 }
 
