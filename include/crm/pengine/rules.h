@@ -55,14 +55,6 @@ void pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                        const char *always_first, gboolean overwrite,
                        crm_time_t *now, crm_time_t *next_change);
 
-#if ENABLE_VERSIONED_ATTRS
-void pe_eval_versioned_attributes(xmlNode *top, const xmlNode *xml_obj,
-                                  const char *set_name, pe_rule_eval_data_t *rule_data,
-                                  xmlNode *hash, crm_time_t *next_change);
-
-GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
-#endif
-
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
 gboolean pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data,

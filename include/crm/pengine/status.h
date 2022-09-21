@@ -43,9 +43,6 @@ pe_node_t *pe_find_node_any(GList *node_list, const char *id, const char *uname)
 GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
 int pe_bundle_replicas(const pe_resource_t *rsc);
-#if ENABLE_VERSIONED_ATTRS
-pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
-#endif
 
 /*!
  * \brief Check whether a resource is any clone type

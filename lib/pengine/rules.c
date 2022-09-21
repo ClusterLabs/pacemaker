@@ -130,11 +130,6 @@ find_expression_type(xmlNode * expr)
 
     } else if (pcmk__str_eq(attr, CRM_ATTR_ROLE, pcmk__str_none)) {
         return role_expr;
-
-#if ENABLE_VERSIONED_ATTRS
-    } else if (pcmk__str_eq(attr, CRM_ATTR_RA_VERSION, pcmk__str_none)) {
-        return version_expr;
-#endif
     }
 
     return attr_expr;
@@ -407,66 +402,6 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
-#if ENABLE_VERSIONED_ATTRS
-static xmlNode*
-get_versioned_rule(xmlNode * attr_set)
-{
-    xmlNode * rule = NULL;
-    xmlNode * expr = NULL;
-
-    for (rule = pcmk__xe_first_child(attr_set); rule != NULL;
-         rule = pcmk__xe_next(rule)) {
-
-        if (pcmk__str_eq((const char *)rule->name, XML_TAG_RULE,
-                         pcmk__str_none)) {
-            for (expr = pcmk__xe_first_child(rule); expr != NULL;
-                 expr = pcmk__xe_next(expr)) {
-
-                if (find_expression_type(expr) == version_expr) {
-                    return rule;
-                }
-            }
-        }
-    }
-
-    return NULL;
-}
-
-static void
-add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
-{
-    xmlNode *attr_set_copy = NULL;
-    xmlNode *rule = NULL;
-    xmlNode *expr = NULL;
-
-    if (!attr_set || !versioned_attrs) {
-        return;
-    }
-
-    attr_set_copy = copy_xml(attr_set);
-
-    rule = get_versioned_rule(attr_set_copy);
-    if (!rule) {
-        free_xml(attr_set_copy);
-        return;
-    }
-
-    expr = pcmk__xe_first_child(rule);
-    while (expr != NULL) {
-        if (find_expression_type(expr) != version_expr) {
-            xmlNode *node = expr;
-
-            expr = pcmk__xe_next(expr);
-            free_xml(node);
-        } else {
-            expr = pcmk__xe_next(expr);
-        }
-    }
-
-    add_node_nocopy(versioned_attrs, NULL, attr_set_copy);
-}
-#endif
-
 typedef struct unpack_data_s {
     gboolean overwrite;
     void *hash;
@@ -486,34 +421,11 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    if (get_versioned_rule(pair->attr_set) && !(unpack_data->rule_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->rule_data->node_hash,
-                                     CRM_ATTR_RA_VERSION, NULL, NULL))) {
-        // we haven't actually tested versioned expressions yet
-        return;
-    }
-#endif
-
     crm_trace("Adding attributes from %s (score %d) %s overwrite",
               pair->name, pair->score,
               (unpack_data->overwrite? "with" : "without"));
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
-
-#if ENABLE_VERSIONED_ATTRS
-static void
-unpack_versioned_attr_set(gpointer data, gpointer user_data)
-{
-    sorted_set_t *pair = data;
-    unpack_data_t *unpack_data = user_data;
-
-    if (pe_eval_rules(pair->attr_set, unpack_data->rule_data,
-                      unpack_data->next_change)) {
-        add_versioned_attributes(pair->attr_set, unpack_data->hash);
-    }
-}
-#endif
 
 /*!
  * \internal
@@ -641,18 +553,6 @@ pe_unpack_nvpairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                     always_first, overwrite, next_change);
 }
 
-#if ENABLE_VERSIONED_ATTRS
-void
-pe_eval_versioned_attributes(xmlNode *top, const xmlNode *xml_obj,
-                             const char *set_name,
-                             pe_rule_eval_data_t *rule_data, xmlNode *hash,
-                             crm_time_t *next_change)
-{
-    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE, rule_data,
-                         next_change, unpack_versioned_attr_set);
-}
-#endif
-
 char *
 pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 {
@@ -709,31 +609,6 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 
     return result;
 }
-
-#if ENABLE_VERSIONED_ATTRS
-GHashTable*
-pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
-{
-    GHashTable *hash = pcmk__strkey_table(free, free);
-
-    if (versioned_params && ra_version) {
-        GHashTable *node_hash = pcmk__strkey_table(free, free);
-        xmlNode *attr_set = pcmk__xe_first_child(versioned_params);
-
-        if (attr_set) {
-            g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
-                                strdup(ra_version));
-            pe_unpack_nvpairs(NULL, versioned_params,
-                              crm_element_name(attr_set), node_hash, hash, NULL,
-                              FALSE, NULL, NULL);
-        }
-
-        g_hash_table_destroy(node_hash);
-    }
-
-    return hash;
-}
-#endif
 
 gboolean
 pe_eval_rules(xmlNode *ruleset, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
@@ -845,19 +720,6 @@ pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_
         case op_expr:
             accept = pe__eval_op_expr(expr, rule_data);
             break;
-
-#if ENABLE_VERSIONED_ATTRS
-        case version_expr:
-            if (rule_data->node_hash &&
-                g_hash_table_lookup_extended(rule_data->node_hash,
-                                             CRM_ATTR_RA_VERSION, NULL, NULL)) {
-                accept = pe__eval_attr_expr(expr, rule_data);
-            } else {
-                // we are going to test it when we have ra-version
-                accept = TRUE;
-            }
-            break;
-#endif
 
         default:
             CRM_CHECK(FALSE /* bad type */ , return FALSE);

@@ -341,42 +341,12 @@ add_action_attributes(pe_action_t *action, xmlNode *action_xml)
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
 
-#if ENABLE_VERSIONED_ATTRS
-        {
-            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-
-            pe_get_versioned_attributes(versioned_parameters, action->rsc,
-                                        action->node, action->rsc->cluster);
-            if (xml_has_children(versioned_parameters)) {
-                add_node_copy(action_xml, versioned_parameters);
-            }
-            free_xml(versioned_parameters);
-        }
-#endif
-
     } else if ((action->rsc != NULL) && (action->rsc->variant <= pe_native)) {
         GHashTable *params = pe_rsc_params(action->rsc, NULL,
                                            action->rsc->cluster);
 
         g_hash_table_foreach(params, hash2smartfield, args_xml);
-
-#if ENABLE_VERSIONED_ATTRS
-        if (xml_has_children(action->rsc->versioned_parameters)) {
-            add_node_copy(action_xml, action->rsc->versioned_parameters);
-        }
-#endif
     }
-
-#if ENABLE_VERSIONED_ATTRS
-    if (rsc_details != NULL) {
-        if (xml_has_children(rsc_details->versioned_parameters)) {
-            add_node_copy(action_xml, rsc_details->versioned_parameters);
-        }
-        if (xml_has_children(rsc_details->versioned_meta)) {
-            add_node_copy(action_xml, rsc_details->versioned_meta);
-        }
-    }
-#endif
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
@@ -420,9 +390,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
     bool needs_node_info = true;
     bool needs_maintenance_info = false;
     xmlNode *action_xml = NULL;
-#if ENABLE_VERSIONED_ATTRS
-    pe_rsc_action_details_t *rsc_details = NULL;
-#endif
 
     if ((action == NULL) || (data_set == NULL)) {
         return;
@@ -457,9 +424,6 @@ create_graph_action(xmlNode *parent, pe_action_t *action, bool skip_details,
 
     } else {
         action_xml = create_xml_node(parent, XML_GRAPH_TAG_RSC_OP);
-#if ENABLE_VERSIONED_ATTRS
-        rsc_details = pe_rsc_action_details(action);
-#endif
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);

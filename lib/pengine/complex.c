@@ -219,36 +219,6 @@ get_rsc_attributes(GHashTable *meta_hash, const pe_resource_t *rsc,
     }
 }
 
-#if ENABLE_VERSIONED_ATTRS
-void
-pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
-                            pe_node_t * node, pe_working_set_t * data_set)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = (node == NULL)? NULL : node->details->attrs,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = data_set->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    pe_eval_versioned_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS,
-                                 &rule_data, meta_hash, NULL);
-
-    /* set anything else based on the parent */
-    if (rsc->parent != NULL) {
-        pe_get_versioned_attributes(meta_hash, rsc->parent, node, data_set);
-
-    } else {
-        /* and finally check the defaults */
-        pe_eval_versioned_attributes(data_set->input, data_set->rsc_defaults,
-                                     XML_TAG_ATTR_SETS, &rule_data, meta_hash,
-                                     NULL);
-    }
-}
-#endif
-
 static char *
 template_op_key(xmlNode * op)
 {
@@ -647,10 +617,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-#endif
-
     (*rsc)->meta = pcmk__strkey_table(free, free);
     (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
     (*rsc)->known_on = pcmk__strkey_table(NULL, free);
@@ -669,9 +635,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
     (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
-#if ENABLE_VERSIONED_ATTRS
-    pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
-#endif
 
     (*rsc)->flags = 0;
     pe__set_resource_flags(*rsc, pe_rsc_runnable|pe_rsc_provisional);
@@ -714,9 +677,6 @@ pe__unpack_resource(xmlNode *xml_obj, pe_resource_t **rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-#if ENABLE_VERSIONED_ATTRS
-    has_versioned_params = xml_has_children((*rsc)->versioned_parameters);
-#endif
     if (crm_is_true(value) && has_versioned_params) {
         pe_rsc_trace((*rsc), "Migration is disabled for resources with versioned parameters");
     } else if (crm_is_true(value)) {
@@ -961,11 +921,6 @@ common_free(pe_resource_t * rsc)
     if (rsc->parameter_cache != NULL) {
         g_hash_table_destroy(rsc->parameter_cache);
     }
-#if ENABLE_VERSIONED_ATTRS
-    if (rsc->versioned_parameters != NULL) {
-        free_xml(rsc->versioned_parameters);
-    }
-#endif
     if (rsc->meta != NULL) {
         g_hash_table_destroy(rsc->meta);
     }

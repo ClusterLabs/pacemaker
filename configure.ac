@@ -76,9 +76,6 @@ dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
 dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
 
-dnl Versioned attributes implementation is not yet production-ready
-AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, [Enable versioned attributes])
-
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 

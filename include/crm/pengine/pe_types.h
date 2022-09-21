@@ -397,18 +397,7 @@ struct pe_resource_s {
      * for a given node.
      */
     GHashTable *parameter_cache; // Key = node name, value = parameters table
-#if ENABLE_VERSIONED_ATTRS
-    xmlNode *versioned_parameters;
-#endif
 };
-
-#if ENABLE_VERSIONED_ATTRS
-// Used as action->action_details if action->rsc is not NULL
-typedef struct pe_rsc_action_details_s {
-    xmlNode *versioned_parameters;
-    xmlNode *versioned_meta;
-} pe_rsc_action_details_t;
-#endif
 
 struct pe_action_s {
     int id;
