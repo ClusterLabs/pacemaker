@@ -104,9 +104,10 @@ typedef struct svc_action_private_s svc_action_private_t;
  *       resource agents, services_alert_create() for alert agents, or
  *       services_action_create_generic() for generic executables). Similarly,
  *       do not use sizeof() on this struct.
- *
- * \internal Internally, services__create_resource_action() is preferable to
- *           resources_action_create().
+ */
+/*
+ * NOTE: Internally, services__create_resource_action() is preferable to
+ * resources_action_create().
  */
 typedef struct svc_action_s {
     /*! Operation key (<resource>_<action>_<interval>) for resource actions,
@@ -233,18 +234,18 @@ gboolean resources_agent_exists(const char *standard, const char *provider,
 /*!
  * \brief Create a new resource action
  *
- * \param[in] name        Name of resource that action is for
- * \param[in] standard    Resource agent standard
- * \param[in] provider    Resource agent provider
- * \param[in] agent       Resource agent name
- * \param[in] action      Name of action to create
- * \param[in] interval_ms How often to repeat this action (if 0, execute once)
- * \param[in] timeout     Error if not complete within this many milliseconds
- * \param[in] params      Action parameters
+ * \param[in]     name        Name of resource that action is for
+ * \param[in]     standard    Resource agent standard
+ * \param[in]     provider    Resource agent provider
+ * \param[in]     agent       Resource agent name
+ * \param[in]     action      Name of action to create
+ * \param[in]     interval_ms How often to repeat action (if 0, execute once)
+ * \param[in]     timeout     Error if not complete within this time (ms)
+ * \param[in,out] params      Action parameters
+ * \param[in]     flags       Group of enum svc_action_flags
  *
  * \return Newly allocated action
- *
- * \note The returned result assumes ownership of \p params.
+ * \note This function assumes ownership of (and may free) \p params.
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
@@ -290,13 +291,14 @@ gboolean services_action_sync(svc_action_t *op);
 /*!
  * \brief Run an action asynchronously, with callback after process is forked
  *
- * \param[in] op                    Action to run
- * \param[in] action_callback       Function to call when the action completes
- *                                  (if NULL, any previously set callback will
- *                                  continue to be used)
- * \param[in] action_fork_callback  Function to call after action process forks
- *                                  (if NULL, any previously set callback will
- *                                  continue to be used)
+ * \param[in,out] op                    Action to run
+ * \param[in]     action_callback       Function to call when action completes
+ *                                      (if NULL, any previously set callback will
+ *                                      continue to be used)
+ * \param[in]     action_fork_callback  Function to call after child process is
+ *                                      forked for action (if NULL, any
+ *                                      previously set callback will continue to
+ *                                      be used)
  *
  * \retval TRUE if the caller should not free or otherwise use \p op again,
  *         because one of these conditions is true:

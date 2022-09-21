@@ -17,20 +17,20 @@ extern "C" {
 /*!
  * \brief Create a new resource action
  *
- * \param[in] name        Name of resource
- * \param[in] standard    Resource agent standard
- * \param[in] provider    Resource agent provider
- * \param[in] agent       Resource agent name
- * \param[in] action      Name of action
- * \param[in] interval_ms How often to repeat this action (if 0, execute once)
- * \param[in] timeout     Error if not complete within this many milliseconds
- * \param[in] params      Action parameters
- * \param[in] flags       Group of enum svc_action_flags
+ * \param[in]     name        Name of resource
+ * \param[in]     standard    Resource agent standard
+ * \param[in]     provider    Resource agent provider
+ * \param[in]     agent       Resource agent name
+ * \param[in]     action      Name of action
+ * \param[in]     interval_ms How often to repeat action (if 0, execute once)
+ * \param[in]     timeout     Error if not complete within this time (ms)
+ * \param[in,out] params      Action parameters
+ * \param[in]     flags       Group of enum svc_action_flags
  *
  * \return NULL if not enough memory, otherwise newly allocated action instance
  *         (if its rc member is not PCMK_OCF_UNKNOWN, the action is invalid)
  *
- * \note The returned action assumes ownership of \p params.
+ * \note This function assumes ownership of (and may free) \p params.
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
