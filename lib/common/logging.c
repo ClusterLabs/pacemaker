@@ -471,7 +471,7 @@ crm_disable_blackbox(int nsig)
  * @TODO actually make this async-safe
  */
 void
-crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
+crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
 {
     static volatile int counter = 1;
     static volatile time_t last = 0;
