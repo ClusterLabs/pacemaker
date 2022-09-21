@@ -1200,6 +1200,35 @@ pcmk__str_update(char **str, const char *value)
     }
 }
 
+/*!
+ * \internal
+ * \brief Append a list of strings to a destination \p GString
+ *
+ * \param[in,out] buffer  Where to append the strings (must not be \p NULL)
+ * \param[in]     ...     A <tt>NULL</tt>-terminated list of strings
+ *
+ * \note This tends to be more efficient than a single call to
+ *       \p g_string_append_printf().
+ */
+void
+pcmk__g_strcat(GString *buffer, ...)
+{
+    va_list ap;
+
+    CRM_ASSERT(buffer != NULL);
+    va_start(ap, buffer);
+
+    while (true) {
+        const char *ele = va_arg(ap, const char *);
+
+        if (ele == NULL) {
+            break;
+        }
+        g_string_append(buffer, ele);
+    }
+    va_end(ap);
+}
+
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 

@@ -142,6 +142,7 @@ bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 int pcmk__numeric_strcasecmp(const char *s1, const char *s2);
 void pcmk__str_update(char **str, const char *value);
+void pcmk__g_strcat(GString *buffer, ...) G_GNUC_NULL_TERMINATED;
 
 static inline bool
 pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
