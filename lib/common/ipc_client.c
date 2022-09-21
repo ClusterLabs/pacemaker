@@ -240,7 +240,7 @@ pcmk_free_ipc_api(pcmk_ipc_api_t *api)
  *         "Pacemaker" if for_log is true and NULL if for_log is false
  */
 const char *
-pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
+pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log)
 {
     if (api == NULL) {
         return for_log? "Pacemaker" : NULL;

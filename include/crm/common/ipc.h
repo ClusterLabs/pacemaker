@@ -128,7 +128,7 @@ void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
 void pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
                                 void *user_data);
 
-const char *pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log);
+const char *pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log);
 
 bool pcmk_ipc_is_connected(pcmk_ipc_api_t *api);
 
