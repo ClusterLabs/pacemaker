@@ -23,7 +23,7 @@ extern "C" {
  * \ingroup core
  */
 
-bool xml_acl_enabled(xmlNode *xml);
+bool xml_acl_enabled(const xmlNode *xml);
 void xml_acl_disable(xmlNode *xml);
 bool xml_acl_denied(const xmlNode *xml);
 bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml,

@@ -641,7 +641,7 @@ xml_acl_disable(xmlNode *xml)
  * \return true if XML node exists and is ACL-enabled, false otherwise
  */
 bool
-xml_acl_enabled(xmlNode *xml)
+xml_acl_enabled(const xmlNode *xml)
 {
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
