@@ -158,7 +158,7 @@ pcmk_sort_nvpairs(GSList *list)
  *       \c pcmk_free_nvpairs().
  */
 GSList *
-pcmk_xml_attrs2nvpairs(xmlNode *xml)
+pcmk_xml_attrs2nvpairs(const xmlNode *xml)
 {
     GSList *result = NULL;
 
