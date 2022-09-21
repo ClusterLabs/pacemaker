@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -179,20 +179,28 @@ void lrmd_api_delete(lrmd_t *lrmd);
 
 lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t * kvp, const char *key, const char *value);
 
-/* *INDENT-OFF* */
-/* Reserved for future use */
 enum lrmd_call_options {
-    lrmd_opt_none = 0x00000000,
-    /* lrmd_opt_sync_call = 0x00000001, //Not implemented, patches welcome. */
-    /*! Only notify the client originating a exec() the results */
-    lrmd_opt_notify_orig_only = 0x00000002,
-    /*! Drop recurring operations initiated by a client when client disconnects.
-     * This call_option is only valid when registering a resource. When used
-     * remotely with the pacemaker_remote daemon, this option means that recurring
-     * operations will be dropped once all the remote connections disconnect. */
-    lrmd_opt_drop_recurring = 0x00000003,
-    /*! Send notifications for recurring operations only when the result changes */
-    lrmd_opt_notify_changes_only = 0x00000004,
+    lrmd_opt_none                   = 0,
+
+    //! Notify only the client that made the request (rather than all clients)
+    lrmd_opt_notify_orig_only       = (1 << 1),
+
+    /*!
+     * Drop recurring operations initiated by a client when the client
+     * disconnects. This option is only valid when registering a resource. When
+     * used with a connection to a remote executor, recurring operations will be
+     * dropped once all remote connections disconnect.
+     *
+     * @COMPAT This is broken, because these values should be unique bits, and
+     * this value overlaps lrmd_opt_notify_orig_only (0x02). The impact is low
+     * since this value is used only with registration requests and the other
+     * one is used only with execution requests. Regardless, when we can break
+     * API compatibility, this should be changed to (1 << 0) or (1 << 3).
+     */
+    lrmd_opt_drop_recurring         = 0x00000003,
+
+    //! Send notifications for recurring operations only when the result changes
+    lrmd_opt_notify_changes_only    = (1 << 2),
 };
 
 enum lrmd_callback_event {
@@ -204,8 +212,6 @@ enum lrmd_callback_event {
     lrmd_event_poke,
     lrmd_event_new_client,
 };
-
-/* *INDENT-ON* */
 
 typedef struct lrmd_event_data_s {
     /*! Type of event, register, unregister, call_completed... */
