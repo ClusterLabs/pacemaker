@@ -589,7 +589,9 @@ pcmk__cluster_option(GHashTable *options,
  * \param[in,out] s       Meta-data string to add to
  * \param[in]     tag     Name of element to add ("longdesc" or "shortdesc")
  * \param[in]     desc    Textual description to add
- * \param[in]     values  If not NULL, the allowed values for the parameter
+ * \param[in]     values  If not \p NULL, the allowed values for the parameter
+ * \param[in]     spaces  If not \p NULL, spaces to insert at the beginning of
+ *                        each line
  */
 static void
 add_desc(GString *s, const char *tag, const char *desc, const char *values,
@@ -597,8 +599,12 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
 {
     char *escaped_en = crm_xml_escape(desc);
 
+    if (spaces != NULL) {
+        g_string_append(s, spaces);
+    }
     g_string_append_printf(s, "<%s lang=\"en\">%s",
                            tag, escaped_en);
+
     if (values != NULL) {
         g_string_append_printf(s, "  Allowed values: %s", values);
     }
@@ -615,14 +621,15 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
                 locale = strtok(setlocale(LC_ALL, NULL), "_");
             }
 
-	    if (spaces != NULL) {
-                g_string_append_printf(s, "%s", spaces);
+            if (spaces != NULL) {
+                g_string_append(s, spaces);
             }
             g_string_append_printf(s, "<%s lang=\"%s\">%s",
                                    tag, locale, localized);
+
             if (values != NULL) {
-                g_string_append(s, _("  Allowed values: "));
-                g_string_append_printf(s, "%s", _(values));
+                g_string_append_printf(s, "%s%s", _("  Allowed values: "),
+                                       _(values));
             }
             g_string_append_printf(s, "</%s>\n", tag);
         }
@@ -647,55 +654,57 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
                               "  <version>%s</version>\n",
                               name, PCMK_OCF_VERSION);
 
-    g_string_append(s, "  ");
     add_desc(s, "longdesc", desc_long, NULL, "  ");
-
-    g_string_append(s, "  ");
     add_desc(s, "shortdesc", desc_short, NULL, "  ");
 
     g_string_append(s, "  <parameters>\n");
 
     for (lpc = 0; lpc < len; lpc++) {
-        const char *long_desc = option_list[lpc].description_long;
+        const char *opt_name = option_list[lpc].name;
+        const char *opt_type = option_list[lpc].type;
+        const char *opt_values = option_list[lpc].values;
+        const char *opt_default = option_list[lpc].default_value;
+        const char *opt_desc_short = option_list[lpc].description_short;
+        const char *opt_desc_long = option_list[lpc].description_long;
 
-        if (long_desc == NULL) {
-            long_desc = option_list[lpc].description_short;
-            if (long_desc == NULL) {
-                continue; // The standard requires a parameter description
-            }
+        // The standard requires long and short parameter descriptions
+        CRM_ASSERT((opt_desc_short != NULL) || (opt_desc_long != NULL));
+
+        if (opt_desc_short == NULL) {
+            opt_desc_short = opt_desc_long;
+        } else if (opt_desc_long == NULL) {
+            opt_desc_long = opt_desc_short;
         }
 
-        g_string_append_printf(s, "    <parameter name=\"%s\">\n",
-                               option_list[lpc].name);
+        // The standard requires a parameter type
+        CRM_ASSERT(opt_type != NULL);
 
-        g_string_append(s, "      ");
-        add_desc(s, "longdesc", long_desc, option_list[lpc].values, "      ");
+        g_string_append_printf(s, "    <parameter name=\"%s\">\n", opt_name);
 
-        g_string_append(s, "      ");
-        add_desc(s, "shortdesc", option_list[lpc].description_short, NULL, "      ");
+        add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
+        add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
 
-        if (option_list[lpc].values && !strcmp(option_list[lpc].type, "select")) {
-            char *str = strdup(option_list[lpc].values);
-            char delim[] = ", ";
+        g_string_append_printf(s, "      <content type=\"%s\"", opt_type);
+        if (opt_default != NULL) {
+            g_string_append_printf(s, " default=\"%s\"", opt_default);
+        }
+
+        if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
+            char *str = strdup(opt_values);
+            const char *delim = ", ";
             char *ptr = strtok(str, delim);
 
-            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\">\n",
-                                   option_list[lpc].type,
-                                   option_list[lpc].default_value);
+            g_string_append(s, ">\n");
 
             while (ptr != NULL) {
                 g_string_append_printf(s, "        <option value=\"%s\" />\n", ptr);
                 ptr = strtok(NULL, delim);
             }
-
             g_string_append_printf(s, "      </content>\n");
             free(str);
 
         } else {
-            g_string_append_printf(s, "      <content type=\"%s\" default=\"%s\"/>\n",
-                                   option_list[lpc].type,
-                                   option_list[lpc].default_value
-            );
+            g_string_append(s, "/>\n");
         }
 
         g_string_append_printf(s, "    </parameter>\n");
