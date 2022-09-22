@@ -19,7 +19,7 @@
 #  include <crm/common/xml.h>
 #  include <pcmki/pcmki_scheduler.h>
 
-pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
 void group_create_actions(pe_resource_t *rsc);
 void group_internal_constraints(pe_resource_t *rsc);
 enum pe_action_flags group_action_flags(pe_action_t *action,
@@ -30,7 +30,7 @@ void pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                  GList *all_rscs, GHashTable *utilization);
 void pcmk__group_shutdown_lock(pe_resource_t *rsc);
 
-pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
 void pcmk__bundle_create_actions(pe_resource_t *rsc);
 bool pcmk__bundle_create_probe(pe_resource_t *rsc, pe_node_t *node);
 void pcmk__bundle_internal_constraints(pe_resource_t *rsc);
@@ -43,7 +43,7 @@ void pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                   GList *all_rscs, GHashTable *utilization);
 void pcmk__bundle_shutdown_lock(pe_resource_t *rsc);
 
-pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer);
 void clone_create_actions(pe_resource_t *rsc);
 void clone_internal_constraints(pe_resource_t *rsc);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);

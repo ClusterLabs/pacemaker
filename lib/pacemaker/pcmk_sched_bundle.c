@@ -65,13 +65,13 @@ get_containers_or_children(pe_resource_t *rsc)
  * \internal
  * \brief Assign a bundle resource to a node
  *
- * \param[in] rsc     Resource to assign to a node
- * \param[in] prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
     GList *nodes = NULL;

@@ -58,12 +58,12 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Assign a resource to a node
      *
-     * \param[in] rsc     Resource to assign to a node
-     * \param[in] prefer  Node to prefer, if all else is equal
+     * \param[in,out] rsc     Resource to assign to a node
+     * \param[in]     prefer  Node to prefer, if all else is equal
      *
      * \return Node that \p rsc is assigned to, if assigned entirely to one node
      */
-    pe_node_t *(*assign)(pe_resource_t *rsc, pe_node_t *prefer);
+    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer);
 
     /*!
      * \internal
@@ -584,7 +584,7 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
