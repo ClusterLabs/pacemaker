@@ -688,8 +688,9 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
 // Group implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization)
+pcmk__group_add_utilization(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization)
 {
     group_variant_data_t *group_data = NULL;
     pe_resource_t *child = NULL;

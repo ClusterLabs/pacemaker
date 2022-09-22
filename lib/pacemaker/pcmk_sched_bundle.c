@@ -1125,8 +1125,9 @@ pcmk__output_bundle_actions(pe_resource_t *rsc)
 
 // Bundle implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                             GList *all_rscs, GHashTable *utilization)
+pcmk__bundle_add_utilization(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList *all_rscs,
+                             GHashTable *utilization)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     pe__bundle_replica_t *replica = NULL;

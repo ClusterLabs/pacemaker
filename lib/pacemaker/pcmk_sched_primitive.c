@@ -1435,8 +1435,9 @@ pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 
 // Primitive implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__primitive_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                                GList *all_rscs, GHashTable *utilization)
+pcmk__primitive_add_utilization(const pe_resource_t *rsc,
+                                const pe_resource_t *orig_rsc, GList *all_rscs,
+                                GHashTable *utilization)
 {
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;

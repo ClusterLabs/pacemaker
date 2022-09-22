@@ -235,13 +235,14 @@ struct resource_alloc_functions_s {
      * the resource's utilization to the existing values, if the resource has
      * not yet been allocated to a node.
      *
-     * \param[in] rsc          Resource with utilization to add
-     * \param[in] orig_rsc     Resource being allocated (for logging only)
-     * \param[in] all_rscs     List of all resources that will be summed
-     * \param[in] utilization  Table of utilization values to add to
+     * \param[in]     rsc          Resource with utilization to add
+     * \param[in]     orig_rsc     Resource being allocated (for logging only)
+     * \param[in]     all_rscs     List of all resources that will be summed
+     * \param[in,out] utilization  Table of utilization values to add to
      */
-    void (*add_utilization)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization);
+    void (*add_utilization)(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization);
 
     /*!
      * \internal
@@ -611,9 +612,9 @@ G_GNUC_INTERNAL
 void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
-void pcmk__primitive_add_utilization(pe_resource_t *rsc,
-                                     pe_resource_t *orig_rsc, GList *all_rscs,
-                                     GHashTable *utilization);
+void pcmk__primitive_add_utilization(const pe_resource_t *rsc,
+                                     const pe_resource_t *orig_rsc,
+                                     GList *all_rscs, GHashTable *utilization);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
