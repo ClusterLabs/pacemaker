@@ -864,7 +864,9 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "--output-as=xml -R true2 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node2\"")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 5", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -F node3 -t 5",
+                                       CrmExit.NOSUCH)
             test.add_cmd("stonith_admin", "--output-as=xml -F node2 -t 5")
 
         # simple topology test for one device
@@ -1074,7 +1076,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -Q true1")
             test.add_cmd("stonith_admin", "--output-as=xml -Q false1")
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true2", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true2",
+                                       CrmExit.NOSUCH)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -1107,7 +1111,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true1",
+                                       CrmExit.NOSUCH)
 
         # simple reboot test
         for test_type in test_types:
@@ -1120,7 +1126,9 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -Q true1", CrmExit.ERROR)
+            test.add_expected_fail_cmd("stonith_admin",
+                                       "--output-as=xml -Q true1",
+                                       CrmExit.NOSUCH)
 
         # test fencing history.
         for test_type in test_types:
@@ -1351,7 +1359,9 @@ class Tests(object):
                              1)
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake_1234 -t 3", CrmExit.ERROR)
+        test.add_expected_fail_cmd("stonith_admin",
+                                   "--output-as=xml -U node_fake_1234 -t 3",
+                                   CrmExit.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
@@ -1383,7 +1393,9 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true2")
 
-        test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake -t 3", CrmExit.ERROR)
+        test.add_expected_fail_cmd("stonith_admin",
+                                   "--output-as=xml -U node_fake -t 3",
+                                   CrmExit.NOSUCH)
         test.add_stonith_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the Pacemaker project contributors
+ * Copyright 2012-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,11 +136,14 @@ lrmd_t *lrmd_api_new(void);
 /*!
  * \brief Create a new TLS connection to a remote executor
  *
- * \param nodename  name of remote node identified with this connection
- * \param server    name of server to connect to
- * \param port      port number to connect to
+ * \param[in] nodename  Name of remote node identified with this connection
+ * \param[in] server    Hostname to connect to
+ * \param[in] port      Port number to connect to (or 0 to use default)
  *
- * \note nodename and server may be the same value.
+ * \return Newly created executor connection object
+ * \note If only one of \p nodename and \p server is non-NULL, it will be used
+ *       for both purposes. If both are NULL, a local IPC connection will be
+ *       created instead.
  */
 lrmd_t *lrmd_remote_api_new(const char *nodename, const char *server, int port);
 
@@ -151,38 +154,53 @@ lrmd_t *lrmd_remote_api_new(const char *nodename, const char *server, int port);
  *
  * \return TRUE if connection is still up, FALSE if disconnected
  */
-bool lrmd_dispatch(lrmd_t * lrmd);
+bool lrmd_dispatch(lrmd_t *lrmd);
 
 /*!
- * \brief Poll for a specified timeout period to determine if a message
- *        is ready for dispatch
+ * \brief Check whether a message is available on an executor connection
+ *
+ * \param[in,out] lrmd     Executor connection object to check
+ * \param[in]     timeout  Currently ignored
  *
  * \retval 1               Message is ready
  * \retval 0               Timeout occurred
  * \retval negative errno  Error occurred
+ *
+ * \note This is intended for callers that do not use a main loop.
  */
-int lrmd_poll(lrmd_t * lrmd, int timeout);
+int lrmd_poll(lrmd_t *lrmd, int timeout);
 
 /*!
  * \brief Destroy executor connection object
+ *
+ * \param[in,out] lrmd     Executor connection object to destroy
  */
-void lrmd_api_delete(lrmd_t * lrmd);
+void lrmd_api_delete(lrmd_t *lrmd);
+
 lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t * kvp, const char *key, const char *value);
 
-/* *INDENT-OFF* */
-/* Reserved for future use */
 enum lrmd_call_options {
-    lrmd_opt_none = 0x00000000,
-    /* lrmd_opt_sync_call = 0x00000001, //Not implemented, patches welcome. */
-    /*! Only notify the client originating a exec() the results */
-    lrmd_opt_notify_orig_only = 0x00000002,
-    /*! Drop recurring operations initiated by a client when client disconnects.
-     * This call_option is only valid when registering a resource. When used
-     * remotely with the pacemaker_remote daemon, this option means that recurring
-     * operations will be dropped once all the remote connections disconnect. */
-    lrmd_opt_drop_recurring = 0x00000003,
-    /*! Send notifications for recurring operations only when the result changes */
-    lrmd_opt_notify_changes_only = 0x00000004,
+    lrmd_opt_none                   = 0,
+
+    //! Notify only the client that made the request (rather than all clients)
+    lrmd_opt_notify_orig_only       = (1 << 1),
+
+    /*!
+     * Drop recurring operations initiated by a client when the client
+     * disconnects. This option is only valid when registering a resource. When
+     * used with a connection to a remote executor, recurring operations will be
+     * dropped once all remote connections disconnect.
+     *
+     * @COMPAT This is broken, because these values should be unique bits, and
+     * this value overlaps lrmd_opt_notify_orig_only (0x02). The impact is low
+     * since this value is used only with registration requests and the other
+     * one is used only with execution requests. Regardless, when we can break
+     * API compatibility, this should be changed to (1 << 0) or (1 << 3).
+     */
+    lrmd_opt_drop_recurring         = 0x00000003,
+
+    //! Send notifications for recurring operations only when the result changes
+    lrmd_opt_notify_changes_only    = (1 << 2),
 };
 
 enum lrmd_callback_event {
@@ -194,8 +212,6 @@ enum lrmd_callback_event {
     lrmd_event_poke,
     lrmd_event_new_client,
 };
-
-/* *INDENT-ON* */
 
 typedef struct lrmd_event_data_s {
     /*! Type of event, register, unregister, call_completed... */
@@ -289,64 +305,98 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Connect to an executor
      *
+     * \param[in,out] lrmd         Executor connection object
+     * \param[in]     client_name  Arbitrary identifier to pass to server
+     * \param[out]    fd           If not NULL, where to store file descriptor
+     *                             for connection's socket
+     *
      * \return Legacy Pacemaker return code
      */
-    int (*connect) (lrmd_t * lrmd, const char *client_name, int *fd);
+    int (*connect) (lrmd_t *lrmd, const char *client_name, int *fd);
 
     /*!
      * \brief Initiate an executor connection without blocking
+     *
+     * \param[in,out] lrmd         Executor connection object
+     * \param[in]     client_name  Arbitrary identifier to pass to server
+     * \param[in]     timeout      Error if not connected within this time
+     *                             (milliseconds)
      *
      * \return Legacy Pacemaker return code (if pcmk_ok, the event callback will
      *         be called later with the result)
      * \note This function requires a mainloop.
      */
-    int (*connect_async) (lrmd_t * lrmd, const char *client_name, int timeout /*ms */ );
+    int (*connect_async) (lrmd_t *lrmd, const char *client_name,
+                          int timeout /*ms */ );
 
     /*!
      * \brief Check whether connection to executor daemon is (still) active
      *
+     * \param[in,out] lrmd  Executor connection object to check
+     *
      * \return 1 if the executor connection is active, 0 otherwise
      */
-    int (*is_connected) (lrmd_t * lrmd);
+    int (*is_connected) (lrmd_t *lrmd);
 
     /*!
-     * \brief Poke executor connection to verify it is still capable of serving requests
-     * \note The response comes in the form of a poke event to the callback. 
+     * \brief Poke executor connection to verify it is still active
+     *
+     * \param[in,out] lrmd  Executor connection object to check
      *
      * \return Legacy Pacemaker return code (if pcmk_ok, the event callback will
      *         be called later with the result)
+     * \note The response comes in the form of a poke event to the callback.
+     *
      */
-    int (*poke_connection) (lrmd_t * lrmd);
+    int (*poke_connection) (lrmd_t *lrmd);
 
     /*!
      * \brief Disconnect from the executor.
      *
+     * \param[in,out] lrmd  Executor connection object to disconnect
+     *
      * \return Legacy Pacemaker return code
      */
-    int (*disconnect) (lrmd_t * lrmd);
+    int (*disconnect) (lrmd_t *lrmd);
 
     /*!
-     * \brief Register a resource with the executor.
+     * \brief Register a resource with the executor
+     *
+     * \param[in,out] lrmd      Executor connection object
+     * \param[in]     rsc_id    ID of resource to register
+     * \param[in]     standard  Resource's resource agent standard
+     * \param[in]     provider  Resource's resource agent provider (or NULL)
+     * \param[in]     agent     Resource's resource agent name
+     * \param[in]     options   Group of enum lrmd_call_options flags
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
      * \return Legacy Pacemaker return code
      */
-    int (*register_rsc) (lrmd_t * lrmd,
-                         const char *rsc_id,
-                         const char *standard,
-                         const char *provider, const char *agent, enum lrmd_call_options options);
+    int (*register_rsc) (lrmd_t *lrmd, const char *rsc_id, const char *standard,
+                         const char *provider, const char *agent,
+                         enum lrmd_call_options options);
 
     /*!
      * \brief Retrieve a resource's registration information
      *
+     * \param[in,out] lrmd      Executor connection object
+     * \param[in]     rsc_id    ID of resource to check
+     * \param[in]     options   Group of enum lrmd_call_options flags
+     *
      * \return Resource information on success, otherwise NULL
      */
-    lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t * lrmd,
-                                      const char *rsc_id, enum lrmd_call_options options);
+    lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t *lrmd, const char *rsc_id,
+                                      enum lrmd_call_options options);
 
     /*!
-     * \brief Retrieve registered recurring operations
+     * \brief Retrieve recurring operations registered for a resource
+     *
+     * \param[in,out] lrmd        Executor connection object
+     * \param[in]     rsc_id      ID of resource to check
+     * \param[in]     timeout_ms  Error if not completed within this time
+     * \param[in]     options     Group of enum lrmd_call_options flags
+     * \param[out]    output      Where to store list of lrmd_op_info_t
      *
      * \return Legacy Pacemaker return code
      */
@@ -354,50 +404,72 @@ typedef struct lrmd_api_operations_s {
                               enum lrmd_call_options options, GList **output);
 
     /*!
-     * \brief Unregister a resource from the executor.
+     * \brief Unregister a resource from the executor
      *
-     * \note All pending and recurring operations will be cancelled
-     *       automatically.
-     *
-     * \note Synchronous, guaranteed to occur in daemon before function returns.
+     * \param[in,out] lrmd     Executor connection object
+     * \param[in]     rsc_id   ID of resource to unregister
+     * \param[in]     options  Group of enum lrmd_call_options flags
      *
      * \return Legacy Pacemaker return code (of particular interest, EINPROGRESS
      *         means that operations are in progress for the resource, and the
      *         unregistration will be done when they complete)
+     * \note Pending and recurring operations will be cancelled.
+     * \note Synchronous, guaranteed to occur in daemon before function returns.
+     *
      */
-    int (*unregister_rsc) (lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options);
+    int (*unregister_rsc) (lrmd_t *lrmd, const char *rsc_id,
+                           enum lrmd_call_options options);
 
     /*!
      * \brief Set a callback for executor events
+     *
+     * \param[in,out] lrmd      Executor connection object
+     * \param[in]     callback  Callback to set
      */
-    void (*set_callback) (lrmd_t * lrmd, lrmd_event_callback callback);
+    void (*set_callback) (lrmd_t *lrmd, lrmd_event_callback callback);
 
     /*!
-     * \brief Issue a command on a resource
+     * \brief Request execution of a resource action
+     *
+     * \param[in,out] lrmd         Executor connection object
+     * \param[in]     rsc_id       ID of resource
+     * \param[in]     action       Name of resource action to execute
+     * \param[in]     userdata     Arbitrary string to pass to event callback
+     * \param[in]     interval_ms  If 0, execute action once, otherwise
+     *                             recurring at this interval (in milliseconds)
+     * \param[in]     timeout      Error if not complete within this time (in
+     *                             milliseconds)
+     * \param[in]     start_delay  Wait this long before execution (in
+     *                             milliseconds)
+     * \param[in]     options      Group of enum lrmd_call_options flags
+     * \param[in,out] params       Parameters to pass to agent (will be freed)
      *
      * \return A call ID for the action on success (in which case the action is
      *         queued in the executor, and the event callback will be called
      *         later with the result), otherwise a negative legacy Pacemaker
      *         return code
-     *
      * \note exec() and cancel() operations on an individual resource are
      *       guaranteed to occur in the order the client API is called. However,
      *       operations on different resources are not guaranteed to occur in
      *       any specific order.
      */
-    int (*exec) (lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata,   /* userdata string given back in event notification */
-                 guint interval_ms,
-                 int timeout,   /* ms */
-                 int start_delay,       /* ms */
-                 enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
+    int (*exec) (lrmd_t *lrmd, const char *rsc_id, const char *action,
+                 const char *userdata, guint interval_ms, int timeout,
+                 int start_delay, enum lrmd_call_options options,
+                 lrmd_key_value_t *params);
 
     /*!
-     * \brief Cancel a recurring command.
+     * \brief Cancel a recurring resource action
      *
-     * \return Legacy Pacemaker return code (if pcmk_ok, command is queued in
-     *         daemon on function return, and the event callback will be called
-     *         later with an exec_complete event with an lrmd_op_status
-     *         signifying that the operation is cancelled)
+     * \param[in,out] lrmd         Executor connection object
+     * \param[in]     rsc_id       ID of resource
+     * \param[in]     action       Name of resource action to cancel
+     * \param[in]     interval_ms  Action's interval (in milliseconds)
+     *
+     * \return Legacy Pacemaker return code (if pcmk_ok, cancellation is queued
+     *         on function return, and the event callback will be called later
+     *         with an exec_complete event with an lrmd_op_status signifying
+     *         that the operation is cancelled)
      *
      * \note exec() and cancel() operations on an individual resource are
      *       guaranteed to occur in the order the client API is called. However,
@@ -408,34 +480,37 @@ typedef struct lrmd_api_operations_s {
                    guint interval_ms);
 
     /*!
-     * \brief Get resource metadata for a specified resource agent
+     * \brief Retrieve resource agent metadata synchronously
      *
      * \param[in]  lrmd      Executor connection (unused)
      * \param[in]  standard  Resource agent class
      * \param[in]  provider  Resource agent provider
      * \param[in]  agent     Resource agent type
-     * \param[out] output    Metadata will be stored here (must not be NULL)
-     * \param[in]  options   Options to use with any executor API calls (unused)
+     * \param[out] output    Where to store metadata (must not be NULL)
+     * \param[in]  options   Group of enum lrmd_call_options flags (unused)
      *
      * \return Legacy Pacemaker return code
      *
-     * \note Caller is responsible for freeing output. This call is currently
-     *       always synchronous (blocking), and always done directly by the
-     *       library (not via the executor connection). This means that it is based
-     *       on the local host environment, even if the executor connection is to a
-     *       remote node, so (for most resource agent classes) this will fail if
-     *       the agent is not installed locally. This also means that, if an
-     *       external agent must be executed, it will be executed by the
-     *       caller's user, not the executor's.
-     * \todo Add a metadata call to the executor API and let the server handle this.
+     * \note Caller is responsible for freeing output. This call is always
+     *       synchronous (blocking), and always done directly by the library
+     *       (not via the executor connection). This means that it is based on
+     *       the local host environment, even if the executor connection is to a
+     *       remote node, so this may fail if the agent is not installed
+     *       locally. This also means that, if an external agent must be
+     *       executed, it will be executed by the caller's user, not the
+     *       executor's.
      */
-    int (*get_metadata) (lrmd_t * lrmd,
-                         const char *standard,
-                         const char *provider,
-                         const char *agent, char **output, enum lrmd_call_options options);
+    int (*get_metadata) (lrmd_t *lrmd, const char *standard,
+                         const char *provider, const char *agent,
+                         char **output, enum lrmd_call_options options);
 
     /*!
-     * \brief Retrieve a list of installed resource agents.
+     * \brief Retrieve a list of installed resource agents
+     *
+     * \param[in]  lrmd      Executor connection (unused)
+     * \param[out] agents    Where to store agent list (must not be NULL)
+     * \param[in]  standard  Resource agent standard to list
+     * \param[in]  provider  Resource agent provider to list (or NULL)
      *
      * \return Number of items in list on success, negative legacy Pacemaker
      *         return code otherwise
@@ -443,33 +518,46 @@ typedef struct lrmd_api_operations_s {
      * \note if standard is not provided, all known agents will be returned
      * \note list must be freed using lrmd_list_freeall()
      */
-    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents,
+    int (*list_agents) (lrmd_t *lrmd, lrmd_list_t **agents,
                         const char *standard, const char *provider);
 
     /*!
      * \brief Retrieve a list of resource agent providers
      *
+     * \param[in]  lrmd       Executor connection (unused)
+     * \param[in]  agent      If not NULL, list providers for this agent only
+     * \param[out] providers  Where to store provider list
+     *
      * \return Number of items in list on success, negative legacy Pacemaker
      *         return code otherwise
-     *
-     * \note When the agent is provided, only the agent's provider will be returned
-     * \note When no agent is supplied, all providers will be returned.
-     * \note List must be freed using lrmd_list_freeall()
+     * \note The caller is responsible for freeing *providers with
+     *       lrmd_list_freeall().
      */
-    int (*list_ocf_providers) (lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers);
+    int (*list_ocf_providers) (lrmd_t *lrmd, const char *agent,
+                               lrmd_list_t **providers);
 
     /*!
-     * \brief Retrieve a list of standards supported by this machine/installation
+     * \brief Retrieve a list of supported standards
+     *
+     * \param[in]  lrmd       Executor connection (unused)
+     * \param[out] standards  Where to store standards list
      *
      * \return Number of items in list on success, negative legacy Pacemaker
      *         return code otherwise
-     *
-     * \note List must be freed using lrmd_list_freeall()
+     * \note The caller is responsible for freeing *standards with
+     *       lrmd_list_freeall().
      */
-    int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
+    int (*list_standards) (lrmd_t *lrmd, lrmd_list_t **standards);
 
     /*!
      * \brief Execute an alert agent
+     *
+     * \param[in,out] lrmd        Executor connection
+     * \param[in]     alert_id    Name of alert to execute
+     * \param[in]     alert_path  Full path to alert executable
+     * \param[in]     timeout     Error if not complete within this many
+     *                            milliseconds
+     * \param[in,out] params      Parameters to pass to agent (will be freed)
      *
      * \return Legacy Pacemaker return code (if pcmk_ok, the alert is queued in
      *         the executor, and the event callback will be called later with
@@ -480,25 +568,24 @@ typedef struct lrmd_api_operations_s {
      *       are not guaranteed to occur in any specific order.
      */
     int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
-                       const char *alert_path, int timeout, /* ms */
-                       lrmd_key_value_t *params); /* ownership of params is given up to api here */
+                       const char *alert_path, int timeout,
+                       lrmd_key_value_t *params);
 
     /*!
-     * \brief Get resource metadata for a resource agent, passing parameters
+     * \brief Retrieve resource agent metadata synchronously with parameters
      *
-     * \param[in]  lrmd      Executor connection (unused)
-     * \param[in]  standard  Resource agent class
-     * \param[in]  provider  Resource agent provider
-     * \param[in]  agent     Resource agent type
-     * \param[out] output    Metadata will be stored here (must not be NULL)
-     * \param[in]  options   Options to use with any executor API calls (unused)
-     * \param[in]  params    Parameters to pass to agent via environment
+     * \param[in]     lrmd      Executor connection (unused)
+     * \param[in]     standard  Resource agent class
+     * \param[in]     provider  Resource agent provider
+     * \param[in]     agent     Resource agent type
+     * \param[out]    output    Where to store metadata (must not be NULL)
+     * \param[in]     options   Group of enum lrmd_call_options flags (unused)
+     * \param[in,out] params    Parameters to pass to agent (will be freed)
      *
      * \return Legacy Pacemaker return code
      *
      * \note This is identical to the get_metadata() API call, except parameters
      *       will be passed to the resource agent via environment variables.
-     * \note The API will handle freeing params.
      */
     int (*get_metadata_params) (lrmd_t *lrmd, const char *standard,
                                 const char *provider, const char *agent,

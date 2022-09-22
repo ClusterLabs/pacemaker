@@ -566,6 +566,8 @@ void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 /*!
  * \internal
  * \brief Register xml formatting message functions.
+ *
+ * \param[in,out] out  Output object to register messages with
  */
 void pe__register_messages(pcmk__output_t *out);
 

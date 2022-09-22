@@ -599,17 +599,14 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 #endif
     log_finished(cmd, exec_time, queue_time);
 
-    /* if the first notify result for a cmd has already been sent earlier, and the
-     * the option to only send notifies on result changes is set. Check to see
-     * if the last result is the same as the new one. If so, suppress this update */
-    if (cmd->first_notify_sent && (cmd->call_opts & lrmd_opt_notify_changes_only)) {
-        if ((cmd->last_notify_rc == cmd->result.exit_status) &&
-            (cmd->last_notify_op_status == cmd->result.execution_status)) {
-
-            /* only send changes */
-            return;
-        }
-
+    /* If the originator requested to be notified only for changes in recurring
+     * operation results, skip the notification if the result hasn't changed.
+     */
+    if (cmd->first_notify_sent
+        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
+        && (cmd->last_notify_rc == cmd->result.exit_status)
+        && (cmd->last_notify_op_status == cmd->result.execution_status)) {
+        return;
     }
 
     cmd->first_notify_sent = true;
@@ -665,10 +662,12 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
             hash2smartfield((gpointer) key, (gpointer) value, args);
         }
     }
-    if (cmd->client_id && (cmd->call_opts & lrmd_opt_notify_orig_only)) {
+    if ((cmd->client_id != NULL)
+        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
+
         pcmk__client_t *client = pcmk__find_client_by_id(cmd->client_id);
 
-        if (client) {
+        if (client != NULL) {
             send_client_notify(client->id, client, notify);
         }
     } else {
@@ -794,7 +793,7 @@ client_disconnect_cleanup(const char *client_id)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (rsc->call_opts & lrmd_opt_drop_recurring) {
+        if (pcmk_all_flags_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
             cancel_all_recurring(rsc, client_id);
