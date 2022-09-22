@@ -693,6 +693,18 @@ G_GNUC_INTERNAL
 void pcmk__schedule_probes(pe_working_set_t *data_set);
 
 
+// Functions related to live migration (pcmk_sched_migration.c)
+
+void pcmk__create_migration_actions(pe_resource_t *rsc,
+                                    const pe_node_t *current);
+
+void pcmk__abort_dangling_migration(void *data, void *user_data);
+
+bool pcmk__rsc_can_migrate(const pe_resource_t *rsc, const pe_node_t *current);
+
+void pcmk__order_migration_equivalents(pe__ordering_t *order);
+
+
 // Functions related to node utilization (pcmk_sched_utilization.c)
 
 G_GNUC_INTERNAL

@@ -16,7 +16,8 @@
 
 #include "libpacemaker_private.h"
 
-gboolean DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set);
+gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
+                   pe_working_set_t *data_set);
 static bool StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
 static bool DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
@@ -425,94 +426,6 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
     return rsc->allocated_to;
 }
 
-static void
-handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *chosen, pe_working_set_t * data_set)
-{
-    pe_action_t *migrate_to = NULL;
-    pe_action_t *migrate_from = NULL;
-    pe_action_t *start = NULL;
-    pe_action_t *stop = NULL;
-    gboolean partial = rsc->partial_migration_target ? TRUE : FALSE;
-
-    pe_rsc_trace(rsc, "Processing migration actions %s moving from %s to %s . partial migration = %s",
-    rsc->id, current->details->id, chosen->details->id, partial ? "TRUE" : "FALSE");
-    start = start_action(rsc, chosen, TRUE);
-    stop = stop_action(rsc, current, TRUE);
-
-    if (partial == FALSE) {
-        migrate_to = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                                   RSC_MIGRATE, current, TRUE, TRUE, data_set);
-    }
-
-    migrate_from = custom_action(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                                 RSC_MIGRATED, chosen, TRUE, TRUE, data_set);
-
-    if ((migrate_to && migrate_from) || (migrate_from && partial)) {
-
-        pe__set_action_flags(start, pe_action_migrate_runnable);
-        pe__set_action_flags(stop, pe_action_migrate_runnable);
-
-        // This is easier than trying to delete it from the graph
-        pe__set_action_flags(start, pe_action_pseudo);
-
-        /* order probes before migrations */
-        if (partial) {
-            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
-            migrate_from->needs = start->needs;
-
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                               NULL, pe_order_optional, data_set);
-
-        } else {
-            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
-            pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
-            migrate_to->needs = start->needs;
-
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0),
-                               NULL, pe_order_optional, data_set);
-            pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATE, 0), NULL,
-                               rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0),
-                               NULL,
-                               pe_order_optional|pe_order_implies_first_migratable,
-                               data_set);
-        }
-
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                           rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                           pe_order_optional|pe_order_implies_first_migratable,
-                           data_set);
-        pcmk__new_ordering(rsc, pcmk__op_key(rsc->id, RSC_MIGRATED, 0), NULL,
-                           rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
-                           pe_order_optional|pe_order_implies_first_migratable|pe_order_pseudo_left,
-                           data_set);
-    }
-
-    if (migrate_to) {
-        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
-        add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
-
-        /* Pacemaker Remote connections don't require pending to be recorded in
-         * the CIB. We can reduce CIB writes by not setting PENDING for them.
-         */
-        if (rsc->is_remote_node == FALSE) {
-            /* migrate_to takes place on the source node, but can 
-             * have an effect on the target node depending on how
-             * the agent is written. Because of this, we have to maintain
-             * a record that the migrate_to occurred, in case the source node
-             * loses membership while the migrate_to action is still in-flight.
-             */
-            add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
-        }
-    }
-
-    if (migrate_from) {
-        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
-        add_hash_param(migrate_from->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
-    }
-}
-
 /*!
  * \internal
  * \brief Schedule actions to bring resource down and back to current role
@@ -578,7 +491,6 @@ native_create_actions(pe_resource_t *rsc)
     gboolean is_moving = FALSE;
     gboolean allow_migrate = FALSE;
 
-    GList *gIter = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
     bool multiply_active = FALSE;
@@ -586,7 +498,6 @@ native_create_actions(pe_resource_t *rsc)
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
     CRM_ASSERT(rsc != NULL);
-    allow_migrate = pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)? TRUE : FALSE;
 
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
@@ -602,34 +513,55 @@ native_create_actions(pe_resource_t *rsc)
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
-    for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *dangling_source = (pe_node_t *) gIter->data;
+    g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
+                   rsc);
 
-        pe_action_t *stop = NULL;
+    if ((current != NULL) && (chosen != NULL)
+        && (current->details != chosen->details)
+        && (rsc->next_role >= RSC_ROLE_STARTED)) {
 
-        pe_rsc_trace(rsc, "Creating stop action %sfor %s on %s due to dangling migration",
-                     pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
-                     rsc->id, pe__node_name(dangling_source));
-        stop = stop_action(rsc, dangling_source, FALSE);
-        pe__set_action_flags(stop, pe_action_dangle);
-        if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, dangling_source, FALSE, rsc->cluster);
-        }
+        pe_rsc_trace(rsc, "Moving %s from %s to %s",
+                     rsc->id, pe__node_name(current), pe__node_name(chosen));
+        is_moving = TRUE;
+        allow_migrate = pcmk__rsc_can_migrate(rsc, current);
+
+        // This is needed even if migrating (though I'm not sure why ...)
+        need_stop = TRUE;
     }
 
-    if ((num_all_active == 2) && (num_clean_active == 2) && chosen
-        && rsc->partial_migration_source && rsc->partial_migration_target
+    // Check whether resource is partially migrated and/or multiply active
+    if ((rsc->partial_migration_source != NULL)
+        && (rsc->partial_migration_target != NULL)
+        && allow_migrate && (num_all_active == 2)
         && (current->details == rsc->partial_migration_source->details)
         && (chosen->details == rsc->partial_migration_target->details)) {
-
-        /* The chosen node is still the migration target from a partial
-         * migration. Attempt to continue the migration instead of recovering
-         * by stopping the resource everywhere and starting it on a single node.
+        /* A partial migration is in progress, and the migration target remains
+         * the same as when the migration began.
          */
-        pe_rsc_trace(rsc, "Will attempt to continue with partial migration "
-                     "to target %s from %s",
-                     rsc->partial_migration_target->details->id,
-                     rsc->partial_migration_source->details->id);
+        pe_rsc_trace(rsc, "Partial migration of %s from %s to %s will continue",
+                     rsc->id, pe__node_name(rsc->partial_migration_source),
+                     pe__node_name(rsc->partial_migration_target));
+
+    } else if ((rsc->partial_migration_source != NULL)
+               || (rsc->partial_migration_target != NULL)) {
+        // A partial migration is in progress but can't be continued
+
+        if (num_all_active > 2) {
+            // The resource is migrating *and* multiply active!
+            crm_notice("Forcing recovery of %s because it is migrating "
+                       "from %s to %s and possibly active elsewhere",
+                       rsc->id, pe__node_name(rsc->partial_migration_source),
+                       pe__node_name(rsc->partial_migration_target));
+        } else {
+            // The migration source or target isn't available
+            crm_notice("Forcing recovery of %s because it can no longer "
+                       "migrate from %s to %s",
+                       rsc->id, pe__node_name(rsc->partial_migration_source),
+                       pe__node_name(rsc->partial_migration_target));
+        }
+        need_stop = TRUE;
+        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+        allow_migrate = FALSE;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
         /* If a resource has "requires" set to nothing or quorum, don't consider
@@ -645,23 +577,13 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     if (multiply_active) {
-        if (rsc->partial_migration_target && rsc->partial_migration_source) {
-            // Migration was in progress, but we've chosen a different target
-            crm_notice("Resource %s can no longer migrate from %s to %s "
-                       "(will stop on both nodes)",
-                       rsc->id, pe__node_name(rsc->partial_migration_source),
-                       pe__node_name(rsc->partial_migration_target));
-            multiply_active = false;
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-        } else {
-            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-            // Resource was (possibly) incorrectly multiply active
-            pe_proc_err("%s resource %s might be active on %u nodes (%s)",
-                        pcmk__s(class, "Untyped"), rsc->id, num_all_active,
-                        recovery2text(rsc->recovery_type));
-            crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
-        }
+        // Resource was (possibly) incorrectly multiply active
+        pe_proc_err("%s resource %s might be active on %u nodes (%s)",
+                    pcmk__s(class, "Untyped"), rsc->id, num_all_active,
+                    recovery2text(rsc->recovery_type));
+        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
 
         switch (rsc->recovery_type) {
             case recovery_stop_start:
@@ -675,14 +597,7 @@ native_create_actions(pe_resource_t *rsc)
                 break;
         }
 
-        /* If by chance a partial migration is in process, but the migration
-         * target is not chosen still, clear all partial migration data.
-         */
-        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-        allow_migrate = FALSE;
-    }
-
-    if (!multiply_active) {
+    } else {
         pe__clear_resource_flags(rsc, pe_rsc_stop_unexpected);
     }
 
@@ -693,11 +608,8 @@ native_create_actions(pe_resource_t *rsc)
         pe__set_action_flags(start, pe_action_print_always);
     }
 
-    if (current && chosen && current->details != chosen->details) {
-        pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, pe__node_name(current), pe__node_name(chosen));
-        is_moving = TRUE;
-        need_stop = TRUE;
+    if (is_moving) {
+        // Remaining tests are only for resources staying where they are
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
@@ -745,25 +657,8 @@ native_create_actions(pe_resource_t *rsc)
 
     pcmk__create_recurring_actions(rsc);
 
-    /* if we are stuck in a partial migration, where the target
-     * of the partial migration no longer matches the chosen target.
-     * A full stop/start is required */
-    if (rsc->partial_migration_target && (chosen == NULL || rsc->partial_migration_target->details != chosen->details)) {
-        pe_rsc_trace(rsc, "Not allowing partial migration of %s to continue",
-                     rsc->id);
-        allow_migrate = FALSE;
-
-    } else if (!is_moving || !pcmk_is_set(rsc->flags, pe_rsc_managed)
-               || pcmk_any_flags_set(rsc->flags,
-                                     pe_rsc_failed|pe_rsc_start_pending)
-               || (current && current->details->unclean)
-               || rsc->next_role < RSC_ROLE_STARTED) {
-
-        allow_migrate = FALSE;
-    }
-
     if (allow_migrate) {
-        handle_migration_actions(rsc, current, chosen, rsc->cluster);
+        pcmk__create_migration_actions(rsc, current);
     }
 }
 
@@ -1298,7 +1193,8 @@ NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional)
 }
 
 gboolean
-DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set)
+DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
+          pe_working_set_t *data_set)
 {
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed",
