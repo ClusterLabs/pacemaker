@@ -290,7 +290,7 @@ void pe__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
 
 
 static inline const char *
-pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
+pe__rsc_bool_str(const pe_resource_t *rsc, uint64_t rsc_flag)
 {
     return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
 }
