@@ -792,7 +792,7 @@ void pcmk__release_node_capacity(GHashTable *current_utilization,
                                  pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer);
+const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,

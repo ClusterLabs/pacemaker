@@ -141,20 +141,23 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
  * \internal
  * \brief Assign a resource to its best allowed node, if possible
  *
- * \param[in] rsc     Resource to choose a node for
- * \param[in] prefer  If not NULL, prefer this node when all else equal
+ * \param[in,out] rsc     Resource to choose a node for
+ * \param[in]     prefer  If not NULL, prefer this node when all else equal
  *
  * \return true if \p rsc could be assigned to a node, otherwise false
  */
 static bool
-assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
+assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *nodes = NULL;
     pe_node_t *chosen = NULL;
     pe_node_t *best = NULL;
     bool result = false;
+    const pe_node_t *most_free_node = pcmk__ban_insufficient_capacity(rsc);
 
-    pcmk__ban_insufficient_capacity(rsc, &prefer);
+    if (prefer == NULL) {
+        prefer = most_free_node;
+    }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         // We've already finished assignment of resources to nodes
