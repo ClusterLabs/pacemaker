@@ -490,7 +490,7 @@ pe_base_name_eq(pe_resource_t *rsc, const char *id)
 int pe__target_rc_from_xml(xmlNode *xml_op);
 
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
-bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any);
+bool is_set_recursive(const pe_resource_t *rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
     /*! Digests are the same */

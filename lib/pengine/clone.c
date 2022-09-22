@@ -494,7 +494,8 @@ clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any)
+bool
+is_set_recursive(const pe_resource_t *rsc, long long flag, bool any)
 {
     GList *gIter;
     bool all = !any;
