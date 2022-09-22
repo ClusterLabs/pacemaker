@@ -184,7 +184,8 @@ pcmk__consume_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
  * \param[in] rsc                  Resource with utilization to add
  */
 void
-pcmk__release_node_capacity(GHashTable *current_utilization, pe_resource_t *rsc)
+pcmk__release_node_capacity(GHashTable *current_utilization,
+                            const pe_resource_t *rsc)
 {
     struct calculate_data data = {
         .current_utilization = current_utilization,
