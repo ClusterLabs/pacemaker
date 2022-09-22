@@ -70,18 +70,15 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
     return retval;
 }
 
-#define XPATH_MAX 1024
-
 // \return Standard Pacemaker return code
 static int
 find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
                    const char *rsc, const char *attr_set_type, const char *set_name,
                    const char *attr_id, const char *attr_name, char **value)
 {
-    int offset = 0;
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
-    char *xpath_string = NULL;
+    GString *xpath = NULL;
     const char *xpath_base = NULL;
 
     if(value) {
@@ -98,34 +95,33 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         return ENOMSG;
     }
 
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s",
-                       xpath_base);
+    xpath = g_string_sized_new(1024);
+    pcmk__g_strcat(xpath,
+                   xpath_base, "//*[@" XML_ATTR_ID "=\"", rsc, "\"]", NULL);
 
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
-
-    if (attr_set_type) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", attr_set_type);
-        if (set_name) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
+    if (attr_set_type != NULL) {
+        pcmk__g_strcat(xpath, "/", attr_set_type, NULL);
+        if (set_name != NULL) {
+            pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "=\"", set_name, "\"]",
+                           NULL);
         }
     }
 
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
-    if (attr_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
+    g_string_append(xpath, "//" XML_CIB_TAG_NVPAIR "[");
+    if (attr_id != NULL) {
+        pcmk__g_strcat(xpath, "@" XML_ATTR_ID "=\"", attr_id, "\"", NULL);
     }
 
-    if (attr_name) {
-        if (attr_id) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
+    if (attr_name != NULL) {
+        if (attr_id != NULL) {
+            g_string_append(xpath, " and ");
         }
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", attr_name);
+        pcmk__g_strcat(xpath, "@" XML_NVPAIR_ATTR_NAME "=\"", attr_name, "\"",
+                       NULL);
     }
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
+    g_string_append_c(xpath, ']');
 
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
@@ -153,7 +149,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     }
 
   done:
-    free(xpath_string);
+    g_string_free(xpath, TRUE);
     free_xml(xml_search);
     return rc;
 }

@@ -11,8 +11,6 @@
 
 #include <crm_resource.h>
 
-#define XPATH_MAX 1024
-
 static char *
 parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 {
@@ -344,9 +342,8 @@ cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t 
 static char *
 build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *node, gboolean promoted_role_only)
 {
-    int offset = 0;
     char *xpath_string = NULL;
-    char *first_half = NULL;
+    GString *first_half = NULL;
     char *rsc_role_substr = NULL;
     char *date_substr = NULL;
 
@@ -361,52 +358,70 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
         return NULL;
     }
 
-    first_half = calloc(1, XPATH_MAX);
-    offset += snprintf(first_half + offset, XPATH_MAX - offset, "//rsc_location");
+    first_half = g_string_sized_new(1024);
+    g_string_append(first_half, "//" XML_CONS_TAG_RSC_LOCATION);
 
     if (node != NULL || rsc != NULL || promoted_role_only == TRUE) {
-        offset += snprintf(first_half + offset, XPATH_MAX - offset, "[");
+        g_string_append_c(first_half, '[');
 
         if (node != NULL) {
+            pcmk__g_strcat(first_half,
+                           "@" XML_CIB_TAG_NODE "='", node, "'", NULL);
+
             if (rsc != NULL || promoted_role_only == TRUE) {
-                offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s' and ", node);
-            } else {
-                offset += snprintf(first_half + offset, XPATH_MAX - offset, "@node='%s'", node);
+                g_string_append(first_half, " and ");
             }
         }
 
         if (rsc != NULL && promoted_role_only == TRUE) {
             rsc_role_substr = crm_strdup_printf("@rsc='%s' and @role='%s'",
                                                 rsc, promoted_role_name());
-            offset += snprintf(first_half + offset, XPATH_MAX - offset,
-                               "@rsc='%s' and @role='%s']",
-                               rsc, promoted_role_name());
+            pcmk__g_strcat(first_half,
+                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "' "
+                           "and @" XML_RULE_ATTR_ROLE "='",
+                           promoted_role_name(), "']", NULL);
+
         } else if (rsc != NULL) {
             rsc_role_substr = crm_strdup_printf("@rsc='%s'", rsc);
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s']", rsc);
+            pcmk__g_strcat(first_half,
+                           "@" XML_LOC_ATTR_SOURCE "='", rsc, "']", NULL);
+
         } else if (promoted_role_only == TRUE) {
             rsc_role_substr = crm_strdup_printf("@role='%s'",
                                                 promoted_role_name());
-            offset += snprintf(first_half + offset, XPATH_MAX - offset,
-                               "@role='%s']", promoted_role_name());
+            pcmk__g_strcat(first_half,
+                           "@" XML_RULE_ATTR_ROLE "='", promoted_role_name(),
+                           "']", NULL);
+
         } else {
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "]");
+            g_string_append_c(first_half, ']');
         }
     }
+
+#define XPATH_FMT_START "%s|//" XML_CONS_TAG_RSC_LOCATION
+
+#define XPATH_FMT_END   "/" XML_TAG_RULE "[" XML_TAG_EXPRESSION \
+                        "[@" XML_EXPR_ATTR_ATTRIBUTE "='" CRM_ATTR_UNAME \
+                        "' and @" XML_EXPR_ATTR_VALUE "='%s']]%s"
 
     if (node != NULL) {
         if (rsc_role_substr != NULL) {
-            xpath_string = crm_strdup_printf("%s|//rsc_location[%s]/rule[expression[@attribute='#uname' and @value='%s']]%s",
-                                             first_half, rsc_role_substr, node, date_substr);
+            xpath_string = crm_strdup_printf(XPATH_FMT_START "[%s]"
+                                             XPATH_FMT_END,
+                                             (const char *) first_half->str,
+                                             rsc_role_substr, node,
+                                             date_substr);
         } else {
-            xpath_string = crm_strdup_printf("%s|//rsc_location/rule[expression[@attribute='#uname' and @value='%s']]%s",
-                                             first_half, node, date_substr);
+            xpath_string = crm_strdup_printf(XPATH_FMT_START XPATH_FMT_END,
+                                             (const char *) first_half->str,
+                                             node, date_substr);
         }
     } else {
-        xpath_string = crm_strdup_printf("%s%s", first_half, date_substr);
+        xpath_string = crm_strdup_printf("%s%s", (const char *) first_half->str,
+                                         date_substr);
     }
 
-    free(first_half);
+    g_string_free(first_half, TRUE);
     free(date_substr);
     free(rsc_role_substr);
 
