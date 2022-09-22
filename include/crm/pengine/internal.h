@@ -563,7 +563,7 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const pe_resource_t *rsc);
-const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
+const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(pe_resource_t *rsc,
                             pe_working_set_t *data_set);
 void pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
