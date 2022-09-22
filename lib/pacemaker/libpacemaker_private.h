@@ -391,20 +391,20 @@ enum pcmk__coloc_affects {
 };
 
 G_GNUC_INTERNAL
-enum pcmk__coloc_affects pcmk__colocation_affects(pe_resource_t *dependent,
-                                                  pe_resource_t *primary,
-                                                  pcmk__colocation_t *constraint,
+enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t *dependent,
+                                                  const pe_resource_t *primary,
+                                                  const pcmk__colocation_t *colocation,
                                                   bool preview);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                                  pe_resource_t *primary,
-                                  pcmk__colocation_t *constraint);
+                                  const pe_resource_t *primary,
+                                  const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
-                                   pcmk__colocation_t *constraint);
+                                   const pe_resource_t *primary,
+                                   const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
