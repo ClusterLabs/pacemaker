@@ -269,11 +269,11 @@ assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
  * \internal
  * \brief Apply a "this with" colocation to a node's allowed node scores
  *
- * \param[in] data       Colocation to apply
- * \param[in] user_data  Resource being assigned
+ * \param[in,out] data       Colocation to apply
+ * \param[in,out] user_data  Resource being assigned
  */
 static void
-apply_this_with(void *data, void *user_data)
+apply_this_with(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
@@ -315,8 +315,8 @@ apply_this_with(void *data, void *user_data)
  * \internal
  * \brief Apply a "with this" colocation to a node's allowed node scores
  *
- * \param[in] data       Colocation to apply
- * \param[in] user_data  Resource being assigned
+ * \param[in,out] data       Colocation to apply
+ * \param[in,out] user_data  Resource being assigned
  */
 static void
 apply_with_this(void *data, void *user_data)
@@ -346,7 +346,7 @@ apply_with_this(void *data, void *user_data)
  * \param[in] connection  Connection resource that has been assigned
  */
 static void
-remote_connection_assigned(pe_resource_t *connection)
+remote_connection_assigned(const pe_resource_t *connection)
 {
     pe_node_t *remote_node = pe_find_node(connection->cluster->nodes,
                                           connection->id);
@@ -816,13 +816,12 @@ rsc_avoids_remote_nodes(const pe_resource_t *rsc)
  * test output (while avoiding the performance hit on a live cluster).
  *
  * \param[in] rsc       Resource to check for allowed nodes
- * \param[in] data_set  Cluster working set
  *
  * \return List of resource's allowed nodes
  * \note Callers should take care not to rely on the list being sorted.
  */
 static GList *
-allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
+allowed_nodes_as_list(const pe_resource_t *rsc)
 {
     GList *allowed_nodes = NULL;
 
@@ -899,7 +898,7 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || (rsc->container != NULL)) {
-        allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
+        allowed_nodes = allowed_nodes_as_list(rsc);
     }
 
     if (check_unfencing) {
@@ -1389,7 +1388,7 @@ pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;
-    pe_resource_t *parent = NULL;
+    const pe_resource_t *parent = NULL;
 
     CRM_ASSERT((rsc != NULL) && (xml != NULL));
 
@@ -1458,7 +1457,7 @@ pcmk__primitive_add_utilization(const pe_resource_t *rsc,
  * \return Epoch time corresponding to shutdown attribute if set or now if not
  */
 static time_t
-shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
+shutdown_time(const pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
@@ -1470,7 +1469,7 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
             result = (time_t) result_ll;
         }
     }
-    return (result == 0)? get_effective_time(data_set) : result;
+    return (result == 0)? get_effective_time(node->details->data_set) : result;
 }
 
 // Primitive implementation of resource_alloc_functions_t:shutdown_lock()
@@ -1511,7 +1510,7 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
                              rsc->id, pe__node_name(node));
             } else {
                 rsc->lock_node = node;
-                rsc->lock_time = shutdown_time(node, rsc->cluster);
+                rsc->lock_time = shutdown_time(node);
             }
         }
     }
