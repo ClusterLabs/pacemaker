@@ -24,9 +24,9 @@
 /* Constraint helper functions */
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 
-pe_resource_t *find_compatible_child(pe_resource_t *local_child,
-                                     pe_resource_t *rsc, enum rsc_role_e filter,
-                                     gboolean current);
+pe_resource_t *find_compatible_child(const pe_resource_t *local_child,
+                                     const pe_resource_t *rsc,
+                                     enum rsc_role_e filter, gboolean current);
 pe_resource_t *find_compatible_child_by_node(const pe_resource_t *local_child,
                                              const pe_node_t *local_node,
                                              const pe_resource_t *rsc,
