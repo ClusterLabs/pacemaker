@@ -964,7 +964,7 @@ pcmk__colocation_affects(const pe_resource_t *dependent,
 void
 pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
                              const pe_resource_t *primary,
-                             pcmk__colocation_t *colocation)
+                             const pcmk__colocation_t *colocation)
 {
     const char *attribute = CRM_ATTR_ID;
     const char *value = NULL;

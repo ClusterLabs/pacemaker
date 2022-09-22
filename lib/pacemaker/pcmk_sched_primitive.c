@@ -1042,15 +1042,15 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
- * \param[in] dependent      Dependent resource in colocation
- * \param[in] primary        Primary resource in colocation
- * \param[in] colocation     Colocation constraint to apply
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
  * \param[in] for_dependent  true if called on behalf of dependent
  */
 void
 pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                  pe_resource_t *primary,
-                                  pcmk__colocation_t *colocation,
+                                  const pe_resource_t *primary,
+                                  const pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {
     enum pcmk__coloc_affects filter_results;
