@@ -87,18 +87,18 @@ create_acl(xmlNode *xml, GList *acls, enum xml_private_flags mode)
 
         if ((ref != NULL) && (attr != NULL)) {
             // NOTE: schema currently does not allow this
-            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s' and @%s]",
-                                   pcmk__s(tag, "*"), ref, attr);
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" XML_ATTR_ID "='",
+                           ref, "' and @", attr, "]", NULL);
 
         } else if (ref != NULL) {
-            g_string_append_printf(buf, "//%s[@" XML_ATTR_ID "='%s']",
-                                   pcmk__s(tag, "*"), ref);
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" XML_ATTR_ID "='",
+                           ref, "']", NULL);
 
         } else if (attr != NULL) {
-            g_string_append_printf(buf, "//%s[@%s]", pcmk__s(tag, "*"), attr);
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@", attr, "]", NULL);
 
         } else {
-            g_string_append_printf(buf, "//%s", pcmk__s(tag, "*"));
+            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
         }
 
         acl->xpath = strdup((const char *) buf->str);
@@ -668,7 +668,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             pcmk__log_else(LOG_TRACE, return false);
             xpath = pcmk__element_xpath(xml);
             if (name != NULL) {
-                g_string_append_printf(xpath, "[@%s]", name);
+                pcmk__g_strcat(xpath, "[@", name, "]", NULL);
             }
 
             qb_log_from_external_source(__func__, __FILE__,
@@ -704,7 +704,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
                 pcmk__log_else(LOG_TRACE, return false);
                 xpath = pcmk__element_xpath(xml);
                 if (name != NULL) {
-                    g_string_append_printf(xpath, "[@%s]", name);
+                    pcmk__g_strcat(xpath, "[@", name, "]", NULL);
                 }
 
                 qb_log_from_external_source(__func__, __FILE__,
@@ -724,7 +724,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         pcmk__log_else(LOG_TRACE, return false);
         xpath = pcmk__element_xpath(xml);
         if (name != NULL) {
-            g_string_append_printf(xpath, "[@%s]", name);
+            pcmk__g_strcat(xpath, "[@", name, "]", NULL);
         }
 
         qb_log_from_external_source(__func__, __FILE__,

@@ -174,15 +174,15 @@ pcmk__quote_cmdline(gchar **argv)
 
     for (int i = 0; argv[i] != NULL; i++) {
         if (i > 0) {
-            g_string_append(gs, " ");
+            g_string_append_c(gs, ' ');
         }
 
         if (strchr(argv[i], ' ') == NULL) {
             /* The arg does not contain a space. */
-            g_string_append_printf(gs, "%s", argv[i]);
+            g_string_append(gs, argv[i]);
         } else if (strchr(argv[i], '\'') == NULL) {
             /* The arg contains a space, but not a single quote. */
-            g_string_append_printf(gs, "'%s'", argv[i]);
+            pcmk__g_strcat(gs, "'", argv[i], "'", NULL);
         } else {
             /* The arg contains both a space and a single quote, which needs to
              * be replaced with an escaped version.  We do this instead of counting
@@ -203,7 +203,7 @@ pcmk__quote_cmdline(gchar **argv)
              * It's simplest to just escape with a backslash.
              */
             gchar *repl = string_replace(argv[i], "'", "\\\'");
-            g_string_append_printf(gs, "'%s'", repl);
+            pcmk__g_strcat(gs, "'", repl, "'", NULL);
             g_free(repl);
         }
     }

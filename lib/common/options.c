@@ -602,13 +602,12 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
     if (spaces != NULL) {
         g_string_append(s, spaces);
     }
-    g_string_append_printf(s, "<%s lang=\"en\">%s",
-                           tag, escaped_en);
+    pcmk__g_strcat(s, "<", tag, " lang=\"en\">", escaped_en, NULL);
 
     if (values != NULL) {
-        g_string_append_printf(s, "  Allowed values: %s", values);
+        pcmk__g_strcat(s, "  Allowed values: ", values, NULL);
     }
-    g_string_append_printf(s, "</%s>\n", tag);
+    pcmk__g_strcat(s, "</", tag, ">\n", NULL);
 
 #ifdef ENABLE_NLS
     {
@@ -624,14 +623,13 @@ add_desc(GString *s, const char *tag, const char *desc, const char *values,
             if (spaces != NULL) {
                 g_string_append(s, spaces);
             }
-            g_string_append_printf(s, "<%s lang=\"%s\">%s",
-                                   tag, locale, localized);
+            pcmk__g_strcat(s, "<", tag, " lang=\"", locale, "\">", localized,
+                           NULL);
 
             if (values != NULL) {
-                g_string_append_printf(s, "%s%s", _("  Allowed values: "),
-                                       _(values));
+                pcmk__g_strcat(s, _("  Allowed values: "), _(values), NULL);
             }
-            g_string_append_printf(s, "</%s>\n", tag);
+            pcmk__g_strcat(s, "</", tag, ">\n", NULL);
         }
         free(localized);
     }
@@ -647,19 +645,19 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
 {
     /* big enough to hold "pacemaker-schedulerd metadata" output */
     GString *s = g_string_sized_new(13000);
-    int lpc = 0;
 
-    g_string_append_printf(s, "<?xml version=\"1.0\"?>"
-                              "<resource-agent name=\"%s\">\n"
-                              "  <version>%s</version>\n",
-                              name, PCMK_OCF_VERSION);
+    pcmk__g_strcat(s,
+                   "<?xml version=\"1.0\"?>\n"
+                   "<resource-agent name=\"", name, "\" "
+                                   "version=\"" PACEMAKER_VERSION "\">\n"
+                   "  <version>" PCMK_OCF_VERSION "</version>\n", NULL);
 
     add_desc(s, "longdesc", desc_long, NULL, "  ");
     add_desc(s, "shortdesc", desc_short, NULL, "  ");
 
     g_string_append(s, "  <parameters>\n");
 
-    for (lpc = 0; lpc < len; lpc++) {
+    for (int lpc = 0; lpc < len; lpc++) {
         const char *opt_name = option_list[lpc].name;
         const char *opt_type = option_list[lpc].type;
         const char *opt_values = option_list[lpc].values;
@@ -679,14 +677,14 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
         // The standard requires a parameter type
         CRM_ASSERT(opt_type != NULL);
 
-        g_string_append_printf(s, "    <parameter name=\"%s\">\n", opt_name);
+        pcmk__g_strcat(s, "    <parameter name=\"", opt_name, "\">\n", NULL);
 
         add_desc(s, "longdesc", opt_desc_long, opt_values, "      ");
         add_desc(s, "shortdesc", opt_desc_short, NULL, "      ");
 
-        g_string_append_printf(s, "      <content type=\"%s\"", opt_type);
+        pcmk__g_strcat(s, "      <content type=\"", opt_type, "\"", NULL);
         if (opt_default != NULL) {
-            g_string_append_printf(s, " default=\"%s\"", opt_default);
+            pcmk__g_strcat(s, " default=\"", opt_default, "\"", NULL);
         }
 
         if ((opt_values != NULL) && (strcmp(opt_type, "select") == 0)) {
@@ -697,7 +695,8 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             g_string_append(s, ">\n");
 
             while (ptr != NULL) {
-                g_string_append_printf(s, "        <option value=\"%s\" />\n", ptr);
+                pcmk__g_strcat(s, "        <option value=\"", ptr, "\" />\n",
+                               NULL);
                 ptr = strtok(NULL, delim);
             }
             g_string_append_printf(s, "      </content>\n");
@@ -707,9 +706,9 @@ pcmk__format_option_metadata(const char *name, const char *desc_short,
             g_string_append(s, "/>\n");
         }
 
-        g_string_append_printf(s, "    </parameter>\n");
+        g_string_append(s, "    </parameter>\n");
     }
-    g_string_append_printf(s, "  </parameters>\n</resource-agent>\n");
+    g_string_append(s, "  </parameters>\n</resource-agent>\n");
 
     return g_string_free(s, FALSE);
 }
