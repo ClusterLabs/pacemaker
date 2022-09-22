@@ -36,7 +36,7 @@ void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
 static GList *
-get_container_list(pe_resource_t *rsc)
+get_container_list(const pe_resource_t *rsc)
 {
     GList *containers = NULL;
 
@@ -55,7 +55,7 @@ get_container_list(pe_resource_t *rsc)
 }
 
 static inline GList *
-get_containers_or_children(pe_resource_t *rsc)
+get_containers_or_children(const pe_resource_t *rsc)
 {
     return (rsc->variant == pe_container)?
            get_container_list(rsc) : rsc->children;
@@ -335,8 +335,9 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 }
 
 static pe_resource_t *
-compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
-                            pe_resource_t *rsc, enum rsc_role_e filter,
+compatible_replica_for_node(const pe_resource_t *rsc_lh,
+                            const pe_node_t *candidate,
+                            const pe_resource_t *rsc, enum rsc_role_e filter,
                             gboolean current)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -364,7 +365,7 @@ compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
 }
 
 static pe_resource_t *
-compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
                    enum rsc_role_e filter, gboolean current,
                    pe_working_set_t *data_set)
 {
@@ -570,8 +571,10 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 }
 
 pe_resource_t *
-find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
-                              enum rsc_role_e filter, gboolean current)
+find_compatible_child_by_node(const pe_resource_t *local_child,
+                              const pe_node_t *local_node,
+                              const pe_resource_t *rsc, enum rsc_role_e filter,
+                              gboolean current)
 {
     GList *gIter = NULL;
     GList *children = NULL;
