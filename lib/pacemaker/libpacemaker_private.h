@@ -338,6 +338,9 @@ void pcmk__fence_guest(pe_node_t *node);
 G_GNUC_INTERNAL
 bool pcmk__node_unfenced(pe_node_t *node);
 
+G_GNUC_INTERNAL
+void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
+
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
