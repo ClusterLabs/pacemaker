@@ -1438,6 +1438,25 @@ shutdown_time(const pe_node_t *node)
     return (result == 0)? get_effective_time(node->details->data_set) : result;
 }
 
+/*!
+ * \internal
+ * \brief Ban a resource from a node if it's not locked to the node
+ *
+ * \param[in] data  Node to check
+ * \param[in] user_data  Resource to check
+ */
+static void
+ban_if_not_locked(gpointer data, gpointer user_data)
+{
+    pe_node_t *node = (pe_node_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
+        resource_location(rsc, node, -CRM_SCORE_INFINITY,
+                          XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
+    }
+}
+
 // Primitive implementation of resource_alloc_functions_t:shutdown_lock()
 void
 pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
@@ -1499,12 +1518,5 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
     }
 
     // If resource is locked to one node, ban it from all other nodes
-    for (GList *item = rsc->cluster->nodes; item != NULL; item = item->next) {
-        pe_node_t *node = item->data;
-
-        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
-            resource_location(rsc, node, -CRM_SCORE_INFINITY,
-                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
-        }
-    }
+    g_list_foreach(rsc->cluster->nodes, ban_if_not_locked, rsc);
 }
