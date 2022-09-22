@@ -337,12 +337,11 @@ bool xml_document_dirty(xmlNode *xml)
  * \return Ordinal position of \p xml (starting with 0)
  */
 int
-pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set)
+pcmk__xml_position(const xmlNode *xml, enum xml_private_flags ignore_if_set)
 {
     int position = 0;
-    xmlNode *cIter = NULL;
 
-    for (cIter = xml; cIter->prev; cIter = cIter->prev) {
+    for (const xmlNode *cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_node_private_t *nodepriv = ((xmlNode*)cIter->prev)->_private;
 
         if (!pcmk_is_set(nodepriv->flags, ignore_if_set)) {
@@ -392,7 +391,7 @@ accept_attr_deletions(xmlNode *xml)
  * \param[in] exact     If true and needle is a comment, position must match
  */
 xmlNode *
-pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact)
+pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle, bool exact)
 {
     CRM_CHECK(needle != NULL, return NULL);
 
@@ -518,7 +517,7 @@ find_xml_node(const xmlNode *root, const char *search_path, gboolean must_find)
  * \return Matching XML child element, or NULL if none found
  */
 xmlNode *
-pcmk__xe_match(xmlNode *parent, const char *node_name,
+pcmk__xe_match(const xmlNode *parent, const char *node_name,
                const char *attr_n, const char *attr_v)
 {
     /* ensure attr_v specified when attr_n is */
@@ -571,12 +570,12 @@ copy_in_properties(xmlNode * target, xmlNode * src)
  * \brief Parse integer assignment statements on this node and all its child
  *        nodes
  *
- * \param[in]  target  root XML node to be processed
+ * \param[in,out] target  Root XML node to be processed
  *
  * \note This function is recursive
  */
 void
-fix_plus_plus_recursive(xmlNode * target)
+fix_plus_plus_recursive(xmlNode *target)
 {
     /* TODO: Remove recursion and use xpath searches for value++ */
     xmlNode *child = NULL;
@@ -596,7 +595,7 @@ fix_plus_plus_recursive(xmlNode * target)
 /*!
  * \brief Update current XML attribute value per parsed integer assignment
           statement
- * 
+ *
  * \param[in,out]   target  an XML node, containing a XML attribute that is
  *                          initialized to some numeric value, to be processed
  * \param[in]       name    name of the XML attribute, e.g. X, whose value
@@ -607,7 +606,7 @@ fix_plus_plus_recursive(xmlNode * target)
  * \note The original XML attribute value is treated as 0 if non-numeric and
  *       truncated to be an integer if decimal-point-containing.
  * \note The final XML attribute value is truncated to not exceed 1000000.
- * \note Undefined behavior if unexpected input. 
+ * \note Undefined behavior if unexpected input.
  */
 void
 expand_plus_plus(xmlNode * target, const char *name, const char *value)
@@ -677,7 +676,7 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
  * \param[in,out] element    XML element to modify
  * \param[in]     match      If not NULL, only remove attributes for which
  *                           this function returns true
- * \param[in]     user_data  Data to pass to \p match
+ * \param[in,out] user_data  Data to pass to \p match
  */
 void
 pcmk__xe_remove_matching_attrs(xmlNode *element,
@@ -803,7 +802,7 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
 /*!
  * Free an XML element and all of its children, removing it from its parent
  *
- * \param[in] xml  XML element to free
+ * \param[in,out] xml  XML element to free
  */
 void
 pcmk_free_xml_subtree(xmlNode *xml)
@@ -1169,7 +1168,7 @@ filename2xml(const char *filename)
  * \internal
  * \brief Add a "last written" attribute to an XML element, set to current time
  *
- * \param[in] xe  XML element to add attribute to
+ * \param[in,out] xe  XML element to add attribute to
  *
  * \return Value that was set, or NULL on error
  */
@@ -1231,11 +1230,11 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \internal
  * \brief Write XML to a file stream
  *
- * \param[in] xml_node  XML to write
- * \param[in] filename  Name of file being written (for logging only)
- * \param[in] stream    Open file stream corresponding to filename
- * \param[in] compress  Whether to compress XML before writing
- * \param[out] nbytes   Number of bytes written
+ * \param[in]     xml_node  XML to write
+ * \param[in]     filename  Name of file being written (for logging only)
+ * \param[in,out] stream    Open file stream corresponding to filename
+ * \param[in]     compress  Whether to compress XML before writing
+ * \param[out]    nbytes    Number of bytes written
  *
  * \return Standard Pacemaker return code
  */
@@ -2201,6 +2200,11 @@ set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
  * deleted. Add the attribute back to the new XML, so that we can check the
  * removal against ACLs, and mark it as deleted for later removal after
  * differences have been calculated.
+ *
+ * \param[in,out] new_xml     XML to modify
+ * \param[in]     element     Name of XML element that changed (for logging)
+ * \param[in]     attr_name   Name of attribute that was deleted
+ * \param[in]     old_value   Value of attribute that was deleted
  */
 static void
 mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
@@ -2252,6 +2256,13 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
 /*!
  * \internal
  * \brief Mark an XML attribute as having changed position
+ *
+ * \param[in,out] new_xml     XML to modify
+ * \param[in]     element     Name of XML element that changed (for logging)
+ * \param[in,out] old_attr    Attribute that moved, in original XML
+ * \param[in,out] new_attr    Attribute that moved, in \p new_xml
+ * \param[in]     p_old       Ordinal position of \p old_attr in original XML
+ * \param[in]     p_new       Ordinal position of \p new_attr in \p new_xml
  */
 static void
 mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
@@ -2275,6 +2286,9 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 /*!
  * \internal
  * \brief Calculate differences in all previously existing XML attributes
+ *
+ * \param[in,out] old_xml  Original XML to compare
+ * \param[in,out] new_xml  New XML to compare
  */
 static void
 xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
@@ -2319,6 +2333,11 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 /*!
  * \internal
  * \brief Check all attributes in new XML for creation
+ *
+ * For each of a given XML element's attributes marked as newly created, accept
+ * (and mark as dirty) or reject the creation according to ACLs.
+ *
+ * \param[in,out] new_xml  XML to check
  */
 static void
 mark_created_attrs(xmlNode *new_xml)
@@ -2353,6 +2372,9 @@ mark_created_attrs(xmlNode *new_xml)
 /*!
  * \internal
  * \brief Calculate differences in attributes between two XML nodes
+ *
+ * \param[in,out] old_xml  Original XML to compare
+ * \param[in,out] new_xml  New XML to compare
  */
 static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
@@ -2370,6 +2392,9 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
  * deleted. Add the child back to the new XML, so that we can check the removal
  * against ACLs, and mark it as deleted for later removal after differences have
  * been calculated.
+ *
+ * \param[in,out] old_child    Child element from original XML
+ * \param[in,out] new_parent   New XML to add marked copy to
  */
 static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
@@ -2541,7 +2566,7 @@ can_prune_leaf(xmlNode * xml_node)
  * \param[in] exact           If true, comment must also be at same position
  */
 xmlNode *
-pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact)
+pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment, bool exact)
 {
     xmlNode *a_child = NULL;
     int search_offset = pcmk__xml_position(search_comment, pcmk__xf_skip);

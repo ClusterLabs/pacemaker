@@ -72,10 +72,12 @@ G_GNUC_INTERNAL
 void pcmk__mark_xml_created(xmlNode *xml);
 
 G_GNUC_INTERNAL
-int pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set);
+int pcmk__xml_position(const xmlNode *xml,
+                       enum xml_private_flags ignore_if_set);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
+xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
+                         bool exact);
 
 G_GNUC_INTERNAL
 void pcmk__xml_log(int log_level, const char *file, const char *function,
@@ -87,7 +89,8 @@ void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
                       bool as_diff);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact);
+xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
+                        bool exact);
 
 G_GNUC_INTERNAL
 void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);

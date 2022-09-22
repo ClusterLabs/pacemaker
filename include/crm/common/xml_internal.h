@@ -156,7 +156,7 @@ enum pcmk__xml_artefact_ns {
 void pcmk__strip_xml_text(xmlNode *xml);
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
-xmlNode *pcmk__xe_match(xmlNode *parent, const char *node_name,
+xmlNode *pcmk__xe_match(const xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
 void pcmk__xe_remove_matching_attrs(xmlNode *element,
