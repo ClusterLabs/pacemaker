@@ -300,10 +300,10 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \internal
  * \brief Parse a guint from a string stored in a hash table
  *
- * \param[in]  table        Hash table to search
- * \param[in]  key          Hash table key to use to retrieve string
- * \param[in]  default_val  What to use if key has no entry in table
- * \param[out] result       If not NULL, where to store parsed integer
+ * \param[in,out] table        Hash table to search
+ * \param[in]     key          Hash table key to use to retrieve string
+ * \param[in]     default_val  What to use if key has no entry in table
+ * \param[out]    result       If not NULL, where to store parsed integer
  *
  * \return Standard Pacemaker return code
  */
@@ -448,7 +448,7 @@ crm_str_to_boolean(const char *s, int *ret)
  * \internal
  * \brief Replace any trailing newlines in a string with \0's
  *
- * \param[in] str  String to trim
+ * \param[in,out] str  String to trim
  *
  * \return \p str
  */
@@ -665,7 +665,7 @@ copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
  * \internal
  * \brief Copy a hash table that uses dynamically allocated strings
  *
- * \param[in] old_table  Hash table to duplicate
+ * \param[in,out] old_table  Hash table to duplicate
  *
  * \return New hash table with copies of everything in \p old_table
  * \note This assumes the hash table uses dynamically allocated strings -- that
@@ -876,16 +876,16 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
  * \note No matter what input string or flags are provided, an empty
  *       list will always return FALSE.
  *
- * \param[in]  s     String to search for
- * \param[in]  lst   List to search
- * \param[in]  flags A bitfield of pcmk__str_flags to modify operation
+ * \param[in] s      String to search for
+ * \param[in] lst    List to search
+ * \param[in] flags  A bitfield of pcmk__str_flags to modify operation
  *
  * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
  */
 gboolean
-pcmk__str_in_list(const gchar *s, GList *lst, uint32_t flags)
+pcmk__str_in_list(const gchar *s, const GList *lst, uint32_t flags)
 {
-    for (GList *ele = lst; ele != NULL; ele = ele->next) {
+    for (const GList *ele = lst; ele != NULL; ele = ele->next) {
         if (pcmk__str_eq(s, ele->data, flags)) {
             return TRUE;
         }
@@ -1184,8 +1184,8 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
  * is different from the new value, free the string and replace it with either a
  * newly allocated duplicate of the value or NULL as appropriate.
  *
- * \param[in] str    Pointer to dynamically allocated string
- * \param[in] value  New value to duplicate (or NULL)
+ * \param[in,out] str    Pointer to dynamically allocated string
+ * \param[in]     value  New value to duplicate (or NULL)
  *
  * \note The caller remains responsibile for freeing \p *str.
  */

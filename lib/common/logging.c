@@ -723,9 +723,9 @@ crm_priority2int(const char *name)
  * If the identifier crm_system_name is not already set, then it is set as follows:
  * - it is passed to the function via the "entity" parameter, or
  * - it is derived from the executable name
- * 
+ *
  * The identifier can be used in logs, IPC, and more.
- * 
+ *
  * This method also sets the PCMK_service environment variable.
  *
  * \param[in] entity  If not NULL, will be assigned to the identifier

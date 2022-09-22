@@ -37,7 +37,7 @@
  *       limit, but there isn't.
  */
 static int
-pcmk__procfs_process_info(struct dirent *entry, char *name, pid_t *pid)
+pcmk__procfs_process_info(const struct dirent *entry, char *name, pid_t *pid)
 {
     int fd, local_pid;
     FILE *file;

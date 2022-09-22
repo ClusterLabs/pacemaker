@@ -160,9 +160,9 @@ xpath_search(xmlNode * xml_top, const char *path)
 /*!
  * \brief Run a supplied function for each result of an xpath search
  *
- * \param[in] xml            XML to search
- * \param[in] xpath          XPath search string
- * \param[in] helper         Function to call for each result
+ * \param[in,out] xml        XML to search
+ * \param[in]     xpath      XPath search string
+ * \param[in]     helper     Function to call for each result
  * \param[in,out] user_data  Data to pass to supplied function
  *
  * \note The helper function will be passed the XML node of the result,

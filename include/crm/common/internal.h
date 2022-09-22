@@ -55,9 +55,9 @@ bool pcmk__verify_digest(xmlNode *input, const char *expected);
 /* internal main loop utilities (from mainloop.c) */
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
-                           struct ipc_client_callbacks *callbacks,
+                           const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
-guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
+guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 
 /* internal node-related XML utilities (from nodes.c) */

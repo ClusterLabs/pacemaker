@@ -285,7 +285,7 @@ pcmk__controld_api_methods(void)
  * \return Newly allocated XML for request
  */
 static xmlNode *
-create_controller_request(pcmk_ipc_api_t *api, const char *op,
+create_controller_request(const pcmk_ipc_api_t *api, const char *op,
                           const char *node, xmlNode *msg_data)
 {
     struct controld_api_private_s *private = NULL;
@@ -340,9 +340,9 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
 /*!
  * \brief Send a reprobe controller operation
  *
- * \param[in] api          Controller connection
- * \param[in] target_node  Name of node to reprobe
- * \param[in] router_node  Router node for host
+ * \param[in,out] api          Controller connection
+ * \param[in]     target_node  Name of node to reprobe
+ * \param[in]     router_node  Router node for host
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_reprobe.
@@ -376,8 +376,8 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
 /*!
  * \brief Send a "node info" controller operation
  *
- * \param[in] api          Controller connection
- * \param[in] nodeid       ID of node to get info for (or 0 for local node)
+ * \param[in,out] api     Controller connection
+ * \param[in]     nodeid  ID of node to get info for (or 0 for local node)
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_info.
@@ -404,8 +404,8 @@ pcmk_controld_api_node_info(pcmk_ipc_api_t *api, uint32_t nodeid)
 /*!
  * \brief Ask the controller for status
  *
- * \param[in] api          Controller connection
- * \param[in] node_name    Name of node whose status is desired (or NULL for DC)
+ * \param[in,out] api        Controller connection
+ * \param[in]     node_name  Name of node whose status is desired (NULL for DC)
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_ping.
@@ -428,7 +428,7 @@ pcmk_controld_api_ping(pcmk_ipc_api_t *api, const char *node_name)
 /*!
  * \brief Ask the controller for cluster information
  *
- * \param[in] api          Controller connection
+ * \param[in,out] api  Controller connection
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_nodes.
@@ -513,14 +513,14 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
 /*!
  * \brief Ask the controller to fail a resource
  *
- * \param[in] api          Controller connection
- * \param[in] target_node  Name of node resource is on
- * \param[in] router_node  Router node for target
- * \param[in] rsc_id       ID of resource to fail
- * \param[in] rsc_long_id  Long ID of resource (if any)
- * \param[in] standard     Standard of resource
- * \param[in] provider     Provider of resource (if any)
- * \param[in] type         Type of resource to fail
+ * \param[in,out] api          Controller connection
+ * \param[in]     target_node  Name of node resource is on
+ * \param[in]     router_node  Router node for target
+ * \param[in]     rsc_id       ID of resource to fail
+ * \param[in]     rsc_long_id  Long ID of resource (if any)
+ * \param[in]     standard     Standard of resource
+ * \param[in]     provider     Provider of resource (if any)
+ * \param[in]     type         Type of resource to fail
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_resource.
@@ -545,15 +545,15 @@ pcmk_controld_api_fail(pcmk_ipc_api_t *api,
 /*!
  * \brief Ask the controller to refresh a resource
  *
- * \param[in] api          Controller connection
- * \param[in] target_node  Name of node resource is on
- * \param[in] router_node  Router node for target
- * \param[in] rsc_id       ID of resource to refresh
- * \param[in] rsc_long_id  Long ID of resource (if any)
- * \param[in] standard     Standard of resource
- * \param[in] provider     Provider of resource (if any)
- * \param[in] type         Type of resource
- * \param[in] cib_only     If true, clean resource from CIB only
+ * \param[in,out] api          Controller connection
+ * \param[in]     target_node  Name of node resource is on
+ * \param[in]     router_node  Router node for target
+ * \param[in]     rsc_id       ID of resource to refresh
+ * \param[in]     rsc_long_id  Long ID of resource (if any)
+ * \param[in]     standard     Standard of resource
+ * \param[in]     provider     Provider of resource (if any)
+ * \param[in]     type         Type of resource
+ * \param[in]     cib_only     If true, clean resource from CIB only
  *
  * \return Standard Pacemaker return code
  * \note Event callback will get a reply of type pcmk_controld_reply_resource.

@@ -978,7 +978,7 @@ pcmk__set_result_output(pcmk__action_result_t *result, char *out, char *err)
  * \internal
  * \brief Clear a result's exit reason, output, and error output
  *
- * \param[in] result  Result to reset
+ * \param[in,out] result  Result to reset
  */
 void
 pcmk__reset_result(pcmk__action_result_t *result)
@@ -1005,7 +1005,7 @@ pcmk__reset_result(pcmk__action_result_t *result)
  * \param[out] dst  Where to copy \p src to
  */
 void
-pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst)
+pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
 {
     CRM_CHECK((src != NULL) && (dst != NULL), return);
     dst->exit_status = src->exit_status;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the Pacemaker project contributors
+ * Copyright 2015-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -69,7 +69,7 @@ enum pcmk__alert_keys_e {
 
 extern const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX][3];
 
-pcmk__alert_t *pcmk__dup_alert(pcmk__alert_t *entry);
+pcmk__alert_t *pcmk__dup_alert(const pcmk__alert_t *entry);
 pcmk__alert_t *pcmk__alert_new(const char *id, const char *path);
 void pcmk__free_alert(pcmk__alert_t *entry);
 void pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,

@@ -121,7 +121,7 @@ int pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type);
 
 void pcmk_disconnect_ipc(pcmk_ipc_api_t *api);
 
-int pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms);
+int pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms);
 
 void pcmk_dispatch_ipc(pcmk_ipc_api_t *api);
 
