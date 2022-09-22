@@ -618,7 +618,8 @@ clone_internal_constraints(pe_resource_t *rsc)
 }
 
 gboolean
-is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
+is_child_compatible(const pe_resource_t *child_rsc, const pe_node_t *local_node,
+                    enum rsc_role_e filter, gboolean current)
 {
     pe_node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
