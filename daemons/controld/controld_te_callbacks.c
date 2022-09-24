@@ -26,8 +26,8 @@ gboolean shuttingdown = FALSE;
 pcmk__graph_t *transition_graph;
 crm_trigger_t *transition_trigger = NULL;
 
-/* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
-#define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
+#define RSC_OP_PREFIX "//" XML_TAG_DIFF_ADDED "//" XML_TAG_CIB \
+                      "//" XML_LRM_TAG_RSC_OP "[@" XML_ATTR_ID "='"
 
 // An explicit shutdown-lock of 0 means the lock has been cleared
 static bool
@@ -45,6 +45,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 {
     int lpc, max;
     xmlXPathObject *xpathObj = NULL;
+    GString *rsc_op_xpath = NULL;
 
     CRM_CHECK(diff != NULL, return);
 
@@ -156,9 +157,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
     xpathObj = xpath_search(diff, "//" XML_TAG_DIFF_REMOVED "//" XML_LRM_TAG_RSC_OP);
     max = numXpathResults(xpathObj);
     for (lpc = 0; lpc < max; lpc++) {
-        int path_max = 0;
         const char *op_id = NULL;
-        char *rsc_op_xpath = NULL;
         xmlXPathObject *op_match = NULL;
         xmlNode *match = getXpathResult(xpathObj, lpc);
 
@@ -167,23 +166,25 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
         op_id = ID(match);
 
-        path_max = strlen(RSC_OP_TEMPLATE) + strlen(op_id) + 1;
-        rsc_op_xpath = calloc(1, path_max);
-        snprintf(rsc_op_xpath, path_max, RSC_OP_TEMPLATE, op_id);
+        if (rsc_op_xpath == NULL) {
+            rsc_op_xpath = g_string_new(RSC_OP_PREFIX);
+        } else {
+            g_string_truncate(rsc_op_xpath, sizeof(RSC_OP_PREFIX) - 1);
+        }
+        pcmk__g_strcat(rsc_op_xpath, op_id, "']", NULL);
 
-        op_match = xpath_search(diff, rsc_op_xpath);
+        op_match = xpath_search(diff, (const char *) rsc_op_xpath->str);
         if (numXpathResults(op_match) == 0) {
             /* Prevent false positives by matching cancelations too */
             const char *node = get_node_id(match);
             pcmk__graph_action_t *cancelled = get_cancel_action(op_id, node);
 
             if (cancelled == NULL) {
-                crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id,
-                          node);
+                crm_debug("No match for deleted action %s (%s on %s)",
+                          (const char *) rsc_op_xpath->str, op_id, node);
                 abort_transition(INFINITY, pcmk__graph_restart,
                                  "Resource op removal", match);
                 freeXpathObject(op_match);
-                free(rsc_op_xpath);
                 goto bail;
 
             } else {
@@ -193,11 +194,13 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         }
 
         freeXpathObject(op_match);
-        free(rsc_op_xpath);
     }
 
   bail:
     freeXpathObject(xpathObj);
+    if (rsc_op_xpath != NULL) {
+        g_string_free(rsc_op_xpath, TRUE);
+    }
 }
 
 static void
