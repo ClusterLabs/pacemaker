@@ -287,12 +287,14 @@ static pcmk__cluster_option_t pe_opts[] = {
 void
 pe_metadata(pcmk__output_t *out)
 {
-    char *s = pcmk__format_option_metadata("pacemaker-schedulerd",
-                                           "Pacemaker scheduler options",
-                                           "Cluster options used by Pacemaker's scheduler",
-                                           pe_opts, PCMK__NELEM(pe_opts));
+    const char *desc_short = "Pacemaker scheduler options";
+    const char *desc_long = "Cluster options used by Pacemaker's scheduler";
+
+    gchar *s = pcmk__format_option_metadata("pacemaker-schedulerd", desc_short,
+                                            desc_long, pe_opts,
+                                            PCMK__NELEM(pe_opts));
     out->output_xml(out, "metadata", s);
-    free(s);
+    g_free(s);
 }
 
 void
