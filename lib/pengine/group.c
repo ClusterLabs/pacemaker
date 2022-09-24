@@ -205,8 +205,13 @@ group_active(pe_resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                void *print_data)
 {
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
@@ -225,8 +230,13 @@ group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
     free(child_text);
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print(pe_resource_t *rsc, const char *pre_text, long options,
+            void *print_data)
 {
     char *child_text = NULL;
     GList *gIter = rsc->children;

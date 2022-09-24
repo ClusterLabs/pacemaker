@@ -447,8 +447,13 @@ native_displayable_state(pe_resource_t *rsc, bool print_pending)
     return rsc_state;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+native_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -770,8 +775,13 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_node_t *node, long options, void *print_data)
+common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
+             pe_node_t *node, long options, void *print_data)
 {
     const char *target_role = NULL;
 
@@ -885,8 +895,13 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     }
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-native_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+native_print(pe_resource_t *rsc, const char *pre_text, long options,
+             void *print_data)
 {
     pe_node_t *node = NULL;
 
@@ -1193,6 +1208,10 @@ destroy_node_table(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
 print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
                  void *print_data, gboolean print_all)

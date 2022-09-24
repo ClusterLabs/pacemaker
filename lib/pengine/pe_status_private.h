@@ -19,6 +19,10 @@
 #define G_GNUC_INTERNAL
 #endif
 
+/*!
+ * \internal
+ * \deprecated This macro will be removed in a future release
+ */
 #  define status_print(fmt, args...)           \
    if(options & pe_print_html) {           \
        FILE *stream = print_data;      \

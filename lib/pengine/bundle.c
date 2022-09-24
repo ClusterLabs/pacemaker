@@ -1416,6 +1416,10 @@ pe__find_bundle_replica(const pe_resource_t *bundle, const pe_node_t *node)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
                   void *print_data)
@@ -1444,6 +1448,10 @@ container_agent_str(enum pe__container_agent t)
     return PE__CONTAINER_AGENT_UNKNOWN_S;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
@@ -1836,6 +1844,10 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
@@ -1866,6 +1878,10 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
 pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)

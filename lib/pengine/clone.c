@@ -404,6 +404,10 @@ clone_active(pe_resource_t * rsc, gboolean all)
     }
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 short_print(const char *list, const char *prefix, const char *type,
             const char *suffix, long options, void *print_data)
@@ -454,8 +458,13 @@ configured_role(pe_resource_t * rsc)
     return RSC_ROLE_UNKNOWN;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+clone_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                void *print_data)
 {
     char *child_text = crm_strdup_printf("%s    ", pre_text);
     const char *target_role = configured_role_str(rsc);
@@ -515,8 +524,13 @@ bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+clone_print(pe_resource_t *rsc, const char *pre_text, long options,
+            void *print_data)
 {
     GString *list_text = NULL;
     char *child_text = NULL;
