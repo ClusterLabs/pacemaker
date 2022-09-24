@@ -20,6 +20,7 @@ check_PROGRAMS = \
 		pcmk__char_in_any_str_test	\
 		pcmk__compress_test	\
 		pcmk__ends_with_test 		\
+		pcmk__g_strcat_test		\
 		pcmk__guint_from_hash_test	\
 		pcmk__numeric_strcasecmp_test \
 		pcmk__parse_ll_range_test	\
