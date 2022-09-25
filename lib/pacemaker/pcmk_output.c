@@ -1880,20 +1880,20 @@ attribute_default(pcmk__output_t *out, va_list args)
     GString *s = g_string_sized_new(50);
 
     if (!pcmk__str_empty(scope)) {
-        g_string_append_printf(s, "scope=\"%s\" ", scope);
+        pcmk__g_strcat(s, "scope=\"", scope, "\" ", NULL);
     }
 
     if (!pcmk__str_empty(instance)) {
-        g_string_append_printf(s, "id=\"%s\" ", instance);
+        pcmk__g_strcat(s, "id=\"", instance, "\" ", NULL);
     }
 
-    g_string_append_printf(s, "name=\"%s\" ", name);
+    pcmk__g_strcat(s, "name=\"", pcmk__s(name, ""), "\" ", NULL);
 
     if (!pcmk__str_empty(host)) {
-        g_string_append_printf(s, "host=\"%s\" ", host);
+        pcmk__g_strcat(s, "host=\"", host, "\" ", NULL);
     }
 
-    g_string_append_printf(s, "value=\"%s\"", value ? value : "");
+    pcmk__g_strcat(s, "value=\"", pcmk__s(value, ""), "\"", NULL);
 
     out->info(out, "%s", s->str);
     g_string_free(s, TRUE);
