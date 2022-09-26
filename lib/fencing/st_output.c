@@ -81,27 +81,29 @@ stonith__history_description(stonith_history_t *history, bool full_history,
         completed_time = time_t_string(history->completed);
     }
 
-    g_string_printf(str, "%s of %s",
-                    stonith_action_str(history->action), history->target);
+    pcmk__g_strcat(str,
+                   stonith_action_str(history->action), " of ", history->target,
+                   NULL);
 
     if (!pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
         // More human-friendly
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
-            g_string_append_printf(str, " by %s", history->delegate);
+
+            pcmk__g_strcat(str, " by ", history->delegate, NULL);
         }
-        g_string_append_printf(str, " for %s@%s",
-                               history->client, history->origin);
+        pcmk__g_strcat(str, " for ", history->client, "@", history->origin,
+                       NULL);
         if (!full_history) {
             g_string_append(str, " last"); // For example, "last failed at ..."
         }
     }
 
-    g_string_append_printf(str, " %s", state_str(history));
+    pcmk__add_word(&str, 0, state_str(history));
 
     // For failed actions, add exit reason if available
     if ((history->state == st_failed) && (history->exit_reason != NULL)) {
-        g_string_append_printf(str, " (%s)", history->exit_reason);
+        pcmk__g_strcat(str, " (", history->exit_reason, ")", NULL);
     }
 
     if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
@@ -112,12 +114,13 @@ stonith__history_description(stonith_history_t *history, bool full_history,
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
 
-            g_string_append_printf(str, "delegate=%s, ", history->delegate);
+            pcmk__g_strcat(str, "delegate=", history->delegate, ", ", NULL);
         }
 
         // Add information about originator
-        g_string_append_printf(str, "client=%s, origin=%s",
-                               history->client, history->origin);
+        pcmk__g_strcat(str,
+                       "client=", history->client, ", origin=", history->origin,
+                       NULL);
 
         // For completed actions, add completion time
         if (completed_time != NULL) {
@@ -128,17 +131,18 @@ stonith__history_description(stonith_history_t *history, bool full_history,
             } else {
                 g_string_append(str, ", last-successful");
             }
-            g_string_append_printf(str, "='%s'", completed_time);
+            pcmk__g_strcat(str, "='", completed_time, "'", NULL);
         }
     } else { // More human-friendly
         if (completed_time != NULL) {
-            g_string_append_printf(str, " at %s", completed_time);
+            pcmk__g_strcat(str, " at ", completed_time, NULL);
         }
     }
 
     if ((history->state == st_failed) && (later_succeeded != NULL)) {
-        g_string_append_printf(str, " (a later attempt from %s succeeded)",
-                               later_succeeded);
+        pcmk__g_strcat(str,
+                       " (a later attempt from ", later_succeeded,
+                       " succeeded)", NULL);
     }
 
     free(completed_time);
