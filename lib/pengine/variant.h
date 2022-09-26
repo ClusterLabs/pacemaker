@@ -92,7 +92,7 @@ typedef struct pe__bundle_variant_data_s {
         char *container_network;
         char *ip_range_start;
         gboolean add_host;
-        char *container_host_options;
+        gchar *container_host_options;
         char *container_command;
         char *launcher_options;
         const char *attribute_target;

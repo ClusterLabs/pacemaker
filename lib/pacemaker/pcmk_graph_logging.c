@@ -102,29 +102,38 @@ synapse_state_str(pcmk__graph_synapse_t *synapse)
     return "Pending";
 }
 
-// List action IDs of inputs in graph that haven't completed successfully
-static char *
-synapse_pending_inputs(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
+/*!
+ * \internal
+ * \brief List the action IDs of pending inputs to a transition graph synapse
+ *
+ * \param[in] graph    Transition graph to which \p synapse belongs
+ * \param[in] synapse  Synapse whose inputs to check
+ *
+ * \return A \p GString containing the space-delimited action IDs of inputs to
+ *         \p synapse that haven't completed successfully
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \p g_string_free().
+ */
+static GString *
+synapse_pending_inputs(pcmk__graph_t *graph,
+                       const pcmk__graph_synapse_t *synapse)
 {
-    char *pending = NULL;
-    size_t pending_len = 0;
+    GString *pending = NULL;
 
-    for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
-        pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
+    for (const GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+        const pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
 
         if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
-            pcmk__add_word(&pending, &pending_len, ID(input->xml));
+            pcmk__add_word(&pending, 1024, ID(input->xml));
 
         } else if (pcmk_is_set(input->flags, pcmk__graph_action_confirmed)) {
             // Confirmed successful inputs are not pending
 
         } else if (find_graph_action_by_id(graph, input->id) != NULL) {
             // In-flight or pending
-            pcmk__add_word(&pending, &pending_len, ID(input->xml));
+            pcmk__add_word(&pending, 1024, ID(input->xml));
         }
-    }
-    if (pending == NULL) {
-        pending = strdup("none");
     }
     return pending;
 }
@@ -169,16 +178,26 @@ static void
 log_synapse(unsigned int log_level, pcmk__graph_t *graph,
             pcmk__graph_synapse_t *synapse)
 {
-    char *pending = NULL;
+    GString *g_pending = NULL;
+    const char *pending = "none";
 
     if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
-        pending = synapse_pending_inputs(graph, synapse);
+        g_pending = synapse_pending_inputs(graph, synapse);
+
+        if (g_pending != NULL) {
+            pending = (const char *) g_pending->str;
+        }
     }
+
     for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         log_synapse_action(log_level, synapse,
                            (pcmk__graph_action_t *) lpc->data, pending);
     }
-    free(pending);
+
+    if (g_pending != NULL) {
+        g_string_free(g_pending, TRUE);
+    }
+
     if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
         log_unresolved_inputs(log_level, graph, synapse);
     }

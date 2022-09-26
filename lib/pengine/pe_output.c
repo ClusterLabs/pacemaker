@@ -2222,17 +2222,11 @@ node_list_text(pcmk__output_t *out, va_list args) {
     bool print_spacer = va_arg(args, int);
 
     /* space-separated lists of node names */
-    char *online_nodes = NULL;
-    char *online_remote_nodes = NULL;
-    char *online_guest_nodes = NULL;
-    char *offline_nodes = NULL;
-    char *offline_remote_nodes = NULL;
-
-    size_t online_nodes_len = 0;
-    size_t online_remote_nodes_len = 0;
-    size_t online_guest_nodes_len = 0;
-    size_t offline_nodes_len = 0;
-    size_t offline_remote_nodes_len = 0;
+    GString *online_nodes = NULL;
+    GString *online_remote_nodes = NULL;
+    GString *online_guest_nodes = NULL;
+    GString *offline_nodes = NULL;
+    GString *offline_remote_nodes = NULL;
 
     int rc = pcmk_rc_no_output;
 
@@ -2260,13 +2254,13 @@ node_list_text(pcmk__output_t *out, va_list args) {
         } else if (node->details->online) {
             // Display online node in a list
             if (pe__is_guest_node(node)) {
-                pcmk__add_word(&online_guest_nodes,
-                               &online_guest_nodes_len, node_name);
+                pcmk__add_word(&online_guest_nodes, 1024, node_name);
+
             } else if (pe__is_remote_node(node)) {
-                pcmk__add_word(&online_remote_nodes,
-                               &online_remote_nodes_len, node_name);
+                pcmk__add_word(&online_remote_nodes, 1024, node_name);
+
             } else {
-                pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
+                pcmk__add_word(&online_nodes, 1024, node_name);
             }
             free(node_name);
             continue;
@@ -2274,13 +2268,13 @@ node_list_text(pcmk__output_t *out, va_list args) {
         } else {
             // Display offline node in a list
             if (pe__is_remote_node(node)) {
-                pcmk__add_word(&offline_remote_nodes,
-                               &offline_remote_nodes_len, node_name);
+                pcmk__add_word(&offline_remote_nodes, 1024, node_name);
+
             } else if (pe__is_guest_node(node)) {
                 /* ignore offline guest nodes */
+
             } else {
-                pcmk__add_word(&offline_nodes,
-                               &offline_nodes_len, node_name);
+                pcmk__add_word(&offline_nodes, 1024, node_name);
             }
             free(node_name);
             continue;
@@ -2292,25 +2286,30 @@ node_list_text(pcmk__output_t *out, va_list args) {
     }
 
     /* If we're not grouping by node, summarize nodes by status */
-    if (online_nodes) {
-        out->list_item(out, "Online", "[ %s ]", online_nodes);
-        free(online_nodes);
+    if (online_nodes != NULL) {
+        out->list_item(out, "Online", "[ %s ]",
+                       (const char *) online_nodes->str);
+        g_string_free(online_nodes, TRUE);
     }
-    if (offline_nodes) {
-        out->list_item(out, "OFFLINE", "[ %s ]", offline_nodes);
-        free(offline_nodes);
+    if (offline_nodes != NULL) {
+        out->list_item(out, "OFFLINE", "[ %s ]",
+                       (const char *) offline_nodes->str);
+        g_string_free(offline_nodes, TRUE);
     }
     if (online_remote_nodes) {
-        out->list_item(out, "RemoteOnline", "[ %s ]", online_remote_nodes);
-        free(online_remote_nodes);
+        out->list_item(out, "RemoteOnline", "[ %s ]",
+                       (const char *) online_remote_nodes->str);
+        g_string_free(online_remote_nodes, TRUE);
     }
     if (offline_remote_nodes) {
-        out->list_item(out, "RemoteOFFLINE", "[ %s ]", offline_remote_nodes);
-        free(offline_remote_nodes);
+        out->list_item(out, "RemoteOFFLINE", "[ %s ]",
+                       (const char *) offline_remote_nodes->str);
+        g_string_free(offline_remote_nodes, TRUE);
     }
-    if (online_guest_nodes) {
-        out->list_item(out, "GuestOnline", "[ %s ]", online_guest_nodes);
-        free(online_guest_nodes);
+    if (online_guest_nodes != NULL) {
+        out->list_item(out, "GuestOnline", "[ %s ]",
+                       (const char *) online_guest_nodes->str);
+        g_string_free(online_guest_nodes, TRUE);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);

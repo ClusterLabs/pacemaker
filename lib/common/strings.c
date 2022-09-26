@@ -687,50 +687,47 @@ pcmk__str_table_dup(GHashTable *old_table)
  * \internal
  * \brief Add a word to a string list of words
  *
- * \param[in,out] list       Pointer to current string list (may not be NULL)
- * \param[in,out] len        If not NULL, must be set to length of \p list,
- *                           and will be updated to new length of \p list
+ * \param[in,out] list       Pointer to current string list (may not be \p NULL)
+ * \param[in]     init_size  \p list will be initialized to at least this size,
+ *                           if it needs initialization (if 0, use GLib's default
+ *                           initial string size)
  * \param[in]     word       String to add to \p list (\p list will be
- *                           unchanged if this is NULL or the empty string)
+ *                           unchanged if this is \p NULL or the empty string)
  * \param[in]     separator  String to separate words in \p list
  *                           (a space will be used if this is NULL)
  *
- * \note This dynamically reallocates \p list as needed. \p word may contain
- *       \p separator, though that would be a bad idea if the string needs to be
- *       parsed later.
+ * \note \p word may contain \p separator, though that would be a bad idea if
+ *       the string needs to be parsed later.
  */
 void
-pcmk__add_separated_word(char **list, size_t *len, const char *word,
+pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
                          const char *separator)
 {
-    size_t orig_len, new_len;
-
     CRM_ASSERT(list != NULL);
 
     if (pcmk__str_empty(word)) {
         return;
     }
 
-    // Use provided length, or calculate it if not available
-    orig_len = (len != NULL)? *len : ((*list == NULL)? 0 : strlen(*list));
+    if (*list == NULL) {
+        if (init_size > 0) {
+            *list = g_string_sized_new(init_size);
+        } else {
+            *list = g_string_new(NULL);
+        }
+    }
 
-    // Don't add a separator before the first word in the list
-    if (orig_len == 0) {
+    if ((*list)->len == 0) {
+        // Don't add a separator before the first word in the list
         separator = "";
 
-    // Default to space-separated
     } else if (separator == NULL) {
+        // Default to space-separated
         separator = " ";
     }
 
-    new_len = orig_len + strlen(separator) + strlen(word);
-    if (len != NULL) {
-        *len = new_len;
-    }
-
-    // +1 for null terminator
-    *list = pcmk__realloc(*list, new_len + 1);
-    sprintf(*list + orig_len, "%s%s", separator, word);
+    g_string_append(*list, separator);
+    g_string_append(*list, word);
 }
 
 /*!

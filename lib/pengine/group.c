@@ -42,27 +42,26 @@ inactive_resources(pe_resource_t *rsc)
 static void
 group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, int n_inactive, bool show_inactive)
 {
-    char *attrs = NULL;
-    size_t len = 0;
+    GString *attrs = NULL;
 
     if (n_inactive > 0 && !show_inactive) {
-        char *word = crm_strdup_printf("%d member%s inactive", n_inactive, pcmk__plural_s(n_inactive));
-        pcmk__add_separated_word(&attrs, &len, word, ", ");
-        free(word);
+        attrs = g_string_sized_new(64);
+        g_string_append_printf(attrs, "%d member%s inactive", n_inactive,
+                               pcmk__plural_s(n_inactive));
     }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pcmk__add_separated_word(&attrs, &len, "unmanaged", ", ");
+        pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
     if (pe__resource_is_disabled(rsc)) {
-        pcmk__add_separated_word(&attrs, &len, "disabled", ", ");
+        pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (attrs) {
+    if (attrs != NULL) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
-                                 rsc->id, attrs);
-        free(attrs);
+                                 rsc->id, (const char *) attrs->str);
+        g_string_free(attrs, TRUE);
     } else {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
     }
@@ -206,8 +205,13 @@ group_active(pe_resource_t * rsc, gboolean all)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
-group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
+                void *print_data)
 {
     GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
@@ -226,8 +230,13 @@ group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
     free(child_text);
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
-group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
+group_print(pe_resource_t *rsc, const char *pre_text, long options,
+            void *print_data)
 {
     char *child_text = NULL;
     GList *gIter = rsc->children;

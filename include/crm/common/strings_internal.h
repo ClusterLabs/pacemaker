@@ -37,8 +37,8 @@ bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);
 char *pcmk__trim(char *str);
-void pcmk__add_separated_word(char **list, size_t *len, const char *word,
-                              const char *separator);
+void pcmk__add_separated_word(GString **list, size_t init_size,
+                              const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
@@ -151,9 +151,9 @@ pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
 
 // Like pcmk__add_separated_word() but using a space as separator
 static inline void
-pcmk__add_word(char **list, size_t *len, const char *word)
+pcmk__add_word(GString **list, size_t init_size, const char *word)
 {
-    return pcmk__add_separated_word(list, len, word, " ");
+    return pcmk__add_separated_word(list, init_size, word, " ");
 }
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"

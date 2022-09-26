@@ -28,15 +28,6 @@
 #include <crm/common/output_internal.h>
 #include <crm/cib/internal.h>
 
-/* could also check for possible truncation */
-#define attr_snprintf(_str, _offset, _limit, ...) do {              \
-    _offset += snprintf(_str + _offset,                             \
-                        (_limit > _offset) ? _limit - _offset : 0,  \
-                        __VA_ARGS__);                               \
-    } while(0)
-
-#define XPATH_MAX 1024
-
 static pcmk__output_t *
 new_output_object(const char *ty)
 {
@@ -64,11 +55,10 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
           const char *attr_set_type, const char *set_name, const char *attr_id,
           const char *attr_name, const char *user_name, xmlNode **result)
 {
-    int offset = 0;
     int rc = pcmk_rc_ok;
 
     const char *xpath_base = NULL;
-    char *xpath_string = NULL;
+    GString *xpath = NULL;
     xmlNode *xml_search = NULL;
     const char *set_type = NULL;
     const char *node_type = NULL;
@@ -103,15 +93,11 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
         return ENOMSG;
     }
 
-    xpath_string = calloc(1, XPATH_MAX);
-    if (xpath_string == NULL) {
-        crm_perror(LOG_CRIT, "Could not create xpath");
-        return ENOMEM;
-    }
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "%s", xpath_base);
+    xpath = g_string_sized_new(1024);
+    g_string_append(xpath, xpath_base);
 
     if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", node_type);
+        g_string_append_printf(xpath, "//%s", node_type);
 
     } else if (node_uuid) {
         const char *node_type = XML_CIB_TAG_NODE;
@@ -120,48 +106,45 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s[@id='%s']", node_type,
-                      node_uuid);
+        g_string_append_printf(xpath, "//%s[@" XML_ATTR_ID "='%s']", node_type,
+                               node_uuid);
     }
 
     if (set_name) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s[@id='%.128s']", set_type,
-                      set_name);
+        g_string_append_printf(xpath, "//%s[@" XML_ATTR_ID "='%s']", set_type,
+                               set_name);
     } else {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", set_type);
+        g_string_append_printf(xpath, "//%s", set_type);
     }
 
-    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair");
+    g_string_append(xpath, "//nvpair");
 
     if (attr_id && attr_name) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s' and @name='%.128s']",
-                      attr_id, attr_name);
+        g_string_append_printf(xpath,
+                               "[@" XML_ATTR_ID "='%s' and @" XML_ATTR_NAME
+                               "='%s']", attr_id, attr_name);
     } else if (attr_id) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@id='%s']", attr_id);
+        g_string_append_printf(xpath, "[@" XML_ATTR_ID "='%s']", attr_id);
+
     } else if (attr_name) {
-        attr_snprintf(xpath_string, offset, XPATH_MAX, "[@name='%.128s']", attr_name);
+        g_string_append_printf(xpath, "[@" XML_ATTR_NAME "='%s']", attr_name);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
-
-    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, xpath_string, NULL,
-                         &xml_search, cib_sync_call|cib_scope_local| cib_xpath,
-                         user_name);
+    rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL,
+                         (const char *) xpath->str, NULL, &xml_search,
+                         cib_sync_call|cib_scope_local|cib_xpath, user_name);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
         crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
                   attr_name, section, pcmk__s(node_uuid, "<null>"),
-                  pcmk__s(set_name, "<null>"), xpath_string,
+                  pcmk__s(set_name, "<null>"), (const char *) xpath->str,
                   pcmk_rc_str(rc));
-        goto done;
     } else {
         rc = pcmk_rc_ok;
+        crm_log_xml_debug(xml_search, "Match");
     }
 
-    crm_log_xml_debug(xml_search, "Match");
-
-  done:
-    free(xpath_string);
+    g_string_free(xpath, TRUE);
     *result = xml_search;
     return rc;
 }

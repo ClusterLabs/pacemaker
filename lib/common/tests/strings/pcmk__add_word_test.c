@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2022 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,75 +14,74 @@
 static void
 add_words(void **state)
 {
-    char *list = NULL;
-    size_t list_len = 0;
+    GString *list = NULL;
 
-    pcmk__add_word(&list, &list_len, "hello");
-    pcmk__add_word(&list, &list_len, "world");
-    assert_int_equal(strcmp(list, "hello world"), 0);
-    free(list);
+    pcmk__add_word(&list, 16, "hello");
+    pcmk__add_word(&list, 16, "world");
+    assert_int_equal(strcmp((const char *) list->str, "hello world"), 0);
+    g_string_free(list, TRUE);
 }
 
 static void
 add_with_no_len(void **state)
 {
-    char *list = NULL;
+    GString *list = NULL;
 
-    pcmk__add_word(&list, NULL, "hello");
-    pcmk__add_word(&list, NULL, "world");
-    assert_int_equal(strcmp(list, "hello world"), 0);
-    free(list);
+    pcmk__add_word(&list, 0, "hello");
+    pcmk__add_word(&list, 0, "world");
+    assert_int_equal(strcmp((const char *) list->str, "hello world"), 0);
+    g_string_free(list, TRUE);
 }
 
 static void
 add_nothing(void **state)
 {
-    char *list = NULL;
+    GString *list = NULL;
 
-    pcmk__add_word(&list, NULL, "hello");
-    pcmk__add_word(&list, NULL, NULL);
-    pcmk__add_word(&list, NULL, "");
-    assert_int_equal(strcmp(list, "hello"), 0);
-    free(list);
+    pcmk__add_word(&list, 0, "hello");
+    pcmk__add_word(&list, 0, NULL);
+    pcmk__add_word(&list, 0, "");
+    assert_int_equal(strcmp((const char *) list->str, "hello"), 0);
+    g_string_free(list, TRUE);
 }
 
 static void
 add_with_null(void **state)
 {
-    char *list = NULL;
-    size_t list_len = 0;
+    GString *list = NULL;
 
-    pcmk__add_separated_word(&list, &list_len, "hello", NULL);
-    pcmk__add_separated_word(&list, &list_len, "world", NULL);
-    pcmk__add_separated_word(&list, &list_len, "I am a unit test", NULL);
-    assert_int_equal(strcmp(list, "hello world I am a unit test"), 0);
-    free(list);
+    pcmk__add_separated_word(&list, 32, "hello", NULL);
+    pcmk__add_separated_word(&list, 32, "world", NULL);
+    pcmk__add_separated_word(&list, 32, "I am a unit test", NULL);
+    assert_int_equal(strcmp((const char *) list->str,
+                            "hello world I am a unit test"), 0);
+    g_string_free(list, TRUE);
 }
 
 static void
 add_with_comma(void **state)
 {
-    char *list = NULL;
-    size_t list_len = 0;
+    GString *list = NULL;
 
-    pcmk__add_separated_word(&list, &list_len, "hello", ",");
-    pcmk__add_separated_word(&list, &list_len, "world", ",");
-    pcmk__add_separated_word(&list, &list_len, "I am a unit test", ",");
-    assert_int_equal(strcmp(list, "hello,world,I am a unit test"), 0);
-    free(list);
+    pcmk__add_separated_word(&list, 32, "hello", ",");
+    pcmk__add_separated_word(&list, 32, "world", ",");
+    pcmk__add_separated_word(&list, 32, "I am a unit test", ",");
+    assert_int_equal(strcmp((const char *) list->str,
+                            "hello,world,I am a unit test"), 0);
+    g_string_free(list, TRUE);
 }
 
 static void
 add_with_comma_and_space(void **state)
 {
-    char *list = NULL;
-    size_t list_len = 0;
+    GString *list = NULL;
 
-    pcmk__add_separated_word(&list, &list_len, "hello", ", ");
-    pcmk__add_separated_word(&list, &list_len, "world", ", ");
-    pcmk__add_separated_word(&list, &list_len, "I am a unit test", ", ");
-    assert_int_equal(strcmp(list, "hello, world, I am a unit test"), 0);
-    free(list);
+    pcmk__add_separated_word(&list, 32, "hello", ", ");
+    pcmk__add_separated_word(&list, 32, "world", ", ");
+    pcmk__add_separated_word(&list, 32, "I am a unit test", ", ");
+    assert_int_equal(strcmp((const char *) list->str,
+                            "hello, world, I am a unit test"), 0);
+    g_string_free(list, TRUE);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

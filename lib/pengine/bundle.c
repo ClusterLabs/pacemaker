@@ -50,12 +50,12 @@ next_ip(const char *last_ip)
     return crm_strdup_printf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
 }
 
-static int
+static void
 allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
-            char *buffer, int max)
+            GString *buffer)
 {
     if(data->ip_range_start == NULL) {
-        return 0;
+        return;
 
     } else if(data->ip_last) {
         replica->ipaddr = next_ip(data->ip_last);
@@ -69,18 +69,20 @@ allocate_ip(pe__bundle_variant_data_t *data, pe__bundle_replica_t *replica,
         case PE__CONTAINER_AGENT_DOCKER:
         case PE__CONTAINER_AGENT_PODMAN:
             if (data->add_host) {
-                return snprintf(buffer, max, " --add-host=%s-%d:%s",
-                                data->prefix, replica->offset,
-                                replica->ipaddr);
+                g_string_append_printf(buffer, " --add-host=%s-%d:%s",
+                                       data->prefix, replica->offset,
+                                       replica->ipaddr);
+                break;
             }
             // fall through
         case PE__CONTAINER_AGENT_RKT:
-            return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
-                            replica->ipaddr, data->prefix, replica->offset);
+            g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d",
+                                   replica->ipaddr, data->prefix,
+                                   replica->offset);
+            break;
         default: // PE__CONTAINER_AGENT_UNKNOWN
             break;
     }
-    return 0;
 }
 
 static xmlNode *
@@ -176,11 +178,8 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                        pe__bundle_replica_t *replica,
                        pe_working_set_t *data_set)
 {
-        int offset = 0, max = 4096;
-        char *buffer = calloc(1, max+1);
-
-        int doffset = 0, dmax = 1024;
-        char *dbuffer = calloc(1, dmax+1);
+        GString *buffer = g_string_sized_new(4096);
+        GString *dbuffer = g_string_sized_new(1024);
 
         char *id = NULL;
         xmlNode *xml_container = NULL;
@@ -201,7 +200,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
         crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
 
-        offset += snprintf(buffer+offset, max-offset, " --restart=no");
+        g_string_append(buffer, " --restart=no");
 
         /* Set a container hostname only if we have an IP to map it to.
          * The user can set -h or --uts=host themselves if they want a nicer
@@ -209,25 +208,23 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * hostname to match the IP they bind to.
          */
         if (data->ip_range_start != NULL) {
-            offset += snprintf(buffer+offset, max-offset, " -h %s-%d",
-                               data->prefix, replica->offset);
+            g_string_append_printf(buffer, " -h %s-%d", data->prefix,
+                                   replica->offset);
         }
 
-        offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
+        g_string_append(buffer, " -e PCMK_stderr=1");
 
         if (data->container_network) {
-#if 0
-            offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
-                               replica->ipaddr);
-#endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s",
-                               data->container_network);
+            g_string_append_printf(buffer, " --net=%s",
+                                   data->container_network);
         }
 
         if(data->control_port) {
-            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%s", data->control_port);
+            g_string_append_printf(buffer, " -e PCMK_remote_port=%s",
+                                   data->control_port);
         } else {
-            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+            g_string_append_printf(buffer, " -e PCMK_remote_port=%d",
+                                   DEFAULT_REMOTE_PORT);
         }
 
         for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
@@ -237,18 +234,20 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
-                if(doffset > 0) {
-                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                if (dbuffer->len > 0) {
+                    g_string_append_c(dbuffer, ',');
                 }
-                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
-                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
+                g_string_append(dbuffer, source);
+                g_string_append_printf(buffer, " -v %s:%s", source,
+                                       mount->target);
                 free(source);
 
             } else {
-                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", mount->source, mount->target);
+                g_string_append_printf(buffer, " -v %s:%s", mount->source,
+                                       mount->target);
             }
             if(mount->options) {
-                offset += snprintf(buffer+offset, max-offset, ":%s", mount->options);
+                g_string_append_printf(buffer, ":%s", mount->options);
             }
         }
 
@@ -256,30 +255,30 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
-                offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
-                                   replica->ipaddr, port->source,
-                                   port->target);
+                g_string_append_printf(buffer, " -p %s:%s:%s", replica->ipaddr,
+                                       port->source, port->target);
             } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
                 // No need to do port mapping if net=host
-                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
+                g_string_append_printf(buffer, " -p %s:%s", port->source,
+                                       port->target);
             }
         }
 
         if (data->launcher_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s",
-                               data->launcher_options);
+            g_string_append_printf(buffer, " %s", data->launcher_options);
         }
 
         if (data->container_host_options) {
-            offset += snprintf(buffer + offset, max - offset, " %s",
-                               data->container_host_options);
+            g_string_append_printf(buffer, " %s", data->container_host_options);
         }
 
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
-        free(buffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
+                              (const char *) buffer->str);
+        g_string_free(buffer, TRUE);
 
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
-        free(dbuffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
+                              (const char *) dbuffer->str);
+        g_string_free(dbuffer, TRUE);
 
         if (replica->child) {
             if (data->container_command) {
@@ -341,11 +340,8 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                        pe__bundle_replica_t *replica,
                        pe_working_set_t *data_set)
 {
-        int offset = 0, max = 4096;
-        char *buffer = calloc(1, max+1);
-
-        int doffset = 0, dmax = 1024;
-        char *dbuffer = calloc(1, dmax+1);
+        GString *buffer = g_string_sized_new(4096);
+        GString *dbuffer = g_string_sized_new(1024);
 
         char *id = NULL;
         xmlNode *xml_container = NULL;
@@ -366,35 +362,29 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
         crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
 
-        // FIXME: (bandini 2018-08) podman has no restart policies
-        //offset += snprintf(buffer+offset, max-offset, " --restart=no");
-
         /* Set a container hostname only if we have an IP to map it to.
          * The user can set -h or --uts=host themselves if they want a nicer
          * name for logs, but this makes applications happy who need their
          * hostname to match the IP they bind to.
          */
         if (data->ip_range_start != NULL) {
-            offset += snprintf(buffer+offset, max-offset, " -h %s-%d",
-                               data->prefix, replica->offset);
+            g_string_append_printf(buffer, " -h %s-%d", data->prefix,
+                                   replica->offset);
         }
 
-        offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
+        g_string_append(buffer, " -e PCMK_stderr=1");
 
         if (data->container_network) {
-#if 0
-            // podman has no support for --link-local-ip
-            offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
-                               replica->ipaddr);
-#endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s",
-                               data->container_network);
+            g_string_append_printf(buffer, " --net=%s",
+                                   data->container_network);
         }
 
         if(data->control_port) {
-            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%s", data->control_port);
+            g_string_append_printf(buffer, " -e PCMK_remote_port=%s",
+                                   data->control_port);
         } else {
-            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+            g_string_append_printf(buffer, " -e PCMK_remote_port=%d",
+                                   DEFAULT_REMOTE_PORT);
         }
 
         for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
@@ -404,18 +394,20 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
-                if(doffset > 0) {
-                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                if (dbuffer->len > 0) {
+                    g_string_append_c(dbuffer, ',');
                 }
-                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
-                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
+                g_string_append(dbuffer, source);
+                g_string_append_printf(buffer, " -v %s:%s", source,
+                                       mount->target);
                 free(source);
 
             } else {
-                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", mount->source, mount->target);
+                g_string_append_printf(buffer, " -v %s:%s", mount->source,
+                                       mount->target);
             }
             if(mount->options) {
-                offset += snprintf(buffer+offset, max-offset, ":%s", mount->options);
+                g_string_append_printf(buffer, ":%s", mount->options);
             }
         }
 
@@ -423,30 +415,30 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
-                offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
-                                   replica->ipaddr, port->source,
-                                   port->target);
+                g_string_append_printf(buffer, " -p %s:%s:%s", replica->ipaddr,
+                                       port->source, port->target);
             } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
                 // No need to do port mapping if net=host
-                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
+                g_string_append_printf(buffer, " -p %s:%s", port->source,
+                                       port->target);
             }
         }
 
         if (data->launcher_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s",
-                               data->launcher_options);
+            g_string_append_printf(buffer, " %s", data->launcher_options);
         }
 
         if (data->container_host_options) {
-            offset += snprintf(buffer + offset, max - offset, " %s",
-                               data->container_host_options);
+            g_string_append_printf(buffer, " %s", data->container_host_options);
         }
 
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
-        free(buffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
+                              (const char *) buffer->str);
+        g_string_free(buffer, TRUE);
 
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
-        free(dbuffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
+                              (const char *) dbuffer->str);
+        g_string_free(dbuffer, TRUE);
 
         if (replica->child) {
             if (data->container_command) {
@@ -507,11 +499,8 @@ static bool
 create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                     pe__bundle_replica_t *replica, pe_working_set_t *data_set)
 {
-        int offset = 0, max = 4096;
-        char *buffer = calloc(1, max+1);
-
-        int doffset = 0, dmax = 1024;
-        char *dbuffer = calloc(1, dmax+1);
+        GString *buffer = g_string_sized_new(4096);
+        GString *dbuffer = g_string_sized_new(1024);
 
         char *id = NULL;
         xmlNode *xml_container = NULL;
@@ -540,25 +529,23 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * hostname to match the IP they bind to.
          */
         if (data->ip_range_start != NULL) {
-            offset += snprintf(buffer+offset, max-offset, " --hostname=%s-%d",
-                               data->prefix, replica->offset);
+            g_string_append_printf(buffer, " --hostname=%s-%d", data->prefix,
+                                   replica->offset);
         }
 
-        offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_stderr=1");
+        g_string_append(buffer, " --environment=PCMK_stderr=1");
 
         if (data->container_network) {
-#if 0
-            offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s",
-                               replica->ipaddr);
-#endif
-            offset += snprintf(buffer+offset, max-offset, " --net=%s",
-                               data->container_network);
+            g_string_append_printf(buffer, " --net=%s",
+                                   data->container_network);
         }
 
         if(data->control_port) {
-            offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%s", data->control_port);
+            g_string_append_printf(buffer, " --environment=PCMK_remote_port=%s",
+                                   data->control_port);
         } else {
-            offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+            g_string_append_printf(buffer, " --environment=PCMK_remote_port=%d",
+                                   DEFAULT_REMOTE_PORT);
         }
 
         for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
@@ -568,23 +555,31 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 char *source = crm_strdup_printf(
                     "%s/%s-%d", mount->source, data->prefix, replica->offset);
 
-                if(doffset > 0) {
-                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                if (dbuffer->len > 0) {
+                    g_string_append_c(dbuffer, ',');
                 }
-                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
-                offset += snprintf(buffer+offset, max-offset, " --volume vol%d,kind=host,source=%s", volid, source);
+                g_string_append(dbuffer, source);
+                g_string_append_printf(buffer,
+                                       " --volume vol%d,kind=host,source=%s",
+                                       volid, source);
                 if(mount->options) {
-                    offset += snprintf(buffer+offset, max-offset, ",%s", mount->options);
+                    g_string_append_printf(buffer, ",%s", mount->options);
                 }
-                offset += snprintf(buffer+offset, max-offset, " --mount volume=vol%d,target=%s", volid, mount->target);
+                g_string_append_printf(buffer,
+                                       " --mount volume=vol%d,target=%s",
+                                       volid, mount->target);
                 free(source);
 
             } else {
-                offset += snprintf(buffer+offset, max-offset, " --volume vol%d,kind=host,source=%s", volid, mount->source);
+                g_string_append_printf(buffer,
+                                       " --volume vol%d,kind=host,source=%s",
+                                       volid, mount->source);
                 if(mount->options) {
-                    offset += snprintf(buffer+offset, max-offset, ",%s", mount->options);
+                    g_string_append_printf(buffer, ",%s", mount->options);
                 }
-                offset += snprintf(buffer+offset, max-offset, " --mount volume=vol%d,target=%s", volid, mount->target);
+                g_string_append_printf(buffer,
+                                       " --mount volume=vol%d,target=%s",
+                                       volid, mount->target);
             }
             volid++;
         }
@@ -593,29 +588,29 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
-                offset += snprintf(buffer+offset, max-offset,
-                                   " --port=%s:%s:%s", port->target,
-                                   replica->ipaddr, port->source);
+                g_string_append_printf(buffer, " --port=%s:%s:%s", port->target,
+                                       replica->ipaddr, port->source);
             } else {
-                offset += snprintf(buffer+offset, max-offset, " --port=%s:%s", port->target, port->source);
+                g_string_append_printf(buffer, " --port=%s:%s", port->target,
+                                       port->source);
             }
         }
 
         if (data->launcher_options) {
-            offset += snprintf(buffer+offset, max-offset, " %s",
-                               data->launcher_options);
+            g_string_append_printf(buffer, " %s", data->launcher_options);
         }
 
         if (data->container_host_options) {
-            offset += snprintf(buffer + offset, max - offset, " %s",
-                               data->container_host_options);
+            g_string_append_printf(buffer, " %s", data->container_host_options);
         }
 
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
-        free(buffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
+                              (const char *) buffer->str);
+        g_string_free(buffer, TRUE);
 
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
-        free(dbuffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
+                              (const char *) dbuffer->str);
+        g_string_free(dbuffer, TRUE);
 
         if (replica->child) {
             if (data->container_command) {
@@ -1194,8 +1189,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         pe_resource_t *new_rsc = NULL;
         pe__bundle_port_t *port = NULL;
 
-        int offset = 0, max = 1024;
-        char *buffer = NULL;
+        GString *buffer = NULL;
 
         if (pe__unpack_resource(xml_resource, &new_rsc, rsc,
                                 data_set) != pcmk_rc_ok) {
@@ -1254,7 +1248,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         port->target = strdup(port->source);
         bundle_data->ports = g_list_append(bundle_data->ports, port);
 
-        buffer = calloc(1, max+1);
+        buffer = g_string_sized_new(1024);
         for (childIter = bundle_data->child->children; childIter != NULL;
              childIter = childIter->next) {
 
@@ -1269,14 +1263,14 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
                 pe__set_resource_flags(bundle_data->child, pe_rsc_notify);
             }
 
-            offset += allocate_ip(bundle_data, replica, buffer+offset,
-                                  max-offset);
+            allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
             bundle_data->attribute_target = g_hash_table_lookup(replica->child->meta,
                                                                 XML_RSC_ATTR_TARGET);
         }
-        bundle_data->container_host_options = buffer;
+        bundle_data->container_host_options = g_string_free(buffer, FALSE);
+
         if (bundle_data->attribute_target) {
             g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET),
                                  strdup(bundle_data->attribute_target));
@@ -1287,19 +1281,17 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     } else {
         // Just a naked container, no pacemaker-remote
-        int offset = 0, max = 1024;
-        char *buffer = calloc(1, max+1);
+        GString *buffer = g_string_sized_new(1024);
 
         for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
             pe__bundle_replica_t *replica = calloc(1, sizeof(pe__bundle_replica_t));
 
             replica->offset = lpc;
-            offset += allocate_ip(bundle_data, replica, buffer+offset,
-                                  max-offset);
+            allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
         }
-        bundle_data->container_host_options = buffer;
+        bundle_data->container_host_options = g_string_free(buffer, FALSE);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1424,6 +1416,10 @@ pe__find_bundle_replica(const pe_resource_t *bundle, const pe_node_t *node)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
                   void *print_data)
@@ -1452,6 +1448,10 @@ container_agent_str(enum pe__container_agent t)
     return PE__CONTAINER_AGENT_UNKNOWN_S;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
@@ -1844,6 +1844,10 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 static void
 print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
                      long options, void *print_data)
@@ -1874,6 +1878,10 @@ print_bundle_replica(pe__bundle_replica_t *replica, const char *pre_text,
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 
+/*!
+ * \internal
+ * \deprecated This function will be removed in a future release
+ */
 void
 pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                  void *print_data)
@@ -1994,7 +2002,7 @@ pe__free_bundle(pe_resource_t *rsc)
     free(bundle_data->container_network);
     free(bundle_data->launcher_options);
     free(bundle_data->container_command);
-    free(bundle_data->container_host_options);
+    g_free(bundle_data->container_host_options);
 
     g_list_free_full(bundle_data->replicas,
                      (GDestroyNotify) free_bundle_replica);

@@ -255,9 +255,19 @@ gboolean group_active(pe_resource_t * rsc, gboolean all);
 gboolean clone_active(pe_resource_t * rsc, gboolean all);
 gboolean pe__bundle_active(pe_resource_t *rsc, gboolean all);
 
-void native_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
-void group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
-void clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data);
+//! \deprecated This function will be removed in a future release
+void native_print(pe_resource_t *rsc, const char *pre_text, long options,
+                  void *print_data);
+
+//! \deprecated This function will be removed in a future release
+void group_print(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data);
+
+//! \deprecated This function will be removed in a future release
+void clone_print(pe_resource_t *rsc, const char *pre_text, long options,
+                 void *print_data);
+
+//! \deprecated This function will be removed in a future release
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
@@ -529,6 +539,7 @@ void pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
+//! \deprecated This function will be removed in a future release
 void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
 int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
@@ -536,7 +547,10 @@ void pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *re
 
 pe_node_t *pe_create_node(const char *id, const char *uname, const char *type,
                           const char *score, pe_working_set_t * data_set);
-void common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_node_t *node, long options, void *print_data);
+
+//! \deprecated This function will be removed in a future release
+void common_print(pe_resource_t *rsc, const char *pre_text, const char *name,
+                  pe_node_t *node, long options, void *print_data);
 int pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, unsigned int options);
 int pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, unsigned int options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,

@@ -303,8 +303,7 @@ pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
     int nodes_online = 0;
     int nodes_standby = 0;
     int nodes_maintenance = 0;
-    char *offline_nodes = NULL;
-    size_t offline_nodes_len = 0;
+    GString *offline_nodes = NULL;
     bool no_dc = false;
     bool offline = false;
     bool has_warnings = false;
@@ -324,10 +323,8 @@ pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
         } else if (node->details->online) {
             nodes_online++;
         } else {
-            char *s = crm_strdup_printf("offline node: %s", pe__node_name(node));
-            /* coverity[leaked_storage] False positive */
-            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
-            free(s);
+            pcmk__add_word(&offline_nodes, 1024, "offline node:");
+            pcmk__add_word(&offline_nodes, 0, pe__node_name(node));
             has_warnings = true;
             offline = true;
         }
@@ -337,8 +334,12 @@ pcmk__output_simple_status(pcmk__output_t *out, pe_working_set_t *data_set)
         out->info(out, "CLUSTER WARN: %s%s%s",
                   no_dc ? "No DC" : "",
                   no_dc && offline ? ", " : "",
-                  (offline? offline_nodes : ""));
-        free(offline_nodes);
+                  (offline? (const char *) offline_nodes->str : ""));
+
+        if (offline_nodes != NULL) {
+            g_string_free(offline_nodes, TRUE);
+        }
+
     } else {
         char *nodes_standby_s = NULL;
         char *nodes_maint_s = NULL;

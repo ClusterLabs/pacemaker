@@ -1206,13 +1206,13 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
         if (pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)) {
             /* Extra work to detect device changes
              */
-            long max = 1024;
-            long digests_all_offset = 0;
-            long digests_secure_offset = 0;
+            GString *digests_all = g_string_sized_new(1024);
+            GString *digests_secure = g_string_sized_new(1024);
 
-            char *digests_all = calloc(max, sizeof(char));
-            char *digests_secure = calloc(max, sizeof(char));
             GList *matches = find_unfencing_devices(data_set->resources, NULL);
+
+            char *key = NULL;
+            char *value = NULL;
 
             for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *match = gIter->data;
@@ -1235,20 +1235,22 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                     }
                 }
 
-                digests_all_offset += snprintf(
-                    digests_all+digests_all_offset, max-digests_all_offset,
-                    "%s:%s:%s,", match->id, agent, data->digest_all_calc);
-
-                digests_secure_offset += snprintf(
-                    digests_secure+digests_secure_offset, max-digests_secure_offset,
-                    "%s:%s:%s,", match->id, agent, data->digest_secure_calc);
+                g_string_append_printf(digests_all, "%s:%s:%s,", match->id,
+                                       agent, data->digest_all_calc);
+                g_string_append_printf(digests_secure, "%s:%s:%s,", match->id,
+                                       agent, data->digest_secure_calc);
             }
-            g_hash_table_insert(stonith_op->meta,
-                                strdup(XML_OP_ATTR_DIGESTS_ALL),
-                                digests_all);
-            g_hash_table_insert(stonith_op->meta,
-                                strdup(XML_OP_ATTR_DIGESTS_SECURE),
-                                digests_secure);
+            key = strdup(XML_OP_ATTR_DIGESTS_ALL);
+            value = strdup((const char *) digests_all->str);
+            CRM_ASSERT((key != NULL) && (value != NULL));
+            g_hash_table_insert(stonith_op->meta, key, value);
+            g_string_free(digests_all, TRUE);
+            
+            key = strdup(XML_OP_ATTR_DIGESTS_SECURE);
+            value = strdup((const char *) digests_secure->str);
+            CRM_ASSERT((key != NULL) && (value != NULL));
+            g_hash_table_insert(stonith_op->meta, key, value);
+            g_string_free(digests_secure, TRUE);
         }
 
     } else {
