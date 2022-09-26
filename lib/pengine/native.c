@@ -547,7 +547,6 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-    gchar *retval = NULL;
     GString *outstr = NULL;
     bool have_flags = false;
 
@@ -678,9 +677,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         }
     }
 
-    retval = outstr->str;
-    g_string_free(outstr, FALSE);
-    return retval;
+    return g_string_free(outstr, FALSE);
 }
 
 int

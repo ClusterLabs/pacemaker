@@ -165,7 +165,6 @@ gchar *
 pcmk__quote_cmdline(gchar **argv)
 {
     GString *gs = NULL;
-    gchar *retval = NULL;
 
     if (argv == NULL || argv[0] == NULL) {
         return NULL;
@@ -209,9 +208,7 @@ pcmk__quote_cmdline(gchar **argv)
         }
     }
 
-    retval = gs->str;
-    g_string_free(gs, FALSE);
-    return retval;
+    return g_string_free(gs, FALSE);
 }
 
 gchar **

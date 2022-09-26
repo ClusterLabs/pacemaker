@@ -661,14 +661,14 @@ static pcmk__cluster_option_t controller_options[] = {
 void
 crmd_metadata(void)
 {
-    char *s = pcmk__format_option_metadata("pacemaker-controld",
-                                           "Pacemaker controller options",
-                                           "Cluster options used by Pacemaker's "
-                                               "controller",
-                                           controller_options,
-                                           PCMK__NELEM(controller_options));
+    const char *desc_short = "Pacemaker controller options";
+    const char *desc_long = "Cluster options used by Pacemaker's controller";
+
+    gchar *s = pcmk__format_option_metadata("pacemaker-controld", desc_short,
+                                            desc_long, controller_options,
+                                            PCMK__NELEM(controller_options));
     printf("%s", s);
-    free(s);
+    g_free(s);
 }
 
 static const char *

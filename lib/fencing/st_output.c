@@ -75,7 +75,6 @@ stonith__history_description(stonith_history_t *history, bool full_history,
                              const char *later_succeeded, uint32_t show_opts)
 {
     GString *str = g_string_sized_new(256); // Generous starting size
-    char *retval = NULL;
     char *completed_time = NULL;
 
     if ((history->state == st_failed) || (history->state == st_done)) {
@@ -142,10 +141,8 @@ stonith__history_description(stonith_history_t *history, bool full_history,
                                later_succeeded);
     }
 
-    retval = str->str;
-    g_string_free(str, FALSE);
     free(completed_time);
-    return retval;
+    return g_string_free(str, FALSE);
 }
 
 PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *",
