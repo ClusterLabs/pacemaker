@@ -1235,10 +1235,12 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                     }
                 }
 
-                g_string_append_printf(digests_all, "%s:%s:%s,", match->id,
-                                       agent, data->digest_all_calc);
-                g_string_append_printf(digests_secure, "%s:%s:%s,", match->id,
-                                       agent, data->digest_secure_calc);
+                pcmk__g_strcat(digests_all,
+                               match->id, ":", agent, ":",
+                               data->digest_all_calc, ",", NULL);
+                pcmk__g_strcat(digests_secure,
+                               match->id, ":", agent, ":",
+                               data->digest_secure_calc, ",", NULL);
             }
             key = strdup(XML_OP_ATTR_DIGESTS_ALL);
             value = strdup((const char *) digests_all->str);

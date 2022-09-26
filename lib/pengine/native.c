@@ -575,16 +575,12 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         node = NULL;
     }
 
-    // We need a string of at least this size
-    outstr = g_string_sized_new(strlen(name) + strlen(class) + strlen(kind)
-                                + (provider? (strlen(provider) + 2) : 0)
-                                + (node? strlen(node->details->uname) + 1 : 0)
-                                + 11);
+    outstr = g_string_sized_new(128);
 
     // Resource name and agent
-    g_string_printf(outstr, "%s\t(%s%s%s:%s):\t", name, class,
-                    ((provider == NULL)? "" : PROVIDER_SEP),
-                    ((provider == NULL)? "" : provider), kind);
+    pcmk__g_strcat(outstr,
+                   name, "\t(", class, ((provider == NULL)? "" : PROVIDER_SEP),
+                   pcmk__s(provider, ""), ":", kind, "):\t", NULL);
 
     // State on node
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -593,16 +589,17 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
+        g_string_append(outstr, " FAILED");
         if (role > RSC_ROLE_UNPROMOTED) {
-            g_string_append_printf(outstr, " FAILED %s", role2text(role));
-        } else {
-            g_string_append(outstr, " FAILED");
+            pcmk__add_word(&outstr, 0, role2text(role));
         }
     } else {
-        g_string_append_printf(outstr, " %s", native_displayable_state(rsc, pcmk_is_set(show_opts, pcmk_show_pending)));
+        bool show_pending = pcmk_is_set(show_opts, pcmk_show_pending);
+
+        pcmk__add_word(&outstr, 0, native_displayable_state(rsc, show_pending));
     }
     if (node) {
-        g_string_append_printf(outstr, " %s", pe__node_name(node));
+        pcmk__add_word(&outstr, 0, pe__node_name(node));
     }
 
     // Failed probe operation
@@ -612,7 +609,8 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
             int rc;
 
             pcmk__scan_min_int(crm_element_value(probe_op, XML_LRM_ATTR_RC), &rc, 0);
-            g_string_append_printf(outstr, " (%s) ", services_ocf_exitcode_str(rc));
+            pcmk__g_strcat(outstr, " (", services_ocf_exitcode_str(rc), ") ",
+                           NULL);
         }
     }
 
@@ -655,7 +653,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
     if (have_flags) {
-        g_string_append(outstr, ")");
+        g_string_append_c(outstr, ')');
     }
 
     // User-supplied description
@@ -664,7 +662,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
         if (desc) {
-            g_string_append_printf(outstr, " %s", desc);
+            pcmk__add_word(&outstr, 0, desc);
         }
     }
 

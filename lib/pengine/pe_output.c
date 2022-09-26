@@ -1198,29 +1198,29 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
 
     str = g_string_sized_new(256); // Should be sufficient for most messages
 
-    g_string_printf(str, "%s ", rsc_id);
+    pcmk__g_strcat(str, rsc_id, " ", NULL);
 
     if (interval_ms != 0) {
-        g_string_append_printf(str, "%s-interval ",
-                               pcmk__readable_interval(interval_ms));
+        pcmk__g_strcat(str, pcmk__readable_interval(interval_ms), "-interval ",
+                       NULL);
     }
-    g_string_append_printf(str, "%s on %s",
-                           crm_action_str(task, interval_ms), node_name);
+    pcmk__g_strcat(str, crm_action_str(task, interval_ms), " on ", node_name,
+                   NULL);
 
     if (status == PCMK_EXEC_DONE) {
-        g_string_append_printf(str, " returned '%s'",
-                               services_ocf_exitcode_str(rc));
+        pcmk__g_strcat(str, " returned '", services_ocf_exitcode_str(rc), "'",
+                       NULL);
         if (!pcmk__str_empty(exit_reason)) {
-            g_string_append_printf(str, " (%s)", exit_reason);
+            pcmk__g_strcat(str, " (", exit_reason, ")", NULL);
         }
 
     } else {
-        g_string_append_printf(str, " could not be executed (%s",
-                               pcmk_exec_status_str(status));
+        pcmk__g_strcat(str, " could not be executed (",
+                       pcmk_exec_status_str(status), NULL);
         if (!pcmk__str_empty(exit_reason)) {
-            g_string_append_printf(str, ": %s", exit_reason);
+            pcmk__g_strcat(str, ": ", exit_reason, NULL);
         }
-        g_string_append(str, ")");
+        g_string_append_c(str, ')');
     }
 
 
@@ -1228,7 +1228,7 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
                                 &last_change_epoch) == pcmk_ok) {
         last_change_str = pcmk__epoch2str(&last_change_epoch);
         if (last_change_str != NULL) {
-            g_string_append_printf(str, " at %s", last_change_str);
+            pcmk__g_strcat(str, " at ", last_change_str, NULL);
         }
     }
     if (!pcmk__str_empty(exec_time)) {
@@ -1236,8 +1236,9 @@ failed_action_friendly(pcmk__output_t *out, xmlNodePtr xml_op,
 
         if ((pcmk__scan_min_int(exec_time, &exec_time_ms, 0) == pcmk_rc_ok)
             && (exec_time_ms > 0)) {
-            g_string_append_printf(str, " after %s",
-                                   pcmk__readable_interval(exec_time_ms));
+
+            pcmk__g_strcat(str, " after ",
+                           pcmk__readable_interval(exec_time_ms), NULL);
         }
     }
 
@@ -1275,30 +1276,30 @@ failed_action_technical(pcmk__output_t *out, xmlNodePtr xml_op,
         call_id = "unknown";
     }
 
-    str = g_string_sized_new(strlen(op_key) + strlen(node_name)
-                             + strlen(exit_status) + strlen(call_id)
-                             + strlen(lrm_status) + 50); // rough estimate
+    str = g_string_sized_new(256);
 
-    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status='%s'",
-                    op_key, node_name, exit_status, rc, call_id, lrm_status);
+    g_string_append_printf(str, "%s on %s '%s' (%d): call=%s, status='%s'",
+                           op_key, node_name, exit_status, rc, call_id,
+                           lrm_status);
 
     if (!pcmk__str_empty(exit_reason)) {
-        g_string_append_printf(str, ", exitreason='%s'", exit_reason);
+        pcmk__g_strcat(str, ", exitreason='", exit_reason, "'", NULL);
     }
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change_epoch) == pcmk_ok) {
         last_change_str = pcmk__epoch2str(&last_change_epoch);
         if (last_change_str != NULL) {
-            g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
-                                   last_change_str);
+            pcmk__g_strcat(str,
+                           ", " XML_RSC_OP_LAST_CHANGE "="
+                           "'", last_change_str, "'", NULL);
         }
     }
     if (!pcmk__str_empty(queue_time)) {
-        g_string_append_printf(str, ", queued=%sms", queue_time);
+        pcmk__g_strcat(str, ", queued=", queue_time, "ms", NULL);
     }
     if (!pcmk__str_empty(exec_time)) {
-        g_string_append_printf(str, ", exec=%sms", exec_time);
+        pcmk__g_strcat(str, ", exec=", exec_time, "ms", NULL);
     }
 
     out->list_item(out, NULL, "%s", str->str);
@@ -1657,8 +1658,8 @@ node_text(pcmk__output_t *out, va_list args) {
         } else {
             g_string_append(str, "Node");
         }
-        g_string_append_printf(str, " %s: %s",
-                               node_name, node_text_status(node));
+        pcmk__g_strcat(str, " ", node_name, ": ", node_text_status(node), NULL);
+
         if (health < 0) {
             g_string_append(str, " (health is RED)");
         } else if (health == 0) {
@@ -1667,7 +1668,7 @@ node_text(pcmk__output_t *out, va_list args) {
         if (pcmk_is_set(show_opts, pcmk_show_feature_set)) {
             const char *feature_set = get_node_feature_set(node);
             if (feature_set != NULL) {
-                g_string_append_printf(str, ", feature set %s", feature_set);
+                pcmk__g_strcat(str, ", feature set ", feature_set, NULL);
             }
         }
 
