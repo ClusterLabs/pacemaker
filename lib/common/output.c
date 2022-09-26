@@ -217,7 +217,7 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
  * \brief  Finish and free an XML-only output object
  *
  * \param[in,out] out  Output object to free
- * \param[out]    xml  Where to store XML output
+ * \param[out]    xml  If not NULL, where to store XML output
  */
 void
 pcmk__xml_output_finish(pcmk__output_t *out, xmlNodePtr *xml) {

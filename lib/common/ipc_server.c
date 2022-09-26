@@ -154,9 +154,9 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
  * \internal
  * \brief Allocate a new pcmk__client_t object based on an IPC connection
  *
- * \param[in,out] c           IPC connection (NULL to allocate generic client)
- * \param[in]     key         Connection table key (NULL to use sane default)
- * \param[in]     uid_client  UID corresponding to c (ignored if c is NULL)
+ * \param[in] c           IPC connection (NULL to allocate generic client)
+ * \param[in] key         Connection table key (NULL to use sane default)
+ * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
  *
  * \return Pointer to new pcmk__client_t (or NULL on error)
  */
