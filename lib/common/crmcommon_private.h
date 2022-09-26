@@ -130,7 +130,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Allocate any private data needed by daemon IPC
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      *
      * \return Standard Pacemaker return code
      */
@@ -140,7 +140,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Free any private data used by daemon IPC
      *
-     * \param[in] api_data  Data allocated by new_data() method
+     * \param[in,out] api_data  Data allocated by new_data() method
      */
     void (*free_data)(void *api_data);
 
@@ -154,7 +154,7 @@ typedef struct pcmk__ipc_methods_s {
      * reply). Ideally this would be consistent across all daemons, but for now
      * this allows each to do its own authorization.
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      *
      * \return Standard Pacemaker return code
      */
@@ -164,8 +164,8 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Check whether an IPC request results in a reply
      *
-     * \param[in] api      IPC API connection
-     * \param[in] request  IPC request XML
+     * \param[in,out] api      IPC API connection
+     * \param[in,out] request  IPC request XML
      *
      * \return true if request would result in an IPC reply, false otherwise
      */
@@ -175,8 +175,8 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Perform daemon-specific handling of an IPC message
      *
-     * \param[in] api  IPC API connection
-     * \param[in] msg  Message read from IPC connection
+     * \param[in,out] api  IPC API connection
+     * \param[in,out] msg  Message read from IPC connection
      *
      * \return true if more IPC reply messages should be expected
      */
@@ -186,7 +186,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Perform daemon-specific handling of an IPC disconnect
      *
-     * \param[in] api  IPC API connection
+     * \param[in,out] api  IPC API connection
      */
     void (*post_disconnect)(pcmk_ipc_api_t *api);
 } pcmk__ipc_methods_t;
@@ -279,8 +279,10 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
  *       the least privilege principle and may pose an additional risk
  *       (i.e. such accidental inconsistency shall be eventually fixed).
  */
-int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
-                                       pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
+int pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock,
+                                       uid_t refuid, gid_t refgid,
+                                       pid_t *gotpid, uid_t *gotuid,
+                                       gid_t *gotgid);
 
 
 /*

@@ -462,11 +462,11 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 /*!
  * \brief Create a CIB XML element for an operation
  *
- * \param[in] parent         If not NULL, make new XML node a child of this one
- * \param[in] prefix         Generate an ID using this prefix
- * \param[in] task           Operation task to set
- * \param[in] interval_spec  Operation interval to set
- * \param[in] timeout        If not NULL, operation timeout to set
+ * \param[in,out] parent         If not NULL, make new XML node a child of this
+ * \param[in]     prefix         Generate an ID using this prefix
+ * \param[in]     task           Operation task to set
+ * \param[in]     interval_spec  Operation interval to set
+ * \param[in]     timeout        If not NULL, operation timeout to set
  *
  * \return New XML object on success, NULL otherwise
  */

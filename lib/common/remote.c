@@ -163,7 +163,7 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
  * \param[in] session  TLS session to affect
  */
 static void
-set_minimum_dh_bits(gnutls_session_t *session)
+set_minimum_dh_bits(const gnutls_session_t *session)
 {
     int dh_min_bits;
 
@@ -342,7 +342,7 @@ error:
  *         if some data was successfully read but more data is needed)
  */
 int
-pcmk__read_handshake_data(pcmk__client_t *client)
+pcmk__read_handshake_data(const pcmk__client_t *client)
 {
     int rc = 0;
 
@@ -479,8 +479,8 @@ remote_send_iovs(pcmk__remote_t *remote, struct iovec *iov, int iovs)
  * \internal
  * \brief Send an XML message over a Pacemaker Remote connection
  *
- * \param[in] remote  Pacemaker Remote connection to use
- * \param[in] msg     XML to send
+ * \param[in,out] remote  Pacemaker Remote connection to use
+ * \param[in]     msg     XML to send
  *
  * \return Standard Pacemaker return code
  */
@@ -531,7 +531,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, xmlNode *msg)
  * \internal
  * \brief Obtain the XML from the currently buffered remote connection message
  *
- * \param[in] remote  Remote connection possibly with message available
+ * \param[in,out] remote  Remote connection possibly with message available
  *
  * \return Newly allocated XML object corresponding to message data, or NULL
  * \note This effectively removes the message from the connection buffer.
@@ -600,7 +600,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 }
 
 static int
-get_remote_socket(pcmk__remote_t *remote)
+get_remote_socket(const pcmk__remote_t *remote)
 {
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (remote->tls_session) {
@@ -630,7 +630,7 @@ get_remote_socket(pcmk__remote_t *remote)
  *         the specified timeout)
  */
 int
-pcmk__remote_ready(pcmk__remote_t *remote, int timeout_ms)
+pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
 {
     struct pollfd fds = { 0, };
     int sock = 0;
@@ -673,7 +673,7 @@ pcmk__remote_ready(pcmk__remote_t *remote, int timeout_ms)
  * \internal
  * \brief Read bytes from non-blocking remote connection
  *
- * \param[in] remote  Remote connection to read
+ * \param[in,out] remote  Remote connection to read
  *
  * \return Standard Pacemaker return code (of particular interest, pcmk_rc_ok if
  *         a full message has been received, or EAGAIN for a partial message)
@@ -781,9 +781,9 @@ read_available_remote_data(pcmk__remote_t *remote)
  * \internal
  * \brief Read one message from a remote connection
  *
- * \param[in]  remote      Remote connection to read
- * \param[in]  timeout_ms  Fail if message not read in this many milliseconds
- *                         (10s will be used if 0, and 60s if negative)
+ * \param[in,out] remote      Remote connection to read
+ * \param[in]     timeout_ms  Fail if message not read in this many milliseconds
+ *                            (10s will be used if 0, and 60s if negative)
  *
  * \return Standard Pacemaker return code
  */
@@ -1163,16 +1163,17 @@ async_cleanup:
  *          as long as its sa_family member is set correctly.
  */
 void
-pcmk__sockaddr2str(void *sa, char *s)
+pcmk__sockaddr2str(const void *sa, char *s)
 {
-    switch (((struct sockaddr*)sa)->sa_family) {
+    switch (((const struct sockaddr *) sa)->sa_family) {
         case AF_INET:
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+            inet_ntop(AF_INET, &(((const struct sockaddr_in *) sa)->sin_addr),
                       s, INET6_ADDRSTRLEN);
             break;
 
         case AF_INET6:
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+            inet_ntop(AF_INET6,
+                      &(((const struct sockaddr_in6 *) sa)->sin6_addr),
                       s, INET6_ADDRSTRLEN);
             break;
 

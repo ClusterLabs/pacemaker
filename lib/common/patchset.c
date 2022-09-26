@@ -840,7 +840,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
+xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset, int format)
 {
     int lpc = 0;
     bool changed = FALSE;
@@ -916,7 +916,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
  * \return Standard Pacemaker return code
  */
 static int
-apply_v1_patchset(xmlNode *xml, xmlNode *patchset)
+apply_v1_patchset(xmlNode *xml, const xmlNode *patchset)
 {
     int rc = pcmk_rc_ok;
     int root_nodes_seen = 0;
@@ -971,8 +971,8 @@ apply_v1_patchset(xmlNode *xml, xmlNode *patchset)
 
 // Return first child matching element name and optionally id or position
 static xmlNode *
-first_matching_xml_child(xmlNode *parent, const char *name, const char *id,
-                         int position)
+first_matching_xml_child(const xmlNode *parent, const char *name,
+                         const char *id, int position)
 {
     xmlNode *cIter = NULL;
 
@@ -1014,7 +1014,7 @@ first_matching_xml_child(xmlNode *parent, const char *name, const char *id,
  *       i.e. the only allowed search predicate is [@id='XXX'].
  */
 static xmlNode *
-search_v2_xpath(xmlNode *top, const char *key, int target_position)
+search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 {
     xmlNode *target = (xmlNode *) top->doc;
     const char *current = key;
@@ -1096,7 +1096,7 @@ search_v2_xpath(xmlNode *top, const char *key, int target_position)
 }
 
 typedef struct xml_change_obj_s {
-    xmlNode *change;
+    const xmlNode *change;
     xmlNode *match;
 } xml_change_obj_t;
 
@@ -1131,10 +1131,10 @@ sort_change_obj_by_position(gconstpointer a, gconstpointer b)
  * \return Standard Pacemaker return code
  */
 static int
-apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
+apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *change = NULL;
+    const xmlNode *change = NULL;
     GList *change_objs = NULL;
     GList *gIter = NULL;
 

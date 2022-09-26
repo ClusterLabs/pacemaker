@@ -226,9 +226,10 @@ pcmk__write_series_sequence(const char *directory, const char *series,
  * \internal
  * \brief Change the owner and group of a file series' .last file
  *
- * \param[in] dir  Directory that contains series
- * \param[in] uid  User ID of desired file owner
- * \param[in] gid  Group ID of desired file group
+ * \param[in] directory  Directory that contains series
+ * \param[in] series     Series to change
+ * \param[in] uid        User ID of desired file owner
+ * \param[in] gid        Group ID of desired file group
  *
  * \return Standard Pacemaker return code
  * \note The caller must have the appropriate privileges.

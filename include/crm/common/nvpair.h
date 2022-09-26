@@ -34,7 +34,7 @@ typedef struct pcmk_nvpair_s {
 GSList *pcmk_prepend_nvpair(GSList *nvpairs, const char *name, const char *value);
 void pcmk_free_nvpairs(GSList *nvpairs);
 GSList *pcmk_sort_nvpairs(GSList *list);
-GSList *pcmk_xml_attrs2nvpairs(xmlNode *xml);
+GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,

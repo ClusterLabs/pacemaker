@@ -1179,7 +1179,7 @@ error:
 /*!
  * \brief Free a dynamically allocated time period object
  *
- * \param[in] period  Time period to free
+ * \param[in,out] period  Time period to free
  */
 void
 crm_time_free_period(crm_time_period_t *period)
@@ -1414,8 +1414,8 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 /*!
  * \brief Add a given number of seconds to a date/time or duration
  *
- * \param[in] a_time  Date/time or duration to add seconds to
- * \param[in] extra   Number of seconds to add
+ * \param[in,out] a_time  Date/time or duration to add seconds to
+ * \param[in]     extra   Number of seconds to add
  */
 void
 crm_time_add_seconds(crm_time_t *a_time, int extra)

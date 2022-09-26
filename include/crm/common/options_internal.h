@@ -58,7 +58,7 @@ typedef struct pcmk__cli_option_s {
 } pcmk__cli_option_t;
 
 void pcmk__set_cli_options(const char *short_options, const char *usage,
-                           pcmk__cli_option_t *long_options,
+                           const pcmk__cli_option_t *long_options,
                            const char *app_desc);
 int pcmk__next_cli_option(int argc, char **argv, int *index,
                           const char **longname);
@@ -94,8 +94,8 @@ typedef struct pcmk__cluster_option_s {
 } pcmk__cluster_option_t;
 
 const char *pcmk__cluster_option(GHashTable *options,
-                                 pcmk__cluster_option_t *option_list, int len,
-                                 const char *name);
+                                 const pcmk__cluster_option_t *option_list,
+                                 int len, const char *name);
 
 gchar *pcmk__format_option_metadata(const char *name, const char *desc_short,
                                     const char *desc_long,

@@ -66,7 +66,8 @@ void pcmk__set_result_output(pcmk__action_result_t *result,
 
 void pcmk__reset_result(pcmk__action_result_t *result);
 
-void pcmk__copy_result(pcmk__action_result_t *src, pcmk__action_result_t *dst);
+void pcmk__copy_result(const pcmk__action_result_t *src,
+                       pcmk__action_result_t *dst);
 
 /*!
  * \internal

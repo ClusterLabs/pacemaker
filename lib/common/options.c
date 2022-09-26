@@ -31,7 +31,7 @@
  */
 
 static char *crm_short_options = NULL;
-static pcmk__cli_option_t *crm_long_options = NULL;
+static const pcmk__cli_option_t *crm_long_options = NULL;
 static const char *crm_app_description = NULL;
 static const char *crm_app_usage = NULL;
 
@@ -43,7 +43,7 @@ pcmk__cli_option_cleanup(void)
 }
 
 static struct option *
-create_long_opts(pcmk__cli_option_t *long_options)
+create_long_opts(const pcmk__cli_option_t *long_options)
 {
     struct option *long_opts = NULL;
 
@@ -103,7 +103,8 @@ create_long_opts(pcmk__cli_option_t *long_options)
  */
 void
 pcmk__set_cli_options(const char *short_options, const char *app_usage,
-                      pcmk__cli_option_t *long_options, const char *app_desc)
+                      const pcmk__cli_option_t *long_options,
+                      const char *app_desc)
 {
     if (short_options) {
         crm_short_options = strdup(short_options);
@@ -479,11 +480,11 @@ pcmk__valid_percentage(const char *value)
  * \internal
  * \brief Check a table of configured options for a particular option
  *
- * \param[in] options    Name/value pairs for configured options
- * \param[in] validate   If not NULL, validator function for option value
- * \param[in] name       Option name to look for
- * \param[in] old_name   Alternative option name to look for
- * \param[in] def_value  Default to use if option not configured
+ * \param[in,out] options    Name/value pairs for configured options
+ * \param[in]     validate   If not NULL, validator function for option value
+ * \param[in]     name       Option name to look for
+ * \param[in]     old_name   Alternative option name to look for
+ * \param[in]     def_value  Default to use if option not configured
  *
  * \return Option value (from supplied options table or default value)
  */
@@ -555,14 +556,15 @@ cluster_option_value(GHashTable *options, bool (*validate)(const char *),
  * \internal
  * \brief Get the value of a cluster option
  *
- * \param[in] options      Name/value pairs for configured options
- * \param[in] option_list  Possible cluster options
- * \param[in] name         (Primary) option name to look for
+ * \param[in,out] options      Name/value pairs for configured options
+ * \param[in]     option_list  Possible cluster options
+ * \param[in]     name         (Primary) option name to look for
  *
  * \return Option value
  */
 const char *
-pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
+pcmk__cluster_option(GHashTable *options,
+                     const pcmk__cluster_option_t *option_list,
                      int len, const char *name)
 {
     const char *value = NULL;
@@ -584,13 +586,14 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
  * \internal
  * \brief Add a description element to a meta-data string
  *
- * \param[in] s       Meta-data string to add to
- * \param[in] tag     Name of element to add ("longdesc" or "shortdesc")
- * \param[in] desc    Textual description to add
- * \param[in] values  If not NULL, the allowed values for the parameter
+ * \param[in,out] s       Meta-data string to add to
+ * \param[in]     tag     Name of element to add ("longdesc" or "shortdesc")
+ * \param[in]     desc    Textual description to add
+ * \param[in]     values  If not NULL, the allowed values for the parameter
  */
 static void
-add_desc(GString *s, const char *tag, const char *desc, const char *values, const char *spaces)
+add_desc(GString *s, const char *tag, const char *desc, const char *values,
+         const char *spaces)
 {
     char *escaped_en = crm_xml_escape(desc);
 

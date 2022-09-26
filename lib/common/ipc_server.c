@@ -42,8 +42,8 @@ pcmk__ipc_client_count(void)
  * \internal
  * \brief Execute a function for each active IPC client connection
  *
- * \param[in] func       Function to call
- * \param[in] user_data  Pointer to pass to function
+ * \param[in]     func       Function to call
+ * \param[in,out] user_data  Pointer to pass to function
  *
  * \note The parameters are the same as for g_hash_table_foreach().
  */
@@ -154,8 +154,8 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
  * \internal
  * \brief Allocate a new pcmk__client_t object based on an IPC connection
  *
- * \param[in] c           IPC connection (or NULL to allocate generic client)
- * \param[in] key         Connection table key (or NULL to use sane default)
+ * \param[in] c           IPC connection (NULL to allocate generic client)
+ * \param[in] key         Connection table key (NULL to use sane default)
  * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
  *
  * \return Pointer to new pcmk__client_t (or NULL on error)
@@ -274,7 +274,7 @@ pcmk__new_ipc_event(void)
 /*!
  * \brief Free an I/O vector created by pcmk__ipc_prepare_iov()
  *
- * \param[in] event  I/O vector to free
+ * \param[in,out] event  I/O vector to free
  */
 void
 pcmk_free_ipc_event(struct iovec *event)
@@ -381,10 +381,10 @@ pcmk__client_pid(qb_ipcs_connection_t *c)
  * \internal
  * \brief Retrieve message XML from data read from client IPC
  *
- * \param[in]  c       IPC client connection
- * \param[in]  data    Data read from client connection
- * \param[out] id      Where to store message ID from libqb header
- * \param[out] flags   Where to store flags from libqb header
+ * \param[in,out]  c       IPC client connection
+ * \param[in]      data    Data read from client connection
+ * \param[out]     id      Where to store message ID from libqb header
+ * \param[out]     flags   Where to store flags from libqb header
  *
  * \return Message XML on success, NULL otherwise
  */
@@ -476,7 +476,7 @@ delay_next_flush(pcmk__client_t *c, unsigned int queue_len)
  * \internal
  * \brief Send client any messages in its queue
  *
- * \param[in]  c  Client to flush
+ * \param[in,out] c  Client to flush
  *
  * \return Standard Pacemaker return value
  */
@@ -574,11 +574,11 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]  request        Identifier for libqb response header
- * \param[in]  message        XML message to send
- * \param[in]  max_send_size  If 0, default IPC buffer size is used
- * \param[out] result         Where to store prepared I/O vector
- * \param[out] bytes          Size of prepared data in bytes
+ * \param[in]     request        Identifier for libqb response header
+ * \param[in,out] message        XML message to send
+ * \param[in]     max_send_size  If 0, default IPC buffer size is used
+ * \param[out]    result         Where to store prepared I/O vector
+ * \param[out]    bytes          Size of prepared data in bytes
  *
  * \return Standard Pacemaker return code
  */
@@ -905,6 +905,7 @@ pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
  * \internal
  * \brief Add an IPC server to the main loop for the pacemaker-attrd API
  *
+ * \param[out] ipcs  Where to store newly created IPC server
  * \param[in] cb  IPC callbacks
  *
  * \note This function exits fatally if unable to create the servers.
@@ -926,7 +927,8 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
  * \internal
  * \brief Add an IPC server to the main loop for the pacemaker-fenced API
  *
- * \param[in] cb  IPC callbacks
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
  *
  * \note This function exits fatally if unable to create the servers.
  */
@@ -948,7 +950,8 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
  * \internal
  * \brief Add an IPC server to the main loop for the pacemakerd API
  *
- * \param[in] cb  IPC callbacks
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
  *
  * \note This function exits with CRM_EX_OSERR if unable to create the servers.
  */
@@ -974,8 +977,9 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  * \internal
  * \brief Add an IPC server to the main loop for the pacemaker-schedulerd API
  *
- * \param[in] cb IPC callbacks
+ * \param[in] cb  IPC callbacks
  *
+ * \return Newly created IPC server
  * \note This function exits fatally if unable to create the servers.
  */
 qb_ipcs_service_t *

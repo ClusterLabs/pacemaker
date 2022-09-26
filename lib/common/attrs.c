@@ -22,6 +22,18 @@
 
 /*!
  * \internal
+ * \brief Get the node name that should be used to set node attributes
+ *
+ * If given NULL, "auto", or "localhost" as an argument, check the environment
+ * to detect the node name that should be used to set node attributes. (The
+ * caller might not know the correct name, for example if the target is part of
+ * a bundle with container-attribute-target set to "host".)
+ *
+ * \param[in] name  NULL, "auto" or "localhost" to check environment variables,
+ *                  or anything else to return NULL
+ *
+ * \return Node name that should be used for node attributes based on the
+ *         environment if known, otherwise NULL
  */
 const char *
 pcmk__node_attr_target(const char *name)

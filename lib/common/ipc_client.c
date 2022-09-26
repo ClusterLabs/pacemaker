@@ -137,10 +137,10 @@ free_daemon_specific_data(pcmk_ipc_api_t *api)
  * \internal
  * \brief Call an IPC API event callback, if one is registed
  *
- * \param[in] api         IPC API connection
- * \param[in] event_type  The type of event that occurred
- * \param[in] status      Event status
- * \param[in] event_data  Event-specific data
+ * \param[in,out] api         IPC API connection
+ * \param[in]     event_type  The type of event that occurred
+ * \param[in]     status      Event status
+ * \param[in,out] event_data  Event-specific data
  */
 void
 pcmk__call_ipc_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
@@ -155,7 +155,7 @@ pcmk__call_ipc_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
  * \internal
  * \brief Clean up after an IPC disconnect
  *
- * \param[in]  user_data  IPC API connection that disconnected
+ * \param[in,out] user_data  IPC API connection that disconnected
  *
  * \note This function can be used as a main loop IPC destroy callback.
  */
@@ -196,7 +196,7 @@ ipc_post_disconnect(gpointer user_data)
 /*!
  * \brief Free the contents of an IPC API object
  *
- * \param[in] api  IPC API object to free
+ * \param[in,out] api  IPC API object to free
  */
 void
 pcmk_free_ipc_api(pcmk_ipc_api_t *api)
@@ -240,7 +240,7 @@ pcmk_free_ipc_api(pcmk_ipc_api_t *api)
  *         "Pacemaker" if for_log is true and NULL if for_log is false
  */
 const char *
-pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
+pcmk_ipc_name(const pcmk_ipc_api_t *api, bool for_log)
 {
     if (api == NULL) {
         return for_log? "Pacemaker" : NULL;
@@ -275,7 +275,7 @@ pcmk_ipc_name(pcmk_ipc_api_t *api, bool for_log)
 /*!
  * \brief Check whether an IPC API connection is active
  *
- * \param[in] api  IPC API connection
+ * \param[in,out] api  IPC API connection
  *
  * \return true if IPC is connected, false otherwise
  */
@@ -293,7 +293,8 @@ pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
  * method's responsibility to call the client's registered event callback, as
  * well as allocate and free any event data.
  *
- * \param[in] api  IPC API connection
+ * \param[in,out] api      IPC API connection
+ * \param[in,out] message  IPC reply XML to dispatch
  */
 static bool
 call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
@@ -310,8 +311,8 @@ call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
  * \internal
  * \brief Dispatch previously read IPC data
  *
- * \param[in] buffer Data read from IPC
- * \param[in] api    IPC object
+ * \param[in]     buffer  Data read from IPC
+ * \param[in,out] api     IPC object
  *
  * \return Standard Pacemaker return code.  In particular:
  *
@@ -354,9 +355,9 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
  * \internal
  * \brief Dispatch data read from IPC source
  *
- * \param[in] buffer     Data read from IPC
- * \param[in] length     Number of bytes of data in buffer (ignored)
- * \param[in] user_data  IPC object
+ * \param[in]     buffer     Data read from IPC
+ * \param[in]     length     Number of bytes of data in buffer (ignored)
+ * \param[in,out] user_data  IPC object
  *
  * \return Always 0 (meaning connection is still required)
  *
@@ -391,7 +392,7 @@ dispatch_ipc_source_data(const char *buffer, ssize_t length, gpointer user_data)
  *       crm_ipc_get_fd(api->ipc), so the caller can call poll() themselves.
  */
 int
-pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms)
+pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
 {
     int rc;
     struct pollfd pollfd = { 0, };
@@ -413,7 +414,7 @@ pcmk_poll_ipc(pcmk_ipc_api_t *api, int timeout_ms)
 /*!
  * \brief Dispatch available messages on an IPC connection (without main loop)
  *
- * \param[in]  api  IPC API connection
+ * \param[in,out] api  IPC API connection
  *
  * \return Standard Pacemaker return code
  *
@@ -476,8 +477,8 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 /*!
  * \brief Connect to a Pacemaker daemon via IPC
  *
- * \param[in]  api            IPC API instance
- * \param[out] dispatch_type  How IPC replies should be dispatched
+ * \param[in,out] api            IPC API instance
+ * \param[in]     dispatch_type  How IPC replies should be dispatched
  *
  * \return Standard Pacemaker return code
  */
@@ -532,7 +533,7 @@ pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
 /*!
  * \brief Disconnect an IPC API instance
  *
- * \param[in]  api  IPC API connection
+ * \param[in,out] api  IPC API connection
  *
  * \return Standard Pacemaker return code
  *
@@ -582,9 +583,9 @@ pcmk_disconnect_ipc(pcmk_ipc_api_t *api)
 /*!
  * \brief Register a callback for IPC API events
  *
- * \param[in] api          IPC API connection
- * \param[in] callback     Callback to register
- * \param[in] userdata     Caller data to pass to callback
+ * \param[in,out] api       IPC API connection
+ * \param[in]     callback  Callback to register
+ * \param[in]     userdata  Caller data to pass to callback
  *
  * \note This function may be called multiple times to update the callback
  *       and/or user data. The caller remains responsible for freeing
@@ -606,8 +607,8 @@ pcmk_register_ipc_callback(pcmk_ipc_api_t *api, pcmk_ipc_callback_t cb,
  * \internal
  * \brief Send an XML request across an IPC API connection
  *
- * \param[in] api          IPC API connection
- * \param[in] request      XML request to send
+ * \param[in,out] api      IPC API connection
+ * \param[in,out] request  XML request to send
  *
  * \return Standard Pacemaker return code
  *
@@ -697,7 +698,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, xmlNode *request)
  *       common syntax with all daemons if their version supports it.
  */
 static xmlNode *
-create_purge_node_request(pcmk_ipc_api_t *api, const char *node_name,
+create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
                           uint32_t nodeid)
 {
     xmlNode *request = NULL;
@@ -734,9 +735,9 @@ create_purge_node_request(pcmk_ipc_api_t *api, const char *node_name,
 /*!
  * \brief Ask a Pacemaker daemon to purge a node from its peer cache
  *
- * \param[in]  api        IPC API connection
- * \param[in]  node_name  If not NULL, name of node to purge
- * \param[in]  nodeid     If not 0, node ID of node to purge
+ * \param[in,out] api        IPC API connection
+ * \param[in]     node_name  If not NULL, name of node to purge
+ * \param[in]     nodeid     If not 0, node ID of node to purge
  *
  * \return Standard Pacemaker return code
  *
@@ -836,14 +837,14 @@ crm_ipc_new(const char *name, size_t max_size)
 /*!
  * \brief Establish an IPC connection to a Pacemaker component
  *
- * \param[in] client  Connection instance obtained from crm_ipc_new()
+ * \param[in,out] client  Connection instance obtained from crm_ipc_new()
  *
  * \return TRUE on success, FALSE otherwise (in which case errno will be set;
  *         specifically, in case of discovering the remote side is not
  *         authentic, its value is set to ECONNABORTED).
  */
 bool
-crm_ipc_connect(crm_ipc_t * client)
+crm_ipc_connect(crm_ipc_t *client)
 {
     uid_t cl_uid = 0;
     gid_t cl_gid = 0;
@@ -993,7 +994,7 @@ crm_ipc_connected(crm_ipc_t * client)
 /*!
  * \brief Check whether an IPC connection is ready to be read
  *
- * \param[in] client  Connection to check
+ * \param[in,out] client  Connection to check
  *
  * \return Positive value if ready to be read, 0 if not ready, -errno on error
  */
@@ -1194,12 +1195,12 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 /*!
  * \brief Send an IPC XML message
  *
- * \param[in]  client      Connection to IPC server
- * \param[in]  message     XML message to send
- * \param[in]  flags       Bitmask of crm_ipc_flags
- * \param[in]  ms_timeout  Give up if not sent within this much time
- *                         (5 seconds if 0, or no timeout if negative)
- * \param[out] reply       Reply from server (or NULL if none)
+ * \param[in,out] client      Connection to IPC server
+ * \param[in,out] message     XML message to send
+ * \param[in]     flags       Bitmask of crm_ipc_flags
+ * \param[in]     ms_timeout  Give up if not sent within this much time
+ *                            (5 seconds if 0, or no timeout if negative)
+ * \param[out]    reply       Reply from server (or NULL if none)
  *
  * \return Negative errno on error, otherwise size of reply received in bytes
  *         if reply was needed, otherwise number of bytes sent

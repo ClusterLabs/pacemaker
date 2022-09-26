@@ -130,7 +130,7 @@ pcmk__free_alert(pcmk__alert_t *entry)
  * \return Duplicate of alert entry
  */
 pcmk__alert_t *
-pcmk__dup_alert(pcmk__alert_t *entry)
+pcmk__dup_alert(const pcmk__alert_t *entry)
 {
     pcmk__alert_t *new_entry = pcmk__alert_new(entry->id, entry->path);
 

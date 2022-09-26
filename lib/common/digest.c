@@ -54,7 +54,7 @@ dump_xml_for_digest(xmlNodePtr xml)
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
+calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean ignored)
 {
     char *digest = NULL;
     GString *buffer = NULL;
@@ -89,7 +89,7 @@ calculate_xml_digest_v1(xmlNode * input, gboolean sort, gboolean ignored)
  * \return Newly allocated string containing digest
  */
 static char *
-calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
+calculate_xml_digest_v2(xmlNode *source, gboolean do_filter)
 {
     char *digest = NULL;
     GString *buffer = g_string_sized_new(1024);
@@ -131,7 +131,7 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
  * \return Newly allocated string containing digest
  */
 char *
-calculate_on_disk_digest(xmlNode * input)
+calculate_on_disk_digest(xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests
      * a) it's a compatibility nightmare
@@ -144,8 +144,8 @@ calculate_on_disk_digest(xmlNode * input)
 /*!
  * \brief Calculate and return digest of XML operation
  *
- * \param[in] input Root of XML to digest
- * \param[in] version Not used
+ * \param[in] input    Root of XML to digest
+ * \param[in] version  Unused
  *
  * \return Newly allocated string containing digest
  */
@@ -159,16 +159,16 @@ calculate_operation_digest(xmlNode *input, const char *version)
 /*!
  * \brief Calculate and return digest of XML tree
  *
- * \param[in] input Root of XML to digest
- * \param[in] sort Whether to sort XML before calculating digest
- * \param[in] do_filter Whether to filter certain XML attributes
- * \param[in] version CRM feature set version (used to select v1/v2 digest)
+ * \param[in] input      Root of XML to digest
+ * \param[in] sort       Whether to sort XML before calculating digest
+ * \param[in] do_filter  Whether to filter certain XML attributes
+ * \param[in] version    CRM feature set version (used to select v1/v2 digest)
  *
  * \return Newly allocated string containing digest
  */
 char *
-calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filter,
-                               const char *version)
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
+                               gboolean do_filter, const char *version)
 {
     /*
      * @COMPAT digests (on-disk or in diffs/patchsets) created <1.1.4;

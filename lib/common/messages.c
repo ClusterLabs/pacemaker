@@ -37,7 +37,7 @@
  * \note The caller is responsible for freeing the result using free_xml().
  */
 xmlNode *
-create_request_adv(const char *task, xmlNode * msg_data,
+create_request_adv(const char *task, xmlNode *msg_data,
                    const char *host_to, const char *sys_to,
                    const char *sys_from, const char *uuid_from,
                    const char *origin)
@@ -219,7 +219,7 @@ pcmk__message_name(const char *name)
  *       g_hash_table_destroy().
  */
 GHashTable *
-pcmk__register_handlers(pcmk__server_command_t *handlers)
+pcmk__register_handlers(const pcmk__server_command_t handlers[])
 {
     GHashTable *commands = g_hash_table_new(g_str_hash, g_str_equal);
 
@@ -242,8 +242,8 @@ pcmk__register_handlers(pcmk__server_command_t *handlers)
  * \internal
  * \brief Process an incoming request
  *
- * \param[in] request   Request to process
- * \param[in] handlers  Command table created by pcmk__register_handlers()
+ * \param[in,out] request   Request to process
+ * \param[in]     handlers  Command table created by pcmk__register_handlers()
  *
  * \return XML to send as reply (or NULL if no reply is needed)
  */
@@ -279,7 +279,7 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
  * \internal
  * \brief Free memory used within a request (but not the request itself)
  *
- * \param[in] request  Request to reset
+ * \param[in,out] request  Request to reset
  */
 void
 pcmk__reset_request(pcmk__request_t *request)
