@@ -127,9 +127,9 @@ valid_network(pe__bundle_variant_data_t *data)
     return FALSE;
 }
 
-static bool
+static int
 create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                   pe__bundle_replica_t *replica, pe_working_set_t *data_set)
+                   pe__bundle_replica_t *replica)
 {
     if(data->ip_range_start) {
         char *id = NULL;
@@ -164,13 +164,13 @@ create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (pe__unpack_resource(xml_ip, &replica->ip, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
+                                parent->cluster) != pcmk_rc_ok) {
+            return pcmk_rc_unpack_error;
         }
 
         parent->children = g_list_append(parent->children, replica->ip);
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static const char*
@@ -442,10 +442,9 @@ disallow_node(pe_resource_t *rsc, const char *uname)
     }
 }
 
-static bool
+static int
 create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica,
-                       pe_working_set_t *data_set)
+                       pe__bundle_replica_t *replica)
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
@@ -456,13 +455,14 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         const char *uname = NULL;
         const char *connect_name = NULL;
 
-        if (pe_find_resource(data_set->resources, id) != NULL) {
+        if (pe_find_resource(parent->cluster->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
-            //@TODO return false instead of asserting?
-            CRM_ASSERT(pe_find_resource(data_set->resources, id) == NULL);
+            //@TODO return error instead of asserting?
+            CRM_ASSERT(pe_find_resource(parent->cluster->resources,
+                                        id) == NULL);
         }
 
         /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
@@ -498,10 +498,10 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pe_find_node(data_set->nodes, uname);
+        node = pe_find_node(parent->cluster->nodes, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, "remote", "-INFINITY",
-                                  data_set);
+                                  parent->cluster);
         } else {
             node->weight = -INFINITY;
         }
@@ -524,7 +524,8 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * @TODO Possible alternative: ensure bundles are unpacked before other
          * resources, so the weight is correct before any copies are made.
          */
-        g_list_foreach(data_set->resources, (GFunc) disallow_node, (gpointer) uname);
+        g_list_foreach(parent->cluster->resources, (GFunc) disallow_node,
+                       (gpointer) uname);
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
@@ -546,8 +547,8 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
+                                parent->cluster) != pcmk_rc_ok) {
+            return pcmk_rc_unpack_error;
         }
 
         g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
@@ -580,29 +581,35 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         parent->children = g_list_append(parent->children, replica->remote);
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-static bool
+static int
 create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                         pe__bundle_replica_t *replica,
-                         pe_working_set_t *data_set)
+                         pe__bundle_replica_t *replica)
 {
-    if (create_container_resource(parent, data, replica) != pcmk_rc_ok) {
-        return false;
+    int rc = pcmk_rc_ok;
+
+    rc = create_container_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
-    if (create_ip_resource(parent, data, replica, data_set) == FALSE) {
-        return FALSE;
+    rc = create_ip_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
-    if(create_remote_resource(parent, data, replica, data_set) == FALSE) {
-        return FALSE;
+
+    rc = create_remote_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
-    if (replica->child && replica->ipaddr) {
+
+    if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
         add_hash_param(replica->child->meta, "external-ip", replica->ipaddr);
     }
 
-    if (replica->remote) {
+    if (replica->remote != NULL) {
         /*
          * Allow the remote connection resource to be allocated to a
          * different node than the one on which the container is active.
@@ -613,8 +620,7 @@ create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
     }
-
-    return TRUE;
+    return rc;
 }
 
 static void
@@ -1034,7 +1040,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (!create_replica_resources(rsc, bundle_data, replica, data_set)) {
+        if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pe_err("Failed unpacking resource %s", rsc->id);
             rsc->fns->free(rsc);
             return FALSE;
