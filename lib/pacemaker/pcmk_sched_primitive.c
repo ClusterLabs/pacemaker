@@ -1018,7 +1018,7 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
  * \brief Return action flags for a given primitive resource action
  *
  * \param[in,out] action  Action to get flags for
- * \param[in]     node    If not NULL, limit effects to this node
+ * \param[in]     node    If not NULL, limit effects to this node (ignored)
  *
  * \return Flags appropriate to \p action on \p node
  */
