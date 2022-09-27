@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-09-22 17:56+0800\n"
+"POT-Creation-Date: 2022-09-27 10:36+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -484,8 +484,8 @@ msgid ""
 "ones.Use this to specify an alternate, device-specific, command that "
 "implements the 'monitor' action."
 msgstr ""
-"一些设备不支持标准命令或可能提供其他命令使用此选项可指定一个该设备特定的替代"
-"命令，用来实现'monitor'操作。"
+"一些设备不支持标准命令或可能提供其他命令，使用此选项可指定一个该设备特定的替"
+"代命令，用来实现'monitor'操作。"
 
 #: daemons/fenced/pacemaker-fenced.c:1530
 msgid ""
@@ -563,14 +563,14 @@ msgstr ""
 "Pacemaker将自动重试（如果时间允许）。 使用此选项更改Pacemaker在放弃之前重"
 "试'status' 操作的次数."
 
-#: daemons/fenced/pacemaker-fenced.c:1566
+#: daemons/fenced/pacemaker-fenced.c:1565
 msgid "Instance attributes available for all \"stonith\"-class resources"
 msgstr " 可用于所有stonith类资源的实例属性"
 
 #: daemons/fenced/pacemaker-fenced.c:1567
 msgid ""
-"Instance attributes available for all \"stonith\"-class resourcesand used by "
-"Pacemaker's fence daemon, formerly known as stonithd"
+"Instance attributes available for all \"stonith\"-class resources and used "
+"by Pacemaker's fence daemon, formerly known as stonithd"
 msgstr ""
 " 可用于所有stonith类资源的实例属性，并由Pacemaker的fence守护程序使用（以前称"
 "为stonithd)"
@@ -592,7 +592,7 @@ msgstr ""
 "如果日志中有针对集群守护程序PID的消息“Evicting client”，（则建议将值设为集群"
 "中的资源数量乘以节点数量）"
 
-#: lib/common/options.c:621
+#: lib/common/options.c:624
 msgid "  Allowed values: "
 msgstr " 允许的值: "
 
