@@ -649,12 +649,21 @@ static pcmk__cluster_option_t controller_options[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "select", "stop, freeze, ignore, demote, suicide",
-        "stop", pcmk__valid_quorum, NULL, NULL
+        "no-quorum-policy", NULL, "select",
+        "stop, freeze, ignore, demote, suicide", "stop", pcmk__valid_quorum,
+        "What to do when the cluster does not have quorum", NULL
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK, NULL, "boolean", NULL,
-        "false", pcmk__valid_boolean, NULL, NULL
+        "false", pcmk__valid_boolean,
+        "Whether to lock resources to a cleanly shut down node",
+        "When true, resources active on a node when it is cleanly shut down "
+            "are kept \"locked\" to that node (not allowed to run elsewhere) "
+            "until they start again on that node after it rejoins (or for at "
+            "most shutdown-lock-limit, if set). Stonith resources and "
+            "Pacemaker Remote connections are never locked. Clone and bundle "
+            "instances and the promoted role of promotable clones are currently"
+            " never locked, though support could be added in a future release."
     },
 };
 
