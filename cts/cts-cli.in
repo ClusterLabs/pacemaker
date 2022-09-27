@@ -2429,8 +2429,8 @@ for t in $tests; do
         -e 's/(version .*)/(version)/' \
         -e 's/last_update time=\".*\"/last_update time=\"\"/' \
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
-        -e 's/ api-version=\".*\" / api-version=\"X\" /' \
-        -e 's/ version="[^"]*" / version="" /' \
+        -e 's/ api-version="[^"]*"/ api-version="X"/' \
+        -e 's/ version="[^"]*"/ version=""/' \
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
