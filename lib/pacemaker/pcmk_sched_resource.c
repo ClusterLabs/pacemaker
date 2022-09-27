@@ -39,7 +39,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__group_assign,
         pcmk__group_create_actions,
         pcmk__probe_rsc_on_node,
-        group_internal_constraints,
+        pcmk__group_internal_constraints,
         pcmk__group_apply_coloc_score,
         pcmk__group_add_colocated_node_scores,
         pcmk__group_colocated_resources,

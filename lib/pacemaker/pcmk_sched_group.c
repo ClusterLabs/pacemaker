@@ -317,16 +317,27 @@ member_internal_constraints(gpointer data, gpointer user_data)
     member_data->previous_member = member;
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a group resource
+ *
+ * \param[in,out] rsc  Group resource to create implicit constraints for
+ */
 void
-group_internal_constraints(pe_resource_t *rsc)
+pcmk__group_internal_constraints(pe_resource_t *rsc)
 {
     struct member_data member_data = { false, };
 
+    CRM_ASSERT(rsc != NULL);
+
+    /* Order group pseudo-actions relative to each other for restarting:
+     * stop group -> group is stopped -> start group -> group is started
+     */
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
+                                 pe_order_runnable_left);
     pcmk__order_resource_actions(rsc, RSC_STOPPED, rsc, RSC_START,
                                  pe_order_optional);
     pcmk__order_resource_actions(rsc, RSC_START, rsc, RSC_STARTED,
-                                 pe_order_runnable_left);
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_STOPPED,
                                  pe_order_runnable_left);
 
     member_data.ordered = pe__group_flag_is_set(rsc, pe__group_ordered);
@@ -335,11 +346,13 @@ group_internal_constraints(pe_resource_t *rsc)
     g_list_foreach(rsc->children, member_internal_constraints, &member_data);
 
     if (member_data.ordered && (member_data.previous_member != NULL)) {
+        // Stop group -> stop last member -> group is stopped
         pcmk__order_stops(rsc, member_data.previous_member,
                           pe_order_implies_then);
         pcmk__order_resource_actions(member_data.previous_member, RSC_STOP,
                                      rsc, RSC_STOPPED, pe_order_optional);
         if (member_data.promotable) {
+            // Demote group -> demote last member -> group is demoted
             pcmk__order_resource_actions(rsc, RSC_DEMOTE,
                                          member_data.previous_member,
                                          RSC_DEMOTE, pe_order_implies_then);
