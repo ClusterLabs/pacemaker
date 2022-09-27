@@ -1562,11 +1562,11 @@ static pcmk__cluster_option_t fencer_options[] = {
 void
 fencer_metadata(void)
 {
-    const char *desc_short = "Instance attributes available for all "
-                             "\"stonith\"-class resources";
-    const char *desc_long = "Instance attributes available for all \"stonith\"-"
+    const char *desc_short = N_("Instance attributes available for all "
+                             "\"stonith\"-class resources");
+    const char *desc_long = N_("Instance attributes available for all \"stonith\"-"
                             "class resources and used by Pacemaker's fence "
-                            "daemon, formerly known as stonithd";
+                            "daemon, formerly known as stonithd");
 
     gchar *s = pcmk__format_option_metadata("pacemaker-fenced", desc_short,
                                             desc_long, fencer_options,
