@@ -430,17 +430,16 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
  * \internal
  * \brief Schedule actions to bring resource down and back to current role
  *
- * \param[in] rsc           Resource to restart
- * \param[in] current       Node that resource should be brought down on
- * \param[in] chosen        Node that resource should be brought up on
- * \param[in] need_stop     Whether the resource must be stopped
- * \param[in] need_promote  Whether the resource must be promoted
+ * \param[in,out] rsc           Resource to restart
+ * \param[in]     current       Node that resource should be brought down on
+ * \param[in]     need_stop     Whether the resource must be stopped
+ * \param[in]     need_promote  Whether the resource must be promoted
  *
  * \return Role that resource would have after scheduled actions are taken
  */
 static void
 schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
-                         pe_node_t *chosen, bool need_stop, bool need_promote)
+                         bool need_stop, bool need_promote)
 {
     enum rsc_role_e role = rsc->role;
     enum rsc_role_e next_role;
@@ -471,7 +470,8 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
                      (required? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required)) {
+        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
+                                                !required)) {
             break;
         }
         role = next_role;
@@ -705,8 +705,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     }
 
     // Create any actions needed to bring resource down and back up to same role
-    schedule_restart_actions(rsc, current, rsc->allocated_to, need_stop,
-                             need_promote);
+    schedule_restart_actions(rsc, current, need_stop, need_promote);
 
     // Create any actions needed to take resource from this role to the next
     schedule_role_transition_actions(rsc);
