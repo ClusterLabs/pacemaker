@@ -23,8 +23,8 @@ Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
  -t 'TEST [...]' Run only specified tests
-                 (default: 'dates error_codes tools crm_mon acls validity
-                            upgrade rules feature_set').
+                 (default: 'daemons dates error_codes tools crm_mon acls
+                            validity upgrade rules feature_set').
                  Other tests: agents (must be run in an installed environment).
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
@@ -43,7 +43,8 @@ shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 verbose=0
-tests="dates error_codes tools crm_mon acls validity upgrade rules feature_set"
+tests="daemons dates error_codes tools crm_mon acls validity upgrade rules "
+tests="$tests feature_set"
 do_save=0
 XMLLINT_CMD=
 VALGRIND_CMD=
@@ -224,6 +225,24 @@ function test_agents() {
 
     unset OCF_RESKEY_op_sleep
     export OCF_RESKEY_op_sleep
+}
+
+function test_daemons() {
+    desc="Get CIB manager metadata"
+    cmd="pacemaker-based metadata"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get controller metadata"
+    cmd="pacemaker-controld metadata"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get fencer metadata"
+    cmd="pacemaker-fenced metadata"
+    test_assert $CRM_EX_OK 0
+
+    desc="Get scheduler metadata"
+    cmd="pacemaker-schedulerd metadata"
+    test_assert $CRM_EX_OK 0
 }
 
 function test_crm_mon() {
@@ -2375,6 +2394,7 @@ done
 for t in $tests; do
     case "$t" in
         agents) ;;
+        daemons) ;;
         dates) ;;
         error_codes) ;;
         tools) ;;
@@ -2402,8 +2422,15 @@ fi
 # Check whether we're running from source directory
 SRCDIR=$(dirname $test_home)
 if [ -x "$SRCDIR/tools/crm_simulate" ]; then
-    export PATH="$SRCDIR/tools:$PATH"
-    echo "Using local binaries from: $SRCDIR/tools"
+    path_dirs="$SRCDIR/tools"
+    for daemon in based controld fenced schedulerd; do
+        if [ -x "$SRCDIR/daemons/$daemon/pacemaker-${daemon}" ]; then
+            path_dirs="$path_dirs:$SRCDIR/daemons/$daemon"
+        fi
+    done
+    export PATH="$path_dirs:$PATH"
+
+    echo "Using local binaries from: ${path_dirs//:/ }"
 
     if [ -x "$SRCDIR/xml" ]; then
         export PCMK_schema_directory="$SRCDIR/xml"
@@ -2430,6 +2457,7 @@ for t in $tests; do
         -e 's/last_update time=\".*\"/last_update time=\"\"/' \
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
         -e 's/ api-version="[^"]*"/ api-version="X"/' \
+        -e 's/ default="[^"]*"/ default=""/' \
         -e 's/ version="[^"]*"/ version=""/' \
         -e 's/request=\".*\(crm_[a-zA-Z0-9]*\)/request=\"\1/' \
         -e 's/crm_feature_set="[^"]*" //'\
