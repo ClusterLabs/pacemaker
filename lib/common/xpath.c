@@ -300,12 +300,12 @@ pcmk__element_xpath(const xmlNode *xml)
     } else if (parent->parent == NULL) {
         g_string_append(xpath, TYPE(xml));
     } else {
-        g_string_append_printf(xpath, "/%s", TYPE(xml));
+        pcmk__g_strcat(xpath, "/", TYPE(xml), NULL);
     }
 
     id = ID(xml);
     if (id != NULL) {
-        g_string_append_printf(xpath, "[@" XML_ATTR_ID "='%s']", id);
+        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", id, "']", NULL);
     }
 
     return xpath;

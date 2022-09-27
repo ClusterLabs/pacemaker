@@ -1471,8 +1471,8 @@ dump_xml_attr(const xmlAttr *attr, int options, GString *buffer)
 
     p_name = (const char *) attr->name;
     p_value = crm_xml_escape((const char *)attr->children->content);
-    g_string_append_printf(buffer, " %s=\"%s\"", p_name,
-                           pcmk__s(p_value, "<null>"));
+    pcmk__g_strcat(buffer, " ", p_name, "=\"", pcmk__s(p_value, "<null>"), "\"",
+                   NULL);
 
     free(p_value);
 }
@@ -1504,11 +1504,11 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
         insert_prefix(options, buffer, depth);
 
         if (data->type == XML_COMMENT_NODE) {
-            g_string_append_printf(buffer, "<!--%s-->",
-                                   (const gchar *) data->content);
+            pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->",
+                           NULL);
 
         } else {
-            g_string_append_printf(buffer, "<%s", name);
+            pcmk__g_strcat(buffer, "<", name, NULL);
 
             hidden = crm_element_value(data, "hidden");
             for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL;
@@ -1534,8 +1534,8 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
                     p_copy = crm_xml_escape(p_value);
                 }
 
-                g_string_append_printf(buffer, " %s=\"%s\"", p_name,
-                                       pcmk__s(p_copy, "<null>"));
+                pcmk__g_strcat(buffer, " ", p_name, "=\"",
+                               pcmk__s(p_copy, "<null>"), "\"", NULL);
                 free(p_copy);
             }
 
@@ -1575,7 +1575,7 @@ log_xml_node_and_children(GString *buffer, int log_level, const char *file,
         g_string_truncate(buffer, 0);
 
         insert_prefix(options, buffer, depth);
-        g_string_append_printf(buffer, "</%s>", name);
+        pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
         do_crm_log_alias(log_level, file, function, line, "%s %s", prefix,
                          (const char *) buffer->str);
@@ -1810,7 +1810,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
     CRM_ASSERT(name != NULL);
 
     insert_prefix(options, buffer, depth);
-    g_string_append_printf(buffer, "<%s", name);
+    pcmk__g_strcat(buffer, "<", name, NULL);
 
     if (options & xml_log_option_filtered) {
         dump_filtered_xml(data, options, buffer);
@@ -1841,7 +1841,7 @@ dump_xml_element(const xmlNode *data, int options, GString *buffer, int depth)
         }
 
         insert_prefix(options, buffer, depth);
-        g_string_append_printf(buffer, "</%s>", name);
+        pcmk__g_strcat(buffer, "</", name, ">", NULL);
 
         if (pcmk_is_set(options, xml_log_option_formatted)) {
             g_string_append_c(buffer, '\n');
@@ -1896,8 +1896,8 @@ dump_xml_cdata(const xmlNode *data, int options, GString *buffer, int depth)
     }
 
     insert_prefix(options, buffer, depth);
-    g_string_append_printf(buffer, "<![CDATA[%s]]>",
-                           (const gchar *) data->content);
+    pcmk__g_strcat(buffer, "<![CDATA[", (const char *) data->content, "]]>",
+                   NULL);
 
     if (pcmk_is_set(options, xml_log_option_formatted)) {
         g_string_append_c(buffer, '\n');
@@ -1924,7 +1924,7 @@ dump_xml_comment(const xmlNode *data, int options, GString *buffer, int depth)
     }
 
     insert_prefix(options, buffer, depth);
-    g_string_append_printf(buffer, "<!--%s-->", (const gchar *) data->content);
+    pcmk__g_strcat(buffer, "<!--", (const char *) data->content, "-->", NULL);
 
     if (pcmk_is_set(options, xml_log_option_formatted)) {
         g_string_append_c(buffer, '\n');
