@@ -598,7 +598,7 @@ msgstr " 允许的值: "
 
 #: lib/pengine/common.c:39
 msgid "What to do when the cluster does not have quorum"
-msgstr "当集群没有必须票数时该如何作"
+msgstr "当集群没有必需票数时该如何作"
 
 #: lib/pengine/common.c:45
 msgid "Whether resources can run on any node by default"
@@ -614,7 +614,7 @@ msgstr "集群是否应避免监视，启动和停止资源"
 msgid ""
 "Whether a start failure should prevent a resource from being recovered on "
 "the same node"
-msgstr "允许或避免在同一节点上重启启动失败的资源"
+msgstr "是否避免在同一节点上重启启动失败的资源"
 
 #: lib/pengine/common.c:60
 msgid ""
@@ -631,7 +631,7 @@ msgstr "群集是否在启动期间检查运行资源"
 
 #: lib/pengine/common.c:73
 msgid "Whether to lock resources to a cleanly shut down node"
-msgstr "锁定资源到完全关闭的节点不长于此时间"
+msgstr "是否锁定资源到完全关闭的节点"
 
 #: lib/pengine/common.c:74
 msgid ""
@@ -642,14 +642,14 @@ msgid ""
 "Clone and bundle instances and the promoted role of promotable clones are "
 "currently never locked, though support could be added in a future release."
 msgstr ""
-"设置为true时，在完全关闭的节点上活动的资源将被“锁定”到该节点（不允许在其他地"
-"方运行），直到它们在重新加入的该节点上再次启动（或最多shutdown-lock-limit 限制（如"
+"设置为true时，在完全关闭的节点上活动的资源将被“锁定”到该节点（不允许在其他地方运行），"
+"直到他们在重新加入的该节点上在次启动（或最多shutdown-lock-limit，如"
 "果已设置）。 Stonith资源和Pacemaker Remote连接永远不会被锁定。 克隆和捆绑实例"
 "以及可升级克隆的主角色目前从未锁定，尽管可以在将来的发行版中添加支持。"
 
 #: lib/pengine/common.c:85
 msgid "Do not lock resources to a cleanly shut down node longer than this"
-msgstr "请勿将资源锁定到完全关闭的节点的时间长于此时间"
+msgstr "资源会被锁定到完全关闭的节点的最长时间"
 
 #: lib/pengine/common.c:86
 msgid ""
