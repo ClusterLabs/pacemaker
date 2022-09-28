@@ -236,7 +236,7 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
                         // The nodes are sorted by weight, so no more are equal
                         break;
                     }
-                    if (allowed->details == running->details) {
+                    if (pe__same_node(allowed, running)) {
                         // Scores are equal, so prefer the current node
                         chosen = allowed;
                     }
@@ -666,8 +666,8 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     if ((rsc->partial_migration_source != NULL)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
-        && (current->details == rsc->partial_migration_source->details)
-        && (rsc->allocated_to->details == rsc->partial_migration_target->details)) {
+        && pe__same_node(current, rsc->partial_migration_source)
+        && pe__same_node(rsc->allocated_to, rsc->partial_migration_target)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -1115,8 +1115,7 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
     return pcmk_all_flags_set(rsc->flags,
                               pe_rsc_stop_unexpected|pe_rsc_restarting)
            && (rsc->next_role > RSC_ROLE_STOPPED)
-           && (rsc->allocated_to != NULL) && (node != NULL)
-           && (rsc->allocated_to->details == node->details);
+           && pe__same_node(rsc->allocated_to, node);
 }
 
 /*!
@@ -1147,10 +1146,9 @@ stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
         }
 
         if (rsc->partial_migration_target != NULL) {
-            if ((rsc->partial_migration_target->details == current->details)
-                // Only if the allocated node still is the migration target
-                && (rsc->allocated_to != NULL)
-                && rsc->allocated_to->details == rsc->partial_migration_target->details) {
+            // Continue migration if node originally was and remains target
+            if (pe__same_node(current, rsc->partial_migration_target)
+                && pe__same_node(current, rsc->allocated_to)) {
                 pe_rsc_trace(rsc,
                              "Skipping stop of %s on %s "
                              "because partial migration there will continue",
