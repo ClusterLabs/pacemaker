@@ -695,7 +695,7 @@ free_device(gpointer data)
 
     free_xml(device->agent_metadata);
     free(device->namespace);
-    free(device->on_target_actions);
+    g_string_free(device->on_target_actions, TRUE);
     free(device->agent);
     free(device->id);
     free(device);
@@ -874,27 +874,6 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
-#define MAX_ACTION_LEN 256
-
-static char *
-add_action(char *actions, const char *action)
-{
-    int offset = 0;
-
-    if (actions == NULL) {
-        actions = calloc(1, MAX_ACTION_LEN);
-    } else {
-        offset = strlen(actions);
-    }
-
-    if (offset > 0) {
-        offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, " ");
-    }
-    offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, "%s", action);
-
-    return actions;
-}
-
 static void
 read_action_metadata(stonith_device_t *device)
 {
@@ -942,8 +921,8 @@ read_action_metadata(stonith_device_t *device)
                                       st_device_supports_on);
         }
 
-        if (action && pcmk__xe_attr_is_true(match, "on_target")) {
-            device->on_target_actions = add_action(device->on_target_actions, action);
+        if ((action != NULL) && pcmk__xe_attr_is_true(match, "on_target")) {
+            pcmk__add_word(&(device->on_target_actions), 64, action);
         }
     }
 
@@ -1111,9 +1090,10 @@ build_device_from_xml(xmlNode *dev)
         crm_info("Fencing device '%s' requires unfencing", device->id);
     }
 
-    if (device->on_target_actions) {
+    if (device->on_target_actions != NULL) {
         crm_info("Fencing device '%s' requires actions (%s) to be executed "
-                 "on target", device->id, device->on_target_actions);
+                 "on target", device->id,
+                 (const char *) device->on_target_actions->str);
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
@@ -2036,11 +2016,14 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
     gboolean localhost_is_target = pcmk__str_eq(target, stonith_our_uname,
                                                 pcmk__str_casei);
 
-    if (device && action && device->on_target_actions
-        && strstr(device->on_target_actions, action)) {
+    if ((device != NULL) && (action != NULL)
+        && (device->on_target_actions != NULL)
+        && (strstr((const char*) device->on_target_actions->str,
+                   action) != NULL)) {
+
         if (!localhost_is_target) {
-            crm_trace("Operation '%s' using %s can only be executed for "
-                      "local host, not %s", action, device->id, target);
+            crm_trace("Operation '%s' using %s can only be executed for local "
+                      "host, not %s", action, device->id, target);
             return FALSE;
         }
 
@@ -2471,31 +2454,31 @@ log_async_result(const async_command_t *cmd,
     }
 
     // Build the log message piece by piece
-    g_string_printf(msg, "Operation '%s' ", cmd->action);
+    pcmk__g_strcat(msg, "Operation '", cmd->action, "' ", NULL);
     if (pid != 0) {
         g_string_append_printf(msg, "[%d] ", pid);
     }
     if (cmd->target != NULL) {
-        g_string_append_printf(msg, "targeting %s ", cmd->target);
+        pcmk__g_strcat(msg, "targeting ", cmd->target, " ", NULL);
     }
     if (cmd->device != NULL) {
-        g_string_append_printf(msg, "using %s ", cmd->device);
+        pcmk__g_strcat(msg, "using ", cmd->device, " ", NULL);
     }
 
     // Add exit status or execution status as appropriate
     if (result->execution_status == PCMK_EXEC_DONE) {
         g_string_append_printf(msg, "returned %d", result->exit_status);
     } else {
-        g_string_append_printf(msg, "could not be executed: %s",
-                               pcmk_exec_status_str(result->execution_status));
+        pcmk__g_strcat(msg, "could not be executed: ",
+                       pcmk_exec_status_str(result->execution_status), NULL);
     }
 
     // Add exit reason and next device if appropriate
     if (result->exit_reason != NULL) {
-        g_string_append_printf(msg, " (%s)", result->exit_reason);
+        pcmk__g_strcat(msg, " (", result->exit_reason, ")", NULL);
     }
     if (next != NULL) {
-        g_string_append_printf(msg, ", retrying with %s", next);
+        pcmk__g_strcat(msg, ", retrying with ", next, NULL);
     }
     if (devices_remaining > 0) {
         g_string_append_printf(msg, " (%u device%s remaining)",

@@ -97,7 +97,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     g_string_append(xpath, xpath_base);
 
     if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
-        g_string_append_printf(xpath, "//%s", node_type);
+        pcmk__g_strcat(xpath, "//", node_type, NULL);
 
     } else if (node_uuid) {
         const char *node_type = XML_CIB_TAG_NODE;
@@ -106,28 +106,28 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
-        g_string_append_printf(xpath, "//%s[@" XML_ATTR_ID "='%s']", node_type,
-                               node_uuid);
+        pcmk__g_strcat(xpath,
+                       "//", node_type, "[@" XML_ATTR_ID "='", node_uuid, "']",
+                       NULL);
     }
 
+    pcmk__g_strcat(xpath, "//", set_type, NULL);
     if (set_name) {
-        g_string_append_printf(xpath, "//%s[@" XML_ATTR_ID "='%s']", set_type,
-                               set_name);
-    } else {
-        g_string_append_printf(xpath, "//%s", set_type);
+        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", set_name, "']", NULL);
     }
 
     g_string_append(xpath, "//nvpair");
 
     if (attr_id && attr_name) {
-        g_string_append_printf(xpath,
-                               "[@" XML_ATTR_ID "='%s' and @" XML_ATTR_NAME
-                               "='%s']", attr_id, attr_name);
+        pcmk__g_strcat(xpath,
+                       "[@" XML_ATTR_ID "='", attr_id, "' "
+                       "and @" XML_ATTR_NAME "='", attr_name, "']", NULL);
+
     } else if (attr_id) {
-        g_string_append_printf(xpath, "[@" XML_ATTR_ID "='%s']", attr_id);
+        pcmk__g_strcat(xpath, "[@" XML_ATTR_ID "='", attr_id, "']", NULL);
 
     } else if (attr_name) {
-        g_string_append_printf(xpath, "[@" XML_ATTR_NAME "='%s']", attr_name);
+        pcmk__g_strcat(xpath, "[@" XML_ATTR_NAME "='", attr_name, "']", NULL);
     }
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL,

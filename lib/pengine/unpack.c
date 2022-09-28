@@ -2593,23 +2593,23 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
               return NULL);
 
     xpath = g_string_sized_new(256);
-    g_string_append_printf(xpath,
-                           "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
-                           "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']"
-                           "/" XML_LRM_TAG_RSC_OP
-                           "[@" XML_LRM_ATTR_TASK "='%s'",
-                           node, resource, op);
+    pcmk__g_strcat(xpath,
+                   "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='", node, "']"
+                   "//" XML_LRM_TAG_RESOURCE
+                   "[@" XML_ATTR_ID "='", resource, "']"
+                   "/" XML_LRM_TAG_RSC_OP "[@" XML_LRM_ATTR_TASK "='", op, "'",
+                   NULL);
 
     /* Need to check against transition_magic too? */
     if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATE) == 0)) {
-        g_string_append_printf(xpath,
-                               "and @" XML_LRM_ATTR_MIGRATE_TARGET "='%s']",
-                               source);
+        pcmk__g_strcat(xpath,
+                       " and @" XML_LRM_ATTR_MIGRATE_TARGET "='", source, "']",
+                       NULL);
 
     } else if ((source != NULL) && (strcmp(op, CRMD_ACTION_MIGRATED) == 0)) {
-        g_string_append_printf(xpath,
-                               "and @" XML_LRM_ATTR_MIGRATE_SOURCE "='%s']",
-                               source);
+        pcmk__g_strcat(xpath,
+                       " and @" XML_LRM_ATTR_MIGRATE_SOURCE "='", source, "']",
+                       NULL);
     } else {
         g_string_append_c(xpath, ']');
     }
@@ -2641,10 +2641,12 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
     CRM_CHECK((rsc_id != NULL) && (node_name != NULL), return NULL);
 
     xpath = g_string_sized_new(256);
-    g_string_append_printf(xpath,
-                           "//" XML_CIB_TAG_STATE "[@" XML_ATTR_UNAME "='%s']"
-                           "//" XML_LRM_TAG_RESOURCE "[@" XML_ATTR_ID "='%s']",
-                           node_name, rsc_id);
+    pcmk__g_strcat(xpath,
+                   "//" XML_CIB_TAG_STATE
+                   "[@" XML_ATTR_UNAME "='", node_name, "']"
+                   "//" XML_LRM_TAG_RESOURCE
+                   "[@" XML_ATTR_ID "='", rsc_id, "']",
+                   NULL);
 
     xml = get_xpath_object((const char *) xpath->str, data_set->input,
                            LOG_DEBUG);

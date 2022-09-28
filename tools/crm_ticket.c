@@ -337,35 +337,35 @@ print_ticket_list(pe_working_set_t * data_set, bool raw, bool details)
     }
 }
 
-#define XPATH_MAX 1024
-
 static int
 find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml)
 {
-    int offset = 0;
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
 
-    char *xpath_string = NULL;
+    GString *xpath = NULL;
 
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
+    xpath = g_string_sized_new(1024);
+    g_string_append(xpath,
+                    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+                    "/" XML_CIB_TAG_TICKETS);
 
-    if (ticket_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s[@id=\"%s\"]",
-                           XML_CIB_TAG_TICKET_STATE, ticket_id);
+    if (ticket_id != NULL) {
+        pcmk__g_strcat(xpath,
+                       "/" XML_CIB_TAG_TICKET_STATE
+                       "[@" XML_ATTR_ID "=\"", ticket_id, "\"]", NULL);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
     rc = pcmk_legacy2rc(rc);
+    g_string_free(xpath, TRUE);
 
     if (rc != pcmk_rc_ok) {
-        goto done;
+        return rc;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -377,20 +377,16 @@ find_ticket_state(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_state_xml
     } else {
         *ticket_state_xml = xml_search;
     }
-
-  done:
-    free(xpath_string);
     return rc;
 }
 
 static int
 find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_cons_xml)
 {
-    int offset = 0;
     int rc = pcmk_rc_ok;
     xmlNode *xml_search = NULL;
 
-    char *xpath_string = NULL;
+    GString *xpath = NULL;
     const char *xpath_base = NULL;
 
     CRM_ASSERT(ticket_cons_xml != NULL);
@@ -402,29 +398,27 @@ find_ticket_constraints(cib_t * the_cib, gchar *ticket_id, xmlNode ** ticket_con
         return -ENOMSG;
     }
 
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s/%s",
-                       xpath_base, XML_CONS_TAG_RSC_TICKET);
+    xpath = g_string_sized_new(1024);
+    pcmk__g_strcat(xpath, xpath_base, "/" XML_CONS_TAG_RSC_TICKET, NULL);
 
-    if (ticket_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@ticket=\"%s\"]",
-                           ticket_id);
+    if (ticket_id != NULL) {
+        pcmk__g_strcat(xpath,
+                       "[@" XML_TICKET_ATTR_TICKET "=\"", ticket_id, "\"]",
+                       NULL);
     }
 
-    CRM_LOG_ASSERT(offset > 0);
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call | cib_scope_local | cib_xpath);
     rc = pcmk_legacy2rc(rc);
+    g_string_free(xpath, TRUE);
 
     if (rc != pcmk_rc_ok) {
-        goto done;
+        return rc;
     }
 
     crm_log_xml_debug(xml_search, "Match");
     *ticket_cons_xml = xml_search;
 
-  done:
-    free(xpath_string);
     return rc;
 }
 
@@ -500,45 +494,40 @@ get_ticket_state_attr(gchar *ticket_id, const char *attr_name, const char **attr
 static void
 ticket_warning(gchar *ticket_id, const char *action)
 {
-    int offset = 0;
-    static int text_max = 1024;
-
-    char *warning = NULL;
+    GString *warning = g_string_sized_new(1024);
     const char *word = NULL;
 
-    warning = calloc(1, text_max);
-    if (pcmk__str_eq(action, "grant", pcmk__str_casei)) {
-        offset += snprintf(warning + offset, text_max - offset,
-                           "This command cannot help you verify whether '%s' has been already granted elsewhere.\n",
-                           ticket_id);
+    CRM_ASSERT(action != NULL);
+
+    if (strcmp(action, "grant") == 0) {
+        pcmk__g_strcat(warning,
+                       "This command cannot help you verify whether '",
+                       ticket_id,
+                       "' has been already granted elsewhere.\n", NULL);
         word = "to";
 
     } else {
-        offset += snprintf(warning + offset, text_max - offset,
-                           "Revoking '%s' can trigger the specified 'loss-policy'(s) relating to '%s'.\n\n",
-                           ticket_id, ticket_id);
-
-        offset += snprintf(warning + offset, text_max - offset,
-                           "You can check that with:\ncrm_ticket --ticket %s --constraints\n\n",
-                           ticket_id);
-
-        offset += snprintf(warning + offset, text_max - offset,
-                           "Otherwise before revoking '%s', you may want to make '%s' standby with:\ncrm_ticket --ticket %s --standby\n\n",
-                           ticket_id, ticket_id, ticket_id);
+        pcmk__g_strcat(warning,
+                       "Revoking '", ticket_id, "' can trigger the specified "
+                       "'loss-policy'(s) relating to '", ticket_id, "'.\n\n"
+                       "You can check that with:\n"
+                       "crm_ticket --ticket ", ticket_id, " --constraints\n\n"
+                       "Otherwise before revoking '", ticket_id, "', "
+                       "you may want to make '", ticket_id, "' "
+                       "standby with:\n"
+                       "crm_ticket --ticket ", ticket_id, " --standby\n\n",
+                       NULL);
         word = "from";
     }
 
-    offset += snprintf(warning + offset, text_max - offset,
-                       "If you really want to %s '%s' %s this site now, and you know what you are doing,\n",
-                       action, ticket_id, word);
+    pcmk__g_strcat(warning,
+                   "If you really want to ", action, " '", ticket_id, "' ",
+                   word, " this site now, and you know what you are doing,\n"
+                   "please specify --force.", NULL);
 
-    offset += snprintf(warning + offset, text_max - offset, 
-                       "please specify --force.");
+    fprintf(stdout, "%s\n", (const char *) warning->str);
 
-    CRM_LOG_ASSERT(offset > 0);
-    fprintf(stdout, "%s\n", warning);
-
-    free(warning);
+    g_string_free(warning, TRUE);
 }
 
 static bool

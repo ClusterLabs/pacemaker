@@ -2696,37 +2696,38 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
     int log_level = LOG_ERR;
     GString *str = g_string_sized_new(100); // reasonable starting size
 
-    g_string_printf(str, "Result of %s operation for %s",
-                    crm_action_str(op->op_type, op->interval_ms), op->rsc_id);
+    pcmk__g_strcat(str,
+                   "Result of ", crm_action_str(op->op_type, op->interval_ms),
+                   " operation for ", op->rsc_id, NULL);
 
     if (node_name != NULL) {
-        g_string_append_printf(str, " on %s", node_name);
+        pcmk__g_strcat(str, " on ", node_name, NULL);
     }
 
     switch (op->op_status) {
         case PCMK_EXEC_DONE:
             log_level = LOG_NOTICE;
-            g_string_append_printf(str, ": %s",
-                                   services_ocf_exitcode_str(op->rc));
+            pcmk__g_strcat(str, ": ", services_ocf_exitcode_str(op->rc), NULL);
             break;
 
         case PCMK_EXEC_TIMEOUT:
-            g_string_append_printf(str, ": %s after %s",
-                                   pcmk_exec_status_str(op->op_status),
-                                   pcmk__readable_interval(op->timeout));
+            pcmk__g_strcat(str,
+                           ": ", pcmk_exec_status_str(op->op_status), " after ",
+                           pcmk__readable_interval(op->timeout), NULL);
             break;
 
         case PCMK_EXEC_CANCELLED:
             log_level = LOG_INFO;
             // Fall through
         default:
-            g_string_append_printf(str, ": %s",
-                                   pcmk_exec_status_str(op->op_status));
+            pcmk__g_strcat(str, ": ", pcmk_exec_status_str(op->op_status),
+                           NULL);
     }
 
     if ((op->exit_reason != NULL)
         && ((op->op_status != PCMK_EXEC_DONE) || (op->rc != PCMK_OCF_OK))) {
-        g_string_append_printf(str, " (%s)", op->exit_reason);
+
+        pcmk__g_strcat(str, " (", op->exit_reason, ")", NULL);
     }
 
     g_string_append(str, " " CRM_XS);

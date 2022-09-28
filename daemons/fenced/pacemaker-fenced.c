@@ -975,9 +975,6 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
     }
 }
 
-/* Needs to hold node name + attribute name + attribute value + 75 */
-#define XPATH_MAX 512
-
 /*!
  * \internal
  * \brief Check whether a node has a specific attribute name/value
@@ -991,24 +988,28 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
 gboolean
 node_has_attr(const char *node, const char *name, const char *value)
 {
-    char xpath[XPATH_MAX];
+    GString *xpath = NULL;
     xmlNode *match;
-    int n;
 
-    CRM_CHECK(local_cib != NULL, return FALSE);
+    CRM_CHECK((local_cib != NULL) && (node != NULL) && (name != NULL)
+              && (value != NULL), return FALSE);
 
     /* Search for the node's attributes in the CIB. While the schema allows
      * multiple sets of instance attributes, and allows instance attributes to
      * use id-ref to reference values elsewhere, that is intended for resources,
      * so we ignore that here.
      */
-    n = snprintf(xpath, XPATH_MAX, "//" XML_CIB_TAG_NODES
-                 "/" XML_CIB_TAG_NODE "[@uname='%s']/" XML_TAG_ATTR_SETS
-                 "/" XML_CIB_TAG_NVPAIR "[@name='%s' and @value='%s']",
-                 node, name, value);
-    match = get_xpath_object(xpath, local_cib, LOG_NEVER);
+    xpath = g_string_sized_new(256);
+    pcmk__g_strcat(xpath,
+                   "//" XML_CIB_TAG_NODES "/" XML_CIB_TAG_NODE
+                   "[@" XML_ATTR_UNAME "='", node, "']/" XML_TAG_ATTR_SETS
+                   "/" XML_CIB_TAG_NVPAIR
+                   "[@" XML_NVPAIR_ATTR_NAME "='", name, "' "
+                   "and @" XML_NVPAIR_ATTR_VALUE "='", value, "']", NULL);
 
-    CRM_CHECK(n < XPATH_MAX, return FALSE);
+    match = get_xpath_object((const char *) xpath->str, local_cib, LOG_NEVER);
+
+    g_string_free(xpath, TRUE);
     return (match != NULL);
 }
 

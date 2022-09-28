@@ -127,9 +127,9 @@ valid_network(pe__bundle_variant_data_t *data)
     return FALSE;
 }
 
-static bool
+static int
 create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                   pe__bundle_replica_t *replica, pe_working_set_t *data_set)
+                   pe__bundle_replica_t *replica)
 {
     if(data->ip_range_start) {
         char *id = NULL;
@@ -164,469 +164,224 @@ create_ip_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
         if (pe__unpack_resource(xml_ip, &replica->ip, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
+                                parent->cluster) != pcmk_rc_ok) {
+            return pcmk_rc_unpack_error;
         }
 
         parent->children = g_list_append(parent->children, replica->ip);
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-static bool
-create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica,
-                       pe_working_set_t *data_set)
+static const char*
+container_agent_str(enum pe__container_agent t)
 {
-        GString *buffer = g_string_sized_new(4096);
-        GString *dbuffer = g_string_sized_new(1024);
+    switch (t) {
+        case PE__CONTAINER_AGENT_DOCKER: return PE__CONTAINER_AGENT_DOCKER_S;
+        case PE__CONTAINER_AGENT_RKT:    return PE__CONTAINER_AGENT_RKT_S;
+        case PE__CONTAINER_AGENT_PODMAN: return PE__CONTAINER_AGENT_PODMAN_S;
+        default: // PE__CONTAINER_AGENT_UNKNOWN
+            break;
+    }
+    return PE__CONTAINER_AGENT_UNKNOWN_S;
+}
 
-        char *id = NULL;
-        xmlNode *xml_container = NULL;
-        xmlNode *xml_obj = NULL;
+static int
+create_container_resource(pe_resource_t *parent,
+                          const pe__bundle_variant_data_t *data,
+                          pe__bundle_replica_t *replica)
+{
+    char *id = NULL;
+    xmlNode *xml_container = NULL;
+    xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-docker-%d", data->prefix, replica->offset);
-        crm_xml_sanitize_id(id);
-        xml_container = create_resource(id, "heartbeat",
-                                        PE__CONTAINER_AGENT_DOCKER_S);
-        free(id);
+    // Agent-specific
+    const char *hostname_opt = NULL;
+    const char *env_opt = NULL;
+    const char *agent_str = NULL;
+    int volid = 0;  // rkt-only
 
-        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_obj, "%s-attributes-%d",
-                       data->prefix, replica->offset);
+    GString *buffer = NULL;
+    GString *dbuffer = NULL;
 
-        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
-        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
-        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
-        crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
+    // Where syntax differences are drop-in replacements, set them now
+    switch (data->agent_type) {
+        case PE__CONTAINER_AGENT_DOCKER:
+        case PE__CONTAINER_AGENT_PODMAN:
+            hostname_opt = "-h ";
+            env_opt = "-e ";
+            break;
+        case PE__CONTAINER_AGENT_RKT:
+            hostname_opt = "--hostname=";
+            env_opt = "--environment=";
+            break;
+        default:    // PE__CONTAINER_AGENT_UNKNOWN
+            return pcmk_rc_unpack_error;
+    }
+    agent_str = container_agent_str(data->agent_type);
 
+    buffer = g_string_sized_new(4096);
+
+    id = crm_strdup_printf("%s-%s-%d", data->prefix, agent_str,
+                           replica->offset);
+    crm_xml_sanitize_id(id);
+    xml_container = create_resource(id, "heartbeat", agent_str);
+    free(id);
+
+    xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
+    crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+
+    crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
+    crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
+    crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
+    crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
+
+    if (data->agent_type == PE__CONTAINER_AGENT_DOCKER) {
         g_string_append(buffer, " --restart=no");
+    }
 
-        /* Set a container hostname only if we have an IP to map it to.
-         * The user can set -h or --uts=host themselves if they want a nicer
-         * name for logs, but this makes applications happy who need their
-         * hostname to match the IP they bind to.
-         */
-        if (data->ip_range_start != NULL) {
-            g_string_append_printf(buffer, " -h %s-%d", data->prefix,
-                                   replica->offset);
+    /* Set a container hostname only if we have an IP to map it to. The user can
+     * set -h or --uts=host themselves if they want a nicer name for logs, but
+     * this makes applications happy who need their  hostname to match the IP
+     * they bind to.
+     */
+    if (data->ip_range_start != NULL) {
+        g_string_append_printf(buffer, " %s%s-%d", hostname_opt, data->prefix,
+                               replica->offset);
+    }
+    pcmk__g_strcat(buffer, " ", env_opt, "PCMK_stderr=1", NULL);
+
+    if (data->container_network != NULL) {
+        pcmk__g_strcat(buffer, " --net=", data->container_network, NULL);
+    }
+
+    if (data->control_port != NULL) {
+        pcmk__g_strcat(buffer, " ", env_opt, "PCMK_remote_port=",
+                      data->control_port, NULL);
+    } else {
+        g_string_append_printf(buffer, " %sPCMK_remote_port=%d", env_opt,
+                               DEFAULT_REMOTE_PORT);
+    }
+
+    for (GList *iter = data->mounts; iter != NULL; iter = iter->next) {
+        pe__bundle_mount_t *mount = (pe__bundle_mount_t *) iter->data;
+        char *source = NULL;
+
+        if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
+            source = crm_strdup_printf("%s/%s-%d", mount->source, data->prefix,
+                                       replica->offset);
+            pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
-        g_string_append(buffer, " -e PCMK_stderr=1");
+        switch (data->agent_type) {
+            case PE__CONTAINER_AGENT_DOCKER:
+            case PE__CONTAINER_AGENT_PODMAN:
+                pcmk__g_strcat(buffer,
+                               " -v ", pcmk__s(source, mount->source),
+                               ":", mount->target, NULL);
 
-        if (data->container_network) {
-            g_string_append_printf(buffer, " --net=%s",
-                                   data->container_network);
-        }
-
-        if(data->control_port) {
-            g_string_append_printf(buffer, " -e PCMK_remote_port=%s",
-                                   data->control_port);
-        } else {
-            g_string_append_printf(buffer, " -e PCMK_remote_port=%d",
-                                   DEFAULT_REMOTE_PORT);
-        }
-
-        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_mount_t *mount = pIter->data;
-
-            if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-                char *source = crm_strdup_printf(
-                    "%s/%s-%d", mount->source, data->prefix, replica->offset);
-
-                if (dbuffer->len > 0) {
-                    g_string_append_c(dbuffer, ',');
+                if (mount->options != NULL) {
+                    pcmk__g_strcat(buffer, ":", mount->options, NULL);
                 }
-                g_string_append(dbuffer, source);
-                g_string_append_printf(buffer, " -v %s:%s", source,
-                                       mount->target);
-                free(source);
-
-            } else {
-                g_string_append_printf(buffer, " -v %s:%s", mount->source,
-                                       mount->target);
-            }
-            if(mount->options) {
-                g_string_append_printf(buffer, ":%s", mount->options);
-            }
-        }
-
-        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_port_t *port = pIter->data;
-
-            if (replica->ipaddr) {
-                g_string_append_printf(buffer, " -p %s:%s:%s", replica->ipaddr,
-                                       port->source, port->target);
-            } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
-                // No need to do port mapping if net=host
-                g_string_append_printf(buffer, " -p %s:%s", port->source,
-                                       port->target);
-            }
-        }
-
-        if (data->launcher_options) {
-            g_string_append_printf(buffer, " %s", data->launcher_options);
-        }
-
-        if (data->container_host_options) {
-            g_string_append_printf(buffer, " %s", data->container_host_options);
-        }
-
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
-                              (const char *) buffer->str);
-        g_string_free(buffer, TRUE);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
-                              (const char *) dbuffer->str);
-        g_string_free(dbuffer, TRUE);
-
-        if (replica->child) {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->container_command);
-            } else {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", SBIN_DIR "/pacemaker-remoted");
-            }
-
-            /* TODO: Allow users to specify their own?
-             *
-             * We just want to know if the container is alive, we'll
-             * monitor the child independently
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-#if 0
-        /* @TODO Consider supporting the use case where we can start and stop
-         * resources, but not proxy local commands (such as setting node
-         * attributes), by running the local executor in stand-alone mode.
-         * However, this would probably be better done via ACLs as with other
-         * Pacemaker Remote nodes.
-         */
-        } else if ((child != NULL) && data->untrusted) {
-            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker-execd");
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
-#endif
-        } else {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->container_command);
-            }
-
-            /* TODO: Allow users to specify their own?
-             *
-             * We don't know what's in the container, so we just want
-             * to know if it is alive
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        }
-
-
-        xml_obj = create_xml_node(xml_container, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
-
-        // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (pe__unpack_resource(xml_container, &replica->container, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
-        }
-        parent->children = g_list_append(parent->children, replica->container);
-        return TRUE;
-}
-
-static bool
-create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica,
-                       pe_working_set_t *data_set)
-{
-        GString *buffer = g_string_sized_new(4096);
-        GString *dbuffer = g_string_sized_new(1024);
-
-        char *id = NULL;
-        xmlNode *xml_container = NULL;
-        xmlNode *xml_obj = NULL;
-
-        id = crm_strdup_printf("%s-podman-%d", data->prefix, replica->offset);
-        crm_xml_sanitize_id(id);
-        xml_container = create_resource(id, "heartbeat",
-                                        PE__CONTAINER_AGENT_PODMAN_S);
-        free(id);
-
-        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_obj, "%s-attributes-%d",
-                       data->prefix, replica->offset);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
-        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
-        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
-        crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
-
-        /* Set a container hostname only if we have an IP to map it to.
-         * The user can set -h or --uts=host themselves if they want a nicer
-         * name for logs, but this makes applications happy who need their
-         * hostname to match the IP they bind to.
-         */
-        if (data->ip_range_start != NULL) {
-            g_string_append_printf(buffer, " -h %s-%d", data->prefix,
-                                   replica->offset);
-        }
-
-        g_string_append(buffer, " -e PCMK_stderr=1");
-
-        if (data->container_network) {
-            g_string_append_printf(buffer, " --net=%s",
-                                   data->container_network);
-        }
-
-        if(data->control_port) {
-            g_string_append_printf(buffer, " -e PCMK_remote_port=%s",
-                                   data->control_port);
-        } else {
-            g_string_append_printf(buffer, " -e PCMK_remote_port=%d",
-                                   DEFAULT_REMOTE_PORT);
-        }
-
-        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_mount_t *mount = pIter->data;
-
-            if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-                char *source = crm_strdup_printf(
-                    "%s/%s-%d", mount->source, data->prefix, replica->offset);
-
-                if (dbuffer->len > 0) {
-                    g_string_append_c(dbuffer, ',');
-                }
-                g_string_append(dbuffer, source);
-                g_string_append_printf(buffer, " -v %s:%s", source,
-                                       mount->target);
-                free(source);
-
-            } else {
-                g_string_append_printf(buffer, " -v %s:%s", mount->source,
-                                       mount->target);
-            }
-            if(mount->options) {
-                g_string_append_printf(buffer, ":%s", mount->options);
-            }
-        }
-
-        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_port_t *port = pIter->data;
-
-            if (replica->ipaddr) {
-                g_string_append_printf(buffer, " -p %s:%s:%s", replica->ipaddr,
-                                       port->source, port->target);
-            } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
-                // No need to do port mapping if net=host
-                g_string_append_printf(buffer, " -p %s:%s", port->source,
-                                       port->target);
-            }
-        }
-
-        if (data->launcher_options) {
-            g_string_append_printf(buffer, " %s", data->launcher_options);
-        }
-
-        if (data->container_host_options) {
-            g_string_append_printf(buffer, " %s", data->container_host_options);
-        }
-
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
-                              (const char *) buffer->str);
-        g_string_free(buffer, TRUE);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
-                              (const char *) dbuffer->str);
-        g_string_free(dbuffer, TRUE);
-
-        if (replica->child) {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->container_command);
-            } else {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", SBIN_DIR "/pacemaker-remoted");
-            }
-
-            /* TODO: Allow users to specify their own?
-             *
-             * We just want to know if the container is alive, we'll
-             * monitor the child independently
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-#if 0
-        /* @TODO Consider supporting the use case where we can start and stop
-         * resources, but not proxy local commands (such as setting node
-         * attributes), by running the local executor in stand-alone mode.
-         * However, this would probably be better done via ACLs as with other
-         * Pacemaker Remote nodes.
-         */
-        } else if ((child != NULL) && data->untrusted) {
-            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker-execd");
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
-#endif
-        } else {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", data->container_command);
-            }
-
-            /* TODO: Allow users to specify their own?
-             *
-             * We don't know what's in the container, so we just want
-             * to know if it is alive
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        }
-
-
-        xml_obj = create_xml_node(xml_container, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
-
-        // TODO: Other ops? Timeouts and intervals from underlying resource?
-        if (pe__unpack_resource(xml_container, &replica->container, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
-        }
-        parent->children = g_list_append(parent->children, replica->container);
-        return TRUE;
-}
-
-static bool
-create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                    pe__bundle_replica_t *replica, pe_working_set_t *data_set)
-{
-        GString *buffer = g_string_sized_new(4096);
-        GString *dbuffer = g_string_sized_new(1024);
-
-        char *id = NULL;
-        xmlNode *xml_container = NULL;
-        xmlNode *xml_obj = NULL;
-
-        int volid = 0;
-
-        id = crm_strdup_printf("%s-rkt-%d", data->prefix, replica->offset);
-        crm_xml_sanitize_id(id);
-        xml_container = create_resource(id, "heartbeat",
-                                        PE__CONTAINER_AGENT_RKT_S);
-        free(id);
-
-        xml_obj = create_xml_node(xml_container, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_obj, "%s-attributes-%d",
-                       data->prefix, replica->offset);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
-        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", "true");
-        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", "false");
-        crm_create_nvpair_xml(xml_obj, NULL, "reuse", "false");
-
-        /* Set a container hostname only if we have an IP to map it to.
-         * The user can set -h or --uts=host themselves if they want a nicer
-         * name for logs, but this makes applications happy who need their
-         * hostname to match the IP they bind to.
-         */
-        if (data->ip_range_start != NULL) {
-            g_string_append_printf(buffer, " --hostname=%s-%d", data->prefix,
-                                   replica->offset);
-        }
-
-        g_string_append(buffer, " --environment=PCMK_stderr=1");
-
-        if (data->container_network) {
-            g_string_append_printf(buffer, " --net=%s",
-                                   data->container_network);
-        }
-
-        if(data->control_port) {
-            g_string_append_printf(buffer, " --environment=PCMK_remote_port=%s",
-                                   data->control_port);
-        } else {
-            g_string_append_printf(buffer, " --environment=PCMK_remote_port=%d",
-                                   DEFAULT_REMOTE_PORT);
-        }
-
-        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_mount_t *mount = pIter->data;
-
-            if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-                char *source = crm_strdup_printf(
-                    "%s/%s-%d", mount->source, data->prefix, replica->offset);
-
-                if (dbuffer->len > 0) {
-                    g_string_append_c(dbuffer, ',');
-                }
-                g_string_append(dbuffer, source);
+                break;
+            case PE__CONTAINER_AGENT_RKT:
                 g_string_append_printf(buffer,
-                                       " --volume vol%d,kind=host,source=%s",
-                                       volid, source);
-                if(mount->options) {
-                    g_string_append_printf(buffer, ",%s", mount->options);
-                }
-                g_string_append_printf(buffer,
-                                       " --mount volume=vol%d,target=%s",
+                                       " --volume vol%d,kind=host,"
+                                       "source=%s%s%s "
+                                       "--mount volume=vol%d,target=%s",
+                                       volid, pcmk__s(source, mount->source),
+                                       (mount->options != NULL)? "," : "",
+                                       pcmk__s(mount->options, ""),
                                        volid, mount->target);
-                free(source);
+                volid++;
+                break;
+            default:
+                break;
+        }
+        free(source);
+    }
 
-            } else {
-                g_string_append_printf(buffer,
-                                       " --volume vol%d,kind=host,source=%s",
-                                       volid, mount->source);
-                if(mount->options) {
-                    g_string_append_printf(buffer, ",%s", mount->options);
+    for (GList *iter = data->ports; iter != NULL; iter = iter->next) {
+        pe__bundle_port_t *port = (pe__bundle_port_t *) iter->data;
+
+        switch (data->agent_type) {
+            case PE__CONTAINER_AGENT_DOCKER:
+            case PE__CONTAINER_AGENT_PODMAN:
+                if (replica->ipaddr != NULL) {
+                    pcmk__g_strcat(buffer,
+                                   " -p ", replica->ipaddr, ":", port->source,
+                                   ":", port->target, NULL);
+
+                } else if (!pcmk__str_eq(data->container_network, "host",
+                                         pcmk__str_none)) {
+                    // No need to do port mapping if net == host
+                    pcmk__g_strcat(buffer,
+                                   " -p ", port->source, ":", port->target,
+                                   NULL);
                 }
-                g_string_append_printf(buffer,
-                                       " --mount volume=vol%d,target=%s",
-                                       volid, mount->target);
-            }
-            volid++;
+                break;
+            case PE__CONTAINER_AGENT_RKT:
+                if (replica->ipaddr != NULL) {
+                    pcmk__g_strcat(buffer,
+                                   " --port=", port->target,
+                                   ":", replica->ipaddr, ":", port->source,
+                                   NULL);
+                } else {
+                    pcmk__g_strcat(buffer,
+                                   " --port=", port->target, ":", port->source,
+                                   NULL);
+                }
+                break;
+            default:
+                break;
         }
+    }
 
-        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
-            pe__bundle_port_t *port = pIter->data;
+    /* @COMPAT: We should use pcmk__add_word() here, but we can't yet, because
+     * it would cause restarts during rolling upgrades.
+     *
+     * In a previous version of the container resource creation logic, if
+     * data->launcher_options is not NULL, we append
+     * (" %s", data->launcher_options) even if data->launcher_options is an
+     * empty string. Likewise for data->container_host_options. Using
+     *
+     *     pcmk__add_word(buffer, 0, data->launcher_options)
+     *
+     * removes that extra trailing space, causing a resource definition change.
+     */
+    if (data->launcher_options != NULL) {
+        pcmk__g_strcat(buffer, " ", data->launcher_options, NULL);
+    }
 
-            if (replica->ipaddr) {
-                g_string_append_printf(buffer, " --port=%s:%s:%s", port->target,
-                                       replica->ipaddr, port->source);
-            } else {
-                g_string_append_printf(buffer, " --port=%s:%s", port->target,
-                                       port->source);
-            }
-        }
+    if (data->container_host_options != NULL) {
+        pcmk__g_strcat(buffer, " ", data->container_host_options, NULL);
+    }
 
-        if (data->launcher_options) {
-            g_string_append_printf(buffer, " %s", data->launcher_options);
-        }
+    crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
+                          (const char *) buffer->str);
+    g_string_free(buffer, TRUE);
 
-        if (data->container_host_options) {
-            g_string_append_printf(buffer, " %s", data->container_host_options);
-        }
-
-        crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
-                              (const char *) buffer->str);
-        g_string_free(buffer, TRUE);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
-                              (const char *) dbuffer->str);
+    crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
+                          (dbuffer != NULL)? (const char *) dbuffer->str : "");
+    if (dbuffer != NULL) {
         g_string_free(dbuffer, TRUE);
+    }
 
-        if (replica->child) {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                      data->container_command);
-            } else {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                      SBIN_DIR "/pacemaker-remoted");
-            }
+    if (replica->child != NULL) {
+        if (data->container_command != NULL) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  data->container_command);
+        } else {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  SBIN_DIR "/pacemaker-remoted");
+        }
 
-            /* TODO: Allow users to specify their own?
-             *
-             * We just want to know if the container is alive, we'll
-             * monitor the child independently
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
+        /* TODO: Allow users to specify their own?
+         *
+         * We just want to know if the container is alive; we'll monitor the
+         * child independently.
+         */
+        crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
 #if 0
         /* @TODO Consider supporting the use case where we can start and stop
          * resources, but not proxy local commands (such as setting node
@@ -634,38 +389,37 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * However, this would probably be better done via ACLs as with other
          * Pacemaker Remote nodes.
          */
-        } else if ((child != NULL) && data->untrusted) {
-            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker-execd");
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+    } else if ((child != NULL) && data->untrusted) {
+        crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                              CRM_DAEMON_DIR "/pacemaker-execd");
+        crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                              CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
 #endif
-        } else {
-            if (data->container_command) {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                      data->container_command);
-            }
-
-            /* TODO: Allow users to specify their own?
-             *
-             * We don't know what's in the container, so we just want
-             * to know if it is alive
-             */
-            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
+    } else {
+        if (data->container_command != NULL) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  data->container_command);
         }
 
+        /* TODO: Allow users to specify their own?
+         *
+         * We don't know what's in the container, so we just want to know if it
+         * is alive.
+         */
+        crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
+    }
 
-        xml_obj = create_xml_node(xml_container, "operations");
-        crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
+    xml_obj = create_xml_node(xml_container, "operations");
+    crm_create_op_xml(xml_obj, ID(xml_container), "monitor", "60s", NULL);
 
-        // TODO: Other ops? Timeouts and intervals from underlying resource?
+    // TODO: Other ops? Timeouts and intervals from underlying resource?
+    if (pe__unpack_resource(xml_container, &replica->container, parent,
+                            parent->cluster) != pcmk_rc_ok) {
+        return pcmk_rc_unpack_error;
+    }
+    parent->children = g_list_append(parent->children, replica->container);
 
-        if (pe__unpack_resource(xml_container, &replica->container, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
-        }
-        parent->children = g_list_append(parent->children, replica->container);
-        return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -688,10 +442,9 @@ disallow_node(pe_resource_t *rsc, const char *uname)
     }
 }
 
-static bool
+static int
 create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pe__bundle_replica_t *replica,
-                       pe_working_set_t *data_set)
+                       pe__bundle_replica_t *replica)
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
@@ -702,13 +455,14 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         const char *uname = NULL;
         const char *connect_name = NULL;
 
-        if (pe_find_resource(data_set->resources, id) != NULL) {
+        if (pe_find_resource(parent->cluster->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
             id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
                                    replica->child->id, replica->offset);
-            //@TODO return false instead of asserting?
-            CRM_ASSERT(pe_find_resource(data_set->resources, id) == NULL);
+            //@TODO return error instead of asserting?
+            CRM_ASSERT(pe_find_resource(parent->cluster->resources,
+                                        id) == NULL);
         }
 
         /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
@@ -744,10 +498,10 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * been, if it has a permanent node attribute), and ensure its weight is
          * -INFINITY so no other resources can run on it.
          */
-        node = pe_find_node(data_set->nodes, uname);
+        node = pe_find_node(parent->cluster->nodes, uname);
         if (node == NULL) {
             node = pe_create_node(uname, uname, "remote", "-INFINITY",
-                                  data_set);
+                                  parent->cluster);
         } else {
             node->weight = -INFINITY;
         }
@@ -770,7 +524,8 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * @TODO Possible alternative: ensure bundles are unpacked before other
          * resources, so the weight is correct before any copies are made.
          */
-        g_list_foreach(data_set->resources, (GFunc) disallow_node, (gpointer) uname);
+        g_list_foreach(parent->cluster->resources, (GFunc) disallow_node,
+                       (gpointer) uname);
 
         replica->node = pe__copy_node(node);
         replica->node->weight = 500;
@@ -792,8 +547,8 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                                 (gpointer) replica->node->details->id, copy);
         }
         if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                data_set) != pcmk_rc_ok) {
-            return FALSE;
+                                parent->cluster) != pcmk_rc_ok) {
+            return pcmk_rc_unpack_error;
         }
 
         g_hash_table_iter_init(&gIter, replica->remote->allowed_nodes);
@@ -826,47 +581,35 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         parent->children = g_list_append(parent->children, replica->remote);
     }
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-static bool
-create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
-                 pe__bundle_replica_t *replica, pe_working_set_t *data_set)
+static int
+create_replica_resources(pe_resource_t *parent, pe__bundle_variant_data_t *data,
+                         pe__bundle_replica_t *replica)
 {
+    int rc = pcmk_rc_ok;
 
-    switch (data->agent_type) {
-        case PE__CONTAINER_AGENT_DOCKER:
-            if (!create_docker_resource(parent, data, replica, data_set)) {
-                return FALSE;
-            }
-            break;
-
-        case PE__CONTAINER_AGENT_PODMAN:
-            if (!create_podman_resource(parent, data, replica, data_set)) {
-                return FALSE;
-            }
-            break;
-
-        case PE__CONTAINER_AGENT_RKT:
-            if (!create_rkt_resource(parent, data, replica, data_set)) {
-                return FALSE;
-            }
-            break;
-        default: // PE__CONTAINER_AGENT_UNKNOWN
-            return FALSE;
+    rc = create_container_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
-    if (create_ip_resource(parent, data, replica, data_set) == FALSE) {
-        return FALSE;
+    rc = create_ip_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
-    if(create_remote_resource(parent, data, replica, data_set) == FALSE) {
-        return FALSE;
+
+    rc = create_remote_resource(parent, data, replica);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
-    if (replica->child && replica->ipaddr) {
+
+    if ((replica->child != NULL) && (replica->ipaddr != NULL)) {
         add_hash_param(replica->child->meta, "external-ip", replica->ipaddr);
     }
 
-    if (replica->remote) {
+    if (replica->remote != NULL) {
         /*
          * Allow the remote connection resource to be allocated to a
          * different node than the one on which the container is active.
@@ -877,8 +620,7 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          */
         pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
     }
-
-    return TRUE;
+    return rc;
 }
 
 static void
@@ -1298,7 +1040,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
-        if (!create_container(rsc, bundle_data, replica, data_set)) {
+        if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pe_err("Failed unpacking resource %s", rsc->id);
             rsc->fns->free(rsc);
             return FALSE;
@@ -1433,19 +1175,6 @@ print_rsc_in_list(pe_resource_t *rsc, const char *pre_text, long options,
             status_print("</li>\n");
         }
     }
-}
-
-static const char*
-container_agent_str(enum pe__container_agent t)
-{
-    switch (t) {
-        case PE__CONTAINER_AGENT_DOCKER: return PE__CONTAINER_AGENT_DOCKER_S;
-        case PE__CONTAINER_AGENT_RKT:    return PE__CONTAINER_AGENT_RKT_S;
-        case PE__CONTAINER_AGENT_PODMAN: return PE__CONTAINER_AGENT_PODMAN_S;
-        default: // PE__CONTAINER_AGENT_UNKNOWN
-            break;
-    }
-    return PE__CONTAINER_AGENT_UNKNOWN_S;
 }
 
 /*!

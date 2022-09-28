@@ -416,48 +416,41 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
     return cib_resource;
 }
 
-#define XPATH_MAX 1024
-
 static int
 find_ticket_state(pcmk__output_t *out, cib_t *the_cib, const char *ticket_id,
                   xmlNode **ticket_state_xml)
 {
-    int offset = 0;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
-    char *xpath_string = NULL;
+    GString *xpath = g_string_sized_new(256);
 
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
+    g_string_append(xpath,
+                    "/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS
+                    "/" XML_CIB_TAG_TICKETS);
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s[@id=\"%s\"]",
-                           XML_CIB_TAG_TICKET_STATE, ticket_id);
+        pcmk__g_strcat(xpath,
+                       "/" XML_CIB_TAG_TICKET_STATE
+                       "[@" XML_ATTR_ID "=\"", ticket_id, "\"]", NULL);
     }
-    CRM_LOG_ASSERT(offset > 0);
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
+    rc = the_cib->cmds->query(the_cib, (const char *) xpath->str, &xml_search,
                               cib_sync_call|cib_scope_local|cib_xpath);
+    g_string_free(xpath, TRUE);
 
     if (rc != pcmk_ok) {
-        goto bail;
+        return rc;
     }
 
     crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
-        if (ticket_id) {
-            out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
-        }
-        *ticket_state_xml = xml_search;
-    } else {
-        *ticket_state_xml = xml_search;
+    if (xml_has_children(xml_search) && (ticket_id != NULL)) {
+        out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
     }
+    *ticket_state_xml = xml_search;
 
-  bail:
-    free(xpath_string);
     return rc;
 }
 

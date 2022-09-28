@@ -217,8 +217,8 @@ log_finished(const lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
         log_level = LOG_DEBUG;
     }
 
-    g_string_printf(str, "%s %s (call %d",
-                    cmd->rsc_id, cmd->action, cmd->call_id);
+    g_string_append_printf(str, "%s %s (call %d",
+                           cmd->rsc_id, cmd->action, cmd->call_id);
     if (cmd->last_pid != 0) {
         g_string_append_printf(str, ", PID %d", cmd->last_pid);
     }
@@ -226,21 +226,22 @@ log_finished(const lrmd_cmd_t *cmd, int exec_time_ms, int queue_time_ms)
         g_string_append_printf(str, ") exited with status %d",
                                cmd->result.exit_status);
     } else {
-        g_string_append_printf(str, ") could not be executed: %s",
-                               pcmk_exec_status_str(cmd->result.execution_status));
+        pcmk__g_strcat(str, ") could not be executed: ",
+                       pcmk_exec_status_str(cmd->result.execution_status),
+                       NULL);
     }
     if (cmd->result.exit_reason != NULL) {
-        g_string_append_printf(str, " (%s)", cmd->result.exit_reason);
+        pcmk__g_strcat(str, " (", cmd->result.exit_reason, ")", NULL);
     }
 
 #ifdef PCMK__TIME_USE_CGT
-    g_string_append_printf(str, " (execution time %s",
-                           pcmk__readable_interval(exec_time_ms));
+    pcmk__g_strcat(str, " (execution time ",
+                   pcmk__readable_interval(exec_time_ms), NULL);
     if (queue_time_ms > 0) {
-        g_string_append_printf(str, " after being queued %s",
-                               pcmk__readable_interval(queue_time_ms));
+        pcmk__g_strcat(str, " after being queued ",
+                       pcmk__readable_interval(queue_time_ms), NULL);
     }
-    g_string_append(str, ")");
+    g_string_append_c(str, ')');
 #endif
 
     do_crm_log(log_level, "%s", str->str);
