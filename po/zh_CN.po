@@ -598,7 +598,7 @@ msgstr " 允许的值: "
 
 #: lib/pengine/common.c:39
 msgid "What to do when the cluster does not have quorum"
-msgstr "当没有仲裁机制时该如何作"
+msgstr "当集群没有必须票数时该如何作"
 
 #: lib/pengine/common.c:45
 msgid "Whether resources can run on any node by default"
@@ -614,7 +614,7 @@ msgstr "集群是否应避免监视，启动和停止资源"
 msgid ""
 "Whether a start failure should prevent a resource from being recovered on "
 "the same node"
-msgstr "是否允许在同一节点上重启启动失败的资源"
+msgstr "允许或避免在同一节点上重启启动失败的资源"
 
 #: lib/pengine/common.c:60
 msgid ""
@@ -622,7 +622,7 @@ msgid ""
 "fails to start there. When false, the cluster will instead check the "
 "resource's fail count against its migration-threshold."
 msgstr ""
-"当为真时，如果资源启动失败，集群将立即禁止节点启动该资源，当为假时，群集将根"
+"当为true，如果资源启动失败，集群将立即禁止节点启动该资源，当为false，群集将根"
 "据其迁移阈值来检查资源的失败计数。"
 
 #: lib/pengine/common.c:67
@@ -631,7 +631,7 @@ msgstr "群集是否在启动期间检查运行资源"
 
 #: lib/pengine/common.c:73
 msgid "Whether to lock resources to a cleanly shut down node"
-msgstr "是否将资源锁定到完全关闭的节点"
+msgstr "锁定资源到完全关闭的节点不长于此时间"
 
 #: lib/pengine/common.c:74
 msgid ""
@@ -643,7 +643,7 @@ msgid ""
 "currently never locked, though support could be added in a future release."
 msgstr ""
 "设置为true时，在完全关闭的节点上活动的资源将被“锁定”到该节点（不允许在其他地"
-"方运行），直到它们重新加入后在该节点上再次启动（或最多shutdown-lock- 限制（如"
+"方运行），直到它们在重新加入的该节点上再次启动（或最多shutdown-lock-limit 限制（如"
 "果已设置）。 Stonith资源和Pacemaker Remote连接永远不会被锁定。 克隆和捆绑实例"
 "以及可升级克隆的主角色目前从未锁定，尽管可以在将来的发行版中添加支持。"
 
@@ -657,7 +657,7 @@ msgid ""
 "shutdown locks will expire after this much time has passed since the "
 "shutdown was initiated, even if the node has not rejoined."
 msgstr ""
-"如果shutdown-lock为true，并且将其设置为非零持续时间，则自从启动shutdown以来经"
+"如果shutdown-lock为true，并且将此选项设置为非零持续时间，则自从开始shutdown以来经"
 "过了这么长的时间后，shutdown锁将过期，即使该节点尚未重新加入。"
 
 #: lib/pengine/common.c:119
