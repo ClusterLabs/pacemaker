@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2022-09-27 10:36+0800\n"
+"POT-Creation-Date: 2022-09-22 16:21+0800\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -595,6 +595,70 @@ msgstr ""
 #: lib/common/options.c:624
 msgid "  Allowed values: "
 msgstr " 允许的值: "
+
+#: lib/pengine/common.c:39
+msgid "What to do when the cluster does not have quorum"
+msgstr "当没有仲裁机制时该如何作"
+
+#: lib/pengine/common.c:45
+msgid "Whether resources can run on any node by default"
+msgstr "资源是否默认可以在任何节点上运行"
+
+#: lib/pengine/common.c:51
+msgid ""
+"Whether the cluster should refrain from monitoring, starting, and stopping "
+"resources"
+msgstr "集群是否应避免监视，启动和停止资源"
+
+#: lib/pengine/common.c:58
+msgid ""
+"Whether a start failure should prevent a resource from being recovered on "
+"the same node"
+msgstr "是否允许在同一节点上重启启动失败的资源"
+
+#: lib/pengine/common.c:60
+msgid ""
+"When true, the cluster will immediately ban a resource from a node if it "
+"fails to start there. When false, the cluster will instead check the "
+"resource's fail count against its migration-threshold."
+msgstr ""
+"当为真时，如果资源启动失败，集群将立即禁止节点启动该资源，当为假时，群集将根"
+"据其迁移阈值来检查资源的失败计数。"
+
+#: lib/pengine/common.c:67
+msgid "Whether the cluster should check for active resources during start-up"
+msgstr "群集是否在启动期间检查运行资源"
+
+#: lib/pengine/common.c:73
+msgid "Whether to lock resources to a cleanly shut down node"
+msgstr "是否将资源锁定到完全关闭的节点"
+
+#: lib/pengine/common.c:74
+msgid ""
+"When true, resources active on a node when it is cleanly shut down are kept "
+"\"locked\" to that node (not allowed to run elsewhere) until they start "
+"again on that node after it rejoins (or for at most shutdown-lock-limit, if "
+"set). Stonith resources and Pacemaker Remote connections are never locked. "
+"Clone and bundle instances and the promoted role of promotable clones are "
+"currently never locked, though support could be added in a future release."
+msgstr ""
+"设置为true时，在完全关闭的节点上活动的资源将被“锁定”到该节点（不允许在其他地"
+"方运行），直到它们重新加入后在该节点上再次启动（或最多shutdown-lock- 限制（如"
+"果已设置）。 Stonith资源和Pacemaker Remote连接永远不会被锁定。 克隆和捆绑实例"
+"以及可升级克隆的主角色目前从未锁定，尽管可以在将来的发行版中添加支持。"
+
+#: lib/pengine/common.c:85
+msgid "Do not lock resources to a cleanly shut down node longer than this"
+msgstr "请勿将资源锁定到完全关闭的节点的时间长于此时间"
+
+#: lib/pengine/common.c:86
+msgid ""
+"If shutdown-lock is true and this is set to a nonzero time duration, "
+"shutdown locks will expire after this much time has passed since the "
+"shutdown was initiated, even if the node has not rejoined."
+msgstr ""
+"如果shutdown-lock为true，并且将其设置为非零持续时间，则自从启动shutdown以来经"
+"过了这么长的时间后，shutdown锁将过期，即使该节点尚未重新加入。"
 
 #: lib/pengine/common.c:119
 msgid "Whether watchdog integration is enabled"
