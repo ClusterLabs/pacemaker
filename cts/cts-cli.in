@@ -2437,6 +2437,7 @@ if [ -x "$SRCDIR/tools/crm_simulate" ]; then
         echo "Using local schemas from: $PCMK_schema_directory"
     fi
 else
+    export PATH="@CRM_DAEMON_DIR@:$PATH"
     export PCMK_schema_directory=@CRM_SCHEMA_DIRECTORY@
 fi
 
