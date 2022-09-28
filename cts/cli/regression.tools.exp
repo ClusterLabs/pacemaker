@@ -4768,12 +4768,12 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dhcpd:1"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-1" score="-INFINITY" id="inactive-dhcpd:1"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-2" score="-INFINITY" id="inactive-dhcpd:1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-group"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-group"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="inactive-dummy-2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-group"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-group"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-1"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="inactive-dummy-2"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="inactive-dummy-2"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="inactive-dummy-1"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="inactive-dummy-1"/>
     <node_weight function="pcmk__primitive_assign" node="httpd-bundle-0" score="-INFINITY" id="inactive-dummy-1"/>
@@ -4841,12 +4841,12 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__clone_allocate" node="httpd-bundle-0" score="INFINITY" id="httpd:0"/>
     <node_weight function="pcmk__clone_allocate" node="httpd-bundle-1" score="INFINITY" id="httpd:1"/>
     <node_weight function="pcmk__clone_allocate" node="httpd-bundle-2" score="INFINITY" id="httpd:2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="exim-group"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="exim-group"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Public-IP"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="Email"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="Email"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="exim-group"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="exim-group"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Public-IP"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="Email"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="Email"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="Public-IP"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="0" id="Public-IP"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="Email"/>
@@ -4873,34 +4873,34 @@ export overcloud-rabbit-2=overcloud-rabbit-2
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-group:4"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="mysql-proxy:4"/>
     <node_weight function="pcmk__clone_allocate" node="cluster02" score="0" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="0" id="mysql-group:0"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="1" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="0" id="mysql-group:0"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="0" id="mysql-proxy:0"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="1" id="mysql-proxy:0"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="0" id="mysql-group:1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="1" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="0" id="mysql-group:1"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:1"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="1" id="mysql-proxy:1"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:1"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:2"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:2"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:2"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:2"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:3"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:3"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:3"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:3"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
-    <node_weight function="pcmk__group_allocate" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
-    <node_weight function="pcmk__group_allocate" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-group:4"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-group:4"/>
+    <node_weight function="pcmk__group_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
+    <node_weight function="pcmk__group_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
     <node_weight function="pcmk__primitive_assign" node="cluster01" score="-INFINITY" id="mysql-proxy:4"/>
     <node_weight function="pcmk__primitive_assign" node="cluster02" score="-INFINITY" id="mysql-proxy:4"/>
     <node_weight function="pcmk__clone_allocate" node="cluster01" score="0" id="promotable-clone"/>
