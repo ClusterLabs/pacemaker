@@ -643,7 +643,7 @@ msgid ""
 "currently never locked, though support could be added in a future release."
 msgstr ""
 "设置为true时，在完全关闭的节点上活动的资源将被“锁定”到该节点（不允许在其他地方运行），"
-"直到他们在重新加入的该节点上在次启动（或最多shutdown-lock-limit，如"
+"直到该节点重新加入后资源重新启动（或最长shutdown-lock-limit，如"
 "果已设置）。 Stonith资源和Pacemaker Remote连接永远不会被锁定。 克隆和捆绑实例"
 "以及可升级克隆的主角色目前从未锁定，尽管可以在将来的发行版中添加支持。"
 
