@@ -20,14 +20,14 @@
 static resource_alloc_functions_t allocation_methods[] = {
     {
         pcmk__primitive_assign,
-        native_create_actions,
+        pcmk__primitive_create_actions,
         pcmk__probe_rsc_on_node,
-        native_internal_constraints,
+        pcmk__primitive_internal_constraints,
         pcmk__primitive_apply_coloc_score,
         pcmk__add_colocated_node_scores,
         pcmk__colocated_resources,
-        native_rsc_location,
-        native_action_flags,
+        pcmk__apply_location,
+        pcmk__primitive_action_flags,
         pcmk__update_ordered_actions,
         pcmk__output_resource_actions,
         pcmk__add_rsc_actions_to_graph,
@@ -295,9 +295,8 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
     if (rsc->running_on) {
         current = pe__current_node(rsc);
         if (rsc->role == RSC_ROLE_STOPPED) {
-            /*
-             * This can occur when resources are being recovered
-             * We fiddle with the current role in native_create_actions()
+            /* This can occur when resources are being recovered because
+             * the current role can change in pcmk__primitive_create_actions()
              */
             rsc->role = RSC_ROLE_STARTED;
         }
@@ -333,7 +332,7 @@ pcmk__output_resource_actions(pe_resource_t *rsc)
  *       actions created for the resource.
  */
 bool
-pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force)
+pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen, bool force)
 {
     pcmk__output_t *out = rsc->cluster->priv;
 
@@ -439,7 +438,7 @@ pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force)
         if (rsc->allocated_to != NULL) {
             changed = true;
         }
-        pcmk__assign_primitive(rsc, node, force);
+        pcmk__finalize_assignment(rsc, node, force);
 
     } else {
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {

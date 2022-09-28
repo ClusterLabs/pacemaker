@@ -540,7 +540,7 @@ pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
 }
 
 enum pe_action_flags
-pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
+pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *containers = NULL;
     enum pe_action_flags flags = 0;
@@ -888,25 +888,26 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     pe__bundle_variant_data_t *bundle_data = NULL;
     get_bundle_variant_data(bundle_data, rsc);
 
-    pcmk__apply_location(constraint, rsc);
+    pcmk__apply_location(rsc, constraint);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
 
         if (replica->container) {
-            replica->container->cmds->rsc_location(replica->container,
-                                                   constraint);
+            replica->container->cmds->apply_location(replica->container,
+                                                     constraint);
         }
         if (replica->ip) {
-            replica->ip->cmds->rsc_location(replica->ip, constraint);
+            replica->ip->cmds->apply_location(replica->ip, constraint);
         }
     }
 
     if (bundle_data->child
         && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
             || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
-        bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
+        bundle_data->child->cmds->apply_location(bundle_data->child,
+                                                 constraint);
         bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
                                                           constraint);
     }

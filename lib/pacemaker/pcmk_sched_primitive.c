@@ -196,7 +196,7 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
                      pe__node_name(chosen), rsc->id, g_list_length(nodes));
     }
 
-    result = pcmk__assign_primitive(rsc, chosen, false);
+    result = pcmk__finalize_assignment(rsc, chosen, false);
     g_list_free(nodes);
     return result;
 }
@@ -395,11 +395,11 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
         }
         pe_rsc_info(rsc, "Unmanaged resource %s assigned to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        pcmk__assign_primitive(rsc, assign_to, true);
+        pcmk__finalize_assignment(rsc, assign_to, true);
 
     } else if (pcmk_is_set(rsc->cluster->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop: stop-all-resources", rsc->id);
-        pcmk__assign_primitive(rsc, NULL, true);
+        pcmk__finalize_assignment(rsc, NULL, true);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && assign_best_node(rsc, prefer)) {
@@ -430,17 +430,16 @@ pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
  * \internal
  * \brief Schedule actions to bring resource down and back to current role
  *
- * \param[in] rsc           Resource to restart
- * \param[in] current       Node that resource should be brought down on
- * \param[in] chosen        Node that resource should be brought up on
- * \param[in] need_stop     Whether the resource must be stopped
- * \param[in] need_promote  Whether the resource must be promoted
+ * \param[in,out] rsc           Resource to restart
+ * \param[in]     current       Node that resource should be brought down on
+ * \param[in]     need_stop     Whether the resource must be stopped
+ * \param[in]     need_promote  Whether the resource must be promoted
  *
  * \return Role that resource would have after scheduled actions are taken
  */
 static void
 schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
-                         pe_node_t *chosen, bool need_stop, bool need_promote)
+                         bool need_stop, bool need_promote)
 {
     enum rsc_role_e role = rsc->role;
     enum rsc_role_e next_role;
@@ -471,7 +470,8 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
                      (required? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, !required)) {
+        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
+                                                !required)) {
             break;
         }
         role = next_role;
@@ -480,53 +480,119 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
     pe__clear_resource_flags(rsc, pe_rsc_restarting);
 }
 
-void
-native_create_actions(pe_resource_t *rsc)
+/*!
+ * \internal
+ * \brief If a resource's next role is not explicitly specified, set a default
+ *
+ * \param[in,out] rsc  Resource to set next role for
+ *
+ * \return "explicit" if next role was explicitly set, otherwise "implicit"
+ */
+static const char *
+set_default_next_role(pe_resource_t *rsc)
+{
+    if (rsc->next_role != RSC_ROLE_UNKNOWN) {
+        return "explicit";
+    }
+
+    if (rsc->allocated_to == NULL) {
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "assignment");
+    } else {
+        pe__set_next_role(rsc, RSC_ROLE_STARTED, "assignment");
+    }
+    return "implicit";
+}
+
+/*!
+ * \internal
+ * \brief Create an action to represent an already pending start
+ *
+ * \param[in,out] rsc  Resource to create start action for
+ */
+static void
+create_pending_start(pe_resource_t *rsc)
 {
     pe_action_t *start = NULL;
-    pe_node_t *chosen = NULL;
-    pe_node_t *current = NULL;
-    gboolean need_stop = FALSE;
-    bool need_promote = FALSE;
-    gboolean is_moving = FALSE;
-    gboolean allow_migrate = FALSE;
 
+    pe_rsc_trace(rsc,
+                 "Creating action for %s to represent already pending start",
+                 rsc->id);
+    start = start_action(rsc, rsc->allocated_to, TRUE);
+    pe__set_action_flags(start, pe_action_print_always);
+}
+
+/*!
+ * \internal
+ * \brief Schedule actions needed to take a resource to its next role
+ *
+ * \param[in,out] rsc  Resource to schedule actions for
+ */
+static void
+schedule_role_transition_actions(pe_resource_t *rsc)
+{
+    enum rsc_role_e role = rsc->role;
+
+    while (role != rsc->next_role) {
+        enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
+
+        pe_rsc_trace(rsc,
+                     "Creating action to take %s from %s to %s (ending at %s)",
+                     rsc->id, role2text(role), role2text(next_role),
+                     role2text(rsc->next_role));
+        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
+                                                false)) {
+            break;
+        }
+        role = next_role;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create all actions needed for a given primitive resource
+ *
+ * \param[in,out] rsc  Primitive resource to create actions for
+ */
+void
+pcmk__primitive_create_actions(pe_resource_t *rsc)
+{
+    bool need_stop = false;
+    bool need_promote = false;
+    bool is_moving = false;
+    bool allow_migrate = false;
+    bool multiply_active = false;
+
+    pe_node_t *current = NULL;
     unsigned int num_all_active = 0;
     unsigned int num_clean_active = 0;
-    bool multiply_active = FALSE;
-    enum rsc_role_e role = RSC_ROLE_UNKNOWN;
-    enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
+    const char *next_role_source = NULL;
 
     CRM_ASSERT(rsc != NULL);
 
-    chosen = rsc->allocated_to;
-    next_role = rsc->next_role;
-    if (next_role == RSC_ROLE_UNKNOWN) {
-        pe__set_next_role(rsc,
-                          (chosen == NULL)? RSC_ROLE_STOPPED : RSC_ROLE_STARTED,
-                          "allocation");
-    }
-    pe_rsc_trace(rsc, "Creating all actions for %s transition from %s to %s (%s) on %s",
+    next_role_source = set_default_next_role(rsc);
+    pe_rsc_trace(rsc,
+                 "Creating all actions for %s transition from %s to %s "
+                 "(%s) on %s",
                  rsc->id, role2text(rsc->role), role2text(rsc->next_role),
-                 ((next_role == RSC_ROLE_UNKNOWN)? "implicit" : "explicit"),
-                 pe__node_name(chosen));
+                 next_role_source, pe__node_name(rsc->allocated_to));
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
     g_list_foreach(rsc->dangling_migrations, pcmk__abort_dangling_migration,
                    rsc);
 
-    if ((current != NULL) && (chosen != NULL)
-        && (current->details != chosen->details)
+    if ((current != NULL) && (rsc->allocated_to != NULL)
+        && (current->details != rsc->allocated_to->details)
         && (rsc->next_role >= RSC_ROLE_STARTED)) {
 
         pe_rsc_trace(rsc, "Moving %s from %s to %s",
-                     rsc->id, pe__node_name(current), pe__node_name(chosen));
-        is_moving = TRUE;
+                     rsc->id, pe__node_name(current),
+                     pe__node_name(rsc->allocated_to));
+        is_moving = true;
         allow_migrate = pcmk__rsc_can_migrate(rsc, current);
 
         // This is needed even if migrating (though I'm not sure why ...)
-        need_stop = TRUE;
+        need_stop = true;
     }
 
     // Check whether resource is partially migrated and/or multiply active
@@ -534,7 +600,7 @@ native_create_actions(pe_resource_t *rsc)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
         && (current->details == rsc->partial_migration_source->details)
-        && (chosen->details == rsc->partial_migration_target->details)) {
+        && (rsc->allocated_to->details == rsc->partial_migration_target->details)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -559,11 +625,13 @@ native_create_actions(pe_resource_t *rsc)
                        rsc->id, pe__node_name(rsc->partial_migration_source),
                        pe__node_name(rsc->partial_migration_target));
         }
-        need_stop = TRUE;
+        need_stop = true;
         rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-        allow_migrate = FALSE;
+        allow_migrate = false;
 
-    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        multiply_active = (num_all_active > 1);
+    } else {
         /* If a resource has "requires" set to nothing or quorum, don't consider
          * it active on unclean nodes (similar to how all resources behave when
          * stonith-enabled is false). We can start such resources elsewhere
@@ -572,8 +640,6 @@ native_create_actions(pe_resource_t *rsc)
          * multiple nodes.
          */
         multiply_active = (num_clean_active > 1);
-    } else {
-        multiply_active = (num_all_active > 1);
     }
 
     if (multiply_active) {
@@ -583,14 +649,15 @@ native_create_actions(pe_resource_t *rsc)
         pe_proc_err("%s resource %s might be active on %u nodes (%s)",
                     pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                     recovery2text(rsc->recovery_type));
-        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
+        crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ"
+                   "#Resource_is_Too_Active for more information");
 
         switch (rsc->recovery_type) {
             case recovery_stop_start:
-                need_stop = TRUE;
+                need_stop = true;
                 break;
             case recovery_stop_unexpected:
-                need_stop = TRUE; // StopRsc() will skip expected node
+                need_stop = true; // StopRsc() will skip expected node
                 pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
                 break;
             default:
@@ -602,10 +669,7 @@ native_create_actions(pe_resource_t *rsc)
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
-        pe_rsc_trace(rsc, "Creating start action for %s to represent already pending start",
-                     rsc->id);
-        start = start_action(rsc, chosen, TRUE);
-        pe__set_action_flags(start, pe_action_print_always);
+        create_pending_start(rsc);
     }
 
     if (is_moving) {
@@ -613,47 +677,38 @@ native_create_actions(pe_resource_t *rsc)
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
-            need_stop = TRUE;
+            need_stop = true;
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
             pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
             if (rsc->next_role == RSC_ROLE_PROMOTED) {
-                need_promote = TRUE;
+                need_promote = true;
             }
         }
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
-        need_stop = TRUE;
+        need_stop = true;
 
-    } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
+    } else if ((rsc->role > RSC_ROLE_STARTED) && (current != NULL)
+               && (rsc->allocated_to != NULL)) {
+        pe_action_t *start = NULL;
+
         pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
                      rsc->id);
-        start = start_action(rsc, chosen, TRUE);
+        start = start_action(rsc, rsc->allocated_to, TRUE);
         if (!pcmk_is_set(start->flags, pe_action_optional)) {
             // Recovery of a promoted resource
             pe_rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
-            need_stop = TRUE;
+            need_stop = true;
         }
     }
 
-    /* Create any additional actions required when bringing resource down and
-     * back up to same level.
-     */
-    schedule_restart_actions(rsc, current, chosen, need_stop, need_promote);
+    // Create any actions needed to bring resource down and back up to same role
+    schedule_restart_actions(rsc, current, need_stop, need_promote);
 
-    /* Required steps from this role to the next */
-    role = rsc->role;
-    while (role != rsc->next_role) {
-        next_role = rsc_state_matrix[role][rsc->next_role];
-        pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
-                     rsc->id, role2text(role), role2text(next_role),
-                     role2text(rsc->next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, chosen, false)) {
-            break;
-        }
-        role = next_role;
-    }
+    // Create any actions needed to take resource from this role to the next
+    schedule_role_transition_actions(rsc);
 
     pcmk__create_recurring_actions(rsc);
 
@@ -662,14 +717,21 @@ native_create_actions(pe_resource_t *rsc)
     }
 }
 
+/*!
+ * \internal
+ * \brief Ban a resource from any allowed nodes that are Pacemaker Remote nodes
+ *
+ * \param[in] rsc  Resource to check
+ */
 static void
-rsc_avoids_remote_nodes(pe_resource_t *rsc)
+rsc_avoids_remote_nodes(const pe_resource_t *rsc)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
+
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        if (node->details->remote_rsc) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
+        if (node->details->remote_rsc != NULL) {
             node->weight = -INFINITY;
         }
     }
@@ -705,19 +767,25 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
     return allowed_nodes;
 }
 
+/*!
+ * \internal
+ * \brief Create implicit constraints needed for a primitive resource
+ *
+ * \param[in,out] rsc  Primitive resource to create implicit constraints for
+ */
 void
-native_internal_constraints(pe_resource_t *rsc)
+pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 {
-    /* This function is on the critical path and worth optimizing as much as possible */
-
     pe_resource_t *top = NULL;
     GList *allowed_nodes = NULL;
-    bool check_unfencing = FALSE;
+    bool check_unfencing = false;
     bool check_utilization = false;
+
+    CRM_ASSERT(rsc != NULL);
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
-                     "Skipping native constraints for unmanaged resource: %s",
+                     "Skipping implicit constraints for unmanaged resource %s",
                      rsc->id);
         return;
     }
@@ -760,12 +828,12 @@ native_internal_constraints(pe_resource_t *rsc)
                        rsc->cluster);
 
     // Certain checks need allowed nodes
-    if (check_unfencing || check_utilization || rsc->container) {
+    if (check_unfencing || check_utilization || (rsc->container != NULL)) {
         allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
     }
 
     if (check_unfencing) {
-        /* Check if the node needs to be unfenced first */
+        // Check whether the node needs to be unfenced
 
         for (GList *item = allowed_nodes; item; item = item->next) {
             pe_node_t *node = item->data;
@@ -806,15 +874,14 @@ native_internal_constraints(pe_resource_t *rsc)
         pcmk__create_utilization_constraints(rsc, allowed_nodes);
     }
 
-    if (rsc->container) {
+    if (rsc->container != NULL) {
         pe_resource_t *remote_rsc = NULL;
 
         if (rsc->is_remote_node) {
             // rsc is the implicit remote connection for a guest or bundle node
 
-            /* Do not allow a guest resource to live on a Pacemaker Remote node,
-             * to avoid nesting remotes. However, allow bundles to run on remote
-             * nodes.
+            /* Guest resources are not allowed to run on Pacemaker Remote nodes,
+             * to avoid nesting remotes. However, bundles are allowed.
              */
             if (!pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 rsc_avoids_remote_nodes(rsc->container);
@@ -843,7 +910,7 @@ native_internal_constraints(pe_resource_t *rsc)
                                                           rsc->container);
         }
 
-        if (remote_rsc) {
+        if (remote_rsc != NULL) {
             /* Force the resource on the Pacemaker Remote node instead of
              * colocating the resource with the container resource.
              */
@@ -883,13 +950,15 @@ native_internal_constraints(pe_resource_t *rsc)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, true, rsc->cluster);
+                                 rsc->container, NULL, NULL, true,
+                                 rsc->cluster);
         }
     }
 
     if (rsc->is_remote_node || pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
-        /* don't allow remote nodes to run stonith devices
-         * or remote connection resources.*/
+        /* Remote connections and fencing devices are not allowed to run on
+         * Pacemaker Remote nodes
+         */
         rsc_avoids_remote_nodes(rsc);
     }
     g_list_free(allowed_nodes);
@@ -944,16 +1013,20 @@ pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
     }
 }
 
+/*!
+ * \internal
+ * \brief Return action flags for a given primitive resource action
+ *
+ * \param[in,out] action  Action to get flags for
+ * \param[in]     node    If not NULL, limit effects to this node (ignored)
+ *
+ * \return Flags appropriate to \p action on \p node
+ */
 enum pe_action_flags
-native_action_flags(pe_action_t * action, pe_node_t * node)
+pcmk__primitive_action_flags(pe_action_t *action, const pe_node_t *node)
 {
+    CRM_ASSERT(action != NULL);
     return action->flags;
-}
-
-void
-native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
-{
-    pcmk__apply_location(constraint, rsc);
 }
 
 /*!

@@ -460,7 +460,7 @@ for_primary:
 }
 
 enum pe_action_flags
-group_action_flags(pe_action_t * action, pe_node_t * node)
+group_action_flags(pe_action_t *action, const pe_node_t *node)
 {
     GList *gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
@@ -565,12 +565,12 @@ group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     pe_rsc_debug(rsc, "Processing rsc_location %s for %s", constraint->id, rsc->id);
 
-    pcmk__apply_location(constraint, rsc);
+    pcmk__apply_location(rsc, constraint);
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_location(child_rsc, constraint);
+        child_rsc->cmds->apply_location(child_rsc, constraint);
         if (group_data->colocated && reset_scores) {
             reset_scores = FALSE;
             constraint->node_list_rh = zero;

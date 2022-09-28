@@ -605,45 +605,48 @@ pcmk__apply_locations(pe_working_set_t *data_set)
          iter != NULL; iter = iter->next) {
         pe__location_t *location = iter->data;
 
-        location->rsc_lh->cmds->rsc_location(location->rsc_lh, location);
+        location->rsc_lh->cmds->apply_location(location->rsc_lh, location);
     }
 }
 
 /*!
  * \internal
- * \brief Apply a location constraint to a resource's allowed node weights
+ * \brief Apply a location constraint to a resource's allowed node scores
  *
- * \param[in] constraint  Location constraint to apply
- * \param[in] rsc         Resource to apply constraint to
+ * \param[in,out] rsc         Resource to apply constraint to
+ * \param[in,out] location    Location constraint to apply
+ *
+ * \note This does not consider the resource's children, so the resource's
+ *       apply_location() method should be used instead in most cases.
  */
 void
-pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
+pcmk__apply_location(pe_resource_t *rsc, pe__location_t *location)
 {
     bool need_role = false;
 
-    CRM_CHECK((constraint != NULL) && (rsc != NULL), return);
+    CRM_CHECK((rsc != NULL) && (location != NULL), return);
 
     // If a role was specified, ensure constraint is applicable
-    need_role = (constraint->role_filter > RSC_ROLE_UNKNOWN);
-    if (need_role && (constraint->role_filter != rsc->next_role)) {
+    need_role = (location->role_filter > RSC_ROLE_UNKNOWN);
+    if (need_role && (location->role_filter != rsc->next_role)) {
         pe_rsc_trace(rsc,
                      "Not applying %s to %s because role will be %s not %s",
-                     constraint->id, rsc->id, role2text(rsc->next_role),
-                     role2text(constraint->role_filter));
+                     location->id, rsc->id, role2text(rsc->next_role),
+                     role2text(location->role_filter));
         return;
     }
 
-    if (constraint->node_list_rh == NULL) {
+    if (location->node_list_rh == NULL) {
         pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
-                     constraint->id, rsc->id);
+                     location->id, rsc->id);
         return;
     }
 
-    pe_rsc_trace(rsc, "Applying %s%s%s to %s", constraint->id,
+    pe_rsc_trace(rsc, "Applying %s%s%s to %s", location->id,
                  (need_role? " for role " : ""),
-                 (need_role? role2text(constraint->role_filter) : ""), rsc->id);
+                 (need_role? role2text(location->role_filter) : ""), rsc->id);
 
-    for (GList *gIter = constraint->node_list_rh; gIter != NULL;
+    for (GList *gIter = location->node_list_rh; gIter != NULL;
          gIter = gIter->next) {
 
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -665,12 +668,12 @@ pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc)
                                                      node->weight);
         }
 
-        if (weighted_node->rsc_discover_mode < constraint->discover_mode) {
-            if (constraint->discover_mode == pe_discover_exclusive) {
+        if (weighted_node->rsc_discover_mode < location->discover_mode) {
+            if (location->discover_mode == pe_discover_exclusive) {
                 rsc->exclusive_discover = TRUE;
             }
             /* exclusive > never > always... always is default */
-            weighted_node->rsc_discover_mode = constraint->discover_mode;
+            weighted_node->rsc_discover_mode = location->discover_mode;
         }
     }
 }

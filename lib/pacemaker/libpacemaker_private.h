@@ -65,6 +65,12 @@ struct resource_alloc_functions_s {
      */
     pe_node_t *(*assign)(pe_resource_t *rsc, pe_node_t *prefer);
 
+    /*!
+     * \internal
+     * \brief Create all actions needed for a given resource
+     *
+     * \param[in,out] rsc  Resource to create actions for
+     */
     void (*create_actions)(pe_resource_t *rsc);
 
     /*!
@@ -78,6 +84,12 @@ struct resource_alloc_functions_s {
      */
     bool (*create_probe)(pe_resource_t *rsc, pe_node_t *node);
 
+    /*!
+     * \internal
+     * \brief Create implicit constraints needed for a resource
+     *
+     * \param[in,out] rsc  Resource to create implicit constraints for
+     */
     void (*internal_constraints)(pe_resource_t *rsc);
 
     /*!
@@ -139,9 +151,29 @@ struct resource_alloc_functions_s {
     GList *(*colocated_resources)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                   GList *colocated_rscs);
 
-    void (*rsc_location) (pe_resource_t *, pe__location_t *);
+    /*!
+     * \internal
+     * \brief Apply a location constraint to a resource's allowed node scores
+     *
+     * \param[in,out] rsc       Resource to apply constraint to
+     * \param[in,out] location  Location constraint to apply
+     */
+    void (*apply_location)(pe_resource_t *rsc, pe__location_t *location);
 
-    enum pe_action_flags (*action_flags) (pe_action_t *, pe_node_t *);
+    /*!
+     * \internal
+     * \brief Return action flags for a given resource action
+     *
+     * \param[in,out] action  Action to get flags for
+     * \param[in]     node    If not NULL, limit effects to this node
+     *
+     * \return Flags appropriate to \p action on \p node
+     * \note For primitives, this will be the same as action->flags regardless
+     *       of node. For collective resources, the flags can differ due to
+     *       multiple instances possibly being involved.
+     */
+    enum pe_action_flags (*action_flags)(pe_action_t *action,
+                                         const pe_node_t *node);
 
     /*!
      * \internal
@@ -337,7 +369,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_locations(pe_working_set_t *data_set);
 
 G_GNUC_INTERNAL
-void pcmk__apply_location(pe__location_t *constraint, pe_resource_t *rsc);
+void pcmk__apply_location(pe_resource_t *rsc, pe__location_t *constraint);
 
 
 // Colocation constraints (pcmk_sched_colocation.c)
@@ -542,6 +574,16 @@ G_GNUC_INTERNAL
 pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
 
 G_GNUC_INTERNAL
+void pcmk__primitive_create_actions(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_internal_constraints(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
+enum pe_action_flags pcmk__primitive_action_flags(pe_action_t *action,
+                                                  const pe_node_t *node);
+
+G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        pe_resource_t *primary,
                                        pcmk__colocation_t *colocation,
@@ -656,7 +698,8 @@ G_GNUC_INTERNAL
 void pcmk__output_resource_actions(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-bool pcmk__assign_primitive(pe_resource_t *rsc, pe_node_t *chosen, bool force);
+bool pcmk__finalize_assignment(pe_resource_t *rsc, pe_node_t *chosen,
+                               bool force);
 
 G_GNUC_INTERNAL
 bool pcmk__assign_resource(pe_resource_t *rsc, pe_node_t *node, bool force);
