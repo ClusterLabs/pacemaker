@@ -1510,6 +1510,11 @@ get_op_total_timeout(const remote_fencing_op_t *op,
         int i;
         GList *device_list = NULL;
         GList *iter = NULL;
+        GList *auto_list = NULL;
+
+        if (pcmk__str_eq(op->action, "on", pcmk__str_casei) && op->automatic_list) {
+            auto_list = g_list_copy(op->automatic_list);
+        }
 
         /* Yep, this looks scary, nested loops all over the place.
          * Here is what is going on.
@@ -1526,6 +1531,14 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 for (iter = op->query_results; iter != NULL; iter = iter->next) {
                     const peer_device_info_t *peer = iter->data;
 
+                    if (auto_list) {
+                        GList *match = g_list_find_custom(auto_list, device_list->data,
+                                        sort_strings);
+                        if (match) {
+                            auto_list = g_list_remove(auto_list, match->data);
+                        }
+                    }
+
                     if (find_peer_device(op, peer, device_list->data, 
                             pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on: st_device_supports_none)) {
                         total_timeout += get_device_timeout(op, peer,
@@ -1535,6 +1548,23 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                 }               /* End Loop3: match device with peer that owns device, find device's timeout period */
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
+
+        //Add only exists automatic_list device timeout
+        if (auto_list) {
+            for (iter = auto_list; iter != NULL; iter = iter->next) {
+                GList *iter2 = NULL;
+
+                for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
+                    peer_device_info_t *peer = iter2->data;
+                    if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
+                        total_timeout += get_device_timeout(op, peer, iter->data);
+                        break;
+                    }
+                }
+            }
+        }
+
+        g_list_free(auto_list);
 
     } else if (chosen_peer) {
         total_timeout = get_peer_timeout(op, chosen_peer);
