@@ -788,9 +788,11 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
 void
 pcmk__group_shutdown_lock(pe_resource_t *rsc)
 {
-    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-        pe_resource_t *child = (pe_resource_t *) iter->data;
+    CRM_ASSERT(rsc != NULL);
 
-        child->cmds->shutdown_lock(child);
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *member = (pe_resource_t *) iter->data;
+
+        member->cmds->shutdown_lock(member);
     }
 }
