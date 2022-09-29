@@ -695,7 +695,9 @@ free_device(gpointer data)
 
     free_xml(device->agent_metadata);
     free(device->namespace);
-    g_string_free(device->on_target_actions, TRUE);
+    if (device->on_target_actions != NULL) {
+        g_string_free(device->on_target_actions, TRUE);
+    }
     free(device->agent);
     free(device->id);
     free(device);
