@@ -112,18 +112,6 @@ typedef struct pe__bundle_variant_data_s {
 	CRM_ASSERT(rsc->variant_opaque != NULL);			\
 	data = (pe__bundle_variant_data_t *)rsc->variant_opaque;		\
 
-#  elif VARIANT_NATIVE
-
-typedef struct native_variant_data_s {
-    int dummy;
-} native_variant_data_t;
-
-#    define get_native_variant_data(data, rsc)				\
-	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_native);				\
-	CRM_ASSERT(rsc->variant_opaque != NULL);			\
-	data = (native_variant_data_t *)rsc->variant_opaque;
-
 #  endif
 
 #endif

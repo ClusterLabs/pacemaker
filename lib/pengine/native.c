@@ -19,9 +19,6 @@
 #include <crm/msg_xml.h>
 #include <pe_status_private.h>
 
-#define VARIANT_NATIVE 1
-#include "./variant.h"
-
 #ifdef PCMK__COMPAT_2_0
 #define PROVIDER_SEP "::"
 #else
@@ -201,14 +198,10 @@ gboolean
 native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_resource_t *parent = uber_parent(rsc);
-    native_variant_data_t *native_data = NULL;
     const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
-
-    native_data = calloc(1, sizeof(native_variant_data_t));
-    rsc->variant_opaque = native_data;
 
     // Only some agent standards support unique and promotable clones
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_unique)
