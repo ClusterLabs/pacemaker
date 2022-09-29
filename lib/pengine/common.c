@@ -559,7 +559,7 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
 }
 
 const char *
-pe_node_attribute_raw(pe_node_t *node, const char *name)
+pe_node_attribute_raw(const pe_node_t *node, const char *name)
 {
     if(node == NULL) {
         return NULL;

@@ -290,7 +290,7 @@ void pe__order_notifs_after_fencing(pe_action_t *action, pe_resource_t *rsc,
 
 
 static inline const char *
-pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
+pe__rsc_bool_str(const pe_resource_t *rsc, uint64_t rsc_flag)
 {
     return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
 }
@@ -490,7 +490,7 @@ pe_base_name_eq(pe_resource_t *rsc, const char *id)
 int pe__target_rc_from_xml(xmlNode *xml_op);
 
 gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
-bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any);
+bool is_set_recursive(const pe_resource_t *rsc, long long flag, bool any);
 
 enum rsc_digest_cmp_val {
     /*! Digests are the same */
@@ -563,7 +563,7 @@ const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const pe_resource_t *rsc);
-const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
+const char *pe_node_attribute_raw(const pe_node_t *node, const char *name);
 bool pe__is_universal_clone(pe_resource_t *rsc,
                             pe_working_set_t *data_set);
 void pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,

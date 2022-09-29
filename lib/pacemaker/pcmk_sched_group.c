@@ -85,13 +85,13 @@ expand_group_colocations(pe_resource_t *rsc)
  * \internal
  * \brief Assign a group resource to a node
  *
- * \param[in] rsc     Resource to assign to a node
- * \param[in] prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__group_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
@@ -372,14 +372,15 @@ group_internal_constraints(pe_resource_t *rsc)
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
- * \param[in] dependent      Dependent resource in colocation
- * \param[in] primary        Primary resource in colocation
- * \param[in] colocation     Colocation constraint to apply
- * \param[in] for_dependent  true if called on behalf of dependent
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__group_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *colocation,
+pcmk__group_apply_coloc_score(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
+                              const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
     GList *gIter = NULL;
@@ -687,8 +688,9 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
 
 // Group implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__group_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization)
+pcmk__group_add_utilization(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization)
 {
     group_variant_data_t *group_data = NULL;
     pe_resource_t *child = NULL;

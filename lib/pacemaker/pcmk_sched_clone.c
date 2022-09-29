@@ -283,13 +283,13 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
  * \internal
  * \brief Assign a clone resource to a node
  *
- * \param[in] rsc     Resource to assign to a node
- * \param[in] prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__clone_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -618,7 +618,8 @@ clone_internal_constraints(pe_resource_t *rsc)
 }
 
 gboolean
-is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_role_e filter, gboolean current) 
+is_child_compatible(const pe_resource_t *child_rsc, const pe_node_t *local_node,
+                    enum rsc_role_e filter, gboolean current)
 {
     pe_node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
@@ -648,8 +649,9 @@ is_child_compatible(pe_resource_t *child_rsc, pe_node_t * local_node, enum rsc_r
 }
 
 pe_resource_t *
-find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
-                      enum rsc_role_e filter, gboolean current)
+find_compatible_child(const pe_resource_t *local_child,
+                      const pe_resource_t *rsc, enum rsc_role_e filter,
+                      gboolean current)
 {
     pe_resource_t *pair = NULL;
     GList *gIter = NULL;
@@ -688,14 +690,15 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
- * \param[in] dependent      Dependent resource in colocation
- * \param[in] primary        Primary resource in colocation
- * \param[in] colocation     Colocation constraint to apply
- * \param[in] for_dependent  true if called on behalf of dependent
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__clone_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                              pcmk__colocation_t *colocation,
+pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
+                              const pe_resource_t *primary,
+                              const pcmk__colocation_t *colocation,
                               bool for_dependent)
 {
     GList *gIter = NULL;
@@ -1142,8 +1145,9 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
 
 // Clone implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__clone_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization)
+pcmk__clone_add_utilization(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization)
 {
     bool existing = false;
     pe_resource_t *child = NULL;

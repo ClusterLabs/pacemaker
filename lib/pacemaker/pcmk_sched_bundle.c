@@ -36,7 +36,7 @@ void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
 static GList *
-get_container_list(pe_resource_t *rsc)
+get_container_list(const pe_resource_t *rsc)
 {
     GList *containers = NULL;
 
@@ -55,7 +55,7 @@ get_container_list(pe_resource_t *rsc)
 }
 
 static inline GList *
-get_containers_or_children(pe_resource_t *rsc)
+get_containers_or_children(const pe_resource_t *rsc)
 {
     return (rsc->variant == pe_container)?
            get_container_list(rsc) : rsc->children;
@@ -65,13 +65,13 @@ get_containers_or_children(pe_resource_t *rsc)
  * \internal
  * \brief Assign a bundle resource to a node
  *
- * \param[in] rsc     Resource to assign to a node
- * \param[in] prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__bundle_allocate(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *containers = NULL;
     GList *nodes = NULL;
@@ -335,8 +335,9 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc)
 }
 
 static pe_resource_t *
-compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
-                            pe_resource_t *rsc, enum rsc_role_e filter,
+compatible_replica_for_node(const pe_resource_t *rsc_lh,
+                            const pe_node_t *candidate,
+                            const pe_resource_t *rsc, enum rsc_role_e filter,
                             gboolean current)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
@@ -364,7 +365,7 @@ compatible_replica_for_node(pe_resource_t *rsc_lh, pe_node_t *candidate,
 }
 
 static pe_resource_t *
-compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+compatible_replica(const pe_resource_t *rsc_lh, const pe_resource_t *rsc,
                    enum rsc_role_e filter, gboolean current,
                    pe_working_set_t *data_set)
 {
@@ -445,14 +446,15 @@ int copies_per_node(pe_resource_t * rsc)
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
- * \param[in] dependent      Dependent resource in colocation
- * \param[in] primary        Primary resource in colocation
- * \param[in] colocation     Colocation constraint to apply
- * \param[in] for_dependent  true if called on behalf of dependent
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
+ * \param[in]     for_dependent  true if called on behalf of dependent
  */
 void
-pcmk__bundle_apply_coloc_score(pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *colocation,
+pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
+                               const pe_resource_t *primary,
+                               const pcmk__colocation_t *colocation,
                                bool for_dependent)
 {
     GList *allocated_primaries = NULL;
@@ -570,8 +572,10 @@ pcmk__bundle_action_flags(pe_action_t *action, const pe_node_t *node)
 }
 
 pe_resource_t *
-find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
-                              enum rsc_role_e filter, gboolean current)
+find_compatible_child_by_node(const pe_resource_t *local_child,
+                              const pe_node_t *local_node,
+                              const pe_resource_t *rsc, enum rsc_role_e filter,
+                              gboolean current)
 {
     GList *gIter = NULL;
     GList *children = NULL;
@@ -1121,8 +1125,9 @@ pcmk__output_bundle_actions(pe_resource_t *rsc)
 
 // Bundle implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__bundle_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                             GList *all_rscs, GHashTable *utilization)
+pcmk__bundle_add_utilization(const pe_resource_t *rsc,
+                             const pe_resource_t *orig_rsc, GList *all_rscs,
+                             GHashTable *utilization)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     pe__bundle_replica_t *replica = NULL;

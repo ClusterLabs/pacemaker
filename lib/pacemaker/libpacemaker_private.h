@@ -58,12 +58,12 @@ struct resource_alloc_functions_s {
      * \internal
      * \brief Assign a resource to a node
      *
-     * \param[in] rsc     Resource to assign to a node
-     * \param[in] prefer  Node to prefer, if all else is equal
+     * \param[in,out] rsc     Resource to assign to a node
+     * \param[in]     prefer  Node to prefer, if all else is equal
      *
      * \return Node that \p rsc is assigned to, if assigned entirely to one node
      */
-    pe_node_t *(*assign)(pe_resource_t *rsc, pe_node_t *prefer);
+    pe_node_t *(*assign)(pe_resource_t *rsc, const pe_node_t *prefer);
 
     /*!
      * \internal
@@ -100,13 +100,14 @@ struct resource_alloc_functions_s {
      * allowed node weights (if we are still placing resources) or priority (if
      * we are choosing promotable clone instance roles).
      *
-     * \param[in] dependent      Dependent resource in colocation
-     * \param[in] primary        Primary resource in colocation
-     * \param[in] colocation     Colocation constraint to apply
-     * \param[in] for_dependent  true if called on behalf of dependent
+     * \param[in,out] dependent      Dependent resource in colocation
+     * \param[in]     primary        Primary resource in colocation
+     * \param[in]     colocation     Colocation constraint to apply
+     * \param[in]     for_dependent  true if called on behalf of dependent
      */
-    void (*apply_coloc_score) (pe_resource_t *dependent, pe_resource_t *primary,
-                               pcmk__colocation_t *colocation,
+    void (*apply_coloc_score) (pe_resource_t *dependent,
+                               const pe_resource_t *primary,
+                               const pcmk__colocation_t *colocation,
                                bool for_dependent);
 
     /*!
@@ -234,13 +235,14 @@ struct resource_alloc_functions_s {
      * the resource's utilization to the existing values, if the resource has
      * not yet been allocated to a node.
      *
-     * \param[in] rsc          Resource with utilization to add
-     * \param[in] orig_rsc     Resource being allocated (for logging only)
-     * \param[in] all_rscs     List of all resources that will be summed
-     * \param[in] utilization  Table of utilization values to add to
+     * \param[in]     rsc          Resource with utilization to add
+     * \param[in]     orig_rsc     Resource being allocated (for logging only)
+     * \param[in]     all_rscs     List of all resources that will be summed
+     * \param[in,out] utilization  Table of utilization values to add to
      */
-    void (*add_utilization)(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                            GList *all_rscs, GHashTable *utilization);
+    void (*add_utilization)(const pe_resource_t *rsc,
+                            const pe_resource_t *orig_rsc, GList *all_rscs,
+                            GHashTable *utilization);
 
     /*!
      * \internal
@@ -336,6 +338,9 @@ void pcmk__fence_guest(pe_node_t *node);
 G_GNUC_INTERNAL
 bool pcmk__node_unfenced(pe_node_t *node);
 
+G_GNUC_INTERNAL
+void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
+
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
 
@@ -391,20 +396,20 @@ enum pcmk__coloc_affects {
 };
 
 G_GNUC_INTERNAL
-enum pcmk__coloc_affects pcmk__colocation_affects(pe_resource_t *dependent,
-                                                  pe_resource_t *primary,
-                                                  pcmk__colocation_t *constraint,
+enum pcmk__coloc_affects pcmk__colocation_affects(const pe_resource_t *dependent,
+                                                  const pe_resource_t *primary,
+                                                  const pcmk__colocation_t *colocation,
                                                   bool preview);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_weights(pe_resource_t *dependent,
-                                  pe_resource_t *primary,
-                                  pcmk__colocation_t *constraint);
+                                  const pe_resource_t *primary,
+                                  const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__apply_coloc_to_priority(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
-                                   pcmk__colocation_t *constraint);
+                                   const pe_resource_t *primary,
+                                   const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
 void pcmk__add_colocated_node_scores(pe_resource_t *rsc, const char *log_id,
@@ -550,14 +555,14 @@ G_GNUC_INTERNAL
 void pcmk__order_promotable_instances(pe_resource_t *clone);
 
 G_GNUC_INTERNAL
-void pcmk__update_dependent_with_promotable(pe_resource_t *primary,
+void pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
                                             pe_resource_t *dependent,
-                                            pcmk__colocation_t *colocation);
+                                            const pcmk__colocation_t *colocation);
 
 G_GNUC_INTERNAL
-void pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
+void pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
                                                 pe_resource_t *dependent,
-                                                pcmk__colocation_t *colocation);
+                                                const pcmk__colocation_t *colocation);
 
 
 // Pacemaker Remote nodes (pcmk_sched_remote.c)
@@ -584,7 +589,7 @@ void pcmk__add_bundle_meta_to_xml(xmlNode *args_xml, pe_action_t *action);
 // Primitives (pcmk_sched_primitive.c)
 
 G_GNUC_INTERNAL
-pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer);
+pe_node_t *pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_create_actions(pe_resource_t *rsc);
@@ -598,8 +603,8 @@ enum pe_action_flags pcmk__primitive_action_flags(pe_action_t *action,
 
 G_GNUC_INTERNAL
 void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                       pe_resource_t *primary,
-                                       pcmk__colocation_t *colocation,
+                                       const pe_resource_t *primary,
+                                       const pcmk__colocation_t *colocation,
                                        bool for_dependent);
 
 G_GNUC_INTERNAL
@@ -610,9 +615,9 @@ G_GNUC_INTERNAL
 void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
 
 G_GNUC_INTERNAL
-void pcmk__primitive_add_utilization(pe_resource_t *rsc,
-                                     pe_resource_t *orig_rsc, GList *all_rscs,
-                                     GHashTable *utilization);
+void pcmk__primitive_add_utilization(const pe_resource_t *rsc,
+                                     const pe_resource_t *orig_rsc,
+                                     GList *all_rscs, GHashTable *utilization);
 
 G_GNUC_INTERNAL
 void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
@@ -622,8 +627,8 @@ void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__group_apply_coloc_score(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
-                                   pcmk__colocation_t *colocation,
+                                   const pe_resource_t *primary,
+                                   const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
 G_GNUC_INTERNAL
@@ -641,16 +646,16 @@ GList *pcmk__group_colocated_resources(pe_resource_t *rsc,
 
 G_GNUC_INTERNAL
 void pcmk__clone_apply_coloc_score(pe_resource_t *dependent,
-                                   pe_resource_t *primary,
-                                   pcmk__colocation_t *colocation,
+                                   const pe_resource_t *primary,
+                                   const pcmk__colocation_t *colocation,
                                    bool for_dependent);
 
 // Bundles (pcmk_sched_bundle.c)
 
 G_GNUC_INTERNAL
 void pcmk__bundle_apply_coloc_score(pe_resource_t *dependent,
-                                    pe_resource_t *primary,
-                                    pcmk__colocation_t *colocation,
+                                    const pe_resource_t *primary,
+                                    const pcmk__colocation_t *colocation,
                                     bool for_dependent);
 
 G_GNUC_INTERNAL
@@ -789,10 +794,10 @@ void pcmk__consume_node_capacity(GHashTable *current_utilization,
 
 G_GNUC_INTERNAL
 void pcmk__release_node_capacity(GHashTable *current_utilization,
-                                 pe_resource_t *rsc);
+                                 const pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
-void pcmk__ban_insufficient_capacity(pe_resource_t *rsc, pe_node_t **prefer);
+const pe_node_t *pcmk__ban_insufficient_capacity(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__create_utilization_constraints(pe_resource_t *rsc,

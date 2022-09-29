@@ -141,20 +141,23 @@ sorted_allowed_nodes(const pe_resource_t *rsc)
  * \internal
  * \brief Assign a resource to its best allowed node, if possible
  *
- * \param[in] rsc     Resource to choose a node for
- * \param[in] prefer  If not NULL, prefer this node when all else equal
+ * \param[in,out] rsc     Resource to choose a node for
+ * \param[in]     prefer  If not NULL, prefer this node when all else equal
  *
  * \return true if \p rsc could be assigned to a node, otherwise false
  */
 static bool
-assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
+assign_best_node(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     GList *nodes = NULL;
     pe_node_t *chosen = NULL;
     pe_node_t *best = NULL;
     bool result = false;
+    const pe_node_t *most_free_node = pcmk__ban_insufficient_capacity(rsc);
 
-    pcmk__ban_insufficient_capacity(rsc, &prefer);
+    if (prefer == NULL) {
+        prefer = most_free_node;
+    }
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         // We've already finished assignment of resources to nodes
@@ -266,11 +269,11 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
  * \internal
  * \brief Apply a "this with" colocation to a node's allowed node scores
  *
- * \param[in] data       Colocation to apply
- * \param[in] user_data  Resource being assigned
+ * \param[in,out] data       Colocation to apply
+ * \param[in,out] user_data  Resource being assigned
  */
 static void
-apply_this_with(void *data, void *user_data)
+apply_this_with(gpointer data, gpointer user_data)
 {
     pcmk__colocation_t *colocation = (pcmk__colocation_t *) data;
     pe_resource_t *rsc = (pe_resource_t *) user_data;
@@ -312,8 +315,8 @@ apply_this_with(void *data, void *user_data)
  * \internal
  * \brief Apply a "with this" colocation to a node's allowed node scores
  *
- * \param[in] data       Colocation to apply
- * \param[in] user_data  Resource being assigned
+ * \param[in,out] data       Colocation to apply
+ * \param[in,out] user_data  Resource being assigned
  */
 static void
 apply_with_this(void *data, void *user_data)
@@ -343,7 +346,7 @@ apply_with_this(void *data, void *user_data)
  * \param[in] connection  Connection resource that has been assigned
  */
 static void
-remote_connection_assigned(pe_resource_t *connection)
+remote_connection_assigned(const pe_resource_t *connection)
 {
     pe_node_t *remote_node = pe_find_node(connection->cluster->nodes,
                                           connection->id);
@@ -375,13 +378,13 @@ remote_connection_assigned(pe_resource_t *connection)
  * \internal
  * \brief Assign a primitive resource to a node
  *
- * \param[in] rsc     Resource to assign to a node
- * \param[in] prefer  Node to prefer, if all else is equal
+ * \param[in,out] rsc     Resource to assign to a node
+ * \param[in]     prefer  Node to prefer, if all else is equal
  *
  * \return Node that \p rsc is assigned to, if assigned entirely to one node
  */
 pe_node_t *
-pcmk__primitive_assign(pe_resource_t *rsc, pe_node_t *prefer)
+pcmk__primitive_assign(pe_resource_t *rsc, const pe_node_t *prefer)
 {
     CRM_ASSERT(rsc != NULL);
 
@@ -813,13 +816,12 @@ rsc_avoids_remote_nodes(const pe_resource_t *rsc)
  * test output (while avoiding the performance hit on a live cluster).
  *
  * \param[in] rsc       Resource to check for allowed nodes
- * \param[in] data_set  Cluster working set
  *
  * \return List of resource's allowed nodes
  * \note Callers should take care not to rely on the list being sorted.
  */
 static GList *
-allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
+allowed_nodes_as_list(const pe_resource_t *rsc)
 {
     GList *allowed_nodes = NULL;
 
@@ -896,45 +898,11 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
 
     // Certain checks need allowed nodes
     if (check_unfencing || check_utilization || (rsc->container != NULL)) {
-        allowed_nodes = allowed_nodes_as_list(rsc, rsc->cluster);
+        allowed_nodes = allowed_nodes_as_list(rsc);
     }
 
     if (check_unfencing) {
-        // Check whether the node needs to be unfenced
-
-        for (GList *item = allowed_nodes; item; item = item->next) {
-            pe_node_t *node = item->data;
-            pe_action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, FALSE,
-                                               rsc->cluster);
-
-            crm_debug("Ordering any stops of %s before %s, and any starts after",
-                      rsc->id, unfence->uuid);
-
-            /*
-             * It would be more efficient to order clone resources once,
-             * rather than order each instance, but ordering the instance
-             * allows us to avoid unnecessary dependencies that might conflict
-             * with user constraints.
-             *
-             * @TODO: This constraint can still produce a transition loop if the
-             * resource has a stop scheduled on the node being unfenced, and
-             * there is a user ordering constraint to start some other resource
-             * (which will be ordered after the unfence) before stopping this
-             * resource. An example is "start some slow-starting cloned service
-             * before stopping an associated virtual IP that may be moving to
-             * it":
-             *       stop this -> unfencing -> start that -> stop this
-             */
-            pcmk__new_ordering(rsc, stop_key(rsc), NULL,
-                               NULL, strdup(unfence->uuid), unfence,
-                               pe_order_optional|pe_order_same_node,
-                               rsc->cluster);
-
-            pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
-                               rsc, start_key(rsc), NULL,
-                               pe_order_implies_then_on_node|pe_order_same_node,
-                               rsc->cluster);
-        }
+        g_list_foreach(allowed_nodes, pcmk__order_restart_vs_unfence, rsc);
     }
 
     if (check_utilization) {
@@ -1039,15 +1007,15 @@ pcmk__primitive_internal_constraints(pe_resource_t *rsc)
  * allowed node weights (if we are still placing resources) or priority (if
  * we are choosing promotable clone instance roles).
  *
- * \param[in] dependent      Dependent resource in colocation
- * \param[in] primary        Primary resource in colocation
- * \param[in] colocation     Colocation constraint to apply
+ * \param[in,out] dependent      Dependent resource in colocation
+ * \param[in]     primary        Primary resource in colocation
+ * \param[in]     colocation     Colocation constraint to apply
  * \param[in] for_dependent  true if called on behalf of dependent
  */
 void
 pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
-                                  pe_resource_t *primary,
-                                  pcmk__colocation_t *colocation,
+                                  const pe_resource_t *primary,
+                                  const pcmk__colocation_t *colocation,
                                   bool for_dependent)
 {
     enum pcmk__coloc_affects filter_results;
@@ -1386,7 +1354,7 @@ pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 {
     char *name = NULL;
     char *value = NULL;
-    pe_resource_t *parent = NULL;
+    const pe_resource_t *parent = NULL;
 
     CRM_ASSERT((rsc != NULL) && (xml != NULL));
 
@@ -1432,8 +1400,9 @@ pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 
 // Primitive implementation of resource_alloc_functions_t:add_utilization()
 void
-pcmk__primitive_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
-                                GList *all_rscs, GHashTable *utilization)
+pcmk__primitive_add_utilization(const pe_resource_t *rsc,
+                                const pe_resource_t *orig_rsc, GList *all_rscs,
+                                GHashTable *utilization)
 {
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -1454,7 +1423,7 @@ pcmk__primitive_add_utilization(pe_resource_t *rsc, pe_resource_t *orig_rsc,
  * \return Epoch time corresponding to shutdown attribute if set or now if not
  */
 static time_t
-shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
+shutdown_time(const pe_node_t *node)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     time_t result = 0;
@@ -1466,7 +1435,26 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
             result = (time_t) result_ll;
         }
     }
-    return (result == 0)? get_effective_time(data_set) : result;
+    return (result == 0)? get_effective_time(node->details->data_set) : result;
+}
+
+/*!
+ * \internal
+ * \brief Ban a resource from a node if it's not locked to the node
+ *
+ * \param[in] data  Node to check
+ * \param[in] user_data  Resource to check
+ */
+static void
+ban_if_not_locked(gpointer data, gpointer user_data)
+{
+    pe_node_t *node = (pe_node_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    if (strcmp(node->details->uname, rsc->lock_node->details->uname) != 0) {
+        resource_location(rsc, node, -CRM_SCORE_INFINITY,
+                          XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
+    }
 }
 
 // Primitive implementation of resource_alloc_functions_t:shutdown_lock()
@@ -1507,7 +1495,7 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
                              rsc->id, pe__node_name(node));
             } else {
                 rsc->lock_node = node;
-                rsc->lock_time = shutdown_time(node, rsc->cluster);
+                rsc->lock_time = shutdown_time(node);
             }
         }
     }
@@ -1530,12 +1518,5 @@ pcmk__primitive_shutdown_lock(pe_resource_t *rsc)
     }
 
     // If resource is locked to one node, ban it from all other nodes
-    for (GList *item = rsc->cluster->nodes; item != NULL; item = item->next) {
-        pe_node_t *node = item->data;
-
-        if (strcmp(node->details->uname, rsc->lock_node->details->uname)) {
-            resource_location(rsc, node, -CRM_SCORE_INFINITY,
-                              XML_CONFIG_ATTR_SHUTDOWN_LOCK, rsc->cluster);
-        }
-    }
+    g_list_foreach(rsc->cluster->nodes, ban_if_not_locked, rsc);
 }

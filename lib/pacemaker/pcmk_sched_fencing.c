@@ -451,3 +451,48 @@ pcmk__node_unfenced(pe_node_t *node)
 
     return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }
+
+/*!
+ * \internal
+ * \brief Order a resource's start and stop relative to unfencing of a node
+ *
+ * \param[in]     data       Node that could be unfenced
+ * \param[in,out] user_data  Resource to order
+ */
+void
+pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
+{
+    pe_node_t *node = (pe_node_t *) data;
+    pe_resource_t *rsc = (pe_resource_t *) user_data;
+
+    pe_action_t *unfence = pe_fence_op(node, "on", true, NULL, false,
+                                       rsc->cluster);
+
+    crm_debug("Ordering any stops of %s before %s, and any starts after",
+              rsc->id, unfence->uuid);
+
+    /*
+     * It would be more efficient to order clone resources once,
+     * rather than order each instance, but ordering the instance
+     * allows us to avoid unnecessary dependencies that might conflict
+     * with user constraints.
+     *
+     * @TODO: This constraint can still produce a transition loop if the
+     * resource has a stop scheduled on the node being unfenced, and
+     * there is a user ordering constraint to start some other resource
+     * (which will be ordered after the unfence) before stopping this
+     * resource. An example is "start some slow-starting cloned service
+     * before stopping an associated virtual IP that may be moving to
+     * it":
+     *       stop this -> unfencing -> start that -> stop this
+     */
+    pcmk__new_ordering(rsc, stop_key(rsc), NULL,
+                       NULL, strdup(unfence->uuid), unfence,
+                       pe_order_optional|pe_order_same_node,
+                       rsc->cluster);
+
+    pcmk__new_ordering(NULL, strdup(unfence->uuid), unfence,
+                       rsc, start_key(rsc), NULL,
+                       pe_order_implies_then_on_node|pe_order_same_node,
+                       rsc->cluster);
+}

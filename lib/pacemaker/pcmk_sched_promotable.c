@@ -1129,14 +1129,14 @@ pcmk__order_promotable_instances(pe_resource_t *clone)
  * \internal
  * \brief Update dependent's allowed nodes for colocation with promotable
  *
- * \param[in] dependent     Dependent resource to update
- * \param[in] primary_node  Node where an instance of the primary will be
- * \param[in] colocation    Colocation constraint to apply
+ * \param[in,out] dependent     Dependent resource to update
+ * \param[in]     primary_node  Node where an instance of the primary will be
+ * \param[in]     colocation    Colocation constraint to apply
  */
 static void
 update_dependent_allowed_nodes(pe_resource_t *dependent,
-                               pe_node_t *primary_node,
-                               pcmk__colocation_t *colocation)
+                               const pe_node_t *primary_node,
+                               const pcmk__colocation_t *colocation)
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -1175,14 +1175,14 @@ update_dependent_allowed_nodes(pe_resource_t *dependent,
 /*!
  * \brief Update dependent for a colocation with a promotable clone
  *
- * \param[in] primary     Primary resource in the colocation
- * \param[in] dependent   Dependent resource in the colocation
- * \param[in] colocation  Colocation constraint to apply
+ * \param[in]     primary     Primary resource in the colocation
+ * \param[in,out] dependent   Dependent resource in the colocation
+ * \param[in]     colocation  Colocation constraint to apply
  */
 void
-pcmk__update_dependent_with_promotable(pe_resource_t *primary,
+pcmk__update_dependent_with_promotable(const pe_resource_t *primary,
                                        pe_resource_t *dependent,
-                                       pcmk__colocation_t *colocation)
+                                       const pcmk__colocation_t *colocation)
 {
     GList *affected_nodes = NULL;
 
@@ -1228,14 +1228,14 @@ pcmk__update_dependent_with_promotable(pe_resource_t *primary,
  * \internal
  * \brief Update dependent priority for colocation with promotable
  *
- * \param[in] primary     Primary resource in the colocation
- * \param[in] dependent   Dependent resource in the colocation
- * \param[in] colocation  Colocation constraint to apply
+ * \param[in]     primary     Primary resource in the colocation
+ * \param[in,out] dependent   Dependent resource in the colocation
+ * \param[in]     colocation  Colocation constraint to apply
  */
 void
-pcmk__update_promotable_dependent_priority(pe_resource_t *primary,
+pcmk__update_promotable_dependent_priority(const pe_resource_t *primary,
                                            pe_resource_t *dependent,
-                                           pcmk__colocation_t *colocation)
+                                           const pcmk__colocation_t *colocation)
 {
     pe_resource_t *primary_instance = NULL;
 
