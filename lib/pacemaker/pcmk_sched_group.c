@@ -708,7 +708,9 @@ GList *
 pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
                                 GList *colocated_rscs)
 {
-    pe_resource_t *child_rsc = NULL;
+    pe_resource_t *member = NULL;
+
+    CRM_ASSERT(rsc != NULL);
 
     if (orig_rsc == NULL) {
         orig_rsc = rsc;
@@ -719,21 +721,19 @@ pcmk__group_colocated_resources(pe_resource_t *rsc, pe_resource_t *orig_rsc,
         /* This group has colocated members and/or is cloned -- either way,
          * add every child's colocated resources to the list.
          */
-        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            child_rsc = (pe_resource_t *) gIter->data;
-            colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
-                                                                  orig_rsc,
-                                                                  colocated_rscs);
+        for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
+            member = (pe_resource_t *) iter->data;
+            colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
+                                                               colocated_rscs);
         }
 
     } else if (rsc->children != NULL) {
         /* This group's members are not colocated, and the group is not cloned,
          * so just add the first child's colocations to the list.
          */
-        child_rsc = (pe_resource_t *) rsc->children->data;
-        colocated_rscs = child_rsc->cmds->colocated_resources(child_rsc,
-                                                              orig_rsc,
-                                                              colocated_rscs);
+        member = (pe_resource_t *) rsc->children->data;
+        colocated_rscs = member->cmds->colocated_resources(member, orig_rsc,
+                                                           colocated_rscs);
     }
 
     // Now consider colocations where the group itself is specified
