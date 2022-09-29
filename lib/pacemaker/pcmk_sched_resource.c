@@ -31,7 +31,7 @@ static resource_alloc_functions_t allocation_methods[] = {
         pcmk__update_ordered_actions,
         pcmk__output_resource_actions,
         pcmk__add_rsc_actions_to_graph,
-        native_append_meta,
+        pcmk__primitive_add_graph_meta,
         pcmk__primitive_add_utilization,
         pcmk__primitive_shutdown_lock,
     },

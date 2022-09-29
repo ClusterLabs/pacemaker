@@ -212,7 +212,17 @@ struct resource_alloc_functions_s {
      */
     void (*add_actions_to_graph)(pe_resource_t *rsc);
 
-    void (*append_meta) (pe_resource_t * rsc, xmlNode * xml);
+    /*!
+     * \internal
+     * \brief Add meta-attributes relevant to transition graph actions to XML
+     *
+     * If a given resource supports variant-specific meta-attributes that are
+     * needed for transition graph actions, add them to a given XML element.
+     *
+     * \param[in]     rsc  Resource whose meta-attributes should be added
+     * \param[in,out] xml  Transition graph action attributes XML to add to
+     */
+    void (*add_graph_meta)(pe_resource_t *rsc, xmlNode *xml);
 
     /*!
      * \internal
@@ -522,6 +532,9 @@ void pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 // Promotable clone resources (pcmk_sched_promotable.c)
 
 G_GNUC_INTERNAL
+void pcmk__add_promotion_scores(pe_resource_t *rsc);
+
+G_GNUC_INTERNAL
 void pcmk__require_promotion_tickets(pe_resource_t *rsc);
 
 G_GNUC_INTERNAL
@@ -588,6 +601,22 @@ void pcmk__primitive_apply_coloc_score(pe_resource_t *dependent,
                                        pe_resource_t *primary,
                                        pcmk__colocation_t *colocation,
                                        bool for_dependent);
+
+G_GNUC_INTERNAL
+void pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node,
+                            bool optional);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_add_utilization(pe_resource_t *rsc,
+                                     pe_resource_t *orig_rsc, GList *all_rscs,
+                                     GHashTable *utilization);
+
+G_GNUC_INTERNAL
+void pcmk__primitive_shutdown_lock(pe_resource_t *rsc);
+
 
 // Groups (pcmk_sched_group.c)
 

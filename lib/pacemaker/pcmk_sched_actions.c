@@ -17,9 +17,6 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-extern gboolean DeleteRsc(pe_resource_t *rsc, pe_node_t *node,
-                          gboolean optional, pe_working_set_t *data_set);
-
 /*!
  * \internal
  * \brief Get the action flags relevant to ordering constraints
@@ -1764,14 +1761,14 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
             pe_rsc_trace(rsc,
                          "Skipping configuration check and scheduling clean-up "
                          "for orphaned resource %s", rsc->id);
-            DeleteRsc(rsc, node, FALSE, rsc->cluster);
+            pcmk__schedule_cleanup(rsc, node, false);
         }
         return;
     }
 
     if (pe_find_node_id(rsc->running_on, node->details->id) == NULL) {
         if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, false)) {
-            DeleteRsc(rsc, node, FALSE, rsc->cluster);
+            pcmk__schedule_cleanup(rsc, node, false);
         }
         pe_rsc_trace(rsc,
                      "Skipping configuration check for %s "
@@ -1784,7 +1781,7 @@ process_rsc_history(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node)
                  rsc->id, pe__node_name(node));
 
     if (pcmk__rsc_agent_changed(rsc, node, rsc_entry, true)) {
-        DeleteRsc(rsc, node, FALSE, rsc->cluster);
+        pcmk__schedule_cleanup(rsc, node, false);
     }
 
     sorted_op_list = rsc_history_as_list(rsc, rsc_entry, &start_index,

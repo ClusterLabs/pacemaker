@@ -16,43 +16,104 @@
 
 #include "libpacemaker_private.h"
 
-gboolean DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
-                   pe_working_set_t *data_set);
-static bool StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static bool StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static bool DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static bool PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static bool RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional);
-static bool NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional);
+static void stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
+static void start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
+static void demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional);
+static void promote_resource(pe_resource_t *rsc, pe_node_t *node,
+                             bool optional);
+static void assert_role_error(pe_resource_t *rsc, pe_node_t *node,
+                              bool optional);
 
-/* This array says what the *next* role should be when transitioning from one
- * role to another. For example going from Stopped to Promoted, the next role is
- * RSC_ROLE_UNPROMOTED, because the resource must be started before being promoted.
- * The current state then becomes Started, which is fed into this array again,
- * giving a next role of RSC_ROLE_PROMOTED.
- */
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current state  Next state*/
-/*                 Unknown           Stopped           Started           Unpromoted           Promoted */
-/* Unknown */    { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED,    RSC_ROLE_STOPPED },
-/* Stopped */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED },
-/* Started */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
-/* Unpromoted */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
-/* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+    /* This array lists the immediate next role when transitioning from one role
+     * to a target role. For example, when going from Stopped to Promoted, the
+     * next role is Unpromoted, because the resource must be started before it
+     * can be promoted. The current state then becomes Started, which is fed
+     * into this array again, giving a next role of Promoted.
+     *
+     * Current role       Immediate next role   Final target role
+     * ------------       -------------------   -----------------
+     */
+    /* Unknown */       { RSC_ROLE_UNKNOWN,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STOPPED,     /* Started */
+                          RSC_ROLE_STOPPED,     /* Unpromoted */
+                          RSC_ROLE_STOPPED,     /* Promoted */
+                        },
+    /* Stopped */       { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STARTED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_UNPROMOTED,  /* Promoted */
+                        },
+    /* Started */       { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STARTED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
+    /* Unpromoted */    { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_STOPPED,     /* Stopped */
+                          RSC_ROLE_STOPPED,     /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
+    /* Promoted  */     { RSC_ROLE_STOPPED,     /* Unknown */
+                          RSC_ROLE_UNPROMOTED,  /* Stopped */
+                          RSC_ROLE_UNPROMOTED,  /* Started */
+                          RSC_ROLE_UNPROMOTED,  /* Unpromoted */
+                          RSC_ROLE_PROMOTED,    /* Promoted */
+                        },
 };
 
-typedef bool (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
+/*!
+ * \internal
+ * \brief Function to schedule actions needed for a role change
+ *
+ * \param[in,out] rsc       Resource whose role is changing
+ * \param[in]     node      Node where resource will be in its next role
+ * \param[in]     optional  Whether scheduled actions should be optional
+ */
+typedef void (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *node,
                                   bool optional);
 
-// This array picks the function needed to transition from one role to another
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-/* Current state   Next state                                            */
-/*                 Unknown    Stopped    Started    Unpromoted Promoted  */
-/* Unknown */    { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
-/* Stopped */    { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
-/* Started */    { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
-/* Unpromoted */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
-/* Promoted  */  { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp,       },
+    /* This array lists the function needed to transition directly from one role
+     * to another. NULL indicates that nothing is needed.
+     *
+     * Current role         Transition function             Next role
+     * ------------         -------------------             ----------
+     */
+    /* Unknown */       {   assert_role_error,              /* Unknown */
+                            stop_resource,                  /* Stopped */
+                            assert_role_error,              /* Started */
+                            assert_role_error,              /* Unpromoted */
+                            assert_role_error,              /* Promoted */
+                        },
+    /* Stopped */       {   assert_role_error,              /* Unknown */
+                            NULL,                           /* Stopped */
+                            start_resource,                 /* Started */
+                            start_resource,                 /* Unpromoted */
+                            assert_role_error,              /* Promoted */
+                        },
+    /* Started */       {   assert_role_error,              /* Unknown */
+                            stop_resource,                  /* Stopped */
+                            NULL,                           /* Started */
+                            NULL,                           /* Unpromoted */
+                            promote_resource,               /* Promoted */
+                        },
+    /* Unpromoted */    {   assert_role_error,              /* Unknown */
+                            stop_resource,                  /* Stopped */
+                            stop_resource,                  /* Started */
+                            NULL,                           /* Unpromoted */
+                            promote_resource,               /* Promoted */
+                        },
+    /* Promoted  */     {   assert_role_error,              /* Unknown */
+                            demote_resource,                /* Stopped */
+                            demote_resource,                /* Started */
+                            demote_resource,                /* Unpromoted */
+                            NULL,                           /* Promoted */
+                        },
 };
 
 /*!
@@ -175,7 +236,7 @@ assign_best_node(pe_resource_t *rsc, pe_node_t *prefer)
                         // The nodes are sorted by weight, so no more are equal
                         break;
                     }
-                    if (allowed->details == running->details) {
+                    if (pe__same_node(allowed, running)) {
                         // Scores are equal, so prefer the current node
                         chosen = allowed;
                     }
@@ -443,6 +504,7 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
 {
     enum rsc_role_e role = rsc->role;
     enum rsc_role_e next_role;
+    rsc_transition_fn fn = NULL;
 
     pe__set_resource_flags(rsc, pe_rsc_restarting);
 
@@ -452,9 +514,11 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
                      (need_stop? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, current, !need_stop)) {
+        fn = rsc_action_matrix[role][next_role];
+        if (fn == NULL) {
             break;
         }
+        fn(rsc, current, !need_stop);
         role = next_role;
     }
 
@@ -470,10 +534,11 @@ schedule_restart_actions(pe_resource_t *rsc, pe_node_t *current,
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
                      (required? "required" : "optional"), rsc->id,
                      role2text(role), role2text(next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
-                                                !required)) {
+        fn = rsc_action_matrix[role][next_role];
+        if (fn == NULL) {
             break;
         }
+        fn(rsc, rsc->allocated_to, !required);
         role = next_role;
     }
 
@@ -534,15 +599,17 @@ schedule_role_transition_actions(pe_resource_t *rsc)
 
     while (role != rsc->next_role) {
         enum rsc_role_e next_role = rsc_state_matrix[role][rsc->next_role];
+        rsc_transition_fn fn = NULL;
 
         pe_rsc_trace(rsc,
                      "Creating action to take %s from %s to %s (ending at %s)",
                      rsc->id, role2text(role), role2text(next_role),
                      role2text(rsc->next_role));
-        if (!rsc_action_matrix[role][next_role](rsc, rsc->allocated_to,
-                                                false)) {
+        fn = rsc_action_matrix[role][next_role];
+        if (fn == NULL) {
             break;
         }
+        fn(rsc, rsc->allocated_to, false);
         role = next_role;
     }
 }
@@ -599,8 +666,8 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
     if ((rsc->partial_migration_source != NULL)
         && (rsc->partial_migration_target != NULL)
         && allow_migrate && (num_all_active == 2)
-        && (current->details == rsc->partial_migration_source->details)
-        && (rsc->allocated_to->details == rsc->partial_migration_target->details)) {
+        && pe__same_node(current, rsc->partial_migration_source)
+        && pe__same_node(rsc->allocated_to, rsc->partial_migration_target)) {
         /* A partial migration is in progress, and the migration target remains
          * the same as when the migration began.
          */
@@ -657,7 +724,7 @@ pcmk__primitive_create_actions(pe_resource_t *rsc)
                 need_stop = true;
                 break;
             case recovery_stop_unexpected:
-                need_stop = true; // StopRsc() will skip expected node
+                need_stop = true; // stop_resource() will skip expected node
                 pe__set_resource_flags(rsc, pe_rsc_stop_unexpected);
                 break;
             default:
@@ -1048,20 +1115,23 @@ is_expected_node(const pe_resource_t *rsc, const pe_node_t *node)
     return pcmk_all_flags_set(rsc->flags,
                               pe_rsc_stop_unexpected|pe_rsc_restarting)
            && (rsc->next_role > RSC_ROLE_STOPPED)
-           && (rsc->allocated_to != NULL) && (node != NULL)
-           && (rsc->allocated_to->details == node->details);
+           && pe__same_node(rsc->allocated_to, node);
 }
 
-static bool
-StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+/*!
+ * \internal
+ * \brief Schedule actions needed to stop a resource wherever it is active
+ *
+ * \param[in,out] rsc       Resource being stopped
+ * \param[in]     node      Node where resource is being stopped (ignored)
+ * \param[in]     optional  Whether actions should be optional
+ */
+static void
+stop_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    GList *gIter = NULL;
-
-    CRM_ASSERT(rsc);
-
-    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *current = (pe_node_t *) gIter->data;
-        pe_action_t *stop;
+    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        pe_node_t *current = (pe_node_t *) iter->data;
+        pe_action_t *stop = NULL;
 
         if (is_expected_node(rsc, current)) {
             /* We are scheduling restart actions for a multiply active resource
@@ -1075,16 +1145,14 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
             continue;
         }
 
-        if (rsc->partial_migration_target) {
-            if (rsc->partial_migration_target->details == current->details
-                // Only if the allocated node still is the migration target.
-                && rsc->allocated_to
-                && rsc->allocated_to->details == rsc->partial_migration_target->details) {
+        if (rsc->partial_migration_target != NULL) {
+            // Continue migration if node originally was and remains target
+            if (pe__same_node(current, rsc->partial_migration_target)
+                && pe__same_node(current, rsc->allocated_to)) {
                 pe_rsc_trace(rsc,
                              "Skipping stop of %s on %s "
-                             "because migration to %s in progress",
-                             rsc->id, pe__node_name(current),
-                             pe__node_name(next));
+                             "because partial migration there will continue",
+                             rsc->id, pe__node_name(current));
                 continue;
             } else {
                 pe_rsc_trace(rsc,
@@ -1099,15 +1167,15 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
                      rsc->id, pe__node_name(current));
         stop = stop_action(rsc, current, optional);
 
-        if(rsc->allocated_to == NULL) {
-            pe_action_set_reason(stop, "node availability", TRUE);
+        if (rsc->allocated_to == NULL) {
+            pe_action_set_reason(stop, "node availability", true);
         } else if (pcmk_all_flags_set(rsc->flags, pe_rsc_restarting
                                                   |pe_rsc_stop_unexpected)) {
             /* We are stopping a multiply active resource on a node that is
              * not its expected node, and we are still scheduling restart
              * actions, so the stop is for being multiply active.
              */
-            pe_action_set_reason(stop, "being multiply active", TRUE);
+            pe_action_set_reason(stop, "being multiply active", true);
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -1115,11 +1183,11 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
         }
 
         if (pcmk_is_set(rsc->cluster->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, current, optional, rsc->cluster);
+            pcmk__schedule_cleanup(rsc, current, optional);
         }
 
         if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-            pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE,
+            pe_action_t *unfence = pe_fence_op(current, "on", true, NULL, false,
                                                rsc->cluster);
 
             order_actions(stop, unfence, pe_order_implies_first);
@@ -1129,201 +1197,236 @@ StopRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
             }
         }
     }
-
-    return true;
 }
 
-static bool
-StartRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+/*!
+ * \internal
+ * \brief Schedule actions needed to start a resource on a node
+ *
+ * \param[in,out] rsc       Resource being started
+ * \param[in]     node      Node where resource should be started
+ * \param[in]     optional  Whether actions should be optional
+ */
+static void
+start_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
     pe_action_t *start = NULL;
 
-    CRM_ASSERT(rsc);
+    CRM_ASSERT(node != NULL);
 
-    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (weight=%d)",
+    pe_rsc_trace(rsc, "Scheduling %s start of %s on %s (score %d)",
                  (optional? "optional" : "required"), rsc->id,
-                 pe__node_name(next),
-                 ((next == NULL)? 0 : next->weight));
-    start = start_action(rsc, next, TRUE);
+                 pe__node_name(node), node->weight);
+    start = start_action(rsc, node, TRUE);
 
-    pcmk__order_vs_unfence(rsc, next, start, pe_order_implies_then);
+    pcmk__order_vs_unfence(rsc, node, start, pe_order_implies_then);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         pe__clear_action_flags(start, pe_action_optional);
     }
 
-    if (is_expected_node(rsc, next)) {
+    if (is_expected_node(rsc, node)) {
         /* This could be a problem if the start becomes necessary for other
          * reasons later.
          */
         pe_rsc_trace(rsc,
                      "Start of multiply active resouce %s "
                      "on expected node %s will be a pseudo-action",
-                     rsc->id, pe__node_name(next));
+                     rsc->id, pe__node_name(node));
         pe__set_action_flags(start, pe_action_pseudo);
     }
-
-    return true;
 }
 
-static bool
-PromoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+/*!
+ * \internal
+ * \brief Schedule actions needed to promote a resource on a node
+ *
+ * \param[in,out] rsc       Resource being promoted
+ * \param[in]     node      Node where resource should be promoted
+ * \param[in]     optional  Whether actions should be optional
+ */
+static void
+promote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    GList *gIter = NULL;
-    gboolean runnable = TRUE;
+    GList *iter = NULL;
     GList *action_list = NULL;
+    bool runnable = true;
 
-    CRM_ASSERT(rsc);
-    CRM_CHECK(next != NULL, return false);
+    CRM_ASSERT(node != NULL);
 
-    pe_rsc_trace(rsc, "%s on %s", rsc->id, pe__node_name(next));
-
-    action_list = pe__resource_actions(rsc, next, RSC_START, TRUE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *start = (pe_action_t *) gIter->data;
+    // Any start must be runnable for promotion to be runnable
+    action_list = pe__resource_actions(rsc, node, RSC_START, true);
+    for (iter = action_list; iter != NULL; iter = iter->next) {
+        pe_action_t *start = (pe_action_t *) iter->data;
 
         if (!pcmk_is_set(start->flags, pe_action_runnable)) {
-            runnable = FALSE;
+            runnable = false;
         }
     }
     g_list_free(action_list);
 
     if (runnable) {
-        pe_action_t *promote = promote_action(rsc, next, optional);
+        pe_action_t *promote = promote_action(rsc, node, optional);
 
-        if (is_expected_node(rsc, next)) {
+        pe_rsc_trace(rsc, "Scheduling %s promotion of %s on %s",
+                     (optional? "optional" : "required"), rsc->id,
+                     pe__node_name(node));
+
+        if (is_expected_node(rsc, node)) {
             /* This could be a problem if the promote becomes necessary for
              * other reasons later.
              */
             pe_rsc_trace(rsc,
                          "Promotion of multiply active resouce %s "
                          "on expected node %s will be a pseudo-action",
-                         rsc->id, pe__node_name(next));
+                         rsc->id, pe__node_name(node));
             pe__set_action_flags(promote, pe_action_pseudo);
         }
+    } else {
+        pe_rsc_trace(rsc, "Not promoting %s on %s: start unrunnable",
+                     rsc->id, pe__node_name(node));
+        action_list = pe__resource_actions(rsc, node, RSC_PROMOTE, true);
+        for (iter = action_list; iter != NULL; iter = iter->next) {
+            pe_action_t *promote = (pe_action_t *) iter->data;
 
-        return true;
+            pe__clear_action_flags(promote, pe_action_runnable);
+        }
+        g_list_free(action_list);
     }
-
-    pe_rsc_debug(rsc, "%s\tPromote %s (canceled)",
-                 pe__node_name(next), rsc->id);
-
-    action_list = pe__resource_actions(rsc, next, RSC_PROMOTE, TRUE);
-
-    for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *promote = (pe_action_t *) gIter->data;
-
-        pe__clear_action_flags(promote, pe_action_runnable);
-    }
-
-    g_list_free(action_list);
-    return true;
 }
 
-static bool
-DemoteRsc(pe_resource_t *rsc, pe_node_t *next, bool optional)
+/*!
+ * \internal
+ * \brief Schedule actions needed to demote a resource wherever it is active
+ *
+ * \param[in,out] rsc       Resource being demoted
+ * \param[in]     node      Node where resource should be demoted (ignored)
+ * \param[in]     optional  Whether actions should be optional
+ */
+static void
+demote_resource(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    GList *gIter = NULL;
+    /* Since this will only be called for a primitive (possibly as an instance
+     * of a collective resource), the resource is multiply active if it is
+     * running on more than one node, so we want to demote on all of them as
+     * part of recovery, regardless of which one is the desired node.
+     */
+    for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        pe_node_t *current = (pe_node_t *) iter->data;
 
-    CRM_ASSERT(rsc);
-
-    if (is_expected_node(rsc, next)) {
-        pe_rsc_trace(rsc,
-                     "Skipping demote of multiply active resource %s "
-                     "on expected node %s",
-                     rsc->id, pe__node_name(next));
-        return true;
+        if (is_expected_node(rsc, current)) {
+            pe_rsc_trace(rsc,
+                         "Skipping demote of multiply active resource %s "
+                         "on expected node %s",
+                         rsc->id, pe__node_name(current));
+        } else {
+            pe_rsc_trace(rsc, "Scheduling %s demotion of %s on %s",
+                         (optional? "optional" : "required"), rsc->id,
+                         pe__node_name(current));
+            demote_action(rsc, current, optional);
+        }
     }
-
-    pe_rsc_trace(rsc, "%s", rsc->id);
-
-    /* CRM_CHECK(rsc->next_role == RSC_ROLE_UNPROMOTED, return FALSE); */
-    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *current = (pe_node_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "%s on %s", rsc->id, pe__node_name(next));
-        demote_action(rsc, current, optional);
-    }
-    return true;
 }
 
-static bool
-RoleError(pe_resource_t *rsc, pe_node_t *next, bool optional)
+static void
+assert_role_error(pe_resource_t *rsc, pe_node_t *node, bool optional)
 {
-    CRM_ASSERT(rsc);
-    crm_err("%s on %s", rsc->id, pe__node_name(next));
-    CRM_CHECK(false, return false);
-    return false;
+    CRM_ASSERT(false);
 }
 
-static bool
-NullOp(pe_resource_t *rsc, pe_node_t *next, bool optional)
+/*!
+ * \internal
+ * \brief Schedule cleanup of a resource
+ *
+ * \param[in,out] rsc       Resource to clean up
+ * \param[in]     node      Node to clean up on
+ * \param[in]     optional  Whether clean-up should be optional
+ */
+void
+pcmk__schedule_cleanup(pe_resource_t *rsc, const pe_node_t *node, bool optional)
 {
-    CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s", rsc->id);
-    return FALSE;
-}
+    /* If the cleanup is required, its orderings are optional, because they're
+     * relevant only if both actions are required. Conversely, if the cleanup is
+     * optional, the orderings make the then action required if the first action
+     * becomes required.
+     */
+    enum pe_ordering flag = optional? pe_order_implies_then : pe_order_optional;
 
-gboolean
-DeleteRsc(pe_resource_t *rsc, const pe_node_t *node, gboolean optional,
-          pe_working_set_t *data_set)
-{
+    CRM_CHECK((rsc != NULL) && (node != NULL), return);
+
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-        pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed",
+        pe_rsc_trace(rsc, "Skipping clean-up of %s on %s: resource failed",
                      rsc->id, pe__node_name(node));
-        return FALSE;
-
-    } else if (node == NULL) {
-        pe_rsc_trace(rsc, "Resource %s not deleted: NULL node", rsc->id);
-        return FALSE;
-
-    } else if (node->details->unclean || node->details->online == FALSE) {
-        pe_rsc_trace(rsc, "Resource %s not deleted from %s: unrunnable",
-                     rsc->id, pe__node_name(node));
-        return FALSE;
+        return;
     }
 
-    crm_notice("Removing %s from %s", rsc->id, pe__node_name(node));
+    if (node->details->unclean || !node->details->online) {
+        pe_rsc_trace(rsc, "Skipping clean-up of %s on %s: node unavailable",
+                     rsc->id, pe__node_name(node));
+        return;
+    }
 
+    crm_notice("Scheduling clean-up of %s on %s", rsc->id, pe__node_name(node));
     delete_action(rsc, node, optional);
 
-    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE,
-                                 optional? pe_order_implies_then : pe_order_optional);
-
-    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START,
-                                 optional? pe_order_implies_then : pe_order_optional);
-
-    return TRUE;
+    // stop -> clean-up -> start
+    pcmk__order_resource_actions(rsc, RSC_STOP, rsc, RSC_DELETE, flag);
+    pcmk__order_resource_actions(rsc, RSC_DELETE, rsc, RSC_START, flag);
 }
 
+/*!
+ * \internal
+ * \brief Add primitive meta-attributes relevant to graph actions to XML
+ *
+ * \param[in]     rsc  Primitive resource whose meta-attributes should be added
+ * \param[in,out] xml  Transition graph action attributes XML to add to
+ */
 void
-native_append_meta(pe_resource_t * rsc, xmlNode * xml)
+pcmk__primitive_add_graph_meta(pe_resource_t *rsc, xmlNode *xml)
 {
-    char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
-    pe_resource_t *parent;
+    char *name = NULL;
+    char *value = NULL;
+    pe_resource_t *parent = NULL;
 
-    if (value) {
-        char *name = NULL;
+    CRM_ASSERT((rsc != NULL) && (xml != NULL));
 
+    /* Clone instance numbers get set internally as meta-attributes, and are
+     * needed in the transition graph (for example, to tell unique clone
+     * instances apart).
+     */
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
+    if (value != NULL) {
         name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
         crm_xml_add(xml, name, value);
         free(name);
     }
 
+    // Not sure if this one is really needed ...
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_REMOTE_NODE);
-    if (value) {
-        char *name = NULL;
-
+    if (value != NULL) {
         name = crm_meta_name(XML_RSC_ATTR_REMOTE_NODE);
         crm_xml_add(xml, name, value);
         free(name);
     }
 
+    /* The container meta-attribute can be set on the primitive itself or one of
+     * its parents (for example, a group inside a container resource), so check
+     * them all, and keep the highest one found.
+     */
     for (parent = rsc; parent != NULL; parent = parent->parent) {
-        if (parent->container) {
-            crm_xml_add(xml, CRM_META"_"XML_RSC_ATTR_CONTAINER, parent->container->id);
+        if (parent->container != NULL) {
+            crm_xml_add(xml, CRM_META "_" XML_RSC_ATTR_CONTAINER,
+                        parent->container->id);
         }
+    }
+
+    /* Bundle replica children will get their external-ip set internally as a
+     * meta-attribute. The graph action needs it, but under a different naming
+     * convention than other meta-attributes.
+     */
+    value = g_hash_table_lookup(rsc->meta, "external-ip");
+    if (value != NULL) {
+        crm_xml_add(xml, "pcmk_external_ip", value);
     }
 }
 
