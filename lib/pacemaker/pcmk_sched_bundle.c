@@ -630,8 +630,8 @@ replica_for_container(const pe_resource_t *rsc, const pe_resource_t *container,
 
 static uint32_t
 multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
-                                pe_node_t *node, uint32_t filter, uint32_t type,
-                                pe_working_set_t *data_set)
+                                const pe_node_t *node, uint32_t filter,
+                                uint32_t type, pe_working_set_t *data_set)
 {
     GList *gIter = NULL;
     GList *children = NULL;
