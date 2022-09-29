@@ -187,12 +187,6 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
     }
 
     client->id = crm_generate_uuid();
-    if (client->id == NULL) {
-        crm_err("Could not generate UUID for client");
-        free(client->user);
-        free(client);
-        return NULL;
-    }
     if (key == NULL) {
         key = client->id;
     }
