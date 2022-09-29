@@ -748,7 +748,9 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
                             const pe_resource_t *orig_rsc, GList *all_rscs,
                             GHashTable *utilization)
 {
-    pe_resource_t *child = NULL;
+    pe_resource_t *member = NULL;
+
+    CRM_ASSERT((rsc != NULL) && (orig_rsc != NULL) && (utilization != NULL));
 
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -760,24 +762,24 @@ pcmk__group_add_utilization(const pe_resource_t *rsc,
         || pe_rsc_is_clone(rsc->parent)) {
         // Every group member will be on same node, so sum all members
         for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
-            child = (pe_resource_t *) iter->data;
+            member = (pe_resource_t *) iter->data;
 
-            if (pcmk_is_set(child->flags, pe_rsc_provisional)
-                && (g_list_find(all_rscs, child) == NULL)) {
-                child->cmds->add_utilization(child, orig_rsc, all_rscs,
-                                             utilization);
+            if (pcmk_is_set(member->flags, pe_rsc_provisional)
+                && (g_list_find(all_rscs, member) == NULL)) {
+                member->cmds->add_utilization(member, orig_rsc, all_rscs,
+                                              utilization);
             }
         }
 
     } else {
-        // Just add first child's utilization
-        child = (pe_resource_t *) rsc->children->data;
-        if ((child != NULL)
-            && pcmk_is_set(child->flags, pe_rsc_provisional)
-            && (g_list_find(all_rscs, child) == NULL)) {
+        // Just add first member's utilization
+        member = (pe_resource_t *) rsc->children->data;
+        if ((member != NULL)
+            && pcmk_is_set(member->flags, pe_rsc_provisional)
+            && (g_list_find(all_rscs, member) == NULL)) {
 
-            child->cmds->add_utilization(child, orig_rsc, all_rscs,
-                                         utilization);
+            member->cmds->add_utilization(member, orig_rsc, all_rscs,
+                                          utilization);
         }
     }
 }
