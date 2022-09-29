@@ -607,11 +607,11 @@ find_compatible_child_by_node(const pe_resource_t *local_child,
 }
 
 static pe__bundle_replica_t *
-replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
-                      pe_node_t *node)
+replica_for_container(const pe_resource_t *rsc, const pe_resource_t *container,
+                      const pe_node_t *node)
 {
     if (rsc->variant == pe_container) {
-        pe__bundle_variant_data_t *data = NULL;
+        const pe__bundle_variant_data_t *data = NULL;
 
         get_bundle_variant_data(data, rsc);
         for (GList *gIter = data->replicas; gIter != NULL;
@@ -620,7 +620,7 @@ replica_for_container(pe_resource_t *rsc, pe_resource_t *container,
 
             if (replica->child
                 && (container == replica->container)
-                && (node->details == replica->node->details)) {
+                && pe__same_node(node, replica->node)) {
                 return replica;
             }
         }
